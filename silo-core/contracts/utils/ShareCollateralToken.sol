@@ -14,6 +14,17 @@ import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 contract ShareCollateralToken is ShareToken {
     using SiloLensLib for ISilo;
 
+    /// @inheritdoc IShareToken
+    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _mint(_owner, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        _burn(_owner, _amount);
+    }
+
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         ShareCollateralTokenLib.afterTokenTransfer(_sender, _recipient, _amount);

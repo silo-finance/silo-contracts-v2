@@ -28,6 +28,17 @@ contract ShareDebtToken is IERC20R, ShareToken {
         revert NotAvailable();
     }
 
+    /// @inheritdoc IShareToken
+    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        _mint(_owner, _amount);
+    }
+
+    /// @inheritdoc IShareToken
+    function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        _burn(_owner, _amount);
+    }
+
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
         NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
