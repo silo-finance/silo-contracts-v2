@@ -20,7 +20,7 @@ contract DecimalsReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        SiloERC4626(address(TestStateLib.silo0())).config();
-        SiloERC4626(address(TestStateLib.silo1())).config();
+        SiloERC4626(address(TestStateLib.silo0())).decimals();
+        SiloERC4626(address(TestStateLib.silo1())).decimals();
     }
 }
