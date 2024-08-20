@@ -125,6 +125,7 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     }
 
     struct SiloStorage {
+        address vaultTokenImpl;
         SiloData siloData;
         SharedStorage sharedStorage;
         /// @dev silo is just for one asset,

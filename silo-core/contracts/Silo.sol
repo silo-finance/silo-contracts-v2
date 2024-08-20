@@ -26,6 +26,7 @@ import {Rounding} from "./lib/Rounding.sol";
 import {Hook} from "./lib/Hook.sol";
 import {AssetTypes} from "./lib/AssetTypes.sol";
 import {SiloStorageLib} from "./lib/SiloStorageLib.sol";
+import {VaultShareTokenLib} from "./lib/VaultShareTokenLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -223,7 +224,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
+        return _callMaxDepositOrMint(VaultShareTokenLib.totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -773,10 +774,6 @@ contract Silo is SiloERC4626 {
     {
         ISiloConfig.ConfigData memory configData = SiloStorageLib.siloConfig().getConfig(address(this));
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, _assetType);
-    }
-
-    function _getShareToken() internal view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = SiloStorageLib.siloConfig().getShareTokens(address(this));
     }
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)

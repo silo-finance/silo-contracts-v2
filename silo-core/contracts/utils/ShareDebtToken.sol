@@ -5,6 +5,7 @@ import {IERC20R} from "../interfaces/IERC20R.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
+import {ExternalShareToken} from "./ExternalShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 
 /// @title ShareDebtToken
@@ -16,37 +17,39 @@ import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 /// to any recipient as long as receiving wallet approves the transfer. In other words, anyone can
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
-contract ShareDebtToken is IERC20R, ShareToken {
+contract ShareDebtToken is IERC20R, ExternalShareToken {
     using SiloLensLib for ISilo;
 
     mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
 
     /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
-        __ShareToken_init(_silo, _hookReceiver, _tokenType);
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
+        __ExternalShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
     /// @inheritdoc IShareToken
-    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+    function mint(address _owner, address _spender, uint256 _amount) external virtual override {
+        _onlySilo();
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _mint(_owner, _amount);
     }
 
     /// @inheritdoc IShareToken
-    function burn(address _owner, address, uint256 _amount) external virtual override onlySilo {
+    function burn(address _owner, address, uint256 _amount) external virtual override {
+        _onlySilo();
         _burn(_owner, _amount);
     }
 
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
-        NonReentrantLib.nonReentrant(siloConfig);
+        NonReentrantLib.nonReentrant(_getSiloConfig());
 
         _setReceiveApproval(owner, _msgSender(), _amount);
     }
 
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
-        NonReentrantLib.nonReentrant(siloConfig);
+        NonReentrantLib.nonReentrant(_getSiloConfig());
 
         uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
 
@@ -62,7 +65,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @inheritdoc IERC20R
     function increaseReceiveAllowance(address _owner, uint256 _addedValue) public virtual override {
-        NonReentrantLib.nonReentrant(siloConfig);
+        NonReentrantLib.nonReentrant(_getSiloConfig());
 
         uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
         _setReceiveApproval(_owner, _msgSender(), currentAllowance + _addedValue);
@@ -92,7 +95,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         if (_isTransfer(_sender, _recipient)) {
             // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`.
             // If `_recepient` has no collateral silo set yet, it will be copiet from sender.
-            siloConfig.onDebtTransfer(_sender, _recipient);
+            _getSiloConfig().onDebtTransfer(_sender, _recipient);
 
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = receiveAllowance(_sender, _recipient);
@@ -116,7 +119,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
         // make sure that _recipient is solvent after transfer
         if (_isTransfer(_sender, _recipient)) {
             _callOracleBeforeQuote(_recipient);
-            if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
+            if (!_silo().isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
