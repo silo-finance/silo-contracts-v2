@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -29,10 +30,24 @@ contract VaultShareToken is ShareToken {
         _burn(_owner, _amount);
     }
 
-    function synchronizeHooks(uint24, uint24) external {}
+    function synchronizeHooks(uint24, uint24) external {
+        // Prevent `synchronizeHooks` on implementation contract
+        if (_getInitializedVersion() == type(uint64).max) revert Forbidden();
+    }
 
     function silo() external view returns (ISilo) {
         return ISilo(address(this));
+    }
+
+    function hookSetup() public view override returns (HookSetup memory) {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        return HookSetup({
+            hookReceiver: address($.sharedStorage.hookReceiver),
+            hooksBefore: $.sharedStorage.hooksBefore,
+            hooksAfter: $.sharedStorage.hooksAfter,
+            tokenType: uint24(Hook.COLLATERAL_TOKEN)
+        });
     }
 
     function _getSiloConfig() internal view override returns (ISiloConfig) {

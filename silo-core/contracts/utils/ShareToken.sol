@@ -99,10 +99,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.transferWithChecks = true;
     }
 
-    function hookSetup() external view virtual returns (HookSetup memory) {
-        return _getShareTokenStorage().hookSetup;
-    }
-
     function hookReceiver() external view virtual returns (address) {
         return _getShareTokenStorage().hookSetup.hookReceiver;
     }
@@ -162,6 +158,10 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         NonReentrantLib.nonReentrant(_getSiloConfig());
 
         ERC20PermitUpgradeable.permit(owner, spender, value, deadline, v, r, s);
+    }
+
+    function hookSetup() public view virtual returns (HookSetup memory) {
+        return _getShareTokenStorage().hookSetup;
     }
 
     /// @dev decimals of share token
@@ -266,7 +266,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
 
     /// @dev Call an afterTokenTransfer hook if registered
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
-        HookSetup memory setup = _getShareTokenStorage().hookSetup;
+        HookSetup memory setup = hookSetup();
 
         uint256 action = Hook.shareTokenTransfer(setup.tokenType);
 

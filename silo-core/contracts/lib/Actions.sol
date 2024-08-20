@@ -449,7 +449,6 @@ library Actions {
         $.sharedStorage.hooksBefore = hooksBefore;
         $.sharedStorage.hooksAfter = hooksAfter;
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }
