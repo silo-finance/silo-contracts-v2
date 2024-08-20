@@ -69,14 +69,15 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
     string private constant _NAME = "SiloShareToken";
 
     modifier onlySilo() {
-        if (msg.sender != address(ShareTokenLib.getShareTokenStorage().silo)) revert OnlySilo();
+        if (msg.sender != address(_getSilo())) revert OnlySilo();
 
         _;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() SiloERC20Permit() {
-        ShareTokenLib.getShareTokenStorage().silo = ISilo(address(this)); // disable initializer
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        $.silo = ISilo(address(this)); // disable initializer
     }
 
     /// @param _silo Silo address for which tokens was deployed
@@ -85,11 +86,11 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
     }
 
     function silo() external view returns (ISilo) {
-        return ShareTokenLib.getShareTokenStorage().silo;
+        return _getSilo();
     }
 
     function siloConfig() external view returns (ISiloConfig) {
-        return ShareTokenLib.getShareTokenStorage().siloConfig;
+        return _getSiloConfig();
     }
 
     /// @inheritdoc IShareToken
@@ -146,7 +147,7 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
     }
 
     function approve(address spender, uint256 value) public override(SiloERC20, IERC20) returns (bool result) {
-        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
+        NonReentrantLib.nonReentrant(_getSiloConfig());
 
         result = SiloERC20.approve(spender, value);
     }
@@ -161,7 +162,7 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         bytes32 r,
         bytes32 s
     ) public virtual override {
-        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
+        NonReentrantLib.nonReentrant(_getSiloConfig());
 
         SiloERC20Permit.permit(owner, spender, value, deadline, v, r, s);
     }
@@ -228,7 +229,15 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         virtual
         returns (ISiloConfig siloConfigCached)
     {
-        siloConfigCached = ShareTokenLib.getShareTokenStorage().siloConfig;
+        siloConfigCached = _getSiloConfig();
         siloConfigCached.turnOnReentrancyProtection();
+    }
+
+    function _getSiloConfig() internal view returns (ISiloConfig) {
+        return ShareTokenLib.getShareTokenStorage().siloConfig;
+    }
+    
+    function _getSilo() internal view returns (ISilo) {
+        return ShareTokenLib.getShareTokenStorage().silo;
     }
 }
