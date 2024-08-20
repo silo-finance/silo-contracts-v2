@@ -13,12 +13,9 @@ import {BurnReentrancyTest} from "../methods/share-token/BurnReentrancyTest.sol"
 import {DecimalsReentrancyTest} from "../methods/share-token/DecimalsReentrancyTest.sol";
 import {Eip712DomainReentrancyTest} from "../methods/share-token/Eip712DomainReentrancyTest.sol";
 import {EmitEventsReentrancyTest} from "../methods/share-token/EmitEventsReentrancyTest.sol";
-import {ForwardApproveReentrancyTest} from "../methods/share-token/ForwardApproveReentrancyTest.sol";
 import {
     ForwardTransferFromNoChecksReentrancyTest
 } from "../methods/share-token/ForwardTransferFromNoChecksReentrancyTest.sol";
-import {ForwardTransferReentrancyTest} from "../methods/share-token/ForwardTransferReentrancyTest.sol";
-import {ForwardTransferFromReentrancyTest} from "../methods/share-token/ForwardTransferFromReentrancyTest.sol";
 import {HookReceiverReentrancyTest} from "../methods/share-token/HookReceiverReentrancyTest.sol";
 import {HookSetupReentrancyTest} from "../methods/share-token/HookSetupReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/share-token/InitializeReentrancyTest.sol";
@@ -47,10 +44,7 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
         _registerMethod(new DecimalsReentrancyTest());
         _registerMethod(new Eip712DomainReentrancyTest());
         _registerMethod(new EmitEventsReentrancyTest());
-        _registerMethod(new ForwardApproveReentrancyTest());
         _registerMethod(new ForwardTransferFromNoChecksReentrancyTest());
-        _registerMethod(new ForwardTransferReentrancyTest());
-        _registerMethod(new ForwardTransferFromReentrancyTest());
         _registerMethod(new HookReceiverReentrancyTest());
         _registerMethod(new HookSetupReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
-import {SiloERC4626} from "silo-core/contracts/utils/SiloERC4626.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
@@ -21,8 +21,8 @@ contract ApproveReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        SiloERC4626 silo0 = SiloERC4626(address(TestStateLib.silo0()));
-        SiloERC4626 silo1 = SiloERC4626(address(TestStateLib.silo1()));
+        ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         address anyAddr = makeAddr("Any address");
 
@@ -31,8 +31,8 @@ contract ApproveReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillRevertReentrancy() internal {
-        SiloERC4626 silo0 = SiloERC4626(address(TestStateLib.silo0()));
-        SiloERC4626 silo1 = SiloERC4626(address(TestStateLib.silo1()));
+        ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo0.approve(address(0), 1e18);

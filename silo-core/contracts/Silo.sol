@@ -36,7 +36,7 @@ import {SiloStorage} from "./SiloStorage.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is ISilo, SiloStorage, ShareCollateralToken { // TODO override mint and burn!
+contract Silo is ISilo, SiloStorage, ShareCollateralToken {
     using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;

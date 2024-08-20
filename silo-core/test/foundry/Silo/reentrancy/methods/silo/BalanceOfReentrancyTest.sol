@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {SiloERC4626} from "silo-core/contracts/utils/SiloERC4626.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
@@ -20,8 +20,8 @@ contract BalanceOfReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        SiloERC4626 silo0 = SiloERC4626(address(TestStateLib.silo0()));
-        SiloERC4626 silo1 = SiloERC4626(address(TestStateLib.silo1()));
+        ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         address anyAddr = makeAddr("Any address");
 
