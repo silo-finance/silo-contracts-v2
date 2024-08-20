@@ -634,7 +634,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
     {
         if (msg.sender != address(_callGetThisConfig())) revert OnlySiloConfig();
 
-        _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee, address(0) /* no other silo */);
+        _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }
 
     /// @inheritdoc ISilo
@@ -839,19 +839,14 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
 
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
         ISiloConfig.ConfigData memory cfg = _callGetThisConfigData();
-        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee, address(0));
+        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
     }
 
     function _callAccrueInterestForAsset(
         address _interestRateModel,
         uint256 _daoFee,
-        uint256 _deployerFee,
-        address _otherSilo
+        uint256 _deployerFee
     ) internal virtual returns (uint256 accruedInterest) {
-        if (_otherSilo != address(0) && _otherSilo != address(this)) {
-            ISilo(_otherSilo).accrueInterest();
-        }
-
         accruedInterest = SiloLendingLib.accrueInterestForAsset(
             _interestRateModel,
             _daoFee,

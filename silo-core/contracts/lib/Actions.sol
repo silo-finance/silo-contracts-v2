@@ -391,7 +391,11 @@ library Actions {
         fee = SiloStdLib.flashFee(ShareTokenLib.getThisConfig(), _token, _amount);
     }
 
-    function maxBorrow(address _borrower, bool _sameAsset) external view returns (uint256 maxAssets, uint256 maxShares) {
+    function maxBorrow(address _borrower, bool _sameAsset)
+        external
+        view
+        returns (uint256 maxAssets, uint256 maxShares)
+    {
         return SiloLendingLib.maxBorrow(_borrower, _sameAsset);
     }
 
