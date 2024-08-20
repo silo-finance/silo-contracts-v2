@@ -383,6 +383,14 @@ library Actions {
         }
     }
 
+    /// @notice Returns flash fee amount
+    /// @param _token for which fee is calculated
+    /// @param _amount for which fee is calculated
+    /// @return fee flash fee amount
+    function flashFee(address _token, uint256 _amount) external view returns (uint256 fee) {
+        fee = SiloStdLib.flashFee(ShareTokenLib.getThisConfig(), _token, _amount);
+    }
+
     /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
     /// @param _receiver The entity that will receive the flash loan and is expected to return it with a fee
     /// @param _token The token that is being borrowed in the flash loan
