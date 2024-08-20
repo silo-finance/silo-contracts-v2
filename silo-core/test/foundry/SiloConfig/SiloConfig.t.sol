@@ -27,14 +27,14 @@ contract SiloConfigTest is Test {
     function setUp() public {
         _configDataDefault0.silo = _silo0Default;
         _configDataDefault0.token = makeAddr("token0");
-        _configDataDefault0.collateralShareToken = makeAddr("collateralShareToken0");
+        _configDataDefault0.collateralShareToken = _silo0Default;
         _configDataDefault0.protectedShareToken = makeAddr("protectedShareToken0");
         _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
         _configDataDefault0.hookReceiver = _hookReceiverModuleDefault;
 
         _configDataDefault1.silo = _silo1Default;
         _configDataDefault1.token = makeAddr("token1");
-        _configDataDefault1.collateralShareToken = makeAddr("collateralShareToken1");
+        _configDataDefault1.collateralShareToken = _silo1Default;
         _configDataDefault1.protectedShareToken = makeAddr("protectedShareToken1");
         _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
         _configDataDefault1.hookReceiver = _hookReceiverModuleDefault;
@@ -119,6 +119,9 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
+
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
@@ -126,12 +129,12 @@ contract SiloConfigTest is Test {
 
         (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(_configData0.silo);
         assertEq(protectedShareToken, _configData0.protectedShareToken);
-        assertEq(collateralShareToken, _configData0.collateralShareToken);
+        assertEq(collateralShareToken, _configData0.silo);
         assertEq(debtShareToken, _configData0.debtShareToken);
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(_configData1.silo);
         assertEq(protectedShareToken, _configData1.protectedShareToken);
-        assertEq(collateralShareToken, _configData1.collateralShareToken);
+        assertEq(collateralShareToken, _configData1.silo);
         assertEq(debtShareToken, _configData1.debtShareToken);
     }
 
@@ -160,6 +163,9 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
+
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
         (address silo0, address silo1) = siloConfig.getSilos();
@@ -194,6 +200,9 @@ contract SiloConfigTest is Test {
     ) public {
         // we always using #0 setup for hookReceiver
         _configData1.hookReceiver = _configData0.hookReceiver;
+
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
 
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
