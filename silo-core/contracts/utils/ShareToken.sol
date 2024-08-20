@@ -117,10 +117,6 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
         return ShareTokenLib.getShareTokenStorage().hookSetup;
     }
 
-    function hookReceiver() external view virtual returns (address) {
-        return ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver;
-    }
-
     /// @inheritdoc SiloERC20
     function transferFrom(address _from, address _to, uint256 _amount)
         public

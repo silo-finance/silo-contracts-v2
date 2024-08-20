@@ -88,7 +88,4 @@ interface IShareToken is IERC20Metadata {
 
     /// @notice Returns hook setup
     function hookSetup() external view returns (HookSetup memory);
-
-    /// @notice Returns hook receiver address
-    function hookReceiver() external view returns (address);
 }
