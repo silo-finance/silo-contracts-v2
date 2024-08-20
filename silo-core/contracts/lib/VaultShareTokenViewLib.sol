@@ -5,6 +5,8 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/interfaces/IERC20Metadata.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {Hook} from "./Hook.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library VaultShareTokenViewLib {
@@ -72,5 +74,16 @@ library VaultShareTokenViewLib {
 
     function hookReceiver() external view returns (address) {
         return address(SiloStorageLib.getSiloStorage().sharedStorage.hookReceiver);
+    }
+
+    function hookSetup() external view returns (IShareToken.HookSetup memory) {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        return IShareToken.HookSetup({
+            hookReceiver: address($.sharedStorage.hookReceiver),
+            hooksBefore: $.sharedStorage.hooksBefore,
+            hooksAfter: $.sharedStorage.hooksAfter,
+            tokenType: uint24(Hook.COLLATERAL_TOKEN)
+        });
     }
 }

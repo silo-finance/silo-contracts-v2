@@ -122,7 +122,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transfer_NotSolvent_
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transfer_NotSolvent_collateral_1
     */
     function test_sToken_transfer_NotSolvent_collateral_1() public {
         _sToken_transfer_NotSolvent(ISilo.CollateralType.Collateral, SAME_ASSET);

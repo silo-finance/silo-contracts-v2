@@ -8,6 +8,7 @@ import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
+import {RevertBytes} from "./RevertBytes.sol";
 
 library VaultShareTokenLib {
     function approve(address _spender, uint256 _amount) internal returns (bool result) {
@@ -20,6 +21,10 @@ library VaultShareTokenLib {
 
     function transferFrom(address _from, address _to, uint256 _amount) internal returns (bool result) {
         (result,) = _delegateCall(abi.encodeCall(IERC20.transferFrom, (_from, _to, _amount)));
+    }
+
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) internal {
+        _delegateCall(abi.encodeCall(IShareToken.forwardTransferFromNoChecks, (_from, _to, _amount)));
     }
 
     function mintShares(address _owner, uint256 _amount) external {
@@ -62,5 +67,7 @@ library VaultShareTokenLib {
     function _delegateCall(bytes memory txPayload) private returns (bool success, bytes memory returnData) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         (success, returnData) = $.vaultTokenImpl.delegatecall(txPayload);
+
+        if (!success) RevertBytes.revertBytes(returnData, "");
     }
 }

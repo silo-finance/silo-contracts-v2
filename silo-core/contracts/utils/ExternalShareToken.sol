@@ -42,6 +42,7 @@ abstract contract ExternalShareToken is ShareToken {
         __ShareToken_init(_hookReceiver, _tokenType);
 
         _getExternalShareTokenStorage().silo = _currentSilo;
+        _getExternalShareTokenStorage().siloConfig = _currentSilo.config();
     }
 
     function _onlySilo() internal view override {

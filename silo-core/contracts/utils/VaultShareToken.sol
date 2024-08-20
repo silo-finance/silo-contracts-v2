@@ -6,6 +6,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
 import {ShareToken} from "./ShareToken.sol";
 
 contract VaultShareToken is ShareToken {
@@ -36,21 +37,42 @@ contract VaultShareToken is ShareToken {
     }
 
     function silo() external view returns (ISilo) {
-        return ISilo(address(this));
+        return _silo();
     }
 
-    function hookSetup() public view override returns (HookSetup memory) {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+    function hookSetup() public view override returns (HookSetup memory) {}
 
-        return HookSetup({
-            hookReceiver: address($.sharedStorage.hookReceiver),
-            hooksBefore: $.sharedStorage.hooksBefore,
-            hooksAfter: $.sharedStorage.hooksAfter,
-            tokenType: uint24(Hook.COLLATERAL_TOKEN)
-        });
+    /// @dev Check if sender is solvent after the transfer
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+        // for minting or burning, Silo is responsible to check all necessary conditions
+        // for transfer make sure that _sender is solvent after transfer
+        if (_isTransfer(_sender, _recipient) && _getShareTokenStorage().transferWithChecks) {
+            if (!_isSolventAfterCollateralTransfer(_sender)) revert SenderNotSolventAfterTransfer();
+        }
+
+        ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
+    }
+
+    function _isSolventAfterCollateralTransfer(address _borrower) internal virtual returns (bool) {
+        (
+            ISiloConfig.DepositConfig memory deposit,
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt
+        ) = _getSiloConfig().getConfigsForWithdraw(address(_silo()), _borrower);
+
+        // when deposit silo is collateral silo, that means this sToken is collateral for debt
+        if (collateral.silo != deposit.silo) return true;
+
+        _callOracleBeforeQuote(_borrower);
+
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }
 
     function _getSiloConfig() internal view override returns (ISiloConfig) {
         return SiloStorageLib.siloConfig();
+    }
+
+    function _silo() internal view override returns (ISilo) {
+        return ISilo(address(this));
     }
 }

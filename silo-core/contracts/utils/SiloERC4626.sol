@@ -27,6 +27,10 @@ abstract contract SiloERC4626 is ISilo {
         return VaultShareTokenLib.transferFrom(_from, _to, _amount);
     }
 
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external {
+        VaultShareTokenLib.forwardTransferFromNoChecks(_from, _to, _amount);
+    }
+
     function mintShares(address _owner, address, uint256 _amount) external {
         if (msg.sender != address(this)) revert OnlySilo();
         VaultShareTokenLib.mintShares(_owner, _amount);
@@ -85,6 +89,10 @@ abstract contract SiloERC4626 is ISilo {
 
     function hookReceiver() external view returns (address) {
         return VaultShareTokenViewLib.hookReceiver();
+    }
+
+    function hookSetup() external view returns (IShareToken.HookSetup memory) {
+        return VaultShareTokenViewLib.hookSetup();
     }
 
     function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply) {
