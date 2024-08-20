@@ -31,7 +31,7 @@ contract VaultShareToken is ShareToken {
         _burn(_owner, _amount);
     }
 
-    function synchronizeHooks(uint24, uint24) external {
+    function synchronizeHooks(uint24, uint24) external view {
         // Prevent `synchronizeHooks` on implementation contract
         if (_getInitializedVersion() == type(uint64).max) revert Forbidden();
     }
@@ -40,7 +40,16 @@ contract VaultShareToken is ShareToken {
         return _silo();
     }
 
-    function hookSetup() public view override returns (HookSetup memory) {}
+    function hookSetup() public view override returns (HookSetup memory) {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        return IShareToken.HookSetup({
+            hookReceiver: address($.sharedStorage.hookReceiver),
+            hooksBefore: $.sharedStorage.hooksBefore,
+            hooksAfter: $.sharedStorage.hooksAfter,
+            tokenType: uint24(Hook.COLLATERAL_TOKEN)
+        });
+    }
 
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
