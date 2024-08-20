@@ -445,11 +445,11 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = SiloLendingLib.maxBorrow(_borrower, false /* same asset */);
+        (maxAssets,) = Actions.maxBorrow(_borrower, false /* same asset */);
     }
 
     function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
-        (maxAssets,) = SiloLendingLib.maxBorrow(_borrower, true /* same asset */);
+        (maxAssets,) = Actions.maxBorrow(_borrower, true /* same asset */);
     }
 
     /// @inheritdoc ISilo
@@ -532,7 +532,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = SiloLendingLib.maxBorrow(_borrower, false /* same asset */);
+        (,maxShares) = Actions.maxBorrow(_borrower, false /* same asset */);
     }
 
     /// @inheritdoc ISilo
