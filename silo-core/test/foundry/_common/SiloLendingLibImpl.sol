@@ -22,6 +22,7 @@ contract SiloLendingLibImpl {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         $.total[AssetTypes.DEBT].assets = _totalDebt.assets;
+        $.total[AssetTypes.COLLATERAL].assets = _totalCollateralAssets;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             _debtShareToken,

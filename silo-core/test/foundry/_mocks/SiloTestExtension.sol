@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import {SiloStorage} from "silo-core/contracts/SiloStorage.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
-contract SiloTestExtension is SiloStorage {
+contract SiloTestExtension {
     function testSiloStorageMutation(uint256 _assetType, uint256 _value) external {
-        _total[_assetType].assets = _value;
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        $.total[_assetType].assets = _value;
     }
 }
