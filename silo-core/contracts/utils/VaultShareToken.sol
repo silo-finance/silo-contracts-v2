@@ -14,11 +14,17 @@ contract VaultShareToken is ShareToken {
 
     /// @inheritdoc IShareToken
     function mintShares(address _owner, address, uint256 _amount) external virtual override {
+        // Prevent tokens `mint` on implementation contract
+        if (_getInitializedVersion() == type(uint64).max) revert Forbidden();
+
         _mint(_owner, _amount);
     }
 
     /// @inheritdoc IShareToken
     function burn(address _owner, address _spender, uint256 _amount) external virtual {
+        // Prevent `burn` on implementation contract
+        if (_getInitializedVersion() == type(uint64).max) revert Forbidden();
+
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _burn(_owner, _amount);
     }

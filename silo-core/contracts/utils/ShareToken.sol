@@ -81,6 +81,10 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         }
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @inheritdoc IShareToken
     function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
         external
@@ -234,7 +238,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     }
 
     // solhint-disable-next-line func-name-mixedcase
-    function __ShareToken_init(address _hookReceiver, uint24 _tokenType) internal virtual {
+    function __ShareToken_init(address _hookReceiver, uint24 _tokenType) internal initializer virtual {
         __ERC20Permit_init(_NAME);
         __ERC20_init(_NAME, _NAME);
 

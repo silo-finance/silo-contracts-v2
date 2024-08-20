@@ -10,6 +10,8 @@ import {VaultShareTokenLib} from "../lib/VaultShareTokenLib.sol";
 import {VaultShareTokenViewLib} from "../lib/VaultShareTokenViewLib.sol";
 
 abstract contract SiloERC4626 is ISilo {
+    error OnlySilo();
+
     /// @inheritdoc IERC20
     function approve(address _spender, uint256 _amount) external returns (bool) {
         return VaultShareTokenLib.approve(_spender, _amount);
@@ -26,10 +28,12 @@ abstract contract SiloERC4626 is ISilo {
     }
 
     function mintShares(address _owner, address, uint256 _amount) external {
+        if (msg.sender != address(this)) revert OnlySilo();
         VaultShareTokenLib.mintShares(_owner, _amount);
     }
 
     function burn(address _owner, address _spender, uint256 _amount) external {
+        if (msg.sender != address(this)) revert OnlySilo();
         VaultShareTokenLib.burn(_owner, _spender, _amount);
     }
 
