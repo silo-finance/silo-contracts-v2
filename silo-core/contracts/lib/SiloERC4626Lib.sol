@@ -66,7 +66,7 @@ library SiloERC4626Lib {
         address _owner,
         ISilo.CollateralType _collateralType,
         uint256 _totalAssets
-    ) internal view returns (uint256 assets, uint256 shares) {
+    ) external view returns (uint256 assets, uint256 shares) {
         (
             ISiloConfig.DepositConfig memory depositConfig,
             ISiloConfig.ConfigData memory collateralConfig,
