@@ -86,7 +86,7 @@ contract TokenMock is CommonBase {
     function mintMock(address _owner, address _spender, uint256 _amount) external {
         require(_owner != address(0), "ERC20: mint to the zero address");
 
-        bytes memory data = abi.encodeWithSelector(IShareToken.mint.selector, _owner, _spender, _amount);
+        bytes memory data = abi.encodeWithSelector(IShareToken.mintShares.selector, _owner, _spender, _amount);
         vm.mockCall(ADDRESS, data, abi.encode());
         vm.expectCall(ADDRESS, data);
     }

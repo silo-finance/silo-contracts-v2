@@ -218,7 +218,7 @@ library SiloERC4626Lib {
         // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
-        _collateralShareToken.mint(_receiver, _depositor, shares);
+        _collateralShareToken.mintShares(_receiver, _depositor, shares);
 
         if (_token != address(0)) {
             // Reentrancy is possible only for view methods (read-only reentrancy),

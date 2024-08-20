@@ -180,7 +180,7 @@ library SiloLendingLib {
 
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
-        IShareToken(_debtShareToken).mint(_args.borrower, _spender, borrowedShares);
+        IShareToken(_debtShareToken).mintShares(_args.borrower, _spender, borrowedShares);
 
         if (_token != address(0)) {
             // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.

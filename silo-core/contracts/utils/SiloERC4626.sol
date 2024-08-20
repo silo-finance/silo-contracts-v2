@@ -25,6 +25,10 @@ abstract contract SiloERC4626 is ISilo {
         return VaultShareTokenLib.transferFrom(_from, _to, _amount);
     }
 
+    function mintShares(address _owner, address, uint256 _amount) external {
+        VaultShareTokenLib.mintShares(_owner, _amount);
+    }
+
     function permit(
         address owner,
         address spender,

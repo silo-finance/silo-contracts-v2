@@ -32,12 +32,12 @@ contract ShareDebtTokenNotInitializedTest is Test {
     */
     function test_sToken_noInit_mint_zero() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
-        sToken.mint(address(1), address(1), 1);
+        sToken.mintShares(address(1), address(1), 1);
 
         // counterexample
         vm.prank(address(0));
         vm.expectRevert(IShareToken.ZeroTransfer.selector);
-        sToken.mint(address(1), address(1), 0);
+        sToken.mintShares(address(1), address(1), 0);
     }
 
     /*
@@ -45,11 +45,11 @@ contract ShareDebtTokenNotInitializedTest is Test {
     */
     function test_sToken_noInit_mint() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
-        sToken.mint(address(1), address(1), 1);
+        sToken.mintShares(address(1), address(1), 1);
 
         // counterexample
         vm.prank(address(0));
-        sToken.mint(address(1), address(1), 1);
+        sToken.mintShares(address(1), address(1), 1);
     }
 
     /*

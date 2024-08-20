@@ -19,7 +19,7 @@ contract ShareCollateralToken is ExternalShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function mint(address _owner, address, uint256 _amount) external virtual override {
+    function mintShares(address _owner, address, uint256 _amount) external virtual override {
         _onlySilo();
         _mint(_owner, _amount);
     }

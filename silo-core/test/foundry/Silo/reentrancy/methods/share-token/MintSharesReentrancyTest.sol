@@ -8,7 +8,7 @@ import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract MintReentrancyTest is ShareTokenMethodReentrancyTest {
+contract MintSharesReentrancyTest is ShareTokenMethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert as expected (all share tokens)");
         _executeForAllShareTokens(_ensureItWillRevertOnlySilo);
@@ -24,11 +24,11 @@ contract MintReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "mint(address,address,uint256)";
+        description = "mintShares(address,address,uint256)";
     }
 
     function _ensureItWillRevertOnlySilo(address _token) internal {
         vm.expectRevert(IShareToken.OnlySilo.selector);
-        ShareToken(_token).mint(address(this), address(this), 1000e18);
+        ShareToken(_token).mintShares(address(this), address(this), 1000e18);
     }
 }

@@ -98,7 +98,9 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         (address protectedShareToken,,) = _siloConfig.getShareTokens(address(silo0));
 
         uint256 tokensToMint = 100;
-        bytes memory data = abi.encodeWithSelector(IShareToken.mint.selector, _thridParty, _thridParty, tokensToMint);
+        bytes memory data = abi.encodeWithSelector(
+            IShareToken.mintShares.selector, _thridParty, _thridParty, tokensToMint
+        );
 
         uint256 amountOfEth = 0;
 

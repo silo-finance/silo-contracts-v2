@@ -105,7 +105,7 @@ contract ReentrancyOnDepositTest is Test {
 
         vm.mockCall(
             address(_shareCollateralToken),
-            abi.encodeCall(IShareToken.mint, (_receiver, _depositor, 991)),
+            abi.encodeCall(IShareToken.mintShares, (_receiver, _depositor, 991)),
             abi.encode(true)
         );
     }

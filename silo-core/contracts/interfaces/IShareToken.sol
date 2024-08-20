@@ -44,11 +44,11 @@ interface IShareToken is IERC20Metadata {
     /// @param _hooksAfter hooks bitmap to trigger hooks AFTER action
     function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external;
 
-    /// @notice Mint method for Silo to create debt
+    /// @notice Mint method for Silo to mint share tokens (collateral/debt)
     /// @param _owner wallet for which to mint token
     /// @param _spender wallet that asks for mint
     /// @param _amount amount of token to be minted
-    function mint(address _owner, address _spender, uint256 _amount) external;
+    function mintShares(address _owner, address _spender, uint256 _amount) external;
 
     /// @notice Burn method for Silo to close debt
     /// @param _owner wallet for which to burn token

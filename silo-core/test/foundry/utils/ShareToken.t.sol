@@ -68,7 +68,7 @@ contract ShareTokenTest is Test {
         sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
         vm.prank(silo.ADDRESS());
-        sToken.mint(owner, owner, 1);
+        sToken.mintShares(owner, owner, 1);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_hookCall
@@ -91,7 +91,7 @@ contract ShareTokenTest is Test {
         _afterTokenTransferMockOnMint(amount);
 
         vm.prank(siloAddr);
-        sToken.mint(owner, owner, amount);
+        sToken.mintShares(owner, owner, amount);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_descreaseAllowance

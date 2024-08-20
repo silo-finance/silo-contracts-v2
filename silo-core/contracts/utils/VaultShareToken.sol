@@ -13,7 +13,7 @@ contract VaultShareToken is ShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function mint(address _owner, address, uint256 _amount) external virtual override {
+    function mintShares(address _owner, address, uint256 _amount) external virtual override {
         _mint(_owner, _amount);
     }
 

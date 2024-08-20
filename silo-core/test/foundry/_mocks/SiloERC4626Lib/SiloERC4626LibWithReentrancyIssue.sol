@@ -51,6 +51,6 @@ library SiloERC4626LibWithReentrancyIssue {
         }
         
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
-        _collateralShareToken.mint(_receiver, _depositor, shares);
+        _collateralShareToken.mintShares(_receiver, _depositor, shares);
     }
 }

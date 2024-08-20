@@ -28,7 +28,7 @@ contract ShareDebtToken is IERC20R, ExternalShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function mint(address _owner, address _spender, uint256 _amount) external virtual override {
+    function mintShares(address _owner, address _spender, uint256 _amount) external virtual override {
         _onlySilo();
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _mint(_owner, _amount);

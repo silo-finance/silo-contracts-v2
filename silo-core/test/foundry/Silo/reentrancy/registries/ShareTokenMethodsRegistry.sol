@@ -18,7 +18,7 @@ import {
 import {HookReceiverReentrancyTest} from "../methods/share-token/HookReceiverReentrancyTest.sol";
 import {HookSetupReentrancyTest} from "../methods/share-token/HookSetupReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/share-token/InitializeReentrancyTest.sol";
-import {MintReentrancyTest} from "../methods/share-token/MintReentrancyTest.sol";
+import {MintSharesReentrancyTest} from "../methods/share-token/MintSharesReentrancyTest.sol";
 import {NameReentrancyTest} from "../methods/share-token/NameReentrancyTest.sol";
 import {NoncesReentrancyTest} from "../methods/share-token/NoncesReentrancyTest.sol";
 import {PermitReentrancyTest} from "../methods/share-token/PermitReentrancyTest.sol";
@@ -46,7 +46,7 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
         _registerMethod(new HookReceiverReentrancyTest());
         _registerMethod(new HookSetupReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());
-        _registerMethod(new MintReentrancyTest());
+        _registerMethod(new MintSharesReentrancyTest());
         _registerMethod(new NameReentrancyTest());
         _registerMethod(new NoncesReentrancyTest());
         _registerMethod(new PermitReentrancyTest());
