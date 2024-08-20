@@ -69,4 +69,8 @@ library VaultShareTokenViewLib {
     function nonces(address _owner) external view returns (uint256) {
         return _getNoncesStorage()._nonces[_owner];
     }
+
+    function hookReceiver() external view returns (address) {
+        return address(SiloStorageLib.getSiloStorage().sharedStorage.hookReceiver);
+    }
 }

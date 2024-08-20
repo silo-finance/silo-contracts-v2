@@ -82,4 +82,13 @@ abstract contract SiloERC4626 is ISilo {
     function nonces(address owner) external view returns (uint256) {
         return VaultShareTokenViewLib.nonces(owner);
     }
+
+    function hookReceiver() external view returns (address) {
+        return VaultShareTokenViewLib.hookReceiver();
+    }
+
+    function balanceOfAndTotalSupply(address _account) external view returns (uint256 balance, uint256 totalSupply) {
+        balance = VaultShareTokenViewLib.balanceOf(_account);
+        totalSupply = VaultShareTokenViewLib.totalSupply();
+    }
 }
