@@ -212,14 +212,7 @@ abstract contract ShareToken is Initializable, SiloERC20Permit, IShareToken {
     /// @param _silo Silo address for which tokens was deployed
     // solhint-disable-next-line func-name-mixedcase
     function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) internal virtual {
-        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
-
-        $.silo = _silo;
-        $.siloConfig = _silo.config();
-
-        $.hookSetup.hookReceiver = _hookReceiver;
-        $.hookSetup.tokenType = _tokenType;
-        $.transferWithChecks = true;
+        ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
 
         ERC20Lib.__ERC20_init(_NAME, _NAME);
         EIP712Lib.__EIP712_init(_NAME, "1");

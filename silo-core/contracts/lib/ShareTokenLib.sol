@@ -29,6 +29,17 @@ library ShareTokenLib {
         }
     }
 
+    function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) external {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+
+        $.silo = _silo;
+        $.siloConfig = _silo.config();
+
+        $.hookSetup.hookReceiver = _hookReceiver;
+        $.hookSetup.tokenType = _tokenType;
+        $.transferWithChecks = true;
+    }
+
     /// @dev decimals of share token
     function decimals() external view returns (uint8) {
         IShareToken.ShareTokenStorage storage $ = getShareTokenStorage();
