@@ -35,7 +35,7 @@ contract ShareDebtToken is IERC20R, ShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+    function burn(address _owner, address /* _spender */, uint256 _amount) external virtual override onlySilo {
         _burn(_owner, _amount);
     }
 

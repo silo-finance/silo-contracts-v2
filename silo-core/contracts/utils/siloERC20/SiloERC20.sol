@@ -123,7 +123,7 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      * - `spender` cannot be the zero address.
      */
     function approve(address spender, uint256 value) public virtual returns (bool result) {
-        _approve(msg.sender, spender, value);
+        return _approve(msg.sender, spender, value);
     }
 
     /**
@@ -262,8 +262,8 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      *
      * Overrides to this logic should be done to the variant with an additional `bool emitEvent` argument.
      */
-    function _approve(address owner, address spender, uint256 value) internal virtual {
-        _approve(owner, spender, value, emitEvents());
+    function _approve(address owner, address spender, uint256 value) internal virtual returns (bool result) {
+        return _approve(owner, spender, value, emitEvents());
     }
 
     /**
@@ -283,12 +283,18 @@ abstract contract SiloERC20 is IERC20, IERC20Metadata, IERC20Errors {
      *
      * Requirements are the same as {_approve}.
      */
-    function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual {
-        return ERC20Lib._approve(owner, spender, value);
+    function _approve(address owner, address spender, uint256 value, bool emitEvent)
+        internal
+        virtual
+        returns (bool result)
+    {
+        ERC20Lib._approve(owner, spender, value);
 
         if (emitEvent) {
             emit Approval(owner, spender, value);
         }
+
+        result = true;
     }
 
     /**

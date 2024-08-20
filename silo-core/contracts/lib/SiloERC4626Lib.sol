@@ -14,6 +14,7 @@ import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
+import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 // solhint-disable function-max-lines
 
@@ -55,7 +56,6 @@ library SiloERC4626Lib {
     /// @dev The function computes the maximum withdrawable assets and shares, considering user's collateral, debt,
     /// and the liquidity in the silo.
     /// Debt withdrawals are not allowed, resulting in a revert if such an attempt is made.
-    /// @param _config Configuration of the silo
     /// @param _owner Address of the user for which the maximum withdrawal amount is calculated
     /// @param _collateralType The type of asset being considered for withdrawal
     /// @param _totalAssets The total PROTECTED assets in the silo. In case of collateral use `0`, total
@@ -63,7 +63,6 @@ library SiloERC4626Lib {
     /// @return assets The maximum assets that the user can withdraw
     /// @return shares The maximum shares that the user can withdraw
     function maxWithdraw(
-        ISiloConfig _config,
         address _owner,
         ISilo.CollateralType _collateralType,
         uint256 _totalAssets
@@ -72,7 +71,7 @@ library SiloERC4626Lib {
             ISiloConfig.DepositConfig memory depositConfig,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _config.getConfigsForWithdraw(address(this), _owner);
+        ) = ShareTokenLib.getThisConfig().getConfigsForWithdraw(address(this), _owner);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;

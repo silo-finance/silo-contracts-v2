@@ -256,7 +256,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
-        uint24 collateralTokenType = uint24(Hook.COLLATERAL_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
 
         // initialize configData0

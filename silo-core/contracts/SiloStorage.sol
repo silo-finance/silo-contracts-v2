@@ -6,8 +6,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 contract SiloStorage {
     ISilo.SiloData internal _siloData;
 
-    ISilo.SharedStorage internal _sharedStorage;
-
     /// @dev silo is just for one asset, but this one asset can be of three types: mapping key is uint256(AssetType),
     /// so we store `assets` by type.
     /// We are using struct `Assets` instead of direct uint256 to pass storage reference to functions.

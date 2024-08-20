@@ -97,13 +97,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         ISilo.CollateralType withdrawType;
     }
 
-    struct SharedStorage {
-        ISiloConfig siloConfig;
-        uint24 hooksBefore;
-        uint24 hooksAfter;
-        IHookReceiver hookReceiver;
-    }
-
     /// @dev this struct is used for all types of assets: collateral, protected and debt
     /// @param assets based on type:
     /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
@@ -220,16 +213,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Update hooks configuration for Silo
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external;
-
-    function sharedStorage()
-        external
-        view
-        returns (
-            ISiloConfig siloConfig,
-            uint24 hooksBefore,
-            uint24 hooksAfter,
-            IHookReceiver hookReceiver
-        );
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo

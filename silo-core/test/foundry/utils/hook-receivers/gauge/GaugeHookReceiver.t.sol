@@ -55,7 +55,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         _siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER);
 
-        (,,, IHookReceiver hook) = silo0.sharedStorage();
+        IHookReceiver hook = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 
         _hookReceiver = IGaugeHookReceiver(address(hook));
 
@@ -159,15 +159,15 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         assertEq(uint256(hooksBefore), 0);
         assertEq(uint256(hooksAfter), action);
 
-        (,hooksBefore,hooksAfter,) = ISilo(silo0).sharedStorage();
+        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
 
-        assertEq(uint256(hooksBefore), 0);
-        assertEq(uint256(hooksAfter), action);
+        assertEq(uint256(silo0Hooks.hooksBefore), 0);
+        assertEq(uint256(silo0Hooks.hooksAfter), action);
 
-        (,hooksBefore,hooksAfter,) = ISilo(silo1).sharedStorage();
+        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
 
-        assertEq(uint256(hooksBefore), 0);
-        assertEq(uint256(hooksAfter), 0);
+        assertEq(uint256(silo1Hooks.hooksBefore), 0);
+        assertEq(uint256(silo1Hooks.hooksAfter), 0);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRemoveGauge
@@ -202,15 +202,15 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         assertEq(uint256(hooksBefore), 0);
         assertEq(uint256(hooksAfter), action);
 
-        (,hooksBefore,hooksAfter,) = ISilo(silo0).sharedStorage();
+        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
 
-        assertEq(uint256(hooksBefore), 0);
-        assertEq(uint256(hooksAfter), action);
+        assertEq(uint256(silo0Hooks.hooksBefore), 0);
+        assertEq(uint256(silo0Hooks.hooksAfter), action);
 
-        (,hooksBefore,hooksAfter,) = ISilo(silo1).sharedStorage();
+        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
 
-        assertEq(uint256(hooksBefore), 0);
-        assertEq(uint256(hooksAfter), 0);
+        assertEq(uint256(silo1Hooks.hooksBefore), 0);
+        assertEq(uint256(silo1Hooks.hooksAfter), 0);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testAfterTokenTransfer
@@ -307,7 +307,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     function _testHookReceiverInitlaizationForSilo(address _silo) internal view {
-        (,,,IHookReceiver hookReceiver) = ISilo(_silo).sharedStorage();
+        IHookReceiver hookReceiver = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 
         assertEq(address(hookReceiver), address(_hookReceiver));
 

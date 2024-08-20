@@ -16,6 +16,7 @@ import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
+import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library SiloLendingLib {
     using SafeERC20 for IERC20;
@@ -260,21 +261,22 @@ library SiloLendingLib {
         }
     }
 
-    function maxBorrow(ISiloConfig _siloConfig, address _borrower, bool _sameAsset)
+    function maxBorrow(address _borrower, bool _sameAsset)
         internal
         view
         returns (uint256 maxAssets, uint256 maxShares)
     {
-        if (_siloConfig.hasDebtInOtherSilo(address(this), _borrower)) return (0, 0);
+        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
+        if (siloConfig.hasDebtInOtherSilo(address(this), _borrower)) return (0, 0);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
         if (_sameAsset) {
-            debtConfig = _siloConfig.getConfig(address(this));
+            debtConfig = siloConfig.getConfig(address(this));
             collateralConfig = debtConfig;
         } else {
-            (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
+            (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
         }
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
@@ -286,7 +288,7 @@ library SiloLendingLib {
             _borrower,
             totalDebtAssets,
             totalDebtShares,
-            _siloConfig
+            siloConfig
         );
     }
 

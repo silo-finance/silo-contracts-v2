@@ -17,9 +17,11 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Hook} from "./Hook.sol";
+import {Rounding} from "./Rounding.sol";
 import {AssetTypes} from "./AssetTypes.sol";
 import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "./NonReentrantLib.sol";
+import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
@@ -32,7 +34,6 @@ library Actions {
     error FeeOverflow();
 
     function deposit(
-        ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
         uint256 _shares,
         address _receiver,
@@ -42,7 +43,8 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        _hookCallBeforeDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver);
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+        _hookCallBeforeDeposit(_collateralType, _assets, _shares, _receiver);
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
@@ -65,11 +67,10 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterDeposit(_shareStorage, _collateralType, _assets, _shares, _receiver, assets, shares);
+        _hookCallAfterDeposit(_collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
     function withdraw(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
         ISilo.Assets storage _totalAssets,
         ISilo.Assets storage _totalDebtAssets
@@ -77,9 +78,10 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        _hookCallBeforeWithdraw(_shareStorage, _args);
+        _hookCallBeforeWithdraw(_args);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -109,11 +111,10 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterWithdraw(_shareStorage, _args, assets, shares);
+        _hookCallAfterWithdraw(_args, assets, shares);
     }
 
     function borrow(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
@@ -121,13 +122,13 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
         uint256 borrowAction = Hook.BORROW;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
-        _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
+        _hookCallBeforeBorrow(_args, borrowAction);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -151,11 +152,10 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterBorrow(_shareStorage, _args, borrowAction, assets, shares);
+        _hookCallAfterBorrow(_args, borrowAction, assets, shares);
     }
 
     function borrowSameAsset(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt
@@ -163,13 +163,13 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
         uint256 borrowAction = Hook.BORROW_SAME_ASSET;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
-        _hookCallBeforeBorrow(_shareStorage, _args, borrowAction);
+        _hookCallBeforeBorrow(_args, borrowAction);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -191,11 +191,10 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterBorrow(_shareStorage, _args, borrowAction, assets, shares);
+        _hookCallAfterBorrow(_args, borrowAction, assets, shares);
     }
 
     function repay(
-        ISilo.SharedStorage storage _shareStorage,
         uint256 _assets,
         uint256 _shares,
         address _borrower,
@@ -205,9 +204,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        if (_shareStorage.hooksBefore.matchAction(Hook.REPAY)) {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {
             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer);
-            _shareStorage.hookReceiver.beforeAction(address(this), Hook.REPAY, data);
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.REPAY, data);
         }
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
@@ -223,15 +224,14 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        if (_shareStorage.hooksAfter.matchAction(Hook.REPAY)) {
+        if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.REPAY)) {
             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
-            _shareStorage.hookReceiver.afterAction(address(this), Hook.REPAY, data);
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);
         }
     }
 
     // solhint-disable-next-line function-max-lines
     function leverageSameAsset(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.Assets storage _totalCollateral,
         ISilo.Assets storage _totalDebt,
         ISilo.Assets storage _totalAssetsForDeposit,
@@ -240,12 +240,12 @@ library Actions {
         external
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
 
         if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
-        _hookCallBeforeLeverageSameAsset(_shareStorage, _args);
+        _hookCallBeforeLeverageSameAsset(_args);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -289,22 +289,21 @@ library Actions {
 
         _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
 
-        _shareStorage.siloConfig.turnOffReentrancyProtection();
+        siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterLeverageSameAsset(_shareStorage, _args, borrowedAssets, depositedShares, borrowedShares);
+        _hookCallAfterLeverageSameAsset(_args, borrowedAssets, depositedShares, borrowedShares);
     }
 
     function transitionCollateral(
-        ISilo.SharedStorage storage _shareStorage,
         mapping(uint256 assetType => ISilo.Assets) storage _total,
         ISilo.TransitionCollateralArgs memory _args
     )
         external
         returns (uint256 assets, uint256 toShares)
     {
-        _hookCallBeforeTransitionCollateral(_shareStorage, _args);
+        _hookCallBeforeTransitionCollateral(_args);
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+        ISiloConfig siloConfig = ShareTokenLib.getShareTokenStorage().siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -323,20 +322,22 @@ library Actions {
             collateralShareToken
         );
 
-        _shareStorage.siloConfig.turnOffReentrancyProtection();
+        siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterTransitionCollateral(_shareStorage, _args, shares, assets);
+        _hookCallAfterTransitionCollateral(_args, shares, assets);
     }
 
-    function switchCollateralToThisSilo(ISilo.SharedStorage storage _shareStorage) external {
+    function switchCollateralToThisSilo() external {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         if (siloConfig.borrowerCollateralSilo(msg.sender) == address(this)) revert ISilo.CollateralSiloAlreadySet();
 
         uint256 action = Hook.SWITCH_COLLATERAL;
 
-        if (_shareStorage.hooksBefore.matchAction(action)) {
-            _shareStorage.hookReceiver.beforeAction(address(this), action, abi.encodePacked(msg.sender));
+        if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, abi.encodePacked(msg.sender));
         }
 
         siloConfig.turnOnReentrancyProtection();
@@ -354,8 +355,9 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        if (_shareStorage.hooksBefore.matchAction(action)) {
-            _shareStorage.hookReceiver.afterAction(address(this), action, abi.encodePacked(msg.sender));
+        if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver)
+                .afterAction(address(this), action, abi.encodePacked(msg.sender));
         }
     }
 
@@ -367,7 +369,6 @@ library Actions {
     /// @param _data Additional data to be passed to the flash loan receiver
     /// @return success A boolean indicating if the flash loan was successful
     function flashLoan(
-        ISilo.SharedStorage storage _shareStorage,
         IERC3156FlashBorrower _receiver,
         address _token,
         uint256 _amount,
@@ -377,9 +378,11 @@ library Actions {
         external
         returns (bool success)
     {
-        if (_shareStorage.hooksBefore.matchAction(Hook.FLASH_LOAN)) {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount);
-            _shareStorage.hookReceiver.beforeAction(address(this), Hook.FLASH_LOAN, data);
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.FLASH_LOAN, data);
         }
 
         // flashFee will revert for wrong token
@@ -398,9 +401,9 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         _siloData.daoAndDeployerFees += uint192(fee);
 
-        if (_shareStorage.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
+        if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
-            _shareStorage.hookReceiver.afterAction(address(this), Hook.FLASH_LOAN, data);
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.FLASH_LOAN, data);
         }
 
         success = true;
@@ -464,12 +467,12 @@ library Actions {
         }
     }
 
-    function updateHooks(ISilo.SharedStorage storage _sharedStorage)
+    function updateHooks()
         external
         returns (uint24 hooksBefore, uint24 hooksAfter)
     {
-        ISilo.SharedStorage memory shareStorage = _sharedStorage;
-        ISiloConfig siloConfig = shareStorage.siloConfig;
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         NonReentrantLib.nonReentrant(siloConfig);
 
@@ -479,12 +482,23 @@ library Actions {
 
         (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig(address(this));
 
-        _sharedStorage.hooksBefore = hooksBefore;
-        _sharedStorage.hooksAfter = hooksAfter;
+        _shareStorage.hookSetup.hooksBefore = hooksBefore;
+        _shareStorage.hookSetup.hooksAfter = hooksAfter;
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+    }
+
+    function maxRepay(address _borrower) external view returns (uint256 assets) {
+        ISiloConfig.ConfigData memory configData = ShareTokenLib.getThisConfigData();
+        uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
+
+        (uint256 totalSiloAssets, uint256 totalShares) =
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, ISilo.AssetType.Debt);
+
+        return SiloMathLib.convertToAssets(
+            shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, ISilo.AssetType.Debt
+        );
     }
 
     // this method expect interest to be already accrued
@@ -577,55 +591,59 @@ library Actions {
     }
 
     function _hookCallBeforeWithdraw(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args
     ) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+        if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender);
 
-        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterWithdraw(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.WithdrawArgs calldata _args,
         uint256 assets,
         uint256 shares
     ) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
 
-        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
     }
 
     function _hookCallBeforeBorrow(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
         uint256 action
     ) private {
-        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower);
 
-        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterBorrow(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.BorrowArgs memory _args,
         uint256 action,
         uint256 assets,
         uint256 shares
     ) private {
-        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(
             _args.assets,
@@ -636,55 +654,53 @@ library Actions {
             shares
         );
 
-        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
     }
 
-    function _hookCallBeforeTransitionCollateral(
-        ISilo.SharedStorage storage _shareStorage,
-        ISilo.TransitionCollateralArgs memory _args
-    ) private {
+    function _hookCallBeforeTransitionCollateral(ISilo.TransitionCollateralArgs memory _args) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+        
         uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
 
-        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+        if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_args.shares, _args.owner);
 
-        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterTransitionCollateral(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.TransitionCollateralArgs memory _args,
         uint256 _shares,
         uint256 _assets
     ) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
 
-        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_shares, _args.owner, _assets);
 
-        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
     }
 
     function _hookCallBeforeDeposit(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.CollateralType _collateralType,
         uint256 _assets,
         uint256 _shares,
         address _receiver
     ) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         uint256 action = Hook.depositAction(_collateralType);
 
-        if (!_shareStorage.hooksBefore.matchAction(action)) return;
+        if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver);
 
-        _shareStorage.hookReceiver.beforeAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);
     }
 
     function _hookCallAfterDeposit(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.CollateralType _collateralType,
         uint256 _assets,
         uint256 _shares,
@@ -692,36 +708,37 @@ library Actions {
         uint256 _exactAssets,
         uint256 _exactShare
     ) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         uint256 action = Hook.depositAction(_collateralType);
 
-        if (!_shareStorage.hooksAfter.matchAction(action)) return;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
-        _shareStorage.hookReceiver.afterAction(address(this), action, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
     }
 
-    function _hookCallBeforeLeverageSameAsset(
-        ISilo.SharedStorage storage _shareStorage,
-        ISilo.LeverageSameAssetArgs memory _args
-    ) private {
-        if (!_shareStorage.hooksBefore.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
+    function _hookCallBeforeLeverageSameAsset(ISilo.LeverageSameAssetArgs memory _args) private {
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (!_shareStorage.hookSetup.hooksBefore.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
 
         bytes memory data = abi.encodePacked(
             _args.depositAssets, _args.borrowAssets, _args.borrower, _args.collateralType
         );
 
-        _shareStorage.hookReceiver.beforeAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
     }
 
     function _hookCallAfterLeverageSameAsset(
-        ISilo.SharedStorage storage _shareStorage,
         ISilo.LeverageSameAssetArgs memory _args,
         uint256 _borrowedAssets,
         uint256 _depositedShares,
         uint256 _borrowedShares
     ) private {
-        if (!_shareStorage.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
+        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
+
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
 
         bytes memory data = abi.encodePacked(
             _args.depositAssets,
@@ -732,6 +749,6 @@ library Actions {
             _borrowedShares
         );
 
-        _shareStorage.hookReceiver.afterAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
     }
 }

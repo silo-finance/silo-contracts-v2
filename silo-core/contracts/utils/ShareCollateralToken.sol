@@ -15,7 +15,7 @@ contract ShareCollateralToken is ShareToken {
     using SiloLensLib for ISilo;
 
     /// @inheritdoc IShareToken
-    function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
+    function mint(address _owner, address /* _spender */, uint256 _amount) external virtual override onlySilo {
         _mint(_owner, _amount);
     }
 

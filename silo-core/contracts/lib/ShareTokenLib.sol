@@ -141,4 +141,13 @@ library ShareTokenLib {
         // on transfer. ERC20 has them, so we good.
         return _sender != address(0) && _recipient != address(0);
     }
+
+    function getThisConfig() internal view returns (ISiloConfig thisSiloConfig) {
+        return ShareTokenLib.getShareTokenStorage().siloConfig;
+    }
+
+    function getThisConfigData() internal view returns (ISiloConfig.ConfigData memory thisSiloConfigData) {
+        IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
+        thisSiloConfigData = _sharedStorage.siloConfig.getConfig(address(this));
+    }
 }
