@@ -28,6 +28,7 @@ abstract contract SiloERC4626 is ISilo {
     }
 
     function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external {
+        if (msg.sender != address(this)) revert OnlySilo();
         VaultShareTokenLib.forwardTransferFromNoChecks(_from, _to, _amount);
     }
 
