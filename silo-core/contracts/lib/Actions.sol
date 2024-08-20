@@ -46,6 +46,15 @@ library Actions {
         return configData.hookReceiver;
     }
 
+    function isSolvent(address _borrower) external view returns (bool) {
+        (
+            ISiloConfig.ConfigData memory collateral,
+            ISiloConfig.ConfigData memory debt
+        ) = ShareTokenLib.getThisConfig().getConfigs(_borrower);
+
+        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
+    }
+
     function deposit(
         uint256 _assets,
         uint256 _shares,
