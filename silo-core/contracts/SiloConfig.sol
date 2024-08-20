@@ -441,7 +441,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             msg.sender != _DEBT_SHARE_TOKEN0 &&
             msg.sender != _DEBT_SHARE_TOKEN1
         ) {
-            revert OnlySiloOrHookReceiver();
+            revert OnlySiloOrTokenOrHookReceiver();
         }
     }
 

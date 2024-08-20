@@ -524,7 +524,7 @@ contract SiloConfigTest is Test {
         vm.assume(_callee != _configDataDefault1.debtShareToken);
 
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         _siloConfig.turnOnReentrancyProtection();
     }
 
@@ -533,7 +533,7 @@ contract SiloConfigTest is Test {
     */
     function test_crossNonReentrantBeforePermissions() public {
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         _siloConfig.turnOnReentrancyProtection();
 
         // _onlySiloOrTokenOrLiquidation permissions check (calls should not revert)
@@ -565,7 +565,7 @@ contract SiloConfigTest is Test {
 
         // Permissions check error
         vm.prank(_callee);
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         _siloConfig.turnOffReentrancyProtection();
     }
 

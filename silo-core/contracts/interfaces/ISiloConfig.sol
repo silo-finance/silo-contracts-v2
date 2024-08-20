@@ -119,7 +119,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     }
 
     error OnlySilo();
-    error OnlySiloOrHookReceiver();
+    error OnlySiloOrTokenOrHookReceiver();
     error OnlyShareToken();
     error OnlySiloOrDebtShareToken();
     error WrongSilo();
