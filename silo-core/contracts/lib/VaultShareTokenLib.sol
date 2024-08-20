@@ -26,6 +26,10 @@ library VaultShareTokenLib {
         _delegateCall(abi.encodeCall(IShareToken.mintShares, (_owner, address(0), _amount)));
     }
 
+    function burn(address _owner, address _spender, uint256 _amount) external {
+        _delegateCall(abi.encodeCall(IShareToken.burn, (_owner, _spender, _amount)));
+    }
+
     function permit(
         address owner,
         address spender,
