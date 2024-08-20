@@ -29,10 +29,12 @@ contract MintSharesReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillRevertOnlySilo() internal {
+        address silo0 = address(TestStateLib.silo0());
         vm.expectRevert(IShareToken.OnlySilo.selector);
-        SiloERC4626(address(TestStateLib.silo0())).mintShares(address(this), address(this), 1000e18);
+        SiloERC4626(silo0).mintShares(address(this), address(this), 1000e18);
 
+        address silo1 = address(TestStateLib.silo1());
         vm.expectRevert(IShareToken.OnlySilo.selector);
-        SiloERC4626(address(TestStateLib.silo1())).mintShares(address(this), address(this), 1000e18);
+        SiloERC4626(silo1).mintShares(address(this), address(this), 1000e18);
     }
 }
