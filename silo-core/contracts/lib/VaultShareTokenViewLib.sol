@@ -19,12 +19,26 @@ library VaultShareTokenViewLib {
         uint256 _totalSupply;
     }
 
+    /// @custom:storage-location erc7201:openzeppelin.storage.Nonces
+    struct NoncesStorage {
+        mapping(address account => uint256) _nonces;
+    }
+
     // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC20")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant ERC20StorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
+
+    // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.Nonces")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant NoncesStorageLocation = 0x5ab42ced628888259c08ac98db1eb0cf702fc1501344311d8b100cd1bfe4bb00;
 
     function _getERC20Storage() private pure returns (ERC20Storage storage $) {
         assembly {
             $.slot := ERC20StorageLocation
+        }
+    }
+
+    function _getNoncesStorage() private pure returns (NoncesStorage storage $) {
+        assembly {
+            $.slot := NoncesStorageLocation
         }
     }
 
@@ -50,5 +64,9 @@ library VaultShareTokenViewLib {
 
     function symbol() internal pure returns (string memory) {
         return _NAME;
+    }
+
+    function nonces(address _owner) external view returns (uint256) {
+        return _getNoncesStorage()._nonces[_owner];
     }
 }

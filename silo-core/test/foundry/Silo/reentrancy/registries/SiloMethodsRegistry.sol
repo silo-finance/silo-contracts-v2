@@ -51,6 +51,8 @@ import {MaxWithdrawWithTypeReentrancyTest} from "../methods/silo/MaxWithdrawWith
 import {MintReentrancyTest} from "../methods/silo/MintReentrancyTest.sol";
 import {MintWithTypeReentrancyTest} from "../methods/silo/MintWithTypeReentrancyTest.sol";
 import {NameReentrancyTest} from "../methods/silo/NameReentrancyTest.sol";
+import {NoncesReentrancyTest} from "../methods/silo/NoncesReentrancyTest.sol";
+import {PermitReentrancyTest} from "../methods/silo/PermitReentrancyTest.sol";
 import {PreviewBorrowReentrancyTest} from "../methods/silo/PreviewBorrowReentrancyTest.sol";
 import {PreviewBorrowSharesReentrancyTest} from "../methods/silo/PreviewBorrowSharesReentrancyTest.sol";
 import {PreviewDepositReentrancyTest} from "../methods/silo/PreviewDepositReentrancyTest.sol";
@@ -134,6 +136,8 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new MintReentrancyTest());
         _registerMethod(new MintWithTypeReentrancyTest());
         _registerMethod(new NameReentrancyTest());
+        _registerMethod(new NoncesReentrancyTest());
+        _registerMethod(new PermitReentrancyTest());
         _registerMethod(new PreviewBorrowReentrancyTest());
         _registerMethod(new PreviewBorrowSharesReentrancyTest());
         _registerMethod(new PreviewDepositReentrancyTest());

@@ -25,6 +25,18 @@ abstract contract SiloERC4626 is ISilo {
         return VaultShareTokenLib.transferFrom(_from, _to, _amount);
     }
 
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        VaultShareTokenLib.permit(owner, spender, value, deadline, v, r, s);
+    }
+
     /// @inheritdoc IERC20Metadata
     function decimals() external view virtual returns (uint8) {
         return VaultShareTokenViewLib.decimals();
@@ -53,5 +65,9 @@ abstract contract SiloERC4626 is ISilo {
     /// @inheritdoc IERC20
     function totalSupply() external view returns (uint256) {
         return VaultShareTokenViewLib.totalSupply();
+    }
+
+    function nonces(address owner) external view returns (uint256) {
+        return VaultShareTokenViewLib.nonces(owner);
     }
 }
