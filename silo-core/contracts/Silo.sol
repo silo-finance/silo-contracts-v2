@@ -74,10 +74,6 @@ contract Silo is SiloERC4626 {
         }
     }
 
-    function hookReceiver() external view returns (address) {
-        return ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver;
-    }
-
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
         Actions.initialize(_siloConfig, _modelConfigAddress);

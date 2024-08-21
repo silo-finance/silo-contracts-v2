@@ -464,7 +464,4 @@ interface ISilo is IERC4626, IERC3156FlashLender {
 
     /// @notice Withdraws earned fees and distributes them to the DAO and deployer fee receivers
     function withdrawFees() external;
-
-    // TODO remove when silo became share token
-    function hookReceiver() external view returns (address);
 }
