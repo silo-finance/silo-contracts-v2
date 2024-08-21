@@ -330,10 +330,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         virtual
         returns (uint256 maxShares)
     {
-        (address protectedToken, address collateralToken, ) = _callGetThisConfig().getShareTokens(address(this));
-        address shareToken = _collateralType == CollateralType.Collateral ? collateralToken : protectedToken;
-
-        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
+        return Actions.maxMint(_collateralType);
     }
 
     /// @inheritdoc ISilo

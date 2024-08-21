@@ -447,6 +447,29 @@ library Actions {
         success = true;
     }
 
+
+    function maxMint(ISilo.CollateralType _collateralType)
+        external
+        view
+        returns (uint256 maxShares)
+    {
+        (
+            address protectedToken, address collateralToken,
+        ) = ShareTokenLib.getThisConfig().getShareTokens(address(this));
+
+        address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
+
+        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
+    }
+
+    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
+        internal
+        view
+        returns (uint256 maxAssetsOrShares)
+    {
+        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
+    }
+
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
