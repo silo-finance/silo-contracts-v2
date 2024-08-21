@@ -102,9 +102,12 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
+        // moving it to lib will increase size
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+
         return UtilizationData({
-            collateralAssets: _total[AssetTypes.COLLATERAL].assets,
-            debtAssets: _total[AssetTypes.DEBT].assets,
+            collateralAssets: $._total[AssetTypes.COLLATERAL].assets,
+            debtAssets: $._total[AssetTypes.DEBT].assets,
             interestRateTimestamp: _siloData.interestRateTimestamp
         });
     }
@@ -146,8 +149,10 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
     {
-        totalCollateralAssets = _total[AssetTypes.COLLATERAL].assets;
-        totalProtectedAssets = _total[AssetTypes.PROTECTED].assets;
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+
+        totalCollateralAssets = $._total[AssetTypes.COLLATERAL].assets;
+        totalProtectedAssets = $._total[AssetTypes.PROTECTED].assets;
     }
 
     /// @inheritdoc ISilo
@@ -157,8 +162,10 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
-        totalCollateralAssets = _total[AssetTypes.COLLATERAL].assets;
-        totalDebtAssets = _total[AssetTypes.DEBT].assets;
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+
+        totalCollateralAssets = $._total[AssetTypes.COLLATERAL].assets;
+        totalDebtAssets = $._total[AssetTypes.DEBT].assets;
     }
 
     // ERC4626
@@ -199,7 +206,9 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        return _callMaxDepositOrMint(_total[AssetTypes.COLLATERAL].assets);
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+
+        return _callMaxDepositOrMint($._total[AssetTypes.COLLATERAL].assets);
     }
 
     /// @inheritdoc IERC4626

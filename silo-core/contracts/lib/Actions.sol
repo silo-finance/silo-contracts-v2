@@ -31,8 +31,16 @@ library Actions {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+    // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC20")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant SiloStorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
 
     error FeeOverflow();
+
+    function _getSiloStorage() internal pure returns (ISilo.SiloStorage storage $) {
+        assembly {
+            $.slot := SiloStorageLocation
+        }
+    }
 
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
