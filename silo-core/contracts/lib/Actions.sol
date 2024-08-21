@@ -47,9 +47,10 @@ library Actions {
 
         if (address(_sharedStorage.siloConfig) != address(0)) revert ISilo.SiloInitialized();
 
-        _sharedStorage.siloConfig = _siloConfig;
-
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
+
+        _sharedStorage.siloConfig = _siloConfig;
+        _sharedStorage.hookSetup.hookReceiver = configData.hookReceiver;
 
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
 
