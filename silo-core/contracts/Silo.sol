@@ -672,7 +672,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
     {
         (
             assets, shares
-        ) = Actions.deposit(_assets, _shares, _receiver, _collateralType, _total[uint256(_collateralType)]);
+        ) = Actions.deposit(_assets, _shares, _receiver, _collateralType);
 
         if (_collateralType == CollateralType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);

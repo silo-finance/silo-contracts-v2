@@ -67,12 +67,13 @@ library Actions {
         uint256 _assets,
         uint256 _shares,
         address _receiver,
-        ISilo.CollateralType _collateralType,
-        ISilo.Assets storage _totalCollateral
+        ISilo.CollateralType _collateralType
     )
         external
         returns (uint256 assets, uint256 shares)
     {
+        ISilo.Assets storage totalCollateral = _getSiloStorage()._total[uint256(_collateralType)];
+
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         _hookCallBeforeDeposit(_collateralType, _assets, _shares, _receiver);
 
@@ -92,7 +93,7 @@ library Actions {
             _shares,
             _receiver,
             IShareToken(shareToken),
-            _totalCollateral
+            totalCollateral
         );
 
         siloConfig.turnOffReentrancyProtection();
@@ -498,8 +499,10 @@ library Actions {
         uint256 availableLiquidity;
         uint256 siloBalance = IERC20(asset).balanceOf(address(this));
 
+        uint256 protectedAssets = Actions._getSiloStorage()._total[AssetTypes.PROTECTED].assets;
+
         // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
-        unchecked { availableLiquidity = _protectedAssets > siloBalance ? 0 : siloBalance - _protectedAssets; }
+        unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
 
         if (availableLiquidity == 0) revert ISilo.NoLiquidity();
 
