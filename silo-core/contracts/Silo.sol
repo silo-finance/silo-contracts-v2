@@ -310,7 +310,8 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         virtual
         returns (uint256 maxAssets)
     {
-        return _callMaxDepositOrMint(_total[uint256(_collateralType)].assets);
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        return _callMaxDepositOrMint($._total[uint256(_collateralType)].assets);
     }
 
     /// @inheritdoc ISilo
