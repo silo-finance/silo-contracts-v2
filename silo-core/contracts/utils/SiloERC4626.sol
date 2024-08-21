@@ -114,7 +114,7 @@ abstract contract SiloERC4626 is ISilo {
         view
         returns (
             bytes1 fields,
-            string memory name,
+            string memory eip712Name,
             string memory version,
             uint256 chainId,
             address verifyingContract,
