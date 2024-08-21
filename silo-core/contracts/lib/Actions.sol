@@ -186,11 +186,7 @@ library Actions {
         _hookCallAfterBorrow(_args, borrowAction, assets, shares);
     }
 
-    function borrowSameAsset(
-        ISilo.BorrowArgs memory _args,
-        ISilo.Assets storage _totalCollateral,
-        ISilo.Assets storage _totalDebt
-    )
+    function borrowSameAsset(ISilo.BorrowArgs memory _args)
         external
         returns (uint256 assets, uint256 shares)
     {
@@ -209,13 +205,15 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
         ISiloConfig.ConfigData memory debtConfig = collateralConfig;
 
+        ISilo.SiloStorage storage $ = _getSiloStorage();
+
         (assets, shares) = SiloLendingLib.borrow({
             _debtShareToken: debtConfig.debtShareToken,
             _token: debtConfig.token,
             _spender: msg.sender,
             _args: _args,
-            _totalCollateralAssets: _totalCollateral.assets,
-            _totalDebt: _totalDebt
+            _totalCollateralAssets: $._total[AssetTypes.COLLATERAL].assets,
+            _totalDebt: $._total[AssetTypes.DEBT]
         });
 
         _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);

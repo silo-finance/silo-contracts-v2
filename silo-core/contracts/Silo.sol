@@ -526,9 +526,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
                 shares: 0,
                 receiver: _receiver,
                 borrower: _borrower
-            }),
-            _total[AssetTypes.COLLATERAL],
-            _total[AssetTypes.DEBT]
+            })
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
