@@ -25,8 +25,6 @@ import {Hook} from "./lib/Hook.sol";
 import {AssetTypes} from "./lib/AssetTypes.sol";
 import {ShareTokenLib} from "./lib/ShareTokenLib.sol";
 
-import {SiloStorage} from "./SiloStorage.sol";
-
 // Keep ERC4626 ordering
 // solhint-disable ordering
 
@@ -34,7 +32,7 @@ import {SiloStorage} from "./SiloStorage.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is ISilo, SiloStorage, ShareCollateralToken {
+contract Silo is ISilo, ShareCollateralToken {
     using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
@@ -108,7 +106,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         return UtilizationData({
             collateralAssets: $._total[AssetTypes.COLLATERAL].assets,
             debtAssets: $._total[AssetTypes.DEBT].assets,
-            interestRateTimestamp: _siloData.interestRateTimestamp
+            interestRateTimestamp: $._siloData.interestRateTimestamp
         });
     }
 
