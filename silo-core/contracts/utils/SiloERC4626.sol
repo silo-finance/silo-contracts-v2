@@ -5,12 +5,12 @@ import {ISilo, IERC20, IERC20Metadata} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
-import {SiloStorage} from "../SiloStorage.sol";
+import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 
-abstract contract SiloERC4626 is ISilo, SiloStorage {
+abstract contract SiloERC4626 is ISilo {
     /// @inheritdoc IERC20
     function approve(address _spender, uint256 _amount) external returns (bool) {
-        NonReentrantLib.nonReentrant(_sharedStorage.siloConfig);
+        NonReentrantLib.nonReentrant(_callGetThisConfig());
         IShareToken(_getShareToken()).forwardApprove(msg.sender, _spender, _amount);
 
         return true;
@@ -18,7 +18,7 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
 
     /// @inheritdoc IERC20
     function transfer(address _to, uint256 _amount) external returns (bool) {
-        ISiloConfig siloConfig = _sharedStorage.siloConfig;
+        ISiloConfig siloConfig = _callGetThisConfig();
 
         siloConfig.turnOnReentrancyProtection();
         IShareToken(_getShareToken()).forwardTransfer(msg.sender, _to, _amount);
@@ -29,7 +29,7 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
 
     /// @inheritdoc IERC20
     function transferFrom(address _from, address _to, uint256 _amount) external returns (bool) {
-        ISiloConfig siloConfig = _sharedStorage.siloConfig;
+        ISiloConfig siloConfig = _callGetThisConfig();
 
         siloConfig.turnOnReentrancyProtection();
         IShareToken(_getShareToken()).forwardTransferFrom(msg.sender, _from, _to, _amount);
@@ -66,6 +66,14 @@ abstract contract SiloERC4626 is ISilo, SiloStorage {
     /// @inheritdoc IERC20
     function totalSupply() external view returns (uint256) {
         return IShareToken(_getShareToken()).totalSupply();
+    }
+
+    function _callGetThisConfig() internal view virtual returns (ISiloConfig siloConfig) {
+        siloConfig = ShareTokenLib.getThisConfig();
+    }
+
+    function _callGetThisConfigData() internal view virtual returns (ISiloConfig.ConfigData memory siloConfigData) {
+        siloConfigData = ShareTokenLib.getThisConfigData();
     }
 
     function _getShareToken() internal view virtual returns (address collateralShareToken);

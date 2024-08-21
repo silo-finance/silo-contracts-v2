@@ -48,4 +48,12 @@ contract StorageUpdateTest is ISomeSilo, Test {
 
         assertTrue(valueBefore != pointer.assets, "storage changed by config and we have latest value");
     }
+
+    /*
+    forge test -vv --ffi --mt test_keccak
+    */
+    function test_keccak() public {
+        emit log_named_bytes32("silo.storage.ERC20R", keccak256(abi.encode(uint256(keccak256("silo.storage.ERC20R")) - 1)) & ~bytes32(uint256(0xff)));
+        emit log_named_bytes32("silo.storage.Silo", keccak256(abi.encode(uint256(keccak256("silo.storage.Silo")) - 1)) & ~bytes32(uint256(0xff)));
+    }
 }
