@@ -93,7 +93,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     function _verifyHookReceiversForSilo(address _silo) internal view {
-        IHookReceiver hookReceiver = IHookReceiver(IShareToken(_silo).hookSetup().hookReceiver);
+        (,,, IHookReceiver hookReceiver) = ISilo(_silo).sharedStorage();
 
         assertNotEq(address(hookReceiver), address(0), "Hook receiver not initialized");
 

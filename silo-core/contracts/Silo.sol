@@ -644,6 +644,25 @@ contract Silo is SiloERC4626 {
         return ($._siloData.daoAndDeployerFees, $._siloData.interestRateTimestamp);
     }
 
+    /// @inheritdoc ISilo
+    function sharedStorage()
+        external
+        view
+        returns (
+            ISiloConfig siloConfig,
+            uint24 hooksBefore,
+            uint24 hooksAfter,
+            IHookReceiver hookReceiver
+        )
+    {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+
+        siloConfig = $.siloConfig;
+        hooksBefore = $.hookSetup.hooksBefore;
+        hooksAfter = $.hookSetup.hooksAfter;
+        hookReceiver = IHookReceiver($.hookSetup.hookReceiver);
+    }
+
     function _deposit(
         uint256 _assets,
         uint256 _shares,
