@@ -216,7 +216,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(totalSupply());
+        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
     }
 
     /// @inheritdoc IERC4626
