@@ -56,15 +56,6 @@ library Actions {
         return configData.hookReceiver;
     }
 
-    function isSolvent(address _borrower) external view returns (bool) {
-        (
-            ISiloConfig.ConfigData memory collateral,
-            ISiloConfig.ConfigData memory debt
-        ) = ShareTokenLib.getThisConfig().getConfigs(_borrower);
-
-        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
-    }
-
     function deposit(
         uint256 _assets,
         uint256 _shares,
@@ -390,22 +381,6 @@ library Actions {
         }
     }
 
-    /// @notice Returns flash fee amount
-    /// @param _token for which fee is calculated
-    /// @param _amount for which fee is calculated
-    /// @return fee flash fee amount
-    function flashFee(address _token, uint256 _amount) external view returns (uint256 fee) {
-        fee = SiloStdLib.flashFee(ShareTokenLib.getThisConfig(), _token, _amount);
-    }
-
-    function maxBorrow(address _borrower, bool _sameAsset)
-        external
-        view
-        returns (uint256 maxAssets, uint256 maxShares)
-    {
-        return SiloLendingLib.maxBorrow(_borrower, _sameAsset);
-    }
-
     /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
     /// @param _receiver The entity that will receive the flash loan and is expected to return it with a fee
     /// @param _token The token that is being borrowed in the flash loan
@@ -450,44 +425,6 @@ library Actions {
         }
 
         success = true;
-    }
-
-
-    function maxMint(ISilo.CollateralType _collateralType)
-        external
-        view
-        returns (uint256 maxShares)
-    {
-        (
-            address protectedToken, address collateralToken,
-        ) = ShareTokenLib.getThisConfig().getShareTokens(address(this));
-
-        address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
-
-        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
-    }
-
-    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
-        internal
-        view
-        returns (uint256 maxAssetsOrShares)
-    {
-        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
-    }
-
-    function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
-        external
-        view
-        returns (uint256 assets, uint256 shares)
-    {
-        return SiloERC4626Lib.maxWithdraw(
-            _owner,
-            _collateralType,
-            // 0 for CollateralType.Collateral because it will be calculated internally
-            _collateralType == ISilo.CollateralType.Protected
-                ? _getSiloStorage()._total[AssetTypes.PROTECTED].assets
-                : 0
-        );
     }
 
     function accrueInterestForAsset(
@@ -587,18 +524,6 @@ library Actions {
         IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-    }
-
-    function maxRepay(address _borrower) external view returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = ShareTokenLib.getThisConfigData();
-        uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
-
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, ISilo.AssetType.Debt);
-
-        return SiloMathLib.convertToAssets(
-            shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, ISilo.AssetType.Debt
-        );
     }
 
     // this method expect interest to be already accrued

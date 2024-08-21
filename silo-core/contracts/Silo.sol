@@ -17,6 +17,7 @@ import {IHookReceiver} from "./interfaces/IHookReceiver.sol";
 import {SiloERC4626} from "./utils/SiloERC4626.sol";
 
 import {Actions} from "./lib/Actions.sol";
+import {Views} from "./lib/Views.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
@@ -108,7 +109,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function isSolvent(address _borrower) external view virtual returns (bool) {
-        return Actions.isSolvent(_borrower);
+        return Views.isSolvent(_borrower);
     }
 
     /// @inheritdoc ISilo
@@ -329,7 +330,7 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 maxShares)
     {
-        return Actions.maxMint(_collateralType);
+        return Views.maxMint(_collateralType);
     }
 
     /// @inheritdoc ISilo
@@ -440,11 +441,11 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = Actions.maxBorrow(_borrower, false /* same asset */);
+        (maxAssets,) = Views.maxBorrow(_borrower, false /* same asset */);
     }
 
     function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
-        (maxAssets,) = Actions.maxBorrow(_borrower, true /* same asset */);
+        (maxAssets,) = Views.maxBorrow(_borrower, true /* same asset */);
     }
 
     /// @inheritdoc ISilo
@@ -522,7 +523,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = Actions.maxBorrow(_borrower, false /* same asset */);
+        (,maxShares) = Views.maxBorrow(_borrower, false /* same asset */);
     }
 
     /// @inheritdoc ISilo
@@ -545,7 +546,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc ISilo
     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {
-        assets = Actions.maxRepay(_borrower);
+        assets = Views.maxRepay(_borrower);
     }
 
     /// @inheritdoc ISilo
@@ -599,7 +600,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC3156FlashLender
     function flashFee(address _token, uint256 _amount) external view virtual returns (uint256 fee) {
-        fee = Actions.flashFee(_token, _amount);
+        fee = Views.flashFee(_token, _amount);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -819,7 +820,7 @@ contract Silo is SiloERC4626 {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        return Actions.maxWithdraw(_owner, _collateralType);
+        return Views.maxWithdraw(_owner, _collateralType);
     }
 
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
