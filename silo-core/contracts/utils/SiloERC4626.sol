@@ -104,4 +104,24 @@ abstract contract SiloERC4626 is ISilo {
     function silo() external view returns (ISilo) {
         return this;
     }
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32) {
+        return VaultShareTokenViewLib.DOMAIN_SEPARATOR();
+    }
+
+    function eip712Domain()
+        external
+        view
+        returns (
+            bytes1 fields,
+            string memory name,
+            string memory version,
+            uint256 chainId,
+            address verifyingContract,
+            bytes32 salt,
+            uint256[] memory extensions
+        )
+    {
+        return VaultShareTokenViewLib.eip712Domain();
+    }
 }

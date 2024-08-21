@@ -485,4 +485,19 @@ interface ISilo is IERC4626, IERC3156FlashLender {
 
     /// @notice Withdraws earned fees and distributes them to the DAO and deployer fee receivers
     function withdrawFees() external;
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+    function eip712Domain()
+        external
+        view
+        returns (
+            bytes1 fields,
+            string memory name,
+            string memory version,
+            uint256 chainId,
+            address verifyingContract,
+            bytes32 salt,
+            uint256[] memory extensions
+        );
 }

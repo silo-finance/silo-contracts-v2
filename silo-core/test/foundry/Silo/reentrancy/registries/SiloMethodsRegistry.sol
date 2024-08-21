@@ -24,6 +24,8 @@ import {ConvertToSharesWithTypeReentrancyTest} from "../methods/silo/ConvertToSh
 import {DecimalsReentrancyTest} from "../methods/silo/DecimalsReentrancyTest.sol";
 import {DepositReentrancyTest} from "../methods/silo/DepositReentrancyTest.sol";
 import {DepositWithTypeReentrancyTest} from "../methods/silo/DepositWithTypeReentrancyTest.sol";
+import {DomainSeparatorReentrancyTest} from "../methods/silo/DomainSeparatorReentrancyTest.sol";
+import {Eip712DomainReentrancyTest} from "../methods/silo/Eip712DomainReentrancyTest.sol";
 import {FactoryReentrancyTest} from "../methods/silo/FactoryReentrancyTest.sol";
 import {FlashFeeReentrancyTest} from "../methods/silo/FlashFeeReentrancyTest.sol";
 import {FlashLoanReentrancyTest} from "../methods/silo/FlashLoanReentrancyTest.sol";
@@ -118,6 +120,8 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new DecimalsReentrancyTest());
         _registerMethod(new DepositReentrancyTest());
         _registerMethod(new DepositWithTypeReentrancyTest());
+        _registerMethod(new DomainSeparatorReentrancyTest());
+        _registerMethod(new Eip712DomainReentrancyTest());
         _registerMethod(new FactoryReentrancyTest());
         _registerMethod(new FlashFeeReentrancyTest());
         _registerMethod(new FlashLoanReentrancyTest());
