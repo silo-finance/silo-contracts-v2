@@ -12,8 +12,6 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
-import {SiloStorage} from "silo-core/contracts/SiloStorage.sol";
-
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
@@ -27,7 +25,7 @@ import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-contract PartialLiquidation is SiloStorage, IPartialLiquidation, IHookReceiver {
+contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     using SafeERC20 for IERC20;
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
