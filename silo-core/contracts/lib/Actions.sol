@@ -323,10 +323,7 @@ library Actions {
         _hookCallAfterLeverageSameAsset(_args, borrowedAssets, depositedShares, borrowedShares);
     }
 
-    function transitionCollateral(
-        mapping(uint256 assetType => ISilo.Assets) storage _total,
-        ISilo.TransitionCollateralArgs memory _args
-    )
+    function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
     {
@@ -341,10 +338,9 @@ library Actions {
 
         uint256 shares;
 
-        (assets, shares) = _transitionCollateralWithdraw(_total, _args, protectedShareToken, collateralShareToken);
+        (assets, shares) = _transitionCollateralWithdraw(_args, protectedShareToken, collateralShareToken);
 
         (assets, toShares) = _transitionCollateralDeposit(
-            _total,
             _args,
             assets,
             protectedShareToken,
@@ -410,14 +406,12 @@ library Actions {
     /// @param _receiver The entity that will receive the flash loan and is expected to return it with a fee
     /// @param _token The token that is being borrowed in the flash loan
     /// @param _amount The amount of tokens to be borrowed
-    /// @param _siloData Storage containing data related to fees
     /// @param _data Additional data to be passed to the flash loan receiver
     /// @return success A boolean indicating if the flash loan was successful
     function flashLoan(
         IERC3156FlashBorrower _receiver,
         address _token,
         uint256 _amount,
-        ISilo.SiloData storage _siloData,
         bytes calldata _data
     )
         external
@@ -444,7 +438,7 @@ library Actions {
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         // cast safe, because we checked `fee > type(uint192).max`
-        _siloData.daoAndDeployerFees += uint192(fee);
+        _getSiloStorage()._siloData.daoAndDeployerFees += uint192(fee);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
@@ -513,9 +507,10 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
-    /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
-        uint256 earnedFees = _siloData.daoAndDeployerFees;
+    function withdrawFees(ISilo _silo) external {
+        ISilo.SiloStorage storage $ = _getSiloStorage();
+
+        uint256 earnedFees = $._siloData.daoAndDeployerFees;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
         (
@@ -536,11 +531,10 @@ library Actions {
 
         if (availableLiquidity == 0) revert ISilo.NoLiquidity();
 
-
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
         // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
-        unchecked { _siloData.daoAndDeployerFees -= uint192(earnedFees); }
+        unchecked { $._siloData.daoAndDeployerFees -= uint192(earnedFees); }
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...
@@ -639,14 +633,15 @@ library Actions {
     }
 
     function _transitionCollateralWithdraw(
-        mapping(uint256 assetType => ISilo.Assets) storage _total,
         ISilo.TransitionCollateralArgs memory _args,
         address _protectedShareToken,
         address _collateralShareToken
     ) private returns (uint256 assets, uint256 toShares) {
+        ISilo.SiloStorage storage $ = _getSiloStorage();
+
         uint256 liquidity = _args.withdrawType == ISilo.CollateralType.Collateral
-            ? SiloMathLib.liquidity(_total[AssetTypes.COLLATERAL].assets, _total[AssetTypes.DEBT].assets)
-            : _total[AssetTypes.PROTECTED].assets;
+            ? SiloMathLib.liquidity($._total[AssetTypes.COLLATERAL].assets, $._total[AssetTypes.DEBT].assets)
+            : $._total[AssetTypes.PROTECTED].assets;
 
         address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
             ? _collateralShareToken
@@ -664,17 +659,18 @@ library Actions {
                 collateralType: _args.withdrawType
             }),
             _liquidity: liquidity,
-            _totalCollateral: _total[uint256(_args.withdrawType)]
+            _totalCollateral: $._total[uint256(_args.withdrawType)]
         });
     }
 
     function _transitionCollateralDeposit(
-        mapping(uint256 assetType => ISilo.Assets) storage _total,
         ISilo.TransitionCollateralArgs memory _args,
         uint256 _assets,
         address _protectedShareToken,
         address _collateralShareToken
     ) private returns (uint256 assets, uint256 toShares) {
+        ISilo.SiloStorage storage $ = _getSiloStorage();
+
         (ISilo.AssetType depositType, address shareTokenTo) = _args.withdrawType == ISilo.CollateralType.Collateral
             ? (ISilo.AssetType.Protected, _protectedShareToken)
             : (ISilo.AssetType.Collateral, _collateralShareToken);
@@ -686,8 +682,7 @@ library Actions {
             _shares: 0,
             _receiver: _args.owner,
             _collateralShareToken: IShareToken(shareTokenTo),
-            _totalCollateral: _total[uint256(depositType)]
-        
+            _totalCollateral: $._total[uint256(depositType)]
         });
     }
 

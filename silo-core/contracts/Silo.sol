@@ -207,7 +207,6 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
         ISilo.SiloStorage storage $ = Actions._getSiloStorage();
-
         return _callMaxDepositOrMint($._total[AssetTypes.COLLATERAL].assets);
     }
 
@@ -433,7 +432,6 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         uint256 toShares;
 
         (assets, toShares) = Actions.transitionCollateral(
-            _total,
             TransitionCollateralArgs({
                 shares: _shares,
                 owner: _owner,
@@ -620,7 +618,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         virtual
         returns (bool success)
     {
-        success = Actions.flashLoan(_receiver, _token, _amount, _siloData, _data);
+        success = Actions.flashLoan(_receiver, _token, _amount, _data);
         if (success) emit FlashLoan(_amount);
     }
 
@@ -642,17 +640,18 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
         _accrueInterest();
-        Actions.withdrawFees(this, _siloData);
+        Actions.withdrawFees(this);
     }
 
     /// @inheritdoc ISilo
     function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
-        totalAssetsByType = _total[_assetType].assets;
+        totalAssetsByType = Actions._getSiloStorage()._total[_assetType].assets;
     }
 
     /// @inheritdoc ISilo
     function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp) {
-        return (_siloData.daoAndDeployerFees, _siloData.interestRateTimestamp);
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        return ($._siloData.daoAndDeployerFees, $._siloData.interestRateTimestamp);
     }
 
     function _deposit(
