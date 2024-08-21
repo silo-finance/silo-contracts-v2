@@ -744,8 +744,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
             _assets,
             _shares,
             _borrower,
-            _repayer,
-            _total[AssetTypes.DEBT]
+            _repayer
         );
 
         emit Repay(_repayer, _borrower, assets, shares);

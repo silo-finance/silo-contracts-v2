@@ -105,7 +105,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = _getSiloStorage();
         ISilo.Assets storage _totalAssets = $._total[uint256(_args.collateralType)];
         ISilo.Assets storage _totalDebtAssets = $._total[AssetTypes.DEBT];
 
@@ -149,7 +149,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = _getSiloStorage();
         ISilo.Assets storage _totalCollateral = $._total[AssetTypes.COLLATERAL];
         ISilo.Assets storage _totalDebt = $._total[AssetTypes.DEBT];
 
@@ -229,12 +229,13 @@ library Actions {
         uint256 _assets,
         uint256 _shares,
         address _borrower,
-        address _repayer,
-        ISilo.Assets storage _totalDebt
+        address _repayer
     )
         external
         returns (uint256 assets, uint256 shares)
     {
+        ISilo.Assets storage _totalDebt = _getSiloStorage()._total[AssetTypes.DEBT];
+
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {
