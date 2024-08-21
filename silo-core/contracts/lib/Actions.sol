@@ -44,9 +44,10 @@ library Actions {
 
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
-        _sharedStorage.siloConfig = _siloConfig;
 
         if (address(_sharedStorage.siloConfig) != address(0)) revert ISilo.SiloInitialized();
+
+        _sharedStorage.siloConfig = _siloConfig;
 
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 

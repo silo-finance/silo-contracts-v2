@@ -8,6 +8,7 @@ import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
+import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 contract SiloInternal is Silo, CryticIERC4626Internal {
@@ -15,12 +16,16 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
         factory = _siloFactory;
     }
 
+    function _$() internal returns (ISilo.SiloStorage storage) {
+        return Actions._getSiloStorage();
+    }
+
     function recognizeProfit(uint256 profit) public {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
         address _asset = _sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).mint(address(this), profit);
-        _total[AssetTypes.COLLATERAL].assets += profit;
+        _$()._total[AssetTypes.COLLATERAL].assets += profit;
     }
 
     function recognizeLoss(uint256 loss) public {
@@ -28,6 +33,6 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
 
         address _asset = _sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).burn(address(this), loss);
-        _total[AssetTypes.COLLATERAL].assets -= loss;
+        _$()._total[AssetTypes.COLLATERAL].assets -= loss;
     }
 }
