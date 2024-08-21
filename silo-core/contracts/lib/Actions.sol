@@ -101,9 +101,7 @@ library Actions {
         _hookCallAfterDeposit(_collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
-    function withdraw(
-        ISilo.WithdrawArgs calldata _args
-    )
+    function withdraw(ISilo.WithdrawArgs calldata _args)
         external
         returns (uint256 assets, uint256 shares)
     {
@@ -147,14 +145,14 @@ library Actions {
         _hookCallAfterWithdraw(_args, assets, shares);
     }
 
-    function borrow(
-        ISilo.BorrowArgs memory _args,
-        ISilo.Assets storage _totalCollateral,
-        ISilo.Assets storage _totalDebt
-    )
+    function borrow(ISilo.BorrowArgs memory _args)
         external
         returns (uint256 assets, uint256 shares)
     {
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.Assets storage _totalCollateral = $._total[AssetTypes.COLLATERAL];
+        ISilo.Assets storage _totalDebt = $._total[AssetTypes.DEBT];
+
         ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
         uint256 borrowAction = Hook.BORROW;
 
