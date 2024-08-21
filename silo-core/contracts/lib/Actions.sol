@@ -363,7 +363,9 @@ library Actions {
         uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
-            IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, abi.encodePacked(msg.sender));
+            IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(
+                address(this), action, abi.encodePacked(msg.sender)
+            );
         }
 
         siloConfig.turnOnReentrancyProtection();
