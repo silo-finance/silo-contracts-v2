@@ -66,7 +66,7 @@ library ShareDebtTokenLib {
         }
     }
 
-    function receiveAllowance(address _owner, address _recipient) public view returns (uint256) {
+    function receiveAllowance(address _owner, address _recipient) internal view returns (uint256) {
         return getIERC20RStorage()._receiveAllowances[_owner][_recipient];
     }
 }
