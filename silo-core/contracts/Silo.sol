@@ -701,9 +701,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
                 owner: _owner,
                 spender: _spender,
                 collateralType: _collateralType
-            }),
-            _total[uint256(_collateralType)],
-            _total[AssetTypes.DEBT]
+            })
         );
 
         if (_collateralType == CollateralType.Collateral) {

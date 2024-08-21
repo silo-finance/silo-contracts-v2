@@ -102,13 +102,15 @@ library Actions {
     }
 
     function withdraw(
-        ISilo.WithdrawArgs calldata _args,
-        ISilo.Assets storage _totalAssets,
-        ISilo.Assets storage _totalDebtAssets
+        ISilo.WithdrawArgs calldata _args
     )
         external
         returns (uint256 assets, uint256 shares)
     {
+        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.Assets storage _totalAssets = $._total[uint256(_args.collateralType)];
+        ISilo.Assets storage _totalDebtAssets = $._total[AssetTypes.DEBT];
+
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
