@@ -646,7 +646,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
         _accrueInterest();
-        Actions.withdrawFees(this, _siloData, _total[AssetTypes.PROTECTED].assets);
+        Actions.withdrawFees(this, _siloData);
     }
 
     /// @inheritdoc ISilo

@@ -483,8 +483,7 @@ library Actions {
     /// accordingly
     /// @param _silo Silo address
     /// @param _siloData Storage reference containing silo-related data, including accumulated fees
-    /// @param _protectedAssets Protected assets in the silo. We can not withdraw it.
-    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData, uint256 _protectedAssets) external {
+    function withdrawFees(ISilo _silo, ISilo.SiloData storage _siloData) external {
         uint256 earnedFees = _siloData.daoAndDeployerFees;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
