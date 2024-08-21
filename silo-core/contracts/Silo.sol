@@ -487,9 +487,6 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         (
             depositedShares, borrowedShares
         ) = Actions.leverageSameAsset(
-            _total[AssetTypes.COLLATERAL],
-            _total[AssetTypes.DEBT],
-            _total[uint256(_collateralType)],
             ISilo.LeverageSameAssetArgs({
                 depositAssets: _depositAssets,
                 borrowAssets: _borrowAssets,
@@ -844,12 +841,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal virtual returns (uint256 accruedInterest) {
-        accruedInterest = Actions.accrueInterestForAsset(
-            _interestRateModel,
-            _daoFee,
-            _deployerFee
-        );
-
+        accruedInterest = Actions.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }
 

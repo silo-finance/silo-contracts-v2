@@ -263,12 +263,7 @@ library Actions {
     }
 
     // solhint-disable-next-line function-max-lines
-    function leverageSameAsset(
-        ISilo.Assets storage _totalCollateral,
-        ISilo.Assets storage _totalDebt,
-        ISilo.Assets storage _totalAssetsForDeposit,
-        ISilo.LeverageSameAssetArgs memory _args
-    )
+    function leverageSameAsset(ISilo.LeverageSameAssetArgs memory _args)
         external
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
@@ -288,19 +283,23 @@ library Actions {
 
         uint256 borrowedAssets;
 
-        (borrowedAssets, borrowedShares) = SiloLendingLib.borrow({
-            _debtShareToken: debtConfig.debtShareToken,
-            _token: address(0), // we are not transferring debt
-            _spender: msg.sender,
-            _args: ISilo.BorrowArgs({
-                assets: _args.borrowAssets,
-                shares: 0,
-                receiver: _args.borrower,
-                borrower: _args.borrower
-            }),
-            _totalCollateralAssets: _totalCollateral.assets,
-            _totalDebt: _totalDebt
-        });
+        {
+            ISilo.SiloStorage storage $ = _getSiloStorage();
+
+            (borrowedAssets, borrowedShares) = SiloLendingLib.borrow({
+                _debtShareToken: debtConfig.debtShareToken,
+                _token: address(0), // we are not transferring debt
+                _spender: msg.sender,
+                _args: ISilo.BorrowArgs({
+                    assets: _args.borrowAssets,
+                    shares: 0,
+                    receiver: _args.borrower,
+                    borrower: _args.borrower
+                }),
+                _totalCollateralAssets: $._total[AssetTypes.COLLATERAL].assets,
+                _totalDebt: $._total[AssetTypes.DEBT]
+            });
+        }
 
         (, depositedShares) = SiloERC4626Lib.deposit({
             _token: address(0), // we are not transferring token
@@ -311,7 +310,7 @@ library Actions {
             _collateralShareToken: _args.collateralType == ISilo.CollateralType.Collateral
                 ? IShareToken(collateralConfig.collateralShareToken)
                 : IShareToken(collateralConfig.protectedShareToken),
-            _totalCollateral: _totalAssetsForDeposit
+            _totalCollateral: _getSiloStorage()._total[uint256(_args.collateralType)]
         });
 
         // receive collateral
