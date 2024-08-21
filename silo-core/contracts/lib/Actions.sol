@@ -10,6 +10,7 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
+import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
@@ -465,6 +466,15 @@ library Actions {
 
         return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
+
+    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
+        internal
+        view
+        returns (uint256 maxAssetsOrShares)
+    {
+        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
+    }
+
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
         external
         view
@@ -577,6 +587,18 @@ library Actions {
         IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+    }
+
+    function maxRepay(address _borrower) external view returns (uint256 assets) {
+        ISiloConfig.ConfigData memory configData = ShareTokenLib.getThisConfigData();
+        uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
+
+        (uint256 totalSiloAssets, uint256 totalShares) =
+            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, ISilo.AssetType.Debt);
+
+        return SiloMathLib.convertToAssets(
+            shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, ISilo.AssetType.Debt
+        );
     }
 
     // this method expect interest to be already accrued
