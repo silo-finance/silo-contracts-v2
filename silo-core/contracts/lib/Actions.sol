@@ -495,6 +495,23 @@ library Actions {
         );
     }
 
+    function accrueInterestForAsset(
+        address _interestRateModel,
+        uint256 _daoFee,
+        uint256 _deployerFee
+    ) external returns (uint256 accruedInterest) {
+        ISilo.SiloStorage storage $ = _getSiloStorage();
+
+        accruedInterest = SiloLendingLib.accrueInterestForAsset(
+            _interestRateModel,
+            _daoFee,
+            _deployerFee,
+            $._siloData,
+            $._total[AssetTypes.COLLATERAL],
+            $._total[AssetTypes.DEBT]
+        );
+    }
+
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly

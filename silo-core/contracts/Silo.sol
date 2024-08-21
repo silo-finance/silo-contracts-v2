@@ -844,13 +844,10 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal virtual returns (uint256 accruedInterest) {
-        accruedInterest = SiloLendingLib.accrueInterestForAsset(
+        accruedInterest = Actions.accrueInterestForAsset(
             _interestRateModel,
             _daoFee,
-            _deployerFee,
-            _siloData,
-            _total[AssetTypes.COLLATERAL],
-            _total[AssetTypes.DEBT]
+            _deployerFee
         );
 
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
