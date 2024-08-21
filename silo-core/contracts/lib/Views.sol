@@ -13,18 +13,11 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-//import {Hook} from "./Hook.sol";
 import {Rounding} from "./Rounding.sol";
 import {AssetTypes} from "./AssetTypes.sol";
-//import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library Views {
-//    using SafeERC20 for IERC20;
-//    using Hook for uint256;
-//    using Hook for uint24;
-//    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
-
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC20")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant SiloStorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
@@ -78,7 +71,7 @@ library Views {
 
     function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
         internal
-        view
+        pure
         returns (uint256 maxAssetsOrShares)
     {
         return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
