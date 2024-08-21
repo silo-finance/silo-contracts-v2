@@ -831,12 +831,7 @@ contract Silo is ISilo, SiloStorage, ShareCollateralToken {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        return SiloERC4626Lib.maxWithdraw(
-            _owner,
-            _collateralType,
-            // 0 for CollateralType.Collateral because it will be calculated internally
-            _collateralType == CollateralType.Protected ? _total[AssetTypes.PROTECTED].assets : 0
-        );
+        return Actions.maxWithdraw(_owner, _collateralType);
     }
 
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {

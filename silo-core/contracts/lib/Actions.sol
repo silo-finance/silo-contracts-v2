@@ -480,6 +480,21 @@ library Actions {
         return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 
+    function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
+        external
+        view
+        returns (uint256 assets, uint256 shares)
+    {
+        return SiloERC4626Lib.maxWithdraw(
+            _owner,
+            _collateralType,
+            // 0 for CollateralType.Collateral because it will be calculated internally
+            _collateralType == ISilo.CollateralType.Protected
+                ? _getSiloStorage()._total[AssetTypes.PROTECTED].assets
+                : 0
+        );
+    }
+
     /// @notice Withdraws accumulated fees and distributes them proportionally to the DAO and deployer
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
