@@ -11,7 +11,7 @@ contract AllowanceReentrancyTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external view {
+    function verifyReentrancy() external {
         _ensureItWillNotRevert();
     }
 
@@ -19,7 +19,7 @@ contract AllowanceReentrancyTest is MethodReentrancyTest {
         description = "allowance(address,address)";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
