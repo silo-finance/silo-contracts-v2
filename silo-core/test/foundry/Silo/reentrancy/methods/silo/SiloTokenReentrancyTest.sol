@@ -6,7 +6,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract SiloReentrancyTest is MethodReentrancyTest {
+contract SiloTokenReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
