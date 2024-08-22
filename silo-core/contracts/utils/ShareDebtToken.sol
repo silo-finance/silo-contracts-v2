@@ -19,12 +19,10 @@ import {ShareDebtTokenLib} from "../lib/ShareDebtTokenLib.sol";
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken {
-    error NotAvailable();
-
     using SiloLensLib for ISilo;
 
     function forwardTransferFromNoChecks(address, address, uint256) external pure override {
-        revert NotAvailable();
+        revert Forbidden();
     }
 
     /// @inheritdoc IShareToken
