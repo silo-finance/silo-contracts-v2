@@ -173,7 +173,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     }
 
     /// @inheritdoc IERC20Permit
-    function permit( // TODO bug: use updatable version
+    function permit(
         address owner,
         address spender,
         uint256 value,
