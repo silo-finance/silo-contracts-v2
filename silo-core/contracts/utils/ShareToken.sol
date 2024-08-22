@@ -98,21 +98,6 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
-        _transfer(_owner, _recipient, _amount);
-    }
-
-    /// @inheritdoc IShareToken
-    function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount)
-        external
-        virtual
-        onlySilo
-    {
-        _spendAllowance(_from, _spender, _amount);
-        _transfer(_from, _to, _amount);
-    }
-
-    /// @inheritdoc IShareToken
     function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
         external
         virtual
@@ -125,17 +110,8 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         $.transferWithChecks = true;
     }
 
-    /// @inheritdoc IShareToken
-    function forwardApprove(address _owner, address _spender, uint256 _amount) external virtual onlySilo {
-        _approve(_owner, _spender, _amount);
-    }
-
     function hookSetup() external view virtual returns (HookSetup memory) {
         return ShareTokenLib.getShareTokenStorage().hookSetup;
-    }
-
-    function hookReceiver() external view virtual returns (address) {
-        return ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver;
     }
 
     /// @inheritdoc ERC20

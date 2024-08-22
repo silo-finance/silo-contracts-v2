@@ -50,7 +50,6 @@ library Actions {
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
         _sharedStorage.siloConfig = _siloConfig;
-        _sharedStorage.hookSetup.hookReceiver = configData.hookReceiver;
 
         IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
 
@@ -522,7 +521,6 @@ library Actions {
         _shareStorage.hookSetup.hooksBefore = hooksBefore;
         _shareStorage.hookSetup.hooksAfter = hooksAfter;
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }

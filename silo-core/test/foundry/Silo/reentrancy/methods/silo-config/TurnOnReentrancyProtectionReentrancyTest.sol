@@ -10,14 +10,14 @@ contract TurnOnReentrancyProtectionReentrancyTest is MethodReentrancyTest {
         emit log_string("\tEnsure it will revert (permissions test)");
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         config.turnOnReentrancyProtection();
     }
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
 
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         config.turnOnReentrancyProtection();
     }
 

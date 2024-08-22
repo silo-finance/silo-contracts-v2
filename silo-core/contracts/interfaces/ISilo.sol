@@ -10,7 +10,7 @@ import {ISiloFactory} from "./ISiloFactory.sol";
 import {IHookReceiver} from "./IHookReceiver.sol";
 
 // solhint-disable ordering
-interface ISilo is IERC4626, IERC3156FlashLender {
+interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -201,7 +201,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     error LeverageTooHigh();
     error SiloInitialized();
     error OnlyHookReceiver();
-    error OnlySiloConfig();
     error NoLiquidity();
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();
@@ -225,16 +224,6 @@ interface ISilo is IERC4626, IERC3156FlashLender {
     /// @notice Update hooks configuration for Silo
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external;
-
-    function sharedStorage()
-        external
-        view
-        returns (
-            ISiloConfig siloConfig,
-            uint24 hooksBefore,
-            uint24 hooksAfter,
-            IHookReceiver hookReceiver
-        );
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
