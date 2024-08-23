@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Silo} from "silo-core/contracts/Silo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract TotalSupplyReentrancyTest is MethodReentrancyTest {
+contract HookSetupReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -16,11 +17,11 @@ contract TotalSupplyReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "totalSupply()";
+        description = "hookSetup()";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().totalSupply();
-        TestStateLib.silo1().totalSupply();
+        IShareToken(address(TestStateLib.silo0())).hookSetup();
+        IShareToken(address(TestStateLib.silo1())).hookSetup();
     }
 }

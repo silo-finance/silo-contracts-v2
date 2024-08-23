@@ -3,18 +3,16 @@ pragma solidity 0.8.24;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
-import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
 import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
-import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
-import {IHookReceiver} from "./interfaces/IHookReceiver.sol";
 
-import {SiloERC4626} from "./utils/SiloERC4626.sol";
+import {ShareCollateralToken} from "./utils/ShareCollateralToken.sol";
 
 import {Actions} from "./lib/Actions.sol";
 import {Views} from "./lib/Views.sol";
@@ -35,7 +33,7 @@ import {ShareTokenLib} from "./lib/ShareTokenLib.sol";
 /// @notice Silo is a ERC4626-compatible vault that allows users to deposit collateral and borrow debt. This contract
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
-contract Silo is SiloERC4626 {
+contract Silo is ISilo, ShareCollateralToken {
     using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
@@ -52,6 +50,12 @@ contract Silo is SiloERC4626 {
     /// between any third-party contract and hook receiver. So, this is the responsibility
     /// of the hook receiver developer to handle it if needed.
     receive() external payable {}
+
+    function synchronizeHooks(uint24, uint24) external pure override {
+        revert Forbidden();
+    }
+
+    // TODO silo() => address(this)
 
     /// @inheritdoc ISilo
     function callOnBehalfOfSilo(address _target, uint256 _value, CallType _callType, bytes calldata _input)
@@ -74,9 +78,16 @@ contract Silo is SiloERC4626 {
         }
     }
 
+    function initialize(ISilo, address, uint24) external virtual override {
+        // share token initialize is disabled, because it is done on silo.initialize
+        revert Initializable.InvalidInitialization();
+    }
+
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
-        Actions.initialize(_siloConfig, _modelConfigAddress);
+        address hookReceiver = Actions.initialize(_siloConfig, _modelConfigAddress);
+
+        ShareTokenLib.__ShareToken_init(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
 
     /// @inheritdoc ISilo
@@ -216,7 +227,7 @@ contract Silo is SiloERC4626 {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(IShareToken(_getShareToken()).totalSupply());
+        return _callMaxDepositOrMint(totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -644,25 +655,6 @@ contract Silo is SiloERC4626 {
         return ($._siloData.daoAndDeployerFees, $._siloData.interestRateTimestamp);
     }
 
-    /// @inheritdoc ISilo
-    function sharedStorage()
-        external
-        view
-        returns (
-            ISiloConfig siloConfig,
-            uint24 hooksBefore,
-            uint24 hooksAfter,
-            IHookReceiver hookReceiver
-        )
-    {
-        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
-
-        siloConfig = $.siloConfig;
-        hooksBefore = $.hookSetup.hooksBefore;
-        hooksAfter = $.hookSetup.hooksAfter;
-        hookReceiver = IHookReceiver($.hookSetup.hookReceiver);
-    }
-
     function _deposit(
         uint256 _assets,
         uint256 _shares,
@@ -761,10 +753,6 @@ contract Silo is SiloERC4626 {
         (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_callGetThisConfigData(), _assetType);
     }
 
-    function _getShareToken() internal view virtual override returns (address collateralShareToken) {
-        (, collateralShareToken,) = _callGetThisConfig().getShareTokens(address(this));
-    }
-
     function _previewMint(uint256 _shares, CollateralType _collateralType)
         internal
         view
@@ -853,5 +841,13 @@ contract Silo is SiloERC4626 {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = Actions.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
+    }
+
+    function _callGetThisConfig() internal view virtual returns (ISiloConfig siloConfig) {
+        siloConfig = ShareTokenLib.getThisConfig();
+    }
+
+    function _callGetThisConfigData() internal view virtual returns (ISiloConfig.ConfigData memory siloConfigData) {
+        siloConfigData = ShareTokenLib.getThisConfigData();
     }
 }

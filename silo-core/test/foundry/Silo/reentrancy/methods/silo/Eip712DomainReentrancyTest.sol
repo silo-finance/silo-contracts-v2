@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Silo} from "silo-core/contracts/Silo.sol";
+import {IERC5267} from "openzeppelin5/interfaces/IERC5267.sol";
+
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract TotalSupplyReentrancyTest is MethodReentrancyTest {
+contract Eip712DomainReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -16,11 +17,11 @@ contract TotalSupplyReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "totalSupply()";
+        description = "eip712Domain()";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().totalSupply();
-        TestStateLib.silo1().totalSupply();
+        IERC5267(address(TestStateLib.silo0())).eip712Domain();
+        IERC5267(address(TestStateLib.silo1())).eip712Domain();
     }
 }

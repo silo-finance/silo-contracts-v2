@@ -24,7 +24,7 @@ library ShareTokenLib {
         }
     }
 
-    function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) internal {
+    function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) external {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
 
         $.silo = _silo;

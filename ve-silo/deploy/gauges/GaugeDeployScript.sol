@@ -65,6 +65,6 @@ abstract contract GaugeDeployScript is Script {
             revert UnsupportedShareTokenType();
         }
 
-        hookReceiver = IShareToken(token).hookReceiver();
+        hookReceiver = IShareToken(token).hookSetup().hookReceiver;
     }
 }

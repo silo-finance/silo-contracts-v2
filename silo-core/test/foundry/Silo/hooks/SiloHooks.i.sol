@@ -60,15 +60,15 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksInitializationAfterDeployment
     */
     function testHooksInitializationAfterDeployment() public view {
-        (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
+        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
 
-        assertEq(silo0HookesBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
-        assertEq(silo0HookesAfter, HOOKS_AFTER, "hooksAfter is not initialized");
+        assertEq(silo0Hooks.hooksBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
+        assertEq(silo0Hooks.hooksAfter, HOOKS_AFTER, "hooksAfter is not initialized");
 
-        (,uint24 silo1HookesBefore, uint24 silo1HookesAfter,) = silo1.sharedStorage();
+        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
 
-        assertEq(silo1HookesBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
-        assertEq(silo1HookesAfter, HOOKS_AFTER, "hooksAfter is not initialized");
+        assertEq(silo1Hooks.hooksBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
+        assertEq(silo1Hooks.hooksAfter, HOOKS_AFTER, "hooksAfter is not initialized");
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksUpdate
@@ -80,17 +80,17 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         silo0.updateHooks();
 
-        (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
+        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
 
-        assertEq(silo0HookesBefore, newHooksBefore, "hooksBefore is not updated");
-        assertEq(silo0HookesAfter, newHooksAfter, "hooksAfter is not updated");
+        assertEq(silo0Hooks.hooksBefore, newHooksBefore, "hooksBefore is not updated");
+        assertEq(silo0Hooks.hooksAfter, newHooksAfter, "hooksAfter is not updated");
 
         silo1.updateHooks();
 
-        (,uint24 silo1HookesBefore, uint24 silo1HookesAfter,) = silo1.sharedStorage();
+        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
 
-        assertEq(silo1HookesBefore, newHooksBefore, "hooksBefore is not updated");
-        assertEq(silo1HookesAfter, newHooksAfter, "hooksAfter is not updated");
+        assertEq(silo1Hooks.hooksBefore, newHooksBefore, "hooksBefore is not updated");
+        assertEq(silo1Hooks.hooksAfter, newHooksAfter, "hooksAfter is not updated");
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSilo

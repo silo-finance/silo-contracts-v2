@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Silo} from "silo-core/contracts/Silo.sol";
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
+
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract TotalSupplyReentrancyTest is MethodReentrancyTest {
+contract NoncesReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -16,11 +17,11 @@ contract TotalSupplyReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "totalSupply()";
+        description = "nonces(address)";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().totalSupply();
-        TestStateLib.silo1().totalSupply();
+        IERC20Permit(address(TestStateLib.silo0())).nonces(address(1));
+        IERC20Permit(address(TestStateLib.silo1())).nonces(address(1));
     }
 }

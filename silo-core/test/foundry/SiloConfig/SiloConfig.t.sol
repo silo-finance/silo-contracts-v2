@@ -27,14 +27,14 @@ contract SiloConfigTest is Test {
     function setUp() public {
         _configDataDefault0.silo = _silo0Default;
         _configDataDefault0.token = makeAddr("token0");
-        _configDataDefault0.collateralShareToken = makeAddr("collateralShareToken0");
+        _configDataDefault0.collateralShareToken = _silo0Default;
         _configDataDefault0.protectedShareToken = makeAddr("protectedShareToken0");
         _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
         _configDataDefault0.hookReceiver = _hookReceiverModuleDefault;
 
         _configDataDefault1.silo = _silo1Default;
         _configDataDefault1.token = makeAddr("token1");
-        _configDataDefault1.collateralShareToken = makeAddr("collateralShareToken1");
+        _configDataDefault1.collateralShareToken = _silo1Default;
         _configDataDefault1.protectedShareToken = makeAddr("protectedShareToken1");
         _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
         _configDataDefault1.hookReceiver = _hookReceiverModuleDefault;
@@ -78,6 +78,8 @@ contract SiloConfigTest is Test {
         _configData1.otherSilo = _configData0.silo;
         _configData1.daoFee = _configData0.daoFee;
         _configData1.deployerFee = _configData0.deployerFee;
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
 
         siloConfig = new SiloConfig(_siloId, _configData0, _configData1);
     }
@@ -194,6 +196,8 @@ contract SiloConfigTest is Test {
     ) public {
         // we always using #0 setup for hookReceiver
         _configData1.hookReceiver = _configData0.hookReceiver;
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
 
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
@@ -522,7 +526,7 @@ contract SiloConfigTest is Test {
         vm.assume(_callee != _configDataDefault1.debtShareToken);
 
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         _siloConfig.turnOnReentrancyProtection();
     }
 
@@ -531,7 +535,7 @@ contract SiloConfigTest is Test {
     */
     function test_crossNonReentrantBeforePermissions() public {
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         _siloConfig.turnOnReentrancyProtection();
 
         // _onlySiloOrTokenOrLiquidation permissions check (calls should not revert)
@@ -563,7 +567,7 @@ contract SiloConfigTest is Test {
 
         // Permissions check error
         vm.prank(_callee);
-        vm.expectRevert(ISiloConfig.OnlySiloOrHookReceiver.selector);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
         _siloConfig.turnOffReentrancyProtection();
     }
 
