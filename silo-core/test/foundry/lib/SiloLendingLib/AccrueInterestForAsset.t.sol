@@ -19,7 +19,7 @@ contract AccrueInterestForAssetTest is Test {
     function test_accrueInterestForAsset_initialCall_noData() public {
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(address(0), 0, 0);
 
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        ISilo.SiloStorage storage $ = _$();
 
         assertEq(accruedInterest, 0, "zero when no data");
         assertEq($._total[AssetTypes.COLLATERAL].assets, 0, "totalCollateral 0");
@@ -33,7 +33,7 @@ contract AccrueInterestForAssetTest is Test {
         uint64 currentTimestamp = 222;
         vm.warp(currentTimestamp);
 
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        ISilo.SiloStorage storage $ = _$();
 
         $._siloData.interestRateTimestamp = currentTimestamp;
 
@@ -60,7 +60,7 @@ contract AccrueInterestForAssetTest is Test {
         InterestRateModelMock irm = new InterestRateModelMock();
         irm.getCompoundInterestRateAndUpdateMock(rcomp);
 
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        ISilo.SiloStorage storage $ = _$();
 
         $._total[AssetTypes.COLLATERAL].assets = 1e18;
         $._total[AssetTypes.DEBT].assets = 0.5e18;
@@ -90,7 +90,7 @@ contract AccrueInterestForAssetTest is Test {
         InterestRateModelMock irm = new InterestRateModelMock();
         irm.getCompoundInterestRateAndUpdateMock(rcomp);
 
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        ISilo.SiloStorage storage $ = _$();
 
         $._total[AssetTypes.COLLATERAL].assets = 1e18;
         $._total[AssetTypes.DEBT].assets = 0.5e18;
@@ -111,5 +111,9 @@ contract AccrueInterestForAssetTest is Test {
             accruedInterest * (daoFee + deployerFee) / DECIMAL_POINTS,
             "daoAndDeployerFees"
         );
+    }
+
+    function _$() internal view returns (ISilo.SiloStorage storage $) {
+        return SiloStorageLib.getSiloStorage();
     }
 }
