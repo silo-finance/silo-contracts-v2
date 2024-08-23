@@ -98,7 +98,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function config() external view virtual returns (ISiloConfig siloConfig) {
-        siloConfig = _callGetThisConfig();
+        siloConfig = _siloConfig();
     }
 
     /// @inheritdoc ISilo
@@ -114,7 +114,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
-        return SiloLendingLib.getLiquidity(_callGetThisConfig());
+        return SiloLendingLib.getLiquidity(_siloConfig());
     }
 
     /// @inheritdoc ISilo
@@ -173,7 +173,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function asset() external view virtual returns (address assetTokenAddress) {
-        return _callGetThisConfig().getAssetForSilo(address(this));
+        return _siloConfig().getAssetForSilo(address(this));
     }
 
     /// @inheritdoc IERC4626
@@ -603,7 +603,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
-        maxLoan = _token == _callGetThisConfig().getAssetForSilo(address(this))
+        maxLoan = _token == _siloConfig().getAssetForSilo(address(this))
             ? IERC20(_token).balanceOf(address(this))
             : 0;
     }
@@ -633,7 +633,7 @@ contract Silo is ISilo, ShareCollateralToken {
         external
         virtual
     {
-        if (msg.sender != address(_callGetThisConfig())) revert OnlySiloConfig();
+        if (msg.sender != address(_siloConfig())) revert OnlySiloConfig();
 
         _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }
@@ -843,11 +843,11 @@ contract Silo is ISilo, ShareCollateralToken {
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }
 
-    function _callGetThisConfig() internal view virtual returns (ISiloConfig siloConfig) {
-        siloConfig = ShareTokenLib.getThisConfig();
+    function _siloConfig() internal view virtual returns (ISiloConfig siloConfig) {
+        siloConfig = ShareTokenLib.siloConfig();
     }
 
     function _callGetThisConfigData() internal view virtual returns (ISiloConfig.ConfigData memory siloConfigData) {
-        siloConfigData = ShareTokenLib.getThisConfigData();
+        siloConfigData = ShareTokenLib.getConfig();
     }
 }

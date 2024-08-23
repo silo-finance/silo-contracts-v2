@@ -122,12 +122,11 @@ library ShareTokenLib {
         return _sender != address(0) && _recipient != address(0);
     }
 
-    function getThisConfig() internal view returns (ISiloConfig thisSiloConfig) {
+    function siloConfig() internal view returns (ISiloConfig thisSiloConfig) {
         return ShareTokenLib.getShareTokenStorage().siloConfig;
     }
 
-    function getThisConfigData() internal view returns (ISiloConfig.ConfigData memory thisSiloConfigData) {
-        IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
-        thisSiloConfigData = _sharedStorage.siloConfig.getConfig(address(this));
+    function getConfig() internal view returns (ISiloConfig.ConfigData memory thisSiloConfigData) {
+        thisSiloConfigData = ShareTokenLib.getShareTokenStorage().siloConfig.getConfig(address(this));
     }
 }
