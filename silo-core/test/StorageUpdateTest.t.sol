@@ -55,13 +55,6 @@ contract StorageUpdateTest is ISomeSilo, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_printPointers
-    */
-    function test_printPointers() public {
-        emit log_named_bytes32("silo.storage.ERC20R", _getStoragePointerHash("silo.storage.ERC20R"));
-    }
-
-    /*
     forge test -vv --ffi --mt test_siloStoragePointer
     */
     function test_siloStoragePointer() public {
