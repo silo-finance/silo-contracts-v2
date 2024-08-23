@@ -503,12 +503,8 @@ library Actions {
         }
     }
 
-    function updateHooks()
-        external
-        returns (uint24 hooksBefore, uint24 hooksAfter)
-    {
-        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
+    function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter) {
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         NonReentrantLib.nonReentrant(siloConfig);
 
@@ -518,9 +514,7 @@ library Actions {
 
         (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig(address(this));
 
-        _shareStorage.hookSetup.hooksBefore = hooksBefore;
-        _shareStorage.hookSetup.hooksAfter = hooksAfter;
-
+        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }

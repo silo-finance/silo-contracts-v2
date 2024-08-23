@@ -43,17 +43,13 @@ contract Silo is ISilo, ShareCollateralToken {
         factory = _siloFactory;
 
         // Set the config to a non-zero value in order to prevent the implementation contract from being initialized
-        ShareTokenLib.getShareTokenStorage().siloConfig = ISiloConfig(address(this));
+        ShareTokenLib.getShareTokenStorage().siloConfig = ISiloConfig(address(0x1));
     }
 
     /// @dev Silo is not designed to work with ether, but it can act as a middleware
     /// between any third-party contract and hook receiver. So, this is the responsibility
     /// of the hook receiver developer to handle it if needed.
     receive() external payable {}
-
-    function synchronizeHooks(uint24, uint24) external pure override {
-        revert Forbidden();
-    }
 
     // TODO silo() => address(this)
 
