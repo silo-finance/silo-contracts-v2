@@ -58,7 +58,7 @@ contract StorageUpdateTest is ISomeSilo, Test {
     forge test -vv --ffi --mt test_siloStoragePointer
     */
     function test_siloStoragePointer() public {
-        string memory pointerSalt = "silo.vault.storage";
+        string memory pointerSalt = "silo.storage.SiloVault";
 
         ISilo.SiloStorage storage siloStorage = SiloStorageLib.getSiloStorage();
 
