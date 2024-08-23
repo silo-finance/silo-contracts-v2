@@ -89,6 +89,7 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
         return _getSiloConfig();
     }
 
+    // TODO add tests
     /// @inheritdoc IShareToken
     function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
