@@ -1,39 +1,29 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import "../../_mocks/InterestRateModelMock.sol";
+import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 
 // forge test -vv --mc AccrueInterestForAssetTest
 contract AccrueInterestForAssetTest is Test {
     uint256 constant DECIMAL_POINTS = 1e18;
 
-    ISilo.SiloData siloData;
-    ISilo.Assets totalCollateral;
-    ISilo.Assets totalDebt;
-
-    function setUp() public {
-        siloData.daoAndDeployerFees = 0;
-        siloData.interestRateTimestamp = 0;
-
-        totalCollateral.assets = 0;
-        totalDebt.assets = 0;
-    }
-
     /*
     forge test -vv --mt test_accrueInterestForAsset_initialCall_noData
     */
     function test_accrueInterestForAsset_initialCall_noData() public {
-        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            address(0), 0, 0, siloData, totalCollateral, totalDebt
-        );
+        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(address(0), 0, 0);
+
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         assertEq(accruedInterest, 0, "zero when no data");
-        assertEq(totalCollateral.assets, 0, "totalCollateral 0");
-        assertEq(totalDebt.assets, 0, "totalDebt 0");
+        assertEq($._total[AssetTypes.COLLATERAL].assets, 0, "totalCollateral 0");
+        assertEq($._total[AssetTypes.DEBT].assets, 0, "totalDebt 0");
     }
 
     /*
@@ -43,18 +33,18 @@ contract AccrueInterestForAssetTest is Test {
         uint64 currentTimestamp = 222;
         vm.warp(currentTimestamp);
 
-        siloData.interestRateTimestamp = currentTimestamp;
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        totalCollateral.assets = 1e18;
-        totalDebt.assets = 1e18;
+        $._siloData.interestRateTimestamp = currentTimestamp;
 
-        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            address(0), 0, 0, siloData, totalCollateral, totalDebt
-        );
+        $._total[AssetTypes.COLLATERAL].assets = 1e18;
+        $._total[AssetTypes.DEBT].assets = 1e18;
+
+        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(address(0), 0, 0);
 
         assertEq(accruedInterest, 0, "zero timestamp did not change");
-        assertEq(totalCollateral.assets, 1e18, "totalCollateral - timestamp did not change");
-        assertEq(totalDebt.assets, 1e18, "totalDebt - timestamp did not change");
+        assertEq($._total[AssetTypes.COLLATERAL].assets, 1e18, "totalCollateral - timestamp did not change");
+        assertEq($._total[AssetTypes.DEBT].assets, 1e18, "totalDebt - timestamp did not change");
     }
 
     /*
@@ -70,19 +60,19 @@ contract AccrueInterestForAssetTest is Test {
         InterestRateModelMock irm = new InterestRateModelMock();
         irm.getCompoundInterestRateAndUpdateMock(rcomp);
 
-        totalCollateral.assets = 1e18;
-        totalDebt.assets = 0.5e18;
-        siloData.interestRateTimestamp = oldTimestamp;
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            irm.ADDRESS(), 0, 0, siloData, totalCollateral, totalDebt
-        );
+        $._total[AssetTypes.COLLATERAL].assets = 1e18;
+        $._total[AssetTypes.DEBT].assets = 0.5e18;
+        $._siloData.interestRateTimestamp = oldTimestamp;
+
+        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(irm.ADDRESS(), 0, 0);
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
-        assertEq(totalCollateral.assets, 1.005e18, "totalCollateral");
-        assertEq(totalDebt.assets, 0.505e18, "totalDebt");
-        assertEq(siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
-        assertEq(siloData.daoAndDeployerFees, 0, "daoAndDeployerFees");
+        assertEq($._total[AssetTypes.COLLATERAL].assets, 1.005e18, "totalCollateral");
+        assertEq($._total[AssetTypes.DEBT].assets, 0.505e18, "totalDebt");
+        assertEq($._siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
+        assertEq($._siloData.daoAndDeployerFees, 0, "daoAndDeployerFees");
     }
 
     /*
@@ -100,24 +90,24 @@ contract AccrueInterestForAssetTest is Test {
         InterestRateModelMock irm = new InterestRateModelMock();
         irm.getCompoundInterestRateAndUpdateMock(rcomp);
 
-        totalCollateral.assets = 1e18;
-        totalDebt.assets = 0.5e18;
-        siloData.interestRateTimestamp = oldTimestamp;
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            irm.ADDRESS(), daoFee, deployerFee, siloData, totalCollateral, totalDebt
-        );
+        $._total[AssetTypes.COLLATERAL].assets = 1e18;
+        $._total[AssetTypes.DEBT].assets = 0.5e18;
+        $._siloData.interestRateTimestamp = oldTimestamp;
+
+        uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(irm.ADDRESS(), daoFee, deployerFee);
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(
-            totalCollateral.assets,
+            $._total[AssetTypes.COLLATERAL].assets,
             1e18 + accruedInterest * (DECIMAL_POINTS - daoFee - deployerFee) / DECIMAL_POINTS,
             "totalCollateral"
         );
-        assertEq(totalDebt.assets, 0.505e18, "totalDebt");
-        assertEq(siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
+        assertEq($._total[AssetTypes.DEBT].assets, 0.505e18, "totalDebt");
+        assertEq($._siloData.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
         assertEq(
-            siloData.daoAndDeployerFees,
+            $._siloData.daoAndDeployerFees,
             accruedInterest * (daoFee + deployerFee) / DECIMAL_POINTS,
             "daoAndDeployerFees"
         );

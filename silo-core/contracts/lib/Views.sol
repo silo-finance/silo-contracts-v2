@@ -16,19 +16,10 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {AssetTypes} from "./AssetTypes.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
+import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library Views {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-    // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC20")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant SiloStorageLocation = 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
-
-    error FeeOverflow();
-
-    function _getSiloStorage() internal pure returns (ISilo.SiloStorage storage $) {
-        assembly {
-            $.slot := SiloStorageLocation
-        }
-    }
 
     function isSolvent(address _borrower) external view returns (bool) {
         (
@@ -87,7 +78,7 @@ library Views {
             _collateralType,
             // 0 for CollateralType.Collateral because it will be calculated internally
             _collateralType == ISilo.CollateralType.Protected
-                ? _getSiloStorage()._total[AssetTypes.PROTECTED].assets
+                ? SiloStorageLib.getSiloStorage()._total[AssetTypes.PROTECTED].assets
                 : 0
         );
     }

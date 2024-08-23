@@ -25,6 +25,7 @@ import {Rounding} from "./lib/Rounding.sol";
 import {Hook} from "./lib/Hook.sol";
 import {AssetTypes} from "./lib/AssetTypes.sol";
 import {ShareTokenLib} from "./lib/ShareTokenLib.sol";
+import {SiloStorageLib} from "./lib/SiloStorageLib.sol";
 
 // Keep ERC4626 ordering
 // solhint-disable ordering
@@ -84,8 +85,8 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external virtual {
-        address hookReceiver = Actions.initialize(_siloConfig, _modelConfigAddress);
+    function initialize(ISiloConfig _config, address _modelConfigAddress) external virtual {
+        address hookReceiver = Actions.initialize(_config, _modelConfigAddress);
 
         ShareTokenLib.__ShareToken_init(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
@@ -104,7 +105,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
         // moving it to lib will increase size
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         return UtilizationData({
             collateralAssets: $._total[AssetTypes.COLLATERAL].assets,
@@ -150,7 +151,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
     {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         totalCollateralAssets = $._total[AssetTypes.COLLATERAL].assets;
         totalProtectedAssets = $._total[AssetTypes.PROTECTED].assets;
@@ -163,7 +164,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         totalCollateralAssets = $._total[AssetTypes.COLLATERAL].assets;
         totalDebtAssets = $._total[AssetTypes.DEBT].assets;
@@ -207,7 +208,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         return _callMaxDepositOrMint($._total[AssetTypes.COLLATERAL].assets);
     }
 
@@ -310,7 +311,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 maxAssets)
     {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         return _callMaxDepositOrMint($._total[uint256(_collateralType)].assets);
     }
 
@@ -646,12 +647,12 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
-        totalAssetsByType = Actions._getSiloStorage()._total[_assetType].assets;
+        totalAssetsByType = SiloStorageLib.getSiloStorage()._total[_assetType].assets;
     }
 
     /// @inheritdoc ISilo
     function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp) {
-        ISilo.SiloStorage storage $ = Actions._getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         return ($._siloData.daoAndDeployerFees, $._siloData.interestRateTimestamp);
     }
 

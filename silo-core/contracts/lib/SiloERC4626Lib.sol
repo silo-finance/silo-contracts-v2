@@ -15,6 +15,8 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
+import {SiloStorageLib} from "./SiloStorageLib.sol";
+import {AssetTypes} from "./AssetTypes.sol";
 
 // solhint-disable function-max-lines
 
@@ -180,7 +182,7 @@ library SiloERC4626Lib {
     /// provided.
     /// @param _receiver The address that will receive the collateral shares
     /// @param _collateralShareToken The collateral share token
-    /// @param _totalCollateral Reference to the total collateral assets in the silo
+    /// @param _collateralType The type of collateral being deposited
     /// @return assets The exact amount of assets being deposited
     /// @return shares The exact number of collateral shares being minted in exchange for the deposited assets
     function deposit(
@@ -190,9 +192,11 @@ library SiloERC4626Lib {
         uint256 _shares,
         address _receiver,
         IShareToken _collateralShareToken,
-        ISilo.Assets storage _totalCollateral
+        ISilo.CollateralType _collateralType
     ) internal returns (uint256 assets, uint256 shares) {
-        uint256 totalAssets = _totalCollateral.assets;
+        ISilo.Assets storage totalCollateral = SiloStorageLib.getSiloStorage()._total[uint256(_collateralType)];
+
+        uint256 totalAssets = totalCollateral.assets;
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -211,7 +215,7 @@ library SiloERC4626Lib {
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
         // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
         // unchecked {
-        _totalCollateral.assets = totalAssets + assets;
+        totalCollateral.assets = totalAssets + assets;
         // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
@@ -231,22 +235,20 @@ library SiloERC4626Lib {
     /// transition of collateral.
     /// @param _shareToken Address of the share token being burned for withdrawal
     /// @param _args ISilo.WithdrawArgs
-    /// @param _liquidity Available liquidity for the withdrawal
-    /// @param _totalCollateral Reference to the total collateral assets in the silo
     /// @return assets The exact amount of assets withdrawn
     /// @return shares The exact number of shares burned in exchange for the withdrawn assets
     function withdraw(
         address _asset,
         address _shareToken,
-        ISilo.WithdrawArgs memory _args,
-        uint256 _liquidity,
-        ISilo.Assets storage _totalCollateral
+        ISilo.WithdrawArgs memory _args
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
         if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
         { // Stack too deep
-            uint256 totalAssets = _totalCollateral.assets;
+            uint256 totalAssets = $._total[uint256(_args.collateralType)].assets;
 
             (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
                 _args.assets,
@@ -260,12 +262,16 @@ library SiloERC4626Lib {
 
             if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
+            uint256 liquidity = _args.collateralType == ISilo.CollateralType.Collateral
+                ? SiloMathLib.liquidity($._total[AssetTypes.COLLATERAL].assets, $._total[AssetTypes.DEBT].assets)
+                : $._total[AssetTypes.PROTECTED].assets;
+
             // check liquidity
-            if (assets > _liquidity) revert ISilo.NotEnoughLiquidity();
+            if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
 
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
-            unchecked { _totalCollateral.assets = totalAssets - assets; }
+            unchecked { $._total[uint256(_args.collateralType)].assets = totalAssets - assets; }
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that

@@ -7,7 +7,7 @@ import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {Actions} from "silo-core/contracts/lib/Actions.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
@@ -28,7 +28,7 @@ contract WithdrawFeesTest is Test {
     TokenMock token;
 
     function _$() internal returns (ISilo.SiloStorage storage) {
-        return Actions._getSiloStorage();
+        return SiloStorageLib.getSiloStorage();
     }
 
     function setUp() public {
