@@ -146,7 +146,7 @@ library Actions {
         ISilo.Assets storage _totalCollateral = $._total[AssetTypes.COLLATERAL];
         ISilo.Assets storage _totalDebt = $._total[AssetTypes.DEBT];
 
-        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         uint256 borrowAction = Hook.BORROW;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
@@ -183,7 +183,7 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
-        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         uint256 borrowAction = Hook.BORROW_SAME_ASSET;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
@@ -258,7 +258,7 @@ library Actions {
         external
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
-        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();

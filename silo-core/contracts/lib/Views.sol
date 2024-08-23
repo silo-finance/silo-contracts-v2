@@ -34,7 +34,7 @@ library Views {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt
-        ) = ShareTokenLib.getThisConfig().getConfigs(_borrower);
+        ) = ShareTokenLib.siloConfig().getConfigs(_borrower);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }
@@ -44,7 +44,7 @@ library Views {
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
     function flashFee(address _token, uint256 _amount) external view returns (uint256 fee) {
-        fee = SiloStdLib.flashFee(ShareTokenLib.getThisConfig(), _token, _amount);
+        fee = SiloStdLib.flashFee(ShareTokenLib.siloConfig(), _token, _amount);
     }
 
     function maxBorrow(address _borrower, bool _sameAsset)
@@ -62,7 +62,7 @@ library Views {
     {
         (
             address protectedToken, address collateralToken,
-        ) = ShareTokenLib.getThisConfig().getShareTokens(address(this));
+        ) = ShareTokenLib.siloConfig().getShareTokens(address(this));
 
         address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
 
@@ -93,7 +93,7 @@ library Views {
     }
 
     function maxRepay(address _borrower) external view returns (uint256 assets) {
-        ISiloConfig.ConfigData memory configData = ShareTokenLib.getThisConfigData();
+        ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();
         uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
 
         (uint256 totalSiloAssets, uint256 totalShares) =

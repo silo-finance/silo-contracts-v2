@@ -266,7 +266,7 @@ library SiloLendingLib {
         view
         returns (uint256 maxAssets, uint256 maxShares)
     {
-        ISiloConfig siloConfig = ShareTokenLib.getThisConfig();
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         if (siloConfig.hasDebtInOtherSilo(address(this), _borrower)) return (0, 0);
 
         ISiloConfig.ConfigData memory collateralConfig;

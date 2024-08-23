@@ -71,7 +71,7 @@ library SiloERC4626Lib {
             ISiloConfig.DepositConfig memory depositConfig,
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = ShareTokenLib.getThisConfig().getConfigsForWithdraw(address(this), _owner);
+        ) = ShareTokenLib.siloConfig().getConfigsForWithdraw(address(this), _owner);
 
         uint256 shareTokenTotalSupply;
         uint256 liquidity;
