@@ -719,12 +719,6 @@ jobs:
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
 #
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
-#
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/SiloFactory/*sol" --ffi -vv
 #
@@ -748,12 +742,6 @@ jobs:
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
 #
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
-#
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/SiloRouter/*sol" --ffi -vv
 #
@@ -776,12 +764,6 @@ jobs:
 #                    cargo build --release
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
-#
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
 #
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/storage/*sol" --ffi -vv
