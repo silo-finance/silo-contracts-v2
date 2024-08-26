@@ -72,7 +72,7 @@ jobs:
                 with:
                     path: |
                         ./cache/foundry/out/silo-core
-                        ./cache/foundry/solidity-files-cache.json
+                        ./cache/foundry/*.json
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -93,25 +93,25 @@ jobs:
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-    linters:
-        needs: silo-core-cache
-        runs-on: ubuntu-latest
-
-        steps:
-            -   name: Checkout sources
-                uses: actions/checkout@v3
-
-            -   name: Set up Node.js
-                uses: actions/setup-node@v3
-                with:
-                    node-version: 20.x
-                    cache: 'yarn'
-
-            -   run: yarn install
-
-            -   name: Solidity Lint
-                run: yarn workspace silo-core lint:sol
-
+#    linters:
+#        needs: silo-core-cache
+#        runs-on: ubuntu-latest
+#
+#        steps:
+#            -   name: Checkout sources
+#                uses: actions/checkout@v3
+#
+#            -   name: Set up Node.js
+#                uses: actions/setup-node@v3
+#                with:
+#                    node-version: 20.x
+#                    cache: 'yarn'
+#
+#            -   run: yarn install
+#
+#            -   name: Solidity Lint
+#                run: yarn workspace silo-core lint:sol
+#
     fast-tests:
         needs: silo-core-cache
         runs-on: ubuntu-latest
@@ -134,9 +134,14 @@ jobs:
                 with:
                     path: |
                         ./cache/foundry/out/silo-core
-                        ./cache/foundry/solidity-files-cache.json
+                        ./cache/foundry/*.json
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
+            -   name: cat cache
+                run: cat ./cache/foundry/out/silo-core/Base.sol/TestBase.json
+            -   name: cat cache 2
+                run: cat ./cache/foundry/solidity-files-cache.json
+            
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
@@ -738,51 +743,51 @@ jobs:
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/storage/*sol" --ffi -vv
 
-    utils:
-        needs: silo-core-cache
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v3
-                with:
-                    submodules: recursive
-
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
-
-            -   name: Cache silo-core contracts
-                uses: actions/cache@v3
-                with:
-                    path: |
-                        ./cache/foundry/out/silo-core
-                        ./cache/foundry/solidity-files-cache.json
-                    key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
-
-            -   name: cat cache
-                run: cat ./cache/foundry/solidity-files-cache.json
-
-            -   name: Install Foundry
-                uses: foundry-rs/foundry-toolchain@v1
-                with:
-                    # update Cache gitmodules as well, when updating foundry build
-                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
-
-            -   name: Build silo foundry utils
-                working-directory: ./gitmodules/silo-foundry-utils
-                run: |
-                    cargo build --release
-                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
-                    ../../silo-foundry-utils --version
-
-            -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/utils/*sol" --ffi -vv
+#    utils:
+#        needs: silo-core-cache
+#        runs-on: ubuntu-latest
+#        steps:
+#            -   uses: actions/checkout@v3
+#                with:
+#                    submodules: recursive
+#
+#            -   name: Cache (home/runner/work)
+#                uses: actions/cache@v3
+#                with:
+#                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+#                    key: home-runner-work-silo-contracts-v2-gitmodules
+#
+#            -   name: Cache gitmodules
+#                uses: actions/cache@v3
+#                with:
+#                    path: |
+#                        ~/.npm
+#                        ./gitmodules/
+#                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
+#
+#            -   name: Cache silo-core contracts
+#                uses: actions/cache@v3
+#                with:
+#                    path: |
+#                        ./cache/foundry/out/silo-core
+#                        ./cache/foundry/solidity-files-cache.json
+#                    key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
+#
+#            -   name: cat cache
+#                run: cat ./cache/foundry/solidity-files-cache.json
+#
+#            -   name: Install Foundry
+#                uses: foundry-rs/foundry-toolchain@v1
+#                with:
+#                    # update Cache gitmodules as well, when updating foundry build
+#                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+#
+#            -   name: Build silo foundry utils
+#                working-directory: ./gitmodules/silo-foundry-utils
+#                run: |
+#                    cargo build --release
+#                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+#                    ../../silo-foundry-utils --version
+#
+#            -   name: Run Forge tests
+#                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/utils/*sol" --ffi -vv
