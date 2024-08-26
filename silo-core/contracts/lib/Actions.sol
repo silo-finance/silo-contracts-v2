@@ -35,6 +35,23 @@ library Actions {
 
     error FeeOverflow();
 
+    function callOnBehalfOfSilo(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
+        internal
+        returns (bool success, bytes memory result)
+    {
+        if (msg.sender != address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver)) {
+            revert ISilo.OnlyHookReceiver();
+        }
+
+        // Silo will not send back any ether leftovers after the call.
+        // The hook receiver should request the ether if needed in a separate call.
+        if (_callType == ISilo.CallType.Delegatecall) {
+            (success, result) = _target.delegatecall(_input); // solhint-disable-line avoid-low-level-calls
+        } else {
+            (success, result) = _target.call{value: _value}(_input); // solhint-disable-line avoid-low-level-calls
+        }
+    }
+
     function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
