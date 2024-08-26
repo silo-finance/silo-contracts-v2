@@ -796,6 +796,6 @@ jobs:
         needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            - uses: ./github/actions/action.yml
-              with:
+            uses: ./github/actions/action.yaml
+            with:
                 silo-core-cache-setup: 'FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/utils/*sol" --ffi -vv'
