@@ -85,18 +85,18 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
-            -   name: ls ./cache/foundry/out
-                run: |
-                    ls
-                    ls ./cache/foundry/out
-            
             -   name: Run Forge build
                 run: |
                     git submodule
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-#    linters:
+            -   name: ls ./cache/foundry/out
+                run: |
+                    ls
+                    ls ./cache/foundry/out
+    
+    #    linters:
 #        needs: silo-core-cache
 #        runs-on: ubuntu-latest
 #
