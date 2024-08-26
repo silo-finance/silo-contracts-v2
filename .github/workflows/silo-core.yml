@@ -92,10 +92,8 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: ls ./cache/foundry/out
-                run: |
-                    ls
-                    ls ./cache/foundry/out
-    
+                run: ls ./cache/foundry/out
+
     #    linters:
 #        needs: silo-core-cache
 #        runs-on: ubuntu-latest
@@ -120,22 +118,28 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            -   uses: actions/checkout@v3
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
                 with:
-                    submodules: recursive
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+#                with:
+#                    submodules: recursive
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
                     path: |
                         ~/.npm
-                        ~/gitmodules/
+                        ./gitmodules/
                     key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ~/cache/foundry/out
+                    path: ./cache/foundry/out
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: pwd
