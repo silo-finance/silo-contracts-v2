@@ -21,8 +21,8 @@ contract SiloLendingLibImpl {
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        $.total[AssetTypes.DEBT] = _totalDebt;
-        $.total[AssetTypes.COLLATERAL] = _totalCollateralAssets;
+        $.totalAssets[AssetTypes.DEBT] = _totalDebt;
+        $.totalAssets[AssetTypes.COLLATERAL] = _totalCollateralAssets;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             _debtShareToken,

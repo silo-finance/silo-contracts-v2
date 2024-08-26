@@ -196,7 +196,7 @@ library SiloERC4626Lib {
     ) internal returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalAssets = $.total[uint256(_collateralType)];
+        uint256 totalAssets = $.totalAssets[uint256(_collateralType)];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -215,7 +215,7 @@ library SiloERC4626Lib {
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
         // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
         // unchecked {
-        $.total[uint256(_collateralType)] = totalAssets + assets;
+        $.totalAssets[uint256(_collateralType)] = totalAssets + assets;
         // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
@@ -248,7 +248,7 @@ library SiloERC4626Lib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         { // Stack too deep
-            uint256 totalAssets = $.total[uint256(_args.collateralType)];
+            uint256 totalAssets = $.totalAssets[uint256(_args.collateralType)];
 
             (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
                 _args.assets,
@@ -263,15 +263,15 @@ library SiloERC4626Lib {
             if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
             uint256 liquidity = _args.collateralType == ISilo.CollateralType.Collateral
-                ? SiloMathLib.liquidity($.total[AssetTypes.COLLATERAL], $.total[AssetTypes.DEBT])
-                : $.total[AssetTypes.PROTECTED];
+                ? SiloMathLib.liquidity($.totalAssets[AssetTypes.COLLATERAL], $.totalAssets[AssetTypes.DEBT])
+                : $.totalAssets[AssetTypes.PROTECTED];
 
             // check liquidity
             if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
 
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
-            unchecked { $.total[uint256(_args.collateralType)] = totalAssets - assets; }
+            unchecked { $.totalAssets[uint256(_args.collateralType)] = totalAssets - assets; }
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that

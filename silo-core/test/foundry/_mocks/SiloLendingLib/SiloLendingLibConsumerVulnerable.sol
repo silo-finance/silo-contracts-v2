@@ -12,7 +12,7 @@ contract SiloLendingLibConsumerVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
     constructor() {
-        SiloStorageLib.getSiloStorage().total[AssetTypes.DEBT] = INITIAL_TOTAL;
+        SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.DEBT] = INITIAL_TOTAL;
     }
 
     function repay(
@@ -32,6 +32,6 @@ contract SiloLendingLibConsumerVulnerable {
     }
 
     function getTotalDebt() public view returns (uint256) {
-        return SiloStorageLib.getSiloStorage().total[AssetTypes.DEBT];
+        return SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.DEBT];
     }
 }

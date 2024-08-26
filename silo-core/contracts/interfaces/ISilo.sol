@@ -121,9 +121,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         /// - COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
         /// It also includes token amount that has been borrowed.
         /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
-        /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
+        /// `totalAssets` can have outdated value (without interest), if you doing view call (of off-chain call) please use
         /// getters eg `getCollateralAssets()` to fetch value that includes interest.
-        mapping(uint256 assetType => uint256 assets) total;
+        mapping(uint256 assetType => uint256 assets) totalAssets;
     }
 
     /// @notice Emitted on protected deposit

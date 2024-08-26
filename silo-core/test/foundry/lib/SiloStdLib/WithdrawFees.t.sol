@@ -237,7 +237,7 @@ contract WithdrawFeesTest is Test {
     }
 
     function _setProtectedAssets(uint256 _assets) internal {
-        _$().total[AssetTypes.PROTECTED] = _assets;
+        _$().totalAssets[AssetTypes.PROTECTED] = _assets;
     }
 
     function _reset() internal {

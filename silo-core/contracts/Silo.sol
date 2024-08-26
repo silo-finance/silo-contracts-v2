@@ -92,8 +92,8 @@ contract Silo is ISilo, ShareCollateralToken {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         return UtilizationData({
-            collateralAssets: $.total[AssetTypes.COLLATERAL],
-            debtAssets: $.total[AssetTypes.DEBT],
+            collateralAssets: $.totalAssets[AssetTypes.COLLATERAL],
+            debtAssets: $.totalAssets[AssetTypes.DEBT],
             interestRateTimestamp: $.interestRateTimestamp
         });
     }
@@ -137,8 +137,8 @@ contract Silo is ISilo, ShareCollateralToken {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        totalCollateralAssets = $.total[AssetTypes.COLLATERAL];
-        totalProtectedAssets = $.total[AssetTypes.PROTECTED];
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalProtectedAssets = $.totalAssets[AssetTypes.PROTECTED];
     }
 
     /// @inheritdoc ISilo
@@ -150,8 +150,8 @@ contract Silo is ISilo, ShareCollateralToken {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        totalCollateralAssets = $.total[AssetTypes.COLLATERAL];
-        totalDebtAssets = $.total[AssetTypes.DEBT];
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
     }
 
     // ERC4626
@@ -192,7 +192,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().total[AssetTypes.COLLATERAL];
+        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
         return _callMaxDepositOrMint(totalCollateralAssets);
     }
 
@@ -296,7 +296,7 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 maxAssets)
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        return _callMaxDepositOrMint($.total[uint256(_collateralType)]);
+        return _callMaxDepositOrMint($.totalAssets[uint256(_collateralType)]);
     }
 
     /// @inheritdoc ISilo
@@ -653,7 +653,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
-        totalAssetsByType = SiloStorageLib.getSiloStorage().total[_assetType];
+        totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
     }
 
     /// @inheritdoc ISilo

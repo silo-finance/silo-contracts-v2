@@ -31,7 +31,7 @@ library SiloERC4626LibWithReentrancyIssue {
     ) public returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalAssets = $.total[AssetTypes.COLLATERAL];
+        uint256 totalAssets = $.totalAssets[AssetTypes.COLLATERAL];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -50,7 +50,7 @@ library SiloERC4626LibWithReentrancyIssue {
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         unchecked {
-            $.total[AssetTypes.COLLATERAL] = totalAssets + assets;
+            $.totalAssets[AssetTypes.COLLATERAL] = totalAssets + assets;
         }
         
         // Hook receiver is called after `mint` and can reentry but state changes are completed already

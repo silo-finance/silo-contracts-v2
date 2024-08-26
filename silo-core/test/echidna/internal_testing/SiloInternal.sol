@@ -25,7 +25,7 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
 
         address _asset = _sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).mint(address(this), profit);
-        _$().total[AssetTypes.COLLATERAL] += profit;
+        _$().totalAssets[AssetTypes.COLLATERAL] += profit;
     }
 
     function recognizeLoss(uint256 loss) public {
@@ -33,6 +33,6 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
 
         address _asset = _sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).burn(address(this), loss);
-        _$().total[AssetTypes.COLLATERAL] -= loss;
+        _$().totalAssets[AssetTypes.COLLATERAL] -= loss;
     }
 }

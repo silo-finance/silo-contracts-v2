@@ -11,7 +11,7 @@ contract SiloERC4626LibConsumerVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
     constructor() {
-        SiloStorageLib.getSiloStorage().total[AssetTypes.COLLATERAL] = INITIAL_TOTAL;
+        SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL] = INITIAL_TOTAL;
     }
 
     function deposit(
@@ -33,6 +33,6 @@ contract SiloERC4626LibConsumerVulnerable {
     }
 
     function getTotalCollateral() public view returns (uint256) {
-        return SiloStorageLib.getSiloStorage().total[AssetTypes.COLLATERAL];
+        return SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
     }
 }

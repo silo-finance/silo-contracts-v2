@@ -78,7 +78,7 @@ library Views {
             _collateralType,
             // 0 for CollateralType.Collateral because it will be calculated internally
             _collateralType == ISilo.CollateralType.Protected
-                ? SiloStorageLib.getSiloStorage().total[AssetTypes.PROTECTED]
+                ? SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.PROTECTED]
                 : 0
         );
     }

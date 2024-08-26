@@ -30,7 +30,7 @@ library SiloLendingLibWithReentrancyIssue {
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
-        uint256 totalDebtAssets = $.total[AssetTypes.DEBT];
+        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -48,7 +48,7 @@ library SiloLendingLibWithReentrancyIssue {
         // If token reenters, no harm done because we didn't change the state yet.
         IERC20(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
-        $.total[AssetTypes.DEBT] = totalDebtAssets - assets;
+        $.totalAssets[AssetTypes.DEBT] = totalDebtAssets - assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);
