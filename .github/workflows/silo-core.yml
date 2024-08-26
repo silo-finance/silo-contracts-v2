@@ -53,6 +53,14 @@ jobs:
                 with:
                     submodules: recursive
 
+            -   name: Cache Foundry
+                id: cache-npm
+                uses: actions/cache@v3
+                with:
+                    # cache files are stored in `~/.npm` on Linux/macOS
+                    path: ~/.foundry-build
+                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
