@@ -1,7 +1,7 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: CORE Quality Test (fast)
+name: CORE Quality Test - Silo
 
 env:
     RPC_MAINNET: ${{ vars.RPC_MAINNET }}
@@ -46,7 +46,7 @@ on:
             - .github/workflows/silo-core.yml
 
 jobs:
-    echidna-findings:
+    borrow:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -66,9 +66,9 @@ jobs:
                   ../../silo-foundry-utils --version
 
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/echidna-findings/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/borrow/*sol" --ffi -vv
 
-    gas:
+    deploy:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -87,16 +87,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/gas/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/deploy/*sol" --ffi -vv
 
-    interestRateModel:
+    deposit:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -115,16 +109,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/interestRateModel/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/deposit/*sol" --ffi -vv
 
-    lib:
+    flashloan:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -143,16 +131,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/lib/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/flashloan/*sol" --ffi -vv
 
-    SiloConfig:
+    getters:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -171,16 +153,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/SiloConfig/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/getters/*sol" --ffi -vv
 
-    SiloFactory:
+    hooks:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -199,16 +175,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/SiloFactory/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/hooks/*sol" --ffi -vv
 
-    SiloRouter:
+    leverage:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -227,16 +197,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/SiloRouter/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/leverage/*sol" --ffi -vv
 
-    storage:
+    max:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -255,16 +219,10 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
-              run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
-
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/storage/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/max/*sol" --ffi -vv
 
-    utils:
+    oracle:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -283,11 +241,115 @@ jobs:
                   cp target/release/silo-foundry-utils ../../silo-foundry-utils
                   ../../silo-foundry-utils --version
 
-            - name: Run Forge build
+            - name: Run Forge tests
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/oracle/*sol" --ffi -vv
+
+    preview:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            - name: Build silo foundry utils
+              working-directory: ./gitmodules/silo-foundry-utils
               run: |
-                  git submodule
-                  forge --version
-                  FOUNDRY_PROFILE=core forge build --sizes
+                  cargo build --release
+                  cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                  ../../silo-foundry-utils --version
 
             - name: Run Forge tests
-              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/utils/*sol" --ffi -vv
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/preview/*sol" --ffi -vv
+
+    reentrancy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            - name: Build silo foundry utils
+              working-directory: ./gitmodules/silo-foundry-utils
+              run: |
+                  cargo build --release
+                  cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                  ../../silo-foundry-utils --version
+
+            - name: Run Forge tests
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/reentrancy/*sol" --ffi -vv
+
+    repay:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            - name: Build silo foundry utils
+              working-directory: ./gitmodules/silo-foundry-utils
+              run: |
+                  cargo build --release
+                  cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                  ../../silo-foundry-utils --version
+
+            - name: Run Forge tests
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/repay/*sol" --ffi -vv
+
+    transitionCollateral:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            - name: Build silo foundry utils
+              working-directory: ./gitmodules/silo-foundry-utils
+              run: |
+                  cargo build --release
+                  cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                  ../../silo-foundry-utils --version
+
+            - name: Run Forge tests
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/transitionCollateral/*sol" --ffi -vv
+
+    withdraw:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            - name: Build silo foundry utils
+              working-directory: ./gitmodules/silo-foundry-utils
+              run: |
+                  cargo build --release
+                  cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                  ../../silo-foundry-utils --version
+
+            - name: Run Forge tests
+              run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/withdraw/*sol" --ffi -vv
