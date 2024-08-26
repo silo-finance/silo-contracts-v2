@@ -93,6 +93,7 @@ jobs:
 
             -   name: ls ./cache/foundry/out
                 run: ls ./cache/foundry/out
+            -   run: ls ./cache/foundry/
 
     #    linters:
 #        needs: silo-core-cache
