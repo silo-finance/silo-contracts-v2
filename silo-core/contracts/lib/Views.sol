@@ -60,12 +60,9 @@ library Views {
         return _maxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
-    function _maxDepositOrMint(uint256 _totalCollateralAssets)
-        internal
-        pure
-        returns (uint256 maxAssetsOrShares)
-    {
-        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
+    function maxDeposit() internal view virtual returns (uint256 maxAssets) {
+        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
+        return _maxDepositOrMint(totalCollateralAssets);
     }
 
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
@@ -124,5 +121,54 @@ library Views {
             debtAssets: $.totalAssets[AssetTypes.DEBT],
             interestRateTimestamp: $.interestRateTimestamp
         });
+    }
+
+    function getCollateralAssets() internal view returns (uint256 totalCollateralAssets) {
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
+
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            thisSiloConfig.silo,
+            thisSiloConfig.interestRateModel,
+            thisSiloConfig.daoFee,
+            thisSiloConfig.deployerFee
+        );
+    }
+
+    function getDebtAssets() internal view returns (uint256 totalDebtAssets) {
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
+
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            thisSiloConfig.silo, thisSiloConfig.interestRateModel
+        );
+    }
+
+    function getCollateralAndProtectedAssets()
+        internal
+        view
+        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
+    {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalProtectedAssets = $.totalAssets[AssetTypes.PROTECTED];
+    }
+
+    function getCollateralAndDebtAssets()
+        internal
+        view
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
+    {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+    }
+
+    function _maxDepositOrMint(uint256 _totalCollateralAssets)
+        internal
+        pure
+        returns (uint256 maxAssetsOrShares)
+    {
+        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 }
