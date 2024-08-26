@@ -113,5 +113,16 @@ library Views {
         protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
         collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
         debtAssets = $.totalAssets[AssetTypes.DEBT];
+
+    }
+
+    function utilizationData() internal view returns (ISilo.UtilizationData memory) {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        return ISilo.UtilizationData({
+            collateralAssets: $.totalAssets[AssetTypes.COLLATERAL],
+            debtAssets: $.totalAssets[AssetTypes.DEBT],
+            interestRateTimestamp: $.interestRateTimestamp
+        });
     }
 }
