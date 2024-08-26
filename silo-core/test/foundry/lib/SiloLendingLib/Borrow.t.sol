@@ -56,7 +56,6 @@ contract BorrowTest is Test {
         address receiver;
         address borrower;
         address spender;
-        uint256 totalCollateralAssets;
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
 
@@ -69,9 +68,7 @@ contract BorrowTest is Test {
                 shares: shares,
                 receiver: receiver,
                 borrower: borrower
-            }),
-            totalCollateralAssets,
-            totalDebt
+            })
         );
     }
 
