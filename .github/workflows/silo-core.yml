@@ -768,6 +768,9 @@ jobs:
                         ./cache/foundry/solidity-files-cache.json
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
+            -   name: cat cache
+                run: cat ./cache/foundry/solidity-files-cache.json
+
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
