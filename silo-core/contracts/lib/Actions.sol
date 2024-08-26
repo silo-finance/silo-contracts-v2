@@ -398,7 +398,7 @@ library Actions {
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage()._siloData.daoAndDeployerFees += uint192(fee);
+        SiloStorageLib.getSiloStorage().daoAndDeployerFees += uint192(fee);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
@@ -427,7 +427,7 @@ library Actions {
     function withdrawFees(ISilo _silo) external {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFees = $._siloData.daoAndDeployerFees;
+        uint256 earnedFees = $.daoAndDeployerFees;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
         (
@@ -441,7 +441,7 @@ library Actions {
         uint256 availableLiquidity;
         uint256 siloBalance = IERC20(asset).balanceOf(address(this));
 
-        uint256 protectedAssets = $._total[AssetTypes.PROTECTED].assets;
+        uint256 protectedAssets = $.total[AssetTypes.PROTECTED];
 
         // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
         unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
@@ -450,8 +450,8 @@ library Actions {
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
-        // we will never underflow because earnedFees max value is `_siloData.daoAndDeployerFees`
-        unchecked { $._siloData.daoAndDeployerFees -= uint192(earnedFees); }
+        // we will never underflow because earnedFees max value is `daoAndDeployerFees`
+        unchecked { $.daoAndDeployerFees -= uint192(earnedFees); }
 
         if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
             // just in case, should never happen...

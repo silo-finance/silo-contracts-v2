@@ -45,9 +45,9 @@ library SiloLendingLib {
     ) internal returns (uint256 assets, uint256 shares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
-        ISilo.Assets storage totalDebt = SiloStorageLib.getSiloStorage()._total[AssetTypes.DEBT];
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalDebtAssets = totalDebt.assets;
+        uint256 totalDebtAssets = $.total[AssetTypes.DEBT];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -63,7 +63,7 @@ library SiloLendingLib {
         if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
-        unchecked { totalDebt.assets = totalDebtAssets - assets; }
+        unchecked { $.total[AssetTypes.DEBT] = totalDebtAssets - assets; }
 
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
@@ -87,11 +87,11 @@ library SiloLendingLib {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint64 lastTimestamp = $._siloData.interestRateTimestamp;
+        uint64 lastTimestamp = $.interestRateTimestamp;
 
         // This is the first time, so we can return early and save some gas
         if (lastTimestamp == 0) {
-            $._siloData.interestRateTimestamp = uint64(block.timestamp);
+            $.interestRateTimestamp = uint64(block.timestamp);
             return 0;
         }
 
@@ -101,29 +101,31 @@ library SiloLendingLib {
         }
 
         uint256 totalFees;
-        uint256 totalCollateralAssets = $._total[AssetTypes.COLLATERAL].assets;
-        uint256 totalDebtAssets = $._total[AssetTypes.DEBT].assets;
+        uint256 totalCollateralAssets = $.total[AssetTypes.COLLATERAL];
+        uint256 totalDebtAssets = $.total[AssetTypes.DEBT];
+
+        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+            totalCollateralAssets,
+            totalDebtAssets,
+            lastTimestamp
+        );
 
         (
-            $._total[AssetTypes.COLLATERAL].assets, $._total[AssetTypes.DEBT].assets, totalFees, accruedInterest
+            $.total[AssetTypes.COLLATERAL], $.total[AssetTypes.DEBT], totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
             totalCollateralAssets,
             totalDebtAssets,
-            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
-                totalCollateralAssets,
-                totalDebtAssets,
-                lastTimestamp
-            ),
+            rcomp,
             _daoFee,
             _deployerFee
         );
 
         // update remaining contract state
-        $._siloData.interestRateTimestamp = uint64(block.timestamp);
+        $.interestRateTimestamp = uint64(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
-        unchecked { $._siloData.daoAndDeployerFees += uint192(totalFees); }
+        unchecked { $.daoAndDeployerFees += uint192(totalFees); }
     }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral
@@ -145,9 +147,9 @@ library SiloLendingLib {
     {
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
 
-        ISilo.Assets storage totalDebt = SiloStorageLib.getSiloStorage()._total[AssetTypes.DEBT];
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalDebtAssets = totalDebt.assets;
+        uint256 totalDebtAssets = $.total[AssetTypes.DEBT];
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
             _args.assets,
@@ -162,16 +164,14 @@ library SiloLendingLib {
         if (borrowedShares == 0) revert ISilo.ZeroShares();
         if (borrowedAssets == 0) revert ISilo.ZeroAssets();
 
-        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage()._total[AssetTypes.COLLATERAL].assets;
+        uint256 totalCollateralAssets = $.total[AssetTypes.COLLATERAL];
 
-        if (_token != address(0) &&
-            borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)
-        ) {
+        if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
         }
 
         // add new debt
-        totalDebt.assets = totalDebtAssets + borrowedAssets;
+        $.total[AssetTypes.DEBT] = totalDebtAssets + borrowedAssets;
 
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
