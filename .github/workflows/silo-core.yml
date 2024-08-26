@@ -71,8 +71,7 @@ jobs:
                 uses: actions/cache@v3
                 with:
                     path: |
-                        ./cache/foundry/out/silo-core
-                        ./cache/foundry/*.json
+                        ./cache/foundry/out
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -133,8 +132,7 @@ jobs:
                 uses: actions/cache@v3
                 with:
                     path: |
-                        ./cache/foundry/out/silo-core
-                        ./cache/foundry/*.json
+                        ./cache/foundry/out/
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: pwd
