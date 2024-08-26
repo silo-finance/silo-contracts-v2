@@ -49,6 +49,12 @@ jobs:
     silo-core-cache:
         runs-on: ubuntu-latest
         steps:
+            -   name: Cache cloned submodules
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
             -   uses: actions/checkout@v3
                 with:
                     submodules: recursive
@@ -66,7 +72,7 @@ jobs:
                 with:
                     path: ./cache/foundry/out/silo-core
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
-            
+
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
@@ -207,12 +213,6 @@ jobs:
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
 #
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
-#
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/gas/*sol" --ffi -vv
 #
@@ -236,12 +236,6 @@ jobs:
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
 #
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
-#
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/interestRateModel/*sol" --ffi -vv
 #
@@ -264,12 +258,6 @@ jobs:
 #                    cargo build --release
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
-#
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
 #
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/lib/*sol" --ffi -vv
@@ -708,12 +696,6 @@ jobs:
 #                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
 #                    ../../silo-foundry-utils --version
 #
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=core forge build --sizes
-#
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/SiloConfig/*sol" --ffi -vv
 #
@@ -816,7 +798,7 @@ jobs:
 #                uses: actions/cache@v3
 #                with:
 #                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-#                    key: home-runner-work-silo-contracts-v2/-gitmodules
+#                    key: home-runner-work-silo-contracts-v2-gitmodules-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -844,12 +826,6 @@ jobs:
                     cargo build --release
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
-
-            -   name: Run Forge build
-                run: |
-                    git submodule
-                    forge --version
-                    FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
                 run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/utils/*sol" --ffi -vv
