@@ -49,11 +49,11 @@ jobs:
     silo-core-cache:
         runs-on: ubuntu-latest
         steps:
-#            -   name: Cache cloned submodules
-#                uses: actions/cache@v3
-#                with:
-#                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-#                    key: home-runner-work-silo-contracts-v2-gitmodules
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
 
             -   uses: actions/checkout@v3
                 with:
@@ -95,11 +95,6 @@ jobs:
         needs: silo-core-cache
         runs-on: ubuntu-latest
 
-        strategy:
-            matrix:
-                node-version: [ 18.x ]
-                # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
         steps:
             -   name: Checkout sources
                 uses: actions/checkout@v2
@@ -107,7 +102,7 @@ jobs:
             -   name: Set up Node.js
                 uses: actions/setup-node@v3
                 with:
-                    node-version: ${{ matrix.node-version }}
+                    node-version: 18.x
                     cache: 'yarn'
 
             -   run: yarn install
@@ -822,11 +817,11 @@ jobs:
                 with:
                     submodules: recursive
 
-#            -   name: Cache Foundry (home/runner/work)
-#                uses: actions/cache@v3
-#                with:
-#                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-#                    key: home-runner-work-silo-contracts-v2-gitmodules-${{ hashFiles('./silo-core/**/*.sol') }}
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
