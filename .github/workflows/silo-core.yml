@@ -70,7 +70,6 @@ jobs:
                 run: yarn workspace silo-core lint:sol
 
     size:
-        name: Foundry QA
         runs-on: ubuntu-latest
 
         strategy:
@@ -86,7 +85,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -121,7 +120,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/deploy/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/deploy/*sol" --ffi -vv
 
     echidna-findings:
         runs-on: ubuntu-latest
@@ -143,7 +142,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/echidna-findings/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/echidna-findings/*sol" --ffi -vv
 
     gas:
         runs-on: ubuntu-latest
@@ -171,7 +170,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/gas/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/gas/*sol" --ffi -vv
 
     interestRateModel:
         runs-on: ubuntu-latest
@@ -199,7 +198,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/interestRateModel/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/interestRateModel/*sol" --ffi -vv
 
     lib:
         runs-on: ubuntu-latest
@@ -227,7 +226,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/lib/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/lib/*sol" --ffi -vv
 
     silo-borrow:
         runs-on: ubuntu-latest
@@ -249,7 +248,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/borrow/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/borrow/*sol" --ffi -vv
 
     silo-deploy:
         runs-on: ubuntu-latest
@@ -271,7 +270,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/deploy/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/deploy/*sol" --ffi -vv
 
     silo-deposit:
         runs-on: ubuntu-latest
@@ -293,7 +292,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/deposit/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/deposit/*sol" --ffi -vv
 
     silo-flashloan:
         runs-on: ubuntu-latest
@@ -315,7 +314,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/flashloan/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/flashloan/*sol" --ffi -vv
 
     silo-getters:
         runs-on: ubuntu-latest
@@ -337,7 +336,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/getters/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/getters/*sol" --ffi -vv
 
     silo-hooks:
         runs-on: ubuntu-latest
@@ -359,7 +358,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/hooks/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/hooks/*sol" --ffi -vv
 
     silo-leverage:
         runs-on: ubuntu-latest
@@ -381,7 +380,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/leverage/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/leverage/*sol" --ffi -vv
 
     silo-maxBorrow:
         runs-on: ubuntu-latest
@@ -403,7 +402,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/max/maxBorrow/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxBorrow/*sol" --ffi -vv
 
     silo-maxDeposit:
         runs-on: ubuntu-latest
@@ -425,7 +424,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/max/maxDeposit/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxDeposit/*sol" --ffi -vv
 
     silo-maxLiquidation:
         runs-on: ubuntu-latest
@@ -447,7 +446,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/max/maxLiquidation/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxLiquidation/*sol" --ffi -vv
 
     silo-maxRepay:
         runs-on: ubuntu-latest
@@ -469,7 +468,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/max/maxRepay/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxRepay/*sol" --ffi -vv
 
     silo-maxWithdraw:
         runs-on: ubuntu-latest
@@ -491,7 +490,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/max/maxWithdraw/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxWithdraw/*sol" --ffi -vv
 
     silo-oracle:
         runs-on: ubuntu-latest
@@ -513,7 +512,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/oracle/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/oracle/*sol" --ffi -vv
 
     silo-preview:
         runs-on: ubuntu-latest
@@ -535,7 +534,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/preview/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/preview/*sol" --ffi -vv
 
     silo-reentrancy:
         runs-on: ubuntu-latest
@@ -557,7 +556,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/reentrancy/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/reentrancy/*sol" --ffi -vv
 
     silo-repay:
         runs-on: ubuntu-latest
@@ -579,7 +578,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/repay/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/repay/*sol" --ffi -vv
 
     silo-transitionCollateral:
         runs-on: ubuntu-latest
@@ -601,7 +600,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/transitionCollateral/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/transitionCollateral/*sol" --ffi -vv
 
     silo-withdraw:
         runs-on: ubuntu-latest
@@ -623,7 +622,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/Silo/withdraw/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/withdraw/*sol" --ffi -vv
 
     SiloConfig:
         runs-on: ubuntu-latest
@@ -651,7 +650,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/SiloConfig/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/SiloConfig/*sol" --ffi -vv
 
     SiloFactory:
         runs-on: ubuntu-latest
@@ -679,7 +678,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/SiloFactory/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/SiloFactory/*sol" --ffi -vv
 
     SiloRouter:
         runs-on: ubuntu-latest
@@ -707,7 +706,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/SiloRouter/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/SiloRouter/*sol" --ffi -vv
 
     storage:
         runs-on: ubuntu-latest
@@ -735,7 +734,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/storage/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/storage/*sol" --ffi -vv
 
     utils:
         runs-on: ubuntu-latest
@@ -763,4 +762,4 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --match-path "**/test/foundry/utils/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/utils/*sol" --ffi -vv
