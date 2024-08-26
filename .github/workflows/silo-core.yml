@@ -70,7 +70,9 @@ jobs:
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry/out/silo-core
+                    path: |
+                        ./cache/foundry/out/silo-core
+                        ./cache/foundry/solidity-files-cache.json
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -97,12 +99,12 @@ jobs:
 
         steps:
             -   name: Checkout sources
-                uses: actions/checkout@v2
+                uses: actions/checkout@v3
 
             -   name: Set up Node.js
                 uses: actions/setup-node@v3
                 with:
-                    node-version: 18.x
+                    node-version: 20.x
                     cache: 'yarn'
 
             -   run: yarn install
@@ -113,81 +115,6 @@ jobs:
     fast-tests:
         needs: silo-core-cache
         runs-on: ubuntu-latest
-
-#        strategy:
-#            matrix:
-#                node-version: [ 18.x ]
-#                # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-#
-#        steps:
-#            -   uses: actions/checkout@v3
-#                with:
-#                    submodules: recursive
-#
-#            -   name: Install Foundry
-#                uses: foundry-rs/foundry-toolchain@v1
-#                with:
-#                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
-#
-#            -   name: Build silo foundry utils
-#                working-directory: ./gitmodules/silo-foundry-utils
-#                run: |
-#                    cargo build --release
-#                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
-#                    ../../silo-foundry-utils --version
-#
-#            -   name: Run Forge build
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=oracles forge build --sizes
-#
-#    deploy:
-#        needs: silo-core-cache
-#        runs-on: ubuntu-latest
-#        steps:
-#            -   uses: actions/checkout@v3
-#                with:
-#                    submodules: recursive
-#
-#            -   name: Install Foundry
-#                uses: foundry-rs/foundry-toolchain@v1
-#                with:
-#                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
-#
-#            -   name: Build silo foundry utils
-#                working-directory: ./gitmodules/silo-foundry-utils
-#                run: |
-#                    cargo build --release
-#                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
-#                    ../../silo-foundry-utils --version
-#
-#            -   name: Run Forge tests
-#                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/deploy/*sol" --ffi -vv
-#
-#    echidna-findings:
-#        needs: silo-core-cache
-#        runs-on: ubuntu-latest
-#        steps:
-#            -   uses: actions/checkout@v3
-#                with:
-#                    submodules: recursive
-#
-#            -   name: Install Foundry
-#                uses: foundry-rs/foundry-toolchain@v1
-#                with:
-#                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
-#
-#            -   name: Build silo foundry utils
-#                working-directory: ./gitmodules/silo-foundry-utils
-#                run: |
-#                    cargo build --release
-#                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
-#                    ../../silo-foundry-utils --version
-#
-#            -   name: Run Forge tests
-#                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/echidna-findings/*sol" --ffi -vv
-#
 
         steps:
             -   uses: actions/checkout@v3
@@ -205,7 +132,9 @@ jobs:
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry/out/silo-core
+                    path: |
+                        ./cache/foundry/out/silo-core
+                        ./cache/foundry/solidity-files-cache.json
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -834,7 +763,9 @@ jobs:
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry/out/silo-core
+                    path: |
+                        ./cache/foundry/out/silo-core
+                        ./cache/foundry/solidity-files-cache.json
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
