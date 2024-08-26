@@ -581,7 +581,16 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _repay(_assets, 0 /* repaySharesZero */, _borrower, msg.sender);
+        uint256 assets;
+
+        (assets, shares) = Actions.repay({
+            _assets: _assets,
+            _shares: 0,
+            _borrower: _borrower,
+            _repayer: msg.sender
+        });
+
+        emit Repay(msg.sender, _borrower, assets, shares);
     }
 
     /// @inheritdoc ISilo
@@ -605,7 +614,16 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _repay(0 /* zeroAssets */, _shares, _borrower, msg.sender);
+        uint256 shares;
+
+        (assets, shares) = Actions.repay({
+            _assets: 0,
+            _shares: _shares,
+            _borrower: _borrower,
+            _repayer: msg.sender
+        });
+
+        emit Repay(msg.sender, _borrower, assets, shares);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -711,23 +729,6 @@ contract Silo is ISilo, ShareCollateralToken {
         } else {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
-    }
-
-    function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer)
-        internal
-        virtual
-        returns (uint256 assets, uint256 shares)
-    {
-        (
-            assets, shares
-        ) = Actions.repay(
-            _assets,
-            _shares,
-            _borrower,
-            _repayer
-        );
-
-        emit Repay(_repayer, _borrower, assets, shares);
     }
 
     function _getTotalAssetsAndTotalSharesWithInterest(AssetType _assetType)
