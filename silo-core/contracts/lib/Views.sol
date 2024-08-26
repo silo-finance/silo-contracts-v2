@@ -60,7 +60,7 @@ library Views {
         return _maxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
-    function maxDeposit() internal view virtual returns (uint256 maxAssets) {
+    function maxDeposit() internal view returns (uint256 maxAssets) {
         uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
         return _maxDepositOrMint(totalCollateralAssets);
     }
