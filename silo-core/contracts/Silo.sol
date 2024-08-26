@@ -83,7 +83,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function config() external view virtual returns (ISiloConfig siloConfig) {
-        siloConfig = _siloConfig();
+        siloConfig = ShareTokenLib.siloConfig();
     }
 
     /// @inheritdoc ISilo
@@ -99,7 +99,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
-        return SiloLendingLib.getLiquidity(_siloConfig());
+        return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());
     }
 
     /// @inheritdoc ISilo
@@ -109,7 +109,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = _getThisConfigData();
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
 
         totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             thisSiloConfig.silo,
@@ -121,7 +121,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = _getThisConfigData();
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
 
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             thisSiloConfig.silo, thisSiloConfig.interestRateModel
@@ -158,7 +158,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function asset() external view virtual returns (address assetTokenAddress) {
-        return _siloConfig().getAssetForSilo(address(this));
+        return ShareTokenLib.siloConfig().getAssetForSilo(address(this));
     }
 
     /// @inheritdoc IERC4626
@@ -595,7 +595,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxRepayShares(address _borrower) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = _getThisConfigData();
+        ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
     }
 
@@ -628,7 +628,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
-        maxLoan = _token == _siloConfig().getAssetForSilo(address(this))
+        maxLoan = _token == ShareTokenLib.siloConfig().getAssetForSilo(address(this))
             ? IERC20(_token).balanceOf(address(this))
             : 0;
     }
@@ -658,7 +658,7 @@ contract Silo is ISilo, ShareCollateralToken {
         external
         virtual
     {
-        if (msg.sender != address(_siloConfig())) revert OnlySiloConfig();
+        if (msg.sender != address(ShareTokenLib.siloConfig())) revert OnlySiloConfig();
 
         _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }
@@ -736,7 +736,7 @@ contract Silo is ISilo, ShareCollateralToken {
         view
         returns (uint256 assets, uint256 shares)
     {
-        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_getThisConfigData(), _assetType);
+        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
     }
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)
@@ -816,7 +816,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
-        ISiloConfig.ConfigData memory cfg = _getThisConfigData();
+        ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();
         accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
     }
 
@@ -827,13 +827,5 @@ contract Silo is ISilo, ShareCollateralToken {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = Actions.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    function _siloConfig() internal view virtual returns (ISiloConfig siloConfig) {
-        siloConfig = ShareTokenLib.siloConfig();
-    }
-
-    function _getThisConfigData() internal view virtual returns (ISiloConfig.ConfigData memory siloConfigData) {
-        siloConfigData = ShareTokenLib.getConfig();
     }
 }
