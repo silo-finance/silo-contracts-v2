@@ -146,9 +146,7 @@ jobs:
                 run: pwd
             -   run: ls ./cache/foundry/out/
             -   run: ls ./cache/foundry/out/silo-core/
-            -   run: ls ./cache/foundry/out/silo-core/Base.sol/
-            -   name: cat cache 2
-                run: cat ./cache/foundry/solidity-files-cache.json
+            -   run: cat ./cache/foundry/solidity-files-cache.json
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
