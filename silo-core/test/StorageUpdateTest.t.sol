@@ -28,7 +28,7 @@ contract ConfigContract {
 contract StorageUpdateTest is ISomeSilo, Test {
     uint256 constant internal _INDEX = 1;
 
-    mapping (uint256 => ISilo.Assets) internal _total;
+    mapping (uint256 => uint256) internal _total;
     ConfigContract internal _config;
 
     function setUp() external {
@@ -37,21 +37,7 @@ contract StorageUpdateTest is ISomeSilo, Test {
 
     // this is
     function accrueInterest() external {
-        _total[_INDEX].assets++;
-    }
-
-    /*
-    forge test -vv --ffi --mt test_workingWithStoragePointers
-    */
-    function test_workingWithStoragePointers() public {
-        ISilo.Assets storage pointer = _total[_INDEX];
-
-        uint256 valueBefore = pointer.assets;
-
-        // eg. from silo, we are calling SiloConfig and it will accrue interest that changes _totals
-        _config.callContract(this);
-
-        assertTrue(valueBefore != pointer.assets, "storage changed by config and we have latest value");
+        _total[_INDEX]++;
     }
 
     /*

@@ -97,17 +97,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         ISilo.CollateralType withdrawType;
     }
 
-    /// @dev this struct is used for all types of assets: collateral, protected and debt
-    /// @param assets based on type:
-    /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
-    /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
-    /// - COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
-    /// It also includes token amount that has been borrowed.
-    /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
-    struct Assets {
-        uint256 assets;
-    }
-
     struct UtilizationData {
         /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
         /// It also includes token amount that has been borrowed.
@@ -126,11 +115,15 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
         /// @dev silo is just for one asset,
         /// but this one asset can be of three types: mapping key is uint256(AssetType), so we store `assets` by type.
-        /// We are using struct `Assets` instead of direct uint256 to pass storage reference to functions.
+        /// Assets based on type:
+        /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
+        /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
+        /// - COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
+        /// It also includes token amount that has been borrowed.
+        /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
         /// `total` can have outdated value (without interest), if you doing view call (of off-chain call) please use
         /// getters eg `getCollateralAssets()` to fetch value that includes interest.
-
-        mapping(uint256 assetType => uint256) total;
+        mapping(uint256 assetType => uint256 assets) total;
     }
 
     /// @notice Emitted on protected deposit

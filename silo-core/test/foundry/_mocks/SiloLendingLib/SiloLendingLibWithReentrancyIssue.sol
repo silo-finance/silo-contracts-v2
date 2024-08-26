@@ -10,6 +10,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 library SiloLendingLibWithReentrancyIssue {
     using SafeERC20 for IERC20;
@@ -22,13 +24,13 @@ library SiloLendingLibWithReentrancyIssue {
         uint256 _assets,
         uint256 _shares,
         address _borrower,
-        address _repayer,
-        ISilo.Assets storage _totalDebt
+        address _repayer
     ) external returns (uint256 assets, uint256 shares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
-        uint256 totalDebtAssets = _totalDebt.assets;
+        uint256 totalDebtAssets = $.total[AssetTypes.DEBT];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -46,7 +48,7 @@ library SiloLendingLibWithReentrancyIssue {
         // If token reenters, no harm done because we didn't change the state yet.
         IERC20(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
-        _totalDebt.assets = totalDebtAssets - assets;
+        $.total[AssetTypes.DEBT] = totalDebtAssets - assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);

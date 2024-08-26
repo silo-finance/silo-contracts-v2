@@ -16,12 +16,12 @@ contract SiloLendingLibImpl {
         address _receiver,
         address _borrower,
         address _spender,
-        ISilo.Assets memory _totalDebt,
+        uint256 _totalDebt,
         uint256 _totalCollateralAssets
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        $.total[AssetTypes.DEBT] = _totalDebt.assets;
+        $.total[AssetTypes.DEBT] = _totalDebt;
         $.total[AssetTypes.COLLATERAL] = _totalCollateralAssets;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
@@ -35,7 +35,5 @@ contract SiloLendingLibImpl {
                 borrower: _borrower
             })
         );
-
-        _totalDebt.assets = $.total[AssetTypes.DEBT];
     }
 }
