@@ -9,7 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
     forge test -vv --ffi --mc SwitchCollateralToTest
