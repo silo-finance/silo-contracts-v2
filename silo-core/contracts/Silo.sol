@@ -494,7 +494,18 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _borrow(_assets, 0 /* shares */, _receiver, _borrower);
+        uint256 assets;
+
+        (assets, shares) = Actions.borrow(
+            BorrowArgs({
+                assets: _assets,
+                shares: 0,
+                receiver: _receiver,
+                borrower: _borrower
+            })
+        );
+
+        emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
     /// @inheritdoc ISilo
@@ -536,7 +547,18 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _borrow(0 /* assets */, _shares, _receiver, _borrower);
+        uint256 shares;
+
+        (assets, shares) = Actions.borrow(
+            BorrowArgs({
+                assets: 0,
+                shares: _shares,
+                receiver: _receiver,
+                borrower: _borrower
+            })
+        );
+
+        emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
     /// @inheritdoc ISilo
@@ -689,28 +711,6 @@ contract Silo is ISilo, ShareCollateralToken {
         } else {
             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);
         }
-    }
-
-    function _borrow(
-        uint256 _assets,
-        uint256 _shares,
-        address _receiver,
-        address _borrower
-    )
-        internal
-        virtual
-        returns (uint256 assets, uint256 shares)
-    {
-        (assets, shares) = Actions.borrow(
-            BorrowArgs({
-                assets: _assets,
-                shares: _shares,
-                receiver: _receiver,
-                borrower: _borrower
-            })
-        );
-
-        emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
     function _repay(uint256 _assets, uint256 _shares, address _borrower, address _repayer)
