@@ -64,17 +64,17 @@ jobs:
                 with:
                     path: |
                         ~/.npm
-                        ~/gitmodules/
+                        ./gitmodules/
                     key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ~/cache/foundry/out
+                    path: ./cache/foundry/out
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
-            -   name: ls ~/cache/foundry/out
-                run: ls ~/cache/foundry/out
+            -   name: ls ./cache/foundry/out
+                run: ls ./cache/foundry/out
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
