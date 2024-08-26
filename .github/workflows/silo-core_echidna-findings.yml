@@ -4,8 +4,8 @@
 name: CORE Quality Test - Echidna
 
 jobs:
-  uses: ./.github/workflows/silo-core_.yml
   foundry:
+    uses: ./.github/workflows/silo-core_.yml
     name: Foundry QA
     runs-on: ubuntu-latest
     steps:
