@@ -51,11 +51,14 @@ contract Silo is ISilo, ShareCollateralToken {
     /// of the hook receiver developer to handle it if needed.
     receive() external payable {}
 
-    // TODO silo() => address(this)
+    function silo() external view virtual override returns (ISilo) {
+        return this;
+    }
 
     /// @inheritdoc ISilo
     function callOnBehalfOfSilo(address _target, uint256 _value, CallType _callType, bytes calldata _input)
         external
+        virtual
         payable
         returns (bool success, bytes memory result)
     {
