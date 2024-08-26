@@ -49,11 +49,11 @@ jobs:
     silo-core-cache:
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache cloned submodules
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
+#            -   name: Cache cloned submodules
+#                uses: actions/cache@v3
+#                with:
+#                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+#                    key: home-runner-work-silo-contracts-v2-gitmodules
 
             -   uses: actions/checkout@v3
                 with:
@@ -91,34 +91,34 @@ jobs:
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-#    linters:
-#        needs: silo-core-cache
-#        runs-on: ubuntu-latest
-#
-#        strategy:
-#            matrix:
-#                node-version: [ 18.x ]
-#                # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-#
-#        steps:
-#            -   name: Checkout sources
-#                uses: actions/checkout@v2
-#
-#            -   name: Set up Node.js
-#                uses: actions/setup-node@v3
-#                with:
-#                    node-version: ${{ matrix.node-version }}
-#                    cache: 'yarn'
-#
-#            -   run: yarn install
-#
-#            -   name: Solidity Lint
-#                run: yarn workspace silo-core lint:sol
-#
-#    size:
-#        needs: silo-core-cache
-#        runs-on: ubuntu-latest
-#
+    linters:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [ 18.x ]
+                # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+        steps:
+            -   name: Checkout sources
+                uses: actions/checkout@v2
+
+            -   name: Set up Node.js
+                uses: actions/setup-node@v3
+                with:
+                    node-version: ${{ matrix.node-version }}
+                    cache: 'yarn'
+
+            -   run: yarn install
+
+            -   name: Solidity Lint
+                run: yarn workspace silo-core lint:sol
+
+    fast-tests:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+
 #        strategy:
 #            matrix:
 #                node-version: [ 18.x ]
@@ -193,6 +193,52 @@ jobs:
 #            -   name: Run Forge tests
 #                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/echidna-findings/*sol" --ffi -vv
 #
+
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    submodules: recursive
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: |
+                        ~/.npm
+                        ./gitmodules/
+                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/foundry/out/silo-core
+                    key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: Deploy test
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/deploy/*sol" --ffi -vv
+
+            -   name: echidna-findings test
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/deploy/*sol" --ffi -vv
+
+            -   name: gas test
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/deploy/*sol" --ffi -vv
+
 #    gas:
 #        needs: silo-core-cache
 #        runs-on: ubuntu-latest
