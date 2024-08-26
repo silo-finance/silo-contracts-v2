@@ -74,7 +74,9 @@ jobs:
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: ls ./cache/foundry/out
-                run: ls ./cache/foundry/out
+                run: |
+                    ls
+                    ls ./cache/foundry/out
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
