@@ -73,10 +73,6 @@ jobs:
                     path: ./cache/foundry/out
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
-            -   name: ls ./cache/foundry/out
-                run: |
-                    ls
-                    ls ./cache/foundry/out
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
@@ -89,6 +85,11 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
+            -   name: ls ./cache/foundry/out
+                run: |
+                    ls
+                    ls ./cache/foundry/out
+            
             -   name: Run Forge build
                 run: |
                     git submodule
