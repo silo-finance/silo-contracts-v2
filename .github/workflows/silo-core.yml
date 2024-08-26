@@ -144,10 +144,9 @@ jobs:
 
             -   name: pwd
                 run: pwd
-            -   name: ls
-                run: ls
-            -   name: cat cache
-                run: cat ./cache/foundry/out/silo-core/Base.sol/TestBase.json
+            -   run: ls ./cache/foundry/out/
+            -   run: ls ./cache/foundry/out/silo-core/
+            -   run: ls ./cache/foundry/out/silo-core/Base.sol/
             -   name: cat cache 2
                 run: cat ./cache/foundry/solidity-files-cache.json
 
