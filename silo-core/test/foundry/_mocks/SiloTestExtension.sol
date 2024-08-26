@@ -7,6 +7,6 @@ import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 contract SiloTestExtension {
     function testSiloStorageMutation(uint256 _assetType, uint256 _value) external {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        $._total[_assetType].assets = _value;
+        $.totalAssets[_assetType] = _value;
     }
 }

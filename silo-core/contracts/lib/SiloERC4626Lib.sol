@@ -194,9 +194,9 @@ library SiloERC4626Lib {
         IShareToken _collateralShareToken,
         ISilo.CollateralType _collateralType
     ) internal returns (uint256 assets, uint256 shares) {
-        ISilo.Assets storage totalCollateral = SiloStorageLib.getSiloStorage()._total[uint256(_collateralType)];
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalAssets = totalCollateral.assets;
+        uint256 totalAssets = $.totalAssets[uint256(_collateralType)];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
@@ -215,7 +215,7 @@ library SiloERC4626Lib {
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
         // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
         // unchecked {
-        totalCollateral.assets = totalAssets + assets;
+        $.totalAssets[uint256(_collateralType)] = totalAssets + assets;
         // }
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
@@ -248,7 +248,7 @@ library SiloERC4626Lib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         { // Stack too deep
-            uint256 totalAssets = $._total[uint256(_args.collateralType)].assets;
+            uint256 totalAssets = $.totalAssets[uint256(_args.collateralType)];
 
             (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
                 _args.assets,
@@ -263,15 +263,15 @@ library SiloERC4626Lib {
             if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
             uint256 liquidity = _args.collateralType == ISilo.CollateralType.Collateral
-                ? SiloMathLib.liquidity($._total[AssetTypes.COLLATERAL].assets, $._total[AssetTypes.DEBT].assets)
-                : $._total[AssetTypes.PROTECTED].assets;
+                ? SiloMathLib.liquidity($.totalAssets[AssetTypes.COLLATERAL], $.totalAssets[AssetTypes.DEBT])
+                : $.totalAssets[AssetTypes.PROTECTED];
 
             // check liquidity
             if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
 
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
-            unchecked { $._total[uint256(_args.collateralType)].assets = totalAssets - assets; }
+            unchecked { $.totalAssets[uint256(_args.collateralType)] = totalAssets - assets; }
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
