@@ -15,7 +15,7 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ContractThatAcceptsETH} from "silo-core/test/foundry/_mocks/ContractThatAcceptsETH.sol";
-import {SiloTestExtension} from "silo-core/test/foundry/_mocks/SiloTestExtension.sol";
+import {SiloStorageExtension} from "silo-core/test/foundry/_mocks/SiloStorageExtension.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -135,10 +135,10 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         uint256 assetType = uint256(ISilo.AssetType.Collateral);
         uint256 expectedTotalCollateralAssets = 1_9999_9999e18;
 
-        address target = address(new SiloTestExtension());
+        address target = address(new SiloStorageExtension());
 
         bytes memory data = abi.encodeWithSelector(
-            SiloTestExtension.testSiloStorageMutation.selector,
+            SiloStorageExtension.siloStorageMutation.selector,
             assetType,
             expectedTotalCollateralAssets
         );
