@@ -62,10 +62,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -130,10 +128,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -250,10 +246,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -293,10 +287,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -336,10 +328,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -379,10 +369,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -434,10 +422,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -477,10 +463,8 @@ jobs:
             -   name: Cache gitmodules
                 uses: actions/cache@v3
                 with:
-                    path: |
-                        ~/.npm
-                        ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
