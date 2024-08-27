@@ -79,7 +79,7 @@ import {RedeemWithTypeReentrancyTest} from "../methods/silo/RedeemWithTypeReentr
 import {RepayReentrancyTest} from "../methods/silo/RepayReentrancyTest.sol";
 import {RepaySharesReentrancyTest} from "../methods/silo/RepaySharesReentrancyTest.sol";
 import {SiloConfigReentrancyTest} from "../methods/silo/SiloConfigReentrancyTest.sol";
-import {SiloDataStorageReentrancyTest} from "../methods/silo/SiloDataStorageReentrancyTest.sol";
+import {GetSiloStorageReentrancyTest} from "../methods/silo/GetSiloStorageReentrancyTest.sol";
 import {SiloReentrancyTest} from "../methods/share-token/SiloReentrancyTest.sol";
 import {SiloTokenReentrancyTest} from "../methods/silo/SiloTokenReentrancyTest.sol";
 import {SwitchCollateralToThisSiloReentrancyTest} from "../methods/silo/SwitchCollateralToThisSiloReentrancyTest.sol";
@@ -177,7 +177,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new RepayReentrancyTest());
         _registerMethod(new RepaySharesReentrancyTest());
         _registerMethod(new SiloConfigReentrancyTest());
-        _registerMethod(new SiloDataStorageReentrancyTest());
+        _registerMethod(new GetSiloStorageReentrancyTest());
         _registerMethod(new SiloReentrancyTest());
         _registerMethod(new SiloTokenReentrancyTest());
         _registerMethod(new SwitchCollateralToThisSiloReentrancyTest());

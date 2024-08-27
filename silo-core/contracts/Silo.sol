@@ -267,6 +267,21 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
+    function getSiloStorage()
+        external
+        view
+        returns (
+            uint192 daoAndDeployerFees,
+            uint64 interestRateTimestamp,
+            uint256 protectedAssets,
+            uint256 collateralAssets,
+            uint256 debtAssets
+        )
+    {
+        return Views.getSiloStorage();
+    }
+
+    /// @inheritdoc ISilo
     function convertToShares(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
         (uint256 totalSiloAssets, uint256 totalShares) = _getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
@@ -672,12 +687,6 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
-    }
-
-    /// @inheritdoc ISilo
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp) {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        return ($.daoAndDeployerFees, $.interestRateTimestamp);
     }
 
     function _deposit(
