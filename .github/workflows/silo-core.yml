@@ -146,9 +146,6 @@ jobs:
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
                     version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
-            
-            # this file is not cached for some reason, and because of that, we need to compile all the contracts
-            -   run: cat ./cache/solidity-files-cache.json
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -158,15 +155,14 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxDepositTest|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxDepositTest|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
 
-    slow-tests:
+    slow-contracts-tests:
         strategy:
             matrix:
-                slow-test: [
+                match-contract: [
                     MaxBorrow,
                     MaxDepositTest,
-                    MaxLiquidationTest,
                     MaxLiquidationBadDebt,
                     PreviewTest,
                     PreviewDepositTest,
@@ -210,5 +206,54 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
+            -   name: ${{ matrix.match-contract }}
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
+
+    MaxLiquidationTest:
+        strategy:
+            matrix:
+                match-test: [
+                    test_maxLiquidation_noDebt,
+                    test_maxLiquidation_partial_1token
+                    test_maxLiquidation_partial_2tokens
+               ]
+
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+            #                with:
+            #                    submodules: recursive
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
             -   name: ${{ matrix.slow-test }}
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc ${{ matrix.slow-test }} --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
