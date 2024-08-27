@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ERC20Permit, IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
-import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import {ERC20Upgradeable} from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
@@ -57,7 +59,7 @@ import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is ERC20Permit, IShareToken {
+abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
@@ -70,9 +72,8 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() ERC20(_NAME, _NAME) ERC20Permit(_NAME) {
-        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
-        $.silo = ISilo(address(this)); // disable initializer
+    constructor() {
+        _disableInitializers();
     }
 
     function silo() external view virtual returns (ISilo) {
@@ -113,38 +114,38 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
         return ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver;
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc ERC20Upgradeable
     function transferFrom(address _from, address _to, uint256 _amount)
         public
         virtual
-        override(ERC20, IERC20)
+        override(ERC20Upgradeable, IERC20)
         returns (bool result)
     {
         ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
-        result = ERC20.transferFrom(_from, _to, _amount);
+        result = ERC20Upgradeable.transferFrom(_from, _to, _amount);
 
         siloConfigCached.turnOffReentrancyProtection();
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc ERC20Upgradeable
     function transfer(address _to, uint256 _amount)
         public
         virtual
-        override(ERC20, IERC20)
+        override(ERC20Upgradeable, IERC20)
         returns (bool result)
     {
         ISiloConfig siloConfigCached = _crossNonReentrantBefore();
 
-        result = ERC20.transfer(_to, _amount);
+        result = ERC20Upgradeable.transfer(_to, _amount);
 
         siloConfigCached.turnOffReentrancyProtection();
     }
 
-    function approve(address spender, uint256 value) public override(ERC20, IERC20) returns (bool result) {
+    function approve(address spender, uint256 value) public override(ERC20Upgradeable, IERC20) returns (bool result) {
         NonReentrantLib.nonReentrant(_getSiloConfig());
 
-        result = ERC20.approve(spender, value);
+        result = ERC20Upgradeable.approve(spender, value);
     }
 
     /// @inheritdoc IERC20Permit
@@ -159,11 +160,11 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
     ) public virtual override {
         NonReentrantLib.nonReentrant(_getSiloConfig());
 
-        ERC20Permit.permit(owner, spender, value, deadline, v, r, s);
+        ERC20PermitUpgradeable.permit(owner, spender, value, deadline, v, r, s);
     }
 
     /// @dev decimals of share token
-    function decimals() public view virtual override(ERC20, IERC20Metadata) returns (uint8) {
+    function decimals() public view virtual override(ERC20Upgradeable, IERC20Metadata) returns (uint8) {
         return ShareTokenLib.decimals();
     }
 
@@ -178,7 +179,7 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
         public
         view
         virtual
-        override(ERC20, IERC20Metadata)
+        override(ERC20Upgradeable, IERC20Metadata)
         returns (string memory)
     {
         return ShareTokenLib.name();
@@ -195,7 +196,7 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
         public
         view
         virtual
-        override(ERC20, IERC20Metadata)
+        override(ERC20Upgradeable, IERC20Metadata)
         returns (string memory)
     {
         return ShareTokenLib.symbol();
@@ -205,13 +206,28 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
         return (balanceOf(_account), totalSupply());
     }
 
-    /// @inheritdoc ERC20
+    /// @dev Share token initialization
+    function _shareTokenInitialize(
+        ISilo _silo,
+        address _hookReceiver,
+        uint24 _tokenType
+    )
+        internal
+        virtual
+        initializer
+    {
+        __ERC20Permit_init(_NAME);
+        __ERC20_init(_NAME, _NAME);
+        ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
+    }
+
+    /// @inheritdoc ERC20Upgradeable
     function _update(address from, address to, uint256 value) internal virtual override {
         if (value == 0) revert ZeroTransfer();
 
         _beforeTokenTransfer(from, to, value);
 
-        ERC20._update(from, to, value);
+        ERC20Upgradeable._update(from, to, value);
 
         _afterTokenTransfer(from, to, value);
     }
