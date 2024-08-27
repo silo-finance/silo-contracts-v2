@@ -57,10 +57,10 @@ library Views {
 
         address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
 
-        return _callMaxDepositOrMint(IShareToken(shareToken).totalSupply());
+        return _maxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
-    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
+    function _maxDepositOrMint(uint256 _totalCollateralAssets)
         internal
         pure
         returns (uint256 maxAssetsOrShares)

@@ -83,7 +83,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function config() external view virtual returns (ISiloConfig siloConfig) {
-        siloConfig = _siloConfig();
+        siloConfig = ShareTokenLib.siloConfig();
     }
 
     /// @inheritdoc ISilo
@@ -99,7 +99,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
-        return SiloLendingLib.getLiquidity(_siloConfig());
+        return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());
     }
 
     /// @inheritdoc ISilo
@@ -109,7 +109,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = _callGetThisConfigData();
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
 
         totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
             thisSiloConfig.silo,
@@ -121,7 +121,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = _callGetThisConfigData();
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
 
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             thisSiloConfig.silo, thisSiloConfig.interestRateModel
@@ -158,7 +158,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function asset() external view virtual returns (address assetTokenAddress) {
-        return _siloConfig().getAssetForSilo(address(this));
+        return ShareTokenLib.siloConfig().getAssetForSilo(address(this));
     }
 
     /// @inheritdoc IERC4626
@@ -192,8 +192,8 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
-        return _callMaxDepositOrMint(totalCollateralAssets);
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        return _maxDepositOrMint($.totalAssets[AssetTypes.COLLATERAL]);
     }
 
     /// @inheritdoc IERC4626
@@ -212,7 +212,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return _callMaxDepositOrMint(totalSupply());
+        return _maxDepositOrMint(totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -227,7 +227,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = _callMaxWithdraw(_owner, CollateralType.Collateral);
+        (maxAssets,) = _maxWithdraw(_owner, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -246,7 +246,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
-        (, maxShares) = _callMaxWithdraw(_owner, CollateralType.Collateral);
+        (, maxShares) = _maxWithdraw(_owner, CollateralType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -296,7 +296,7 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 maxAssets)
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        return _callMaxDepositOrMint($.totalAssets[uint256(_collateralType)]);
+        return _maxDepositOrMint($.totalAssets[uint256(_collateralType)]);
     }
 
     /// @inheritdoc ISilo
@@ -354,7 +354,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 maxAssets)
     {
-        (maxAssets,) = _callMaxWithdraw(_owner, _collateralType);
+        (maxAssets,) = _maxWithdraw(_owner, _collateralType);
     }
 
     /// @inheritdoc ISilo
@@ -383,7 +383,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 maxShares)
     {
-        (, maxShares) = _callMaxWithdraw(_owner, _collateralType);
+        (, maxShares) = _maxWithdraw(_owner, _collateralType);
     }
 
     /// @inheritdoc ISilo
@@ -595,7 +595,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxRepayShares(address _borrower) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = _callGetThisConfigData();
+        ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
     }
 
@@ -628,7 +628,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
-        maxLoan = _token == _siloConfig().getAssetForSilo(address(this))
+        maxLoan = _token == ShareTokenLib.siloConfig().getAssetForSilo(address(this))
             ? IERC20(_token).balanceOf(address(this))
             : 0;
     }
@@ -658,9 +658,9 @@ contract Silo is ISilo, ShareCollateralToken {
         external
         virtual
     {
-        if (msg.sender != address(_siloConfig())) revert OnlySiloConfig();
+        if (msg.sender != address(ShareTokenLib.siloConfig())) revert OnlySiloConfig();
 
-        _callAccrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
+        _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }
 
     /// @inheritdoc ISilo
@@ -736,7 +736,7 @@ contract Silo is ISilo, ShareCollateralToken {
         view
         returns (uint256 assets, uint256 shares)
     {
-        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_callGetThisConfigData(), _assetType);
+        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
     }
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)
@@ -797,7 +797,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
-    function _callMaxDepositOrMint(uint256 _totalCollateralAssets)
+    function _maxDepositOrMint(uint256 _totalCollateralAssets)
         internal
         view
         virtual
@@ -806,7 +806,7 @@ contract Silo is ISilo, ShareCollateralToken {
         return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 
-    function _callMaxWithdraw(address _owner, ISilo.CollateralType _collateralType)
+    function _maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
         internal
         view
         virtual
@@ -816,24 +816,16 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
-        ISiloConfig.ConfigData memory cfg = _callGetThisConfigData();
-        accruedInterest = _callAccrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
+        ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();
+        accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
     }
 
-    function _callAccrueInterestForAsset(
+    function _accrueInterestForAsset(
         address _interestRateModel,
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = Actions.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    function _siloConfig() internal view virtual returns (ISiloConfig siloConfig) {
-        siloConfig = ShareTokenLib.siloConfig();
-    }
-
-    function _callGetThisConfigData() internal view virtual returns (ISiloConfig.ConfigData memory siloConfigData) {
-        siloConfigData = ShareTokenLib.getConfig();
     }
 }
