@@ -91,8 +91,8 @@ jobs:
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-            -   run: ls ./cache/
-
+            -   name: Run single test to build cache for contracts
+                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
     linters:
         needs: silo-core-cache
         runs-on: ubuntu-latest
