@@ -460,7 +460,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" -mc MaxLiquidationBadDebt  --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationBadDebt  --ffi -vv
 
     silo-preview:
         needs: silo-core-cache
