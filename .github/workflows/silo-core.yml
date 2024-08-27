@@ -321,7 +321,7 @@ jobs:
             -   name: Run Forge tests
                 run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxDeposit/*sol" --ffi -vv
 
-    silo-maxLiquidation:
+    silo-maxLiquidation-MaxLiquidationTest:
         needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
@@ -362,7 +362,105 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxLiquidation/*sol" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationTest  --ffi -vv
+
+    silo-maxLiquidation-others:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+            #                with:
+            #                    submodules: recursive
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: |
+                        ~/.npm
+                        ./gitmodules/
+                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/foundry
+                    key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: Run MaxLiquidationBadDebt tests
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationBadDebt  --ffi -vv
+
+            -   name: Run MaxLiquidationCapTest tests
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationCapTest  --ffi -vv
+
+            -   name: Run MaxLiquidationLTV100 tests
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationLTV100  --ffi -vv
+
+            -   name: Run MaxLiquidationDust tests
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationDust  --ffi -vv
+
+            -   name: Run MaxLiquidationWithChunksTest tests
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationWithChunksTest  --ffi -vv
+
+    silo-maxLiquidation-MaxLiquidationBadDebt:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+            #                with:
+            #                    submodules: recursive
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: |
+                        ~/.npm
+                        ./gitmodules/
+                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/foundry
+                    key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: Run Forge tests
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" -mc MaxLiquidationBadDebt  --ffi -vv
 
     silo-preview:
         needs: silo-core-cache

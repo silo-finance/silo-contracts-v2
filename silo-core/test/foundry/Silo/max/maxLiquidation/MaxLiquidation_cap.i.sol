@@ -8,7 +8,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationTest
+    forge test -vv --ffi --mc MaxLiquidationCapTest
 
     this tests are for "normal" case,
     where user became insolvent and we can partially liquidate
