@@ -8,7 +8,7 @@ import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.s
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 
 abstract contract ShareTokenInitializable is IShareTokenInitializable, Initializable {
-    /// @param _silo Silo address for which tokens was deployed
+    /// @inheritdoc IShareTokenInitializable
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
         ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
