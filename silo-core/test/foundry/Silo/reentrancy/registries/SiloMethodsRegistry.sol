@@ -39,7 +39,6 @@ import {GetLiquidityReentrancyTest} from "../methods/silo/GetLiquidityReentrancy
 import {HookReceiverTokenReentrancyTest} from "../methods/silo/HookReceiverTokenReentrancyTest.sol";
 import {HookSetupReentrancyTest} from "../methods/silo/HookSetupReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/silo/InitializeReentrancyTest.sol";
-import {InitializeTokenReentrancyTest} from "../methods/silo/InitializeTokenReentrancyTest.sol";
 import {IsSolventReentrancyTest} from "../methods/silo/IsSolventReentrancyTest.sol";
 import {LeverageSameAssetReentrancyTest} from "../methods/silo/LeverageSameAssetReentrancyTest.sol";
 import {MaxBorrowReentrancyTest} from "../methods/silo/MaxBorrowReentrancyTest.sol";
@@ -137,7 +136,6 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new HookReceiverTokenReentrancyTest());
         _registerMethod(new HookSetupReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());
-        _registerMethod(new InitializeTokenReentrancyTest());
         _registerMethod(new IsSolventReentrancyTest());
         _registerMethod(new LeverageSameAssetReentrancyTest());
         _registerMethod(new MaxBorrowReentrancyTest());

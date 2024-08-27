@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IShareTokenInitializable} from "silo-core/contracts/interfaces/IShareTokenInitializable.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
 contract InitializeReentrancyTest is ShareTokenMethodReentrancyTest {
@@ -23,6 +23,6 @@ contract InitializeReentrancyTest is ShareTokenMethodReentrancyTest {
 
     function _ensureItWillNotRevert(address _token) internal {
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        IShareToken(_token).initialize(ISilo(address(this)), address(this), uint24(100));
+        IShareTokenInitializable(_token).initialize(ISilo(address(this)), address(this), uint24(100));
     }
 }

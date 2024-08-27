@@ -8,6 +8,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IShareTokenInitializable} from "silo-core/contracts/interfaces/IShareTokenInitializable.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
@@ -152,22 +153,16 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0), 0);
+        IShareTokenInitializable(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData0.collateralShareToken).initialize(ISilo(configData0.silo), address(0), 0);
+        IShareTokenInitializable(configData0.debtShareToken).initialize(ISilo(configData0.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData0.debtShareToken).initialize(ISilo(configData0.silo), address(0), 0);
+        IShareTokenInitializable(configData1.protectedShareToken).initialize(ISilo(configData1.silo), address(0), 0);
 
         vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData1.protectedShareToken).initialize(ISilo(configData1.silo), address(0), 0);
-
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData1.collateralShareToken).initialize(ISilo(configData1.silo), address(0), 0);
-
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareToken(configData1.debtShareToken).initialize(ISilo(configData1.silo), address(0), 0);
+        IShareTokenInitializable(configData1.debtShareToken).initialize(ISilo(configData1.silo), address(0), 0);
 
         assertEq(siloFactory.ownerOf(1), initData.deployer);
     }

@@ -8,6 +8,7 @@ import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {ShareDebtTokenLib} from "../lib/ShareDebtTokenLib.sol";
+import {ShareTokenInitializable} from "./ShareTokenInitializable.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo
@@ -18,7 +19,7 @@ import {ShareDebtTokenLib} from "../lib/ShareDebtTokenLib.sol";
 /// to any recipient as long as receiving wallet approves the transfer. In other words, anyone can
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
-contract ShareDebtToken is IERC20R, ShareToken {
+contract ShareDebtToken is IERC20R, ShareToken, ShareTokenInitializable {
     using SiloLensLib for ISilo;
 
     function forwardTransferFromNoChecks(address, address, uint256) external pure override {
