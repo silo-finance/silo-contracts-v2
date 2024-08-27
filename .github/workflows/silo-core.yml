@@ -214,8 +214,10 @@ jobs:
             matrix:
                 match-test: [
                     test_maxLiquidation_noDebt,
-                    test_maxLiquidation_partial_1token,
-                    test_maxLiquidation_partial_2tokens
+                    test_maxLiquidation_partial_1token_sTokens,
+                    test_maxLiquidation_partial_1token_tokens,
+                    test_maxLiquidation_partial_2tokens_sTokens
+                    test_maxLiquidation_partial_2tokens_tokens
                ]
 
         needs: silo-core-cache
