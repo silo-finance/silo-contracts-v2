@@ -362,7 +362,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run Forge tests
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationTest  --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --match-path "**/test/foundry/Silo/max/maxLiquidation/*sol" --mc MaxLiquidationTest  --ffi -vv
 
     silo-maxLiquidation-others:
         needs: silo-core-cache
