@@ -138,7 +138,7 @@ library SiloSolvencyLib {
 
         uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).total(AssetTypes.DEBT);
+            : ISilo(_debtConfig.silo).getTotalStorage(AssetTypes.DEBT);
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(

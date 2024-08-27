@@ -86,7 +86,7 @@ import {SwitchCollateralToThisSiloReentrancyTest} from "../methods/silo/SwitchCo
 import {SymbolReentrancyTest} from "../methods/silo/SymbolReentrancyTest.sol";
 import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
 import {SynchronizeHooksTokenReentrancyTest} from "../methods/silo/SynchronizeHooksTokenReentrancyTest.sol";
-import {TotalReentrancyTest} from "../methods/silo/TotalReentrancyTest.sol";
+import {GetTotalStorageReentrancyTest} from "../methods/silo/GetTotalStorageReentrancyTest.sol";
 import {TotalAssetsReentrancyTest} from "../methods/silo/TotalAssetsReentrancyTest.sol";
 import {TotalSupplyReentrancyTest} from "../methods/silo/TotalSupplyReentrancyTest.sol";
 import {TransferReentrancyTest} from "../methods/silo/TransferReentrancyTest.sol";
@@ -183,7 +183,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new SwitchCollateralToThisSiloReentrancyTest());
         _registerMethod(new SymbolReentrancyTest());
         _registerMethod(new SynchronizeHooksReentrancyTest());
-        _registerMethod(new TotalReentrancyTest());
+        _registerMethod(new GetTotalStorageReentrancyTest());
         _registerMethod(new TotalAssetsReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
         _registerMethod(new TransferReentrancyTest());

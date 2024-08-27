@@ -233,7 +233,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     function isSolvent(address _borrower) external view returns (bool);
 
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    function total(uint256 _assetType) external view returns (uint256);
+    function getTotalStorage(uint256 _assetType) external view returns (uint256);
 
     /// @notice Direct storage access to silo storage
     /// @dev See struct `SiloStorage` for more details

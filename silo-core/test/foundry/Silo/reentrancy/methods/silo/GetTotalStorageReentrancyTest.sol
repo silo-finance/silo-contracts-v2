@@ -5,7 +5,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract TotalReentrancyTest is MethodReentrancyTest {
+contract GetTotalStorageReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -16,17 +16,17 @@ contract TotalReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "total(uint256)";
+        description = "getTotalStorage(uint256)";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().total(uint256(ISilo.AssetType.Collateral));
-        TestStateLib.silo1().total(uint256(ISilo.AssetType.Collateral));
+        TestStateLib.silo0().getTotalStorage(uint256(ISilo.AssetType.Collateral));
+        TestStateLib.silo1().getTotalStorage(uint256(ISilo.AssetType.Collateral));
 
-        TestStateLib.silo0().total(uint256(ISilo.AssetType.Protected));
-        TestStateLib.silo1().total(uint256(ISilo.AssetType.Protected));
+        TestStateLib.silo0().getTotalStorage(uint256(ISilo.AssetType.Protected));
+        TestStateLib.silo1().getTotalStorage(uint256(ISilo.AssetType.Protected));
 
-        TestStateLib.silo0().total(uint256(ISilo.AssetType.Debt));
-        TestStateLib.silo1().total(uint256(ISilo.AssetType.Debt));
+        TestStateLib.silo0().getTotalStorage(uint256(ISilo.AssetType.Debt));
+        TestStateLib.silo1().getTotalStorage(uint256(ISilo.AssetType.Debt));
     }
 }
