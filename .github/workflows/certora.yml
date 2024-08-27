@@ -1,0 +1,71 @@
+name: Certora
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - certora/*
+      - .github/workflows/certora.yml
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - silo-core/**/*.sol
+      - silo-oracles/**/*.sol
+      - gitmodules/*
+      - .gitmodules
+
+  pull_request:
+    paths:
+      - certora/*
+      - .github/workflows/certora.yml
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - silo-core/**/*.sol
+      - silo-oracles/**/*.sol
+      - gitmodules/*
+      - .gitmodules
+
+jobs:
+  ve-silo-foundry:
+    strategy:
+      fail-fast: true
+
+    name: CVL typecheck only
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install the solc-select
+        run: pip3 install solc-select
+
+      - name: Install the Certora Prover package
+        run: pip3 install certora-cli-beta
+
+      - name: Install/select solidity
+        run: |
+          solc-select install 0.8.21
+          solc-select use 0.8.21
+
+      - name: Print versions
+        run: |
+          certoraRun --version
+          solc --version
+# TODO
+#      - name: Silo VariableChangesSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+#
+#      - name: Silo ValidStateSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
+#
+#      - name: Silo UnitTestsSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/unit-tests/UnitTestsSilo0.spec"
+#
+#      - name: Silo RiskAssessmentSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/risk-assessment/RiskAssessmentSilo0.spec"
+#
+#      - name: Share debt token RiskAssessment typecheck
+#        run: certoraRun certora/config/shareDebt.conf --parametric_contracts ShareDebtToken --compilation_steps_only --verify "ShareDebtToken:certora/specs/share-debt-token/RiskAssessment.spec"
+#
+#      - name: Silo StateTransitionSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/state-transition/StateTransitionSilo0.spec"
