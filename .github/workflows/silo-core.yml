@@ -95,24 +95,24 @@ jobs:
                 run: ls ./cache/foundry/out
             -   run: ls ./cache/foundry/
 
-        linters:
-            needs: silo-core-cache
-            runs-on: ubuntu-latest
+    linters:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
 
-            steps:
-                -   name: Checkout sources
-                    uses: actions/checkout@v3
+        steps:
+            -   name: Checkout sources
+                uses: actions/checkout@v3
 
-                -   name: Set up Node.js
-                    uses: actions/setup-node@v3
-                    with:
-                        node-version: 20.x
-                        cache: 'yarn'
+            -   name: Set up Node.js
+                uses: actions/setup-node@v3
+                with:
+                    node-version: 20.x
+                    cache: 'yarn'
 
-                -   run: yarn install
+            -   run: yarn install
 
-                -   name: Solidity Lint
-                    run: yarn workspace silo-core lint:sol
+            -   name: Solidity Lint
+                run: yarn workspace silo-core lint:sol
 
     fast-tests:
         needs: silo-core-cache
