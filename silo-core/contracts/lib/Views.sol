@@ -47,7 +47,7 @@ library Views {
     }
 
     function maxMint(ISilo.CollateralType _collateralType)
-        external
+        internal
         view
         returns (uint256 maxShares)
     {
@@ -57,12 +57,12 @@ library Views {
 
         address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
 
-        return _maxDepositOrMint(IShareToken(shareToken).totalSupply());
+        return SiloERC4626Lib.maxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
-    function maxDeposit() internal view returns (uint256 maxAssets) {
-        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
-        return _maxDepositOrMint(totalCollateralAssets);
+    function maxDeposit(ISilo.CollateralType _collateralType) internal view returns (uint256 maxAssets) {
+        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[uint256(_collateralType)];
+        return SiloERC4626Lib.maxDepositOrMint(totalCollateralAssets);
     }
 
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
@@ -162,13 +162,5 @@ library Views {
 
         totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
         totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
-    }
-
-    function _maxDepositOrMint(uint256 _totalCollateralAssets)
-        internal
-        pure
-        returns (uint256 maxAssetsOrShares)
-    {
-        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 }
