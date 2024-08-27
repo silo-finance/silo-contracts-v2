@@ -65,7 +65,7 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: build-foundry-nightly-2cb875799419c907cc3709e586ece2559e6b340e
+                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
