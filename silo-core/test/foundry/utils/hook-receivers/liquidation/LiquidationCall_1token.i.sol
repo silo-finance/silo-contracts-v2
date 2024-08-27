@@ -136,8 +136,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
 
-        (, uint64 interestRateTimestamp0) = silo0.siloData();
-        (, uint64 interestRateTimestamp1) = silo1.siloData();
+        (, uint64 interestRateTimestamp0,,,) = silo0.getSiloStorage();
+        (, uint64 interestRateTimestamp1,,,) = silo1.getSiloStorage();
         assertEq(interestRateTimestamp0, 1, "interestRateTimestamp0 is 1 because we deposited and borrow same asset");
         assertEq(block.timestamp, 1, "block.timestamp");
 
@@ -247,8 +247,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         }
 
         { // too deep
-            (, uint64 interestRateTimestamp0After) = silo0.siloData();
-            (, uint64 interestRateTimestamp1After) = silo1.siloData();
+            (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
+            (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
             assertGt(interestRateTimestamp1After, 0, "interestRateTimestamp #1 (because of withdraw)");
@@ -342,8 +342,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo1));
 
-        (, uint64 interestRateTimestamp0) = silo0.siloData();
-        (, uint64 interestRateTimestamp1) = silo1.siloData();
+        (, uint64 interestRateTimestamp0,,,) = silo0.getSiloStorage();
+        (, uint64 interestRateTimestamp1,,,) = silo1.getSiloStorage();
 
         // move forward with time so we can have interests
 
@@ -429,15 +429,15 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             assertEq(token0.balanceOf(address(silo0)), dust + roundingError, "no balance after withdraw fees (except dust!)");
             assertEq(IShareToken(debtConfig.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
             assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
-            assertEq(silo0.total(AssetTypes.COLLATERAL), dust + roundingError, "storage AssetType.Collateral");
+            assertEq(silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL), dust + roundingError, "storage AssetType.Collateral");
             assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
             assertEq(silo0.getCollateralAssets(), dust + roundingError, "total collateral == 4+5, dust!");
             assertEq(silo0.getLiquidity(), dust + roundingError, "getLiquidity == 4+5, dust!");
         }
 
         { // too deep
-            (, uint64 interestRateTimestamp0After) = silo0.siloData();
-            (, uint64 interestRateTimestamp1After) = silo1.siloData();
+            (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
+            (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
 
@@ -462,8 +462,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
 
-        (, uint64 interestRateTimestamp0) = silo0.siloData();
-        (, uint64 interestRateTimestamp1) = silo1.siloData();
+        (, uint64 interestRateTimestamp0,,,) = silo0.getSiloStorage();
+        (, uint64 interestRateTimestamp1,,,) = silo1.getSiloStorage();
 
         // move forward with time so we can have interests
 
@@ -556,8 +556,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         }
 
         { // too deep
-            (, uint64 interestRateTimestamp0After) = silo0.siloData();
-            (, uint64 interestRateTimestamp1After) = silo1.siloData();
+            (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
+            (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
             assertLt(interestRateTimestamp1, interestRateTimestamp1After, "interestRateTimestamp #1");

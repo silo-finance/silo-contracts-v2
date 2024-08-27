@@ -30,9 +30,9 @@ import {FactoryReentrancyTest} from "../methods/silo/FactoryReentrancyTest.sol";
 import {FlashFeeReentrancyTest} from "../methods/silo/FlashFeeReentrancyTest.sol";
 import {FlashLoanReentrancyTest} from "../methods/silo/FlashLoanReentrancyTest.sol";
 import {ForwardTransferFromNoChecksTest} from "../methods/silo/ForwardTransferFromNoChecksTest.sol";
-import {GetCollateralAndDebtAssetsReentrancyTest} from "../methods/silo/GetCollateralAndDebtAssetsReentrancyTest.sol";
-import {GetCollateralAndProtectedAssetsReentrancyTest}
-    from "../methods/silo/GetCollateralAndProtectedAssetsReentrancyTest.sol";
+import {GetCollateralAndDebtTotalsStorageReentrancyTest} from "../methods/silo/GetCollateralAndDebtTotalsStorageReentrancyTest.sol";
+import {GetCollateralAndProtectedTotalsStorageReentrancyTest}
+    from "../methods/silo/GetCollateralAndProtectedTotalsStorageReentrancyTest.sol";
 import {GetCollateralAssetsReentrancyTest} from "../methods/silo/GetCollateralAssetsReentrancyTest.sol";
 import {GetDebtAssetsReentrancyTest} from "../methods/silo/GetDebtAssetsReentrancyTest.sol";
 import {GetLiquidityReentrancyTest} from "../methods/silo/GetLiquidityReentrancyTest.sol";
@@ -79,14 +79,14 @@ import {RedeemWithTypeReentrancyTest} from "../methods/silo/RedeemWithTypeReentr
 import {RepayReentrancyTest} from "../methods/silo/RepayReentrancyTest.sol";
 import {RepaySharesReentrancyTest} from "../methods/silo/RepaySharesReentrancyTest.sol";
 import {SiloConfigReentrancyTest} from "../methods/silo/SiloConfigReentrancyTest.sol";
-import {SiloDataStorageReentrancyTest} from "../methods/silo/SiloDataStorageReentrancyTest.sol";
+import {GetSiloStorageReentrancyTest} from "../methods/silo/GetSiloStorageReentrancyTest.sol";
 import {SiloReentrancyTest} from "../methods/share-token/SiloReentrancyTest.sol";
 import {SiloTokenReentrancyTest} from "../methods/silo/SiloTokenReentrancyTest.sol";
 import {SwitchCollateralToThisSiloReentrancyTest} from "../methods/silo/SwitchCollateralToThisSiloReentrancyTest.sol";
 import {SymbolReentrancyTest} from "../methods/silo/SymbolReentrancyTest.sol";
 import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
 import {SynchronizeHooksTokenReentrancyTest} from "../methods/silo/SynchronizeHooksTokenReentrancyTest.sol";
-import {TotalReentrancyTest} from "../methods/silo/TotalReentrancyTest.sol";
+import {GetTotalAssetsStorageReentrancyTest} from "../methods/silo/GetTotalAssetsStorageReentrancyTest.sol";
 import {TotalAssetsReentrancyTest} from "../methods/silo/TotalAssetsReentrancyTest.sol";
 import {TotalSupplyReentrancyTest} from "../methods/silo/TotalSupplyReentrancyTest.sol";
 import {TransferReentrancyTest} from "../methods/silo/TransferReentrancyTest.sol";
@@ -129,8 +129,8 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new FlashFeeReentrancyTest());
         _registerMethod(new FlashLoanReentrancyTest());
         _registerMethod(new ForwardTransferFromNoChecksTest());
-        _registerMethod(new GetCollateralAndDebtAssetsReentrancyTest());
-        _registerMethod(new GetCollateralAndProtectedAssetsReentrancyTest());
+        _registerMethod(new GetCollateralAndDebtTotalsStorageReentrancyTest());
+        _registerMethod(new GetCollateralAndProtectedTotalsStorageReentrancyTest());
         _registerMethod(new GetCollateralAssetsReentrancyTest());
         _registerMethod(new GetDebtAssetsReentrancyTest());
         _registerMethod(new GetLiquidityReentrancyTest());
@@ -177,13 +177,13 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new RepayReentrancyTest());
         _registerMethod(new RepaySharesReentrancyTest());
         _registerMethod(new SiloConfigReentrancyTest());
-        _registerMethod(new SiloDataStorageReentrancyTest());
+        _registerMethod(new GetSiloStorageReentrancyTest());
         _registerMethod(new SiloReentrancyTest());
         _registerMethod(new SiloTokenReentrancyTest());
         _registerMethod(new SwitchCollateralToThisSiloReentrancyTest());
         _registerMethod(new SymbolReentrancyTest());
         _registerMethod(new SynchronizeHooksReentrancyTest());
-        _registerMethod(new TotalReentrancyTest());
+        _registerMethod(new GetTotalAssetsStorageReentrancyTest());
         _registerMethod(new TotalAssetsReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
         _registerMethod(new TransferReentrancyTest());

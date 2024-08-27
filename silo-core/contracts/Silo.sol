@@ -129,7 +129,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getCollateralAndProtectedAssets()
+    function getCollateralAndProtectedTotalsStorage()
         external
         view
         virtual
@@ -142,7 +142,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getCollateralAndDebtAssets()
+    function getCollateralAndDebtTotalsStorage()
         external
         view
         virtual
@@ -264,6 +264,21 @@ contract Silo is ISilo, ShareCollateralToken {
         uint256 zeroAssets = 0;
 
         (assets,) = _withdraw(zeroAssets, _shares, _receiver, _owner, msg.sender, CollateralType.Collateral);
+    }
+
+    /// @inheritdoc ISilo
+    function getSiloStorage()
+        external
+        view
+        returns (
+            uint192 daoAndDeployerFees,
+            uint64 interestRateTimestamp,
+            uint256 protectedAssets,
+            uint256 collateralAssets,
+            uint256 debtAssets
+        )
+    {
+        return Views.getSiloStorage();
     }
 
     /// @inheritdoc ISilo
@@ -670,14 +685,8 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function total(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
+    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
-    }
-
-    /// @inheritdoc ISilo
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp) {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        return ($.daoAndDeployerFees, $.interestRateTimestamp);
     }
 
     function _deposit(

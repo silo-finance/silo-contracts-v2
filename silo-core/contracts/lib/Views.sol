@@ -94,4 +94,24 @@ library Views {
             shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, ISilo.AssetType.Debt
         );
     }
+
+    function getSiloStorage()
+        internal
+        view
+        returns (
+            uint192 daoAndDeployerFees,
+            uint64 interestRateTimestamp,
+            uint256 protectedAssets,
+            uint256 collateralAssets,
+            uint256 debtAssets
+        )
+    {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        daoAndDeployerFees = $.daoAndDeployerFees;
+        interestRateTimestamp = $.interestRateTimestamp;
+        protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
+        collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        debtAssets = $.totalAssets[AssetTypes.DEBT];
+    }
 }

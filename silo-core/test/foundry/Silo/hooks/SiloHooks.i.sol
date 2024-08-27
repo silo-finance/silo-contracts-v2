@@ -143,13 +143,13 @@ contract SiloHooksTest is SiloLittleHelper, Test {
             expectedTotalCollateralAssets
         );
 
-        uint256 totalCollateralBeforeCall = silo0.total(assetType);
+        uint256 totalCollateralBeforeCall = silo0.getTotalAssetsStorage(assetType);
         assertEq(totalCollateralBeforeCall, 0, "Expect to have no collateral assets");
 
         vm.prank(_hookReceiverAddr);
         silo0.callOnBehalfOfSilo(target, amoutToSend, ISilo.CallType.Delegatecall, data);
 
-        uint256 totalCollateralAfterCall = silo0.total(assetType);
+        uint256 totalCollateralAfterCall = silo0.getTotalAssetsStorage(assetType);
         assertEq(totalCollateralAfterCall, expectedTotalCollateralAssets, "Expect to have collateral assets");
     }
 
