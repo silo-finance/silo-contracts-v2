@@ -163,14 +163,15 @@ jobs:
     slow-tests:
         strategy:
             matrix:
-                slow-test: | 
-                    MaxBorrow
-                    MaxDepositTest
-                    MaxLiquidationTest
-                    MaxLiquidationBadDebt
-                    PreviewTest
-                    PreviewDepositTest
+                slow-test: [
+                    MaxBorrow,
+                    MaxDepositTest,
+                    MaxLiquidationTest,
+                    MaxLiquidationBadDebt,
+                    PreviewTest,
+                    PreviewDepositTest,
                     PreviewMintTest
+               ]
 
         needs: silo-core-cache
         runs-on: ubuntu-latest
