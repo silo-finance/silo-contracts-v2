@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 import {ERC20Permit, IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20, IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
@@ -58,7 +57,7 @@ import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
+abstract contract ShareToken is ERC20Permit, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
@@ -74,11 +73,6 @@ abstract contract ShareToken is Initializable, ERC20Permit, IShareToken {
     constructor() ERC20(_NAME, _NAME) ERC20Permit(_NAME) {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
         $.silo = ISilo(address(this)); // disable initializer
-    }
-
-    /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
-        ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
     function silo() external view returns (ISilo) {

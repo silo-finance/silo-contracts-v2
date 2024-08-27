@@ -3,8 +3,8 @@ pragma solidity >=0.5.0;
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISilo} from "../interfaces/ISilo.sol";
+import {ISiloConfig} from "./ISiloConfig.sol";
+import {ISilo} from "./ISilo.sol";
 
 interface IShareToken is IERC20Metadata {
     struct HookSetup {
@@ -46,11 +46,6 @@ interface IShareToken is IERC20Metadata {
     error RecipientNotSolventAfterTransfer();
     error SenderNotSolventAfterTransfer();
     error ZeroTransfer();
-
-    /// @param _silo Silo address for which tokens was deployed
-    /// @param _hookReceiver address that will get a callback on mint, burn and transfer of the token
-    /// @param _tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
-    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external;
 
     /// @notice method for SiloConfig to synchronize hooks
     /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action

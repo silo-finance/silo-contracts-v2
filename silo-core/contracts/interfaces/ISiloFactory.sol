@@ -58,7 +58,7 @@ interface ISiloFactory is IERC721 {
     function maxLiquidationFee() external view returns (uint256);
     function daoFeeReceiver() external view returns (address);
     function siloImpl() external view returns (address);
-    function shareCollateralTokenImpl() external view returns (address);
+    function shareProtectedCollateralTokenImpl() external view returns (address);
     function shareDebtTokenImpl() external view returns (address);
 
     function idToSilos(uint256 _id) external view returns (address[2] memory);

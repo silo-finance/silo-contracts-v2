@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -61,11 +60,6 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (bool success, bytes memory result)
     {
         (success, result) = Actions.callOnBehalfOfSilo(_target, _value, _callType, _input);
-    }
-
-    function initialize(ISilo, address, uint24) external virtual override {
-        // share token initialize is disabled, because it is done on silo.initialize
-        revert Initializable.InvalidInitialization();
     }
 
     /// @inheritdoc ISilo

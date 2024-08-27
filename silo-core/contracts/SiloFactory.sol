@@ -7,6 +7,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
 import {IShareToken} from "./interfaces/IShareToken.sol";
+import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {ISilo, Silo} from "./Silo.sol";
@@ -34,7 +35,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     address public daoFeeReceiver;
 
     address public siloImpl;
-    address public shareCollateralTokenImpl;
+    address public shareProtectedCollateralTokenImpl;
     address public shareDebtTokenImpl;
 
     mapping(uint256 id => address[2] silos) private _idToSilos;
@@ -48,7 +49,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only creator can init.
     function initialize(
         address _siloImpl,
-        address _shareCollateralTokenImpl,
+        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
@@ -58,12 +59,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         // start IDs from 1
         _siloId = 1;
 
-        if (_siloImpl == address(0) || _shareCollateralTokenImpl == address(0) || _shareDebtTokenImpl == address(0)) {
+        if (
+            _siloImpl == address(0) ||
+            _shareProtectedCollateralTokenImpl == address(0) ||
+            _shareDebtTokenImpl == address(0)
+        ) {
             revert ZeroAddress();
         }
 
         siloImpl = _siloImpl;
-        shareCollateralTokenImpl = _shareCollateralTokenImpl;
+        shareProtectedCollateralTokenImpl = _shareProtectedCollateralTokenImpl;
         shareDebtTokenImpl = _shareDebtTokenImpl;
 
         uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
@@ -243,10 +248,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData0,
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
-        configData0.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData0.protectedShareToken = Clones.clone(shareProtectedCollateralTokenImpl);
         configData0.collateralShareToken = configData0.silo;
         configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
-        configData1.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
+        configData1.protectedShareToken = Clones.clone(shareProtectedCollateralTokenImpl);
         configData1.collateralShareToken = configData1.silo;
         configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
     }
@@ -262,15 +267,15 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISilo silo0 = ISilo(configData0.silo);
         address hookReceiver0 = configData0.hookReceiver;
 
-        IShareToken(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
-        IShareToken(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
+        IShareTokenInitializable(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
+        IShareTokenInitializable(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
 
         // initialize configData1
         ISilo silo1 = ISilo(configData1.silo);
         address hookReceiver1 = configData1.hookReceiver;
 
-        IShareToken(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
-        IShareToken(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
+        IShareTokenInitializable(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
+        IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
