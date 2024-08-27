@@ -38,11 +38,11 @@ contract SiloMock is Test {
         vm.expectCall(ADDRESS, data);
     }
 
-    // ISilo.getCollateralAndProtectedAssets.selector: 0x99d499c1
+    // ISilo.getCollateralAndProtectedTotalsStorage.selector: 0xffbaaf7a
     function getCollateralAndProtectedAssetsMock(uint256 _totalCollateralAssets, uint256 _totalProtectedAssets)
         external
     {
-        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndProtectedAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndProtectedTotalsStorage.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }

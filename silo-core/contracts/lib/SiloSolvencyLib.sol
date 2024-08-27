@@ -109,7 +109,7 @@ library SiloSolvencyLib {
 
         (
             uint256 totalCollateralAssets, uint256 totalProtectedAssets
-        ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedAssets();
+        ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedTotalsStorage();
 
         ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
             shares, totalProtectedAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Protected

@@ -259,7 +259,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Retrieves the total amounts of collateral and protected (non-borrowable) assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalProtectedAssets The total amount of protected (non-borrowable) assets
-    function getCollateralAndProtectedAssets()
+    function getCollateralAndProtectedTotalsStorage()
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
