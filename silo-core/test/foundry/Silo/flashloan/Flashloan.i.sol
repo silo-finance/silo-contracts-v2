@@ -13,10 +13,10 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../_common/MintableToken.sol";
-import {FlashLoanReceiverWithInvalidResponse} from "../_mocks/FlashLoanReceiverWithInvalidResponse.sol";
-import {Gas} from "../gas/Gas.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {FlashLoanReceiverWithInvalidResponse} from "../../_mocks/FlashLoanReceiverWithInvalidResponse.sol";
+import {Gas} from "../../gas/Gas.sol";
 
 bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
