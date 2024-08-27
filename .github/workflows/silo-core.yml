@@ -71,7 +71,7 @@ jobs:
                 uses: actions/cache@v3
                 with:
                     path: ./cache/foundry
-                    key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
