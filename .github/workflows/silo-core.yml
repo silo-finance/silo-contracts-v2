@@ -65,12 +65,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -91,9 +91,8 @@ jobs:
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-            -   name: ls ./cache/foundry/out
-                run: ls ./cache/foundry/out
-            -   run: ls ./cache/foundry/
+            -   run: ls ./cache//out
+            -   run: ls ./cache//
 
     linters:
         needs: silo-core-cache
@@ -135,16 +134,16 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             # this file is not cached for some reason, and because of that, we need to compile all the contracts
-            # -   run: cat ./cache/foundry/solidity-files-cache.json
+            # -   run: cat ./cache//solidity-files-cache.json
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
@@ -255,12 +254,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -298,12 +297,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -341,12 +340,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -384,12 +383,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -439,12 +438,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
@@ -482,12 +481,12 @@ jobs:
                     path: |
                         ~/.npm
                         ./gitmodules/
-                    key: silo-core-submodules--${{ hashFiles('./gitmodules/**/*.sol') }}
+                    key: silo-core-submodules-${{ hashFiles('./gitmodules/**/*.sol') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
-                    path: ./cache/foundry
+                    path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
