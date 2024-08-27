@@ -214,7 +214,7 @@ jobs:
             matrix:
                 match-test: [
                     test_maxLiquidation_noDebt,
-                    test_maxLiquidation_partial_1token
+                    test_maxLiquidation_partial_1token,
                     test_maxLiquidation_partial_2tokens
                ]
 
