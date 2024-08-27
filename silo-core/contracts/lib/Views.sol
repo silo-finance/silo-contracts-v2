@@ -47,7 +47,7 @@ library Views {
     }
 
     function maxMint(ISilo.CollateralType _collateralType)
-        external
+        internal
         view
         returns (uint256 maxShares)
     {
@@ -57,15 +57,12 @@ library Views {
 
         address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
 
-        return _maxDepositOrMint(IShareToken(shareToken).totalSupply());
+        return SiloERC4626Lib.maxDepositOrMint(IShareToken(shareToken).totalSupply());
     }
 
-    function _maxDepositOrMint(uint256 _totalCollateralAssets)
-        internal
-        pure
-        returns (uint256 maxAssetsOrShares)
-    {
-        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
+    function maxDeposit(ISilo.CollateralType _collateralType) internal view returns (uint256 maxAssets) {
+        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[uint256(_collateralType)];
+        return SiloERC4626Lib.maxDepositOrMint(totalCollateralAssets);
     }
 
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
@@ -113,5 +110,57 @@ library Views {
         protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
         collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
         debtAssets = $.totalAssets[AssetTypes.DEBT];
+
+    }
+
+    function utilizationData() internal view returns (ISilo.UtilizationData memory) {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        return ISilo.UtilizationData({
+            collateralAssets: $.totalAssets[AssetTypes.COLLATERAL],
+            debtAssets: $.totalAssets[AssetTypes.DEBT],
+            interestRateTimestamp: $.interestRateTimestamp
+        });
+    }
+
+    function getCollateralAssets() internal view returns (uint256 totalCollateralAssets) {
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
+
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            thisSiloConfig.silo,
+            thisSiloConfig.interestRateModel,
+            thisSiloConfig.daoFee,
+            thisSiloConfig.deployerFee
+        );
+    }
+
+    function getDebtAssets() internal view returns (uint256 totalDebtAssets) {
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
+
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            thisSiloConfig.silo, thisSiloConfig.interestRateModel
+        );
+    }
+
+    function getCollateralAndProtectedAssets()
+        internal
+        view
+        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
+    {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalProtectedAssets = $.totalAssets[AssetTypes.PROTECTED];
+    }
+
+    function getCollateralAndDebtAssets()
+        internal
+        view
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
+    {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
     }
 }

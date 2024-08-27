@@ -75,7 +75,7 @@ abstract contract ShareToken is ERC20Permit, IShareToken {
         $.silo = ISilo(address(this)); // disable initializer
     }
 
-    function silo() external view returns (ISilo) {
+    function silo() external view virtual returns (ISilo) {
         return _getSilo();
     }
 
