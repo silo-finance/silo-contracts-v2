@@ -122,8 +122,6 @@ jobs:
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
             -   uses: actions/checkout@v3
-            #                with:
-            #                    submodules: recursive
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -179,8 +177,6 @@ jobs:
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
             -   uses: actions/checkout@v3
-            #                with:
-            #                    submodules: recursive
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -230,8 +226,6 @@ jobs:
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
             -   uses: actions/checkout@v3
-            #                with:
-            #                    submodules: recursive
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -257,5 +251,5 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
-            -   name: ${{ matrix.slow-test }}
+            -   name: ${{ matrix.match-test }}
                 run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
