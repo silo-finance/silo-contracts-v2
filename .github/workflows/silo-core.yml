@@ -143,12 +143,8 @@ jobs:
                     path: ./cache/foundry
                     key: silo-core-contracts-${{ hashFiles('./silo-core/**/*.sol') }}
 
-            -   name: pwd
-                run: pwd
-            -   run: ls ./cache/foundry/
-            -   run: ls ./cache/foundry/out/
-            -   run: ls ./cache/foundry/out/silo-core/
-            -   run: cat ./cache/foundry/solidity-files-cache.json
+            # this file is not cached for some reason, and because of that, we need to compile all the contracts
+            # -   run: cat ./cache/foundry/solidity-files-cache.json
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
