@@ -149,8 +149,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo1));
         ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
 
-        (, uint64 interestRateTimestamp0) = silo0.siloData();
-        (, uint64 interestRateTimestamp1) = silo1.siloData();
+        (, uint64 interestRateTimestamp0,,,) = silo0.getSiloStorage();
+        (, uint64 interestRateTimestamp1,,,) = silo1.getSiloStorage();
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
@@ -233,8 +233,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         }
 
         { // too deep
-            (, uint64 interestRateTimestamp0After) = silo0.siloData();
-            (, uint64 interestRateTimestamp1After) = silo1.siloData();
+            (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
+            (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
             assertEq(interestRateTimestamp1 + timeForward, interestRateTimestamp1After, "interestRateTimestamp #1");
@@ -322,8 +322,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
         ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo1));
 
-        (, uint64 interestRateTimestamp0) = silo0.siloData();
-        (, uint64 interestRateTimestamp1) = silo1.siloData();
+        (, uint64 interestRateTimestamp0,,,) = silo0.getSiloStorage();
+        (, uint64 interestRateTimestamp1,,,) = silo1.getSiloStorage();
 
         // move forward with time so we can have interests
 
@@ -398,8 +398,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         */
 
         { // too deep
-            (, uint64 interestRateTimestamp0After) = silo0.siloData();
-            (, uint64 interestRateTimestamp1After) = silo1.siloData();
+            (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
+            (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
             assertEq(interestRateTimestamp0 + timeForward, interestRateTimestamp0After, "interestRateTimestamp #0");
             assertEq(interestRateTimestamp1 + timeForward, interestRateTimestamp1After, "interestRateTimestamp #1");
@@ -564,7 +564,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidate, uint256 debtToRepay,
         ) = partialLiquidation.maxLiquidation(BORROWER);
 
-        (uint192 daoAndDeployerFees,) = silo1.siloData();
+        (uint192 daoAndDeployerFees,,,,) = silo1.getSiloStorage();
         uint256 maxRepay = silo1.maxRepay(BORROWER);
         uint256 interest = maxRepay - DEBT - daoAndDeployerFees;
         uint256 liquidity = silo1.getLiquidity();

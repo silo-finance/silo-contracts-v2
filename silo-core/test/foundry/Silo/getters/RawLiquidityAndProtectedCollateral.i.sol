@@ -101,9 +101,9 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
     function _printSiloStats(string memory _step, ISilo _silo, MintableToken _token) internal {
         emit log(_step);
 
-        (uint256 collateralAssets, uint256 protectedAssets) = _silo.getCollateralAndProtectedAssets();
+        (uint256 collateralAssets, uint256 protectedAssets) = _silo.getCollateralAndProtectedTotalsStorage();
         uint256 debtAssets = _silo.getDebtAssets();
-        (uint192 daoAndDeployerFees,) = _silo.siloData();
+        (uint192 daoAndDeployerFees,,,,) = _silo.getSiloStorage();
         uint256 liquidity = _silo.getRawLiquidity();
 
         emit log_named_uint("collateralAssets", collateralAssets);

@@ -55,7 +55,7 @@ library SiloStdLib {
         returns (uint256 totalAssets, uint256 totalShares)
     {
         if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = ISilo(_configData.silo).total(AssetTypes.PROTECTED);
+            totalAssets = ISilo(_configData.silo).getTotalAssetsStorage(AssetTypes.PROTECTED);
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
@@ -109,7 +109,7 @@ library SiloStdLib {
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
-        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
+        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
             collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
@@ -143,6 +143,6 @@ library SiloStdLib {
 
         (
             totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).total(AssetTypes.DEBT), rcomp);
+        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(AssetTypes.DEBT), rcomp);
     }
 }

@@ -16,7 +16,10 @@ import {Hook} from "./Hook.sol";
 
 library SiloLensLib {
     function getRawLiquidity(ISilo _silo) internal view returns (uint256 liquidity) {
-        return SiloMathLib.liquidity(_silo.total(AssetTypes.COLLATERAL), _silo.total(AssetTypes.DEBT));
+        return SiloMathLib.liquidity(
+            _silo.getTotalAssetsStorage(AssetTypes.COLLATERAL),
+            _silo.getTotalAssetsStorage(AssetTypes.DEBT)
+        );
     }
 
     function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {

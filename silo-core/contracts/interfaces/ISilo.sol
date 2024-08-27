@@ -220,11 +220,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @return siloFactory The associated factory of the silo
     function factory() external view returns (ISiloFactory siloFactory);
 
-    /// @notice Fetches the data related to the silo
-    /// @return daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
-    /// @return interestRateTimestamp Timestamp of the last interest accrual
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
-
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
 
@@ -238,7 +233,20 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     function isSolvent(address _borrower) external view returns (bool);
 
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    function total(uint256 _assetType) external view returns (uint256);
+    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256);
+
+    /// @notice Direct storage access to silo storage
+    /// @dev See struct `SiloStorage` for more details
+    function getSiloStorage()
+        external
+        view
+        returns (
+            uint192 daoAndDeployerFees,
+            uint64 interestRateTimestamp,
+            uint256 protectedAssets,
+            uint256 collateralAssets,
+            uint256 debtAssets
+        );
 
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
@@ -251,7 +259,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Retrieves the total amounts of collateral and protected (non-borrowable) assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalProtectedAssets The total amount of protected (non-borrowable) assets
-    function getCollateralAndProtectedAssets()
+    function getCollateralAndProtectedTotalsStorage()
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
@@ -259,7 +267,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Retrieves the total amounts of collateral and debt assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
-    function getCollateralAndDebtAssets()
+    function getCollateralAndDebtTotalsStorage()
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);

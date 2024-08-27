@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract GetCollateralAndProtectedAssetsReentrancyTest is MethodReentrancyTest {
+contract GetCollateralAndProtectedTotalsStorageReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -15,11 +15,11 @@ contract GetCollateralAndProtectedAssetsReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getCollateralAndProtectedAssets()";
+        description = "getCollateralAndProtectedTotalsStorage()";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().getCollateralAndProtectedAssets();
-        TestStateLib.silo1().getCollateralAndProtectedAssets();
+        TestStateLib.silo0().getCollateralAndProtectedTotalsStorage();
+        TestStateLib.silo1().getCollateralAndProtectedTotalsStorage();
     }
 }

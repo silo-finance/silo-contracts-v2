@@ -201,7 +201,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         
         shares = SiloMathLib.convertToShares(
             _withdrawAssets,
-            ISilo(_silo).total(_assetType),
+            ISilo(_silo).getTotalAssetsStorage(_assetType),
             IShareToken(_shareToken).totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
             ISilo.AssetType(_assetType)
