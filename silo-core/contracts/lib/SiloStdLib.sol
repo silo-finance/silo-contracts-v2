@@ -109,7 +109,7 @@ library SiloStdLib {
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
 
-        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtAssets();
+        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
             collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee

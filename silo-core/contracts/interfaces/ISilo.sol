@@ -267,7 +267,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Retrieves the total amounts of collateral and debt assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
-    function getCollateralAndDebtAssets()
+    function getCollateralAndDebtTotalsStorage()
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);

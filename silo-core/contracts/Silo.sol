@@ -142,7 +142,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getCollateralAndDebtAssets()
+    function getCollateralAndDebtTotalsStorage()
         external
         view
         virtual

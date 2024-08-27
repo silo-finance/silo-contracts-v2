@@ -13,7 +13,7 @@ contract SiloMock is Test {
     }
 
     function getCollateralAndDebtAssetsMock(uint256 _totalCollateralAssets, uint256 _totalDebtAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsStorage.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets));
         vm.expectCall(ADDRESS, data);
     }
