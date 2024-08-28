@@ -128,7 +128,7 @@ library Actions {
 
         if (depositConfig.silo == collateralConfig.silo) {
             // If deposit is collateral, then check the solvency.
-            _checkSolvencyNoAccrue(collateralConfig, debtConfig, _args.owner);
+            _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -141,12 +141,11 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
-        uint256 borrowAction = Hook.BORROW;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
-        _hookCallBeforeBorrow(_args, borrowAction);
+        _hookCallBeforeBorrow(_args, Hook.BORROW);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -164,11 +163,11 @@ library Actions {
             _args
         );
 
-        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterBorrow(_args, borrowAction, assets, shares);
+        _hookCallAfterBorrow(_args, Hook.BORROW, assets, shares);
     }
 
     function borrowSameAsset(ISilo.BorrowArgs memory _args)
@@ -176,12 +175,11 @@ library Actions {
         returns (uint256 assets, uint256 shares)
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
-        uint256 borrowAction = Hook.BORROW_SAME_ASSET;
 
         if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
-        _hookCallBeforeBorrow(_args, borrowAction);
+        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -197,11 +195,11 @@ library Actions {
             _args: _args
         });
 
-        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterBorrow(_args, borrowAction, assets, shares);
+        _hookCallAfterBorrow(_args, Hook.BORROW_SAME_ASSET, assets, shares);
     }
 
     function repay(
@@ -289,13 +287,14 @@ library Actions {
         uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
 
-        _checkLTVNoAccrue(collateralConfig, debtConfig, _args.borrower);
+        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);
 
         siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterLeverageSameAsset(_args, borrowedAssets, depositedShares, borrowedShares);
     }
 
+    // solhint-disable-next-line function-max-lines
     function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
@@ -311,18 +310,43 @@ library Actions {
 
         uint256 shares;
 
-        (assets, shares) = _transitionCollateralWithdraw(_args, protectedShareToken, collateralShareToken);
+        // transition collateral withdraw
+        address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
+            ? collateralShareToken
+            : protectedShareToken;
 
-        (assets, toShares) = _transitionCollateralDeposit(
-            _args,
-            assets,
-            protectedShareToken,
-            collateralShareToken
-        );
+        (assets, shares) = SiloERC4626Lib.withdraw({
+            _asset: address(0), // empty token because we don't want to transfer
+            _shareToken: shareTokenFrom,
+            _args: ISilo.WithdrawArgs({
+                assets: 0,
+                shares: _args.shares,
+                owner: _args.owner,
+                receiver: _args.owner,
+                spender: msg.sender,
+                collateralType: _args.withdrawType
+            })
+        });
+
+        // transition collateral deposit
+        (ISilo.CollateralType depositType, address shareTokenTo) =
+            _args.withdrawType == ISilo.CollateralType.Collateral
+                ? (ISilo.CollateralType.Protected, protectedShareToken)
+                : (ISilo.CollateralType.Collateral, collateralShareToken);
+
+        (assets, toShares) = SiloERC4626Lib.deposit({
+            _token: address(0), // empty token because we don't want to transfer
+            _depositor: _args.owner,
+            _assets: assets,
+            _shares: 0,
+            _receiver: _args.owner,
+            _collateralShareToken: IShareToken(shareTokenTo),
+            _collateralType: depositType
+        });
 
         siloConfig.turnOffReentrancyProtection();
 
-        _hookCallAfterTransitionCollateral(_args, shares, assets);
+        _hookCallAfterTransitionCollateral(_args, toShares, assets);
     }
 
     function switchCollateralToThisSilo() external {
@@ -350,7 +374,7 @@ library Actions {
 
         if (debtConfig.silo != address(0)) {
             siloConfig.accrueInterestForBothSilos();
-            _checkSolvencyNoAccrue(collateralConfig, debtConfig, msg.sender);
+            _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, msg.sender);
         }
 
         siloConfig.turnOffReentrancyProtection();
@@ -496,7 +520,7 @@ library Actions {
     }
 
     // this method expect interest to be already accrued
-    function _checkSolvencyNoAccrue(
+    function _checkSolvencyWithoutAccruingInterest(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
         address _user
@@ -514,7 +538,7 @@ library Actions {
     }
 
     // this method expect interest to be already accrued
-    function _checkLTVNoAccrue(
+    function _checkLTVWithoutAccruingInterest(
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower
@@ -529,51 +553,6 @@ library Actions {
         );
 
         if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
-    }
-
-    function _transitionCollateralWithdraw(
-        ISilo.TransitionCollateralArgs memory _args,
-        address _protectedShareToken,
-        address _collateralShareToken
-    ) private returns (uint256 assets, uint256 toShares) {
-        address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
-            ? _collateralShareToken
-            : _protectedShareToken;
-
-        (assets, toShares) = SiloERC4626Lib.withdraw({
-            _asset: address(0), // empty token because we don't want to transfer
-            _shareToken: shareTokenFrom,
-            _args: ISilo.WithdrawArgs({
-                assets: 0,
-                shares: _args.shares,
-                owner: _args.owner,
-                receiver: _args.owner,
-                spender: msg.sender,
-                collateralType: _args.withdrawType
-            })
-        });
-    }
-
-    function _transitionCollateralDeposit(
-        ISilo.TransitionCollateralArgs memory _args,
-        uint256 _assets,
-        address _protectedShareToken,
-        address _collateralShareToken
-    ) private returns (uint256 assets, uint256 toShares) {
-        (ISilo.CollateralType depositType, address shareTokenTo) =
-            _args.withdrawType == ISilo.CollateralType.Collateral
-                ? (ISilo.CollateralType.Protected, _protectedShareToken)
-                : (ISilo.CollateralType.Collateral, _collateralShareToken);
-
-        (assets, toShares) = SiloERC4626Lib.deposit({
-            _token: address(0), // empty token because we don't want to transfer
-            _depositor: _args.owner,
-            _assets: _assets,
-            _shares: 0,
-            _receiver: _args.owner,
-            _collateralShareToken: IShareToken(shareTokenTo),
-            _collateralType: depositType
-        });
     }
 
     function _hookCallBeforeWithdraw(
