@@ -21,7 +21,7 @@ library SiloCoreContracts {
 library SiloCoreDeployments {
     string public constant DEPLOYMENTS_DIR = "silo-core";
 
-    function get(string memory _contract, string memory _network) internal returns(address) {
+    function get(string memory _contract, string memory _network) internal returns (address) {
         return Deployments.getAddress(DEPLOYMENTS_DIR, _network, _contract);
     }
 }
