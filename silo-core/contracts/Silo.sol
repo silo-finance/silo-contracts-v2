@@ -41,9 +41,6 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
         factory = _siloFactory;
-
-        // Set the config to a non-zero value in order to prevent the implementation contract from being initialized
-        ShareTokenLib.getShareTokenStorage().siloConfig = ISiloConfig(address(0x1));
     }
 
     /// @dev Silo is not designed to work with ether, but it can act as a middleware
@@ -67,9 +64,10 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function initialize(ISiloConfig _config, address _modelConfigAddress) external virtual {
+        // silo initialization
         address hookReceiver = Actions.initialize(_config, _modelConfigAddress);
-
-        ShareTokenLib.__ShareToken_init(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
+        // silo (vault) share token intialization
+        _shareTokenInitialize(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
 
     /// @inheritdoc ISilo

@@ -47,7 +47,7 @@ library Views {
     }
 
     function maxMint(ISilo.CollateralType _collateralType)
-        internal
+        external
         view
         returns (uint256 maxShares)
     {
