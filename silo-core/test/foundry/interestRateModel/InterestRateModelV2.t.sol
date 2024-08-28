@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
@@ -18,8 +19,45 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
 
     uint256 constant DP = 10 ** 18;
 
+    event Initialized(address indexed silo, address indexed config);
+
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
+    }
+
+    /*
+    forge test -vv --mt test_connect_zero
+    */
+    function test_connect_zero() public {
+        vm.expectRevert(IInterestRateModelV2.AddressZero.selector);
+        INTEREST_RATE_MODEL.connect(address(0));
+    }
+
+    /*
+    forge test -vv --mt test_connect_pass
+    */
+    function test_connect_pass() public {
+        address config = makeAddr("config");
+
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(address(this), config);
+
+        INTEREST_RATE_MODEL.connect(config);
+
+        (,, IInterestRateModelV2Config connectedConfig) = INTEREST_RATE_MODEL.getSetup(address(this));
+        assertEq(address(connectedConfig), config, "expect valid config address");
+    }
+
+    /*
+    forge test -vv --mt test_connect_onlyOnce
+    */
+    function test_connect_onlyOnce() public {
+        address config = makeAddr("config");
+
+        INTEREST_RATE_MODEL.connect(config);
+
+        vm.expectRevert(IInterestRateModelV2.AlreadyConnected.selector);
+        INTEREST_RATE_MODEL.connect(config);
     }
 
     function test_IRM_decimals() public view {
