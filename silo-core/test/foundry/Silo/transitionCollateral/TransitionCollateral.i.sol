@@ -121,4 +121,38 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
 
         silo0.transitionCollateral(5, owner, ISilo.CollateralType.Protected);
     }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_withInterest_solvent
+    */
+    function test_transitionCollateral_withInterest_solvent() public {
+        address owner = address(this);
+
+        _deposit(1e18, owner, ISilo.CollateralType.Protected);
+        _depositForBorrow(0.7e18, makeAddr("depositor"));
+        _borrow(0.7e18, owner);
+
+        vm.warp(block.timestamp + 3 days);
+
+        assertTrue(silo0.isSolvent(owner), "this test is for solvent user");
+
+        silo0.transitionCollateral(0.5e18, owner, ISilo.CollateralType.Protected);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_withInterest_inSolvent
+    */
+    function test_transitionCollateral_withInterest_inSolvent() public {
+        address owner = address(this);
+
+        _deposit(1e18, owner, ISilo.CollateralType.Protected);
+        _depositForBorrow(0.7e18, makeAddr("depositor"));
+        _borrow(0.7e18, owner);
+
+        vm.warp(block.timestamp + 100 days);
+
+        assertTrue(!silo0.isSolvent(owner), "this test is for solvent user");
+
+        silo0.transitionCollateral(0.5e18, owner, ISilo.CollateralType.Protected);
+    }
 }
