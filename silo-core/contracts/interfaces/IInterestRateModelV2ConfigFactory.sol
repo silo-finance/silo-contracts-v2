@@ -20,6 +20,13 @@ interface IInterestRateModelV2ConfigFactory {
     /// @dev DP is 18 decimal points used for integer calculations
     // solhint-disable-next-line func-name-mixedcase
     function DP() external view returns (uint256);
+
+    /// @dev verifies if config has correct values for a model, throws on invalid `_config`
+    /// @param _config config that will ve verified
     function verifyConfig(IInterestRateModelV2.Config calldata _config) external view;
+
+    /// @dev hashes IRM config
+    /// @param _config IRM config
+    /// @return configId hash of `_config`
     function hashConfig(IInterestRateModelV2.Config calldata _config) external pure returns (bytes32 configId);
 }
