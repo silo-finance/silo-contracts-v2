@@ -52,7 +52,7 @@ library Actions {
         }
     }
 
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external returns (address hookReceiver) {
+    function initialize(ISiloConfig _siloConfig, address _irmConfigAddress) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
         if (address(_sharedStorage.siloConfig) != address(0)) revert ISilo.SiloInitialized();
@@ -61,7 +61,7 @@ library Actions {
 
         _sharedStorage.siloConfig = _siloConfig;
 
-        IInterestRateModel(configData.interestRateModel).connect(_modelConfigAddress);
+        IInterestRateModel(configData.interestRateModel).connect(_irmConfigAddress);
 
         return configData.hookReceiver;
     }
