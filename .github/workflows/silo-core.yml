@@ -70,6 +70,9 @@ jobs:
                 with:
                     path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    restore-keys: |
+                        silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                        silo-core-contracts-cache-
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
