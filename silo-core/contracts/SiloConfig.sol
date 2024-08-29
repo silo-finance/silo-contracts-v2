@@ -232,7 +232,15 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
-        address collateralSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
+        address collateralSilo; 
+        
+        if (_debtSilo == _SILO0) {
+            collateralSilo = _SILO1;
+        } else if (_debtSilo == _SILO1) {
+            collateralSilo = _SILO0;
+        } else {
+            revert WrongSilo();
+        }
 
         collateralConfig = getConfig(collateralSilo);
         debtConfig = getConfig(_debtSilo);
