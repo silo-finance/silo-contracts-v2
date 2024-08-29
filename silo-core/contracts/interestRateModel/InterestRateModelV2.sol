@@ -80,6 +80,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @dev this method creates 1:1 link between silo and config
     function connect(address _configAddress) external virtual {
+        if (_configAddress == address(0)) revert AddressZero();
         if (address(getSetup[msg.sender].config) != address(0)) revert AlreadyConnected();
 
         getSetup[msg.sender].config = IInterestRateModelV2Config(_configAddress);
