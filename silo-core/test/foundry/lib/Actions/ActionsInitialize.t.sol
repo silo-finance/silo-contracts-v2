@@ -10,7 +10,9 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --mc ActionsInitializeTest --ffi
+/*
+ FOUNDRY_PROFILE=core-test forge test -vv --mc ActionsInitializeTest --ffi
+*/
 contract ActionsInitializeTest is Test, SiloLittleHelper {
     ISiloConfig siloConfig;
 

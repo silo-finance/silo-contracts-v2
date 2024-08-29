@@ -265,10 +265,7 @@ abstract contract SiloLittleHelper is CommonBase {
         partialLiquidation = IPartialLiquidation(hook);
     }
 
-    function _getShareTokenStorage() internal returns (IShareToken.ShareTokenStorage storage _sharedStorage)
-        internal
-        pure
-    {
+    function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage _sharedStorage) {
         _sharedStorage = ShareTokenLib.getShareTokenStorage();
     }
 
