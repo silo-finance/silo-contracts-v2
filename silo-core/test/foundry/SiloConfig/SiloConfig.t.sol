@@ -99,6 +99,64 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_accrueInterestForSilo_WrongSilo
+    */
+    function test_accrueInterestForSilo_WrongSilo() public {
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.accrueInterestForSilo(anySilo);
+    }
+
+    /*
+    forge test -vv --mt test_accrueInterestForSilo
+    */
+    function test_accrueInterestForSilo() public {
+        bytes memory data = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
+        );
+
+        vm.mockCall(_silo0Default, data, abi.encode(true));
+        vm.expectCall(_silo0Default, data);
+
+        _siloConfig.accrueInterestForSilo(_silo0Default);
+
+        data = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault1.interestRateModel, _configDataDefault1.daoFee, _configDataDefault1.deployerFee)
+        );
+
+        vm.mockCall(_silo1Default, data, abi.encode(true));
+        vm.expectCall(_silo1Default, data);
+
+        _siloConfig.accrueInterestForSilo(_silo1Default);
+    }
+
+    /*
+    forge test -vv --mt test_accrueInterestForBothSilos
+    */
+    function test_accrueInterestForBothSilos() public {
+        bytes memory dataSilo0 = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
+        );
+
+        vm.mockCall(_silo0Default, dataSilo0, abi.encode(true));
+        vm.expectCall(_silo0Default, dataSilo0);
+
+        bytes memory dataSilo1 = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault1.interestRateModel, _configDataDefault1.daoFee, _configDataDefault1.deployerFee)
+        );
+
+        vm.mockCall(_silo1Default, dataSilo1, abi.encode(true));
+        vm.expectCall(_silo1Default, dataSilo1);
+
+        _siloConfig.accrueInterestForBothSilos();
+    }
+
+    /*
     forge test -vv --mt test_getSilos_fuzz
     */
     function test_getSilos_fuzz(
