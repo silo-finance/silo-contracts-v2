@@ -86,14 +86,15 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
+            -   name: Run single test to build cache for contracts
+                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
+
             -   name: Run Forge build
                 run: |
                     git submodule
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-            -   name: Run single test to build cache for contracts
-                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
     linters:
         needs: silo-core-cache
         runs-on: ubuntu-latest
