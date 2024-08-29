@@ -272,6 +272,32 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_setThisSiloAsCollateralSilo_MultipleTimes
+    */
+    function test_setThisSiloAsCollateralSilo_MultipleTimes() public {
+        address borrower = makeAddr("borrower");
+        address configuredSilo;
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo0Default);
+            _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo0Default), configuredSilo);
+        }
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo1Default);
+            _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo1Default), configuredSilo);
+        }
+    }
+
+    /*
     forge test -vv --mt test_setOtherSiloAsCollateralSilo
     */
     function test_setOtherSiloAsCollateralSilo() public {
@@ -290,6 +316,32 @@ contract SiloConfigTest is Test {
         configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
 
         assertEq(address(_silo0Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_setOtherSiloAsCollateralSilo_MultipleTimes
+    */
+    function test_setOtherSiloAsCollateralSilo_MultipleTimes() public {
+        address borrower = makeAddr("borrower");
+        address configuredSilo;
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo0Default);
+            _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo1Default), configuredSilo);
+        }
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo1Default);
+            _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo0Default), configuredSilo);
+        }
     }
 
     /*
