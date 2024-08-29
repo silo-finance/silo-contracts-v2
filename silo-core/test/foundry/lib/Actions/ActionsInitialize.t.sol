@@ -41,7 +41,10 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
         assertEq(address(_getShareTokenStorage().siloConfig), address(0), "storage.siloConfig is empty before init");
 
         // we have to mock it, so it will not throw with WrongSilo()
-        vm.mockCall(address(siloConfig), abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg));
+        vm.mockCall(
+            address(siloConfig),
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg)
+        );
 
         // we expecting to connect IRM config on init
         vm.expectCall(
@@ -60,6 +63,14 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
     */
     function test_actions_initialize_SiloInitialized() public {
         address irmConfigAddress = makeAddr("irmConfigAddress");
+        ISiloConfig.ConfigData memory mockedCfg = siloConfig.getConfig(address(silo0));
+
+        // we have to mock it, so it will not throw with WrongSilo()
+        vm.mockCall(
+            address(siloConfig),
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg)
+        );
+
         Actions.initialize(siloConfig, irmConfigAddress);
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
