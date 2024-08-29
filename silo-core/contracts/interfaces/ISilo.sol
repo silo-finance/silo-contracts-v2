@@ -91,10 +91,13 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         ISilo.CollateralType collateralType;
     }
 
+    /// @param shares Amount of shares the user wishes to transit.
+    /// @param owner owner of the shares after transition.
+    /// @param transitionFrom type of collateral that will be transitioned.
     struct TransitionCollateralArgs {
         uint256 shares;
         address owner;
-        ISilo.CollateralType withdrawType;
+        ISilo.CollateralType transitionFrom;
     }
 
     struct UtilizationData {
@@ -337,9 +340,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// leaving the protocol
     /// @param _shares Amount of shares to be transitioned
     /// @param _owner Owner of the assets being transitioned
-    /// @param _withdrawType Specifies if the transition is from collateral or protected assets
+    /// @param _transitionFrom Specifies if the transition is from collateral or protected assets
     /// @return assets Amount of assets transitioned
-    function transitionCollateral(uint256 _shares, address _owner, CollateralType _withdrawType)
+    function transitionCollateral(uint256 _shares, address _owner, CollateralType _transitionFrom)
         external
         returns (uint256 assets);
     
