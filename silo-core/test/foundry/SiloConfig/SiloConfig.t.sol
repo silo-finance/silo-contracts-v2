@@ -251,6 +251,73 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_setThisSiloAsCollateralSilo
+    */
+    function test_setThisSiloAsCollateralSilo() public {
+        address borrower = makeAddr("borrower");
+
+        vm.prank(_silo0Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        address configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo0Default), configuredSilo);
+
+        vm.prank(_silo1Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo1Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_setOtherSiloAsCollateralSilo
+    */
+    function test_setOtherSiloAsCollateralSilo() public {
+        address borrower = makeAddr("borrower");
+
+        vm.prank(_silo0Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+        address configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo1Default), configuredSilo);
+
+        vm.prank(_silo1Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo0Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_borrowerCollateralSilo
+    */
+    function test_borrowerCollateralSilo() public {
+        address borrower = makeAddr("borrower");
+
+        address configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(0), configuredSilo);
+
+        vm.prank(_silo0Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo1Default), configuredSilo);
+
+        vm.prank(_silo0Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo0Default), configuredSilo);
+    }
+
+    /*
     forge test -vv --mt test_setCollateralSilo_pass
     */
     function test_openDebt_pass() public {
