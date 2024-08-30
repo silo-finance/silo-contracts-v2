@@ -758,6 +758,35 @@ contract SiloConfigTest is Test {
         _siloConfig.getDebtSilo(user);
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo_notDebt
+    */
+    function test_getDebtSilo_notDebt() public {
+        address user = makeAddr("user");
+
+        // no debt
+        _mockShareTokensBlances(user, 0, 0);
+
+        address debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(0), "user has no debt");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_noDebt
+    */
+    function test_hasDebtInOtherSilo_noDebt() public {
+        address user = makeAddr("user");
+
+        // no debt
+        _mockShareTokensBlances(user, 0, 0);
+
+        bool hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+    }
+
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
         vm.prank(_callee);
         _siloConfig.turnOnReentrancyProtection();
