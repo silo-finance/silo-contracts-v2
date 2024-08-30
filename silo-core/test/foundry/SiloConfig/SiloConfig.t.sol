@@ -7,6 +7,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 
 // solhint-disable func-name-mixedcase
 
@@ -903,6 +904,42 @@ contract SiloConfigTest is Test {
     ) public {
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
         assertEq(siloConfig.SILO_ID(), _siloId);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_turnOnReentrancyProtection_revertCrossReentrantCall
+    */
+    function test_turnOnReentrancyProtection_revertCrossReentrantCall() public {
+        vm.prank(_silo0Default);
+        _siloConfig.turnOnReentrancyProtection();
+
+        vm.prank(_silo0Default);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        _siloConfig.turnOnReentrancyProtection();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_turnOffReentrancyProtection_revertCrossReentrancyNotActive
+    */
+    function test_turnOffReentrancyProtection_revertCrossReentrancyNotActive() public {
+        vm.prank(_silo0Default);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrancyNotActive.selector);
+        _siloConfig.turnOffReentrancyProtection();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_reentrancyGuardEntered
+    */
+    function test_reentrancyGuardEntered() public {
+        assertFalse(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return false");
+
+        vm.prank(_silo0Default);
+        _siloConfig.turnOnReentrancyProtection();
+        assertTrue(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return true");
+
+        vm.prank(_silo0Default);
+        _siloConfig.turnOffReentrancyProtection();
+        assertFalse(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return false");
     }
 
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
