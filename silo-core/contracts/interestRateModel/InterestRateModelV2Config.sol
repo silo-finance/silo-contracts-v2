@@ -50,6 +50,7 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
         _BETA = _config.beta;
     }
 
+    /// @inheritdoc IInterestRateModelV2Config
     function getConfig() external view virtual returns (IInterestRateModelV2.Config memory config) {
         config.uopt = _UOPT;
         config.ucrit = _UCRIT;
