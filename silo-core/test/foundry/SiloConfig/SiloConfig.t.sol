@@ -240,6 +240,41 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_getDebtShareTokenAndAsset_revertOnOnlySilo
+    */
+    function test_getDebtShareTokenAndAsset_revertOnOnlySilo() public {
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.getDebtShareTokenAndAsset(anySilo);
+    }
+
+    /*
+    forge test -vv --mt test_getDebtShareTokenAndAsset_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_getDebtShareTokenAndAsset_fuzz(
+        uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+
+        address debtToken;
+        address asset;
+
+        (debtToken, asset) = siloConfig.getDebtShareTokenAndAsset(_configData0.silo);
+
+        assertEq(debtToken, _configData0.debtShareToken);
+        assertEq(asset, _configData0.token);
+
+        (debtToken, asset) = siloConfig.getDebtShareTokenAndAsset(_configData1.silo);
+
+        assertEq(debtToken, _configData1.debtShareToken);
+        assertEq(asset, _configData1.token);
+    }
+
+    /*
     forge test -vv --mt test_setCollateralSilo_revertOnOnlySilo
     */
     function test_setCollateralSilo_revertOnOnlySilo() public {
