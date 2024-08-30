@@ -18,19 +18,17 @@ interface ISiloFactory is IERC721 {
     error ZeroAddress();
     error EmptyToken0();
     error EmptyToken1();
-    error MaxFee();
+    error MaxFeeExceeded();
     error SameAsset();
     error InvalidIrm();
     error InvalidMaxLtv();
-    error InvalidMaxLt();
     error InvalidLt();
     error InvalidDeployer();
     error MaxDeployerFee();
     error MaxFlashloanFee();
     error MaxLiquidationFee();
     error InvalidIrmConfig();
-    error InvalidFee();
-    error BeforeCall();
+    error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
 
     function initialize(

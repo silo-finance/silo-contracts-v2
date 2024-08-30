@@ -34,7 +34,7 @@ contract SiloFactorySettersTest is Test {
 
         vm.assume(_newDaoFee < maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setDaoFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -54,7 +54,7 @@ contract SiloFactorySettersTest is Test {
 
         vm.assume(_newMaxDeployerFee < maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxDeployerFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -74,7 +74,7 @@ contract SiloFactorySettersTest is Test {
 
         vm.assume(_newMaxFlashloanFee < maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxFlashloanFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -94,7 +94,7 @@ contract SiloFactorySettersTest is Test {
 
         vm.assume(_newMaxLiquidationFee < maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxLiquidationFee(maxFee + 1);
 
         vm.prank(hacker);

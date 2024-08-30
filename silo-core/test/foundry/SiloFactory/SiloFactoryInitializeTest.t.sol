@@ -36,23 +36,50 @@ contract SiloFactoryInitializeTest is Test, TransferOwnership {
     }
 
     /*
-    forge test -vv --mt test_initialize
+    forge test -vv --mt test_initialize_invalidInitialization
     */
-    function test_initialize(
+    function test_initialize_invalidInitialization(
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
     ) public {
-        vm.assume(_siloImpl != address(0));
-        vm.assume(_shareProtectedCollateralTokenImpl != address(0));
-        vm.assume(_shareDebtTokenImpl != address(0));
-        vm.assume(_daoFeeReceiver != address(0));
+        _assumeInitializeParams(
+            _siloImpl,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            _daoFee,
+            _daoFeeReceiver
+        );
 
-        uint256 maxFee = siloFactory.MAX_FEE();
+        siloFactory.initialize(
+            _siloImpl, _shareProtectedCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, _daoFeeReceiver
+        );
 
-        vm.assume(_daoFee < maxFee);
+        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
+        siloFactory.initialize(
+            _siloImpl, _shareProtectedCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, _daoFeeReceiver
+        );
+    }
+
+    /*
+    forge test -vv --mt test_initialize_zeroAddress
+    */
+    function test_initialize_zeroAddress(
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _daoFee,
+        address _daoFeeReceiver
+    ) public {
+        _assumeInitializeParams(
+            _siloImpl,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            _daoFee,
+            _daoFeeReceiver
+        );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector);
         siloFactory.initialize(
@@ -69,16 +96,58 @@ contract SiloFactoryInitializeTest is Test, TransferOwnership {
         siloFactory.initialize(
             _siloImpl, _shareProtectedCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, address(0)
         );
+    }
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+    /*
+    forge test -vv --mt test_initialize_maxFeeExceeded
+    */
+    function test_initialize_maxFeeExceeded(
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _daoFee,
+        address _daoFeeReceiver
+    ) public {
+        _assumeInitializeParams(
+            _siloImpl,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            _daoFee,
+            _daoFeeReceiver
+        );
+
+        uint256 maxFee = siloFactory.MAX_FEE();
+
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.initialize(
             _siloImpl, _shareProtectedCollateralTokenImpl, _shareDebtTokenImpl, maxFee + 1, _daoFeeReceiver
+        );
+    }
+
+    /*
+    forge test -vv --mt test_initialize
+    */
+    function test_initialize(
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _daoFee,
+        address _daoFeeReceiver
+    ) public {
+        _assumeInitializeParams(
+            _siloImpl,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            _daoFee,
+            _daoFeeReceiver
         );
 
         siloFactory.initialize(
             _siloImpl, _shareProtectedCollateralTokenImpl, _shareDebtTokenImpl, _daoFee, _daoFeeReceiver
         );
 
+        assertEq(siloFactory.MAX_FEE(), 0.4e18);
+        assertEq(siloFactory.MAX_PERCENT(), 1e18);
         assertEq(siloFactory.name(), "Silo Finance Fee Receiver");
         assertEq(siloFactory.symbol(), "feeSILO");
         assertEq(siloFactory.owner(), address(this));
@@ -87,10 +156,28 @@ contract SiloFactoryInitializeTest is Test, TransferOwnership {
         assertEq(siloFactory.shareProtectedCollateralTokenImpl(), _shareProtectedCollateralTokenImpl);
         assertEq(siloFactory.shareDebtTokenImpl(), _shareDebtTokenImpl);
         assertEq(siloFactory.daoFee(), _daoFee);
+        assertEq(siloFactory.daoFeeReceiver(), _daoFeeReceiver);
         assertEq(siloFactory.maxDeployerFee(), 0.15e18);
         assertEq(siloFactory.maxFlashloanFee(), 0.15e18);
         assertEq(siloFactory.maxLiquidationFee(), 0.3e18);
 
         assertTrue(_test_transfer2StepOwnership(address(siloFactory), address(this)));
+    }
+
+    function _assumeInitializeParams(
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _daoFee,
+        address _daoFeeReceiver
+    ) internal view {
+        vm.assume(_siloImpl != address(0));
+        vm.assume(_shareProtectedCollateralTokenImpl != address(0));
+        vm.assume(_shareDebtTokenImpl != address(0));
+        vm.assume(_daoFeeReceiver != address(0));
+
+        uint256 maxFee = siloFactory.MAX_FEE();
+
+        vm.assume(_daoFee < maxFee);
     }
 }
