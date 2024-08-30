@@ -186,12 +186,12 @@ contract SiloConfigTest is Test {
 
         (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(_configData0.silo);
         assertEq(protectedShareToken, _configData0.protectedShareToken);
-        assertEq(collateralShareToken, _configData0.collateralShareToken);
+        assertEq(collateralShareToken, _configData0.silo);
         assertEq(debtShareToken, _configData0.debtShareToken);
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(_configData1.silo);
         assertEq(protectedShareToken, _configData1.protectedShareToken);
-        assertEq(collateralShareToken, _configData1.collateralShareToken);
+        assertEq(collateralShareToken, _configData1.silo);
         assertEq(debtShareToken, _configData1.debtShareToken);
     }
 
