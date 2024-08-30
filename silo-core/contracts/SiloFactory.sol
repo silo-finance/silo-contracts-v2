@@ -10,10 +10,9 @@ import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.so
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
-import {Creator} from "./utils/Creator.sol";
 import {Hook} from "./lib/Hook.sol";
 
-contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
+contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev max fee is 40%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.4e18;
 
@@ -45,14 +44,14 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
     /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
     /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
-    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only creator can init.
+    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only owner can init.
     function initialize(
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external virtual onlyCreator {
+    ) external virtual onlyOwner {
         if (_siloId != 0) revert InvalidInitialization();
 
         // start IDs from 1

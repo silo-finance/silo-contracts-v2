@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {ISiloFactory, SiloFactory, Creator} from "silo-core/contracts/SiloFactory.sol";
+import {ISiloFactory, SiloFactory, Ownable} from "silo-core/contracts/SiloFactory.sol";
 import {TransferOwnership} from "../_common/TransferOwnership.sol";
 
 /*
@@ -17,9 +17,9 @@ contract SiloFactoryInitializeTest is Test, TransferOwnership {
     }
 
     /*
-    forge test -vv --mt test_initialize_onlyCreator
+    forge test -vv --mt test_initialize_onlyOwner
     */
-    function test_initialize_onlyCreator() public {
+    function test_initialize_onlyOwner() public {
         SiloFactory f = new SiloFactory();
 
         address siloImpl = address(1);
@@ -28,8 +28,8 @@ contract SiloFactoryInitializeTest is Test, TransferOwnership {
         uint256 daoFee;
         address daoFeeReceiver = address(1);
 
-        vm.expectRevert(Creator.OnlyCreator.selector);
-        vm.prank(address(1));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, daoFeeReceiver));
+        vm.prank(daoFeeReceiver);
         f.initialize(siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
 
         f.initialize(siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
