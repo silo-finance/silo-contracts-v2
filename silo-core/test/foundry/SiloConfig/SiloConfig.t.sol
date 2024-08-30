@@ -324,7 +324,61 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_getDebtShareTokenAndAsset_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 3
-    function test_getDebtShareTokenAndAsset_fuzz(
+    function test_getDebtShareTokenAndAsset_fuzz(uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+
+        address shareToken;
+        address asset;
+
+        ISilo.CollateralType collateralType = ISilo.CollateralType.Collateral;
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData0.silo, collateralType);
+
+        assertEq(shareToken, _configData0.silo);
+        assertEq(asset, _configData0.token);
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData1.silo, collateralType);
+
+        assertEq(shareToken, _configData1.silo);
+        assertEq(asset, _configData1.token);
+
+        collateralType = ISilo.CollateralType.Protected;
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData0.silo, collateralType);
+
+        assertEq(shareToken, _configData0.protectedShareToken);
+        assertEq(asset, _configData0.token);
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData1.silo, collateralType);
+
+        assertEq(shareToken, _configData1.protectedShareToken);
+        assertEq(asset, _configData1.token);
+    }
+
+    /*
+    forge test -vv --mt test_getCollateralShareTokenAndAsset_revertWrongSilo
+    */
+    function test_getCollateralShareTokenAndAsset_revertWrongSilo() public {
+        address anySilo = makeAddr("anySilo");
+        ISilo.CollateralType collateralType = ISilo.CollateralType.Collateral;
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.getCollateralShareTokenAndAsset(anySilo, collateralType);
+
+        collateralType = ISilo.CollateralType.Protected;
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.getCollateralShareTokenAndAsset(anySilo, collateralType);
+    }
+
+    /*
+    forge test -vv --mt test_getCollateralShareTokenAndAsset_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_getCollateralShareTokenAndAsset_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -342,7 +396,6 @@ contract SiloConfigTest is Test {
         (debtToken, asset) = siloConfig.getDebtShareTokenAndAsset(_configData1.silo);
 
         assertEq(debtToken, _configData1.debtShareToken);
-        assertEq(asset, _configData1.token);
     }
 
     /*
