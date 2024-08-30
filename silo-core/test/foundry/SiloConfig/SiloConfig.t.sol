@@ -787,6 +787,19 @@ contract SiloConfigTest is Test {
         assertFalse(hasDebt, "user has no debt in other silo");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_siloID_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_siloID_fuzz(
+        uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+        assertEq(siloConfig.SILO_ID(), _siloId);
+    }
+
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
         vm.prank(_callee);
         _siloConfig.turnOnReentrancyProtection();
