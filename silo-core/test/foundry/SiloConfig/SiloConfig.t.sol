@@ -707,6 +707,99 @@ contract SiloConfigTest is Test {
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault1.debtShareToken);
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo
+    */
+    function test_hasDebtInOtherSilo() public {
+        address user = makeAddr("user");
+
+        // Create a debt in the silo1
+        _mockShareTokensBlances(user, 0, 1);
+
+        bool hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertTrue(hasDebt, "user has debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        // Create a debt in the silo0
+        _mockShareTokensBlances(user, 1, 0);
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertTrue(hasDebt, "user has debt in other silo");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo
+    */
+    function test_getDebtSilo() public {
+        address user = makeAddr("user");
+
+        // Create a debt in the silo0
+        _mockShareTokensBlances(user, 1, 0);
+
+        address debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(_silo0Default), "debt silo should be silo0");
+
+        // Create a debt in the silo1
+        _mockShareTokensBlances(user, 0, 1);
+
+        debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(_silo1Default), "debt silo should be silo1");
+
+        // Debt in two silo should not be possible.
+        // Create a debt in two silos only for testing
+        _mockShareTokensBlances(user, 1, 1);
+
+        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
+        _siloConfig.getDebtSilo(user);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo_notDebt
+    */
+    function test_getDebtSilo_notDebt() public {
+        address user = makeAddr("user");
+
+        // no debt
+        _mockShareTokensBlances(user, 0, 0);
+
+        address debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(0), "user has no debt");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_noDebt
+    */
+    function test_hasDebtInOtherSilo_noDebt() public {
+        address user = makeAddr("user");
+
+        // no debt
+        _mockShareTokensBlances(user, 0, 0);
+
+        bool hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_siloID_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_siloID_fuzz(
+        uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+        assertEq(siloConfig.SILO_ID(), _siloId);
+    }
+
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
         vm.prank(_callee);
         _siloConfig.turnOnReentrancyProtection();
