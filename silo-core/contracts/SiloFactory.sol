@@ -6,7 +6,6 @@ import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
-import {IShareToken} from "./interfaces/IShareToken.sol";
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
