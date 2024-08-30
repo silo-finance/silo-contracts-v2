@@ -32,7 +32,7 @@ contract SiloFactorySettersTest is Test {
     function test_setDaoFee(uint256 _newDaoFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newDaoFee < maxFee);
+        vm.assume(_newDaoFee <= maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setDaoFee(maxFee + 1);
@@ -52,7 +52,7 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxDeployerFee(uint256 _newMaxDeployerFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxDeployerFee < maxFee);
+        vm.assume(_newMaxDeployerFee <= maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxDeployerFee(maxFee + 1);
@@ -72,7 +72,7 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxFlashloanFee(uint256 _newMaxFlashloanFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxFlashloanFee < maxFee);
+        vm.assume(_newMaxFlashloanFee <= maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxFlashloanFee(maxFee + 1);
@@ -92,7 +92,7 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxLiquidationFee(uint256 _newMaxLiquidationFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxLiquidationFee < maxFee);
+        vm.assume(_newMaxLiquidationFee <= maxFee);
 
         vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxLiquidationFee(maxFee + 1);
