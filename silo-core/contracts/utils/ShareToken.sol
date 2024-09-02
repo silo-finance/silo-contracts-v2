@@ -89,6 +89,10 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
 
+        if ($.hookSetup.hooksBefore == _hooksBefore && $.hookSetup.hooksAfter == _hooksAfter) {
+            revert HooksDidNotChanged();
+        }
+
         $.hookSetup.hooksBefore = _hooksBefore;
         $.hookSetup.hooksAfter = _hooksAfter;
     }
