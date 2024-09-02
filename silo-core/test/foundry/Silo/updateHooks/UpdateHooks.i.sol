@@ -72,12 +72,12 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
         IShareToken.HookSetup memory hooks = IShareToken(protectedShareToken).hookSetup();
         assertEq(hooks.hooksBefore, expectedBefore, "protectedShareToken hooksBefore");
         assertEq(hooks.hooksAfter, expectedAfter, "protectedShareToken hooksAfter");
-        assertEq(hooks.tokenType, Hook.COLLATERAL_TOKEN, "protectedShareToken tokenType");
+        assertEq(hooks.tokenType, Hook.PROTECTED_TOKEN, "protectedShareToken tokenType");
 
         hooks = IShareToken(collateralShareToken).hookSetup();
         assertEq(hooks.hooksBefore, expectedBefore, "collateralShareToken hooksBefore");
         assertEq(hooks.hooksAfter, expectedAfter, "collateralShareToken hooksAfter");
-        assertEq(hooks.tokenType, Hook.PROTECTED_TOKEN, "collateralShareToken tokenType");
+        assertEq(hooks.tokenType, Hook.COLLATERAL_TOKEN, "collateralShareToken tokenType");
 
         hooks = IShareToken(debtShareToken).hookSetup();
         assertEq(hooks.hooksBefore, expectedBefore, "debtShareToken hooksBefore");
