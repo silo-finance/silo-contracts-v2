@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -14,7 +15,7 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ShareTokenCommonTest
 */
-contract ShareTokenCommonTest is SiloLittleHelper, Test {
+contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable {
     address public user = makeAddr("someUser");
     address public otherUser = makeAddr("someOtherUser");
     uint256 public mintAmout = 100e18;
@@ -84,7 +85,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test {
         _shareToken.mint(user, user, mintAmout);
     }
 
-   /*
+    /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenMint
     */
     function test_shareTokenMint() public {
@@ -114,6 +115,52 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test {
     function _burnPermissions(IShareToken _shareToken) internal {
         vm.expectRevert(IShareToken.OnlySilo.selector);
         _shareToken.burn(user, otherUser, 100e18);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenBurn
+    */
+    function test_shareTokenBurn() public {
+        _executeForAllShareTokens(_shareTokenBurn);
+    }
+
+    function _shareTokenBurn(IShareToken _shareToken) internal {
+        ISilo silo = _shareToken.silo();
+
+        vm.prank(address(silo));
+        _shareToken.mint(user, user, mintAmout);
+
+        vm.recordLogs();
+
+        vm.prank(address(silo));
+        _shareToken.burn(user, user, mintAmout);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        assertTrue(_hasEvent(entries, TRANSFER_EVENT, address(_shareToken)), "Event not emitted");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenBurnAllowance
+    */
+    function test_shareTokenBurnAllowance() public {
+        _executeForAllCollateralShareTokens(_shareTokenBurnAllowance);
+    }
+
+    function _shareTokenBurnAllowance(IShareToken _shareToken) internal {
+        ISilo silo = _shareToken.silo();
+
+        vm.prank(address(silo));
+        _shareToken.mint(user, user, mintAmout);
+
+        vm.prank(user);
+        _shareToken.approve(otherUser, mintAmout);
+
+        vm.expectEmit(true, true, true, false);
+        emit Transfer(user, address(0), mintAmout);
+
+        vm.prank(address(silo));
+        _shareToken.burn(user, otherUser, mintAmout);
     }
 
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
@@ -148,7 +195,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test {
         func(IShareToken(debt1));
     }
 
-    function _hasEvent(Vm.Log[] memory entries, bytes32 _event, address _emitter) internal view returns (bool) {
+    function _hasEvent(Vm.Log[] memory entries, bytes32 _event, address _emitter) internal pure returns (bool) {
         for(uint256 i = 0; i < entries.length; i++) {
             if (entries[i].topics[0] == _event && entries[i].emitter == _emitter) {
                 return true;
