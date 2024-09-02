@@ -513,8 +513,8 @@ library Actions {
         // however because of hooks, there is a way to call `synchronizeHooks` separately
         // so it is safer not to return early and perform full update,
         // so we have 100% guaranty hooks are sync after this call
-        updated = updated || IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-        updated = updated || IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        updated = IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter) || updated;
+        updated = IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter) || updated;
     }
 
     // this method expect interest to be already accrued

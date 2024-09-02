@@ -4,14 +4,10 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
-import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-
-import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
@@ -66,21 +62,27 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
 
         silo1.updateHooks();
 
+        uint24 expectedBefore = 123;
+        uint24 expectedAfter = 456;
+
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
         ) = siloConfig.getShareTokens(address(silo1));
 
         IShareToken.HookSetup memory hooks = IShareToken(protectedShareToken).hookSetup();
-        assertEq(hooks.hooksBefore, _hooksBefore, "protectedShareToken hooksBefore");
-        assertEq(hooks.hooksAfter, _hooksAfter, "protectedShareToken hooksAfter");
+        assertEq(hooks.hooksBefore, expectedBefore, "protectedShareToken hooksBefore");
+        assertEq(hooks.hooksAfter, expectedAfter, "protectedShareToken hooksAfter");
+        assertEq(hooks.tokenType, Hook.COLLATERAL_TOKEN, "protectedShareToken tokenType");
 
         hooks = IShareToken(collateralShareToken).hookSetup();
-        assertEq(hooks.hooksBefore, _hooksBefore, "collateralShareToken hooksBefore");
-        assertEq(hooks.hooksAfter, _hooksAfter, "collateralShareToken hooksAfter");
+        assertEq(hooks.hooksBefore, expectedBefore, "collateralShareToken hooksBefore");
+        assertEq(hooks.hooksAfter, expectedAfter, "collateralShareToken hooksAfter");
+        assertEq(hooks.tokenType, Hook.PROTECTED_TOKEN, "collateralShareToken tokenType");
 
         hooks = IShareToken(debtShareToken).hookSetup();
-        assertEq(hooks.hooksBefore, _hooksBefore, "debtShareToken hooksBefore");
-        assertEq(hooks.hooksAfter, _hooksAfter, "debtShareToken hooksAfter");
+        assertEq(hooks.hooksBefore, expectedBefore, "debtShareToken hooksBefore");
+        assertEq(hooks.hooksAfter, expectedAfter, "debtShareToken hooksAfter");
+        assertEq(hooks.tokenType, Hook.DEBT_TOKEN, "debtShareToken tokenType");
     }
 
     /*
