@@ -2,8 +2,10 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 
@@ -13,8 +15,11 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ShareTokenCommonTest
 */
 contract ShareTokenCommonTest is SiloLittleHelper, Test {
-    address user = makeAddr("someUser");
-    address otherUser = makeAddr("someOtherUser");
+    address public user = makeAddr("someUser");
+    address public otherUser = makeAddr("someOtherUser");
+    uint256 public mintAmout = 100e18;
+
+    bytes32 constant public TRANSFER_EVENT = keccak256(bytes("Transfer(address,address,uint256)"));
 
     ISiloConfig siloConfig;
 
@@ -40,6 +45,63 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test {
 
         allowance = _shareToken.allowance(user, otherUser);
         assertEq(allowance, approveAmount, "allowance should be equal to approveAmount");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_balanceOfAndTotalSupply
+    */
+    function test_balanceOfAndTotalSupply() public {
+        _executeForAllShareTokens(_balanceOfAndTotalSupply);
+    }
+
+    function _balanceOfAndTotalSupply(IShareToken _shareToken) internal {
+        ISilo silo = _shareToken.silo();
+
+        vm.prank(address(silo));
+        _shareToken.mint(user, user, mintAmout);
+
+        uint256 balance0 = _shareToken.balanceOf(user);
+        uint256 totalSupply0 = _shareToken.totalSupply();
+
+        assertEq(balance0, mintAmout, "balance should be equal to mintAmout");
+        assertEq(totalSupply0, mintAmout, "totalSupply should be equal to mintAmout");
+
+        (uint256 balance1, uint256 totalSupply1) = _shareToken.balanceOfAndTotalSupply(user);
+
+        assertEq(balance0, balance1, "balances mistmatch");
+        assertEq(totalSupply0, totalSupply1, "totalSupply mistmatch");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenMintPermissions
+    */
+    function test_shareTokenMintPermissions() public {
+        _executeForAllShareTokens(_shareTokenMintPermissions);
+    }
+
+    function _shareTokenMintPermissions(IShareToken _shareToken) internal {
+        vm.expectRevert(IShareToken.OnlySilo.selector);
+        _shareToken.mint(user, user, mintAmout);
+    }
+
+   /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenMint
+    */
+    function test_shareTokenMint() public {
+        _executeForAllShareTokens(_shareTokenMint);
+    }
+
+    function _shareTokenMint(IShareToken _shareToken) internal {
+        ISilo silo = _shareToken.silo();
+
+        vm.recordLogs();
+
+        vm.prank(address(silo));
+        _shareToken.mint(user, user, mintAmout);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        assertTrue(_hasEvent(entries, TRANSFER_EVENT, address(_shareToken)), "Event not emitted");
     }
 
     /*
@@ -84,5 +146,15 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test {
 
         func(IShareToken(debt0));
         func(IShareToken(debt1));
+    }
+
+    function _hasEvent(Vm.Log[] memory entries, bytes32 _event, address _emitter) internal view returns (bool) {
+        for(uint256 i = 0; i < entries.length; i++) {
+            if (entries[i].topics[0] == _event && entries[i].emitter == _emitter) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
