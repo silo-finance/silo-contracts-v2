@@ -85,29 +85,6 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    forge test -vv --mt test_withdrawFees_NothingToPay
-    */
-    function test_withdrawFees_NothingToPay() external {
-        uint256 daoFee;
-        uint256 deployerFee;
-        uint256 flashloanFeeInBp;
-        address asset = token.ADDRESS();
-
-        address dao;
-        address deployer;
-        
-        siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
-        siloFactory.getFeeReceiversMock(address(this), dao, deployer);
-        token.balanceOfMock(address(this), 1);
-
-        _$().daoAndDeployerFees = 2;
-        _setProtectedAssets(NO_PROTECTED_ASSETS);
-
-        vm.expectRevert(ISilo.NothingToPay.selector);
-        _withdrawFees(ISilo(address(this)));
-    }
-
-    /*
     forge test -vv --mt test_withdrawFees_when_deployerFeeReceiver_isZero
     */
     function test_withdrawFees_when_deployerFeeReceiver_isZero() external {
@@ -126,30 +103,6 @@ contract WithdrawFeesTest is Test {
         _$().daoAndDeployerFees = 9;
 
         token.transferMock(dao, 9);
-        _setProtectedAssets(NO_PROTECTED_ASSETS);
-
-        _withdrawFees(ISilo(address(this)));
-    }
-
-    /*
-    forge test -vv --mt test_withdrawFees_when_daoFeeReceiver_isZero
-    */
-    function test_withdrawFees_when_daoFeeReceiver_isZero() external {
-        uint256 daoFee;
-        uint256 deployerFee;
-        uint256 flashloanFeeInBp;
-        address asset = token.ADDRESS();
-
-        address dao;
-        address deployer = makeAddr("Deployer");
-
-        siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
-        siloFactory.getFeeReceiversMock(address(this), dao, deployer);
-        token.balanceOfMock(address(this), 1e18);
-
-        _$().daoAndDeployerFees = 2;
-
-        token.transferMock(deployer, 2);
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
         _withdrawFees(ISilo(address(this)));

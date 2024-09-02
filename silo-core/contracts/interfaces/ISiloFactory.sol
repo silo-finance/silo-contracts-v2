@@ -46,6 +46,11 @@ interface ISiloFactory is IERC721 {
     /// @param _initData silo initialization data
     function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig);
 
+    /// @notice After burning, the deployer fee is sent to the DAO.
+    /// Doesn't affect Silo's behavior. It is only about fee distribution.
+    /// @param _siloIdToBurn silo ID to burn
+    function burn(uint256 _siloIdToBurn) external;
+
     function setDaoFee(uint256 _newDaoFee) external;
     function setDaoFeeReceiver(address _newDaoFeeReceiver) external;
     function setMaxDeployerFee(uint256 _newMaxDeployerFee) external;
@@ -61,8 +66,7 @@ interface ISiloFactory is IERC721 {
     function shareProtectedCollateralTokenImpl() external view returns (address);
     function shareDebtTokenImpl() external view returns (address);
 
-    function idToSilos(uint256 _id) external view returns (address[2] memory);
-    function siloToId(address _silo) external view returns (uint256);
+    function idToSiloConfig(uint256 _id) external view returns (address);
 
     function isSilo(address _silo) external view returns (bool);
     function getNextSiloId() external view returns (uint256);

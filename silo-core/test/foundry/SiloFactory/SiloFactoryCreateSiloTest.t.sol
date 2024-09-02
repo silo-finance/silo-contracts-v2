@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
@@ -84,9 +84,10 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertTrue(siloFactory.isSilo(address(silo0)));
         assertTrue(siloFactory.isSilo(address(silo1)));
 
-        address[2] memory silos = siloFactory.idToSilos(1);
-        assertEq(silos[0], address(silo0));
-        assertEq(silos[1], address(silo1));
+        address configFromFactory = siloFactory.idToSiloConfig(1);
+        assertEq(configFromFactory, address(siloConfig));
+        assertEq(configFromFactory, address(silo0.config()));
+        assertEq(configFromFactory, address(silo1.config()));
 
         ISiloConfig.ConfigData memory configData0 = silo0.config().getConfig(address(silo0));
         ISiloConfig.ConfigData memory configData1 = silo0.config().getConfig(address(silo1));

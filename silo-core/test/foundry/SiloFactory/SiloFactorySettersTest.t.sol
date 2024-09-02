@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
 /*
@@ -123,7 +125,22 @@ contract SiloFactorySettersTest is Test {
 
         assertEq(siloFactory.daoFeeReceiver(), _newDaoFeeReceiver);
 
-        (address dao, address deployer) = siloFactory.getFeeReceivers(address(1));
+        address silo = makeAddr("Silo");
+        address config = makeAddr("SiloConfig");
+
+        vm.mockCall(
+            silo,
+            abi.encodeWithSelector(ISilo.config.selector),
+            abi.encode(config)
+        );
+
+        vm.mockCall(
+            config,
+            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
+            abi.encode(1)
+        );
+
+        (address dao, address deployer) = siloFactory.getFeeReceivers(silo);
 
         assertEq(dao, _newDaoFeeReceiver);
         assertEq(deployer, address(0));

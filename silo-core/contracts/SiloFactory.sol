@@ -38,8 +38,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     address public shareProtectedCollateralTokenImpl;
     address public shareDebtTokenImpl;
 
-    mapping(uint256 id => address[2] silos) private _idToSilos;
-    mapping(address silo => uint256 id) public siloToId;
+    mapping(uint256 id => address siloConfig) public idToSiloConfig;
+    mapping(address silo => bool) public isSilo;
 
     constructor() ERC721("Silo Finance Fee Receiver", "feeSILO") Ownable(msg.sender) {}
 
@@ -115,15 +115,20 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISilo(configData0.silo).updateHooks();
         ISilo(configData1.silo).updateHooks();
 
-        siloToId[configData0.silo] = nextSiloId;
-        siloToId[configData1.silo] = nextSiloId;
-        _idToSilos[nextSiloId] = [configData0.silo, configData1.silo];
+        idToSiloConfig[nextSiloId] = address(siloConfig);
+
+        isSilo[configData0.silo] = true;
+        isSilo[configData1.silo] = true;
 
         if (_initData.deployer != address(0)) {
             _mint(_initData.deployer, nextSiloId);
         }
 
         emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
+    }
+
+    function burn(uint256 _siloIdToBurn) external virtual {
+        _burn(_siloIdToBurn);
     }
 
     function setDaoFee(uint256 _newDaoFee) external virtual onlyOwner {
@@ -146,20 +151,13 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         _setDaoFeeReceiver(_newDaoFeeReceiver);
     }
 
-    function isSilo(address _silo) external view virtual returns (bool) {
-        return siloToId[_silo] != 0;
-    }
-
-    function idToSilos(uint256 _id) external view virtual returns (address[2] memory silos) {
-        silos = _idToSilos[_id];
-    }
-
     function getNextSiloId() external view virtual returns (uint256) {
         return _siloId;
     }
 
     function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
-        return (daoFeeReceiver, _ownerOf(siloToId[_silo]));
+        uint256 siloID = ISilo(_silo).config().SILO_ID();
+        return (daoFeeReceiver, _ownerOf(siloID));
     }
 
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
