@@ -5,17 +5,17 @@ import {IInterestRateModelV2} from "./IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "./IInterestRateModelV2Config.sol";
 
 interface IInterestRateModelV2ConfigFactory {
-    /// @dev config ID and config address should be easily accessible directly from oracle contract
-    event NewInterestRateModelV2Config(bytes32 indexed id, IInterestRateModelV2Config indexed configAddress);
+    event NewInterestRateModelV2Config(bytes32 indexed configHash, address indexed configAddress);
+    event NewInterestRateModelV2(bytes32 indexed configAddress, address indexed irm);
 
     /// @dev verifies config and creates IRM config contract
     /// @notice it can be used in separate tx eg config can be prepared before it will be used for Silo creation
     /// @param _config IRM configuration
-    /// @return id unique ID of the config
-    /// @return configContract deployed (or existing one, depends on ID) contract address
+    /// @return configHash unique ID of the config
+    /// @return irm deployed (or existing one, depends on ID) contract address
     function create(IInterestRateModelV2.Config calldata _config)
         external
-        returns (bytes32 id, IInterestRateModelV2Config configContract);
+        returns (bytes32 configHash, IInterestRateModelV2 irm);
 
     /// @dev DP is 18 decimal points used for integer calculations
     // solhint-disable-next-line func-name-mixedcase

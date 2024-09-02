@@ -73,18 +73,19 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     /// silo => setup
     mapping (address => Setup) public getSetup;
 
+    IInterestRateModelV2Config public irmConfig;
+
     /// @notice Emitted on config init
-    /// @param silo Silo address for which config should be set
     /// @param config config struct for asset in Silo
-    event Initialized(address indexed silo, address indexed config);
+    event Initialized(address indexed config);
 
-    /// @dev this method creates 1:1 link between silo and config
-    function connect(address _configAddress) external virtual {
+    /// @dev this method sets config address for all Silos that will use this model
+    function initialize(address _configAddress) external virtual {
         if (_configAddress == address(0)) revert AddressZero();
-        if (address(getSetup[msg.sender].config) != address(0)) revert AlreadyConnected();
+        if (address(irmConfig) != address(0)) revert AlreadyConnected();
 
-        getSetup[msg.sender].config = IInterestRateModelV2Config(_configAddress);
-        emit Initialized(msg.sender, _configAddress);
+        irmConfig = IInterestRateModelV2Config(_configAddress);
+        emit Initialized(_configAddress);
     }
 
     /// @inheritdoc IInterestRateModel
@@ -187,7 +188,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     function getConfig(address _silo) public view virtual returns (ConfigWithState memory fullConfig) {
         Setup memory setup = getSetup[_silo];
-        Config memory config = setup.config.getConfig();
+        Config memory config = irmConfig.getConfig();
 
         fullConfig.uopt = config.uopt;
         fullConfig.ucrit = config.ucrit;

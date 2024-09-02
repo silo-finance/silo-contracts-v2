@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2ConfigFactory} from "../interfaces/IInterestRateModelV2ConfigFactory.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2Config} from "./InterestRateModelV2Config.sol";
+import {InterestRateModelV2} from "./InterestRateModelV2.sol";
 
 /// @title InterestRateModelV2ConfigFactory
 /// @dev It creates InterestRateModelV2Config.
@@ -13,31 +15,43 @@ contract InterestRateModelV2ConfigFactory is IInterestRateModelV2ConfigFactory {
     /// @dev DP is 18 decimal points used for integer calculations
     uint256 public constant DP = 1e18;
 
-    /// @dev hash(config) => config contract
+    /// @dev hash(config) => config contract address
     /// config ID is determine by initial configuration, the logic is the same, so config is the only difference
     /// that's why we can use it as ID, at the same time we can detect duplicated and save gas by reusing same config
     /// multiple times
-    mapping(bytes32 => IInterestRateModelV2Config) public getConfigAddress;
+    mapping(bytes32 configHash => address configAddress) public getConfigAddress;
+
+    /// @dev IRM contract implementation address to clone
+    address public immutable IRM;
+
+    constructor() {
+        IRM = address(new InterestRateModelV2());
+    }
 
     /// @inheritdoc IInterestRateModelV2ConfigFactory
     function create(IInterestRateModelV2.Config calldata _config)
         external
         virtual
-        returns (bytes32 id, IInterestRateModelV2Config configContract)
+        returns (bytes32 configHash, IInterestRateModelV2 irm)
     {
-        id = hashConfig(_config);
+        configHash = hashConfig(_config);
 
-        configContract = getConfigAddress[id];
+        address configAddress = getConfigAddress[configHash];
 
-        if (address(configContract) != address(0)) {
-            return (id, configContract);
+        // if config not yet present, deploy new one
+        if (configAddress == address(0)) {
+            verifyConfig(_config);
+            configAddress = address(new InterestRateModelV2Config(_config));
+            getConfigAddress[configHash] = configAddress;
+            emit NewInterestRateModelV2Config(configHash, configAddress);
         }
 
-        verifyConfig(_config);
-        configContract = IInterestRateModelV2Config(address(new InterestRateModelV2Config(_config)));
-        getConfigAddress[id] = configContract;
+        irm = IInterestRateModelV2(Clones.clone(IRM));
+        irm.initialize(configAddress);
 
-        emit NewInterestRateModelV2Config(id, configContract);
+        emit NewInterestRateModelV2(configAddress, address(irm));
+
+        return (configHash, irm);
     }
 
     /// @inheritdoc IInterestRateModelV2ConfigFactory

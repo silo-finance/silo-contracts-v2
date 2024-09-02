@@ -209,8 +209,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
-    /// @param _modelConfigAddress address of a config contract used by IRM
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
+    function initialize(ISiloConfig _siloConfig) external;
 
     /// @notice Update hooks configuration for Silo
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver

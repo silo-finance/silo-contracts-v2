@@ -107,8 +107,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
-        ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
-        ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
+        ISilo(configData0.silo).initialize(siloConfig);
+        ISilo(configData1.silo).initialize(siloConfig);
 
         _initializeShareTokens(configData0, configData1);
 

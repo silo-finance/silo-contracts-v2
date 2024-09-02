@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IInterestRateModelV2Config} from "./IInterestRateModelV2Config.sol";
+import {IInterestRateModel} from "./IInterestRateModel.sol";
 
 // solhint-disable var-name-mixedcase
 
-interface IInterestRateModelV2 {
+interface IInterestRateModelV2 is IInterestRateModel {
     struct Config {
         // uopt ∈ (0, 1) – optimal utilization;
         int256 uopt;
@@ -53,7 +53,6 @@ interface IInterestRateModelV2 {
         int128 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
         int128 Tcrit;
-        IInterestRateModelV2Config config;
     }
     /* solhint-enable */
 

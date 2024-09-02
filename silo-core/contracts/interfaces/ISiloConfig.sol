@@ -31,10 +31,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// @notice Address of the interest rate model
         address interestRateModel0;
 
-        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
-        address interestRateModelConfig0;
-
         /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
         /// if borrower can borrow given amount of assets. MaxLtv is in 18 decimals points
         uint256 maxLtv0;
@@ -66,10 +62,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
         /// @notice Address of the interest rate model
         address interestRateModel1;
-
-        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be reused between multiple IRMs (Interest Rate Models).
-        address interestRateModelConfig1;
 
         /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
         /// if borrower can borrow given amount of assets. maxLtv is in 18 decimals points
