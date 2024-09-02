@@ -148,8 +148,23 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function isSilo(address _silo) external view virtual returns (bool) {
-        uint256 siloID = ISilo(_silo).config().SILO_ID();
-        return idToSiloConfig[siloID] != address(0);
+        (bool success, bytes memory data) = _silo.staticcall(abi.encodeWithSelector(ISilo.config.selector));
+
+        // if `_silo` doesn't have `config()` method, it's not Silo
+        if (!success) return false;
+
+        address configFromSilo = abi.decode(data, (address));
+
+        uint256 siloID = ISiloConfig(configFromSilo).SILO_ID();
+        address configFromFactory = idToSiloConfig[siloID];
+
+        if (configFromFactory == address(0) || configFromSilo != configFromFactory) return false;
+
+        (address silo0, address silo1) = ISiloConfig(configFromFactory).getSilos();
+
+        if (silo0 == _silo || silo1 == _silo) return true;
+
+        return false;
     }
 
     function getNextSiloId() external view virtual returns (uint256) {

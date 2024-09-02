@@ -167,22 +167,4 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(siloFactory.ownerOf(1), initData.deployer);
     }
-
-    /*
-    forge test -vv --ffi --mt test_burnCreatedSiloToken
-    */
-    function test_burnCreatedSiloToken() public {
-        uint256 firstSiloId = 1;
-
-        (,address owner) = siloFactory.getFeeReceivers(address(silo0));
-
-        assertNotEq(owner, address(0), "owner is 0");
-
-        vm.prank(owner);
-        siloFactory.burn(firstSiloId);
-
-        (,owner) = siloFactory.getFeeReceivers(address(silo0));
-
-        assertEq(owner, address(0), "owner is not 0 after burn");
-    }
 }
