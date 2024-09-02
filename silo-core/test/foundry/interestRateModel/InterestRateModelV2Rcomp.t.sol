@@ -77,22 +77,6 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertGt(fullConfig.uopt, 0, "uopt");
     }
 
-    // forge test -vv --ffi --mt test_IRM_getConfig
-    function test_IRM_getConfig() public {
-        address silo = makeAddr("silo");
-        uint256 integratorState = 1;
-        uint256 tcrit = 2;
-//
-//        INTEREST_RATE_MODEL.mockSetup(silo, integratorState, tcrit);
-//
-//        bytes memory encodedData = abi.encodeWithSelector(ISilo.utilizationData.selector);
-//        vm.mockCall(silo, encodedData, abi.encode(utilizationData));
-//        vm.expectCall(silo, encodedData);
-//
-//        uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, testCase.input.currentTime);
-
-    }
-
     function test_IRM_RcompData_Mock() public {
         RcompData[] memory data = _readDataFromJson();
 
