@@ -73,7 +73,8 @@ library SiloStdLib {
         }
     }
 
-    /// @notice Returns totalAssets and totalShares for conversion math (convertToAssets and convertToShares)
+    /// @notice overloaded version of:
+    /// `getTotalAssetsAndTotalSharesWithInterest`(ISiloConfig.ConfigData, ISilo.AssetType)
     /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
     ///      updated numbers, interest should be added on the fly.
     /// @param _assetType used to read proper storage data

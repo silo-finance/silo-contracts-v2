@@ -110,7 +110,6 @@ library Views {
         protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
         collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
         debtAssets = $.totalAssets[AssetTypes.DEBT];
-
     }
 
     function utilizationData() internal view returns (ISilo.UtilizationData memory) {
