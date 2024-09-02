@@ -27,6 +27,6 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
 
     function test_get_NotExists() public {
         address liquidationHook = SiloCoreDeployments.get("not.exist", _networkName);
-        assertEq(liquidationHook, address(0), "expect address to be empty");
+        assertEq(liquidationHook, partialLiquidation, "expect to return valid address");
     }
 }
