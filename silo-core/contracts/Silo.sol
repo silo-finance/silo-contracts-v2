@@ -714,7 +714,7 @@ contract Silo is ISilo, ShareCollateralToken {
         view
         returns (uint256 assets, uint256 shares)
     {
-        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        (assets, shares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
     }
 
     function _previewMint(uint256 _shares, CollateralType _collateralType)
