@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -26,6 +27,10 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     bytes32 private constant _TYPE_HASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 public constant TRANSFER_EVENT = keccak256(bytes("Transfer(address,address,uint256)"));
+        bytes32 constant internal _PERMIT_TYPEHASH =
+        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 constant internal _HASHED_NAME = keccak256(bytes(_NAME));
+    bytes32 constant internal _HASHED_VERSION = keccak256(bytes(_VERSION));
 
     ISiloConfig public siloConfig;
     address public hookReceiver;
@@ -328,6 +333,37 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         assertEq(IShareToken(debt1).symbol(), "db-1");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenPermitAndNonces
+    */
+    function test_shareTokenPermitAndNonces() public {
+        _executeForAllShareTokens(_shareTokenPermitAndNonces);
+    }
+
+    function _shareTokenPermitAndNonces(IShareToken _shareToken) public {
+        Vm.Wallet memory wallet = vm.createWallet("Signer");
+        address spender = makeAddr("Spender");
+        uint256 value = 100e18;
+        uint256 nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
+        uint256 deadline = block.timestamp + 1000;
+
+        assertEq(nonce, 0, "expect nonce to be 0");
+
+        (uint8 v, bytes32 r, bytes32 s) =
+            _createPermit(wallet.addr, wallet.privateKey, spender, value, nonce, deadline, address(_shareToken));
+
+        uint256 allowanceBefore = _shareToken.allowance(wallet.addr, spender);
+        assertEq(allowanceBefore, 0, "expect no allowance");
+
+        ERC20PermitUpgradeable(address(_shareToken)).permit(wallet.addr, spender, value, deadline, v, r, s);
+
+        uint256 allowanceAfter = _shareToken.allowance(wallet.addr, spender);
+        assertEq(allowanceAfter, value, "expect valid allowance");
+
+        nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
+        assertEq(nonce, 1, "expect nonce to be 1");
+    }
+
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
         (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
@@ -368,5 +404,23 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         }
 
         return false;
+    }
+
+    function _createPermit(
+        address _signer,
+        uint256 _signerPrivateKey,
+        address _spender,
+        uint256 _value,
+        uint256 _nonce,
+        uint256 _deadline,
+        address _shareToken
+    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        bytes32 structHash =
+            keccak256(abi.encode(_PERMIT_TYPEHASH, _signer, _spender, _value, _nonce, _deadline));
+
+        bytes32 domainSeparator = ERC20PermitUpgradeable(_shareToken).DOMAIN_SEPARATOR();
+        bytes32 digest = MessageHashUtils.toTypedDataHash(domainSeparator, structHash);
+
+        (v, r, s) = vm.sign(_signerPrivateKey, digest);
     }
 }
