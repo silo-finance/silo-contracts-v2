@@ -46,12 +46,12 @@ interface IShareToken is IERC20Metadata {
     error RecipientNotSolventAfterTransfer();
     error SenderNotSolventAfterTransfer();
     error ZeroTransfer();
-    error HooksDidNotChanged();
 
     /// @notice method for SiloConfig to synchronize hooks
     /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action
     /// @param _hooksAfter hooks bitmap to trigger hooks AFTER action
-    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external;
+    /// @return updated flag that tells if any update was done/necessary
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external returns (bool updated);
 
     /// @notice Mint method for Silo to create debt
     /// @param _owner wallet for which to mint token

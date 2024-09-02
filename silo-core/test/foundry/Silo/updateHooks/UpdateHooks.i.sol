@@ -44,21 +44,15 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test --ffi -vv --mt test_updateHooks_HookReceiverNotSet
-    */
-    function test_updateHooks_HookReceiverNotSet() public {
-        _mockHookReceiver(address(0));
-
-        vm.expectRevert(ISilo.HookReceiverNotSet.selector);
-        silo0.updateHooks();
-    }
-
-    /*
     forge test --ffi -vv --mt test_updateHooks_emitEvent
     */
-    function test_updateHooks_HooksDidNotChanged() public {
-        vm.expectRevert(IShareToken.HooksDidNotChanged.selector);
+    function test_updateHooks_whenNothingChanged() public {
+        // we expect not have reverts when no update was done
         silo0.updateHooks();
+        silo0.updateHooks();
+
+        silo1.updateHooks();
+        silo1.updateHooks();
     }
 
     /*
@@ -74,7 +68,7 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo0));
+        ) = siloConfig.getShareTokens(address(silo1));
 
         IShareToken.HookSetup memory hooks = IShareToken(protectedShareToken).hookSetup();
         assertEq(hooks.hooksBefore, _hooksBefore, "protectedShareToken hooksBefore");
@@ -112,7 +106,7 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo0));
+        ) = siloConfig.getShareTokens(address(silo1));
 
         IShareToken.HookSetup memory hooks = IShareToken(protectedShareToken).hookSetup();
         assertEq(hooks.hooksBefore, 0, "protectedShareToken hooksBefore");

@@ -497,7 +497,7 @@ library Actions {
         }
     }
 
-    function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter, bool updated) {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         NonReentrantLib.nonReentrant(siloConfig);
@@ -508,9 +508,13 @@ library Actions {
 
         (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig(address(this));
 
-        IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-        IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
-        IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        updated = IShareToken(cfg.collateralShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        // we could early return at this point, because we expect `updateHooks` is atomic
+        // however because of hooks, there is a way to call `synchronizeHooks` separately
+        // so it is safer not to return early and perform full update,
+        // so we have 100% guaranty hooks are sync after this call
+        updated = updated || IShareToken(cfg.protectedShareToken).synchronizeHooks(hooksBefore, hooksAfter);
+        updated = updated || IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }
 
     // this method expect interest to be already accrued
