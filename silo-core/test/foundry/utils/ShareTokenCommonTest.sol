@@ -6,6 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
@@ -20,14 +21,19 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     address public otherUser = makeAddr("someOtherUser");
     uint256 public mintAmout = 100e18;
 
-    bytes32 constant public TRANSFER_EVENT = keccak256(bytes("Transfer(address,address,uint256)"));
+    string private constant _NAME = "SiloShareToken";
+    string private constant _VERSION = "1";
+    bytes32 private constant _TYPE_HASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 public constant TRANSFER_EVENT = keccak256(bytes("Transfer(address,address,uint256)"));
 
-    ISiloConfig siloConfig;
+    ISiloConfig public siloConfig;
+    address public hookReceiver;
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
     }
-    
+
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_approveAndAllowance
     */
@@ -161,6 +167,131 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
 
         vm.prank(address(silo));
         _shareToken.burn(user, otherUser, mintAmout);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_domainSeparator
+    */
+    function test_domainSeparator() public {
+        _executeForAllShareTokens(_domainSeparator);
+    }
+
+    function _domainSeparator(IShareToken _shareToken) internal view {
+        bytes32 expectedDomainSeparator = keccak256(abi.encode(
+            _TYPE_HASH,
+            keccak256(bytes(_NAME)),
+            keccak256(bytes(_VERSION)),
+            block.chainid,
+            address(_shareToken)
+        ));
+
+        bytes32 domainSeparator = ERC20PermitUpgradeable(address(_shareToken)).DOMAIN_SEPARATOR();
+
+        assertEq(domainSeparator, expectedDomainSeparator, "unexpected domainSeparator");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_eip712Domain
+    */
+    function test_eip712Domain() public {
+        _executeForAllShareTokens(_eip712Domain);
+    }
+
+    function _eip712Domain(IShareToken _shareToken) internal view {
+        string memory name;
+        string memory version;
+        address verifyingContract;
+
+        (, name, version,, verifyingContract,,) = ERC20PermitUpgradeable(address(_shareToken)).eip712Domain();
+
+        assertEq(keccak256(bytes(name)), keccak256(bytes(_NAME)), "name should be equal to _NAME");
+        assertEq(keccak256(bytes(version)), keccak256(bytes(_VERSION)), "version should be equal to _VERSION");
+        assertEq(verifyingContract, address(_shareToken), "verifyingContract should be equal to _shareToken");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_hookReceiver
+    */
+    function test_hookReceiver() public {
+        _executeForAllShareTokens(_hookReceiver);
+    }
+
+    function _hookReceiver(IShareToken _shareToken) internal view {
+        address shareTokenHookReceiver = _shareToken.hookReceiver();
+        assertEq(shareTokenHookReceiver, address(partialLiquidation), "wrong hookReceiver");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_synchronizeHooksPermissions
+    */
+    function test_synchronizeHooksPermissions() public {
+        _executeForAllShareTokens(_synchronizeHooksPermissions);
+    }
+
+    function _synchronizeHooksPermissions(IShareToken _shareToken) internal {
+        vm.expectRevert(IShareToken.OnlySilo.selector);
+        _shareToken.synchronizeHooks(0, 0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_hookReceiver
+    */
+    function test_hookSetupAndSynchronizeHooks() public {
+        _executeForAllShareTokens(_hookSetupAndSynchronizeHooks);
+    }
+
+    function _hookSetupAndSynchronizeHooks(IShareToken _shareToken) internal {
+        ISilo silo = _shareToken.silo();
+
+        IShareToken.HookSetup memory setup = _shareToken.hookSetup();
+
+        uint24 hooksBefore;
+        uint24 hooksAfter;
+
+        (hooksBefore, hooksAfter) = IHookReceiver(address(partialLiquidation)).hookReceiverConfig(address(silo));
+
+        assertEq(setup.hooksBefore, hooksBefore, "Should be equal to hooksBefore");
+        assertEq(setup.hooksAfter, hooksAfter, "Should be equal to hooksAfter");
+
+        uint24 newBeforeConfig = 55;
+        uint24 newAfterConfig = 66;
+
+        vm.prank(address(silo));
+        _shareToken.synchronizeHooks(newBeforeConfig, newAfterConfig);
+
+        setup = _shareToken.hookSetup();
+
+        assertEq(setup.hooksBefore, newBeforeConfig, "Should be equal to newBeforeConfig");
+        assertEq(setup.hooksAfter, newAfterConfig, "Should be equal to newAfterConfig");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSilo
+    */
+    function test_shareTokenSilo() public {
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
+
+        assertEq(address(IShareToken(protected0).silo()), address(silo0), "Should be equal to silo0");
+        assertEq(address(IShareToken(collateral0).silo()), address(silo0), "Should be equal to silo0");
+        assertEq(address(IShareToken(debt0).silo()), address(silo0), "Should be equal to silo0");
+
+        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
+
+        assertEq(address(IShareToken(protected1).silo()), address(silo1), "Should be equal to silo1");
+        assertEq(address(IShareToken(collateral1).silo()), address(silo1), "Should be equal to silo1");
+        assertEq(address(IShareToken(debt1).silo()), address(silo1), "Should be equal to silo1");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSiloConfig
+    */
+    function test_shareTokenSiloConfig() public {
+        _executeForAllShareTokens(_shareTokenSiloConfig);
+    }
+
+    function _shareTokenSiloConfig(IShareToken _shareToken) internal {
+        ISiloConfig shareTokenSiloConfig = _shareToken.siloConfig();
+        assertEq(address(shareTokenSiloConfig), address(siloConfig), "Should be equal to siloConfig");
     }
 
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
