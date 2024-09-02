@@ -477,15 +477,9 @@ library Actions {
         // we will never underflow because earnedFees max value is `daoAndDeployerFees`
         unchecked { $.daoAndDeployerFees -= uint192(earnedFees); }
 
-        if (daoFeeReceiver == address(0) && deployerFeeReceiver == address(0)) {
-            // just in case, should never happen...
-            revert ISilo.NothingToPay();
-        } else if (deployerFeeReceiver == address(0)) {
+        if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
-        } else if (daoFeeReceiver == address(0)) {
-            // should never happen... but we assume DAO does not want to make money so all is going to deployer
-            IERC20(asset).safeTransfer(deployerFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
             uint256 daoFees = earnedFees * daoFee;
