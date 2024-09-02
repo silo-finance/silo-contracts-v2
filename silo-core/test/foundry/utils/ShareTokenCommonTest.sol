@@ -268,7 +268,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSilo
     */
-    function test_shareTokenSilo() public {
+    function test_shareTokenSilo() public view {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
 
         assertEq(address(IShareToken(protected0).silo()), address(silo0), "Should be equal to silo0");
@@ -289,9 +289,43 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         _executeForAllShareTokens(_shareTokenSiloConfig);
     }
 
-    function _shareTokenSiloConfig(IShareToken _shareToken) internal {
+    function _shareTokenSiloConfig(IShareToken _shareToken) internal view {
         ISiloConfig shareTokenSiloConfig = _shareToken.siloConfig();
         assertEq(address(shareTokenSiloConfig), address(siloConfig), "Should be equal to siloConfig");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenName
+    */
+    function test_shareTokenName() public view {
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
+
+        assertEq(IShareToken(protected0).name(), "Silo Finance Non-borrowable b Deposit, SiloId: 1");
+        assertEq(IShareToken(collateral0).name(), "Silo Finance Borrowable b Deposit, SiloId: 1");
+        assertEq(IShareToken(debt0).name(), "Silo Finance b Debt, SiloId: 1");
+
+        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
+
+        assertEq(IShareToken(protected1).name(), "Silo Finance Non-borrowable b Deposit, SiloId: 1");
+        assertEq(IShareToken(collateral1).name(), "Silo Finance Borrowable b Deposit, SiloId: 1");
+        assertEq(IShareToken(debt1).name(), "Silo Finance b Debt, SiloId: 1");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSymbol
+    */
+    function test_shareTokenSymbol() public view {
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
+
+        assertEq(IShareToken(protected0).symbol(), "nbb-1");
+        assertEq(IShareToken(collateral0).symbol(), "bb-1");
+        assertEq(IShareToken(debt0).symbol(), "db-1");
+
+        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
+
+        assertEq(IShareToken(protected1).symbol(), "nbb-1");
+        assertEq(IShareToken(collateral1).symbol(), "bb-1");
+        assertEq(IShareToken(debt1).symbol(), "db-1");
     }
 
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
