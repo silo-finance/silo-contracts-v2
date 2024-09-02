@@ -39,6 +39,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     address public shareDebtTokenImpl;
 
     mapping(uint256 id => address siloConfig) public idToSiloConfig;
+    mapping(address silo => bool) public isSilo;
 
     constructor() ERC721("Silo Finance Fee Receiver", "feeSILO") Ownable(msg.sender) {}
 
@@ -116,6 +117,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
         idToSiloConfig[nextSiloId] = address(siloConfig);
 
+        isSilo[configData0.silo] = true;
+        isSilo[configData1.silo] = true;
+
         if (_initData.deployer != address(0)) {
             _mint(_initData.deployer, nextSiloId);
         }
@@ -145,26 +149,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
     function setDaoFeeReceiver(address _newDaoFeeReceiver) external virtual onlyOwner {
         _setDaoFeeReceiver(_newDaoFeeReceiver);
-    }
-
-    function isSilo(address _silo) external view virtual returns (bool) {
-        (bool success, bytes memory data) = _silo.staticcall(abi.encodeWithSelector(ISilo.config.selector));
-
-        // if `_silo` doesn't have `config()` method, it's not Silo
-        if (!success) return false;
-
-        address configFromSilo = abi.decode(data, (address));
-
-        uint256 siloID = ISiloConfig(configFromSilo).SILO_ID();
-        address configFromFactory = idToSiloConfig[siloID];
-
-        if (configFromFactory == address(0) || configFromSilo != configFromFactory) return false;
-
-        (address silo0, address silo1) = ISiloConfig(configFromFactory).getSilos();
-
-        if (silo0 == _silo || silo1 == _silo) return true;
-
-        return false;
     }
 
     function getNextSiloId() external view virtual returns (uint256) {

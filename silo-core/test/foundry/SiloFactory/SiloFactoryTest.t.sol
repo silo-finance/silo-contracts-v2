@@ -91,27 +91,5 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         // 3. Some random address
         isSilo = siloFactory.isSilo(makeAddr("random"));
         assertFalse(isSilo, "random is a silo");
-
-        // 4. Test fake silo with wrong config
-        address fakeSilo = makeAddr("fakeSilo");
-        address fakeConfig = makeAddr("fakeConfig");
-
-        // Fake silo return fake config
-        vm.mockCall(
-            fakeSilo,
-            abi.encodeWithSelector(ISilo.config.selector),
-            abi.encode(fakeConfig)
-        );
-
-        // Fake config return valid silo id that is unrelated to the fake silo
-        vm.mockCall(
-            fakeConfig,
-            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
-            abi.encode(1)
-        );
-
-        // we detect the fake config and return `false`
-        isSilo = siloFactory.isSilo(fakeSilo);
-        assertFalse(isSilo, "fakeSilo is a silo");
     }
 }
