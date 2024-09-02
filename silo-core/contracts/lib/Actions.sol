@@ -311,7 +311,7 @@ library Actions {
         uint256 shares;
 
         // transition collateral withdraw
-        address shareTokenFrom = _args.withdrawType == ISilo.CollateralType.Collateral
+        address shareTokenFrom = _args.transitionFrom == ISilo.CollateralType.Collateral
             ? collateralShareToken
             : protectedShareToken;
 
@@ -324,13 +324,13 @@ library Actions {
                 owner: _args.owner,
                 receiver: _args.owner,
                 spender: msg.sender,
-                collateralType: _args.withdrawType
+                collateralType: _args.transitionFrom
             })
         });
 
         // transition collateral deposit
         (ISilo.CollateralType depositType, address shareTokenTo) =
-            _args.withdrawType == ISilo.CollateralType.Collateral
+            _args.transitionFrom == ISilo.CollateralType.Collateral
                 ? (ISilo.CollateralType.Protected, protectedShareToken)
                 : (ISilo.CollateralType.Collateral, collateralShareToken);
 
@@ -625,7 +625,7 @@ library Actions {
     function _hookCallBeforeTransitionCollateral(ISilo.TransitionCollateralArgs memory _args) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         
-        uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
+        uint256 action = Hook.transitionCollateralAction(_args.transitionFrom);
 
         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
@@ -640,7 +640,7 @@ library Actions {
         uint256 _assets
     ) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
-        uint256 action = Hook.transitionCollateralAction(_args.withdrawType);
+        uint256 action = Hook.transitionCollateralAction(_args.transitionFrom);
 
         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 

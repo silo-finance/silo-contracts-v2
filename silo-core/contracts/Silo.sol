@@ -393,7 +393,7 @@ contract Silo is ISilo, ShareCollateralToken {
     function transitionCollateral(
         uint256 _shares,
         address _owner,
-        CollateralType _withdrawType
+        CollateralType _transitionFrom
     )
         external
         virtual
@@ -405,11 +405,11 @@ contract Silo is ISilo, ShareCollateralToken {
             TransitionCollateralArgs({
                 shares: _shares,
                 owner: _owner,
-                withdrawType: _withdrawType
+                transitionFrom: _transitionFrom
             })
         );
 
-        if (_withdrawType == CollateralType.Collateral) {
+        if (_transitionFrom == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
             emit DepositProtected(msg.sender, _owner, assets, toShares);
         } else {
