@@ -11,7 +11,7 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc SiloCoreDeploymentsTest
 */
 contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
-    string constant _networkName = "anvil";
+    string constant _networkName = "optimism";
 
     function setUp() public {
         _setUpLocalFixture();
@@ -20,13 +20,28 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_get_exists
     */
-    function test_get_exists() public {
-        address liquidationHook = SiloCoreDeployments.get(SiloCoreContracts.PARTIAL_LIQUIDATION, _networkName);
-        assertTrue(liquidationHook != address(0), "expect address to be there");
+    function test_get_exists_anvil() public {
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "rr");
+        assertEq(addr, 0x01c6dc3bD8B175a9494F00b6D224b14EdC67CD34, "expect valid address anvil");
     }
 
-    function test_get_NotExists() public {
-        address liquidationHook = SiloCoreDeployments.get("not.exist", _networkName);
-        assertEq(liquidationHook, address(partialLiquidation), "expect to return valid address");
+    function test_get_exists_optimism() public {
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "optimism");
+        assertEq(addr, 0x01c6dc3bD8B175a9494F00b6D224b14EdC67CD34, "expect valid address Optimism");
+    }
+
+    function test_get_exists_arbitrum_one() public {
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "arbitrum_one");
+        assertEq(addr, 0x8C1b49B1A45d9FD50c5846a6Cd19a5ADaA376B1B, "expect valid address on Arbitrum");
+    }
+
+    function test_get_contractNotExists() public {
+        address addr = SiloCoreDeployments.get("not.exist", _networkName);
+        assertEq(addr, address(0), "expect to return 0");
+    }
+
+    function test_get_invalidNetwork() public {
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "abcd");
+        assertEq(addr, address(0), "expect to return 0");
     }
 }
