@@ -364,6 +364,44 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         assertEq(nonce, 1, "expect nonce to be 1");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPermissions
+    */
+    function test_forwardTransferFromNoChecksPermissions() public {
+        _executeForAllShareTokens(_synchronizeHooksPermissions);
+    }
+
+    function _forwardTransferFromNoChecksPermissions(IShareToken _shareToken) internal {
+        vm.expectRevert(IShareToken.OnlySilo.selector);
+        _shareToken.forwardTransferFromNoChecks(address(0), address(0), 0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks
+    */
+    function test_forwardTransferFromNoChecks() public {
+        _executeForAllShareTokens(_synchronizeHooksPermissions);
+    }
+
+    function _forwardTransferFromNoChecks(IShareToken _shareToken) internal {
+        ISilo silo = _shareToken.silo();
+
+        vm.prank(address(silo));
+        _shareToken.mint(user, user, mintAmout);
+
+        uint256 balance = _shareToken.balanceOf(user);
+        assertEq(balance, mintAmout, "expect valid balance for a user");
+
+        vm.prank(address(silo));
+        _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmout);
+
+        balance = _shareToken.balanceOf(otherUser);
+        assertEq(balance, mintAmout, "expect valid balance for otherUser");
+
+        balance = _shareToken.balanceOf(user);
+        assertEq(balance, 0, "expect 0 balance for user");
+    }
+
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
         (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
