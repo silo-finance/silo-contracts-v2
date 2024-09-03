@@ -19,7 +19,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
 
     uint256 constant DP = 10 ** 18;
 
-    event Initialized(address indexed silo, address indexed config);
+    event Initialized(address indexed config);
 
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
@@ -40,7 +40,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         address config = makeAddr("config");
 
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(this), config);
+        emit Initialized(config);
 
         INTEREST_RATE_MODEL.initialize(config);
 

@@ -65,8 +65,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         initData.flashloanFee1 = 0;
         initData.liquidationFee0 = 0;
         initData.liquidationFee1 = 0;
-        initData.interestRateModel0 = makeAddr("irm0");
-        initData.interestRateModel1 = makeAddr("irm1");
 
         vm.expectRevert(ISiloFactory.Uninitialized.selector);
         siloFactoryTest.createSilo(initData);
@@ -101,7 +99,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertTrue(configData0.debtShareToken != address(0), "configData0.debtShareToken");
         assertEq(configData0.solvencyOracle, initData.solvencyOracle0, "configData0.solvencyOracle");
         assertEq(configData0.maxLtvOracle, initData.maxLtvOracle0, "configData0.maxLtvOracle");
-        assertEq(configData0.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
         assertEq(configData0.maxLtv, initData.maxLtv0, "configData0.maxLtv");
         assertEq(configData0.lt, initData.lt0, "configData0.lt");
         assertEq(configData0.liquidationFee, initData.liquidationFee0, "configData0.liquidationFee");
@@ -119,7 +116,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertTrue(configData1.debtShareToken != address(0), "configData1.debtShareToken");
         assertEq(configData1.solvencyOracle, initData.solvencyOracle1, "configData1.solvencyOracle");
         assertEq(configData1.maxLtvOracle, initData.maxLtvOracle1, "configData1.maxLtvOracle");
-        assertEq(configData1.interestRateModel, getAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
         assertEq(configData1.maxLtv, initData.maxLtv1, "configData1.maxLtv");
         assertEq(configData1.lt, initData.lt1, "configData1.lt");
         assertEq(configData1.liquidationFee, initData.liquidationFee1, "configData1.liquidationFee");

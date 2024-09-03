@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
@@ -35,8 +36,10 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             RcurData memory testCase = data[i];
 
             IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            address silo = address(uint160(i));
+            InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
-            uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
+            uint256 rcur = IRMv2Impl.calculateCurrentInterestRate(
                 cfg,
                 testCase.input.totalDeposits,
                 testCase.input.totalBorrowAmount,
@@ -60,25 +63,27 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
                 uint64(testCase.input.lastTransactionTime)
             );
 
-            address silo = address(uint160(i));
-
-            IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(testCase));
-
-            vm.prank(silo);
-            INTEREST_RATE_MODEL.initialize(address(configAddress));
-
-            INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
+            IRMv2Impl.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
             bytes memory encodedData = abi.encodeWithSelector(ISilo.utilizationData.selector);
             vm.mockCall(silo, encodedData, abi.encode(utilizationData));
             vm.expectCall(silo, encodedData);
 
-            uint256 mockedRcur = INTEREST_RATE_MODEL.getCurrentInterestRate(silo, testCase.input.currentTime);
+            uint256 mockedRcur = IRMv2Impl.getCurrentInterestRate(silo, testCase.input.currentTime);
             assertEq(mockedRcur, rcur, _concatMsg(i, "getCurrentInterestRate()"));
 
-            bool overflow = INTEREST_RATE_MODEL.overflowDetected(silo, testCase.input.currentTime);
+            bool overflow = IRMv2Impl.overflowDetected(silo, testCase.input.currentTime);
             assertEq(overflow, testCase.expected.didOverflow == 1, _concatMsg(i, "expect overflowDetected() = expected.didOverflow"));
         }
+    }
+
+    function _createIRM(address _silo, RcurData memory _testCase) internal returns (InterestRateModelV2Impl IRMv2Impl) {
+        IRMv2Impl = InterestRateModelV2Impl(Clones.clone(address(INTEREST_RATE_MODEL)));
+
+        IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(_testCase));
+
+        vm.prank(_silo);
+        IRMv2Impl.initialize(address(configAddress));
     }
 
     function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {
