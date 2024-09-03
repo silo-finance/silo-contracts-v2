@@ -36,21 +36,29 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
     forge test --ffi -vv --mt test_updateHooks_anyoneCanCall
     */
     function test_updateHooks_anyoneCanCall() public {
-        silo0.updateHooks();
+        vm.expectEmit(true, true, true, true);
+        emit HooksUpdated(0, 0);
+
+        silo1.updateHooks();
     }
 
     /*
     forge test --ffi -vv --mt test_updateHooks_emitEvent
     */
     function test_updateHooks_whenNothingChanged() public {
+        // we expect not have reverts when no update was done
+        silo0.updateHooks();
+
         vm.expectEmit(true, true, true, true);
         emit HooksUpdated(0, 0);
 
-        // we expect not have reverts when no update was done
-        silo0.updateHooks();
         silo0.updateHooks();
 
         silo1.updateHooks();
+
+        vm.expectEmit(true, true, true, true);
+        emit HooksUpdated(0, 0);
+
         silo1.updateHooks();
     }
 
