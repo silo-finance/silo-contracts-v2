@@ -426,14 +426,6 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         func(IShareToken(collateral1));
     }
 
-    function _executeForAllDebtShareTokens(function(IShareToken) internal func) internal {
-        (,, address debt0) = siloConfig.getShareTokens(address(silo0));
-        (,, address debt1) = siloConfig.getShareTokens(address(silo1));
-
-        func(IShareToken(debt0));
-        func(IShareToken(debt1));
-    }
-
     function _hasEvent(Vm.Log[] memory entries, bytes32 _event, address _emitter) internal pure returns (bool) {
         for(uint256 i = 0; i < entries.length; i++) {
             if (entries[i].topics[0] == _event && entries[i].emitter == _emitter) {
