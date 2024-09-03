@@ -43,6 +43,9 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
     forge test --ffi -vv --mt test_updateHooks_emitEvent
     */
     function test_updateHooks_whenNothingChanged() public {
+        vm.expectEmit(true, true, true, true);
+        emit HooksUpdated(0, 0);
+
         // we expect not have reverts when no update was done
         silo0.updateHooks();
         silo0.updateHooks();

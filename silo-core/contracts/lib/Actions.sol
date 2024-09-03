@@ -504,7 +504,7 @@ library Actions {
 
         ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(this));
 
-        if (cfg.hookReceiver == address(0)) revert ISilo.HookReceiverNotSet();
+        if (cfg.hookReceiver == address(0)) return (0, 0);
 
         (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig(address(this));
 
