@@ -72,8 +72,8 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function updateHooks() external {
-        (uint24 hooksBefore, uint24 hooksAfter, bool updated) = Actions.updateHooks();
-        if (updated) emit HooksUpdated(hooksBefore, hooksAfter);
+        (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks();
+        emit HooksUpdated(hooksBefore, hooksAfter);
     }
 
     /// @inheritdoc ISilo
