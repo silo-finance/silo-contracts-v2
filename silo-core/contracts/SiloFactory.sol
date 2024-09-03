@@ -6,15 +6,13 @@ import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
-import {IShareToken} from "./interfaces/IShareToken.sol";
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
+import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
-import {ISilo, Silo} from "./Silo.sol";
-import {Creator} from "./utils/Creator.sol";
 import {Hook} from "./lib/Hook.sol";
 
-contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
+contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev max fee is 40%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.4e18;
 
@@ -46,14 +44,14 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
     /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
     /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
-    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only creator can init.
+    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only owner can init.
     function initialize(
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external virtual onlyCreator {
+    ) external virtual onlyOwner {
         if (_siloId != 0) revert InvalidInitialization();
 
         // start IDs from 1
@@ -177,13 +175,13 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
             revert OracleMisconfiguration();
         }
 
-        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert BeforeCall();
+        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
 
         if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
             revert OracleMisconfiguration();
         }
 
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert BeforeCall();
+        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFee();
         if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFee();
@@ -203,7 +201,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        if (_newDaoFee > MAX_FEE) revert MaxFee();
+        if (_newDaoFee > MAX_FEE) revert MaxFeeExceeded();
 
         daoFee = _newDaoFee;
 
@@ -211,7 +209,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
-        if (_newMaxDeployerFee >= MAX_FEE) revert MaxFee();
+        if (_newMaxDeployerFee > MAX_FEE) revert MaxFeeExceeded();
 
         maxDeployerFee = _newMaxDeployerFee;
 
@@ -219,7 +217,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
-        if (_newMaxFlashloanFee >= MAX_FEE) revert MaxFee();
+        if (_newMaxFlashloanFee > MAX_FEE) revert MaxFeeExceeded();
 
         maxFlashloanFee = _newMaxFlashloanFee;
 
@@ -227,7 +225,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        if (_newMaxLiquidationFee >= MAX_FEE) revert MaxFee();
+        if (_newMaxLiquidationFee > MAX_FEE) revert MaxFeeExceeded();
 
         maxLiquidationFee = _newMaxLiquidationFee;
 
@@ -277,7 +275,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
-        return "//app.silo.finance/silo/";
+        return "TODO//app.silo.finance/silo/";  //TODO
     }
 
     function _copyConfig(ISiloConfig.InitData memory _initData)

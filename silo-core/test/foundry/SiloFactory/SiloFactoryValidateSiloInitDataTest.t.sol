@@ -81,7 +81,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.callBeforeQuote0 = true;
         initData.maxLtvOracle0 = address(0);
         initData.solvencyOracle0 = address(0);
-        vm.expectRevert(ISiloFactory.BeforeCall.selector);
+        vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.solvencyOracle0 = address(1);
@@ -92,7 +92,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.callBeforeQuote1 = true;
         initData.maxLtvOracle1 = address(0);
-        vm.expectRevert(ISiloFactory.BeforeCall.selector);
+        vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.solvencyOracle1 = address(1);
