@@ -81,7 +81,7 @@ library SiloStdLib {
     /// @return totalAssets total assets in Silo with interest for given asset type
     /// @return totalShares total shares in Silo for given asset type
     function getTotalAssetsAndTotalSharesWithInterest(ISilo.AssetType _assetType)
-        external
+        internal
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
