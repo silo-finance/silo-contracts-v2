@@ -10,12 +10,10 @@ import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.s
 import "./InterestRateModelV2Impl.sol";
 import "../_common/InterestRateModelConfigs.sol";
 import "../data-readers/RcurTestData.sol";
-import "../../../contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 import "../../../contracts/interfaces/IInterestRateModelV2Config.sol";
 
 // forge test -vv --mc InterestRateModelV2RcurTest
 contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
-    InterestRateModelV2ConfigFactory immutable CONFIG_FACTORY;
     InterestRateModelV2Impl immutable INTEREST_RATE_MODEL;
 
     uint256 constant DP = 10 ** 18;
@@ -23,7 +21,6 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
 
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2Impl();
-        CONFIG_FACTORY = new InterestRateModelV2ConfigFactory();
     }
 
     /*

@@ -14,7 +14,6 @@ import "../data-readers/RcompTestData.sol";
 
 // forge test -vv --ffi --mc InterestRateModelV2RcompTest
 contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs {
-    InterestRateModelV2ConfigFactory immutable CONFIG_FACTORY;
     InterestRateModelV2Impl immutable INTEREST_RATE_MODEL;
 
     uint256 constant DP = 10 ** 18;
@@ -22,7 +21,6 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2Impl();
-        CONFIG_FACTORY = new InterestRateModelV2ConfigFactory();
     }
 
     /*
