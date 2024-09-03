@@ -65,8 +65,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         initData.flashloanFee1 = 0;
         initData.liquidationFee0 = 0;
         initData.liquidationFee1 = 0;
-        initData.interestRateModelConfig0 = makeAddr("irmConfig0");
-        initData.interestRateModelConfig1 = makeAddr("irmConfig1");
         initData.interestRateModel0 = makeAddr("irm0");
         initData.interestRateModel1 = makeAddr("irm1");
 
@@ -129,13 +127,12 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData1.callBeforeQuote, initData.callBeforeQuote1, "configData1.callBeforeQuote");
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        ISilo(configData0.silo).initialize(siloConfig, initData.interestRateModelConfig0);
+        ISilo(configData0.silo).initialize(siloConfig);
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        ISilo(configData1.silo).initialize(siloConfig, initData.interestRateModelConfig1);
+        ISilo(configData1.silo).initialize(siloConfig);
 
-        (,, IInterestRateModelV2Config modelConfigAddr0) =
-            InterestRateModelV2(configData0.interestRateModel).getSetup(configData0.silo);
+        IInterestRateModelV2Config modelConfigAddr0 = InterestRateModelV2(configData0.interestRateModel).irmConfig();
         IInterestRateModelV2.Config memory irmConfigUsed0 = modelConfigAddr0.getConfig();
 
         (SiloConfigData.ConfigData memory siloConfigData,,) = siloData.getConfigData(SILO_TO_DEPLOY);
@@ -144,8 +141,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed0), abi.encode(irmConfigExpected0));
 
-        (,, IInterestRateModelV2Config modelConfigAddr1) =
-            InterestRateModelV2(configData1.interestRateModel).getSetup(configData1.silo);
+        IInterestRateModelV2Config modelConfigAddr1 = InterestRateModelV2(configData1.interestRateModel).irmConfig();
         IInterestRateModelV2.Config memory irmConfigUsed1 = modelConfigAddr1.getConfig();
 
         IInterestRateModelV2.Config memory irmConfigExpected1 =

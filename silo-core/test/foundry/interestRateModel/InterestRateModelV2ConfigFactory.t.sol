@@ -107,10 +107,10 @@ contract InterestRateModelV2ConfigFactoryTest is Test, InterestRateModelConfigs 
     function test_IRMF_create_new() public {
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        (bytes32 id, IInterestRateModelV2Config configContract) = factory.create(config);
+        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config);
 
-        assertEq(id, factory.hashConfig(config), "id is hash");
-        assertEq(address(configContract), address(factory.getConfigAddress(id)), "config address is stored");
+        assertEq(configHash, factory.hashConfig(config), "wrong config hash");
+        assertEq(address(irm), address(factory.irmByConfigHash(configHash)), "irm address is stored");
     }
 
     /*
@@ -119,10 +119,10 @@ contract InterestRateModelV2ConfigFactoryTest is Test, InterestRateModelConfigs 
     function test_IRMF_create_reusable() public {
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        (bytes32 id, IInterestRateModelV2Config configContract) = factory.create(config);
-        (bytes32 id2, IInterestRateModelV2Config configContract2) = factory.create(config);
+        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config);
+        (bytes32 configHash2, IInterestRateModelV2 irm2) = factory.create(config);
 
-        assertEq(id, id2, "id is the same for same config");
-        assertEq(address(configContract), address(configContract2), "config address is the same");
+        assertEq(configHash, configHash2, "config hash is the same for same config");
+        assertEq(address(irm), address(irm2), "irm address is the same");
     }
 }

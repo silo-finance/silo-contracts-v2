@@ -76,7 +76,6 @@ contract Deployers is VyperDeployer, Data {
             solvencyOracle0: oracles["DIA"],
             maxLtvOracle0: oracles["CHAINLINK"],
             interestRateModel0: address(interestRateModelV2),
-            interestRateModelConfig0: IRMConfigs["defaultAsset"],
             maxLtv0: 0.7500e18,
             lt0: 0.8500e18,
             liquidationFee0: 0.0500e18,
@@ -87,7 +86,6 @@ contract Deployers is VyperDeployer, Data {
             solvencyOracle1: oracles["UniV3-ETH-USDC-0.3"],
             maxLtvOracle1: oracles[""],
             interestRateModel1: address(interestRateModelV2),
-            interestRateModelConfig1: IRMConfigs["defaultAsset"],
             maxLtv1: 0.8500e18,
             lt1: 0.9500e18,
             liquidationFee1: 0.0250e18,
@@ -220,16 +218,10 @@ contract Deployers is VyperDeployer, Data {
         interestRateModelV2ConfigFactory = IInterestRateModelV2ConfigFactory(
             address(new InterestRateModelV2ConfigFactory())
         );
-
-        // deploy preset IRM configs
-        (, IInterestRateModelV2Config config) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
-        IRMConfigs["defaultAsset"] = address(config);
     }
 
     function core_deployInterestRateModel() internal {
-        interestRateModelV2 = IInterestRateModelV2(
-            address(new InterestRateModelV2())
-        );
+        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
     }
 
     function core_deployGaugeHookReceiver() internal {

@@ -61,22 +61,25 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
     /// 2^196 > (max(uitn256) / RCOMP_MAX), so as a limit we need to use: `max(uitn256) / RCOMP_MAX`
     uint256 public constant ASSET_DATA_OVERFLOW_LIMIT = type(uint256).max / RCOMP_MAX;
 
-    /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
-    /// at the same time this is safety feature because we will write to this mapping based on msg.sender
-    /// silo => setup
-    mapping (address => Setup) public getSetup;
+    /// @dev Each Silo setup is stored separately in mapping. We will write to this mapping based on the msg.sender.
+    /// Silo => IInterestRateModelV2.Setup
+    mapping (address silo => Setup) public getSetup;
+
+    /// @dev Config for the model
+    IInterestRateModelV2Config public irmConfig;
 
     /// @notice Emitted on config init
-    /// @param silo Silo address for which config should be set
     /// @param config config struct for asset in Silo
-    event Initialized(address indexed silo, address indexed config);
+    event Initialized(address indexed config);
 
-    /// @dev this method creates 1:1 link between silo and config
-    function connect(address _configAddress) external virtual {
-        if (address(getSetup[msg.sender].config) != address(0)) revert AlreadyConnected();
+    /// @inheritdoc IInterestRateModel
+    function initialize(address _config) external virtual {
+        if (_config == address(0)) revert AddressZero();
+        if (address(irmConfig) != address(0)) revert AlreadyInitialized();
 
-        getSetup[msg.sender].config = IInterestRateModelV2Config(_configAddress);
-        emit Initialized(msg.sender, _configAddress);
+        irmConfig = IInterestRateModelV2Config(_config);
+
+        emit Initialized(_config);
     }
 
     /// @inheritdoc IInterestRateModel
@@ -179,7 +182,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
     function getConfig(address _silo) public view virtual returns (ConfigWithState memory fullConfig) {
         Setup memory setup = getSetup[_silo];
-        Config memory config = setup.config.getConfig();
+        Config memory config = irmConfig.getConfig();
 
         fullConfig.uopt = config.uopt;
         fullConfig.ucrit = config.ucrit;

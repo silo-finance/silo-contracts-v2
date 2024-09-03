@@ -62,10 +62,10 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
 
             address silo = address(uint160(i));
 
-            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
+            IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(testCase));
 
             vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(address(configAddress));
+            INTEREST_RATE_MODEL.initialize(address(configAddress));
 
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 

@@ -38,7 +38,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         address silo = address(this);
         address irmConfigAddress = makeAddr("irmConfigAddress");
 
-        INTEREST_RATE_MODEL.connect(irmConfigAddress);
+        INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
         IInterestRateModelV2.ConfigWithState memory emptyConfig;
 
@@ -55,7 +55,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         address silo = address(this);
         address irmConfigAddress = makeAddr("irmConfigAddress");
 
-        INTEREST_RATE_MODEL.connect(irmConfigAddress);
+        INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(_configWithState()));
@@ -147,10 +147,10 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             address silo = address(uint160(i));
 
-            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
+            IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(testCase));
 
             vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(address(configAddress));
+            INTEREST_RATE_MODEL.initialize(address(configAddress));
 
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
@@ -189,10 +189,10 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
             address silo = address(uint160(i));
 
-            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
+            IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(testCase));
 
             vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(address(configAddress));
+            INTEREST_RATE_MODEL.initialize(address(configAddress));
 
             INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
@@ -204,7 +204,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 testCase.input.lastTransactionTime
             );
 
-            (int256 storageRi, int256 storageTcrit,)= INTEREST_RATE_MODEL.getSetup(silo);
+            (int256 storageRi, int256 storageTcrit)= INTEREST_RATE_MODEL.getSetup(silo);
 
             assertEq(storageRi, ri, _concatMsg(i, "storageRi"));
             assertEq(storageTcrit, Tcrit, _concatMsg(i, "storageTcrit"));

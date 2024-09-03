@@ -53,13 +53,12 @@ interface IInterestRateModelV2 {
         int128 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
         int128 Tcrit;
-        IInterestRateModelV2Config config;
     }
     /* solhint-enable */
 
     error AddressZero();
     error DeployConfigFirst();
-    error AlreadyConnected();
+    error AlreadyInitialized();
 
     error InvalidBeta();
     error InvalidKcrit();

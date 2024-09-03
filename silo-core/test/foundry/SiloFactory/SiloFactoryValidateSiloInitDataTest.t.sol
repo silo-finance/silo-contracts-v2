@@ -157,12 +157,8 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.interestRateModelConfig0 = address(100005);
-
         vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
         siloFactory.validateSiloInitData(initData);
-
-        initData.interestRateModelConfig1 = initData.interestRateModelConfig0;
 
         vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);

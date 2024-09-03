@@ -1,5 +1,7 @@
 pragma solidity ^0.8.20;
 
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {InterestRateModelV2Config, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
@@ -15,7 +17,6 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     using SafeCast for uint256;
 
     InterestRateModelV2 IRMv2;
-    InterestRateModelV2Config IRMV2Config;
 
     uint256 internal constant _DP = 1e18;
 
@@ -60,7 +61,8 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     uint64 interestRateTimestamp;
 
     constructor() {
-        IRMv2 = new InterestRateModelV2();
+        InterestRateModelV2ConfigFactory factory = new InterestRateModelV2ConfigFactory();
+
         IInterestRateModelV2.Config memory _config = IInterestRateModelV2.Config({
             uopt: 500000000000000000,
             ucrit: 900000000000000000,
@@ -71,8 +73,10 @@ contract EchidnaIRMv2 is PropertiesAsserts {
             klin: 4439370878,
             beta: 69444444444444
         });
-        IRMV2Config = new InterestRateModelV2Config(_config);
-        IRMv2.connect(address(IRMV2Config));
+
+        (, IInterestRateModelV2 createdIRM) = factory.create(_config);
+
+        IRMv2 = InterestRateModelV2(address(createdIRM));
     }
 
     /* ================================================================

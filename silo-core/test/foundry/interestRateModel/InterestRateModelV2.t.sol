@@ -26,38 +26,38 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     /*
-    forge test -vv --mt test_connect_zero
+    forge test -vv --mt test_initialize_zero
     */
-    function test_connect_zero() public {
+    function test_initialize_zero() public {
         vm.expectRevert(IInterestRateModelV2.AddressZero.selector);
-        INTEREST_RATE_MODEL.connect(address(0));
+        INTEREST_RATE_MODEL.initialize(address(0));
     }
 
     /*
-    forge test -vv --mt test_connect_pass
+    forge test -vv --mt test_initialize_pass
     */
-    function test_connect_pass() public {
+    function test_initialize_pass() public {
         address config = makeAddr("config");
 
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(this), config);
 
-        INTEREST_RATE_MODEL.connect(config);
+        INTEREST_RATE_MODEL.initialize(config);
 
-        (,, IInterestRateModelV2Config connectedConfig) = INTEREST_RATE_MODEL.getSetup(address(this));
+        IInterestRateModelV2Config connectedConfig = INTEREST_RATE_MODEL.irmConfig();
         assertEq(address(connectedConfig), config, "expect valid config address");
     }
 
     /*
-    forge test -vv --mt test_connect_onlyOnce
+    forge test -vv --mt test_initialize_onlyOnce
     */
-    function test_connect_onlyOnce() public {
+    function test_initialize_onlyOnce() public {
         address config = makeAddr("config");
 
-        INTEREST_RATE_MODEL.connect(config);
+        INTEREST_RATE_MODEL.initialize(config);
 
-        vm.expectRevert(IInterestRateModelV2.AlreadyConnected.selector);
-        INTEREST_RATE_MODEL.connect(config);
+        vm.expectRevert(IInterestRateModelV2.AlreadyInitialized.selector);
+        INTEREST_RATE_MODEL.initialize(config);
     }
 
     function test_IRM_decimals() public view {
