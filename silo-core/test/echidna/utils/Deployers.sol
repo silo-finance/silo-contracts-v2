@@ -22,7 +22,7 @@ import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liqui
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {IInterestRateModelV2Factory, InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
@@ -38,7 +38,7 @@ contract Deployers is VyperDeployer, Data {
     // silo-core
     ISiloFactory siloFactory;
     ISiloFactory siloFactoryInternal;
-    IInterestRateModelV2ConfigFactory interestRateModelV2ConfigFactory;
+    IInterestRateModelV2Factory interestRateModelV2ConfigFactory;
     IInterestRateModelV2 interestRateModelV2;
     IGaugeHookReceiver hookReceiver;
     ISiloDeployer siloDeployer;
@@ -215,8 +215,8 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deployInterestRateConfigFactory() internal {
-        interestRateModelV2ConfigFactory = IInterestRateModelV2ConfigFactory(
-            address(new InterestRateModelV2ConfigFactory())
+        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(
+            address(new InterestRateModelV2Factory())
         );
     }
 

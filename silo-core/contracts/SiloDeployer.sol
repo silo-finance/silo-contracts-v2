@@ -6,7 +6,7 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
+import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
@@ -15,12 +15,12 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 /// @notice Silo Deployer
 contract SiloDeployer is ISiloDeployer {
     // solhint-disable var-name-mixedcase
-    IInterestRateModelV2ConfigFactory public immutable IRM_CONFIG_FACTORY;
+    IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
     // solhint-enable var-name-mixedcase
 
     constructor(
-        IInterestRateModelV2ConfigFactory _irmConfigFactory,
+        IInterestRateModelV2Factory _irmConfigFactory,
         ISiloFactory _siloFactory
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;

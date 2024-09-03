@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 import {IInterestRateModelV2} from "./IInterestRateModelV2.sol";
 
-interface IInterestRateModelV2ConfigFactory {
+interface IInterestRateModelV2Factory {
     /// @dev config hash and IRM should be easily accessible directly from oracle contract
     event NewInterestRateModelV2(bytes32 indexed configHash, IInterestRateModelV2 indexed irm);
 

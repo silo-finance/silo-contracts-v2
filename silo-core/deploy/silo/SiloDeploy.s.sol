@@ -11,8 +11,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";

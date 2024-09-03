@@ -6,13 +6,13 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {InterestRateModelV2} from "./InterestRateModelV2.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "../interfaces/IInterestRateModelV2ConfigFactory.sol";
+import {IInterestRateModelV2Factory} from "../interfaces/IInterestRateModelV2Factory.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2Config} from "./InterestRateModelV2Config.sol";
 
-/// @title InterestRateModelV2ConfigFactory
+/// @title InterestRateModelV2Factory
 /// @dev It creates InterestRateModelV2Config.
-contract InterestRateModelV2ConfigFactory is IInterestRateModelV2ConfigFactory {
+contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
     /// @dev DP is 18 decimal points used for integer calculations
     uint256 public constant DP = 1e18;
 
@@ -28,7 +28,7 @@ contract InterestRateModelV2ConfigFactory is IInterestRateModelV2ConfigFactory {
         IRM = address(new InterestRateModelV2());
     }
 
-    /// @inheritdoc IInterestRateModelV2ConfigFactory
+    /// @inheritdoc IInterestRateModelV2Factory
     function create(IInterestRateModelV2.Config calldata _config)
         external
         virtual
@@ -54,7 +54,7 @@ contract InterestRateModelV2ConfigFactory is IInterestRateModelV2ConfigFactory {
         emit NewInterestRateModelV2(configHash, irm);
     }
 
-    /// @inheritdoc IInterestRateModelV2ConfigFactory
+    /// @inheritdoc IInterestRateModelV2Factory
     // solhint-disable-next-line code-complexity
     function verifyConfig(IInterestRateModelV2.Config calldata _config) public view virtual {
         int256 dp = int256(DP);
@@ -69,7 +69,7 @@ contract InterestRateModelV2ConfigFactory is IInterestRateModelV2ConfigFactory {
         if (_config.beta < 0) revert IInterestRateModelV2.InvalidBeta();
     }
 
-    /// @inheritdoc IInterestRateModelV2ConfigFactory
+    /// @inheritdoc IInterestRateModelV2Factory
     function hashConfig(IInterestRateModelV2.Config calldata _config)
         public
         pure

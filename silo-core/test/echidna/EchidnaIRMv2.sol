@@ -1,7 +1,7 @@
 pragma solidity ^0.8.20;
 
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
-import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {InterestRateModelV2Config, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
@@ -61,7 +61,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     uint64 interestRateTimestamp;
 
     constructor() {
-        InterestRateModelV2ConfigFactory factory = new InterestRateModelV2ConfigFactory();
+        InterestRateModelV2Factory factory = new InterestRateModelV2Factory();
 
         IInterestRateModelV2.Config memory _config = IInterestRateModelV2.Config({
             uopt: 500000000000000000,

@@ -25,7 +25,7 @@ import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreC
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
+import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
 // silo-oracles
 import {OracleConfig, OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {
@@ -52,7 +52,7 @@ contract SiloContracts {
     // silo-core
     IGaugeHookReceiver public gaugeHookReceiver;
     IInterestRateModelV2 public interestRateModelV2;
-    IInterestRateModelV2ConfigFactory public interestRateModelV2ConfigFactory;
+    IInterestRateModelV2Factory public interestRateModelV2ConfigFactory;
     ISiloFactory public siloFactory;
     // silo-oracles
     ChainlinkV3OracleFactory public chainlinkV3OracleFactory;
@@ -95,9 +95,9 @@ contract SiloContracts {
         gaugeHookReceiver = IGaugeHookReceiver(SiloCoreDeployments.get(SiloCoreContracts.GAUGE_HOOK_RECEIVER, chainAlias));
         siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));
 
-        interestRateModelV2ConfigFactory = IInterestRateModelV2ConfigFactory(
+        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(
             SiloCoreDeployments.get(
-                SiloCoreContracts.INTEREST_RATE_MODEL_V2_CONFIG_FACTORY,
+                SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY,
                 chainAlias
             )
         );

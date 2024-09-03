@@ -5,7 +5,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import "./InterestRateModelV2Impl.sol";
 import "../_common/InterestRateModelConfigs.sol";
