@@ -55,7 +55,7 @@ contract BorrowPossibleTest is Test, SiloLittleHelper {
         _depositForBorrow(10, depositor);
         _borrow(1, depositor);
 
-        assertTrue(!silo0.borrowPossible(depositor));
+        assertFalse(silo0.borrowPossible(depositor));
         assertTrue(silo1.borrowPossible(depositor));
     }
 }
