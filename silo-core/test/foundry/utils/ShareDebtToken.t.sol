@@ -361,6 +361,52 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         shareDebtToken.transfer(receiver, toBorrow);
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_shareDebtToken_allowance
+    */
+    function test_shareDebtToken_allowance() public {
+        address user = makeAddr("user");
+        address otherUser = makeAddr("otherUser");
+        uint256 amount = 100e18;
+
+        uint256 allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, 0, "no allowance");
+
+        vm.prank(otherUser);
+        shareDebtToken.setReceiveApproval(user, amount);
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, amount, "allowance set");
+
+        uint256 decreaseAmount = 10e18;
+
+        vm.prank(otherUser);
+        shareDebtToken.decreaseReceiveAllowance(user, decreaseAmount);
+
+        uint256 newAllowance = amount - decreaseAmount;
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, newAllowance, "allowance decreased");
+
+        uint256 increaseAmount = 20e18;
+
+        vm.prank(otherUser);
+        shareDebtToken.increaseReceiveAllowance(user, increaseAmount);
+
+        newAllowance += increaseAmount;
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, newAllowance, "allowance increased");
+
+        uint256 otherAmount = 10000e18;
+
+        vm.prank(otherUser);
+        shareDebtToken.setReceiveApproval(user, otherAmount);
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, otherAmount, "allowance overriden");
+    }
+
     function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {
         collateralSender = siloConfig.borrowerCollateralSilo(address(this));
         collateralReceiver = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
