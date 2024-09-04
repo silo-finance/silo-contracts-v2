@@ -408,6 +408,22 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_allowance
+    */
+    function test_debtToken_transferFrom_allowance() public {
+        address borrower = makeAddr("Borrower");
+        address receiver = makeAddr("Receiver");
+        address spender = makeAddr("Spender");
+
+        vm.prank(borrower);
+        shareDebtToken.approve(spender, 1e18);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
+        shareDebtToken.transferFrom(borrower, receiver, 1e18);
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom
     */
     function test_debtToken_transferFrom() public {
