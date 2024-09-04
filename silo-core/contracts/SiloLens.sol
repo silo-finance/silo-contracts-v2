@@ -19,11 +19,6 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function borrowPossible(ISilo _silo, address _borrower) external view virtual returns (bool possible) {
-        return _silo.borrowPossible(_borrower);
-    }
-
-    /// @inheritdoc ISiloLens
     function getMaxLtv(ISilo _silo) external view virtual returns (uint256 maxLtv) {
         return _silo.getMaxLtv();
     }

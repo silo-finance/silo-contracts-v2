@@ -22,10 +22,6 @@ library SiloLensLib {
         );
     }
 
-    function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
-        possible = !_silo.config().hasDebtInOtherSilo(address(_silo), _borrower);
-    }
-
     function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {
         maxLtv = _silo.config().getConfig(address(_silo)).maxLtv;
     }

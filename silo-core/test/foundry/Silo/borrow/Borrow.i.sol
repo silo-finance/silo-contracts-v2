@@ -389,7 +389,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         assertEq(silo0.maxBorrow(borrower), 0, "maxBorrow 0");
         assertTrue(silo0.isSolvent(borrower), "still isSolvent (silo0)");
         assertTrue(silo1.isSolvent(borrower), "still isSolvent (silo1)");
-        assertTrue(silo1.borrowPossible(borrower), "borrow is still possible, we just reached CAP");
 
         _borrow(1, borrower, ISilo.AboveMaxLtv.selector);
     }
