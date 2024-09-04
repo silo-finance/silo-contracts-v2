@@ -140,6 +140,76 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
         _sToken_transfer_NotSolvent(ISilo.CollateralType.Protected, TWO_ASSETS);
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_collateralShareTokens_transferFrom_depositorSolvent
+    */
+    function test_collateralShareTokens_transferFrom_depositorSolvent() public {
+        address spender = makeAddr("Spender");
+        uint256 amount = 100e18;
+
+        _depositCollateral(amount, depositor, TWO_ASSETS, ISilo.CollateralType.Collateral);
+        _depositCollateral(amount, depositor, TWO_ASSETS, ISilo.CollateralType.Protected);
+
+        IShareToken collateralToken = _token0(ISilo.CollateralType.Collateral);
+        IShareToken protecteToken = _token0(ISilo.CollateralType.Protected);
+
+        vm.prank(depositor);
+        collateralToken.approve(spender, amount);
+
+        vm.prank(depositor);
+        protecteToken.approve(spender, amount);
+
+        uint256 balance = collateralToken.balanceOf(receiver);
+        assertEq(balance, 0, "collateral balance");
+
+        balance = protecteToken.balanceOf(receiver);
+        assertEq(balance, 0, "protected balance");
+
+        vm.prank(spender);
+        collateralToken.transferFrom(depositor, receiver, amount);
+
+        vm.prank(spender);
+        protecteToken.transferFrom(depositor, receiver, amount);
+
+        balance = collateralToken.balanceOf(receiver);
+        assertEq(balance, amount, "collateral transfer success");
+
+        balance = protecteToken.balanceOf(receiver);
+        assertEq(balance, amount, "protected transfer success");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_collateralShareTokens_transferFrom_depositorNotSolvent
+    */
+    function test_collateralShareTokens_transferFrom_depositorNotSolvent() public {
+        address spender = makeAddr("Spender");
+        uint256 amount = 100e18;
+
+        _depositCollateral(amount, depositor, TWO_ASSETS, ISilo.CollateralType.Collateral);
+        _depositCollateral(amount, depositor, TWO_ASSETS, ISilo.CollateralType.Protected);
+
+        _depositForBorrow(amount * 2, makeAddr("any"));
+
+        IShareToken collateralToken = _token0(ISilo.CollateralType.Collateral);
+        IShareToken protecteToken = _token0(ISilo.CollateralType.Protected);
+
+        vm.prank(depositor);
+        collateralToken.approve(spender, amount);
+
+        vm.prank(depositor);
+        protecteToken.approve(spender, amount);
+
+        _borrow(150e18, depositor, TWO_ASSETS);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.SenderNotSolventAfterTransfer.selector);
+        collateralToken.transferFrom(depositor, receiver, amount);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.SenderNotSolventAfterTransfer.selector);
+        protecteToken.transferFrom(depositor, receiver, amount);
+    }
+
     function _sToken_transfer_NotSolvent(ISilo.CollateralType _collateralType, bool _sameAsset) private {
         _depositCollateral(1e18, depositor, SAME_ASSET, _collateralType);
         _depositCollateral(1e18, depositor, TWO_ASSETS, _collateralType);
