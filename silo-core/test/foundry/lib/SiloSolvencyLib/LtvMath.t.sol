@@ -42,12 +42,15 @@ contract LtvMathTest is Test {
     }
 
     function test_ltvMath_maxDebt() public {
-        /*
-        this is what docs saying:
-        @dev Calculates floor(x * y / denominator) with full precision. Throws if result overflows a uint256 or
-        denominator == 0.
-        but looks like we can overflow on mul!
-        */
-        assertEq(SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: type(uint256).max, _sumOfBorrowerCollateralValue: 1}), type(uint256).max);
+        assertEq(SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: type(uint256).max, _sumOfBorrowerCollateralValue: 1e18}), type(uint256).max);
+    }
+
+    function test_ltvMath_overflow() public {
+        vm.expectRevert();
+        SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: type(uint256).max, _sumOfBorrowerCollateralValue: 1e18 - 1});
+    }
+
+    function test_ltvMath_rounding() public {
+        assertEq(SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 1, _sumOfBorrowerCollateralValue: 3}), 333333333333333334, "0.3(3) ceil +1");
     }
 }
