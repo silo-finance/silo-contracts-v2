@@ -81,12 +81,12 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @inheritdoc IInterestRateModel
     function initialize(address _irmConfig) external virtual {
-        if (_config == address(0)) revert AddressZero();
+        if (_irmConfig == address(0)) revert AddressZero();
         if (address(irmConfig) != address(0)) revert AlreadyInitialized();
 
-        irmConfig = IInterestRateModelV2Config(_config);
+        irmConfig = IInterestRateModelV2Config(_irmConfig);
 
-        emit Initialized(_config);
+        emit Initialized(_irmConfig);
     }
 
     /// @inheritdoc IInterestRateModel

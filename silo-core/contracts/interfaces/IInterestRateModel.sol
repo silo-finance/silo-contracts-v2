@@ -3,8 +3,8 @@ pragma solidity >=0.5.0;
 
 interface IInterestRateModel {
     /// @dev Sets config address for all Silos that will use this model
-    /// @param _config address of SiloConfig contract
-    function initialize(address _config) external;
+    /// @param _irmConfig address of IRM config contract
+    function initialize(address _irmConfig) external;
 
     /// @dev get compound interest rate and update model storage for current block.timestamp
     /// @param _collateralAssets total silo collateral assets
