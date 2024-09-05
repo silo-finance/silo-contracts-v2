@@ -407,6 +407,70 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         assertEq(allowance, otherAmount, "allowance overriden");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_allowance
+    */
+    function test_debtToken_transferFrom_allowance() public {
+        address borrower = makeAddr("Borrower");
+        address spender = makeAddr("Spender");
+
+        vm.prank(borrower);
+        shareDebtToken.approve(spender, 1e18);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
+        shareDebtToken.transferFrom(borrower, receiver, 1e18);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_
+    */
+    function test_debtToken_transferFrom_1token() public {
+        _debtToken_transferFrom(SAME_ASSET);
+    }
+
+    function test_debtToken_transferFrom_2tokens() public {
+        _debtToken_transferFrom(TWO_ASSETS);
+    }
+
+    function _debtToken_transferFrom(bool _sameAsset) public {
+        address depositor = makeAddr("Depositor");
+        address spender = makeAddr("Spender");
+        uint256 amount = 100e18;
+
+        _depositCollateral(amount, depositor, _sameAsset, ISilo.CollateralType.Collateral);
+        _depositCollateral(amount, depositor, _sameAsset, ISilo.CollateralType.Protected);
+
+        _depositCollateral(amount * 2, makeAddr("any"), true /* toSilo1 */, ISilo.CollateralType.Collateral);
+
+        uint256 borrowAmount = 150e18;
+        address borrower = depositor;
+
+        _borrow(borrowAmount, borrower, _sameAsset);
+
+        vm.prank(borrower);
+        shareDebtToken.approve(spender, borrowAmount);
+
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(borrower, borrowAmount);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.RecipientNotSolventAfterTransfer.selector);
+        shareDebtToken.transferFrom(borrower, receiver, borrowAmount);
+
+        _depositCollateral(amount * 3, receiver, _sameAsset, ISilo.CollateralType.Collateral);
+
+        uint256 balance = shareDebtToken.balanceOf(receiver);
+
+        assertEq(balance, 0, "receiver has no debt");
+
+        vm.prank(spender);
+        shareDebtToken.transferFrom(borrower, receiver, borrowAmount);
+
+        balance = shareDebtToken.balanceOf(receiver);
+        assertEq(balance, borrowAmount, "receiver has debt");
+    }
+
     function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {
         collateralSender = siloConfig.borrowerCollateralSilo(address(this));
         collateralReceiver = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
