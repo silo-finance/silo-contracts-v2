@@ -106,14 +106,11 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     function _shareTokenMint(IShareToken _shareToken) internal {
         ISilo silo = _shareToken.silo();
 
-        vm.recordLogs();
+        vm.expectEmit(true, true, true, true, address(_shareToken));
+        emit Transfer(address(0), user, mintAmout);
 
         vm.prank(address(silo));
         _shareToken.mint(user, user, mintAmout);
-
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-
-        assertTrue(_hasEvent(entries, TRANSFER_EVENT, address(_shareToken)), "Event not emitted");
     }
 
     /*
@@ -138,17 +135,17 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     function _shareTokenBurn(IShareToken _shareToken) internal {
         ISilo silo = _shareToken.silo();
 
+        vm.expectEmit(true, true, true, true, address(_shareToken));
+        emit Transfer(address(0), user, mintAmout);
+
         vm.prank(address(silo));
         _shareToken.mint(user, user, mintAmout);
 
-        vm.recordLogs();
+        vm.expectEmit(true, true, true, true, address(_shareToken));
+        emit Transfer(user, address(0), mintAmout);
 
         vm.prank(address(silo));
         _shareToken.burn(user, user, mintAmout);
-
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-
-        assertTrue(_hasEvent(entries, TRANSFER_EVENT, address(_shareToken)), "Event not emitted");
     }
 
     /*
@@ -424,16 +421,6 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
 
         func(IShareToken(protected1));
         func(IShareToken(collateral1));
-    }
-
-    function _hasEvent(Vm.Log[] memory entries, bytes32 _event, address _emitter) internal pure returns (bool) {
-        for(uint256 i = 0; i < entries.length; i++) {
-            if (entries[i].topics[0] == _event && entries[i].emitter == _emitter) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     function _createPermit(
