@@ -14,7 +14,8 @@ contract LtvMathTest is Test {
     */
     function test_ltvMath_zeros() public {
         // this test will revert, but in code we not calling `ltvMath` with 0, so we good.
-        // assertEq(SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 0, _sumOfBorrowerCollateralValue: 0}), 0);
+        vm.expectRevert();
+        SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 0, _sumOfBorrowerCollateralValue: 0});
     }
 
     /*
