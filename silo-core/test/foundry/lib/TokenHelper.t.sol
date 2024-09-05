@@ -50,4 +50,11 @@ contract TokenHelperTest is Test {
         assertEq(TokenHelper.symbol(token), symbol);
         assertEq(TokenHelper.assertAndGetDecimals(token), decimals);
     }
+
+    function test_removeZeros() public {
+        assertEq(TokenHelper.removeZeros(""), "");
+        assertEq(TokenHelper.removeZeros("0"), "0");
+        assertEq(TokenHelper.removeZeros(abi.encode(0x20)), " ");
+        assertEq(TokenHelper.removeZeros(abi.encode(0x20414243000000)), " ABC");
+    }
 }
