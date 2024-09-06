@@ -105,8 +105,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
-        ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
-        ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
+        ISilo(configData0.silo).initialize(siloConfig);
+        ISilo(configData1.silo).initialize(siloConfig);
 
         _initializeShareTokens(configData0, configData1);
 
@@ -188,10 +188,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFee();
         if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFee();
         if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFee();
-
-        if (_initData.interestRateModelConfig0 == address(0) || _initData.interestRateModelConfig1 == address(0)) {
-            revert InvalidIrmConfig();
-        }
 
         if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
             revert InvalidIrm();

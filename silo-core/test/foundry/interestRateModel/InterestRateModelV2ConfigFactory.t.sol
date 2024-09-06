@@ -6,18 +6,18 @@ import "forge-std/Test.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
 import {InterestRateModelV2Checked} from "./InterestRateModelV2Checked.sol";
 
-// forge test -vv --mc InterestRateModelV2ConfigFactoryTest
-contract InterestRateModelV2ConfigFactoryTest is Test, InterestRateModelConfigs {
-    InterestRateModelV2ConfigFactory factory;
+// forge test -vv --mc InterestRateModelV2FactoryTest
+contract InterestRateModelV2FactoryTest is Test, InterestRateModelConfigs {
+    InterestRateModelV2Factory factory;
 
     function setUp() public {
-        factory = new InterestRateModelV2ConfigFactory();
+        factory = new InterestRateModelV2Factory();
     }
 
     /*
@@ -107,10 +107,10 @@ contract InterestRateModelV2ConfigFactoryTest is Test, InterestRateModelConfigs 
     function test_IRMF_create_new() public {
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        (bytes32 id, IInterestRateModelV2Config configContract) = factory.create(config);
+        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config);
 
-        assertEq(id, factory.hashConfig(config), "id is hash");
-        assertEq(address(configContract), address(factory.getConfigAddress(id)), "config address is stored");
+        assertEq(configHash, factory.hashConfig(config), "wrong config hash");
+        assertEq(address(irm), address(factory.irmByConfigHash(configHash)), "irm address is stored");
     }
 
     /*
@@ -119,10 +119,10 @@ contract InterestRateModelV2ConfigFactoryTest is Test, InterestRateModelConfigs 
     function test_IRMF_create_reusable() public {
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        (bytes32 id, IInterestRateModelV2Config configContract) = factory.create(config);
-        (bytes32 id2, IInterestRateModelV2Config configContract2) = factory.create(config);
+        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config);
+        (bytes32 configHash2, IInterestRateModelV2 irm2) = factory.create(config);
 
-        assertEq(id, id2, "id is the same for same config");
-        assertEq(address(configContract), address(configContract2), "config address is the same");
+        assertEq(configHash, configHash2, "config hash is the same for same config");
+        assertEq(address(irm), address(irm2), "irm address is the same");
     }
 }

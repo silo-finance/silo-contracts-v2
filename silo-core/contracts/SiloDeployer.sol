@@ -6,7 +6,7 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
+import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
@@ -15,12 +15,12 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 /// @notice Silo Deployer
 contract SiloDeployer is ISiloDeployer {
     // solhint-disable var-name-mixedcase
-    IInterestRateModelV2ConfigFactory public immutable IRM_CONFIG_FACTORY;
+    IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
     // solhint-enable var-name-mixedcase
 
     constructor(
-        IInterestRateModelV2ConfigFactory _irmConfigFactory,
+        IInterestRateModelV2Factory _irmConfigFactory,
         ISiloFactory _siloFactory
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
@@ -38,7 +38,7 @@ contract SiloDeployer is ISiloDeployer {
         external
         returns (ISiloConfig siloConfig)
     {
-        // setUp IRMs (create configs) and update `_siloInitData`
+        // setUp IRMs (create if needed) and update `_siloInitData`
         _setUpIRMs(_irmConfigData0, _irmConfigData1, _siloInitData);
         // create oracles and update `_siloInitData`
         _createOracles(_siloInitData, _oracles);
@@ -52,7 +52,7 @@ contract SiloDeployer is ISiloDeployer {
         emit SiloCreated(siloConfig);
     }
 
-    /// @notice Create IRMs configs and update `_siloInitData`
+    /// @notice Create IRMs and update `_siloInitData`
     /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
     /// @param _siloInitData Silo configuration for the silo creation
@@ -61,11 +61,11 @@ contract SiloDeployer is ISiloDeployer {
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
     ) internal {
-        (, IInterestRateModelV2Config interestRateModelConfig0) = IRM_CONFIG_FACTORY.create(_irmConfigData0);
-        (, IInterestRateModelV2Config interestRateModelConfig1) = IRM_CONFIG_FACTORY.create(_irmConfigData1);
+        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0);
+        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1);
 
-        _siloInitData.interestRateModelConfig0 = address(interestRateModelConfig0);
-        _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
+        _siloInitData.interestRateModel0 = address(interestRateModel0);
+        _siloInitData.interestRateModel1 = address(interestRateModel1);
     }
 
     /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation

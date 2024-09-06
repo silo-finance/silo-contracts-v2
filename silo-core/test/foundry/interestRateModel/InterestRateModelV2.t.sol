@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
@@ -19,45 +19,45 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
 
     uint256 constant DP = 10 ** 18;
 
-    event Initialized(address indexed silo, address indexed config);
+    event Initialized(address indexed config);
 
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
     }
 
     /*
-    forge test -vv --mt test_connect_zero
+    forge test -vv --mt test_initialize_zero
     */
-    function test_connect_zero() public {
+    function test_initialize_zero() public {
         vm.expectRevert(IInterestRateModelV2.AddressZero.selector);
-        INTEREST_RATE_MODEL.connect(address(0));
+        INTEREST_RATE_MODEL.initialize(address(0));
     }
 
     /*
-    forge test -vv --mt test_connect_pass
+    forge test -vv --mt test_initialize_pass
     */
-    function test_connect_pass() public {
+    function test_initialize_pass() public {
         address config = makeAddr("config");
 
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(this), config);
+        emit Initialized(config);
 
-        INTEREST_RATE_MODEL.connect(config);
+        INTEREST_RATE_MODEL.initialize(config);
 
-        (,, IInterestRateModelV2Config connectedConfig) = INTEREST_RATE_MODEL.getSetup(address(this));
+        IInterestRateModelV2Config connectedConfig = INTEREST_RATE_MODEL.irmConfig();
         assertEq(address(connectedConfig), config, "expect valid config address");
     }
 
     /*
-    forge test -vv --mt test_connect_onlyOnce
+    forge test -vv --mt test_initialize_onlyOnce
     */
-    function test_connect_onlyOnce() public {
+    function test_initialize_onlyOnce() public {
         address config = makeAddr("config");
 
-        INTEREST_RATE_MODEL.connect(config);
+        INTEREST_RATE_MODEL.initialize(config);
 
-        vm.expectRevert(IInterestRateModelV2.AlreadyConnected.selector);
-        INTEREST_RATE_MODEL.connect(config);
+        vm.expectRevert(IInterestRateModelV2.AlreadyInitialized.selector);
+        INTEREST_RATE_MODEL.initialize(config);
     }
 
     function test_IRM_decimals() public view {
