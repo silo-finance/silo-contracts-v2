@@ -360,7 +360,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         assertEq(debtConfig.deployerFee, 0.10e18, "just checking on deployerFee");
 
         { // too deep
-            uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+            uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
             assertEq(
                 token0.balanceOf(address(this)), COLLATERAL,
@@ -375,7 +375,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
                 "silo has debt token fully repay, debt deposit + interest"
             );
             assertEq(
-                silo1.getCollateralAssets(), 0.5e18 + 7.5e18 + interest - daoAndDeployerFees,
+                silo1.getCollateralAssets(), 0.5e18 + 7.5e18 + interest - daoAndDeployerRevenue,
                 "borrowed token + interest"
             );
 
@@ -390,10 +390,10 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
           _totalCollateral.assets before %   8000000000000000000
           _totalDebt.assets before %         7500000000000000000
 
-          _totalCollateral.assets %         54232876712322080000 (8 + accruedInterest - daoAndDeployerFees)
+          _totalCollateral.assets %         54232876712322080000 (8 + accruedInterest - daoAndDeployerRevenue)
           _totalDebt.assets %               69143835616429440000 (7.5 + all interest)
 
-          totalFees (daoAndDeployerFees) %  15410958904107360000
+          totalFees (daoAndDeployerRevenue) %  15410958904107360000
           accruedInterest %                 61643835616429440000
         */
 
@@ -564,19 +564,19 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidate, uint256 debtToRepay,
         ) = partialLiquidation.maxLiquidation(BORROWER);
 
-        (uint192 daoAndDeployerFees,,,,) = silo1.getSiloStorage();
+        (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
         uint256 maxRepay = silo1.maxRepay(BORROWER);
-        uint256 interest = maxRepay - DEBT - daoAndDeployerFees;
+        uint256 interest = maxRepay - DEBT - daoAndDeployerRevenue;
         uint256 liquidity = silo1.getLiquidity();
 
         emit log_named_decimal_uint("balance of silo1", token1.balanceOf(address(silo1)), 18);
         emit log_named_decimal_uint("silo1.getLiquidity()", liquidity, 18);
 
-        emit log_named_decimal_uint("daoAndDeployerFees", daoAndDeployerFees, 18);
+        emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
         emit log_named_decimal_uint("interest", interest, 18);
-        emit log_named_decimal_uint("fee + interest", daoAndDeployerFees + interest, 18);
+        emit log_named_decimal_uint("fee + interest", daoAndDeployerRevenue + interest, 18);
 
-        int256 calculatedLiquidity = (COLLATERAL_FOR_BORROW - DEBT).toInt256() - uint256(daoAndDeployerFees).toInt256();
+        int256 calculatedLiquidity = (COLLATERAL_FOR_BORROW - DEBT).toInt256() - uint256(daoAndDeployerRevenue).toInt256();
 
         emit log_named_decimal_int("(COLLATERAL_FOR_BORROW - DEBT) - fee == liquidity", calculatedLiquidity, 18);
 
@@ -587,7 +587,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_int(
             "liquidity without CAP == deposited + interest - DEBT - fee",
-            (COLLATERAL_FOR_BORROW + interest).toInt256() - DEBT.toInt256() - uint256(daoAndDeployerFees).toInt256(),
+            (COLLATERAL_FOR_BORROW + interest).toInt256() - DEBT.toInt256() - uint256(daoAndDeployerRevenue).toInt256(),
             18
         );
 

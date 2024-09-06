@@ -112,7 +112,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     struct SiloStorage {
         /// @dev Current amount of fees accrued by DAO and Deployer
-        uint192 daoAndDeployerFees;
+        uint192 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
 
@@ -242,7 +242,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         external
         view
         returns (
-            uint192 daoAndDeployerFees,
+            uint192 daoAndDeployerRevenue,
             uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,

@@ -409,11 +409,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             uint256 roundingError = 5;
 
             { // too deep
-                uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+                uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
                 assertEq(
                     token0.balanceOf(address(silo0)),
-                    daoAndDeployerFees + dust + roundingError,
+                    daoAndDeployerRevenue + dust + roundingError,
                     "all silo collateral should be transfer to liquidator, fees left"
                 );
             }
@@ -529,7 +529,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(debtConfig.deployerFee, 0.10e18, "just checking on deployerFee");
 
         { // too deep
-            uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+            uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
             uint256 deposit = 1e18 + 4_491873366236992444;
             // newest liquidation process is based on sToken transfer and recalculating shares from assets,
             // this leads to less assets in result, rounding error for this test is 5
@@ -543,7 +543,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             assertEq(
                 token0.balanceOf(address(silo0)),
-                daoAndDeployerFees + deposit + 5 /* roundingError */,
+                daoAndDeployerRevenue + deposit + 5 /* roundingError */,
                 "all silo collateral should be transfer to liquidator, fees left and deposit"
             );
 
@@ -599,11 +599,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(silo0.getCollateralAssets(), dust, "total collateral (dust)");
 
         uint256 interest = 30_372197335919815515 - 7.5e18;
-        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+        uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
         assertEq(
             token0.balanceOf(address(silo0)),
-            daoAndDeployerFees + dust,
+            daoAndDeployerRevenue + dust,
             "silo collateral should be transfer to liquidator, fees left"
         );
 
@@ -673,7 +673,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         uint256 maxRepay = silo0.maxRepay(BORROWER);
         uint256 interest = 30_372197335919815515 - 7.5e18;
-        uint256 daoAndDeployerFees = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
+        uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
@@ -712,7 +712,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         } else {
             assertEq(
                 token0.balanceOf(address(silo0)) - 5, // dust(2) + rounding error(3)
-                daoAndDeployerFees,
+                daoAndDeployerRevenue,
                 "[!_receiveSToken] silo has just fees"
             );
 

@@ -420,7 +420,7 @@ library Actions {
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerFees += uint192(fee);
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
@@ -449,7 +449,7 @@ library Actions {
     function withdrawFees(ISilo _silo) external {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFees = $.daoAndDeployerFees;
+        uint256 earnedFees = $.daoAndDeployerRevenue;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
         (
@@ -472,8 +472,8 @@ library Actions {
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
-        // we will never underflow because earnedFees max value is `daoAndDeployerFees`
-        unchecked { $.daoAndDeployerFees -= uint192(earnedFees); }
+        // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
+        unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
 
         if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
