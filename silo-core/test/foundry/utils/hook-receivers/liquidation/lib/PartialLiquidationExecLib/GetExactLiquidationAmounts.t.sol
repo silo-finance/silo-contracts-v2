@@ -99,7 +99,6 @@ contract GetExactLiquidationAmountsHelper is Test {
         returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
     {
         collateralConfig.silo = SILO_A.ADDRESS();
-        collateralConfig.otherSilo = SILO_B.ADDRESS();
         collateralConfig.token = TOKEN_A.ADDRESS();
         collateralConfig.collateralShareToken = C_SHARE_TOKEN_A.ADDRESS();
         collateralConfig.protectedShareToken = P_SHARE_TOKEN_A.ADDRESS();
@@ -109,7 +108,6 @@ contract GetExactLiquidationAmountsHelper is Test {
         collateralConfig.lt = LT;
 
         debtConfig.silo = SILO_B.ADDRESS();
-        debtConfig.otherSilo = SILO_A.ADDRESS();
         debtConfig.token = TOKEN_B.ADDRESS();
         debtConfig.collateralShareToken = C_SHARE_TOKEN_B.ADDRESS();
         debtConfig.protectedShareToken = P_SHARE_TOKEN_B.ADDRESS();

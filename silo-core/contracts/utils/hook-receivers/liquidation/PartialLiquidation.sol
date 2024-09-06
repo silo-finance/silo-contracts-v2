@@ -183,7 +183,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         ISilo(debtConfig.silo).accrueInterest();
 
         if (collateralConfig.silo != debtConfig.silo) {
-            ISilo(debtConfig.otherSilo).accrueInterest();
+            ISilo(collateralConfig.silo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }

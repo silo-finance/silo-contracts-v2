@@ -84,7 +84,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         uint256 daoFee;
         uint256 deployerFee;
         address silo;
-        address otherSilo;
         address token;
         address protectedShareToken;
         address collateralShareToken;

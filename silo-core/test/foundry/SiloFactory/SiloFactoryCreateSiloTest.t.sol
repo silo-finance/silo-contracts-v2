@@ -90,10 +90,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
-        assertEq(configData0.silo, configData1.otherSilo, "configData0.silo");
-        assertEq(configData0.otherSilo, configData1.silo, "configData0.otherSilo");
         assertTrue(configData0.silo != address(0), "configData0.silo");
-        assertTrue(configData0.otherSilo != address(0), "configData0.otherSilo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
         assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");
         assertTrue(configData0.debtShareToken != address(0), "configData0.debtShareToken");
@@ -107,10 +104,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(configData1.daoFee, siloFactory.daoFee(), "configData1.daoFee");
         assertEq(configData1.deployerFee, initData.deployerFee, "configData1.deployerFee");
-        assertEq(configData1.silo, configData0.otherSilo, "configData1.silo");
-        assertEq(configData1.otherSilo, configData0.silo, "configData1.otherSilo");
         assertTrue(configData1.silo != address(0), "configData1.silo");
-        assertTrue(configData1.otherSilo != address(0), "configData1.otherSilo");
         assertTrue(configData1.protectedShareToken != address(0), "configData1.protectedShareToken");
         assertTrue(configData1.collateralShareToken != address(0), "configData1.collateralShareToken");
         assertTrue(configData1.debtShareToken != address(0), "configData1.debtShareToken");
