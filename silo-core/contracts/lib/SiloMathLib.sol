@@ -67,7 +67,7 @@ library SiloMathLib {
     /// @param _debtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
-    /// @return accruedInterest The amount of interest accrued on the debt assets
+    /// @return accruedInterest The total amount of interest accrued on the debt assets
     function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp)
         internal
         pure
