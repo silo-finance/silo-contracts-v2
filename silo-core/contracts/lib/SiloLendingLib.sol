@@ -125,7 +125,7 @@ library SiloLendingLib {
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
-        unchecked { $.daoAndDeployerFees += uint192(totalFees); }
+        unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
     }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral

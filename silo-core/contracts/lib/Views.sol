@@ -96,7 +96,7 @@ library Views {
         internal
         view
         returns (
-            uint192 daoAndDeployerFees,
+            uint192 daoAndDeployerRevenue,
             uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,
@@ -105,7 +105,7 @@ library Views {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        daoAndDeployerFees = $.daoAndDeployerFees;
+        daoAndDeployerRevenue = $.daoAndDeployerRevenue;
         interestRateTimestamp = $.interestRateTimestamp;
         protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
         collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
