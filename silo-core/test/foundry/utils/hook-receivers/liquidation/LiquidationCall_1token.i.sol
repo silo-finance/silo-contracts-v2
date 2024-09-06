@@ -94,7 +94,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debt;
 
-        (, debt) = siloConfig.getConfigs(userWithoutDebt);
+        (, debt) = siloConfig.getConfigsForSolvency(userWithoutDebt);
 
         assertTrue(debt.silo == address(0), "we need user without debt for this test");
 

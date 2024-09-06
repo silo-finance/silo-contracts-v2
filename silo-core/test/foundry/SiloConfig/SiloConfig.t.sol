@@ -570,7 +570,7 @@ contract SiloConfigTest is Test {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _siloConfig.getConfigs(address(0));
+        ) = _siloConfig.getConfigsForSolvency(address(0));
 
 
         assertEq(collateralConfig.silo, address(0), "User has no debt - config should be empty");
@@ -591,7 +591,7 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(borrower);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(borrower);
 
         assertTrue(debtConfig.silo != address(0));
         assertTrue(debtConfig.silo == collateralConfig.silo);
@@ -612,7 +612,7 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(borrower);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(borrower);
 
         assertTrue(debtConfig.silo != address(0), "debt silo is empty");
         assertTrue(debtConfig.silo != collateralConfig.silo, "same asset");
@@ -621,7 +621,7 @@ contract SiloConfigTest is Test {
         address otherUser = makeAddr("otherUser");
         _mockShareTokensBlances(otherUser, 0, 0);
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(otherUser);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(otherUser);
 
         assertEq(collateralConfig.silo, address(0), "config should be empty");
         assertEq(debtConfig.silo, address(0), "config should be empty");
@@ -655,7 +655,7 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory collateralConfigFrom;
         ISiloConfig.ConfigData memory debtConfigFrom;
 
-        (collateralConfigFrom, debtConfigFrom) = _siloConfig.getConfigs(from);
+        (collateralConfigFrom, debtConfigFrom) = _siloConfig.getConfigsForSolvency(from);
 
         vm.prank(_silo0 ? _configDataDefault0.debtShareToken : _configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
@@ -666,7 +666,7 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory collateralConfigTo;
         ISiloConfig.ConfigData memory debtConfigTo;
 
-        (collateralConfigTo, debtConfigTo) = _siloConfig.getConfigs(to);
+        (collateralConfigTo, debtConfigTo) = _siloConfig.getConfigsForSolvency(to);
 
         assertEq(collateralConfigTo.silo, collateralConfigFrom.silo, "silo should be the same");
         assertEq(debtConfigTo.silo, debtConfigFrom.silo, "debt silo should be the same");
@@ -781,7 +781,7 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory collateral;
         ISiloConfig.ConfigData memory debt;
 
-        (collateral, debt) = _siloConfig.getConfigs(to);
+        (collateral, debt) = _siloConfig.getConfigsForSolvency(to);
 
         assertTrue(debt.silo != address(0), "debtPresent");
         assertTrue(debt.silo != collateral.silo, "sameAsset is not cloned when debt already open");
