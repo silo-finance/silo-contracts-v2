@@ -15,10 +15,10 @@ contract GetConfigsReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getConfigs(address)";
+        description = "getConfigsForSolvency(address)";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.siloConfig().getConfigs(address(0));
+        TestStateLib.siloConfig().getConfigsForSolvency(address(0));
     }
 }

@@ -106,7 +106,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory debt;
 
-        (, debt) = siloConfig.getConfigs(userWithoutDebt);
+        (, debt) = siloConfig.getConfigsForSolvency(userWithoutDebt);
 
         assertTrue(debt.silo == address(0), "we need user without debt for this test");
 
@@ -436,7 +436,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         (
             ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigs(BORROWER);
+        ) = siloConfig.getConfigsForSolvency(BORROWER);
 
         // IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         vm.expectCall(

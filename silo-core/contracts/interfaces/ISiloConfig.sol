@@ -181,7 +181,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param borrower borrower address for which debtConfig will be returned
     /// @return collateralConfig The configuration data for collateral silo (empty if there is no debt).
     /// @return debtConfig The configuration data for debt silo (empty if there is no debt).
-    function getConfigs(address borrower)
+    function getConfigsForSolvency(address borrower)
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);

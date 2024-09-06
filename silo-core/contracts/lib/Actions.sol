@@ -368,7 +368,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForSolvency(msg.sender);
 
         if (debtConfig.silo != address(0)) {
             siloConfig.accrueInterestForBothSilos();
