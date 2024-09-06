@@ -25,7 +25,7 @@ library Views {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt
-        ) = ShareTokenLib.siloConfig().getConfigs(_borrower);
+        ) = ShareTokenLib.siloConfig().getConfigsForSolvency(_borrower);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }

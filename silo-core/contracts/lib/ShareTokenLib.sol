@@ -104,7 +104,7 @@ library ShareTokenLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _siloConfig.getConfigs(_user);
+        ) = _siloConfig.getConfigsForSolvency(_user);
 
         collateralConfig.callSolvencyOracleBeforeQuote();
         debtConfig.callSolvencyOracleBeforeQuote();

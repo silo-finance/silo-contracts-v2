@@ -194,7 +194,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _borrower) external view virtual returns (
+    function getConfigsForSolvency(address _borrower) external view virtual returns (
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {

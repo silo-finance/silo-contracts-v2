@@ -34,7 +34,7 @@ library SiloLensLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _silo.config().getConfigs(_borrower);
+        ) = _silo.config().getConfigsForSolvency(_borrower);
 
         if (debtConfig.silo != address(0)) {
             ltv = SiloSolvencyLib.getLtv(

@@ -174,7 +174,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        (collateralConfig, debtConfig) = _siloConfigCached.getConfigs(_borrower);
+        (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
         if (debtConfig.silo == address(0)) revert UserIsSolvent();
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
