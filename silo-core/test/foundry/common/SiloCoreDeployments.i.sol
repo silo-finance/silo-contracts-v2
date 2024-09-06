@@ -23,8 +23,8 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
     function test_get_exists_anvil() public {
         _setUpLocalFixture();
 
-        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.ANVIL_ALIAS);
-        assertEq(addr, 0xB6AdBb29f2D8ae731C7C72036A7FD5A7E970B198, "expect valid address anvil");
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.PARTIAL_LIQUIDATION, ChainsLib.ANVIL_ALIAS);
+        assertEq(addr, address(partialLiquidation), "expect valid address anvil");
     }
 
     function test_get_exists_optimism() public {
