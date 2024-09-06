@@ -122,7 +122,9 @@ library SiloMathLib {
         } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
-        } else revert ISilo.InputCanBeAssetsOrShares();
+        } else {
+            revert ISilo.InputCanBeAssetsOrShares();
+        }
     }
 
     /// @dev Math for collateral is exact copy of
