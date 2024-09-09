@@ -67,7 +67,7 @@ library SiloMathLib {
             // eg. is it possible to generate more debt so then we can not withdraw collateral because we short with tokens?
             // scenario: collateral is 70%max, debt is 50%max, interest 40%max
             // but on collateral it will be cap to 30%max (because 70% + 40% will give overflow).
-            // what happen with 10% diff??
+            // what happen with 10% diff? will users lose money on interest overflow?
             if (cap < collateralInterest) {
                 collateralInterest = cap;
             }
@@ -124,7 +124,7 @@ library SiloMathLib {
     /// @param _debtAssets current total borrows for assets
     /// @return utilization value, capped to 100%
     /// Limiting utilisation ratio by 100% max will allows us to perform better interest rate computations
-    /// and should not affect any other part of protocol.
+    /// and should not affect any other part of protocol. It is possible to go over 100% only when bad debt.
     function calculateUtilization(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)
         internal
         pure
@@ -132,14 +132,22 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0) return 0;
 
-        utilization = _debtAssets * _dp;
-        // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
-            utilization /= _collateralAssets;
+            /*
+                how to prevent overflow on: _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST):
+                1. max > _debtAssets * _dp / _collateralAssets
+                2. max / _dp > _debtAssets / _collateralAssets
+            */
+            // save to unchecked because we only have division and `_collateralAssets` is not 0 based on above check
+            if (type(uint256).max / _dp > _debtAssets / _collateralAssets) {
+                utilization = _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST);
+                // cap at 100%
+                if (utilization > _dp) utilization = _dp;
+            } else {
+                // we have overflow
+                utilization = _dp;
+            }
         }
-
-        // cap at 100%
-        if (utilization > _dp) utilization = _dp;
     }
 
     function convertToAssetsAndToShares(
