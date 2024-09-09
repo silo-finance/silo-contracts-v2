@@ -1,7 +1,7 @@
 
 # Silo Protocol Hooks System
 
-The **Silo Protocol Hooks System** provides an extensible mechanism for interacting with core actions like deposits, withdrawals, borrowing, and liquidations. Hooks allow external systems to execute custom logic **before** or **after** protocol actions, offering flexibility for validation, logging, or integration with external contracts. While the protocol is fully functional without hooks, they enhance its modularity and allow for seamless interaction with other decentralized systems.
+The **Silo Protocol Hooks System** provides an extensible mechanism for interacting with core actions like deposits, withdrawals, borrowing, repayments, leverage operations, collateral transitions, switching collateral, flash loans, and liquidations. Hooks allow external systems to execute custom logic **before** or **after** protocol actions, offering flexibility for validation, logging, or integration with external contracts. While the protocol is fully functional without hooks, they enhance its modularity and allow for seamless interaction with other decentralized systems.
 
 - [Overview](#overview)
 - [Deposit function hook actions](#deposit-function-hook-actions)
@@ -18,7 +18,7 @@ The **Silo Protocol Hooks System** provides an extensible mechanism for interact
 
 ## Overview
 
-The **Silo Protocol** is a decentralized lending protocol built entirely on smart contracts. It allows users to deposit assets, borrow funds, and manage collateral securely. A key feature of the protocol is its **Hooks System**, which provides an extensible mechanism for interacting with protocol actions such as deposits, withdrawals, borrowing, repayments, liquidations, and other advanced actions like flash loans and leverage operations.
+The **Silo Protocol** is a decentralized lending protocol. It allows users to deposit assets, borrow funds, and manage collateral securely. One of the key features of the protocol is its **Hooks System**, which provides an extensible mechanism for interacting with protocol actions such as deposits, withdrawals, borrowing, repayments, liquidations, and other advanced actions like flash loans and leverage operations.
 
 The hooks system allows external contracts or modules to execute additional logic at two key points: **before** and **after** the core logic of each protocol action. While the protocol is fully functional without hooks, the system provides an extension point for developers and users who wish to enforce additional checks, perform external calls, or execute custom business logic surrounding core operations.
 
@@ -26,24 +26,18 @@ Each action within the protocol is associated with two types of hooks:
 - **Before Action Hook**: Invoked **before** any logic of the action is executed. This can be used to perform validation checks, eligibility assessments, or custom logic before the main action takes place.
 - **After Action Hook**: Invoked **after** all logic of the action is completed. This allows developers to perform follow-up tasks such as logging, notifications, or additional off-chain and on-chain integrations.
 
-## Key Concepts
+## Some concepts
 
 1. **Collaterals**: 
    - The protocol supports two types of collateral: **Hook.COLLATERAL_TOKEN** (borrowable collateral) and **Hook.PROTECTED_TOKEN** (non-borrowable collateral). Borrowable collateral earns interest as it is available for lending, while protected collateral provides security for the user, ensuring liquidity and immediate access to their funds.
-   - Transitions between these collateral types (e.g., transitioning from **Hook.PROTECTED_TOKEN** to **Hook.COLLATERAL_TOKEN**) are handled via the hooks system.
+   - Transitions between these collateral types (e.g., transitioning from **Hook.PROTECTED_TOKEN** to **Hook.COLLATERAL_TOKEN**).
 
 2. **Token Transfers**:
-   - The hooks system manages share token transfers that occur during key actions like deposits, withdrawals, and borrow operations. When collateral or debt tokens are involved, the hooks ensure accurate and secure handling of token transfers.
+   - The hooks system notifies also about the share token transfers that occur during key actions like deposits, withdrawals, and borrow operations or when share tokens are transferred via ERC-20 transfer or transferFrom function directly.
    - For instance, **Hook.SHARE_TOKEN_TRANSFER** is invoked during deposit and withdrawal actions to handle share tokens, and during borrow and repay actions to manage debt tokens.
 
 3. **Transitioning Between Collateral Types**:
-   - Users can transition their assets between **Hook.PROTECTED_TOKEN** and **Hook.COLLATERAL_TOKEN** without transferring the underlying assets. This transition is crucial for users who want to switch between protected and borrowable collateral, enabling interest generation or enhanced security.
-
-4. **Debt Management**:
-   - Debt tokens, represented by **Hook.DEBT_TOKEN**, are a core component of the borrowing system. These tokens track the debt of borrowers within the protocol and are transferred or burned during borrow, repay, and liquidation actions. 
-
-5. **Liquidation**:
-   - When a position becomes insolvent, the protocol invokes the **Hook.LIQUIDATION** action. This involves liquidating collateral to repay debt. Hooks ensure that both collateral and debt token transfers occur as part of this process, allowing external systems to track liquidation events and make adjustments.
+   - Users can transition their assets between **Hook.PROTECTED_TOKEN** and **Hook.COLLATERAL_TOKEN** and vice verse without transferring the underlying assets. This transition is crucial for users who want to switch between protected and borrowable collateral, enabling interest generation or enhanced security.
 
 ## Extensibility via Hooks
 
