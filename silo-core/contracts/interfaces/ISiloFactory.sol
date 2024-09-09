@@ -75,8 +75,8 @@ interface ISiloFactory is IERC721 {
     /// @return siloConfig Config for the created Silo.
     function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig);
 
-    /// @notice NFT ownership represents the deployer fee receiver for the each Silo ID.  After burning, the deployer fee 
-    /// is sent to the DAO. Burning doesn't affect Silo's behavior. It is only about fee distribution.
+    /// @notice NFT ownership represents the deployer fee receiver for the each Silo ID.  After burning, 
+    /// the deployer fee is sent to the DAO. Burning doesn't affect Silo's behavior. It is only about fee distribution.
     /// @param _siloIdToBurn silo ID to burn.
     function burn(uint256 _siloIdToBurn) external;
 
