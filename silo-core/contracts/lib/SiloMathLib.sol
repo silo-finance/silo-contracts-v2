@@ -59,9 +59,18 @@ library SiloMathLib {
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
             // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
             collateralInterest = accruedInterest - daoAndDeployerRevenue;
-        }
 
-        collateralAssetsWithInterest = _collateralAssets + collateralInterest;
+            uint256 cap = type(uint256).max - _collateralAssets;
+
+            // TODO if we cap interest on debt and now we cap on collateral - can it have impact on something?
+            // eg. is it possible to generate more debt so then we can not withdraw collateral because we short with tokens?
+            if (cap < collateralInterest) {
+                collateralInterest = cap;
+            }
+
+            // safe to uncheck because of cap
+            collateralAssetsWithInterest = _collateralAssets + collateralInterest;
+        }
     }
 
     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
