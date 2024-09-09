@@ -224,13 +224,18 @@ contract RepayTest is SiloLittleHelper, Test {
         uint256 shares2 = _depositForBorrow(1, makeAddr("user2"));
         uint256 shares3 = _depositForBorrow(1e18, makeAddr("user3"));
 
-        uint256 shares4 = _depositCollateral(type(uint256).max / 4, borrower, TWO_ASSETS);
-        uint256 debtShares = _borrow(type(uint256).max / 6, borrower, TWO_ASSETS);
+        uint256 shares4 = _depositCollateral(type(uint224).max , borrower, TWO_ASSETS);
+        uint256 debtShares = _borrow(type(uint224).max / 2, borrower, TWO_ASSETS);
 
-        emit log_named_decimal_uint("LTV before", siloLens.getLtv(silo1, borrower), 16);
+        uint256 ltvBefore = siloLens.getLtv(silo1, borrower);
+
+        emit log_named_decimal_uint("LTV before", ltvBefore, 16);
         _printUtilization(silo1);
 
-        vm.warp(block.timestamp + 10000000 days);
+        for (uint256 i; ltvBefore == siloLens.getLtv(silo0, borrower); i++) {
+            vm.warp(1 seconds);
+        }
+
         silo1.accrueInterest();
 
         emit log_named_decimal_uint("LTV after", siloLens.getLtv(silo0, borrower), 16);
