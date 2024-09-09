@@ -25,7 +25,7 @@ library Views {
         (
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt
-        ) = ShareTokenLib.siloConfig().getConfigs(_borrower);
+        ) = ShareTokenLib.siloConfig().getConfigsForSolvency(_borrower);
 
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }
@@ -96,7 +96,7 @@ library Views {
         internal
         view
         returns (
-            uint192 daoAndDeployerFees,
+            uint192 daoAndDeployerRevenue,
             uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,
@@ -105,12 +105,11 @@ library Views {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        daoAndDeployerFees = $.daoAndDeployerFees;
+        daoAndDeployerRevenue = $.daoAndDeployerRevenue;
         interestRateTimestamp = $.interestRateTimestamp;
         protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
         collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
         debtAssets = $.totalAssets[AssetTypes.DEBT];
-
     }
 
     function utilizationData() internal view returns (ISilo.UtilizationData memory) {

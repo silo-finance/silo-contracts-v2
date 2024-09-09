@@ -24,18 +24,14 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_actions_initialize_WrongSilo --ffi
     */
     function test_actions_initialize_WrongSilo() public {
-        address irmConfigAddress = makeAddr("irmConfigAddress");
-
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        Actions.initialize(siloConfig, irmConfigAddress);
+        Actions.initialize(siloConfig);
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_actions_initialize_pass --ffi
     */
     function test_actions_initialize_pass() public {
-        address irmConfigAddress = makeAddr("irmConfigAddress");
-
         ISiloConfig.ConfigData memory mockedCfg = siloConfig.getConfig(address(silo0));
 
         assertEq(address(_getShareTokenStorage().siloConfig), address(0), "storage.siloConfig is empty before init");
@@ -46,13 +42,7 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
             abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg)
         );
 
-        // we expecting to connect IRM config on init
-        vm.expectCall(
-            mockedCfg.interestRateModel,
-            abi.encodeWithSelector(IInterestRateModel.connect.selector, irmConfigAddress)
-        );
-
-        address hook = Actions.initialize(siloConfig, irmConfigAddress);
+        address hook = Actions.initialize(siloConfig);
 
         assertEq(hook, mockedCfg.hookReceiver, "hookReceiver match");
         assertEq(address(_getShareTokenStorage().siloConfig), address(siloConfig), "siloConfig set");
@@ -62,7 +52,6 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_actions_initialize_SiloInitialized --ffi
     */
     function test_actions_initialize_SiloInitialized() public {
-        address irmConfigAddress = makeAddr("irmConfigAddress");
         ISiloConfig.ConfigData memory mockedCfg = siloConfig.getConfig(address(silo0));
 
         // we have to mock it, so it will not throw with WrongSilo()
@@ -71,9 +60,9 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
             abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg)
         );
 
-        Actions.initialize(siloConfig, irmConfigAddress);
+        Actions.initialize(siloConfig);
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        Actions.initialize(siloConfig, irmConfigAddress);
+        Actions.initialize(siloConfig);
     }
 }

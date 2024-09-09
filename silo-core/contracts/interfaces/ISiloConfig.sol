@@ -31,10 +31,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// @notice Address of the interest rate model
         address interestRateModel0;
 
-        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
-        address interestRateModelConfig0;
-
         /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
         /// if borrower can borrow given amount of assets. MaxLtv is in 18 decimals points
         uint256 maxLtv0;
@@ -67,10 +63,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// @notice Address of the interest rate model
         address interestRateModel1;
 
-        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be reused between multiple IRMs (Interest Rate Models).
-        address interestRateModelConfig1;
-
         /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
         /// if borrower can borrow given amount of assets. maxLtv is in 18 decimals points
         uint256 maxLtv1;
@@ -92,7 +84,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         uint256 daoFee;
         uint256 deployerFee;
         address silo;
-        address otherSilo;
         address token;
         address protectedShareToken;
         address collateralShareToken;
@@ -175,10 +166,10 @@ interface ISiloConfig is ICrossReentrancyGuard {
     function getAssetForSilo(address _silo) external view returns (address asset);
 
     /// @notice Verfies if the borrower has debt in other silo by checkeing the debt share token balance
-    /// @param _silo The address of the silo in respect of which the debt is checked
+    /// @param _thisSilo The address of the silo in respect of which the debt is checked
     /// @param _borrower The address of the borrower for which the debt is checked
     /// @return hasDebt true if the borrower has debt in other silo
-    function hasDebtInOtherSilo(address _silo, address _borrower) external view returns (bool hasDebt);
+    function hasDebtInOtherSilo(address _thisSilo, address _borrower) external view returns (bool hasDebt);
 
     /// @notice Retrieves the debt silo associated with a specific borrower
     /// @dev This function reverts if debt present in two silo (should not happen)
@@ -189,7 +180,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param borrower borrower address for which debtConfig will be returned
     /// @return collateralConfig The configuration data for collateral silo (empty if there is no debt).
     /// @return debtConfig The configuration data for debt silo (empty if there is no debt).
-    function getConfigs(address borrower)
+    function getConfigsForSolvency(address borrower)
         external
         view
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);

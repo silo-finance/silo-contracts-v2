@@ -72,7 +72,7 @@ contract AccrueInterestForAssetTest is Test {
         assertEq($.totalAssets[AssetTypes.COLLATERAL], 1.005e18, "totalCollateral");
         assertEq($.totalAssets[AssetTypes.DEBT], 0.505e18, "totalDebt");
         assertEq($.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
-        assertEq($.daoAndDeployerFees, 0, "daoAndDeployerFees");
+        assertEq($.daoAndDeployerRevenue, 0, "daoAndDeployerRevenue");
     }
 
     /*
@@ -107,9 +107,9 @@ contract AccrueInterestForAssetTest is Test {
         assertEq($.totalAssets[AssetTypes.DEBT], 0.505e18, "totalDebt");
         assertEq($.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
         assertEq(
-            $.daoAndDeployerFees,
+            $.daoAndDeployerRevenue,
             accruedInterest * (daoFee + deployerFee) / DECIMAL_POINTS,
-            "daoAndDeployerFees"
+            "daoAndDeployerRevenue"
         );
     }
 

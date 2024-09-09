@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-
 interface IInterestRateModel {
-    /// @dev optional method that can connect silo to it's model state on silo initialization
-    /// can be empty by must implement interface.
-    function connect(address _configAddress) external;
+    /// @dev Sets config address for all Silos that will use this model
+    /// @param _irmConfig address of IRM config contract
+    function initialize(address _irmConfig) external;
 
     /// @dev get compound interest rate and update model storage for current block.timestamp
     /// @param _collateralAssets total silo collateral assets

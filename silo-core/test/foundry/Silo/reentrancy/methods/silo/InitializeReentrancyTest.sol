@@ -17,20 +17,19 @@ contract InitializeReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "initialize(address,address)";
+        description = "initialize(address)";
     }
 
     function _ensureItWillRevert() internal {
         ISiloConfig config = ISiloConfig(address(0));
-        address modelConfig = address(0);
 
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        silo0.initialize(config, modelConfig);
+        silo0.initialize(config);
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
-        silo1.initialize(config, modelConfig);
+        silo1.initialize(config);
     }
 }

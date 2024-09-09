@@ -52,7 +52,7 @@ library Actions {
         }
     }
 
-    function initialize(ISiloConfig _siloConfig, address _irmConfigAddress) external returns (address hookReceiver) {
+    function initialize(ISiloConfig _siloConfig) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
         if (address(_sharedStorage.siloConfig) != address(0)) revert ISilo.SiloInitialized();
@@ -60,8 +60,6 @@ library Actions {
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
         _sharedStorage.siloConfig = _siloConfig;
-
-        IInterestRateModel(configData.interestRateModel).connect(_irmConfigAddress);
 
         return configData.hookReceiver;
     }
@@ -370,7 +368,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = siloConfig.getConfigs(msg.sender);
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForSolvency(msg.sender);
 
         if (debtConfig.silo != address(0)) {
             siloConfig.accrueInterestForBothSilos();
@@ -422,7 +420,7 @@ library Actions {
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerFees += uint192(fee);
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
@@ -451,7 +449,7 @@ library Actions {
     function withdrawFees(ISilo _silo) external {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFees = $.daoAndDeployerFees;
+        uint256 earnedFees = $.daoAndDeployerRevenue;
         if (earnedFees == 0) revert ISilo.EarnedZero();
 
         (
@@ -474,8 +472,8 @@ library Actions {
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
-        // we will never underflow because earnedFees max value is `daoAndDeployerFees`
-        unchecked { $.daoAndDeployerFees -= uint192(earnedFees); }
+        // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
+        unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
 
         if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
@@ -504,7 +502,7 @@ library Actions {
 
         ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(this));
 
-        if (cfg.hookReceiver == address(0)) return (hooksBefore, hooksAfter);
+        if (cfg.hookReceiver == address(0)) return (0, 0);
 
         (hooksBefore, hooksAfter) = IHookReceiver(cfg.hookReceiver).hookReceiverConfig(address(this));
 

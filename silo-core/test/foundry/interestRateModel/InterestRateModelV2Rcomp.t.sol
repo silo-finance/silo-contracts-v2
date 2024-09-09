@@ -2,9 +2,10 @@
 pragma solidity ^0.8.20;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import "./InterestRateModelV2Impl.sol";
 import "../_common/InterestRateModelConfigs.sol";
@@ -13,7 +14,6 @@ import "../data-readers/RcompTestData.sol";
 
 // forge test -vv --ffi --mc InterestRateModelV2RcompTest
 contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs {
-    InterestRateModelV2ConfigFactory immutable CONFIG_FACTORY;
     InterestRateModelV2Impl immutable INTEREST_RATE_MODEL;
 
     uint256 constant DP = 10 ** 18;
@@ -21,7 +21,6 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2Impl();
-        CONFIG_FACTORY = new InterestRateModelV2ConfigFactory();
     }
 
     /*
@@ -38,7 +37,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         address silo = address(this);
         address irmConfigAddress = makeAddr("irmConfigAddress");
 
-        INTEREST_RATE_MODEL.connect(irmConfigAddress);
+        INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
         IInterestRateModelV2.ConfigWithState memory emptyConfig;
 
@@ -55,7 +54,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         address silo = address(this);
         address irmConfigAddress = makeAddr("irmConfigAddress");
 
-        INTEREST_RATE_MODEL.connect(irmConfigAddress);
+        INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(_configWithState()));
@@ -87,13 +86,15 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             RcompData memory testCase = data[i];
 
             IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            address silo = address(uint160(i));
+            InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
             (
                 uint256 rcomp,
                 int256 ri,
                 int256 Tcrit,
                 bool overflow
-            ) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
+            ) = IRMv2Impl.calculateCompoundInterestRateWithOverflowDetection(
                 cfg,
                 testCase.input.totalDeposits,
                 testCase.input.totalBorrowAmount,
@@ -145,20 +146,13 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 continue;
             }
 
-            address silo = address(uint160(i));
-
-            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
-
-            vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(address(configAddress));
-
-            INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
+            IRMv2Impl.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
             bytes memory encodedData = abi.encodeWithSelector(ISilo.utilizationData.selector);
             vm.mockCall(silo, encodedData, abi.encode(utilizationData));
             vm.expectCall(silo, encodedData);
 
-            uint256 compoundInterestRate = INTEREST_RATE_MODEL.getCompoundInterestRate(silo, testCase.input.currentTime);
+            uint256 compoundInterestRate = IRMv2Impl.getCompoundInterestRate(silo, testCase.input.currentTime);
             assertEq(compoundInterestRate, rcomp, _concatMsg(i, "getCompoundInterestRate()"));
         }
 
@@ -175,11 +169,13 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             RcompData memory testCase = data[i];
 
             IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            address silo = address(uint160(i));
+            InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
             (
                 , int256 ri,
                 int256 Tcrit,
-            ) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
+            ) = IRMv2Impl.calculateCompoundInterestRateWithOverflowDetection(
                 cfg,
                 testCase.input.totalDeposits,
                 testCase.input.totalBorrowAmount,
@@ -187,28 +183,30 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 testCase.input.currentTime
             );
 
-            address silo = address(uint160(i));
-
-            (, IInterestRateModelV2Config configAddress) = CONFIG_FACTORY.create(_toConfigStruct(testCase));
-
-            vm.prank(silo);
-            INTEREST_RATE_MODEL.connect(address(configAddress));
-
-            INTEREST_RATE_MODEL.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
+            IRMv2Impl.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
             vm.warp(testCase.input.currentTime);
             vm.prank(silo);
-            INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(
+            IRMv2Impl.getCompoundInterestRateAndUpdate(
                 testCase.input.totalDeposits,
                 testCase.input.totalBorrowAmount,
                 testCase.input.lastTransactionTime
             );
 
-            (int256 storageRi, int256 storageTcrit,)= INTEREST_RATE_MODEL.getSetup(silo);
+            (int256 storageRi, int256 storageTcrit)= IRMv2Impl.getSetup(silo);
 
             assertEq(storageRi, ri, _concatMsg(i, "storageRi"));
             assertEq(storageTcrit, Tcrit, _concatMsg(i, "storageTcrit"));
         }
+    }
+
+    function _createIRM(address _silo, RcompData memory _testCase) internal returns (InterestRateModelV2Impl IRMv2Impl) {
+        IRMv2Impl = InterestRateModelV2Impl(Clones.clone(address(INTEREST_RATE_MODEL)));
+
+        IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(_testCase));
+
+        vm.prank(_silo);
+        IRMv2Impl.initialize(address(configAddress));
     }
 
     function _diff(int256 _a, int256 _b) internal pure returns (uint256 diff) {

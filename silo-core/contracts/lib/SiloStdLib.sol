@@ -11,6 +11,7 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {AssetTypes} from "./AssetTypes.sol";
+import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library SiloStdLib {
     using SafeERC20 for IERC20;
@@ -70,6 +71,21 @@ library SiloStdLib {
             totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
         }
+    }
+
+    /// @notice overloaded version of:
+    /// `getTotalAssetsAndTotalSharesWithInterest`(ISiloConfig.ConfigData, ISilo.AssetType)
+    /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
+    ///      updated numbers, interest should be added on the fly.
+    /// @param _assetType used to read proper storage data
+    /// @return totalAssets total assets in Silo with interest for given asset type
+    /// @return totalShares total shares in Silo for given asset type
+    function getTotalAssetsAndTotalSharesWithInterest(ISilo.AssetType _assetType)
+        internal
+        view
+        returns (uint256 totalAssets, uint256 totalShares)
+    {
+        return getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
     }
 
     /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset

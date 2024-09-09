@@ -16,11 +16,11 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 // - `withdraw`             debt silo1  | debt same asset
 // - `borrow`               not the same asset
 // - `borrow`               the same asset
-// - `getConfigs`           no debt
-// - `getConfigs`           debt silo0  | not the same asset
-// - `getConfigs`           debt silo0  | the same asset
-// - `getConfigs`           debt silo1  | not the same asset
-// - `getConfigs`           debt silo1  | the same asset
+// - `getConfigsForSolvency`           no debt
+// - `getConfigsForSolvency`           debt silo0  | not the same asset
+// - `getConfigsForSolvency`           debt silo0  | the same asset
+// - `getConfigsForSolvency`           debt silo1  | not the same asset
+// - `getConfigsForSolvency`           debt silo1  | the same asset
 //
 // FOUNDRY_PROFILE=core-test forge test -vv --mc OrderedConfigsTest
 contract OrderedConfigsTest is Test {
@@ -73,8 +73,6 @@ contract OrderedConfigsTest is Test {
         _configDataInput0.hookReceiver = _configDataInput1.hookReceiver; 
         _configDataInput0.hookReceiver = _configDataInput1.hookReceiver;
 
-        _configDataInput0.otherSilo = _configDataInput1.silo;
-        _configDataInput1.otherSilo = _configDataInput0.silo;
         _configDataInput1.daoFee = _configDataInput0.daoFee;
         _configDataInput1.deployerFee = _configDataInput0.deployerFee;
 
@@ -223,7 +221,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(_siloUser);
 
         assertEq(collateralConfig.silo, address(0));
         assertEq(debtConfig.silo, address(0));
@@ -239,7 +237,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(_siloUser);
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo0);
@@ -255,7 +253,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(_siloUser);
 
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo0);
@@ -271,7 +269,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(_siloUser);
 
         assertEq(collateralConfig.silo, _silo0);
         assertEq(debtConfig.silo, _silo1);
@@ -287,7 +285,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
-        (collateralConfig, debtConfig) = _siloConfig.getConfigs(_siloUser);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(_siloUser);
 
         assertEq(collateralConfig.silo, _silo1);
         assertEq(debtConfig.silo, _silo1);

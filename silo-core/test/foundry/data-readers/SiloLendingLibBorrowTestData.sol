@@ -174,7 +174,6 @@ contract SiloLendingLibBorrowTestData {
                 daoFee: _src.input.configData.daoFee,
                 deployerFee: _src.input.configData.deployerFee,
                 silo: _src.input.configData.silo,
-                otherSilo: _src.input.configData.otherSilo,
                 token: _src.input.configData.token,
                 protectedShareToken: _src.input.configData.protectedShareToken,
                 collateralShareToken: _src.input.configData.collateralShareToken,

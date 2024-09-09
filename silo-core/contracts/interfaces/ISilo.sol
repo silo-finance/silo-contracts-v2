@@ -111,8 +111,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     }
 
     struct SiloStorage {
-        /// @dev Current amount of fees accrued by DAO and Deployer
-        uint192 daoAndDeployerFees;
+        /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
+        /// but not yet withdrawn
+        uint192 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
 
@@ -208,8 +209,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
-    /// @param _modelConfigAddress address of a config contract used by IRM
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
+    function initialize(ISiloConfig _siloConfig) external;
 
     /// @notice Update hooks configuration for Silo
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver
@@ -243,7 +243,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         external
         view
         returns (
-            uint192 daoAndDeployerFees,
+            uint192 daoAndDeployerRevenue,
             uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,
