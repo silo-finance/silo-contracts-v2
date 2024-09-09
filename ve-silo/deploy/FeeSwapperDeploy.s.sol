@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
@@ -21,7 +21,6 @@ contract FeeSwapperDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         address weth = getAddress(AddrKey.WETH);
-        address silo80weth20 = getAddress(SILO80_WETH20_TOKEN);
         address silo = getAddress(SILO_TOKEN);
         address balancerVault = getAddress(AddrKey.BALANCER_VAULT);
         address feeDistributor = getDeployedAddress(VeSiloContracts.FEE_DISTRIBUTOR);
@@ -35,7 +34,6 @@ contract FeeSwapperDeploy is CommonDeploy {
         feeSwapper = IFeeSwapper(address(
             new FeeSwapper(
                 IERC20(weth),
-                IERC20(silo80weth20),
                 IERC20(silo),
                 balancerVault,
                 poolId,

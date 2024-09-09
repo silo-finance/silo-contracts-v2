@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -27,9 +27,9 @@ contract RepayPartGasTest is Gas, Test {
         _action(
             BORROWER,
             address(silo1),
-            abi.encodeCall(ISilo.repay, (ASSETS / 2, BORROWER)),
+            abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPart partial (no interest)",
-            81776
+            88223
         );
     }
 }

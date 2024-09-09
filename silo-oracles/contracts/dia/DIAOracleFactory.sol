@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity 0.8.24;
 
-import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {OracleFactory} from "../_common/OracleFactory.sol";
 import {DIAOracle, IDIAOracle} from "../dia/DIAOracle.sol";
@@ -40,7 +40,7 @@ contract DIAOracleFactory is OracleFactory {
 
         oracleConfig = new DIAOracleConfig(_config, divider, multiplier);
 
-        oracle = DIAOracle(ClonesUpgradeable.clone(ORACLE_IMPLEMENTATION));
+        oracle = DIAOracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {Ownable2Step, Ownable} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
 
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
@@ -40,9 +40,9 @@ contract VeSiloFeatures is CommonSiloIntegration {
         veSilo.apply_smart_wallet_checker();
     }
 
-    function _createGauge(address _hookReceiver) internal returns (address gauge) {
+    function _createGauge(address _shareToken) internal returns (address gauge) {
         vm.prank(_deployer);
-        gauge = factory.create(_WEIGHT_CAP, _hookReceiver);
+        gauge = factory.create(_WEIGHT_CAP, _shareToken);
         vm.label(gauge, "Gauge");
     }
 
@@ -57,55 +57,14 @@ contract VeSiloFeatures is CommonSiloIntegration {
         assertTrue(_gauge.integrate_fraction(_bob) != 0, "Should have earned incentives");
     }
 
-    function getBPT(address _user) public returns (uint256 receivedTokens){
-        uint256 amount = 1000e18;
-        deal(address(_wethToken), _user, amount);
-
-        IAsset[] memory assets = new IAsset[](2);
-        assets[0] = IAsset(getAddress(SILO_TOKEN));
-        assets[1] = IAsset(address(_wethToken));
-
-        uint256[] memory maxAmountsIn = new uint256[](2);
-        maxAmountsIn[0] = 0; // depositing only WETH
-        maxAmountsIn[1] = amount;
-
+    function _getVotingPower(address _user, uint256 _siloToLock) internal returns (uint256 votingPower){
         vm.prank(_user);
-        _wethToken.approve(address(_balancerVault), amount);
-
-        uint256 minimumBPT = 1;
-
-        bytes memory userData = abi.encode(
-            Vault.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-            maxAmountsIn,
-            minimumBPT
-        );
-
-        Vault.JoinPoolRequest memory request = Vault.JoinPoolRequest({
-            assets: assets,
-            maxAmountsIn: maxAmountsIn,
-            userData: userData,
-            fromInternalBalance: false
-        });
-
-        vm.prank(_user);
-        _balancerVault.joinPool(
-            _BALANCER_POOL_ID,
-            _user,
-            _user,
-            request
-        );
-
-        receivedTokens = _silo80Weth20Token.balanceOf(_user);
-    }
-
-    function _getVotingPower(address _user, uint256 _bptToLock) internal returns (uint256 votingPower){
-        vm.prank(_user);
-        _silo80Weth20Token.approve(address(veSilo), _bptToLock);
+        _siloToken.approve(address(veSilo), _siloToLock);
 
         uint256 unlockTime = block.timestamp + 365 * 24 * 3600;
 
         vm.prank(_user);
-        veSilo.create_lock(_bptToLock, unlockTime);
+        veSilo.create_lock(_siloToLock, unlockTime);
 
         votingPower = veSilo.balanceOf(_user);
     }

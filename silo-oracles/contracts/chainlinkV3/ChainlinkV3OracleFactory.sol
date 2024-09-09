@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.18;
+pragma solidity 0.8.24;
 
-import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 
 import {OracleFactory} from "../_common/OracleFactory.sol";
@@ -37,7 +37,7 @@ contract ChainlinkV3OracleFactory is OracleFactory {
         );
 
         oracleConfig = new ChainlinkV3OracleConfig(_config, divider, multiplier);
-        oracle = ChainlinkV3Oracle(ClonesUpgradeable.clone(ORACLE_IMPLEMENTATION));
+        oracle = ChainlinkV3Oracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
 

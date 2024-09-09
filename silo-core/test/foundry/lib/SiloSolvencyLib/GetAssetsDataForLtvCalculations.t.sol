@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
@@ -75,9 +75,11 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         collateralConfig.collateralShareToken = collateralShareToken;
         collateralConfig.daoFee = scenario.input.collateralConfig.daoFee;
         collateralConfig.silo = silo0;
+        collateralConfig.token = makeAddr("collateral.token");
 
         debtConfig.debtShareToken = debtShareToken;
         debtConfig.silo = silo1;
+        debtConfig.token = makeAddr("debt.token");
 
         accrueInMemory = scenario.input.accrueInMemory
             ? ISilo.AccrueInterestInMemory.Yes
@@ -90,12 +92,21 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             : ISilo.OracleType.MaxLtv;
 
         TokenMock protectedShareTokenMock = new TokenMock(protectedShareToken);
-        protectedShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.collateralConfig.protectedShareBalanceOf);
-        protectedShareTokenMock.totalSupplyMock(scenario.input.collateralConfig.protectedShareTotalSupply);
+
+        protectedShareTokenMock.balanceOfAndTotalSupplyMock(
+            borrowerAddr,
+            scenario.input.collateralConfig.protectedShareBalanceOf,
+            scenario.input.collateralConfig.protectedShareTotalSupply
+        );
 
         TokenMock collateralShareTokenMock = new TokenMock(collateralShareToken);
-        collateralShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.collateralConfig.collateralShareBalanceOf);
-        collateralShareTokenMock.totalSupplyMock(scenario.input.collateralConfig.collateralShareTotalSupply);
+
+        collateralShareTokenMock.balanceOfAndTotalSupplyMock(
+            borrowerAddr,
+            scenario.input.collateralConfig.collateralShareBalanceOf,
+            scenario.input.collateralConfig.collateralShareTotalSupply
+        
+        );
 
         if (scenario.input.accrueInMemory) {
             interestRateModelMock.getCompoundInterestRateMock(
@@ -107,12 +118,14 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
         if (scenario.input.debtConfig.cachedBalance) {
             cachedShareDebtBalance = scenario.input.debtConfig.debtShareBalanceOf;
+            debtShareTokenMock.totalSupplyMock(scenario.input.debtConfig.debtShareTotalSupply);
         } else {
-            debtShareTokenMock.balanceOfMock(borrowerAddr, scenario.input.debtConfig.debtShareBalanceOf);
+            debtShareTokenMock.balanceOfAndTotalSupplyMock(
+                borrowerAddr,
+                scenario.input.debtConfig.debtShareBalanceOf,
+                scenario.input.debtConfig.debtShareTotalSupply
+            );
         }
-
-        debtShareTokenMock.totalSupplyMock(scenario.input.debtConfig.debtShareTotalSupply);
-
 
         SiloMock siloMock0 = new SiloMock(silo0);
 

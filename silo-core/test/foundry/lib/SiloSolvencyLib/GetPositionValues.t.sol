@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloSolvencyLib.sol";
@@ -15,22 +15,26 @@ contract GetPositionValuesTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_SiloSolvencyLib_PRECISION_DECIMALS
     */
-    function test_SiloSolvencyLib_PRECISION_DECIMALS() public {
+    function test_SiloSolvencyLib_PRECISION_DECIMALS() public pure {
         assertEq(_PRECISION_DECIMALS, SiloSolvencyLib._PRECISION_DECIMALS, "_PRECISION_DECIMALS");
     }
 
     /*
     forge test -vv --mt test_SiloSolvencyLib_getPositionValues_noOracle
     */
-    function test_SiloSolvencyLib_getPositionValues_noOracle() public {
+    function test_SiloSolvencyLib_getPositionValues_noOracle() public view {
         ISiloOracle noOracle;
         uint256 collateralAssets = 20;
         uint256 protectedAssets = 10;
         uint256 debtAssets = 3;
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
-            noOracle, noOracle, protectedAssets, collateralAssets, debtAssets
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData({
+            collateralOracle: noOracle,
+            debtOracle: noOracle,
+            borrowerProtectedAssets: protectedAssets,
+            borrowerCollateralAssets: collateralAssets,
+            borrowerDebtAssets: debtAssets
+        });
 
         address any = address(1);
 
@@ -38,5 +42,35 @@ contract GetPositionValuesTest is Test, OraclesHelper {
 
         assertEq(collateralValue, collateralAssets + protectedAssets, "collateralValue");
         assertEq(debtValue, debtAssets, "debtValue");
+    }
+
+    /*
+    forge test -vv --mt test_SiloSolvencyLib_getPositionValues_withOracle
+    */
+    function test_SiloSolvencyLib_getPositionValues_withOracle() public {
+        uint256 collateralAssets = 20;
+        uint256 protectedAssets = 10;
+        uint256 debtAssets = 3;
+
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData({
+            collateralOracle: ISiloOracle(COLLATERAL_ORACLE),
+            debtOracle: ISiloOracle(DEBT_ORACLE),
+            borrowerProtectedAssets: protectedAssets,
+            borrowerCollateralAssets: collateralAssets,
+            borrowerDebtAssets: debtAssets
+        });
+
+        address collateralAsset = makeAddr("collateralAsset");
+        address debtAsset = makeAddr("debtAsset");
+
+        collateralOracle.quoteMock(protectedAssets + collateralAssets, collateralAsset, 123);
+        debtOracle.quoteMock(debtAssets, debtAsset, 44);
+
+        (
+            uint256 collateralValue, uint256 debtValue
+        ) = SiloSolvencyLib.getPositionValues(ltvData, collateralAsset, debtAsset);
+
+        assertEq(collateralValue, 123, "collateralValue");
+        assertEq(debtValue, 44, "debtValue");
     }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -47,7 +47,7 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
     function test_getFeesAndFeeReceiversWithAsset(address _newDeployer) public {
         vm.assume(_newDeployer != address(0));
 
-        (, ISiloConfig.InitData memory initData) = siloData.getConfigData(SILO_TO_DEPLOY);
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
         (address silo0, address silo1) = siloConfig.getSilos();
 
         (uint256 daoFee, uint256 deployerFee,, address asset) = siloConfig.getFeesWithAsset(silo0);

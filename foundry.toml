@@ -9,7 +9,7 @@ libs = [
     'silo-vaults/node_modules'
 ]
 out = 'cache/foundry/out'
-evm_version = 'paris'
+evm_version = 'shanghai'
 
 [profile.amm-periphery]
 src = 'silo-amm-periphery/contracts'
@@ -30,6 +30,19 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.core-with-test]
+src = 'silo-core/contracts'
+test = 'silo-core/test/foundry'
+out = 'cache/foundry/out/silo-core'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
@@ -40,6 +53,7 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
@@ -75,6 +89,9 @@ src = 'proposals/contracts'
 out = 'cache/foundry/out/proposals'
 test = 'proposals/test'
 broadcast = 'proposals/broadcast'
+
+[fuzz]
+max_test_rejects = 131072 # 65536 * 2 (doubled a default value)
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"

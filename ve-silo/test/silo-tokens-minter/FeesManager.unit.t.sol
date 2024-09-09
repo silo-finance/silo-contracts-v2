@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {IFeesManager, FeesManager} from "ve-silo/contracts/silo-tokens-minter/FeesManager.sol";
@@ -23,7 +24,7 @@ contract FeesManagerTest is IntegrationTest {
             return;
         }
 
-        vm.expectRevert(abi.encodePacked("Ownable: caller is not the owner"));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _manager.setFees(_daoFee, _deployerFee);
 
         vm.expectEmit(false, false, true, true);

@@ -12,13 +12,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IBalancerTokenAdmin, IBalancerToken} from "./interfaces/IBalancerTokenAdmin.sol";
 
 import {ExtendedOwnable, Ownable} from "../access/ExtendedOwnable.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {SafeMath} from "ve-silo/contracts/utils/SafeMath.sol";
 
 // solhint-disable not-rely-on-time
 // solhint-disable ordering

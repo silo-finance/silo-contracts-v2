@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
@@ -50,13 +50,13 @@ contract SiloGovernorTest is IntegrationTest {
         bytes32 proposerRole = _timelock.PROPOSER_ROLE();
         bytes32 executorRole = _timelock.EXECUTOR_ROLE();
         bytes32 cancellerRole = _timelock.CANCELLER_ROLE();
-        bytes32 adminRole = _timelock.TIMELOCK_ADMIN_ROLE();
+        bytes32 adminRole = _timelock.DEFAULT_ADMIN_ROLE();
 
         // DAO should have all roles
         assertTrue(_timelock.hasRole(proposerRole, siloGovernorAddr), "DAO should have a PROPOSER_ROLE role");
         assertTrue(_timelock.hasRole(executorRole, siloGovernorAddr), "DAO should have an EXECUTOR_ROLE role");
         assertTrue(_timelock.hasRole(cancellerRole, siloGovernorAddr), "DAO should have a CANCELLER_ROLE role");
-        assertTrue(_timelock.hasRole(adminRole, siloGovernorAddr), "DAO should have a TIMELOCK_ADMIN_ROLE role");
+        assertTrue(_timelock.hasRole(adminRole, siloGovernorAddr), "DAO should have a DEFAULT_ADMIN_ROLE role");
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address deployer = vm.addr(deployerPrivateKey);
@@ -65,7 +65,7 @@ contract SiloGovernorTest is IntegrationTest {
         assertTrue(!_timelock.hasRole(proposerRole, deployer), "Deployer should not have a PROPOSER_ROLE role");
         assertTrue(!_timelock.hasRole(executorRole, deployer), "Deployer should not have an EXECUTOR_ROLE role");
         assertTrue(!_timelock.hasRole(cancellerRole, deployer), "Deployer should not a CANCELLER_ROLE role");
-        assertTrue(!_timelock.hasRole(adminRole, deployer), "Deployer should not a TIMELOCK_ADMIN_ROLE role");
+        assertTrue(!_timelock.hasRole(adminRole, deployer), "Deployer should not a DEFAULT_ADMIN_ROLE role");
 
         // veSilo token admin is a TimelockController
         assertEq(
@@ -112,12 +112,12 @@ contract SiloGovernorTest is IntegrationTest {
     }
 
     function _getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) internal {
-        IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
-        deal(address(silo80Weth20Token), _userAddr, _amount);
+        deal(address(siloToken), _userAddr, _amount);
 
         vm.prank(_userAddr);
-        silo80Weth20Token.approve(address(_votingEscrow), _amount);
+        siloToken.approve(address(_votingEscrow), _amount);
 
         uint256 lockedTo = block.timestamp + _unlockTime;
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -18,13 +18,13 @@ abstract contract CommonSiloIntegration is IntegrationTest, SiloContracts {
 
     Vault internal _balancerVault;
     IERC20 internal _wethToken;
-    IERC20 internal _silo80Weth20Token;
+    IERC20 internal _siloToken;
     IERC20 internal _usdcToken;
 
     constructor() {
         _wethToken = IERC20(getAddress(AddrKey.WETH));
         _usdcToken = IERC20(getAddress(AddrKey.USDC));
-        _silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        _siloToken = IERC20(getAddress(SILO_TOKEN));
         _balancerVault = Vault(getAddress(AddrKey.BALANCER_VAULT));
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));

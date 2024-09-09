@@ -3,10 +3,10 @@ methods {
     function SiloSolvencyLib.isSolvent(
         ISiloConfig.ConfigData memory collateralConfig,
         ISiloConfig.ConfigData memory debtConfig,
+        ISiloConfig.DebtInfo memory debtInfo,
         address borrower,
-        ISilo.AccrueInterestInMemory accrueInMemory,
-        uint256 debtShareBalance
-    ) internal returns (bool) => simplified_solvent(borrower, debtShareBalance);
+        ISilo.AccrueInterestInMemory accrueInMemory
+    ) internal returns (bool) => simplified_solvent(borrower);
 }
 
-ghost simplified_solvent(address, uint256) returns bool;
+ghost simplified_solvent(address) returns bool;

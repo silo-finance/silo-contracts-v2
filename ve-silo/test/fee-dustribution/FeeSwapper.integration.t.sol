@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -30,7 +31,7 @@ contract FeeSwapperTest is IntegrationTest {
     IFeeSwap internal _testSwap = IFeeSwap(makeAddr("Test swap"));
     IERC20 internal _snxToken;
     IERC20 internal _wethToken;
-    IERC20 internal _silo80Weth20Token;
+    IERC20 internal _siloToken;
     UniswapSwapper internal _feeSwap;
 
     address internal _user1 = makeAddr("User1");
@@ -69,13 +70,13 @@ contract FeeSwapperTest is IntegrationTest {
 
         _snxToken = IERC20(getAddress(AddrKey.SNX));
         _wethToken = IERC20(getAddress(AddrKey.WETH));
-        _silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        _siloToken = IERC20(getAddress(SILO_TOKEN));
 
         _uniswapSwapperTest = new UniswapSwapperTest();
     }
 
     function testOnlyOwnerCanConfigureSwappers() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _addSwapper(address(this), _testAsset, _testSwap);
 
         vm.expectEmit(false, false, true, true);
@@ -114,51 +115,56 @@ contract FeeSwapperTest is IntegrationTest {
         _feeSwapper.swapFees(inputs, data);
     }
 
-    function testBalancerPoolJoin() public {
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSwapFeesAndDeposit --ffi -vvv
+    function testGetSiloTokens() public {
         uint256 amount = 1e18;
         deal(getAddress(AddrKey.WETH), address(_feeSwapper), amount);
 
-        uint256 balance = _silo80Weth20Token.balanceOf(address(_feeSwapper));
-        assertEq(balance, 0, "LP tokens balance should be 0");
+        uint256 balance = _siloToken.balanceOf(address(_feeSwapper));
+        assertEq(balance, 0, "SILO token balance should be 0");
 
-        _feeSwapper.joinBalancerPool();
+        uint256 expectedAmount = 36186755173227576313430;
 
-        balance = _silo80Weth20Token.balanceOf(address(_feeSwapper));
-        assertEq(balance, 5330326778435015438810, "Expecting to have LP tokens");
+        _feeSwapper.getSiloTokens(expectedAmount);
+
+        balance = _siloToken.balanceOf(address(_feeSwapper));
+        assertEq(balance, expectedAmount, "Expecting to have SILO tokens");
     }
 
     function testFeeDistributor() public {
         uint256 amount = 1000e18;
-        
 
-        deal(address(_silo80Weth20Token), address(_feeSwapper), amount);
+        deal(address(_siloToken), address(_feeSwapper), amount);
 
-        _feeSwapper.depositLPTokens(amount);
+        _feeSwapper.depositSiloTokens(amount);
 
-        uint256 tokenBalance = _feeDistributor.getTokenLastBalance(_silo80Weth20Token);
+        uint256 tokenBalance = _feeDistributor.getTokenLastBalance(_siloToken);
 
         assertEq(tokenBalance, amount, "Token balance differs from the expected tokens amount");
     }
 
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSwapFeesAndDeposit --ffi -vvv
     function testSwapFeesAndDeposit() public {
         _preconfigureSwap();
         address[] memory inputs = _swapInputs();
 
-        uint256 tokenBalance = _feeDistributor.getTokenLastBalance(_silo80Weth20Token);
+        uint256 tokenBalance = _feeDistributor.getTokenLastBalance(_siloToken);
         assertEq(tokenBalance, 0, "Expect has no any token balance in the FeeDistributor");
 
         uint256 expectedAmount = 6587321744;
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodePacked(expectedAmount);
 
+        uint256 siloExpectedAmount = 143215631856922242299414;
+
         vm.expectRevert(abi.encodePacked(Manageable.OnlyManager.selector));
-        _feeSwapper.swapFeesAndDeposit(inputs, data);
+        _feeSwapper.swapFeesAndDeposit(inputs, data, siloExpectedAmount);
 
         vm.prank(_deployer);
-        _feeSwapper.swapFeesAndDeposit(inputs, data);
+        _feeSwapper.swapFeesAndDeposit(inputs, data, siloExpectedAmount);
 
-        tokenBalance = _feeDistributor.getTokenLastBalance(_silo80Weth20Token);
-        assertEq(tokenBalance, 21185869692299349334413,"Expect to has token balance in the FeeDistributor");
+        tokenBalance = _feeDistributor.getTokenLastBalance(_siloToken);
+        assertEq(tokenBalance, siloExpectedAmount,"Expect to has token balance in the FeeDistributor");
     }
 
     function _preconfigureSwap() internal {

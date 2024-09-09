@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IRouterClient} from "chainlink-ccip/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 import {ICCIPGauge, IStakelessGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 import {StakelessGauge, Ownable2Step, IMainnetBalancerMinter} from "../stakeless-gauge/StakelessGauge.sol";
@@ -13,9 +13,9 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
     // solhint-disable var-name-mixedcase
     IRouterClient public immutable ROUTER;
     address public immutable LINK;
-    uint64 public immutable DESTINATION_CHAIN;
     // solhint-enable var-name-mixedcase
 
+    uint64 public destinationChain;
     bytes public extraArgs;
 
     address internal _chaildChainGauge;
@@ -25,18 +25,17 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
     constructor(
         IMainnetBalancerMinter _minter,
         address _router,
-        address _link,
-        uint64 _destinationChain
+        address _link
     ) StakelessGauge(_minter) {
         ROUTER = IRouterClient(_router);
         LINK = _link;
-        DESTINATION_CHAIN = _destinationChain;
     }
 
     function initialize(
         address _recepient,
         uint256 _relativeWeightCap,
-        address _checkpointer
+        address _checkpointer,
+        uint64 _destinationChain
     )
         external
     {
@@ -49,6 +48,7 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
         _transferOwnership(Ownable2Step(msg.sender).owner());
 
         _chaildChainGauge = _recepient;
+        destinationChain = _destinationChain;
     }
 
     function setExtraArgs(bytes calldata _extraArgs) external onlyOwner {
@@ -58,8 +58,9 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
     }
 
     /// @inheritdoc ICCIPGauge
-    function calculateFee(Client.EVM2AnyMessage calldata _message) external view returns (uint256 fee) {
-        fee = _calculateFee(_message);
+    function calculateFee(uint256 _amount, PayFeesIn _payFeesIn) external view returns (uint256 fee) {
+        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_amount, _payFeesIn);
+        fee = _calculateFee(evm2AnyMessage);
     }
 
     /// @inheritdoc ICCIPGauge
@@ -92,14 +93,14 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
 
             if (balance >= fees) { // Ensure that we have enough ether to pay fees
                 messageId = ROUTER.ccipSend{ value: fees }(
-                    DESTINATION_CHAIN,
+                    destinationChain,
                     evm2AnyMessage
                 );
             } else { // If we don't have enough ether to pay fees, try to pay with LINK
                 messageId = _transferMessageAndPayInLINK(_mintAmount);
             }
 
-            _returnLeftoverEthIfAny();
+            _returnLeftoverIfAny();
         } else {
             messageId = _transferMessageAndPayInLINK(_mintAmount);
         }
@@ -116,22 +117,29 @@ abstract contract CCIPGauge is StakelessGauge, ICCIPGauge {
         IERC20(LINK).approve(address(ROUTER), fees);
 
         messageId = ROUTER.ccipSend(
-            DESTINATION_CHAIN,
+            destinationChain,
             evm2AnyMessage
         );
     }
 
-    function _returnLeftoverEthIfAny() internal {
+    /// @dev Ensure that the contract returns any leftover ether or LINK to the sender
+    function _returnLeftoverIfAny() internal {
         uint256 remainingBalance = address(this).balance;
 
         if (remainingBalance > 0) {
             Address.sendValue(payable(msg.sender), remainingBalance);
         }
+
+        uint256 remainingLINKBalance = IERC20(LINK).balanceOf(address(this));
+
+        if (remainingLINKBalance > 0) {
+            IERC20(LINK).transfer(msg.sender, remainingLINKBalance);
+        }
     }
 
     function _calculateFee(Client.EVM2AnyMessage memory _message) internal view returns (uint256 fee) {
         fee = ROUTER.getFee(
-            DESTINATION_CHAIN,
+            destinationChain,
             _message
         );
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract LiquidationPreviewTestData {
     struct Input {
@@ -91,7 +91,7 @@ contract LiquidationPreviewTestData {
             output: Output({
                 collateralAssetsToLiquidate: 1,
                 debtAssetsToRepay: 1,
-                ltvAfterLiquidation: 0.009999999999999999e18 // (1e18 - 1) / (100e18 - 1)
+                ltvAfterLiquidation: 0.01e18 // (1e18 - 1) / (100e18 - 1)
             })
         });
 
@@ -108,7 +108,8 @@ contract LiquidationPreviewTestData {
             output: Output({
                 collateralAssetsToLiquidate: 101, // 100 debt to cover produces 1 fee
                 debtAssetsToRepay: 100,
-                ltvAfterLiquidation: 9999999999999999
+                // (one - 100n) * one / (100n * one - 101n) => +1 round up
+                ltvAfterLiquidation: 0.009999999999999999e18 + 1
             })
         });
 
@@ -125,7 +126,8 @@ contract LiquidationPreviewTestData {
             output: Output({
                 collateralAssetsToLiquidate: 4230769230769230767,
                 debtAssetsToRepay: 480769230769230769,
-                ltvAfterLiquidation: 720000000000000000 // this is minimal acceptable LTV
+                // (one - 480769230769230769n) * 80n * one / ((10n * one - 4230769230769230767n) * 10n)
+                ltvAfterLiquidation: 720000000000000000 + 1 // this is minimal acceptable LTV
             })
         });
 
@@ -143,8 +145,8 @@ contract LiquidationPreviewTestData {
             output: Output({
                 collateralAssetsToLiquidate: 87964862992139996, // 79.2e18 / 900 => 0.88,
                 debtAssetsToRepay: 0.899640644237795417e18,
-                // (80e18 - 72e18) / (9_000e18 - 72e18 - 72e18 * 0.1) = 0.000896780557797507
-                ltvAfterLiquidation: 0.000900000000000000e18
+                // (one - 899640644237795417n) * 80n * one / ((10n * one - 87964862992139996n) * 900n) = 900000000000000n
+                ltvAfterLiquidation: 0.000900000000000000e18 + 1
             })
         });
 
@@ -163,7 +165,7 @@ contract LiquidationPreviewTestData {
             output: Output({
                 collateralAssetsToLiquidate: 9864687385108739,
                 debtAssetsToRepay: 109878943646013188,
-                ltvAfterLiquidation: 7920000000000000
+                ltvAfterLiquidation: 7920000000000000 + 1 // +1 rounding up
             })
         });
 
@@ -217,7 +219,7 @@ contract LiquidationPreviewTestData {
             output: Output({
                 collateralAssetsToLiquidate: (10e18 + 10e18 * 0.1e18 / 1e18),
                 debtAssetsToRepay: 10e18,
-                ltvAfterLiquidation: 1_9101_12359550561797
+                ltvAfterLiquidation: 1_9101_12359550561797 + 1 // +1 rounding up
             })
         });
 

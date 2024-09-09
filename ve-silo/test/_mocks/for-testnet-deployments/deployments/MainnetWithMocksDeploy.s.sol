@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "ve-silo/deploy/_CommonDeploy.sol";
 import {MainnetDeploy} from "ve-silo/deploy/MainnetDeploy.s.sol";
-import {BPTTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/BPTTokenLike.sol";
 import {LINKTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/LINKTokenLike.sol";
 import {SILOTokenLike} from "ve-silo/test/_mocks/for-testnet-deployments/tokens/SILOTokenLike.sol";
 import {CCIPGaugeWithMocks} from "ve-silo/test/_mocks/for-testnet-deployments/gauges/CCIPGaugeWithMocks.sol";
@@ -24,11 +23,10 @@ contract MainnetWithMocksDeploy is CommonDeploy {
         TestTokensMainnetLikeDeploy tokensDeploy = new TestTokensMainnetLikeDeploy();
         CCIPRouterClientLikeDeploy routerDeploy = new CCIPRouterClientLikeDeploy();
 
-        (BPTTokenLike bptToken, LINKTokenLike linkToken, SILOTokenLike siloToken) = tokensDeploy.run();
+        (LINKTokenLike linkToken, SILOTokenLike siloToken) = tokensDeploy.run();
 
         setAddress(AddrKey.LINK, address(linkToken));
         setAddress(SILO_TOKEN, address(siloToken));
-        setAddress(SILO80_WETH20_TOKEN, address(bptToken));
 
         CCIPRouterClientLike router = routerDeploy.run();
 

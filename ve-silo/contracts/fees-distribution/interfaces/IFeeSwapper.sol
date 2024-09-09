@@ -12,9 +12,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IFeeSwap} from "./IFeeSwap.sol";
 
@@ -24,15 +24,19 @@ interface IFeeSwapper {
         IFeeSwap swap;
     }
 
-    function swapFeesAndDeposit(address[] calldata _assets, bytes[] memory _data) external;
+    function swapFeesAndDeposit(
+        address[] calldata _assets,
+        bytes[] memory _data,
+        uint256 _siloExpectedAmount
+    ) external;
 
-    /// @notice Deposit into SILO-80%/WEH-20% Balancer pool
-    function joinBalancerPool() external;
+    /// @notice Swap WETH to SILO tokens
+    function getSiloTokens(uint256 _siloExpectedAmount) external;
 
-    /// @notice Deposit 80%/20% pool LP tokens in the `FeeDistributor`
+    /// @notice Deposit SILO tokens in the `FeeDistributor`
     /// @param _amount Amount to be deposited into the `FeeDistributor`.
     /// If `uint256` max the current balance of the `FeeSwapper` will be deposited.
-    function depositLPTokens(uint256 _amount) external;
+    function depositSiloTokens(uint256 _amount) external;
 
     /// @notice Swap all provided assets into WETH
     /// @param _assets A list of the asset to swap

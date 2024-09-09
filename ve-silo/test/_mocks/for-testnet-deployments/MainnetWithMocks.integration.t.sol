@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
@@ -54,9 +54,9 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             getAddress(VeSiloContracts.VE_SILO_DELEGATOR_VIA_CCIP)
         );
 
-        uint64 dstChainSelector = 1; 
+        uint64 dstChainSelector = 1;
 
-        vm.prank(_deployer);
+        vm.prank(address(_timelock));
         veSiloDelegator.setChildChainReceiver(dstChainSelector, _deployer);
 
         uint256 fee = veSiloDelegator.estimateSendUserBalance(
@@ -121,7 +121,11 @@ contract MainnetWithMocksIntegrationTest is MainnetTest {
             chainAlias
         );
 
-        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(gaugeAdder, 1e18 /** weight cap */);
+        gauge = CCIPGaugeFactory(gaugeFactoryAnyChainAddr).create(
+            gaugeAdder,
+            1e18 /** weight cap */,
+            1 /** destination chain */
+        );
 
         vm.label(gauge, "CCIP_Gauge");
     }

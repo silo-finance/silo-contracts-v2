@@ -6,6 +6,41 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.7.0] - 2024-06-03
+### Added
+ - Refactoring of the hooks' actions and hooks inputs
+ - Reentrancy bug fix in flashLoan fn
+ - Rounding error bug fix in maxWithdraw fn
+ - Overflow bug fix on maxWithdraw fn
+ - ERC20Permit for share token
+ - Added delegate call into the callOnBehalfOfSilo fn
+ - Other minor fixes and improvements
+
+## [0.6.2] - 2024-05-15
+### Added
+ - deployment with mocked CCIP and tokens for Arbitrum and Optimism
+
+## [0.6.1] - 2024-05-14
+### Fixed
+- apply fixes for certora report
+
+## [0.6.0] - 2024-05-06
+### Added
+- deposit to any silo without restrictions
+- borrow same token
+  - liquidation for same token can be done with sToken without reverting
+  - case observed on full liquidation: when we empty out silo, there is dust left (no shares)
+
+### Changed
+- standard reentrancy guard was replaced by cross Silo reentrancy check
+
+### Fixed
+- fix issue with wrong configs in `isSolvent` after debt share transfer
+
+## [0.5.0] - 2024-03-12
+### Added
+- SiloLens deploy
+
 ## [0.4.0] - 2024-02-22
 ### Added
 - add returned code for `IHookReceiver.afterTokenTransfer`

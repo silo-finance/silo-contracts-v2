@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -36,10 +36,21 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     function test_validateSiloInitData() public {
         ISiloConfig.InitData memory initData;
 
-        vm.expectRevert(ISiloFactory.SameAsset.selector);
+        vm.expectRevert(ISiloFactory.MissingHookReceiver.selector);
+        siloFactory.validateSiloInitData(initData);
+        initData.hookReceiver = address(2);
+
+        vm.expectRevert(ISiloFactory.EmptyToken0.selector);
+        siloFactory.validateSiloInitData(initData);
+        initData.token0 = address(1);
+
+        vm.expectRevert(ISiloFactory.EmptyToken1.selector); // even when zeros
+        siloFactory.validateSiloInitData(initData);
+        initData.token1 = address(1);
+
+        vm.expectRevert(ISiloFactory.SameAsset.selector); // even when zeros
         siloFactory.validateSiloInitData(initData);
 
-        initData.token0 = address(1);
         initData.token1 = address(2);
 
         vm.expectRevert(ISiloFactory.InvalidMaxLtv.selector);
@@ -60,7 +71,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.lt0 = 0.85e18;
         initData.lt1 = 0.75e18;
 
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
+        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.maxLtvOracle0 = address(1);
@@ -70,7 +81,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.callBeforeQuote0 = true;
         initData.maxLtvOracle0 = address(0);
         initData.solvencyOracle0 = address(0);
-        vm.expectRevert(ISiloFactory.BeforeCall.selector);
+        vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.solvencyOracle0 = address(1);
@@ -81,7 +92,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.callBeforeQuote1 = true;
         initData.maxLtvOracle1 = address(0);
-        vm.expectRevert(ISiloFactory.BeforeCall.selector);
+        vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.solvencyOracle1 = address(1);
@@ -93,7 +104,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.deployer = address(100001);
 
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
+        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.deployerFee = siloFactory.maxDeployerFee() + 1;
@@ -103,7 +114,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.deployerFee = 0.01e18;
 
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
+        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.flashloanFee0 = uint64(siloFactory.maxFlashloanFee() + 1);
@@ -113,7 +124,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.flashloanFee0 = 0.01e18;
 
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
+        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.flashloanFee1 = uint64(siloFactory.maxFlashloanFee() + 1);
@@ -123,7 +134,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.flashloanFee1 = 0.01e18;
 
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
+        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.liquidationFee0 = uint64(siloFactory.maxLiquidationFee() + 1);
@@ -132,10 +143,6 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         siloFactory.validateSiloInitData(initData);
 
         initData.liquidationFee0 = 0.01e18;
-
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
-        siloFactory.validateSiloInitData(initData);
-
         initData.liquidationFee1 = uint64(siloFactory.maxLiquidationFee() + 1);
 
         vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
@@ -143,36 +150,19 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.liquidationFee1 = 0.01e18;
 
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
+        initData.interestRateModel0 = address(0);
+
+        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.interestRateModelConfig0 = address(100005);
-
-        vm.expectRevert(ISiloFactory.InvalidIrmConfig.selector);
-        siloFactory.validateSiloInitData(initData);
-
-        initData.interestRateModelConfig1 = initData.interestRateModelConfig0;
+        initData.interestRateModel1 = address(100005);
 
         vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.interestRateModel0 = address(100006);
-
-        vm.expectRevert(ISiloFactory.InvalidIrm.selector);
-        siloFactory.validateSiloInitData(initData);
-
         initData.interestRateModel1 = initData.interestRateModel0;
 
         assertTrue(siloFactory.validateSiloInitData(initData));
-
-        initData.token0 = address(0);
-        initData.token1 = address(1);
-        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, initData.token0, initData.token1));
-        siloFactory.validateSiloInitData(initData);
-
-        initData.token0 = address(1);
-        initData.token1 = address(0);
-        vm.expectRevert(abi.encodeWithSelector(ISiloFactory.EmptySiloAsset.selector, initData.token0, initData.token1));
-        siloFactory.validateSiloInitData(initData);
     }
 }

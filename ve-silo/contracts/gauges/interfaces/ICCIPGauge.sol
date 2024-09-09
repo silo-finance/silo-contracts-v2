@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
@@ -25,7 +25,8 @@ interface ICCIPGauge is IStakelessGauge, ICCIPExtraArgsConfig {
         returns (Client.EVM2AnyMessage memory evm2AnyMessage);
     
     /// @notice Calculates the fee required to send the message
-    /// @param _message Message to be sent
+    /// @param _amount The amount of the token to be transferred.
+    /// @param _payFeesIn Pay fees in LINK or Native
     /// @return fee to send a `_message`
-    function calculateFee(Client.EVM2AnyMessage calldata _message) external view returns (uint256 fee);
+    function calculateFee(uint256 _amount, PayFeesIn _payFeesIn) external view returns (uint256 fee);
 }

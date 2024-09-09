@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.18;
+pragma solidity 0.8.24;
 
 import "../../../constants/Arbitrum.sol";
 
-import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {TokensGenerator} from "../_common/TokensGenerator.sol";
 import {DIAOracleConfig} from "../../../contracts/dia/DIAOracleConfig.sol";
 import {DIAOracleFactory, DIAOracle, IDIAOracle} from "../../../contracts/dia/DIAOracleFactory.sol";
@@ -64,7 +64,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
 
         emit log_named_decimal_uint("RDPX/USD", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 10711, "optimise gas");
+        assertEq(gasStart - gasEnd, 10637, "[DIAOracleFactory_quote_RDPXinTUSD] optimise gas");
         assertEq(price, 16_676184950000000000, ", RDPX/USD price is ~$16");
     }
 
@@ -81,7 +81,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 330787, "optimise gas for creation");
+        assertEq(gasStart - gasEnd, 353416, "[DIAOracleFactory_quote_RDPXinETH] optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
@@ -95,7 +95,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
 
         emit log_named_decimal_uint("RDPX/ETH", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 15682, "optimise gas");
+        assertEq(gasStart - gasEnd, 15600, "[DIAOracleFactory_quote_RDPXinETH] optimise gas");
         assertEq(price, 10104984720670688, "RDPX/ETH price 0.01ETH");
     }
 }

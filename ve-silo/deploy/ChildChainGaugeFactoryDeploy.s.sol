@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
+
+import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
 
@@ -43,6 +45,8 @@ contract ChildChainGaugeFactoryDeploy is CommonDeploy {
             _VERSION,
             _VERSION
         );
+
+        Ownable2Step(address(factory)).transferOwnership(l2Multisig);
 
         vm.stopBroadcast();
 

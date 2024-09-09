@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
-import {ERC20PresetMinterPauser} from "openzeppelin-contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
@@ -11,6 +10,7 @@ import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol"
 import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
 import {VotingEscrowTest} from "ve-silo/test/voting-escrow/VotingEscrow.integration.t.sol";
 import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IFeeDistributor.sol";
+import {ERC20Mint} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc FeeDistributorTest --ffi -vvv
 contract FeeDistributorTest is IntegrationTest {
@@ -24,7 +24,7 @@ contract FeeDistributorTest is IntegrationTest {
     FeeDistributorDeploy internal _feeDistributorDeploy;
     VotingEscrowTest internal _votingEscrowTest;
 
-    ERC20PresetMinterPauser internal _feesToken;
+    ERC20Mint internal _feesToken;
     IERC20 internal _erc20feesToken;
 
     address internal _user1 = makeAddr("User1");
@@ -41,7 +41,7 @@ contract FeeDistributorTest is IntegrationTest {
 
         _feesDistributor = _feeDistributorDeploy.run();
 
-        _feesToken = new ERC20PresetMinterPauser("Fees token", "FT");
+        _feesToken = new ERC20Mint("Fees token", "FT");
         _erc20feesToken = IERC20(address(_feesToken));
     }
 

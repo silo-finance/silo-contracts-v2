@@ -12,11 +12,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {IUniswapSwapRouterLike as ISwapRouter} from "./interfaces/IUniswapSwapRouterLike.sol";
 import {IFeeSwap} from "../../interfaces/IFeeSwap.sol";
@@ -39,7 +39,7 @@ contract UniswapSwapper is IFeeSwap, Ownable2Step {
     error AssetIsNotConfigured();
     error PoolNotSet();
 
-    constructor (address _router) {
+    constructor (address _router) Ownable(msg.sender) {
         if (_router == address(0)) revert RouterIsZero();
 
         router = ISwapRouter(_router);

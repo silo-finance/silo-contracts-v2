@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {ERC20PresetMinterPauser, IERC20} from "openzeppelin-contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
@@ -9,6 +10,7 @@ import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChi
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {FeesManagerTest} from "./FeesManager.unit.t.sol";
+import {ERC20Mint} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
@@ -26,7 +28,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
     uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%
 
     FeesManagerTest internal _feesTest;
-    ERC20PresetMinterPauser internal _siloToken;
+    ERC20Mint internal _siloToken;
     IL2BalancerPseudoMinter internal _minter;
     ILiquidityGaugeFactory internal _liquidityGaugeFactory =
         ILiquidityGaugeFactory(makeAddr("Liquidity gauge factory"));
@@ -48,7 +50,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
         L2BalancerPseudoMinterDeploy deploy = new L2BalancerPseudoMinterDeploy();
         deploy.disableDeploymentsSync();
 
-        _siloToken = new ERC20PresetMinterPauser("Test", "T");
+        _siloToken = new ERC20Mint("Test", "T");
 
         setAddress(SILO_TOKEN, address(_siloToken));
 
@@ -80,7 +82,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
     }
 
     function testAddGaugeFactoryPermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _minter.addGaugeFactory(_liquidityGaugeFactory);
 
         vm.prank(_deployer);
@@ -90,7 +92,7 @@ contract L2BalancerPseudoMinterTest is IntegrationTest {
     }
 
     function testRemoveGaugeFactoryPermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _minter.removeGaugeFactory(_liquidityGaugeFactory);
 
         vm.prank(_deployer);

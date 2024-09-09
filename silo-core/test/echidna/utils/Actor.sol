@@ -1,6 +1,9 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.20;
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
@@ -10,11 +13,14 @@ import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 ///  2. Keep track of how much the account has deposited/withdrawn & raise an error if the account can withdraw/redeem more than it deposited/minted.
 /// @dev It's important that other property tests never send tokens/shares to the Actor contract address, or else the accounting will break. This restriction is enforced in restrictAddressToThirdParties()
 ///      If support is added for "harvesting" a vault during property tests, the accounting logic here needs to be updated to reflect cases where an actor can withdraw more than they deposited.
-contract Actor is PropertiesAsserts {
-    TestERC20Token token0;
-    TestERC20Token token1;
-    Silo vault0;
-    Silo vault1;
+contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
+    bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+
+    TestERC20Token immutable token0;
+    TestERC20Token immutable token1;
+    Silo immutable vault0;
+    Silo immutable vault1;
+    PartialLiquidation immutable liquidationModule;
 
     mapping(address => uint256) public tokensDepositedCollateral;
     mapping(address => uint256) public tokensDepositedProtected;
@@ -22,45 +28,220 @@ contract Actor is PropertiesAsserts {
     mapping(address => uint256) public protectedMinted;
     mapping(address => uint256) public collateralMinted;
     mapping(address => uint256) public debtMinted;
+
     constructor(Silo _vault0, Silo _vault1) {
         vault0 = _vault0;
         vault1 = _vault1;
         token0 = TestERC20Token(address(_vault0.asset()));
         token1 = TestERC20Token(address(_vault1.asset()));
+        liquidationModule = PartialLiquidation(_vault0.config().getConfig(address(_vault0)).hookReceiver);
     }
 
-    function accountForOpenedPosition(ISilo.AssetType assetType, bool vaultZero, uint256 _tokensDeposited, uint256 _sharesMinted) internal {
-        address vault = vaultZero ? address(vault0) : address(vault1);
+    function deposit(bool _vaultZero, uint256 _assets) public returns (uint256 shares) {
+        Silo vault = _prepareForDeposit(_vaultZero, _assets);
 
-        if (assetType == ISilo.AssetType.Collateral) {
+        shares = vault.deposit(_assets, address(this));
+        _accountForOpenedPosition(ISilo.CollateralType.Collateral, _vaultZero, _assets, shares);
+    }
+
+    function depositAssetType(bool _vaultZero, uint256 _assets, ISilo.CollateralType _assetType)
+        external
+        returns (uint256 shares)
+    {
+        Silo vault = _prepareForDeposit(_vaultZero, _assets);
+
+        shares = vault.deposit(_assets, address(this), _assetType);
+        _accountForOpenedPosition(_assetType, _vaultZero, _assets, shares);
+    }
+
+    function mint(bool _vaultZero, uint256 _shares) external returns (uint256 assets) {
+        (Silo vault,) = _prepareForDepositShares(_vaultZero, _shares, ISilo.CollateralType.Collateral);
+
+        assets = vault.mint(_shares, address(this));
+        _accountForOpenedPosition(ISilo.CollateralType.Collateral, _vaultZero, assets, _shares);
+    }
+
+    function mintAssetType(bool _vaultZero, uint256 _shares, ISilo.CollateralType _assetType)
+        external
+        returns (uint256 assets)
+    {
+        (Silo vault,) = _prepareForDepositShares(_vaultZero, _shares, _assetType);
+
+        assets = vault.mint(_shares, address(this), _assetType);
+        _accountForOpenedPosition(_assetType, _vaultZero, assets, _shares);
+    }
+
+    function withdraw(bool _vaultZero, uint256 _assets) external returns (uint256 shares) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        shares = vault.withdraw(_assets, address(this), address(this));
+        _accountForClosedPosition(ISilo.CollateralType.Collateral, _vaultZero, _assets, shares);
+    }
+
+    function withdrawAssetType(bool _vaultZero, uint256 _assets, ISilo.CollateralType _assetType)
+        external
+        returns (uint256 shares)
+    {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        shares = vault.withdraw(_assets, address(this), address(this), _assetType);
+        _accountForClosedPosition(_assetType, _vaultZero, _assets, shares);
+    }
+
+    function redeem(bool _vaultZero, uint256 _shares) external returns (uint256 assets) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        assets = vault.redeem(_shares, address(this), address(this));
+        _accountForClosedPosition(ISilo.CollateralType.Collateral, _vaultZero, assets, _shares);
+    }
+
+    function redeemAssetType(bool _vaultZero, uint256 _shares, ISilo.CollateralType _assetType)
+        external
+        returns (uint256 assets)
+    {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        assets = vault.redeem(_shares, address(this), address(this), _assetType);
+        _accountForClosedPosition(_assetType, _vaultZero, assets, _shares);
+    }
+
+    function borrow(bool _vaultZero, uint256 _assets) external returns (uint256 shares) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        shares = vault.borrow(_assets, address(this), address(this));
+        _accountForOpenedDebt(_vaultZero, _assets, shares);
+    }
+
+    function borrowShares(bool _vaultZero, uint256 _shares) external returns (uint256 assets) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        assets = vault.borrowShares(_shares, address(this), address(this));
+        _accountForOpenedDebt(_vaultZero, assets, _shares);
+    }
+
+    function repay(bool _vaultZero, uint256 _assets) external returns (uint256 shares) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        _approveFunds(_vaultZero, _assets, address(vault));
+        shares = vault.repay(_assets, address(this));
+        _accountForClosedDebt(_vaultZero, _assets, shares);
+    }
+
+    function repayShares(bool _vaultZero, uint256 _shares) external returns (uint256 assets) {
+        (Silo vault,) = _prepareForRepayShares(_vaultZero, _shares);
+        assets = vault.repayShares(_shares, address(this));
+        _accountForClosedDebt(_vaultZero, assets, _shares);
+    }
+
+    function transitionCollateral(bool _vaultZero, uint256 _shares, ISilo.CollateralType withdrawType)
+        external
+        returns (uint256 assets)
+    {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        assets = vault.transitionCollateral(_shares, address(this), withdrawType);
+        _accountForClosedPosition(withdrawType, _vaultZero, assets, _shares);
+        _accountForOpenedPosition(withdrawType, _vaultZero, assets, _shares);
+    }
+
+    function switchCollateralToThisSilo(bool _vaultZero) external {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        vault.switchCollateralToThisSilo();
+    }
+
+    function leverageSameAsset(
+        bool _vaultZero,
+        uint256 _depositAssets,
+        uint256 _borrowAssets,
+        address _borrower,
+        ISilo.CollateralType _collateralType
+    ) external returns (uint256 depositedShares, uint256 borrowedShares) {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        return vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
+    }
+
+    function flashLoan(bool _vaultZero, uint256 _amount)
+        public
+        returns (bool success)
+    {
+        Silo vault = _vaultZero ? vault0 : vault1;
+        return vault.flashLoan(this, address(_vaultZero ? token0 : token1), _amount, "");
+    }
+
+    function liquidationCall(
+        address borrower,
+        uint256 debtToCover,
+        bool receiveSToken,
+        ISiloConfig config
+    ) public {
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            config.getConfigsForSolvency(borrower);
+
+        liquidationModule.liquidationCall(
+            collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken
+        );
+    }
+
+    function onFlashLoan(
+        address _initiator,
+        address _token,
+        uint256 _amount,
+        uint256 _fee,
+        bytes calldata // _data
+    )
+        external
+        returns (bytes32)
+    {
+        _requireTotalCap(_token == address(token0), _amount + _fee);
+
+        assert(_initiator == address(this));
+
+        _fund(_token == address(token0), _amount + _fee);
+        TestERC20Token(_token).approve(msg.sender, _amount + _fee);
+        return _FLASHLOAN_CALLBACK;
+    }
+
+    function _accountForOpenedPosition(
+        ISilo.CollateralType _assetType,
+        bool _vaultZero,
+        uint256 _tokensDeposited,
+        uint256 _sharesMinted
+    ) internal {
+        address vault = _vaultZero ? address(vault0) : address(vault1);
+
+        if (_assetType == ISilo.CollateralType.Collateral) {
             tokensDepositedCollateral[vault] += _tokensDeposited;
             collateralMinted[vault] += _sharesMinted;
-        } else if (assetType == ISilo.AssetType.Protected) {
+        } else if (_assetType == ISilo.CollateralType.Protected) {
             tokensDepositedProtected[vault] += _tokensDeposited;
             protectedMinted[vault] += _sharesMinted;
-        } else {
-            tokensBorrowed[vault] += _tokensDeposited;
-            debtMinted[vault] += _sharesMinted;
         }
     }
 
-    function accountForClosedPosition(
-        ISilo.AssetType /* assetType */,
-        bool vaultZero,
+    function _accountForOpenedDebt(bool _vaultZero, uint256 _tokensDeposited, uint256 _sharesMinted) internal {
+        address vault = _vaultZero ? address(vault0) : address(vault1);
+
+        tokensBorrowed[vault] += _tokensDeposited;
+        debtMinted[vault] += _sharesMinted;
+    }
+
+    function _accountForClosedDebt(
+        bool _vaultZero,
         uint256 /* _tokensReceived */,
         uint256 /* _sharesBurned */
     ) internal pure {
-        // address vault = vaultZero ? address(vault0) : address(vault1);
+        // TODO
+    }
+
+    function _accountForClosedPosition(
+        ISilo.CollateralType /* _assetType */,
+        bool _vaultZero,
+        uint256 /* _tokensReceived */,
+        uint256 /* _sharesBurned */
+    ) internal pure {
+        // address vault = _vaultZero ? address(vault0) : address(vault1);
 
         // note: The below code can lead to false positives since it does not account for interest.
         // In order to properly check these properties it needs to be modified so the accounting is correct.
 
-/*         if (assetType == ISilo.AssetType.Collateral) {
+/*         if (_assetType == ISilo.CollateralType.Collateral) {
             assertLte(_sharesBurned, collateralMinted[vault],  "Actor has burned more shares than they ever minted. Implies a rounding or accounting error");
             assertLte(_tokensReceived, tokensDepositedCollateral[vault],  "Actor has withdrawn more tokens than they ever deposited. Implies a rounding or accounting error");
             tokensDepositedCollateral[vault] -= _tokensReceived;
             collateralMinted[vault] -= _sharesBurned;
-        } else if (assetType == ISilo.AssetType.Protected) {
+        } else if (_assetType == ISilo.CollateralType.Protected) {
             assertLte(_sharesBurned, protectedMinted[vault],  "Actor has burned more shares than they ever minted. Implies a rounding or accounting error");
             assertLte(_tokensReceived, tokensDepositedProtected[vault],  "Actor has withdrawn more tokens than they ever deposited. Implies a rounding or accounting error");
             tokensDepositedProtected[vault] -= _tokensReceived;
@@ -73,132 +254,66 @@ contract Actor is PropertiesAsserts {
         } */
     }
 
-    function fund(bool vaultZero, uint256 amount) internal {
-        TestERC20Token token = vaultZero ? token0 : token1;
-
-        token.mint(address(this), amount);
+    function _prepareForDeposit(bool _vaultZero, uint256 amount) internal returns (Silo vault) {
+        vault = _vaultZero ? vault0 : vault1;
+        _fund(_vaultZero, amount);
+        _approveFunds(_vaultZero, amount, address(vault));
     }
 
-    function approveFunds(bool vaultZero, uint256 amount, address vault) internal {
-        TestERC20Token token = vaultZero ? token0 : token1;
+    function _prepareForDepositShares(bool _vaultZero, uint256 _shares, ISilo.CollateralType _assetType)
+        internal
+        returns (Silo vault, uint256 amount)
+    {
+        vault = _vaultZero ? vault0 : vault1;
+        amount = vault.previewMint(_shares, _assetType);
 
+        _prepareForDeposit(_vaultZero, amount);
+    }
+
+    function _prepareForRepayShares(bool _vaultZero, uint256 _shares) internal returns (Silo vault, uint256 amount) {
+        vault = _vaultZero ? vault0 : vault1;
+        amount = vault.previewRepayShares(_shares);
+
+        _approveFunds(_vaultZero, amount, address(vault));
+    }
+
+    function _prepareForLiquidationRepay(bool _vaultZero, uint256 debtToRepay) internal returns (Silo vault) {
+        vault = _vaultZero ? vault0 : vault1;
+        TestERC20Token token = _vaultZero ? token0 : token1;
+
+        uint256 balance = token.balanceOf(address(this));
+
+        if (balance < debtToRepay) {
+            if (type(uint256).max - token.totalSupply() < debtToRepay - balance) {
+                revert("total supply limit - require it for echidna, so it does not fail on it");
+            }
+
+            token.mint(address(this), debtToRepay - balance);
+        }
+
+        _approveFunds(_vaultZero, debtToRepay, address(vault));
+    }
+
+    function _fund(bool _vaultZero, uint256 _amount) internal {
+        TestERC20Token token = _vaultZero ? token0 : token1;
+        uint256 balance = token.balanceOf(address(this));
+
+        if (balance < _amount) {
+            token.mint(address(this), _amount - balance);
+        }
+    }
+
+    function _approveFunds(bool _vaultZero, uint256 amount, address vault) internal {
+        TestERC20Token token = _vaultZero ? token0 : token1;
         token.approve(vault, amount);
     }
 
-    function prepareForDeposit(bool vaultZero, uint256 amount) internal returns (Silo vault){
-        vault = vaultZero ? vault0 : vault1;
-        fund(vaultZero, amount);
-        approveFunds(vaultZero, amount, address(vault));
-    }
+    function _requireTotalCap(bool _vaultZero, uint256 requiredBalance) internal view {
+        TestERC20Token token = _vaultZero ? token0 : token1;
+        uint256 balance = token.balanceOf(address(this));
 
-    function prepareForDepositShares(bool vaultZero, uint256 shares, ISilo.AssetType assetType) internal returns (Silo vault, uint256 amount) {
-        vault = vaultZero ? vault0 : vault1;
-        amount = vault.previewMint(shares, assetType);
-
-        prepareForDeposit(vaultZero, amount);
-    }
-
-    function prepareForRepayShares(bool vaultZero, uint256 shares) internal returns (Silo vault, uint256 amount) {
-        vault = vaultZero ? vault0 : vault1;
-        amount = vault.previewRepayShares(shares);
-        
-        approveFunds(vaultZero, amount, address(vault));
-    }
-
-    function deposit(bool vaultZero, uint256 assets) public returns (uint256 shares) {
-        Silo vault = prepareForDeposit(vaultZero, assets);
-
-        shares = vault.deposit(assets, address(this));
-        accountForOpenedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
-    }
-
-    function depositAssetType(bool vaultZero, uint256 assets, ISilo.AssetType assetType) public returns (uint256 shares) {
-        Silo vault = prepareForDeposit(vaultZero, assets);
-
-        shares = vault.deposit(assets, address(this), assetType);
-        accountForOpenedPosition(assetType, vaultZero, assets, shares);
-    }
-
-    function mint(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        (Silo vault,) = prepareForDepositShares(vaultZero, shares, ISilo.AssetType.Collateral);
-
-        assets = vault.mint(shares, address(this));
-        accountForOpenedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
-    }
-
-    function mintAssetType(bool vaultZero, uint256 shares, ISilo.AssetType assetType) public returns (uint256 assets) {
-        (Silo vault,) = prepareForDepositShares(vaultZero, shares, assetType);
-
-        assets = vault.mint(shares, address(this), assetType);
-        accountForOpenedPosition(assetType, vaultZero, assets, shares);
-    }
-
-    function withdraw(bool vaultZero, uint256 assets) public returns (uint256 shares) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        shares = vault.withdraw(assets, address(this), address(this));
-        accountForClosedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
-    }
-
-    function withdrawAssetType(bool vaultZero, uint256 assets, ISilo.AssetType assetType) public returns (uint256 shares) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        shares = vault.withdraw(assets, address(this), address(this), assetType);
-        accountForClosedPosition(assetType, vaultZero, assets, shares);
-    }
-
-    function redeem(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        assets = vault.redeem(shares, address(this), address(this));
-        accountForClosedPosition(ISilo.AssetType.Collateral, vaultZero, assets, shares);
-    }
-
-    function redeemAssetType(bool vaultZero, uint256 shares, ISilo.AssetType assetType) public returns (uint256 assets) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        assets = vault.redeem(shares, address(this), address(this), assetType);
-        accountForClosedPosition(assetType, vaultZero, assets, shares);
-    }
-
-    function borrow(bool vaultZero, uint256 assets) public returns (uint256 shares) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        shares = vault.borrow(assets, address(this), address(this));
-        accountForOpenedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
-    }
-
-    function borrowShares(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        assets = vault.borrowShares(shares, address(this), address(this));
-        accountForOpenedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
-    }
-
-    function repay(bool vaultZero, uint256 assets) public returns (uint256 shares) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        approveFunds(vaultZero, assets, address(vault));
-        shares = vault.repay(assets, address(this));
-        accountForClosedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
-    }
-
-    function repayShares(bool vaultZero, uint256 shares) public returns (uint256 assets) {
-        (Silo vault,) = prepareForRepayShares(vaultZero, shares);
-        assets = vault.repayShares(shares, address(this));
-        accountForClosedPosition(ISilo.AssetType.Debt, vaultZero, assets, shares);
-    }
-
-    function transitionCollateral(bool vaultZero, uint256 shares, ISilo.AssetType withdrawType) public returns (uint256 assets) {
-        Silo vault = vaultZero ? vault0 : vault1;
-        assets = vault.transitionCollateral(shares, address(this), withdrawType);
-        accountForClosedPosition(withdrawType, vaultZero, assets, shares);
-        accountForOpenedPosition(withdrawType, vaultZero, assets, shares);
-    }
-
-    function liquidationCall(
-        bool _vaultZeroWithDebt,
-        address borrower,
-        uint256 debtToCover,
-        bool receiveSToken,
-        ISiloConfig config
-    ) public {
-        Silo vault = prepareForDeposit(_vaultZeroWithDebt, debtToCover);
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            config.getConfigs(address(vault));
-        vault.liquidationCall(collateralConfig.token, debtConfig.token, borrower, debtToCover, receiveSToken);
+        if (balance < requiredBalance) {
+            require(type(uint256).max - token.totalSupply() >= requiredBalance - balance, "total supply limit");
+        }
     }
 }

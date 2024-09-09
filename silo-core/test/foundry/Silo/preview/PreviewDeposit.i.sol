@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -28,20 +28,20 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz2
+    forge test -vv --ffi --mt test_previewDepositType_beforeInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint256 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == 0 || _type == 1);
 
         uint256 previewShares = _defaultType
             ? silo0.previewDeposit(_assets)
-            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+            : silo0.previewDeposit(_assets, ISilo.CollateralType(_type));
 
         uint256 shares = _defaultType
             ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+            : _deposit(_assets, depositor, ISilo.CollateralType(_type));
 
         assertEq(previewShares, shares, "previewDeposit must return as close but NOT more");
     }
@@ -49,25 +49,25 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == 0 || _type == 1);
 
         uint256 sharesBefore = _defaultType
             ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+            : _deposit(_assets, depositor, ISilo.CollateralType(_type));
 
         vm.warp(block.timestamp + 365 days);
         silo0.accrueInterest();
 
         uint256 previewShares = _defaultType
             ? silo0.previewDeposit(_assets)
-            : silo0.previewDeposit(_assets, ISilo.AssetType(_type));
+            : silo0.previewDeposit(_assets, ISilo.CollateralType(_type));
 
         uint256 gotShares = _defaultType
             ? _deposit(_assets, depositor)
-            : _deposit(_assets, depositor, ISilo.AssetType(_type));
+            : _deposit(_assets, depositor, ISilo.CollateralType(_type));
 
         assertEq(previewShares, gotShares, "previewDeposit must return as close but NOT more");
         assertEq(previewShares, sharesBefore, "without interest shares must be the same");
@@ -76,18 +76,22 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_withInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewDeposit_withInterest_fuzz(uint256 _assets, bool _protected) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewDeposit_withInterest_1token_fuzz(uint256 _assets, bool _protected) public {
+        _previewDeposit_withInterest(_assets, _protected);
+    }
+
+    function _previewDeposit_withInterest(uint256 _assets, bool _protected) private {
         vm.assume(_assets < type(uint128).max);
         vm.assume(_assets > 0);
 
-        ISilo.AssetType assetType = _protected ? ISilo.AssetType.Protected : ISilo.AssetType.Collateral;
+        ISilo.CollateralType assetType = _protected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
 
         uint256 sharesBefore = _deposit(_assets, depositor, assetType);
         _depositForBorrow(_assets, depositor);
 
         if (_protected) {
-            _makeDeposit(silo1, token1, _assets, depositor, ISilo.AssetType.Protected);
+            _makeDeposit(silo1, token1, _assets, depositor, ISilo.CollateralType.Protected);
         }
 
         _deposit(_assets / 10 == 0 ? 2 : _assets, borrower);

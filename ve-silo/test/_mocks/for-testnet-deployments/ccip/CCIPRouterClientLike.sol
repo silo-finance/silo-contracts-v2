@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IRouterClient} from "chainlink-ccip/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 contract CCIPRouterClientLike is IRouterClient {
     uint256 public constant FEE = 0.001e18;

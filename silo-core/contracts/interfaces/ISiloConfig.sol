@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-interface ISiloConfig {
+import {ISilo} from "./ISilo.sol";
+import {ICrossReentrancyGuard} from "./ICrossReentrancyGuard.sol";
+
+interface ISiloConfig is ICrossReentrancyGuard {
     struct InitData {
         /// @notice The address of the deployer of the Silo
         address deployer;
+
+        /// @notice Address of the hook receiver called on every before/after action on Silo
+        address hookReceiver;
 
         /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
         /// the Silo.
@@ -25,10 +31,6 @@ interface ISiloConfig {
         /// @notice Address of the interest rate model
         address interestRateModel0;
 
-        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be resued between multiple IRMs (Interest Rate Models).
-        address interestRateModelConfig0;
-
         /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
         /// if borrower can borrow given amount of assets. MaxLtv is in 18 decimals points
         uint256 maxLtv0;
@@ -46,16 +48,6 @@ interface ISiloConfig {
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote0;
 
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver0;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver0;
-
         /// @notice Address of the second token
         address token1;
 
@@ -70,10 +62,6 @@ interface ISiloConfig {
 
         /// @notice Address of the interest rate model
         address interestRateModel1;
-
-        /// @notice Address of the interest rate model configuration. Configuration is a separately deployed contract
-        /// with immutable config that can be reused between multiple IRMs (Interest Rate Models).
-        address interestRateModelConfig1;
 
         /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
         /// if borrower can borrow given amount of assets. maxLtv is in 18 decimals points
@@ -90,23 +78,12 @@ interface ISiloConfig {
 
         /// @notice Indicates if a beforeQuote on oracle contract should be called before quoting price
         bool callBeforeQuote1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for protected (non-borrowable)
-        /// collateral
-        address protectedHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for collateral
-        address collateralHookReceiver1;
-
-        /// @notice Address of the hook receiver called on every share token transfer for debt
-        address debtHookReceiver1;
     }
 
     struct ConfigData {
         uint256 daoFee;
         uint256 deployerFee;
         address silo;
-        address otherSilo;
         address token;
         address protectedShareToken;
         address collateralShareToken;
@@ -118,18 +95,69 @@ interface ISiloConfig {
         uint256 lt;
         uint256 liquidationFee;
         uint256 flashloanFee;
+        address hookReceiver;
         bool callBeforeQuote;
     }
 
-    error WrongSilo();
+    struct DepositConfig {
+        address silo;
+        address token;
+        address collateralShareToken;
+        address protectedShareToken;
+        uint256 daoFee;
+        uint256 deployerFee;
+        address interestRateModel;
+    }
 
-    // solhint-disable-next-line func-name-mixedcase
-    function SILO_ID() external view returns (uint256);
+    error OnlySilo();
+    error OnlySiloOrTokenOrHookReceiver();
+    error OnlyShareToken();
+    error OnlySiloOrDebtShareToken();
+    error WrongSilo();
+    error OnlyDebtShareToken();
+    error DebtExistInOtherSilo();
+    error NoDebt();
+    error CollateralTypeDidNotChanged();
+    error InvalidConfigOrder();
+    error FeeTooHigh();
+    error InvalidDebtShareToken();
+
+    /// @dev It should be called on debt transfer. It sets collateral silo if the `_to` address doesn't have one
+    /// @param _sender sender address
+    /// @param _recipient recipient address
+    function onDebtTransfer(address _sender, address _recipient) external;
+
+    /// @notice Set collateral silo.
+    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
+    /// @dev Always set collateral silo the same as msg.sender.
+    /// @param _borrower borrower address
+    function setThisSiloAsCollateralSilo(address _borrower) external;
+
+    /// @notice Set collateral silo
+    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
+    /// @dev Always set collateral silo opposite to the msg.sender.
+    /// @param _borrower borrower address
+    function setOtherSiloAsCollateralSilo(address _borrower) external;
+
+    /// @notice Accrue interest for the silo
+    /// @param _silo silo for which accrue interest
+    function accrueInterestForSilo(address _silo) external;
+
+    /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
+    function accrueInterestForBothSilos() external;
+
+    function borrowerCollateralSilo(address _borrower) external view returns (address collateralSilo);
+
+    /// @notice Retrieves the silo ID
+    /// @dev Each silo is assigned a unique ID. ERC-721 token is minted with identical ID to deployer.
+    /// An owner of that token receives the deployer fees.
+    /// @return siloId The ID of the silo
+    function SILO_ID() external view returns (uint256 siloId); // solhint-disable-line func-name-mixedcase
 
     /// @notice Retrieves the addresses of the two silos
     /// @return silo0 The address of the first silo
     /// @return silo1 The address of the second silo
-    function getSilos() external view returns (address, address);
+    function getSilos() external view returns (address silo0, address silo1);
 
     /// @notice Retrieves the asset associated with a specific silo
     /// @dev This function reverts for incorrect silo address input
@@ -137,19 +165,53 @@ interface ISiloConfig {
     /// @return asset The address of the asset associated with the specified silo
     function getAssetForSilo(address _silo) external view returns (address asset);
 
+    /// @notice Verfies if the borrower has debt in other silo by checkeing the debt share token balance
+    /// @param _thisSilo The address of the silo in respect of which the debt is checked
+    /// @param _borrower The address of the borrower for which the debt is checked
+    /// @return hasDebt true if the borrower has debt in other silo
+    function hasDebtInOtherSilo(address _thisSilo, address _borrower) external view returns (bool hasDebt);
+
+    /// @notice Retrieves the debt silo associated with a specific borrower
+    /// @dev This function reverts if debt present in two silo (should not happen)
+    /// @param _borrower The address of the borrower for which the debt silo is being retrievedååå
+    function getDebtSilo(address _borrower) external view returns (address debtSilo);
+
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
-    /// @dev This function reverts for incorrect silo address input
-    /// @param _silo The address of the silo for which configuration data is being retrieved. Config for this silo will
-    /// be at index 0.
-    /// @return configData0 The configuration data for the specified silo.
-    /// @return configData1 The configuration data for the other silo.
-    function getConfigs(address _silo) external view returns (ConfigData memory, ConfigData memory);
+    /// @param borrower borrower address for which debtConfig will be returned
+    /// @return collateralConfig The configuration data for collateral silo (empty if there is no debt).
+    /// @return debtConfig The configuration data for debt silo (empty if there is no debt).
+    function getConfigsForSolvency(address borrower)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
 
     /// @notice Retrieves configuration data for a specific silo
-    /// @dev This function reverts for incorrect silo address input
+    /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
-    /// @return configData The configuration data for the specified silo
-    function getConfig(address _silo) external view returns (ConfigData memory);
+    /// @return config The configuration data for the specified silo
+    function getConfig(address _silo) external view returns (ConfigData memory config);
+
+    /// @notice Retrieves configuration data for a specific silo for withtdraw fn.
+    /// @dev This function reverts for incorrect silo address input.
+    /// @param _silo The address of the silo for which configuration data is being retrieved
+    /// @return depositConfig The configuration data for the specified silo (always config for `_silo`)
+    /// @return collateralConfig The configuration data for the collateral silo (empty if there is no debt)
+    /// @return debtConfig The configuration data for the debt silo (empty if there is no debt)
+    function getConfigsForWithdraw(address _silo, address _borrower) external view returns (
+        DepositConfig memory depositConfig,
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig
+    );
+
+    /// @notice Retrieves configuration data for a specific silo for borrow fn.
+    /// @dev This function reverts for incorrect silo address input.
+    /// @param _debtSilo The address of the silo for which configuration data is being retrieved
+    /// @return collateralConfig The configuration data for the collateral silo (always other than `_debtSilo`)
+    /// @return debtConfig The configuration data for the debt silo (always config for `_debtSilo`)
+    function getConfigsForBorrow(address _debtSilo)
+        external
+        view
+        returns (ConfigData memory collateralConfig, ConfigData memory debtConfig);
 
     /// @notice Retrieves fee-related information for a specific silo
     /// @dev This function reverts for incorrect silo address input
@@ -173,4 +235,23 @@ interface ISiloConfig {
         external
         view
         returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+
+    /// @notice Retrieves the share token and the silo token associated with a specific silo
+    /// @param _silo The address of the silo for which the share token and silo token are being retrieved
+    /// @param _collateralType The type of collateral
+    /// @return shareToken The address of the share token (collateral or protected collateral)
+    /// @return asset The address of the silo token
+    function getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType)
+        external
+        view
+        returns (address shareToken, address asset);
+
+    /// @notice Retrieves the share token and the silo token associated with a specific silo
+    /// @param _silo The address of the silo for which the share token and silo token are being retrieved
+    /// @return shareToken The address of the share token (debt)
+    /// @return asset The address of the silo token
+    function getDebtShareTokenAndAsset(address _silo)
+        external
+        view
+        returns (address shareToken, address asset);
 }

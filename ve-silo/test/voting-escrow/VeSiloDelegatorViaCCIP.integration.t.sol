@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
+import {OwnableUpgradeable} from "openzeppelin5-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
+import {VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interfaces/IVeSiloDelegatorViaCCIP.sol";
+import {VeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/VeSiloDelegatorViaCCIP.sol";
 import {ICCIPMessageSender, CCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowCCIPRemapper.sol";
 import {VotingEscrowTest} from "./VotingEscrow.integration.t.sol";
@@ -17,14 +21,14 @@ import {ISmartWalletChecker} from "ve-silo/contracts/voting-escrow/interfaces/IS
 import {ICCIPExtraArgsConfig} from "ve-silo/contracts/gauges/interfaces/ICCIPExtraArgsConfig.sol";
 import {ICCIPGauge} from "ve-silo/contracts/gauges/interfaces/ICCIPGauge.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc VeSiloDelegatorViaCCIP --ffi -vvv
-contract VeSiloDelegatorViaCCIP is IntegrationTest {
+// FOUNDRY_PROFILE=ve-silo-test forge test --mc VeSiloDelegatorViaCCIPTest --ffi -vvv
+contract VeSiloDelegatorViaCCIPTest is IntegrationTest {
     IVeSiloDelegatorViaCCIP public veSiloDelegator;
     VotingEscrowTest public veTest;
     IVeSilo public votingEscrow;
 
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 4319390;
-    uint64 internal constant _DS_CHAIN_SELECTOR = 12532609583862916517; // Polygon Mumbai
+    uint256 internal constant _FORKING_BLOCK_NUMBER = 201222490;
+    uint64 internal constant _DS_CHAIN_SELECTOR = 5009297550715157269; // Ethereum
 
     address internal _localUser = makeAddr("localUser");
     address internal _votingEscrowCCIPRemapper = makeAddr("VotingEscrowCCIPRemapper");
@@ -32,6 +36,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
     address internal _childChainReceiver = makeAddr("Child chain receiver");
     address internal _deployer;
     address internal _link;
+    address internal _timelock;
 
     event SentUserBalance(
         uint64 dstChainSelector,
@@ -48,7 +53,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
 
     function setUp() public {
         vm.createSelectFork(
-            getChainRpcUrl(SEPOLIA_ALIAS),
+            getChainRpcUrl(ARBITRUM_ONE_ALIAS),
             _FORKING_BLOCK_NUMBER
         );
 
@@ -68,12 +73,38 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
-
+        _timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
         _link = getAddress(AddrKey.LINK);
     }
 
+    function testShouldFailToReinitialize() public {
+        address newOwner = makeAddr("newOwner");
+
+        VeSiloDelegatorViaCCIP delegatorProxy = VeSiloDelegatorViaCCIP(address(veSiloDelegator));
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        delegatorProxy.initialize(newOwner);
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        vm.prank(_timelock);
+        delegatorProxy.initialize(newOwner);
+
+        address implementation = VeSiloDeployments.get(VeSiloContracts.VE_SILO_DELEGATOR_VIA_CCIP, getChainAlias());
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        VeSiloDelegatorViaCCIP(implementation).initialize(newOwner);
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        vm.prank(_timelock);
+        VeSiloDelegatorViaCCIP(implementation).initialize(newOwner);
+    }
+
     function testChildChainReceiveUpdatePermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(
+            OwnableUpgradeable.OwnableUnauthorizedAccount.selector,
+            address(this)
+        ));
+
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
 
         _setChildChainReceiver();
@@ -85,13 +116,17 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         ICCIPExtraArgsConfig delegator = ICCIPExtraArgsConfig(address(veSiloDelegator));
 
         // Test permissions and configuration
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(
+            OwnableUpgradeable.OwnableUnauthorizedAccount.selector,
+            address(this)
+        ));
+
         delegator.setExtraArgs(anyExtraArgs);
 
         vm.expectEmit(false, false, false, true);
         emit ICCIPExtraArgsConfig.ExtraArgsUpdated(anyExtraArgs);
 
-        vm.prank(_deployer);
+        vm.prank(_timelock);
         delegator.setExtraArgs(anyExtraArgs);
 
         assertEq(
@@ -215,7 +250,7 @@ contract VeSiloDelegatorViaCCIP is IntegrationTest {
         vm.expectEmit(false, false, true, true);
         emit ChildChainReceiverUpdated(_DS_CHAIN_SELECTOR, _childChainReceiver);
 
-        vm.prank(_deployer);
+        vm.prank(_timelock);
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
     }
 

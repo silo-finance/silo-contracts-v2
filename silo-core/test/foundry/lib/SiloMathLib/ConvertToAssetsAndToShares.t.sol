@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloMathLib.sol";
@@ -9,12 +9,12 @@ contract ConvertToAssetsAndToSharesTest is Test {
     /*
     forge test -vv --mt test_convertToAssetsAndToShares
     */
-    function test_convertToAssetsAndToShares() public {
+    function test_convertToAssetsAndToShares() public pure {
         uint256 _assetsOrShares = 10000;
         uint256 _totalAssets = 250000;
         uint256 _totalShares = 250000;
-        MathUpgradeable.Rounding roundingToAssets = MathUpgradeable.Rounding.Up;
-        MathUpgradeable.Rounding roundingToShares = MathUpgradeable.Rounding.Down;
+        Math.Rounding roundingToAssets = Rounding.UP;
+        Math.Rounding roundingToShares = Rounding.DOWN;
 
         uint256 assets;
         uint256 shares;

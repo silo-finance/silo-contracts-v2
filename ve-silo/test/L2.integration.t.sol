@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
@@ -16,23 +15,16 @@ import {IChildChainGaugeRegistry} from "ve-silo/contracts/gauges/interfaces/IChi
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
 import {IL2BalancerPseudoMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IL2BalancerPseudoMinter.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
-import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {VotingEscrowChildChainTest} from "ve-silo/test/voting-escrow/VotingEscrowChildChain.unit.t.sol";
+import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
 } from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
 // solhint-disable max-states-count
-
-contract ERC20 is ERC20WithoutMint {
-    constructor(string memory name, string memory symbol) ERC20WithoutMint(name, symbol) {}
-    function mint(address _account, uint256 _amount) external {
-        _mint(_account, _amount);
-    }
-}
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
@@ -66,8 +58,6 @@ contract L2Test is IntegrationTest {
     bool internal _executeDeploy = true;
 
     function setUp() public virtual {
-        setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
-
         if (_executeDeploy) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
             _deployer = vm.addr(deployerPrivateKey);
@@ -78,12 +68,16 @@ contract L2Test is IntegrationTest {
                 _FORKING_BLOCK_NUMBER
             );
 
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
+
             _dummySiloToken();
 
             L2Deploy deploy = new L2Deploy();
             deploy.disableDeploymentsSync();
 
             deploy.run();
+        } else {
+            setAddress(AddrKey.L2_MULTISIG, _l2Multisig);
         }
 
         _factory = IChildChainGaugeFactory(getAddress(VeSiloContracts.CHILD_CHAIN_GAUGE_FACTORY));
@@ -93,8 +87,8 @@ contract L2Test is IntegrationTest {
         _votingEscrowChildTest = new VotingEscrowChildChainTest();
     }
 
-    function testIt() public {
-        _mockCalls();
+    function testChildChainIntegration() public {
+        _mockSiloCoreCalls(); // mock silo core calls as it is not deployed
 
         // create gauges
         ISiloChildChainGauge gauge = _createGauge();
@@ -109,29 +103,39 @@ contract L2Test is IntegrationTest {
         // transfer incentives (SILO token)
         _transferIncentives(gauge);
 
-        // Expect to transfer all incentives to the `_l2PseudoMinter` during the user checkpoint
-        gauge.user_checkpoint(_bob);
+        // user checkpoint and inflation rate
+        _userCheckpointAndInflationRate(gauge);
 
         uint256 integrateCheckpointBob = gauge.integrate_checkpoint_of(_bob);
         assertTrue(integrateCheckpointBob != 0, "User is not check pointed");
 
         _verifyClaimable(ISiloChildChainGauge(gauge));
 
+        _mintIncentives(gauge);
+
+        _verifyMintedStats(gauge);
+
+        _rewardwsFees(gauge);
+    }
+
+    function _mintIncentives(ISiloChildChainGauge _gauge) internal {
         uint256 pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
         assertEq(pseudoMinterBalance, _INCENTIVES_AMOUNT, "Invalid `_l2PseudoMinter` balance");
 
         vm.warp(block.timestamp + 10 days);
 
         vm.prank(_bob);
-        _l2PseudoMinter.mint(address(gauge));
+        _l2PseudoMinter.mint(address(_gauge));
 
         uint256 userBalance = _siloToken.balanceOf(_bob);
         assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
 
-        _verifyMintedStats(gauge);
+        uint256 claimableTotal = _gauge.claimable_tokens(_bob);
+
+        assertEq(claimableTotal, 0, "Expect to have an empty claimable balance");
     }
 
-    function _verifyMintedStats(ISiloChildChainGauge _gauge) internal {
+    function _verifyMintedStats(ISiloChildChainGauge _gauge) internal view {
         uint256 totalMinted = _l2PseudoMinter.minted(_bob, address(_gauge));
         uint256 expectedMinted = totalMinted - (totalMinted * 10 / 100 + totalMinted * 20 / 100);
         uint256 mintedToUser = _l2PseudoMinter.mintedToUser(_bob, address(_gauge));
@@ -150,12 +154,12 @@ contract L2Test is IntegrationTest {
     }
 
     function _createGauge() internal returns (ISiloChildChainGauge gauge) {
-        gauge = ISiloChildChainGauge(_factory.create(_hookReceiver));
+        gauge = ISiloChildChainGauge(_factory.create(_shareToken));
         vm.label(address(gauge), "gauge");
     }
 
     function _transferVotingPower() internal {
-        vm.prank(_deployer);
+        vm.prank(_l2Multisig);
         _votingEscrowChild.setSourceChainSender(_sender);
 
         bytes memory data = _votingEscrowChildTest.balanceTransferData();
@@ -194,6 +198,10 @@ contract L2Test is IntegrationTest {
         claimableTotal = _gauge.claimable_tokens(_bob);
         (claimableTokens, feeDao, feeDeployer) = _gauge.claimable_tokens_with_fees(_bob);
 
+        assertNotEq(feeDao, 0, "DAO fee is zero");
+        assertNotEq(feeDeployer, 0, "Deployer fee is zero");
+        assertNotEq(claimableTokens, 0, "Claimable tokens are zero");
+
         assertTrue(claimableTotal == (claimableTokens + feeDao + feeDeployer));
 
         uint256 expectedFeeDao = claimableTotal * 10 / 100;
@@ -205,7 +213,27 @@ contract L2Test is IntegrationTest {
         assertEq(expectedToReceive, claimableTokens, "Wrong number of the user tokens");
     }
 
-    function _mockCalls() internal {
+    function _userCheckpointAndInflationRate(ISiloChildChainGauge _gauge) internal {
+        // inflation retes before the user checkpoint
+        uint256 currentWeek = block.timestamp / 1 weeks;
+        uint256 inflationRateBefore = _gauge.inflation_rate(currentWeek);
+
+        uint256 siloAmountPerWeek = _siloToken.balanceOf(address(_gauge));
+
+        // Expect to transfer all incentives to the `_l2PseudoMinter` during the user checkpoint
+        _gauge.user_checkpoint(_bob);
+
+        uint256 currentWeekTimestamp = currentWeek * 1 weeks;
+        uint256 nextWeekTimestamp = currentWeekTimestamp + 1 weeks;
+
+        uint256 expectedInflationRage = inflationRateBefore + siloAmountPerWeek / (nextWeekTimestamp - block.timestamp);
+
+        uint256 inflationRateAfter = _gauge.inflation_rate(currentWeek);
+
+        assertEq(inflationRateAfter, expectedInflationRage, "Inflation rate is not correct");
+    }
+
+    function _mockSiloCoreCalls() internal {
         vm.mockCall(
             _shareToken,
             abi.encodeWithSelector(IShareToken.balanceOf.selector, _bob),
@@ -225,9 +253,9 @@ contract L2Test is IntegrationTest {
         );
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(
@@ -246,5 +274,34 @@ contract L2Test is IntegrationTest {
     function _dummySiloToken() internal {
         _siloToken = new ERC20("Silo test token", "SILO");
         setAddress(getChainId(), SILO_TOKEN, address(_siloToken));
+    }
+
+    function _rewardwsFees(ISiloChildChainGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+
+        ERC20 rewardToken = new ERC20("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(_l2Multisig);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

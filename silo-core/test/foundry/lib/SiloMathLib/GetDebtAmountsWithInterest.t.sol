@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloMathLib.sol";
@@ -9,7 +9,7 @@ contract GetDebtAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getDebtAmountsWithInterest
     */
-    function test_getDebtAmountsWithInterest() public {
+    function test_getDebtAmountsWithInterest() public pure {
         uint256 debtAssets;
         uint256 rcompInDp;
 

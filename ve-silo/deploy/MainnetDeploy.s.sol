@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
@@ -11,8 +11,6 @@ import {VotingEscrowRemapperDeploy} from "./VotingEscrowRemapperDeploy.s.sol";
 import {GaugeAdderDeploy} from "./GaugeAdderDeploy.s.sol";
 import {StakelessGaugeCheckpointerAdaptorDeploy} from "ve-silo/deploy/StakelessGaugeCheckpointerAdaptorDeploy.s.sol";
 import {FeeDistributorDeploy} from "ve-silo/deploy/FeeDistributorDeploy.s.sol";
-import {FeeSwapperDeploy} from "ve-silo/deploy/FeeSwapperDeploy.s.sol";
-import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {SmartWalletCheckerDeploy} from "./SmartWalletCheckerDeploy.s.sol";
 import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
 import {CCIPGaugeCheckpointerDeploy} from "ve-silo/deploy/CCIPGaugeCheckpointerDeploy.s.sol";
@@ -54,8 +52,6 @@ contract MainnetDeploy is CommonDeploy {
         LiquidityGaugeFactoryDeploy factoryDeploy = new LiquidityGaugeFactoryDeploy();
         GaugeAdderDeploy gaugeAdderDeploy = new GaugeAdderDeploy();
         FeeDistributorDeploy feeDistributorDeploy = new FeeDistributorDeploy();
-        FeeSwapperDeploy feeSwapperDeploy = new FeeSwapperDeploy();
-        UniswapSwapperDeploy uniswapSwapperDeploy = new UniswapSwapperDeploy();
         SmartWalletCheckerDeploy smartWalletCheckerDeploy = new SmartWalletCheckerDeploy();
 
         if (_isMainnetSimulation) {
@@ -71,8 +67,6 @@ contract MainnetDeploy is CommonDeploy {
 
         if (!_isMainnetSimulation) {
             feeDistributorDeploy.run();
-            feeSwapperDeploy.run();
-            uniswapSwapperDeploy.run();
         }
     }
 

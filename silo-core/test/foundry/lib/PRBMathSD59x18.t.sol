@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "openzeppelin-contracts/utils/Strings.sol";
+import "openzeppelin5/utils/Strings.sol";
 import "silo-core/contracts/lib/PRBMathSD59x18.sol";
 
 import "../_common/Assertions.sol";
@@ -32,7 +32,7 @@ contract PRBMathSD59x18Test is Assertions, PRBMathSD59x18_exp2_data, PRBMathSD59
         }
     }
 
-    function test_PRBMathCommon_exp2_withIntegers() public {
+    function test_PRBMathCommon_exp2_withIntegers() public pure {
         (int256[] memory inputs, int256[] memory expected) = exp2IntegersData();
 
         unchecked {

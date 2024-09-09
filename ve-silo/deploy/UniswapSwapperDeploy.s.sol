@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
-
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+pragma solidity 0.8.24;
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";

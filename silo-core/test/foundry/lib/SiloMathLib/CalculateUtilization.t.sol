@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "silo-core/contracts/lib/SiloMathLib.sol";
@@ -9,7 +9,7 @@ contract CalculateUtilizationTest is Test {
     /*
     forge test -vv --mt test_calculateUtilization_fuzz
     */
-    function test_calculateUtilization_fuzz(uint256 _collateralAssets, uint256 _debtAssets) public {
+    function test_calculateUtilization_fuzz(uint256 _collateralAssets, uint256 _debtAssets) public pure {
         uint256 dp = 1e18;
 
         assertEq(SiloMathLib.calculateUtilization(dp, 1e18, 0.9e18), 0.9e18);
@@ -27,7 +27,10 @@ contract CalculateUtilizationTest is Test {
     /*
     forge test -vv --mt test_calculateUtilizationWithMax_fuzz
     */
-    function test_calculateUtilizationWithMax_fuzz(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets) public {
+    function test_calculateUtilizationWithMax_fuzz(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)
+        public
+        pure
+    {
         vm.assume(_debtAssets < type(uint128).max);
         vm.assume(_dp < type(uint128).max);
 

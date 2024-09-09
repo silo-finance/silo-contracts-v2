@@ -12,17 +12,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IERC20} from "balancer-labs/v2-interfaces/solidity-utils/openzeppelin/IERC20.sol";
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IMainnetBalancerMinter.sol";
+import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 import {IStakelessGauge} from "../interfaces/IStakelessGauge.sol";
 
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2Step {
     // solhint-disable ordering
@@ -53,7 +54,7 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
 
     address private _checkpointer;
 
-    constructor(IMainnetBalancerMinter minter) {
+    constructor(IMainnetBalancerMinter minter) Ownable(msg.sender) {
         IBalancerTokenAdmin tokenAdmin = IBalancerTokenAdmin(minter.getBalancerTokenAdmin());
         IERC20 balToken = IERC20(address(tokenAdmin.getBalancerToken()));
         IGaugeController gaugeController = minter.getGaugeController();
@@ -145,6 +146,55 @@ abstract contract StakelessGauge is IStakelessGauge, ReentrancyGuard, Ownable2St
         }
 
         return true;
+    }
+
+    function unclaimedIncentives() external virtual returns (uint256 unclaimed) {
+        uint256 lastPeriod = _period;
+        uint256 currentPeriod = _currentPeriod();
+
+        if (lastPeriod >= currentPeriod || _isKilled) return 0;
+
+        _gaugeController.checkpoint_gauge(address(this));
+
+        uint256 rate = _rate;
+        uint256 newEmissions = 0;
+        lastPeriod += 1;
+        uint256 nextEpochTime = _startEpochTime + _RATE_REDUCTION_TIME;
+        for (uint256 i = lastPeriod; i < lastPeriod + 255; ++i) {
+            if (i > currentPeriod) break;
+
+            uint256 periodTime = i * 1 weeks;
+            uint256 periodEmission = 0;
+            uint256 gaugeWeight = getCappedRelativeWeight(periodTime);
+
+            if (nextEpochTime >= periodTime && nextEpochTime < periodTime + 1 weeks) {
+                // If the period crosses an epoch, we calculate a reduction in the rate
+                // using the same formula as used in `BalancerTokenAdmin`. We perform the calculation
+                // locally instead of calling to `BalancerTokenAdmin.rate()` because we are generating
+                // the emissions for the upcoming week, so there is a possibility the new
+                // rate has not yet been applied.
+
+                // Calculate emission up until the epoch change
+                uint256 durationInCurrentEpoch = nextEpochTime - periodTime;
+                periodEmission = (gaugeWeight * rate * durationInCurrentEpoch) / 10**18;
+                // Action the decrease in rate
+                rate = (rate * _RATE_DENOMINATOR) / _RATE_REDUCTION_COEFFICIENT;
+                // Calculate emission from epoch change to end of period
+                uint256 durationInNewEpoch = 1 weeks - durationInCurrentEpoch;
+                periodEmission += (gaugeWeight * rate * durationInNewEpoch) / 10**18;
+
+                nextEpochTime += _RATE_REDUCTION_TIME;
+            } else {
+                periodEmission = (gaugeWeight * rate * 1 weeks) / 10**18;
+            }
+
+            newEmissions += periodEmission;
+        }
+
+        if (newEmissions > 0) {
+            uint256 minted = _minter.minted(address(this), address(this));
+            unclaimed = newEmissions - minted;
+        }
     }
 
     function setCheckpointer(address newCheckpointer) external onlyOwner {

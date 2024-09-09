@@ -4,16 +4,22 @@ FOUNDRY_PROFILE=ve-silo-test \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
 
 # Deploy silo-core
+# Make sure a fee distributor address is set to the dev wallet
 FOUNDRY_PROFILE=core \
     forge script silo-core/deploy/MainnetDeploy.s.sol \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
 
-# Deploy silo
-FOUNDRY_PROFILE=core CONFIG=ETH-USDC_UniswapV3_Silo \
-    forge script silo-core/deploy/silo/SiloDeploy.s.sol \
+# Deploy silo-oracles. Unsiwap oracles factory
+FOUNDRY_PROFILE=oracles \
+    forge script silo-oracles/deploy/uniswap-v3-oracle/UniswapV3OracleFactoryDeploy.s.sol \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
 
-# Send ETH to proposer
+# Deploy silo
+FOUNDRY_PROFILE=core CONFIG=ETH-USDC_UniswapV3_Silo \
+    forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
+    --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
+
+# Send ETH to proposer (if balance is empty)
 FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/scripts/SendEthToProposer.sol \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
@@ -23,7 +29,7 @@ FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/scripts/TransferSiloMockOwnership.sol \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
 
-# Approve BPT and get veSilo
+# Approve Silo tokens and get veSilo
 FOUNDRY_PROFILE=ve-silo-test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/scripts/ApproveAndGetVeSilo.sol \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>

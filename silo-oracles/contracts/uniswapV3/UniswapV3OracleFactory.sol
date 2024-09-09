@@ -2,9 +2,10 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {ClonesUpgradeable} from "openzeppelin-contracts-upgradeable@v3.4.2/proxy/ClonesUpgradeable.sol";
 import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+
+import {Clones} from "../lib/Clones.sol";
 
 import {OracleFactory} from "../_common/OracleFactory.sol";
 import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
@@ -41,7 +42,7 @@ contract UniswapV3OracleFactory is OracleFactory {
         uint16 requiredCardinality = verifyConfig(_config);
 
         oracleConfig = address(new UniswapV3OracleConfig(_config, requiredCardinality));
-        oracle = UniswapV3Oracle(ClonesUpgradeable.clone(ORACLE_IMPLEMENTATION));
+        oracle = UniswapV3Oracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
         _saveOracle(address(oracle), oracleConfig, id);
 

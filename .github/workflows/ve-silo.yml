@@ -10,6 +10,7 @@ env:
   RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
   RPC_ANVIL: ${{ vars.RPC_ANVIL }}
   PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
+  PROPOSER_PRIVATE_KEY: ${{ vars.PROPOSER_PRIVATE_KEY }}
 
 on:
   push:
@@ -64,7 +65,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-5ac78a9cd4b94dc53d1fe5e0f42372b28b5a7559
 
       - name: yarn install
         run: yarn install

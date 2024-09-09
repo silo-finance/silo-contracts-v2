@@ -12,21 +12,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
+
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {IChildChainGauge} from "balancer-labs/v2-interfaces/liquidity-mining/IChildChainGauge.sol";
 import {Version} from "../_common/Version.sol";
-
+import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
-contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
+contract ChildChainGaugeFactory is Version, BaseGaugeFactory, FeesManager {
     string private _productVersion;
 
     constructor(
         IChildChainGauge gaugeImplementation,
         string memory factoryVersion,
         string memory productVersion
-    ) Version(factoryVersion) BaseGaugeFactory(address(gaugeImplementation)) {
+    ) Version(factoryVersion) BaseGaugeFactory(address(gaugeImplementation)) Ownable(msg.sender) {
         require(
             keccak256(abi.encodePacked(gaugeImplementation.version())) == keccak256(abi.encodePacked(productVersion)),
             "VERSION_MISMATCH"
@@ -47,12 +49,12 @@ contract ChildChainGaugeFactory is Version, BaseGaugeFactory {
      * @notice Deploys a new gauge for a ERC-20 balances handler (Silo shares token)
      *
      * It is possible to deploy multiple gauges for a single pool.
-     * @param hookReceiver The address of the Silo hook receiver
+     * @param shareToken The address of the Silo share token
      * @return The address of the deployed gauge
      */
-    function create(address hookReceiver) external returns (address) { //solhint-disable-line ordering
+    function create(address shareToken) external returns (address) { //solhint-disable-line ordering
         address gauge = _create();
-        IChildChainGauge(gauge).initialize(hookReceiver, getProductVersion());
+        IChildChainGauge(gauge).initialize(shareToken, getProductVersion());
         return gauge;
     }
 }

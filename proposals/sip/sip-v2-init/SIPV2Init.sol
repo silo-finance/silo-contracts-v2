@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
@@ -34,9 +34,9 @@ contract SIPV2Init is Proposal {
         smartWalletChecker.acceptOwnership();
         stakelessGaugeCheckpointerAdaptor.acceptOwnership();
         uniswapSwapper.acceptOwnership();
-        veSiloDelegatorViaCCIP.acceptOwnership();
         votingEscrowCCIPRemapper.acceptOwnership();
         votingEscrowDelegationProxy.acceptOwnership();
+        liquidityGaugeFactory.acceptOwnership();
 
         // gauge related configuration
         gaugeController.add_type(Constants._GAUGE_TYPE_ETHEREUM);

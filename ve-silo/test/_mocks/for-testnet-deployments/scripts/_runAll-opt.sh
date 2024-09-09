@@ -9,6 +9,7 @@ FOUNDRY_PROFILE=oracles \
     --ffi --broadcast --rpc-url https://optimism-mainnet.infura.io/v3/<_key_>
 
 # Deploy silo-core
+# Make sure addresses updated (fee disctributor and timelock)
 FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
         --ffi --broadcast --rpc-url https://optimism-mainnet.infura.io/v3/<_key_>

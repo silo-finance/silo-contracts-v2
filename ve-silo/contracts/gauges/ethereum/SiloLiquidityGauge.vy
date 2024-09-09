@@ -13,10 +13,8 @@ interface ShareToken:
     def balanceOf(addr: address) -> uint256: view
     def totalSupply() -> uint256: view
     def silo() -> address: view
+    def hookReceiver() -> address: view
     def balanceOfAndTotalSupply(addr: address) -> (uint256, uint256): view
-
-interface HookReceiver:
-    def shareToken() -> address: view
 
 interface Silo:
     def factory() -> address: view
@@ -46,6 +44,8 @@ interface VotingEscrow:
 interface VotingEscrowBoost:
     def adjusted_balance_of(_account: address) -> uint256: view
 
+interface FeesManager:
+    def getFees() -> (uint256, uint256): view
 
 event Deposit:
     provider: indexed(address)
@@ -100,6 +100,7 @@ BPS_BASE: constant(uint256) = 10 ** 4
 hook_receiver: public(address)
 share_token: public(address)
 silo: public(address)
+factory: public(address)
 silo_factory: public(address)
 
 is_killed: public(bool)
@@ -384,6 +385,59 @@ def _dao_and_deployer_fee(_amount: uint256) -> (uint256, uint256):
 
 
 @internal
+def _get_dao_and_deployer_fee_from_rewards(_amount: uint256, _token: address) -> uint256:
+    """
+    @notice Calculates DAO and a Silo Deployer fees
+    @param _amount Amount from which fee should be deducted
+    """
+    dao_fee: uint256 = 0
+    deployer_fee: uint256 = 0
+    fee_to_dao: uint256 = 0
+    fee_to_deployer: uint256 = 0
+
+    (dao_fee, deployer_fee) = FeesManager(self.factory).getFees()
+
+    if _amount == 0:
+        return _amount
+
+    dao_fee_receiver: address = empty(address)
+    deployer_fee_receiver: address = empty(address)
+
+    (
+        dao_fee_receiver,
+        deployer_fee_receiver
+    ) = SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+
+    if dao_fee_receiver != empty(address) and dao_fee != 0:
+        fee_to_dao = self._calculate_fee(_amount, dao_fee)
+        if fee_to_dao != 0:
+            self._transfer_token(dao_fee_receiver, _token, fee_to_dao)
+
+    if deployer_fee_receiver != empty(address) and deployer_fee != 0:
+        fee_to_deployer = self._calculate_fee(_amount, deployer_fee)
+        if fee_to_deployer != 0:
+            self._transfer_token(deployer_fee_receiver, _token, fee_to_deployer)
+
+    return _amount - (fee_to_dao + fee_to_deployer)
+
+
+@internal
+def _transfer_token(_receiver: address, _reward_token: address, _amount: uint256):
+    """
+    @notice Transfer token to the `_receiver`
+    """
+    response: Bytes[32] = raw_call(
+        _reward_token,
+        _abi_encode(
+            _receiver, _amount, method_id=method_id("transfer(address,uint256)")
+        ),
+        max_outsize=32,
+    )
+    if len(response) != 0:
+        assert convert(response, bool)
+
+
+@internal
 @pure
 def _calculate_fee(_amount: uint256, _bps: uint256) -> uint256:
     if _amount == 0 or _bps == 0:
@@ -511,13 +565,15 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
     if len(response) != 0:
         assert convert(response, bool)
 
+    _amountWithoutFee: uint256 = self._get_dao_and_deployer_fee_from_rewards(_amount, _reward_token)
+
     period_finish: uint256 = self.reward_data[_reward_token].period_finish
     if block.timestamp >= period_finish:
-        self.reward_data[_reward_token].rate = _amount / WEEK
+        self.reward_data[_reward_token].rate = _amountWithoutFee / WEEK
     else:
         remaining: uint256 = period_finish - block.timestamp
         leftover: uint256 = remaining * self.reward_data[_reward_token].rate
-        self.reward_data[_reward_token].rate = (_amount + leftover) / WEEK
+        self.reward_data[_reward_token].rate = (_amountWithoutFee + leftover) / WEEK
 
     self.reward_data[_reward_token].last_update = block.timestamp
     self.reward_data[_reward_token].period_finish = block.timestamp + WEEK
@@ -696,17 +752,18 @@ def _setRelativeWeightCap(relative_weight_cap: uint256):
     log RelativeWeightCapChanged(relative_weight_cap)
 
 @external
-def initialize(relative_weight_cap: uint256, hook_receiver: address):
+def initialize(relative_weight_cap: uint256, silo_share_token: address):
     """
     @notice Contract constructor
     """
-    assert hook_receiver != empty(address) # dev: silo hook receiver required
+    assert silo_share_token != empty(address) # dev: silo share token required
     assert self.hook_receiver == empty(address) # dev: already initialized
 
-    self.hook_receiver = hook_receiver
-    self.share_token = HookReceiver(hook_receiver).shareToken()
+    self.hook_receiver = ShareToken(silo_share_token).hookReceiver()
+    self.share_token = silo_share_token
+    self.factory = msg.sender
 
-    silo: address = ShareToken(self.share_token).silo()
+    silo: address = ShareToken(silo_share_token).silo()
 
     self.silo = silo
     self.silo_factory = Silo(silo).factory()

@@ -12,9 +12,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 contract CheckpointerAdaptorMock {
     receive() external payable {}

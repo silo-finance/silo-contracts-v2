@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
@@ -50,6 +50,7 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
         _BETA = _config.beta;
     }
 
+    /// @inheritdoc IInterestRateModelV2Config
     function getConfig() external view virtual returns (IInterestRateModelV2.Config memory config) {
         config.uopt = _UOPT;
         config.ucrit = _UCRIT;

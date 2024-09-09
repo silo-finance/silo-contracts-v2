@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IERC721Upgradeable} from "openzeppelin-contracts-upgradeable/interfaces/IERC721Upgradeable.sol";
+import {IERC721} from "openzeppelin5/interfaces/IERC721.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 
-interface ISiloFactory is IERC721Upgradeable {
+interface ISiloFactory is IERC721 {
     event NewSilo(address indexed token0, address indexed token1, address silo0, address silo1, address siloConfig);
     event DaoFeeChanged(uint256 daoFee);
     event MaxDeployerFeeChanged(uint256 maxDeployerFee);
@@ -12,22 +12,24 @@ interface ISiloFactory is IERC721Upgradeable {
     event MaxLiquidationFeeChanged(uint256 maxLiquidationFee);
     event DaoFeeReceiverChanged(address daoFeeReceiver);
 
+    error InvalidInitialization();
+    error Uninitialized();
+    error MissingHookReceiver();
     error ZeroAddress();
-    error MaxFee();
+    error EmptyToken0();
+    error EmptyToken1();
+    error MaxFeeExceeded();
     error SameAsset();
     error InvalidIrm();
     error InvalidMaxLtv();
-    error InvalidMaxLt();
     error InvalidLt();
     error InvalidDeployer();
     error MaxDeployerFee();
     error MaxFlashloanFee();
     error MaxLiquidationFee();
     error InvalidIrmConfig();
-    error InvalidFee();
-    error BeforeCall();
+    error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
-    error EmptySiloAsset(address asset0, address asset1);
 
     function initialize(
         address _siloImpl,
@@ -42,6 +44,11 @@ interface ISiloFactory is IERC721Upgradeable {
     /// @param _initData silo initialization data
     function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig);
 
+    /// @notice After burning, the deployer fee is sent to the DAO.
+    /// Doesn't affect Silo's behavior. It is only about fee distribution.
+    /// @param _siloIdToBurn silo ID to burn
+    function burn(uint256 _siloIdToBurn) external;
+
     function setDaoFee(uint256 _newDaoFee) external;
     function setDaoFeeReceiver(address _newDaoFeeReceiver) external;
     function setMaxDeployerFee(uint256 _newMaxDeployerFee) external;
@@ -54,11 +61,10 @@ interface ISiloFactory is IERC721Upgradeable {
     function maxLiquidationFee() external view returns (uint256);
     function daoFeeReceiver() external view returns (address);
     function siloImpl() external view returns (address);
-    function shareCollateralTokenImpl() external view returns (address);
+    function shareProtectedCollateralTokenImpl() external view returns (address);
     function shareDebtTokenImpl() external view returns (address);
 
-    function idToSilos(uint256 _id) external view returns (address[2] memory);
-    function siloToId(address _silo) external view returns (uint256);
+    function idToSiloConfig(uint256 _id) external view returns (address);
 
     function isSilo(address _silo) external view returns (bool);
     function getNextSiloId() external view returns (uint256);

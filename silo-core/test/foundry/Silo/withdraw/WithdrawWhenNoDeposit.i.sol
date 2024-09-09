@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
+
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
-
-import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 /*
     forge test -vv --ffi --mc WithdrawWhenNoDepositTest
@@ -32,7 +31,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         configOverride.token0 = t0;
         configOverride.token1 = t1;
 
-        (siloConfig, silo0, silo1,,) = siloFixture.deploy_local(configOverride);
+        (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
         token0 = new TokenMock(t0);
         token1 = new TokenMock(t1);
@@ -50,8 +49,8 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     forge test -vv --ffi --mt test_withdraw_WrongAssetType
     */
     function test_withdraw_WrongAssetType() public {
-        vm.expectRevert(ISilo.WrongAssetType.selector);
-        silo0.withdraw(0, address(1), address(1), ISilo.AssetType.Debt);
+        vm.expectRevert();
+        silo0.withdraw(0, address(1), address(1), ISilo.CollateralType(uint8(ISilo.AssetType.Debt)));
     }
 
     /*
@@ -59,16 +58,16 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     */
     function test_withdraw_NothingToWithdraw() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Protected);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
     }
 
     /*
@@ -76,29 +75,29 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
     */
     function test_withdraw_when_liquidity_but_NothingToWithdraw() public {
         // any deposit so we have liquidity
-        _anyDeposit(ISilo.AssetType.Collateral);
+        _anyDeposit(ISilo.CollateralType.Collateral);
 
         // test
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Collateral);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(0, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Protected);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Collateral);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
 
         // any deposit so we have liquidity
-        _anyDeposit(ISilo.AssetType.Protected);
+        _anyDeposit(ISilo.CollateralType.Protected);
 
-        vm.expectRevert("ERC20: burn amount exceeds balance");
-        silo0.withdraw(1, address(this), address(this), ISilo.AssetType.Protected);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
+        silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
     }
 
-    function _anyDeposit(ISilo.AssetType _type) public {
+    function _anyDeposit(ISilo.CollateralType _type) public {
         address otherDepositor = address(1);
         uint256 depositAmount = 1e18;
 

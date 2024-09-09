@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {console2} from "forge-std/console2.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
@@ -27,7 +29,10 @@ contract Gas is SiloLittleHelper {
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        (, silo0, silo1,,) = siloFixture.deploy_local(overrides);
+
+        address hook;
+        (, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
 
         __init(token0, token1, silo0, silo1);
 
@@ -50,14 +55,25 @@ contract Gas is SiloLittleHelper {
     function _action(
         address _sender,
         address _target,
-        bytes memory _data,
+        bytes memory _calldata,
         string memory _msg,
         uint256 _expectedGas
+    ) internal returns (uint256 gas) {
+        return _action(_sender, _target, _calldata, _msg, _expectedGas, 100);
+    }
+
+    function _action(
+        address _sender,
+        address _target,
+        bytes memory _calldata,
+        string memory _msg,
+        uint256 _expectedGas,
+        uint256 _errorThreshold
     ) internal returns (uint256 gas) {
         vm.startPrank(_sender, _sender);
 
         uint256 gasStart = gasleft();
-        (bool success,) = _target.call(_data);
+        (bool success,) = _target.call(_calldata);
         uint256 gasEnd = gasleft();
         gas = gasStart - gasEnd;
 
@@ -71,7 +87,7 @@ contract Gas is SiloLittleHelper {
             uint256 diff = _expectedGas > gas ? _expectedGas - gas : gas - _expectedGas;
             string memory diffSign = gas < _expectedGas ? "less" : "more";
 
-            if (diff < 100) {
+            if (diff < _errorThreshold) {
                 console2.log(string(abi.encodePacked("[GAS] ", _msg, ": %s (got bit ", diffSign, " by %s)")), gas, diff);
             } else {
                 revert(string(abi.encodePacked(

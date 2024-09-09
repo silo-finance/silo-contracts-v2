@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {SiloSolvencyLib, ISiloOracle} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
@@ -17,7 +18,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_zero
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_zero() public {
+    function test_SiloSolvencyLib_calculateLtv_noOracle_zero() public view {
         uint128 zero;
 
         ISiloOracle noOracle;
@@ -36,7 +37,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
     /*
     forge test -vv --mt test_SiloSolvencyLib_calculateLtv_noOracle_infinity
     */
-    function test_SiloSolvencyLib_calculateLtv_noOracle_infinity() public {
+    function test_SiloSolvencyLib_calculateLtv_noOracle_infinity() public view {
         uint128 zero;
         uint128 debtAssets = 1;
 
@@ -60,7 +61,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         uint128 _collateralAssets,
         uint128 _protectedAssets,
         uint128 _debtAssets
-    ) public {
+    ) public view {
         ISiloOracle noOracle;
         uint256 sumOfCollateralAssets = uint256(_collateralAssets) + _protectedAssets;
         // because this is the same token, we assume the sum can not be higher than uint128
@@ -81,7 +82,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
         } else if (sumOfCollateralAssets == 0) {
             expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
-            expectedLtv = MathUpgradeable.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, MathUpgradeable.Rounding.Up);
+            expectedLtv = Math.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, Math.Rounding(Rounding.LTV));
         }
 
         assertEq(ltv, expectedLtv, "ltv");
@@ -113,7 +114,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         assertEq(
             ltv,
-            MathUpgradeable.mulDiv(1111, DECIMALS_POINTS, 9999, MathUpgradeable.Rounding.Up),
+            Math.mulDiv(1111, DECIMALS_POINTS, 9999, Math.Rounding(Rounding.LTV)),
             "constant values, constant ltv"
         );
     }

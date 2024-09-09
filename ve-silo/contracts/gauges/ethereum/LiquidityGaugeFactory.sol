@@ -12,14 +12,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloLiquidityGauge} from "../interfaces/ISiloLiquidityGauge.sol";
-
+import {FeesManager} from "../../silo-tokens-minter/FeesManager.sol";
 import {BaseGaugeFactory} from "../BaseGaugeFactory.sol";
 
-contract LiquidityGaugeFactory is BaseGaugeFactory {
-    constructor(ISiloLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) {
+contract LiquidityGaugeFactory is BaseGaugeFactory, FeesManager {
+    constructor(ISiloLiquidityGauge gauge) BaseGaugeFactory(address(gauge)) Ownable(msg.sender) {
         // solhint-disable-previous-line no-empty-blocks
     }
 
@@ -33,12 +34,12 @@ contract LiquidityGaugeFactory is BaseGaugeFactory {
      *
      * It is possible to deploy multiple gauges for a single pool.
      * @param relativeWeightCap The relative weight cap for the created gauge
-     * @param hookReceiver The address of the Silo hook receiver
+     * @param shareToken The address of the Silo share token
      * @return The address of the deployed gauge
      */
-    function create(uint256 relativeWeightCap, address hookReceiver) external returns (address) {
+    function create(uint256 relativeWeightCap, address shareToken) external returns (address) {
         address gauge = _create();
-        ISiloLiquidityGauge(gauge).initialize(relativeWeightCap, hookReceiver);
+        ISiloLiquidityGauge(gauge).initialize(relativeWeightCap, shareToken);
         return gauge;
     }
 }

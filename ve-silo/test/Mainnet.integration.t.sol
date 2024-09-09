@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {StdStorage, stdStorage} from "forge-std/StdStorage.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
@@ -22,13 +22,13 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {IBalancerTokenAdmin} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerTokenAdmin.sol";
 import {IBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/interfaces/IBalancerMinter.sol";
 import {IGaugeAdder} from "ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol";
-import {IHookReceiverMock as IHookReceiver} from "./_mocks/IHookReceiverMock.sol";
 import {IShareTokenLike as IShareToken} from "ve-silo/contracts/gauges/interfaces/IShareTokenLike.sol";
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
 import {VETSIP01} from "ve-silo/test/proposals/VETSIP01.sol";
 import {ProposalEngineLib} from "proposals/contracts/ProposalEngineLib.sol";
 import {Proposal} from "proposals/contracts/Proposal.sol";
+import {ERC20Mint} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
@@ -118,6 +118,7 @@ contract MainnetTest is IntegrationTest {
         _checkpointUsers(ISiloLiquidityGauge(gauge));
         _verifyClaimable(ISiloLiquidityGauge(gauge));
         _getIncentives(gauge);
+        _rewardwsFees(ISiloLiquidityGauge(gauge));
         _stopMiningProgram();
     }
 
@@ -276,7 +277,7 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _createGauge() internal returns (address gauge) {
-        gauge = _factory.create(_WEIGHT_CAP, _hookReceiver);
+        gauge = _factory.create(_WEIGHT_CAP, _shareToken);
         vm.label(gauge, "Gauge");
     }
 
@@ -310,12 +311,12 @@ contract MainnetTest is IntegrationTest {
     }
 
     function _getVeSiloTokens(address _userAddr, uint256 _amount, uint256 _unlockTime) internal {
-        IERC20 silo80Weth20Token = IERC20(getAddress(SILO80_WETH20_TOKEN));
+        IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));
 
-        deal(address(silo80Weth20Token), _userAddr, _amount);
+        deal(address(siloToken), _userAddr, _amount);
 
         vm.prank(_userAddr);
-        silo80Weth20Token.approve(address(_veSilo), _amount);
+        siloToken.approve(address(_veSilo), _amount);
 
         vm.prank(_userAddr);
         _veSilo.create_lock(_amount, _unlockTime);
@@ -436,9 +437,9 @@ contract MainnetTest is IntegrationTest {
         vm.mockCall(siloFactory, abi.encodeWithSelector(Ownable2Step.acceptOwnership.selector), abi.encode(true));
 
         vm.mockCall(
-            _hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.shareToken.selector),
-            abi.encode(_shareToken)
+            _shareToken,
+            abi.encodeWithSelector(IShareToken.hookReceiver.selector),
+            abi.encode(_hookReceiver)
         );
 
         vm.mockCall(
@@ -452,5 +453,35 @@ contract MainnetTest is IntegrationTest {
             abi.encodeWithSelector(ISilo.factory.selector),
             abi.encode(_siloFactory)
         );
+    }
+
+    function _rewardwsFees(ISiloLiquidityGauge _gauge) internal {
+        vm.prank(_deployer);
+        IFeesManager(address(_factory)).setFees(_DAO_FEE, _DEPLOYER_FEE);
+
+        uint256 rewardsAmount = 100e18;
+
+        address distributor = makeAddr("distributor");
+        address timelock = getAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+
+        ERC20Mint rewardToken = new ERC20Mint("Test reward token", "TRT");
+        rewardToken.mint(distributor, rewardsAmount);
+
+        vm.prank(distributor);
+        rewardToken.approve(address(_gauge), rewardsAmount);
+
+        vm.prank(timelock);
+        _gauge.add_reward(address(rewardToken), distributor);
+
+        vm.prank(distributor);
+        _gauge.deposit_reward_token(address(rewardToken), rewardsAmount);
+
+        uint256 gaugeBalance = rewardToken.balanceOf(address(_gauge));
+        uint256 daoFeeReceiverBalance = rewardToken.balanceOf(_daoFeeReceiver);
+        uint256 deployerFeeReceiverBalance = rewardToken.balanceOf(_deployerFeeReceiver);
+
+        assertEq(gaugeBalance, 70e18);
+        assertEq(daoFeeReceiverBalance, 10e18);
+        assertEq(deployerFeeReceiverBalance, 20e18);
     }
 }

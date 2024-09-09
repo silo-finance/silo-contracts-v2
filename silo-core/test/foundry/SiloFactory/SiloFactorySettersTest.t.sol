@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
 /*
@@ -17,7 +21,7 @@ contract SiloFactorySettersTest is Test {
     uint256 daoFee = 0.20e18;
     address daoFeeReceiver = address(100004);
 
-    address hacker = address(1000099);
+    address hacker = makeAddr("Hacker");
 
     function setUp() public {
         siloFactory = new SiloFactory();
@@ -30,13 +34,13 @@ contract SiloFactorySettersTest is Test {
     function test_setDaoFee(uint256 _newDaoFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newDaoFee < maxFee);
+        vm.assume(_newDaoFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setDaoFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setDaoFee(_newDaoFee);
 
         siloFactory.setDaoFee(_newDaoFee);
@@ -50,13 +54,13 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxDeployerFee(uint256 _newMaxDeployerFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxDeployerFee < maxFee);
+        vm.assume(_newMaxDeployerFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxDeployerFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
 
         siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
@@ -70,13 +74,13 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxFlashloanFee(uint256 _newMaxFlashloanFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxFlashloanFee < maxFee);
+        vm.assume(_newMaxFlashloanFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxFlashloanFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
 
         siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
@@ -90,13 +94,13 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxLiquidationFee(uint256 _newMaxLiquidationFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxLiquidationFee < maxFee);
+        vm.assume(_newMaxLiquidationFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxLiquidationFee(maxFee + 1);
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
 
         siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
@@ -114,14 +118,29 @@ contract SiloFactorySettersTest is Test {
         siloFactory.setDaoFeeReceiver(address(0));
 
         vm.prank(hacker);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
         siloFactory.setDaoFeeReceiver(_newDaoFeeReceiver);
 
         siloFactory.setDaoFeeReceiver(_newDaoFeeReceiver);
 
         assertEq(siloFactory.daoFeeReceiver(), _newDaoFeeReceiver);
 
-        (address dao, address deployer) = siloFactory.getFeeReceivers(address(1));
+        address silo = makeAddr("Silo");
+        address config = makeAddr("SiloConfig");
+
+        vm.mockCall(
+            silo,
+            abi.encodeWithSelector(ISilo.config.selector),
+            abi.encode(config)
+        );
+
+        vm.mockCall(
+            config,
+            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
+            abi.encode(1)
+        );
+
+        (address dao, address deployer) = siloFactory.getFeeReceivers(silo);
 
         assertEq(dao, _newDaoFeeReceiver);
         assertEq(deployer, address(0));

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
+import {VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 /**
 FOUNDRY_PROFILE=ve-silo-test \
@@ -17,15 +20,15 @@ contract VotingEscrowDeploy is CommonDeploy {
     function run() public returns (IVeSilo votingEscrow) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address silo80Weth20Token = getAddress(SILO80_WETH20_TOKEN);
-        address timelock = getDeployedAddress(VeSiloContracts.TIMELOCK_CONTROLLER);
+        address siloToken = AddrLib.getAddress(AddrKey.SILO_TOKEN);
+        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);
 
         address votingEscrowAddr = _deploy(
             VeSiloContracts.VOTING_ESCROW,
             abi.encode(
-                silo80Weth20Token,
+                siloToken,
                 votingEscrowName(),
                 votingEscrowSymbol(),
                 timelock

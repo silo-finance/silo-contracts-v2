@@ -9,7 +9,6 @@ definition transitionCollateralSig() returns uint32 = sig:transitionCollateral(u
 definition initializeSig() returns uint32 = sig:initialize(address,address).selector;
 definition withdrawFeesSig() returns uint32 = sig:withdrawFees().selector;
 definition flashLoanSig() returns uint32 = sig:flashLoan(address,address,uint256,bytes).selector;
-definition liquidationCallSig() returns uint32 = sig:liquidationCall(address,address,address,uint256,bool).selector;
 definition transferSig() returns uint32 = sig:transfer(address,uint256).selector;
 definition transferFromSig() returns uint32 = sig:transferFrom(address,address,uint256).selector;
 definition approveSig() returns uint32 = sig:approve(address,uint256).selector;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -33,7 +33,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_beforeInterest
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_beforeInterest_fuzz(uint256 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
@@ -43,7 +43,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_afterNoInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_previewMint_afterNoInterest_fuzz(
         uint128 _depositAmount,
         uint128 _shares,
@@ -57,8 +57,17 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
     */
-    /// forge-config: core.fuzz.runs = 10000
-    function test_previewMint_withInterest_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewMint_withInterest_1token_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
+        vm.assume(_shares > 0);
+
+        _createInterest();
+
+        _assertPreviewMint(_shares, _defaultType, _type);
+    }
+
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares, bool _defaultType, uint8 _type) public {
         vm.assume(_shares > 0);
 
         _createInterest();
@@ -105,7 +114,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
 
         uint256 previewMint = _defaultType
             ? silo0.previewMint(_shares)
-            : silo0.previewMint(_shares, ISilo.AssetType(_type));
+            : silo0.previewMint(_shares, ISilo.CollateralType(_type));
 
         token0.mint(depositor, previewMint);
 
@@ -114,7 +123,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
 
         uint256 depositedAssets = _defaultType
             ? silo0.mint(_shares, depositor)
-            : silo0.mint(_shares, depositor, ISilo.AssetType(_type));
+            : silo0.mint(_shares, depositor, ISilo.CollateralType(_type));
 
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
     }

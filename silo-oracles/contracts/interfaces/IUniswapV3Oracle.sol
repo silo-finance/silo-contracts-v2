@@ -10,6 +10,9 @@ interface IUniswapV3Oracle {
         // UniV3 pool address that is used for TWAP price
         IUniswapV3Pool pool;
 
+        // Base token
+        address baseToken;
+
         // Asset in which oracle denominates its price
         address quoteToken;
 
@@ -25,6 +28,9 @@ interface IUniswapV3Oracle {
     struct UniswapV3Config {
         // UniV3 pool address that is used for TWAP price
         IUniswapV3Pool pool;
+
+        // Base token
+        address baseToken;
 
         // Asset in which oracle denominates its price
         address quoteToken;

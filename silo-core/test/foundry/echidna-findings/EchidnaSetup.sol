@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Test} from "forge-std/Test.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -64,7 +64,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     }
 
     function _invariant_checkForInterest(ISilo _silo) internal returns (bool noInterest) {
-        (, uint256 interestRateTimestamp) = _silo.siloData();
+        (, uint256 interestRateTimestamp,,,) = _silo.getSiloStorage();
         noInterest = block.timestamp == interestRateTimestamp;
 
         if (noInterest) assertEq(_silo.accrueInterest(), 0, "no interest should be applied");
@@ -72,6 +72,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
     function _invariant_insolventHasDebt(address _user)
         internal
+        view
         returns (bool isSolvent, ISilo _siloWithDebt, ISilo _siloWithCollateral)
     {
         // _dumpState(_user);
@@ -122,12 +123,12 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         siloWithCollateral = protectedBalance0 + collateralBalance0 == 0 ? silo1 : silo0;
     }
 
-    function _requireHealthySilos() internal {
+    function _requireHealthySilos() internal view {
         _requireHealthySilo(silo0);
         _requireHealthySilo(silo1);
     }
 
-    function _requireHealthySilo(ISilo _silo) internal {
+    function _requireHealthySilo(ISilo _silo) internal view {
         ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(address(_silo));
 
         try IInterestRateModel(cfg.interestRateModel).getCompoundInterestRate(address(_silo), block.timestamp) {
@@ -139,7 +140,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     }
 
     function _checkForInterest(ISilo _silo) internal returns (bool noInterest) {
-        (, uint256 interestRateTimestamp) = _silo.siloData();
+        (, uint256 interestRateTimestamp,,,) = _silo.getSiloStorage();
         noInterest = block.timestamp == interestRateTimestamp;
 
         if (noInterest) assertEq(_silo.accrueInterest(), 0, "no interest should be applied");
@@ -153,8 +154,8 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_uint("block.number:", block.number);
         emit log_named_uint("block.timestamp:", block.timestamp);
 
-        (uint256 collectedFees0, uint256 irmTimestamp0) = silo0.siloData();
-        (uint256 collectedFees1, uint256 irmTimestamp1) = silo1.siloData();
+        (uint256 collectedFees0, uint256 irmTimestamp0,,,) = silo0.getSiloStorage();
+        (uint256 collectedFees1, uint256 irmTimestamp1,,,) = silo1.getSiloStorage();
 
 
         emit log_named_decimal_uint("getLiquidity0:", silo0.getLiquidity(), 18);

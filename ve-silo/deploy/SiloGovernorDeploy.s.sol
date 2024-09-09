@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
-import {TimelockController} from "openzeppelin-contracts/governance/extensions/GovernorTimelockControl.sol";
+import {TimelockController} from "openzeppelin5/governance/extensions/GovernorTimelockControl.sol";
 
 import {SiloGovernor} from "ve-silo/contracts/governance/SiloGovernor.sol";
 import {ISiloGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
@@ -71,8 +71,8 @@ contract SiloGovernorDeploy is CommonDeploy {
         _timelock.grantRole(_timelock.CANCELLER_ROLE(), governorAddr);
 
         // Update TimelockController admin role
-        _timelock.grantRole(_timelock.TIMELOCK_ADMIN_ROLE(), governorAddr);
-        _timelock.revokeRole(_timelock.TIMELOCK_ADMIN_ROLE(), deployer);
+        _timelock.grantRole(_timelock.DEFAULT_ADMIN_ROLE(), governorAddr);
+        _timelock.revokeRole(_timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
         vm.stopBroadcast();
     }

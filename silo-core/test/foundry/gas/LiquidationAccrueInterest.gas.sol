@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
-import {ISiloLiquidation} from "silo-core/contracts/interfaces/ISiloLiquidation.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {Gas} from "./Gas.sol";
 
@@ -29,12 +29,18 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
     forge test -vvv --ffi --mt test_gas_liquidationCallWithInterest
     */
     function test_gas_liquidationCallWithInterest() public {
+        vm.prank(DEPOSITOR);
+        token1.approve(address(partialLiquidation), type(uint256).max);
+
         _action(
             DEPOSITOR,
-            address(silo1),
-            abi.encodeCall(ISiloLiquidation.liquidationCall, (address(token0), address(token1), BORROWER, ASSETS / 2, false)),
+            address(partialLiquidation),
+            abi.encodeCall(
+                IPartialLiquidation.liquidationCall,
+                (address(token0), address(token1), BORROWER, ASSETS / 2, false)
+            ),
             "LiquidationCall with accrue interest",
-            292053
+            441835
         );
     }
 }

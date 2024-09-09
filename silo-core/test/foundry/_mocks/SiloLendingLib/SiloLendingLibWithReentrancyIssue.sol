@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {MathUpgradeable} from "openzeppelin-contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 library SiloLendingLibWithReentrancyIssue {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20 for IERC20;
 
     // deposit fn with reentrancy issue
     // original code can be found here:
@@ -21,21 +24,21 @@ library SiloLendingLibWithReentrancyIssue {
         uint256 _assets,
         uint256 _shares,
         address _borrower,
-        address _repayer,
-        ISilo.Assets storage _totalDebt
+        address _repayer
     ) external returns (uint256 assets, uint256 shares) {
         if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
 
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
-        uint256 totalDebtAssets = _totalDebt.assets;
+        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
 
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
             totalDebtAssets,
             debtShareToken.totalSupply(),
-            MathUpgradeable.Rounding.Up,
-            MathUpgradeable.Rounding.Down,
+            Rounding.REPAY_TO_ASSETS,
+            Rounding.REPAY_TO_SHARES,
             ISilo.AssetType.Debt
         );
 
@@ -43,9 +46,9 @@ library SiloLendingLibWithReentrancyIssue {
 
         // fee-on-transfer is ignored
         // If token reenters, no harm done because we didn't change the state yet.
-        IERC20Upgradeable(_configData.token).safeTransferFrom(_repayer, address(this), assets);
+        IERC20(_configData.token).safeTransferFrom(_repayer, address(this), assets);
         // subtract repayment from debt
-        _totalDebt.assets = totalDebtAssets - assets;
+        $.totalAssets[AssetTypes.DEBT] = totalDebtAssets - assets;
         // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
         // no harm done because state changes are completed.
         debtShareToken.burn(_borrower, _repayer, shares);

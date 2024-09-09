@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -9,11 +9,11 @@ contract SiloMock is Test {
     address public immutable ADDRESS;
 
     constructor(address _silo) {
-        ADDRESS = _silo == address(0) ? makeAddr("SiloMock") : _silo;
+        ADDRESS = _silo == address(0) ? makeAddr("SiloMockAddr") : _silo;
     }
 
     function getCollateralAndDebtAssetsMock(uint256 _totalCollateralAssets, uint256 _totalDebtAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsStorage.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets));
         vm.expectCall(ADDRESS, data);
     }
@@ -27,22 +27,22 @@ contract SiloMock is Test {
 
     // ISilo.getDebtAssets.selector: 0xecd658b4
     function totalMock(ISilo.AssetType _assetType, uint256 _totalDebtAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, _assetType);
+        bytes memory data = abi.encodeWithSelector(ISilo.getTotalAssetsStorage.selector, _assetType);
         vm.mockCall(ADDRESS, data, abi.encode(_totalDebtAssets));
         vm.expectCall(ADDRESS, data);
     }
 
     function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.total.selector, ISilo.AssetType.Protected);
+        bytes memory data = abi.encodeWithSelector(ISilo.getTotalAssetsStorage.selector, ISilo.CollateralType.Protected);
         vm.mockCall(ADDRESS, data, abi.encode(_totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }
 
-    // ISilo.getCollateralAndProtectedAssets.selector: 0x99d499c1
+    // ISilo.getCollateralAndProtectedTotalsStorage.selector: 0xffbaaf7a
     function getCollateralAndProtectedAssetsMock(uint256 _totalCollateralAssets, uint256 _totalProtectedAssets)
         external
     {
-        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndProtectedAssets.selector);
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndProtectedTotalsStorage.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }
@@ -52,6 +52,12 @@ contract SiloMock is Test {
     {
         bytes memory data = abi.encodeWithSelector(ISilo.utilizationData.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_collateral, _debt, _timestamp));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function configMock(address _config) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.config.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_config));
         vm.expectCall(ADDRESS, data);
     }
 }

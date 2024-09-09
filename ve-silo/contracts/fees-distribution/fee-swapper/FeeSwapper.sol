@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {FeeSwapperConfig, IFeeSwapper, IERC20} from "./FeeSwapperConfig.sol";
 import {IFeeSwap} from "../interfaces/IFeeSwap.sol";
@@ -22,7 +22,6 @@ import {IBalancerVaultLike as Vault, IAsset} from "../interfaces/IBalancerVaultL
 contract FeeSwapper is FeeSwapperConfig {
     // solhint-disable var-name-mixedcase
     IERC20 immutable public WETH;
-    IERC20 immutable public LP_TOKEN;
     IERC20 immutable public SILO_TOKEN;
     IFeeDistributor immutable public FEE_DISTRIBUTOR;
     Vault immutable public BALANCER_VAULT;
@@ -34,7 +33,6 @@ contract FeeSwapper is FeeSwapperConfig {
 
     constructor(
         IERC20 _weth,
-        IERC20 _lpToken,
         IERC20 _siloToken,
         address _vault,
         bytes32 _poolId,
@@ -43,26 +41,32 @@ contract FeeSwapper is FeeSwapperConfig {
     ) FeeSwapperConfig(_configs) {
         WETH = _weth;
         FEE_DISTRIBUTOR = _feeDistributor;
-        LP_TOKEN = _lpToken;
         SILO_TOKEN = _siloToken;
         BALANCER_VAULT = Vault(_vault);
         BALANCER_POOL_ID = _poolId;
+
+        WETH.approve(address(BALANCER_VAULT), type(uint256).max);
+        SILO_TOKEN.approve(address(FEE_DISTRIBUTOR), type(uint256).max);
     }
 
-    function swapFeesAndDeposit(address[] calldata _assets, bytes[] memory _data) external onlyManager virtual {
+    function swapFeesAndDeposit(
+        address[] calldata _assets,
+        bytes[] memory _data,
+        uint256 _siloExpectedAmount
+    ) external onlyManager virtual {
         _swapFees(_assets, _data);
-        _depositIntoBalancer();
-        _depositLPTokens(type(uint256).max);
+        _swapViaBalancer(_siloExpectedAmount);
+        _depositSiloTokens(type(uint256).max);
     }
 
     /// @inheritdoc IFeeSwapper
-    function joinBalancerPool() external virtual {
-        _depositIntoBalancer();
+    function getSiloTokens(uint256 _siloExpectedAmount) external virtual {
+        _swapViaBalancer(_siloExpectedAmount);
     }
 
     /// @inheritdoc IFeeSwapper
-    function depositLPTokens(uint256 _amount) external virtual {
-        _depositLPTokens(_amount);
+    function depositSiloTokens(uint256 _amount) external virtual {
+        _depositSiloTokens(_amount);
     }
 
     /// @inheritdoc IFeeSwapper
@@ -70,60 +74,39 @@ contract FeeSwapper is FeeSwapperConfig {
         _swapFees(_assets, _data);
     }
 
-    /// @notice Deposit into SILO-80%/WEH-20% Balancer pool
-    function _depositIntoBalancer() internal virtual {
+    /// @notice Swap WETH to SILO tokens
+    function _swapViaBalancer(uint256 _siloExpectedAmount) internal virtual {
         uint256 wethBalance = WETH.balanceOf(address(this));
 
-        IAsset[] memory assets = new IAsset[](2);
-        assets[0] = IAsset(address(SILO_TOKEN));
-        assets[1] = IAsset(address(WETH));
-
-        uint256[] memory maxAmountsIn = new uint256[](2);
-        maxAmountsIn[0] = 0; // depositing only WETH
-        maxAmountsIn[1] = wethBalance;
-
-        WETH.approve(address(BALANCER_VAULT), wethBalance);
-
-        uint256 minimumBPT = 1;
-
-        // userData: ['uint256', 'uint256[]', 'uint256']
-        // userData: [EXACT_TOKENS_IN_FOR_BPT_OUT, amountsIn, minimumBPT]
-        bytes memory userData = abi.encode(
-            Vault.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-            maxAmountsIn,
-            minimumBPT
-        );
-
-        Vault.JoinPoolRequest memory request = Vault.JoinPoolRequest({
-            assets: assets,
-            maxAmountsIn: maxAmountsIn,
-            userData: userData,
-            fromInternalBalance: false
-        });
-
-        BALANCER_VAULT.joinPool(
+        Vault.SingleSwap memory singleSwap = Vault.SingleSwap(
             BALANCER_POOL_ID,
-            address(this),
-            address(this),
-            request
+            Vault.SwapKind.GIVEN_IN,
+            IAsset(address(WETH)),
+            IAsset(address(SILO_TOKEN)),
+            wethBalance,
+            ""
         );
+
+        Vault.FundManagement memory funds = Vault.FundManagement(
+            address(this), false, payable(address(this)), false
+        );
+
+        BALANCER_VAULT.swap(singleSwap, funds, _siloExpectedAmount, block.timestamp);
     }
 
-    /// @notice Deposit 80%/20% pool LP tokens in the `FeeDistributor`
+    /// @notice Deposit SILO tokens in the `FeeDistributor`
     /// @param _amount Amount to be deposited into the `FeeDistributor`.
     /// If `uint256` max the current balance of the `FeeSwapper` will be deposited.
-    function _depositLPTokens(uint256 _amount) internal virtual {
+    function _depositSiloTokens(uint256 _amount) internal virtual {
         uint256 amountToDistribute = _amount;
 
         if (_amount == type(uint256).max) {
-            amountToDistribute = LP_TOKEN.balanceOf(address(this));
+            amountToDistribute = SILO_TOKEN.balanceOf(address(this));
         }
 
-        LP_TOKEN.approve(address(FEE_DISTRIBUTOR), amountToDistribute);
-
-        FEE_DISTRIBUTOR.depositToken(LP_TOKEN, amountToDistribute);
+        FEE_DISTRIBUTOR.depositToken(SILO_TOKEN, amountToDistribute);
         FEE_DISTRIBUTOR.checkpoint();
-        FEE_DISTRIBUTOR.checkpointToken(LP_TOKEN);
+        FEE_DISTRIBUTOR.checkpointToken(SILO_TOKEN);
     }
 
     /// @notice Swap all provided assets into WETH

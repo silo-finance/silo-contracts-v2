@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {SiloGovernorDeploy} from "ve-silo/deploy/SiloGovernorDeploy.s.sol";
 import {GaugeControllerDeploy} from "ve-silo/deploy/GaugeControllerDeploy.s.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
+import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc GaugeControllerTest --ffi -vvv
 contract GaugeControllerTest is IntegrationTest {
@@ -39,7 +39,7 @@ contract GaugeControllerTest is IntegrationTest {
     }
 
     function testEnsureDeployedWithCorrectData() public {
-        address siloToken = getAddress(SILO80_WETH20_TOKEN);
+        address siloToken = getAddress(SILO_TOKEN);
 
         assertEq(_controller.token(), siloToken, "Invalid silo token");
 
@@ -89,10 +89,8 @@ contract GaugeControllerTest is IntegrationTest {
     function _dummySiloToken() internal {
         if (isChain(ANVIL_ALIAS)) {
             ERC20 siloToken = new ERC20("Silo test token", "SILO");
-            ERC20 silo8020Token = new ERC20("Silo 80/20", "SILO-80-20");
 
             setAddress(getChainId(), SILO_TOKEN, address(siloToken));
-            setAddress(getChainId(), SILO80_WETH20_TOKEN, address(silo8020Token));
         }
     }
 }

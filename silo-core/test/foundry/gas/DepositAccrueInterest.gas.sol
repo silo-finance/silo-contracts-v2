@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
@@ -25,13 +25,16 @@ contract DepositAccrueInterestGasTest is Gas, Test {
         vm.warp(block.timestamp + 1 days);
     }
 
+    /*
+    forge test -vvv --ffi --mt test_gas_depositAccrueInterest
+    */
     function test_gas_depositAccrueInterest() public {
         _action(
             DEPOSITOR,
             address(silo1),
-            abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.AssetType.Collateral)),
+            abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.CollateralType.Collateral)),
             "DepositAccrueInterest",
-            139094
+            135388
         );
     }
 }

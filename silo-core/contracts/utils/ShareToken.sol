@@ -1,20 +1,24 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {
-    ERC20Upgradeable,
-    IERC20MetadataUpgradeable
-} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import {ERC20Upgradeable} from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {IHookReceiver} from "silo-core/contracts/utils/hook-receivers/interfaces/IHookReceiver.sol";
-import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
+import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
 import {TokenHelper} from "../lib/TokenHelper.sol";
+import {Hook} from "../lib/Hook.sol";
+import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
+import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
+import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
+
 
 /// @title ShareToken
-/// @notice Implements common interface for Silo tokens representing debt or collateral positions.
+/// @notice Implements common interface for Silo tokens representing debt or collateral.
 /// @dev Docs borrowed from https://github.com/OpenZeppelin/openzeppelin-contracts/tree/v4.9.3
 ///
 /// Implementation of the ERC4626 "Tokenized Vault Standard" as defined in
@@ -55,15 +59,14 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is ERC20Upgradeable, IShareToken {
-    /// @notice Silo address for which tokens was deployed
-    ISilo public silo;
+abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
+    using Hook for uint24;
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    /// @notice Address of hook contract called on each token transfer, mint and burn
-    address public hookReceiver;
+    string private constant _NAME = "SiloShareToken";
 
     modifier onlySilo() {
-        if (msg.sender != address(silo)) revert OnlySilo();
+        if (msg.sender != address(_getSilo())) revert OnlySilo();
 
         _;
     }
@@ -73,32 +76,95 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         _disableInitializers();
     }
 
-    /// @inheritdoc IShareToken
-    function forwardTransfer(address _owner, address _recipient, uint256 _amount) external virtual onlySilo {
-        _transfer(_owner, _recipient, _amount);
+    function silo() external view virtual returns (ISilo) {
+        return _getSilo();
+    }
+
+    function siloConfig() external view returns (ISiloConfig) {
+        return _getSiloConfig();
     }
 
     /// @inheritdoc IShareToken
-    function forwardTransferFrom(address _spender, address _from, address _to, uint256 _amount)
-        public
+    function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+
+        $.hookSetup.hooksBefore = _hooksBefore;
+        $.hookSetup.hooksAfter = _hooksAfter;
+    }
+
+    /// @inheritdoc IShareToken
+    function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
+        external
         virtual
         onlySilo
     {
-        _spendAllowance(_from, _spender, _amount);
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+
+        $.transferWithChecks = false;
         _transfer(_from, _to, _amount);
+        $.transferWithChecks = true;
     }
 
-    /// @inheritdoc IShareToken
-    function forwardApprove(address _owner, address _spender, uint256 _amount) public virtual onlySilo {
-        _approve(_owner, _spender, _amount);
+    function hookSetup() external view virtual returns (HookSetup memory) {
+        return ShareTokenLib.getShareTokenStorage().hookSetup;
+    }
+
+    function hookReceiver() external view virtual returns (address) {
+        return ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver;
+    }
+
+    /// @inheritdoc ERC20Upgradeable
+    function transferFrom(address _from, address _to, uint256 _amount)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20)
+        returns (bool result)
+    {
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
+
+        result = ERC20Upgradeable.transferFrom(_from, _to, _amount);
+
+        siloConfigCached.turnOffReentrancyProtection();
+    }
+
+    /// @inheritdoc ERC20Upgradeable
+    function transfer(address _to, uint256 _amount)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20)
+        returns (bool result)
+    {
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
+
+        result = ERC20Upgradeable.transfer(_to, _amount);
+
+        siloConfigCached.turnOffReentrancyProtection();
+    }
+
+    function approve(address spender, uint256 value) public override(ERC20Upgradeable, IERC20) returns (bool result) {
+        NonReentrantLib.nonReentrant(_getSiloConfig());
+
+        result = ERC20Upgradeable.approve(spender, value);
+    }
+
+    /// @inheritdoc IERC20Permit
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual override {
+        NonReentrantLib.nonReentrant(_getSiloConfig());
+
+        ERC20PermitUpgradeable.permit(owner, spender, value, deadline, v, r, s);
     }
 
     /// @dev decimals of share token
-    function decimals() public view virtual override(ERC20Upgradeable, IERC20MetadataUpgradeable) returns (uint8) {
-        ISiloConfig siloConfig = silo.config();
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-
-        return uint8(TokenHelper.assertAndGetDecimals(configData.token));
+    function decimals() public view virtual override(ERC20Upgradeable, IERC20Metadata) returns (uint8) {
+        return ShareTokenLib.decimals();
     }
 
     /// @dev Name convention:
@@ -112,26 +178,10 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         public
         view
         virtual
-        override(ERC20Upgradeable, IERC20MetadataUpgradeable)
+        override(ERC20Upgradeable, IERC20Metadata)
         returns (string memory)
     {
-        ISiloConfig siloConfig = silo.config();
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
-
-        string memory pre = "";
-        string memory post = " Deposit";
-
-        if (address(this) == configData.protectedShareToken) {
-            pre = "Non-borrowable ";
-        } else if (address(this) == configData.collateralShareToken) {
-            pre = "Borrowable ";
-        } else if (address(this) == configData.debtShareToken) {
-            post = " Debt";
-        }
-
-        string memory tokenSymbol = TokenHelper.symbol(configData.token);
-        return string.concat("Silo Finance ", pre, tokenSymbol, post, ", SiloId: ", siloIdAscii);
+        return ShareTokenLib.name();
     }
 
     /// @dev Symbol convention:
@@ -145,66 +195,80 @@ abstract contract ShareToken is ERC20Upgradeable, IShareToken {
         public
         view
         virtual
-        override(ERC20Upgradeable, IERC20MetadataUpgradeable)
+        override(ERC20Upgradeable, IERC20Metadata)
         returns (string memory)
     {
-        ISiloConfig siloConfig = silo.config();
-        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo));
-        string memory siloIdAscii = StringsUpgradeable.toString(siloConfig.SILO_ID());
-
-        string memory pre;
-
-        if (address(this) == configData.protectedShareToken) {
-            pre = "nb";
-        } else if (address(this) == configData.collateralShareToken) {
-            pre = "b";
-        } else if (address(this) == configData.debtShareToken) {
-            pre = "d";
-        }
-
-        string memory tokenSymbol = TokenHelper.symbol(configData.token);
-        return string.concat(pre, tokenSymbol, "-", siloIdAscii);
+        return ShareTokenLib.symbol();
     }
 
     function balanceOfAndTotalSupply(address _account) public view virtual returns (uint256, uint256) {
         return (balanceOf(_account), totalSupply());
     }
 
-    /// @param _silo Silo address for which tokens was deployed
-    // solhint-disable-next-line func-name-mixedcase
-    function __ShareToken_init(ISilo _silo, address _hookReceiver) internal virtual onlyInitializing {
-        silo = _silo;
-        hookReceiver = _hookReceiver;
+    /// @dev Share token initialization
+    function _shareTokenInitialize(
+        ISilo _silo,
+        address _hookReceiver,
+        uint24 _tokenType
+    )
+        internal
+        virtual
+        initializer
+    {
+        __ERC20Permit_init(_NAME);
+        __ERC20_init(_NAME, _NAME);
+        ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
-    /// @dev Call an afterTokenTransfer hook if registered and check minimum share requirement on mint/burn
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        if (hookReceiver == address(0)) return;
+    /// @inheritdoc ERC20Upgradeable
+    function _update(address from, address to, uint256 value) internal virtual override {
+        if (value == 0) revert ZeroTransfer();
+
+        _beforeTokenTransfer(from, to, value);
+
+        ERC20Upgradeable._update(from, to, value);
+
+        _afterTokenTransfer(from, to, value);
+    }
+
+    /// @dev By default, we do not have any hooks before token transfer. However,
+    /// derived contracts can override this function if they need to execute any logic before token transfer.
+    function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {}
+
+    /// @dev Call an afterTokenTransfer hook if registered
+    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        HookSetup memory setup = $.hookSetup;
+
+        uint256 action = Hook.shareTokenTransfer(setup.tokenType);
+
+        if (!setup.hooksAfter.matchAction(action)) return;
 
         // report mint, burn or transfer
-        (bool callSuccessful, bytes memory code) = hookReceiver.call( // solhint-disable-line avoid-low-level-calls
-            abi.encodeCall(
-                IHookReceiver.afterTokenTransfer,
-                (_sender, balanceOf(_sender), _recipient, balanceOf(_recipient), totalSupply(), _amount)
-            )
+        // even if it is possible to leave silo in a middle of mint/burn, where we can have invalid state
+        // you can not enter any function because of cross reentrancy check
+        // invalid mid-state can be eg: in a middle of transitionCollateral, after burn but before mint
+        IHookReceiver(setup.hookReceiver).afterAction(
+            address($.silo),
+            action,
+            abi.encodePacked(_sender, _recipient, _amount, balanceOf(_sender), balanceOf(_recipient), totalSupply())
         );
-
-        if (!callSuccessful || code.length == 0) return;
-
-        if (abi.decode(code, (IHookReceiver.HookReturnCode)) == IHookReceiver.HookReturnCode.REQUEST_TO_REVERT_TX) {
-            revert RevertRequestFromHook();
-        }
     }
 
-    /// @dev checks if operation is "real" transfer
-    /// @param _sender sender address
-    /// @param _recipient recipient address
-    /// @return bool true if operation is real transfer, false if it is mint or burn
-    function _isTransfer(address _sender, address _recipient) internal pure virtual returns (bool) {
-        // in order this check to be true, is is required to have:
-        // require(sender != address(0), "ERC20: transfer from the zero address");
-        // require(recipient != address(0), "ERC20: transfer to the zero address");
-        // on transfer. ERC20 has them, so we good.
-        return _sender != address(0) && _recipient != address(0);
+    function _crossNonReentrantBefore()
+        internal
+        virtual
+        returns (ISiloConfig siloConfigCached)
+    {
+        siloConfigCached = _getSiloConfig();
+        siloConfigCached.turnOnReentrancyProtection();
+    }
+
+    function _getSiloConfig() internal view returns (ISiloConfig) {
+        return ShareTokenLib.getShareTokenStorage().siloConfig;
+    }
+    
+    function _getSilo() internal view returns (ISilo) {
+        return ShareTokenLib.getShareTokenStorage().silo;
     }
 }

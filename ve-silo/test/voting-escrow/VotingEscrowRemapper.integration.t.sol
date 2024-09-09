@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -30,6 +31,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
     address internal _remoteUser = makeAddr("remoteUser");
     address internal _childChainReceiver = makeAddr("Child chain receiver");
     address internal _smartValletChecker = makeAddr("Smart wallet checker");
+    address internal _timelock = makeAddr("Timelock");
     address internal _deployer;
     address internal _link;
 
@@ -74,12 +76,14 @@ contract VotingEscrowRemapperTest is IntegrationTest {
 
         _link = getAddress(AddrKey.LINK);
 
+        setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
+
         VeSiloDelegatorViaCCIPDeploy delegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
         veSiloDelegator = delegatorDeploy.run();
     }
 
     function testChildChainReceiveUpdatePermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         remapper.setVeSiloDelegator(veSiloDelegator);
 
         _setVeSiloDelegator();
@@ -257,7 +261,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
         vm.expectEmit(false, false, true, true);
         emit ChildChainReceiverUpdated(_DS_CHAIN_SELECTOR, _childChainReceiver);
 
-        vm.prank(_deployer);
+        vm.prank(_timelock);
         veSiloDelegator.setChildChainReceiver(_DS_CHAIN_SELECTOR, _childChainReceiver);
     }
 

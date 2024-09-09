@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
-import {InterestRateModelV2Checked} from "../_checkedMath/InterestRateModelV2Checked.sol";
+import {InterestRateModelV2Checked} from "./InterestRateModelV2Checked.sol";
 
 // forge test -vv --mc InterestRateModelV2Test
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
@@ -18,24 +19,62 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
 
     uint256 constant DP = 10 ** 18;
 
+    event Initialized(address indexed config);
+
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
     }
 
-    function test_IRM_decimals() public {
-        assertEq(INTEREST_RATE_MODEL.decimals(), DP);
+    /*
+    forge test -vv --mt test_initialize_zero
+    */
+    function test_initialize_zero() public {
+        vm.expectRevert(IInterestRateModelV2.AddressZero.selector);
+        INTEREST_RATE_MODEL.initialize(address(0));
     }
 
-    function test_IRM_RCOMP_MAX() public {
+    /*
+    forge test -vv --mt test_initialize_pass
+    */
+    function test_initialize_pass() public {
+        address config = makeAddr("config");
+
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(config);
+
+        INTEREST_RATE_MODEL.initialize(config);
+
+        IInterestRateModelV2Config connectedConfig = INTEREST_RATE_MODEL.irmConfig();
+        assertEq(address(connectedConfig), config, "expect valid config address");
+    }
+
+    /*
+    forge test -vv --mt test_initialize_onlyOnce
+    */
+    function test_initialize_onlyOnce() public {
+        address config = makeAddr("config");
+
+        INTEREST_RATE_MODEL.initialize(config);
+
+        vm.expectRevert(IInterestRateModelV2.AlreadyInitialized.selector);
+        INTEREST_RATE_MODEL.initialize(config);
+    }
+
+    function test_IRM_decimals() public view {
+        uint256 decimals = INTEREST_RATE_MODEL.decimals();
+        assertEq(DP, 10 ** decimals);
+    }
+
+    function test_IRM_RCOMP_MAX() public view {
         assertEq(INTEREST_RATE_MODEL.RCOMP_MAX(), 2 ** 16 * DP);
     }
 
-    function test_IRM_X_MAX() public {
+    function test_IRM_X_MAX() public view {
         assertEq(INTEREST_RATE_MODEL.X_MAX(), 11090370147631773313);
     }
 
     // forge test -vvv --mt test_IRM_ASSET_DATA_OVERFLOW_LIMIT
-    function test_IRM_ASSET_DATA_OVERFLOW_LIMIT() public {
+    function test_IRM_ASSET_DATA_OVERFLOW_LIMIT() public view {
         assertEq(INTEREST_RATE_MODEL.ASSET_DATA_OVERFLOW_LIMIT(), uint256(type(uint256).max / (2 ** 16 * DP)));
     }
 
@@ -52,7 +91,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
     
     // forge test -vv --mt test_IRM_calculateCurrentInterestRate_CAP
-    function test_IRM_calculateCurrentInterestRate_CAP() public {
+    function test_IRM_calculateCurrentInterestRate_CAP() public view {
         uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
             _configWithState(),
             100e18, // _totalDeposits,
@@ -76,7 +115,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz
-    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz(uint256 _t) public {
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz(uint256 _t) public view {
         vm.assume(_t < 5 * 365 days);
 
         uint256 cap = 3170979198376 * (1 + _t);
@@ -94,7 +133,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO
-    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO() public {
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO() public view {
         (uint256 rcur,,,) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
             _configWithState(),
             100e18, // _totalDeposits,
@@ -107,7 +146,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateRComp
-    /// forge-config: core.fuzz.runs = 10000
+    /// forge-config: core-test.fuzz.runs = 10000
     function test_IRM_calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x) public {
         InterestRateModelV2Impl impl = new InterestRateModelV2Impl();
         InterestRateModelV2Checked implChecked = new InterestRateModelV2Checked();

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {Address} from "openzeppelin-contracts/utils/Address.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
 
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
@@ -12,7 +13,7 @@ import {IVeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/interface
 import {CCIPMessageSender, ICCIPMessageSender} from "ve-silo/contracts/utils/CCIPMessageSender.sol";
 
 /// @title VeSilo delegator via CCIP
-contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDelegatorViaCCIP {
+contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, Initializable, IVeSiloDelegatorViaCCIP {
     // solhint-disable var-name-mixedcase
     IVeSilo public immutable VOTING_ESCROW;
     IVotingEscrowCCIPRemapper public immutable REMAPPER;
@@ -29,9 +30,13 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
         IVotingEscrowCCIPRemapper remapper,
         address router,
         address link
-    ) CCIPMessageSender(router, link) {
+    ) CCIPMessageSender(router, link) Ownable(msg.sender) {
         VOTING_ESCROW = votingEscrow;
         REMAPPER = remapper;
+
+        // Locks an implementation, preventing any future reinitialization
+        _disableInitializers();
+        _transferOwnership(address(0));
     }
 
     /// @inheritdoc IVeSiloDelegatorViaCCIP
@@ -151,6 +156,10 @@ contract VeSiloDelegatorViaCCIP is CCIPMessageSender, Ownable2Step, IVeSiloDeleg
         bytes memory data = _getTotalSupplyData(totalSupplyEpoch);
         Client.EVM2AnyMessage memory ccipMessage = getCCIPMessage(childChainReceiver, data, _payFeesIn);
         fee = _calculateFee(_dstChainSelector, ccipMessage);
+    }
+
+    function initialize(address _timelock) public initializer {
+        _transferOwnership(_timelock);
     }
 
     /// @notice Send back any ETH leftover to the `msg.sender`

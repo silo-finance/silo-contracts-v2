@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 /// @notice please read carefully unchecked comments, there are some requirements tht must be met in order to not
 /// over/under flow
@@ -49,7 +50,7 @@ library OracleNormalization {
         view
         returns (uint256 divider, uint256 multiplier)
     {
-        uint256 quoteDecimals = _quoteToken.decimals();
+        uint256 quoteDecimals = TokenHelper.assertAndGetDecimals(address(_quoteToken));
 
         // this is arbitrary check, 36 is high enough
         // anything above 36 might cause precision errors in price and it will make no sense to have it
@@ -57,7 +58,7 @@ library OracleNormalization {
         uint256 arbitraryMaxDecimals = 36;
         if (quoteDecimals > arbitraryMaxDecimals) revert Overflow();
 
-        uint256 baseDecimals = _baseToken.decimals();
+        uint256 baseDecimals = TokenHelper.assertAndGetDecimals(address(_baseToken));
         bool useMultiplier = false;
 
         // below check prevents underflow on subtraction

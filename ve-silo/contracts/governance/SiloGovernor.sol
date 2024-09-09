@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.21;
+pragma solidity 0.8.24;
 
-import {Governor, IGovernor, SafeCast} from "openzeppelin-contracts/governance/Governor.sol";
-import {GovernorSettings} from "openzeppelin-contracts/governance/extensions/GovernorSettings.sol";
-import {GovernorCountingSimple} from "openzeppelin-contracts/governance/extensions/GovernorCountingSimple.sol";
-import {GovernorVotes, IVotes} from "openzeppelin-contracts/governance/extensions/GovernorVotes.sol";
+import {Governor, IGovernor, SafeCast} from "openzeppelin5/governance/Governor.sol";
+import {GovernorSettings} from "openzeppelin5/governance/extensions/GovernorSettings.sol";
+import {GovernorCountingSimple} from "openzeppelin5/governance/extensions/GovernorCountingSimple.sol";
+import {GovernorVotes, IVotes} from "openzeppelin5/governance/extensions/GovernorVotes.sol";
 
 import {GovernorVotesQuorumFraction}
-    from "openzeppelin-contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+    from "openzeppelin5/governance/extensions/GovernorVotesQuorumFraction.sol";
 
 import {GovernorTimelockControl, TimelockController}
-    from "openzeppelin-contracts/governance/extensions/GovernorTimelockControl.sol";
+    from "openzeppelin5/governance/extensions/GovernorTimelockControl.sol";
 
 import {IVeSilo} from "../voting-escrow/interfaces/IVeSilo.sol";
 
@@ -49,7 +49,7 @@ contract SiloGovernor is
         public
         view
         virtual
-        override(IGovernor, GovernorVotesQuorumFraction)
+        override(Governor, GovernorVotesQuorumFraction)
         returns (uint256)
     {
         return (veSiloToken.totalSupply(_timepoint) * quorumNumerator(_timepoint)) / quorumDenominator();
@@ -82,25 +82,35 @@ contract SiloGovernor is
         public
         view
         virtual
+        override(Governor)
+        returns (bool)
+    {
+        return Governor.supportsInterface(_interfaceId);
+    }
+
+    /// @inheritdoc GovernorTimelockControl
+    function proposalNeedsQueuing(uint256 _proposalId)
+        public
+        view
         override(Governor, GovernorTimelockControl)
         returns (bool)
     {
-        return GovernorTimelockControl.supportsInterface(_interfaceId);
+        return GovernorTimelockControl.proposalNeedsQueuing(_proposalId);
     }
 
     /// @inheritdoc GovernorVotes
-    function clock() public view virtual override(IGovernor, GovernorVotes) returns (uint48) {
+    function clock() public view virtual override(Governor, GovernorVotes) returns (uint48) {
          return SafeCast.toUint48(block.timestamp);
     }
 
     /// @inheritdoc GovernorVotes
     // solhint-disable-next-line func-name-mixedcase
-    function CLOCK_MODE() public pure virtual override(IGovernor, GovernorVotes) returns (string memory) {
+    function CLOCK_MODE() public pure virtual override(Governor, GovernorVotes) returns (string memory) {
         return "mode=blocktimestamp&from=default";
     }
 
     /// @inheritdoc Governor
-    function _execute(
+    function _executeOperations(
         uint256 _proposalId,
         address[] memory _targets,
         uint256[] memory _values,
@@ -111,7 +121,23 @@ contract SiloGovernor is
         virtual
         override(Governor, GovernorTimelockControl)
     {
-        GovernorTimelockControl._execute(_proposalId, _targets, _values, _calldatas, _descriptionHash);
+        GovernorTimelockControl._executeOperations(_proposalId, _targets, _values, _calldatas, _descriptionHash);
+    }
+
+    /// @inheritdoc GovernorTimelockControl
+    function _queueOperations(
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    )
+        internal
+        virtual
+        override(Governor, GovernorTimelockControl)
+        returns (uint48)
+    {
+        return GovernorTimelockControl._queueOperations(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     /// @inheritdoc Governor

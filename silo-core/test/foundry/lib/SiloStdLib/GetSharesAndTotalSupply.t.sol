@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloStdLib.sol";
+import {Test} from "forge-std/Test.sol";
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
@@ -22,8 +22,7 @@ contract GetSharesAndTotalSupplyTest is Test {
         address shareToken = SHARE_TOKEN.ADDRESS();
         address owner;
 
-        SHARE_TOKEN.balanceOfMock(owner, 0);
-        SHARE_TOKEN.totalSupplyMock(0);
+        SHARE_TOKEN.balanceOfAndTotalSupplyMock(owner, 0, 0);
         (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner, 0);
         assertEq(shares, 0, "zero shares");
         assertEq(totalSupply, 0, "zero totalSupply");
@@ -36,8 +35,7 @@ contract GetSharesAndTotalSupplyTest is Test {
         address shareToken = SHARE_TOKEN.ADDRESS();
         address owner = address(2);
 
-        SHARE_TOKEN.balanceOfMock(owner, 111);
-        SHARE_TOKEN.totalSupplyMock(222);
+        SHARE_TOKEN.balanceOfAndTotalSupplyMock(owner, 111, 222);
         (uint256 shares, uint256 totalSupply) = SiloStdLib.getSharesAndTotalSupply(shareToken, owner, 0);
         assertEq(shares, 111, "shares");
         assertEq(totalSupply, 222, "totalSupply");

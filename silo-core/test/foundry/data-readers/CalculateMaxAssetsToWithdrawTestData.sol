@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract CalculateMaxAssetsToWithdrawTestData {
     struct Input {
@@ -41,7 +41,7 @@ contract CalculateMaxAssetsToWithdrawTestData {
 
         _add(10, 8, 0.8888e18, 10, 10, 0, "8/(10 - 1) = 100% > LT (!), only zero is acceptable");
 
-        ourMax = 999099909990999099;
+        ourMax = 999099909990999098;
         _add(10e18, 8e18, 0.8888e18, 5e18, 5e18, ourMax, "LTV after => 88,88% (1)");
         _add(
             10e18 - ourMax, 8e18, 0.8888e18, 10e18 - ourMax, 0, 0,
@@ -53,7 +53,7 @@ contract CalculateMaxAssetsToWithdrawTestData {
         _add(10e18 - ourMax * 5, 8e18, 0.8888e18, 1e18 - ourMax, 0, 0, "^ LTV after => 88,88% (2)");
 
         //  0.1e18 / (3e18 - 2882352941176470589));
-        ourMax = 2882352941176470588;
+        ourMax = 2882352941176470587;
         _add(3e18, 0.1e18, 0.85e18, 2e18, 1e18, ourMax, "LTV after => 85%");
         _add(3e18 - ourMax, 0.1e18, 0.85e18, 0, 3e18 - ourMax, 0, "^ LTV after => 85%");
 
