@@ -3,19 +3,18 @@
 
 The **Silo Protocol Hooks System** provides an extensible mechanism for interacting with core actions like deposits, withdrawals, borrowing, and liquidations. Hooks allow external systems to execute custom logic **before** or **after** protocol actions, offering flexibility for validation, logging, or integration with external contracts. While the protocol is fully functional without hooks, they enhance its modularity and allow for seamless interaction with other decentralized systems.
 
-# Navigation Menu
-
 - [Overview](#overview)
-- [Deposit Function Hook Actions](#deposit-function-hook-actions)
-- [Withdraw Function Hook Actions](#withdraw-function-hook-actions)
-- [Borrow Function Hook Actions](#borrow-function-hook-actions)
-- [Repay Function Hook Actions](#repay-function-hook-actions)
-- [Leverage Same Asset Function Hook Actions](#leverage-same-asset-function-hook-actions)
-- [Transition Collateral Function Hook Actions](#transition-collateral-function-hook-actions)
-- [Switch Collateral To This Silo Function Hook Actions](#switch-collateral-to-this-silo-function-hook-actions)
-- [Flash Loan Function Hook Actions](#flash-loan-function-hook-actions)
-- [Liquidation Call Function Hook Actions](#liquidation-call-function-hook-actions)
-- [Share Token Transfer Hook](#share-token-transfer-hook-during-deposit-withdraw-borrow-repay-leverage-same-asset-transition-collateral-and-liquidation)
+- [Deposit function hook actions](#deposit-function-hook-actions)
+- [Withdraw function hook actions](#withdraw-function-hook-actions)
+- [Borrow function hook actions](#borrow-function-hook-actions)
+- [Repay function hook actions](#repay-function-hook-actions)
+- [Leverage Same Asset function hook actions](#leverage-same-asset-function-hook-actions)
+- [Transition Collateral function hook actions](#transition-collateral-function-hook-actions)
+- [Switch Collateral To This Silo function hook actions](#switch-collateral-to-this-silo-function-hook-actions)
+- [Flash Loan function hook actions](#flash-loan-function-hook-actions)
+- [Liquidation Call function hook actions](#liquidation-call-function-hook-actions)
+- [Share Token Transfer hook](#share-token-transfer-hook)
+- [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction)
 
 ## Overview
 
@@ -440,14 +439,7 @@ The following key actions in the protocol are enhanced by the hooks system:
   - Collateral tokens are transferred as part of the liquidation process to represent the liquidation of collateral. This action triggers a **Share Token Transfer Hook** for both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the transfer of collateral tokens to cover the borrower’s debt. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
 ---
 
-
-
-
-
-
-
-
-## Share Token Transfer Hook
+## Share Token Transfer Hook (AfterAction)
 
 - **Action**: `Hook.shareTokenTransfer(tokenType)` (afterAction)
   - **Context**: During the deposit process, shares are minted for the depositor to represent their stake in the protocol. This triggers a token transfer action where share tokens are transferred. The `Hook.shareTokenTransfer` hook is invoked after the shares are minted.
@@ -477,7 +469,7 @@ The following key actions in the protocol are enhanced by the hooks system:
       ```
       - **Explanation**: This code demonstrates how developers can decode the data sent to the `afterAction` hook for token transfers using the `Hook` library. The `afterTokenTransferDecode` function provides access to data like `sender`, `recipient`, and `amount`, which can be used in post-transfer logic.
 
-# Share Debt Token Transfer Hook (AfterAction)
+## Share Debt Token Transfer Hook (AfterAction)
 
 - **Action**: `Hook.shareTokenTransfer(tokenType)` (afterAction)
   - **Context**: This hook is invoked during the transfer of debt tokens that represent a borrower’s liability in the protocol. It is triggered after the debt tokens are transferred or minted in response to borrowing operations.
