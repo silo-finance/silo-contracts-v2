@@ -92,6 +92,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
             Strings.toHexString(siloConfigFromFactory)
         );
 
+        // The example of a link. The foundry may generate different addresses/hashes, address of a Config may change.
         // https://v2.app.silo.finance/markets/31337/0x45c9fcf98d9d4b4a7d0daba0411208139a9b06a3
         string memory tokenURI = IERC721Metadata(address(siloFactory)).tokenURI(firstSiloId);
         assertEq(tokenURI, expectedURI, "actual token URI does not match with expected");

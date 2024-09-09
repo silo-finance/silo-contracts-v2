@@ -53,10 +53,8 @@ interface ISiloFactory is IERC721 {
     error OracleMisconfiguration();
 
     /// @notice Initialize SiloFactory contract.
-    /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
-    /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
-    /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
-    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only owner can init.
+    /// @dev SiloFactory is not a clonable contract. initialize() method is here because we have circular dependency:
+    /// SiloFactory needs to know Silo address and Silo implementation (clonable) needs to know the factory address.
     /// @param _siloImpl Address of the Silo implementation.
     /// @param _shareCollateralTokenImpl Address of the ShareCollateralToken implementation.
     /// @param _shareDebtTokenImpl Address of the ShareDebtToken implementation.
