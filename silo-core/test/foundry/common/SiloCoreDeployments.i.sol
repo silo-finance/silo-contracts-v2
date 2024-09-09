@@ -18,13 +18,17 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_get_exists
+    forge test -vv --ffi --mt test_get_exists_
     */
     function test_get_exists_anvil() public {
         _setUpLocalFixture();
 
-        address addr = SiloCoreDeployments.get(SiloCoreContracts.PARTIAL_LIQUIDATION, ChainsLib.ANVIL_ALIAS);
-        assertEq(addr, address(partialLiquidation), "expect valid address anvil");
+        address factoryFromSilo0 = address(silo0.factory());
+        address factoryFromSilo1 = address(silo1.factory());
+        address deployedFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.ANVIL_ALIAS);
+
+        assertEq(factoryFromSilo0, factoryFromSilo1, "factoryFromSilo0 == factoryFromSilo1");
+        assertEq(factoryFromSilo0, deployedFactory, "factoryFromSilo0 == deployedFactory");
     }
 
     function test_get_exists_optimism() public {
