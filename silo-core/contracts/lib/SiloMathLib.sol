@@ -65,6 +65,9 @@ library SiloMathLib {
 
             // TODO if we cap interest on debt and now we cap on collateral - can it have impact on something?
             // eg. is it possible to generate more debt so then we can not withdraw collateral because we short with tokens?
+            // scenario: collateral is 70%max, debt is 50%max, interest 40%max
+            // but on collateral it will be cap to 30%max (because 70% + 40% will give overflow).
+            // what happen with 10% diff??
             if (cap < collateralInterest) {
                 collateralInterest = cap;
             }
