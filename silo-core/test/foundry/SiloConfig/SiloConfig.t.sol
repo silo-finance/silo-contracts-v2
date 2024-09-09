@@ -75,8 +75,6 @@ contract SiloConfigTest is Test {
         // when using assume, it reject too many inputs
         _configData0.hookReceiver = _configData1.hookReceiver;
 
-        _configData0.otherSilo = _configData1.silo;
-        _configData1.otherSilo = _configData0.silo;
         _configData1.daoFee = _configData0.daoFee;
         _configData1.deployerFee = _configData0.deployerFee;
         _configData0.collateralShareToken = _configData0.silo;

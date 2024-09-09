@@ -73,8 +73,6 @@ contract OrderedConfigsTest is Test {
         _configDataInput0.hookReceiver = _configDataInput1.hookReceiver; 
         _configDataInput0.hookReceiver = _configDataInput1.hookReceiver;
 
-        _configDataInput0.otherSilo = _configDataInput1.silo;
-        _configDataInput1.otherSilo = _configDataInput0.silo;
         _configDataInput1.daoFee = _configDataInput0.daoFee;
         _configDataInput1.deployerFee = _configDataInput0.deployerFee;
 
