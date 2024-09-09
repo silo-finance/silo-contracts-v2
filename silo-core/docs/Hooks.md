@@ -64,7 +64,7 @@ The following key actions in the protocol are enhanced by the hooks system:
 - **Flash Loan**: Flash loans can be issued, with hooks ensuring proper validation and fee tracking.
 - **Liquidation Call**: When a user’s position is insolvent, the protocol invokes liquidation, with hooks tracking the sale of collateral and the repayment of debt.
 
-# Deposit Function Hook Actions
+# Deposit function hook actions
 
 - **Action**: `Hook.depositAction(depositType)`
   - **Context**: This hook is invoked during deposit operations, allowing for actions to be taken before and after the deposit logic is executed. Depositors receive shares representing their stake in the vault, and this process can trigger other hook actions such as token transfers when these shares are minted. The protocol supports different types of deposits that determine liquidity and risk preferences.
@@ -109,11 +109,11 @@ The following key actions in the protocol are enhanced by the hooks system:
 
 ### Share Token Transfer Hook (During Deposit)
 
-- During the deposit, share tokens are mminted to the depositor. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+- During the deposit, share tokens are minted to the depositor. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
 
 ---
 
-# Withdraw Function Hook Actions
+# Withdraw function hook actions
 
 - **Action**: `Hook.withdrawAction(collateralType)`
   - **Context**: This hook is invoked during withdrawal operations, allowing for actions to be taken before and after the withdrawal logic is executed. Different types of collateral influence the conditions under which withdrawals occur.
@@ -156,11 +156,11 @@ The following key actions in the protocol are enhanced by the hooks system:
 
 ### Share Token Transfer Hook (During Withdraw)
 
-- During the withdrawal process, share tokens are burned to release the depositor's stake in the protocol. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+- During the withdrawal process, share tokens are burned to release the depositor's stake in the protocol. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
 ---
 
 
-# Borrow Function Hook Actions
+# Borrow function hook actions
 
 - **Action**: `Hook.borrowAction()`
   - **Context**: This hook is invoked during borrowing operations, allowing for actions to be taken before and after the borrow logic is executed. Borrowing operations in the protocol result in the minting of a debt token to represent the borrower’s debt position.
@@ -196,11 +196,13 @@ The following key actions in the protocol are enhanced by the hooks system:
       Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
       ```
       - **Explanation**: This code example shows how developers can decode the data sent to the `afterAction` hook using the `Hook` library. The `afterBorrowDecode` function allows easy access to fields like `borrowedAssets` and `borrowedShares`, simplifying post-borrow logic.
+
 ### Share Token Transfer Hook (During Borrow)
 
-- During the borrowing process, debt tokens are minted to represent the borrower's liability in the protocol. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+- During the borrowing process, debt tokens are minted to represent the borrower's liability in the protocol. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
 ---
-# Repay Function Hook Actions
+
+# Repay function hook actions
 
 - **Action**: `Hook.REPAY` (beforeAction and afterAction)
   - **Context**: This hook is invoked during the repayment of borrowed assets, allowing for actions to be taken before and after the repayment logic is executed. When a user repays their debt, their debt position is adjusted accordingly, and the corresponding debt tokens are updated.
@@ -239,10 +241,10 @@ The following key actions in the protocol are enhanced by the hooks system:
 
 ### Share Debt Token Transfer Hook (During Repay)
 
-- During the repayment process, debt tokens are burned to adjust the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+- During the repayment process, debt tokens are burned to adjust the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
 ---
 
-# Leverage Same Asset Function Hook Actions
+# Leverage Same Asset function hook actions
 
 - **Action**: `Hook.LEVERAGE_SAME_ASSET` (beforeAction and afterAction)
   - **Context**: This hook is invoked during leverage operations where the same asset is used for both deposit and borrowing. It allows for actions to be taken before and after the leverage logic is executed. During this process, both debt and collateral tokens are transferred to reflect the leveraged position.
@@ -282,13 +284,13 @@ The following key actions in the protocol are enhanced by the hooks system:
 ### Share Token Transfer Hooks (During Leverage Same Asset)
 
 - **Debt Token Transfer**:
-  - During the leverage process, debt tokens are minted to represent the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+  - During the leverage process, debt tokens are minted to represent the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
 
 - **Collateral Token Transfer**:
-  - Simultaneously, collateral tokens are transferred to represent the borrower’s collateral position. This action triggers a **Share Token Transfer Hook** for both **COLLATERAL_TOKEN** and **PROTECTED_TOKEN** types, depending on the type of collateral used. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+  - Simultaneously, collateral tokens are transferred to represent the borrower’s collateral position. This action triggers a **Share Token Transfer Hook** for both **COLLATERAL_TOKEN** and **PROTECTED_TOKEN** types, depending on the type of collateral used. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
 ---
 
-# Transition Collateral Function Hook Actions
+# Transition Collateral function hook actions
 
 - **Action**: `Hook.transitionCollateralAction(withdrawType)` (beforeAction and afterAction)
   - **Context**: The **transitionCollateral** function allows users to transition from one type of collateral to another (e.g., from **Hook.PROTECTED_TOKEN** to **Hook.COLLATERAL_TOKEN**) without transferring underlying assets. This transition enables users to adjust their collateral based on their preference to either protect their assets or make them borrowable to earn interest. The transition involves a combination of both a withdraw and deposit action, representing the change in collateral type.
@@ -333,10 +335,10 @@ The following key actions in the protocol are enhanced by the hooks system:
 ### Share Token Transfer Hooks (During Transition Collateral)
 
 - **Collateral Token Transfer**:
-  - During the transition, collateral tokens are transferred to reflect the user's updated collateral position. This action triggers a **Share Token Transfer Hook** for **Hook.COLLATERAL_TOKEN** or **Hook.PROTECTED_TOKEN** type. These hooks manage the token transfer logic to reflect the change in collateral type during the transition. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+  - During the transition, collateral tokens are transferred to reflect the user's updated collateral position. This action triggers a **Share Token Transfer Hook** both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the token transfer logic to reflect the change in collateral type during the transition. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
 ---
 
-# Switch Collateral to This Silo Function Hook Actions
+# Switch Collateral to This Silo function hook actions
 
 - **Action**: `Hook.SWITCH_COLLATERAL` (beforeAction and afterAction)
   - **Context**: This hook is invoked when collateral is switched to the current silo. The function allows for actions to be taken before and after the collateral switch is executed.
@@ -354,7 +356,7 @@ The following key actions in the protocol are enhanced by the hooks system:
       - **Explanation**: This code demonstrates how developers can decode the data sent to the `beforeAction` or `afterAction` hook using the `Hook` library. The `switchCollateralDecode` function simplifies access to the `msg.sender` field, enabling developers to apply pre- and post-collateral switch logic as needed.
 ---
 
-# Flash Loan Function Hook Actions
+# Flash Loan function hook actions
 
 - **Action**: `Hook.FLASH_LOAN` (beforeAction and afterAction)
   - **Context**: This hook is invoked during flash loan operations, allowing actions to be taken before and after the flash loan logic is executed. Flash loans involve borrowing assets without collateral and without changing the Silo state, provided that the loan is repaid within the same transaction, along with a fee.
@@ -389,7 +391,7 @@ The following key actions in the protocol are enhanced by the hooks system:
       - **Explanation**: This code demonstrates how developers can decode the data sent to the `afterAction` hook using the `Hook` library. The `afterFlashLoanDecode` function provides access to fields such as `receiver`, `token`, `amount`, and `fee`, enabling post-flash loan logic.
 ---
 
-# Liquidation Call Function Hook Actions
+# Liquidation Call function hook actions
 
 - **Action**: `Hook.LIQUIDATION` (beforeAction and afterAction)
   - **Context**: This hook is invoked when a liquidation of an insolvent position occurs, allowing for actions to be taken before and after the liquidation logic is executed. Liquidation typically involves selling collateral to repay debt and involves both collateral and debt token transfers.
@@ -433,10 +435,10 @@ The following key actions in the protocol are enhanced by the hooks system:
 ### Share Token Transfer Hooks (During Liquidation)
 
 - **Debt Token Transfer**:
-  - During the liquidation process, debt tokens are transferred or burned to reflect the repayment of the borrower's debt. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the transfer of the debt tokens during liquidation. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+  - During the liquidation process, debt tokens are transferred or burned to reflect the repayment of the borrower's debt. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the transfer of the debt tokens during liquidation. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
 
 - **Collateral Token Transfer**:
-  - Collateral tokens are transferred as part of the liquidation process to represent the liquidation of collateral. This action triggers a **Share Token Transfer Hook** for both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the transfer of collateral tokens to cover the borrower’s debt. For more details, refer to the **Share Token Transfer Hook** section located at the end of this document.
+  - Collateral tokens are transferred as part of the liquidation process to represent the liquidation of collateral. This action triggers a **Share Token Transfer Hook** for both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the transfer of collateral tokens to cover the borrower’s debt. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
 ---
 
 ## Share Token Transfer Hook (AfterAction)
