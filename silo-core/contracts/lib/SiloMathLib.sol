@@ -77,9 +77,25 @@ library SiloMathLib {
             return (_debtAssets, 0);
         }
 
-        accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
+        unchecked {
+            // save to unchecked because we only have division and `_rcomp` is not 0 based on above check
+            if (_debtAssets / _PRECISION_DECIMALS < type(uint256).max / _rcomp) {
+                // we have overflow on accruedInterest, let's do 0, will that be in sync with other places??
+            } else {
+                accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
+            }
 
-        debtAssetsWithInterest = _debtAssets + accruedInterest;
+            // save to uncheck because total amount can not be more than type.max
+            uint256 cap = type(uint256).max - _debtAssets;
+
+            if (cap < accruedInterest) {
+                // overflow on interest
+                accruedInterest = cap;
+                debtAssetsWithInterest = type(uint256).max;
+            } else {
+                debtAssetsWithInterest = _debtAssets + accruedInterest;
+            }
+        }
     }
 
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
