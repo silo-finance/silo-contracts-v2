@@ -137,7 +137,7 @@ Each action within the protocol is associated with two types of hooks:
 
 # Borrow function hook actions
 
-- **Action**: `Hook.borrowAction()`
+- **Action**: `Hook.BORROW`
   - **Context**: This hook is invoked during borrowing operations, allowing for actions to be taken before and after the borrow logic is executed. Borrowing operations in the protocol result in the minting of a debt token to represent the borrower’s debt position.
   
   - **Before Borrow Data**:
