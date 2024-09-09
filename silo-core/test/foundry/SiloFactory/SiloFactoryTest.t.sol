@@ -58,7 +58,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
 
         (,address owner) = siloFactory.getFeeReceivers(address(silo0));
 
-        assertNotEq(owner, address(0), "owner is not 0");
+        assertNotEq(owner, address(0), "owner is 0");
 
         bool isSilo = siloFactory.isSilo(address(silo0));
         assertTrue(isSilo, "silo0 is not a silo");
@@ -70,7 +70,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
 
         (,owner) = siloFactory.getFeeReceivers(address(silo0));
 
-        assertEq(owner, address(0), "owner is 0 after burn");
+        assertEq(owner, address(0), "owner is not 0 after burn");
 
         isSilo = siloFactory.isSilo(address(silo0));
         assertTrue(isSilo, "silo0 is not a silo after burn");
