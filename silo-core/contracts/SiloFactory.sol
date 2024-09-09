@@ -19,17 +19,12 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
+
     uint256 public daoFee;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public maxDeployerFee;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public maxFlashloanFee;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public maxLiquidationFee;
-
     address public daoFeeReceiver;
-
     address public siloImpl;
     address public shareProtectedCollateralTokenImpl;
     address public shareDebtTokenImpl;

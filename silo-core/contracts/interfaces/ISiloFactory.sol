@@ -108,16 +108,16 @@ interface ISiloFactory is IERC721 {
     /// @param _newBaseURI Value of the new base URI.
     function setBaseURI(string calldata _newBaseURI) external;
 
-    /// @notice DAO fee.
+    /// @notice DAO fee. Denominated in 18 decimals points. 1e18 == 100%.
     function daoFee() external view returns (uint256);
 
-    /// @notice Max deployer fee for a new Silos.
+    /// @notice Max deployer fee for a new Silos. Denominated in 18 decimals points. 1e18 == 100%.
     function maxDeployerFee() external view returns (uint256);
 
-    /// @notice Max flashloan fee for a new Silos.
+    /// @notice Max flashloan fee for a new Silos. Denominated in 18 decimals points. 1e18 == 100%.
     function maxFlashloanFee() external view returns (uint256);
 
-    /// @notice Max liquidation fee for a new Silos.
+    /// @notice Max liquidation fee for a new Silos. Denominated in 18 decimals points. 1e18 == 100%.
     function maxLiquidationFee() external view returns (uint256);
 
     /// @notice The recipient of DAO fees.
