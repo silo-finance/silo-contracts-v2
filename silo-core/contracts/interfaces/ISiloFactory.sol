@@ -71,8 +71,6 @@ interface ISiloFactory is IERC721 {
     ) external;
 
     /// @notice Create a new Silo.
-    /// @dev Share tokens in _configData are overridden so can be set to address(0). Sanity data validation
-    /// is done by SiloConfig.
     /// @param _initData Silo initialization data.
     /// @return siloConfig Config for the created Silo.
     function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig);
