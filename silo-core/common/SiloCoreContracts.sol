@@ -18,10 +18,15 @@ library SiloCoreContracts {
     string public constant SILO_ROUTER = "SiloRouter.sol";
 }
 
+/// @notice SiloCoreDeployments library
+/// @dev This library is used to get the deployed via deployment scripts address of the contracts.
+/// Supported deployment scripts are in the `silo-core/deploy` directory except for the `silo`,
+/// as it has a separate deployment script. Also, this library will not resolve the address of the
+/// smart contract that was cloned during the `silo` deployment.
 library SiloCoreDeployments {
     string public constant DEPLOYMENTS_DIR = "silo-core";
 
-    function get(string memory _contract, string memory _network) internal returns(address) {
+    function get(string memory _contract, string memory _network) internal returns (address) {
         return Deployments.getAddress(DEPLOYMENTS_DIR, _network, _contract);
     }
 }
