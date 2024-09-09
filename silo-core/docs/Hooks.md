@@ -39,19 +39,6 @@ Each action within the protocol is associated with two types of hooks:
 3. **Transitioning Between Collateral Types**:
    - Users can transition their assets between **Hook.PROTECTED_TOKEN** and **Hook.COLLATERAL_TOKEN** and vice verse without transferring the underlying assets. This transition is crucial for users who want to switch between protected and borrowable collateral, enabling interest generation or enhanced security.
 
-### Summary of Hookable Actions
-
-The following key actions in the protocol are enhanced by the hooks system:
-- **Deposit**: Allows users to deposit assets and receive share tokens, with hooks supporting pre- and post-deposit checks.
-- **Withdraw**: Users can withdraw collateral, and hooks ensure that token transfers and validations occur.
-- **Borrow**: Users can borrow against their collateral, with hooks managing debt tokens and enforcing borrowing rules.
-- **Repay**: Borrowers can repay their debt, with hooks updating their position and transferring debt tokens.
-- **Leverage Same Asset**: Users can leverage a single asset for both deposit and borrowing, with hooks handling the transition of tokens and ensuring system integrity.
-- **Transition Collateral**: Users can transition between protected and borrowable collateral, with hooks ensuring a seamless transition without moving the underlying assets.
-- **Switch Collateral to This Silo**: Users can switch collateral between silos, with hooks enforcing rules and tracking the movement of collateral.
-- **Flash Loan**: Flash loans can be issued, with hooks ensuring proper validation and fee tracking.
-- **Liquidation Call**: When a user’s position is insolvent, the protocol invokes liquidation, with hooks tracking the sale of collateral and the repayment of debt.
-
 # Deposit function hook actions
 
 - **Action**: `Hook.depositAction(depositType)`
