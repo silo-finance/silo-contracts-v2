@@ -109,7 +109,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.deployerFee = siloFactory.maxDeployerFee() + 1;
 
-        vm.expectRevert(ISiloFactory.MaxDeployerFee.selector);
+        vm.expectRevert(ISiloFactory.MaxDeployerFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.deployerFee = 0.01e18;
@@ -119,7 +119,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.flashloanFee0 = uint64(siloFactory.maxFlashloanFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxFlashloanFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFlashloanFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.flashloanFee0 = 0.01e18;
@@ -129,7 +129,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.flashloanFee1 = uint64(siloFactory.maxFlashloanFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxFlashloanFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFlashloanFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.flashloanFee1 = 0.01e18;
@@ -139,7 +139,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.liquidationFee0 = uint64(siloFactory.maxLiquidationFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
+        vm.expectRevert(ISiloFactory.MaxLiquidationFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.liquidationFee0 = 0.01e18;
@@ -149,7 +149,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.liquidationFee1 = uint64(siloFactory.maxLiquidationFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
+        vm.expectRevert(ISiloFactory.MaxLiquidationFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.liquidationFee1 = 0.01e18;

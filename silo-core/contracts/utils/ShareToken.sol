@@ -63,7 +63,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    string private constant _NAME = "SiloShareToken";
+    string internal constant _NAME = "SiloShareToken";
 
     modifier onlySilo() {
         if (msg.sender != address(_getSilo())) revert OnlySilo();

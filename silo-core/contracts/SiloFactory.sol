@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
@@ -18,9 +19,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
-
-    uint256 private _siloId;
-
     /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public daoFee;
     /// @dev denominated in 18 decimals points. 1e18 == 100%.
@@ -36,15 +34,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     address public shareProtectedCollateralTokenImpl;
     address public shareDebtTokenImpl;
 
+    string public baseURI;
+
     mapping(uint256 id => address siloConfig) public idToSiloConfig;
     mapping(address silo => bool) public isSilo;
 
+    uint256 internal _siloId;
+
     constructor() ERC721("Silo Finance Fee Receiver", "feeSILO") Ownable(msg.sender) {}
 
-    /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
-    /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
-    /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
-    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only owner can init.
+    /// @inheritdoc ISiloFactory
     function initialize(
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
@@ -68,6 +67,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         siloImpl = _siloImpl;
         shareProtectedCollateralTokenImpl = _shareProtectedCollateralTokenImpl;
         shareDebtTokenImpl = _shareDebtTokenImpl;
+        baseURI = "https://v2.app.silo.finance/markets/";
 
         uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
         uint256 _newMaxFlashloanFee = 0.15e18; // 15% max flashloan fee
@@ -81,9 +81,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _setMaxLiquidationFee(_newMaxLiquidationFee);
     }
 
-    /// @dev share tokens in _configData are overridden so can be set to address(0). Sanity data validation
-    ///      is done by SiloConfig.
-    /// @param _initData silo initialization data
+    /// @inheritdoc ISiloFactory
     function createSilo(ISiloConfig.InitData memory _initData) external virtual returns (ISiloConfig siloConfig) {
         validateSiloInitData(_initData);
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
@@ -125,39 +123,53 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
     }
 
+    /// @inheritdoc ISiloFactory
     function burn(uint256 _siloIdToBurn) external virtual {
         _burn(_siloIdToBurn);
     }
 
+    /// @inheritdoc ISiloFactory
     function setDaoFee(uint256 _newDaoFee) external virtual onlyOwner {
         _setDaoFee(_newDaoFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setMaxDeployerFee(uint256 _newMaxDeployerFee) external virtual onlyOwner {
         _setMaxDeployerFee(_newMaxDeployerFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setMaxFlashloanFee(uint256 _newMaxFlashloanFee) external virtual onlyOwner {
         _setMaxFlashloanFee(_newMaxFlashloanFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setMaxLiquidationFee(uint256 _newMaxLiquidationFee) external virtual onlyOwner {
         _setMaxLiquidationFee(_newMaxLiquidationFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setDaoFeeReceiver(address _newDaoFeeReceiver) external virtual onlyOwner {
         _setDaoFeeReceiver(_newDaoFeeReceiver);
     }
 
+    /// @inheritdoc ISiloFactory
+    function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
+        baseURI = _newBaseURI;
+    }
+
+    /// @inheritdoc ISiloFactory
     function getNextSiloId() external view virtual returns (uint256) {
         return _siloId;
     }
 
+    /// @inheritdoc ISiloFactory
     function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
         uint256 siloID = ISilo(_silo).config().SILO_ID();
         return (daoFeeReceiver, _ownerOf(siloID));
     }
 
+    /// @inheritdoc ISiloFactory
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
         // solhint-disable-previous-line code-complexity
         if (_initData.hookReceiver == address(0)) revert MissingHookReceiver();
@@ -183,11 +195,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFee();
-        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFee();
-        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFee();
-        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFee();
-        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFee();
+        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
+        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
+        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
+        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
+        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
 
         if (_initData.interestRateModelConfig0 == address(0) || _initData.interestRateModelConfig1 == address(0)) {
             revert InvalidIrmConfig();
@@ -198,6 +210,18 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         }
 
         return true;
+    }
+
+    /// @inheritdoc ERC721
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        _requireOwned(tokenId);
+
+        return string.concat(
+            baseURI,
+            Strings.toString(block.chainid),
+            "/",
+            Strings.toHexString(idToSiloConfig[tokenId])
+        );
     }
 
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
@@ -275,7 +299,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
-        return "TODO//app.silo.finance/silo/";  //TODO
+        return baseURI;
     }
 
     function _copyConfig(ISiloConfig.InitData memory _initData)

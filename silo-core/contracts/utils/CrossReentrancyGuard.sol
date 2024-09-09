@@ -15,10 +15,10 @@ abstract contract CrossReentrancyGuard is ICrossReentrancyGuard {
     // amount. Since refunds are capped to a percentage of the total
     // transaction's gas, it is best to keep them low in cases like this one, to
     // increase the likelihood of the full refund coming into effect.
-    uint24 private constant _NOT_ENTERED = 1;
-    uint24 private constant _ENTERED = 2;
+    uint24 internal constant _NOT_ENTERED = 1;
+    uint24 internal constant _ENTERED = 2;
 
-    uint256 private _crossReentrantStatus;
+    uint256 internal _crossReentrantStatus;
 
     constructor() {
         _crossReentrantStatus = _NOT_ENTERED;

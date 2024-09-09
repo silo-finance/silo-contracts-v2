@@ -5,7 +5,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "../../../interfaces/IHookReceiver.sol";
 
 abstract contract SiloHookReceiver is IHookReceiver {
-    mapping(address silo => HookConfig) private _hookConfig;
+    mapping(address silo => HookConfig) internal _hookConfig;
 
     function _setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter) internal virtual {
         _hookConfig[_silo] = HookConfig(uint24(_hooksBefore), uint24(_hooksAfter));

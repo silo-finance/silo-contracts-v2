@@ -96,6 +96,8 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
         assertEq(configData0.silo, configData1.otherSilo, "configData0.silo");
         assertEq(configData0.otherSilo, configData1.silo, "configData0.otherSilo");
+        // assertEq(configData0.token, initData.token0, "configData0.token");
+        // assertEq(configData0.hookReceiver, initData.hookReceiver, "configData0.hookReceiver");
         assertTrue(configData0.silo != address(0), "configData0.silo");
         assertTrue(configData0.otherSilo != address(0), "configData0.otherSilo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
