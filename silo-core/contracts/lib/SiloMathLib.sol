@@ -60,6 +60,7 @@ library SiloMathLib {
             // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
             collateralInterest = accruedInterest - daoAndDeployerRevenue;
 
+            // save to uncheck because variable can not be more than max
             uint256 cap = type(uint256).max - _collateralAssets;
 
             // TODO if we cap interest on debt and now we cap on collateral - can it have impact on something?
@@ -88,18 +89,23 @@ library SiloMathLib {
         }
 
         unchecked {
+            /*
+            how to prevent overflow on: _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST):
+            1. max > _totalDebtAssets * _rcomp / _PRECISION_DECIMALS
+            2. max / _rcomp > _totalDebtAssets / _PRECISION_DECIMALS
+            */
             // save to unchecked because we only have division and `_rcomp` is not 0 based on above check
-            if (_totalDebtAssets / _PRECISION_DECIMALS < type(uint256).max / _rcomp) {
+            if (type(uint256).max / _rcomp > _totalDebtAssets / _PRECISION_DECIMALS) {
+                accruedInterest = _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
+            } else {
                 // we have overflow on accruedInterest
                 accruedInterest = type(uint256).max;
-            } else {
-                accruedInterest = _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
             }
 
-            // save to uncheck because total amount `_totalDebtAssets` can not be more than type.max
+            // save to uncheck because variable `_totalDebtAssets` can not be more than type.max
             uint256 cap = type(uint256).max - _totalDebtAssets;
 
-            if (cap < accruedInterest) {
+            if (accruedInterest > cap) {
                 // overflow on interest
                 accruedInterest = cap;
             }
