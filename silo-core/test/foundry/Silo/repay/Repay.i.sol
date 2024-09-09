@@ -230,7 +230,7 @@ contract RepayTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("LTV before", siloLens.getLtv(silo1, borrower), 16);
         _printUtilization(silo1);
 
-        vm.warp(block.timestamp + 100000 days);
+        vm.warp(block.timestamp + 10000000 days);
         silo1.accrueInterest();
 
         emit log_named_decimal_uint("LTV after", siloLens.getLtv(silo0, borrower), 16);
