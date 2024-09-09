@@ -214,6 +214,44 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares_notFullWithInterest_withDust();
     }
 
+    /*
+    forge test -vv --ffi --mt test_repay_overflowInterest
+    */
+    function test_repay_overflowInterest() public {
+        address borrower = makeAddr("borrower");
+
+        uint256 shares1 = _depositForBorrow(type(uint256).max / 4, makeAddr("user1"));
+        uint256 shares2 = _depositForBorrow(1, makeAddr("user2"));
+        uint256 shares3 = _depositForBorrow(1e18, makeAddr("user3"));
+
+        uint256 shares4 = _depositCollateral(type(uint256).max / 4, borrower, TWO_ASSETS);
+        uint256 debtShares = _borrow(type(uint256).max / 6, borrower, TWO_ASSETS);
+
+        emit log_named_decimal_uint("LTV before", siloLens.getLtv(silo1, borrower), 16);
+        _printUtilization(silo1);
+
+        vm.warp(block.timestamp + 100000 days);
+        silo1.accrueInterest();
+
+        emit log_named_decimal_uint("LTV after", siloLens.getLtv(silo0, borrower), 16);
+        _printUtilization(silo1);
+
+        // looks like we can overflow on IRM even when we have overflow detection
+        _repayShares(type(uint256).max, debtShares, borrower);
+
+        uint256 withdraw1 = _withdraw(makeAddr("user1"), shares1);
+        emit log_named_uint("deposit1", type(uint256).max / 4);
+        emit log_named_uint("withdraw1", withdraw1);
+
+        uint256 withdraw2 = _withdraw(makeAddr("user2"), shares2);
+        emit log_named_uint("deposit2", 1);
+        emit log_named_uint("withdraw2", withdraw2);
+
+        uint256 withdraw3 = _withdraw(makeAddr("user3"), shares3);
+        emit log_named_uint("deposit3", 1e18);
+        emit log_named_uint("withdraw3", withdraw3);
+    }
+
     function _repayShares_notFullWithInterest_withDust() private {
         uint128 assets = 1e18;
         address borrower = makeAddr("Borrower");
@@ -259,5 +297,18 @@ contract RepayTest is SiloLittleHelper, Test {
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
         uint256 interestLeft = 12011339784578816; // interest smaller for one token
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), interestLeft, "interest left");
+    }
+
+    function _withdraw(address _user, uint256 _shares) private returns (uint256 assets) {
+        vm.prank(_user);
+        assets = silo1.redeem(_shares, _user, _user);
+    }
+
+    function _printUtilization(ISilo _silo) private {
+        ISilo.UtilizationData memory data = _silo.utilizationData();
+
+        emit log_named_decimal_uint("[UtilizationData] collateralAssets", data.collateralAssets, 18);
+        emit log_named_decimal_uint("[UtilizationData] debtAssets", data.debtAssets, 18);
+        emit log_named_uint("[UtilizationData] interestRateTimestamp", data.interestRateTimestamp);
     }
 }
