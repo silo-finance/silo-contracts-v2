@@ -63,7 +63,7 @@ library SiloMathLib {
         collateralAssetsWithInterest = _collateralAssets + collateralInterest;
     }
 
-    /// @notice Calculate the debt assets with accrued interest
+    /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
     /// @param _debtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
@@ -80,7 +80,8 @@ library SiloMathLib {
         unchecked {
             // save to unchecked because we only have division and `_rcomp` is not 0 based on above check
             if (_debtAssets / _PRECISION_DECIMALS < type(uint256).max / _rcomp) {
-                // we have overflow on accruedInterest, let's do 0, will that be in sync with other places??
+                // we have overflow on accruedInterest
+                accruedInterest = type(uint256).max;
             } else {
                 accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
             }
@@ -91,10 +92,9 @@ library SiloMathLib {
             if (cap < accruedInterest) {
                 // overflow on interest
                 accruedInterest = cap;
-                debtAssetsWithInterest = type(uint256).max;
-            } else {
-                debtAssetsWithInterest = _debtAssets + accruedInterest;
             }
+
+            debtAssetsWithInterest = _debtAssets + accruedInterest;
         }
     }
 
