@@ -68,33 +68,33 @@ library SiloMathLib {
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
     /// @return accruedInterest The total amount of interest accrued on the debt assets
-    function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp)
+    function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)
         internal
         pure
         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
-        if (_debtAssets == 0 || _rcomp == 0) {
-            return (_debtAssets, 0);
+        if (_totalDebtAssets == 0 || _rcomp == 0) {
+            return (_totalDebtAssets, 0);
         }
 
         unchecked {
             // save to unchecked because we only have division and `_rcomp` is not 0 based on above check
-            if (_debtAssets / _PRECISION_DECIMALS < type(uint256).max / _rcomp) {
+            if (_totalDebtAssets / _PRECISION_DECIMALS < type(uint256).max / _rcomp) {
                 // we have overflow on accruedInterest
                 accruedInterest = type(uint256).max;
             } else {
-                accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
+                accruedInterest = _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
             }
 
-            // save to uncheck because total amount can not be more than type.max
-            uint256 cap = type(uint256).max - _debtAssets;
+            // save to uncheck because total amount `_totalDebtAssets` can not be more than type.max
+            uint256 cap = type(uint256).max - _totalDebtAssets;
 
             if (cap < accruedInterest) {
                 // overflow on interest
                 accruedInterest = cap;
             }
 
-            debtAssetsWithInterest = _debtAssets + accruedInterest;
+            debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
         }
     }
 
