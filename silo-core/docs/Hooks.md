@@ -26,7 +26,7 @@ Each action within the protocol is associated with two types of hooks:
 - **Before Action Hook**: Invoked **before** any logic of the action is executed. This can be used to perform validation checks, eligibility assessments, or custom logic before the main action takes place.
 - **After Action Hook**: Invoked **after** all logic of the action is completed. This allows developers to perform follow-up tasks such as logging, notifications, or additional off-chain and on-chain integrations.
 
-## Some concepts
+### Some concepts
 
 1. **Collaterals**: 
    - The protocol supports two types of collateral: **Hook.COLLATERAL_TOKEN** (borrowable collateral) and **Hook.PROTECTED_TOKEN** (non-borrowable collateral). Borrowable collateral earns interest as it is available for lending, while protected collateral provides security for the user, ensuring liquidity and immediate access to their funds.
@@ -39,13 +39,7 @@ Each action within the protocol is associated with two types of hooks:
 3. **Transitioning Between Collateral Types**:
    - Users can transition their assets between **Hook.PROTECTED_TOKEN** and **Hook.COLLATERAL_TOKEN** and vice verse without transferring the underlying assets. This transition is crucial for users who want to switch between protected and borrowable collateral, enabling interest generation or enhanced security.
 
-## Extensibility via Hooks
-
-The Silo Protocol is designed to be modular, providing a robust framework for third-party developers to interact with protocol actions via hooks. The hooks system enables powerful use cases such as:
-- **Pre-Action Validations**: Hooks can be used to enforce external rules before actions are executed, such as verifying if a user is on a sanctions list or checking loan-to-value ratios.
-- **Post-Action Logging and Integration**: After actions, hooks can trigger external integrations, notifications, or on-chain events, enabling seamless interaction with other smart contracts or systems.
-
-## Summary of Hookable Actions
+### Summary of Hookable Actions
 
 The following key actions in the protocol are enhanced by the hooks system:
 - **Deposit**: Allows users to deposit assets and receive share tokens, with hooks supporting pre- and post-deposit checks.
