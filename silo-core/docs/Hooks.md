@@ -13,7 +13,7 @@ The **Silo Protocol Hooks System** provides an extensible mechanism for interact
 - [Switch Collateral To This Silo function hook actions](#switch-collateral-to-this-silo-function-hook-actions)
 - [Flash Loan function hook actions](#flash-loan-function-hook-actions)
 - [Liquidation Call function hook actions](#liquidation-call-function-hook-actions)
-- [Share Token Transfer hook](#share-token-transfer-hook)
+- [Share Token Transfer hook](#share-token-transfer-hook-afteraction)
 - [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction)
 
 ## Overview
@@ -109,7 +109,7 @@ The following key actions in the protocol are enhanced by the hooks system:
 
 ### Share Token Transfer Hook (During Deposit)
 
-- During the deposit, share tokens are minted to the depositor. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
+- During the deposit, share tokens are minted to the depositor. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook-afteraction) section.
 
 ---
 
@@ -156,7 +156,7 @@ The following key actions in the protocol are enhanced by the hooks system:
 
 ### Share Token Transfer Hook (During Withdraw)
 
-- During the withdrawal process, share tokens are burned to release the depositor's stake in the protocol. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
+- During the withdrawal process, share tokens are burned to release the depositor's stake in the protocol. This action triggers a **Share Token Transfer Hook**, which manages the token transfer logic. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook-afteraction) section.
 ---
 
 
@@ -287,7 +287,7 @@ The following key actions in the protocol are enhanced by the hooks system:
   - During the leverage process, debt tokens are minted to represent the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
 
 - **Collateral Token Transfer**:
-  - Simultaneously, collateral tokens are transferred to represent the borrower’s collateral position. This action triggers a **Share Token Transfer Hook** for both **COLLATERAL_TOKEN** and **PROTECTED_TOKEN** types, depending on the type of collateral used. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
+  - Simultaneously, collateral tokens are transferred to represent the borrower’s collateral position. This action triggers a **Share Token Transfer Hook** for both **COLLATERAL_TOKEN** and **PROTECTED_TOKEN** types, depending on the type of collateral used. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook-afteraction) section.
 ---
 
 # Transition Collateral function hook actions
@@ -335,7 +335,7 @@ The following key actions in the protocol are enhanced by the hooks system:
 ### Share Token Transfer Hooks (During Transition Collateral)
 
 - **Collateral Token Transfer**:
-  - During the transition, collateral tokens are transferred to reflect the user's updated collateral position. This action triggers a **Share Token Transfer Hook** both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the token transfer logic to reflect the change in collateral type during the transition. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
+  - During the transition, collateral tokens are transferred to reflect the user's updated collateral position. This action triggers a **Share Token Transfer Hook** both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the token transfer logic to reflect the change in collateral type during the transition. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook-afteraction) section.
 ---
 
 # Switch Collateral to This Silo function hook actions
@@ -438,7 +438,7 @@ The following key actions in the protocol are enhanced by the hooks system:
   - During the liquidation process, debt tokens are transferred or burned to reflect the repayment of the borrower's debt. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the transfer of the debt tokens during liquidation. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
 
 - **Collateral Token Transfer**:
-  - Collateral tokens are transferred as part of the liquidation process to represent the liquidation of collateral. This action triggers a **Share Token Transfer Hook** for both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the transfer of collateral tokens to cover the borrower’s debt. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook) section.
+  - Collateral tokens are transferred as part of the liquidation process to represent the liquidation of collateral. This action triggers a **Share Token Transfer Hook** for both **Hook.COLLATERAL_TOKEN** and **Hook.PROTECTED_TOKEN** types. These hooks manage the transfer of collateral tokens to cover the borrower’s debt. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook-afteraction) section.
 ---
 
 ## Share Token Transfer Hook (AfterAction)
