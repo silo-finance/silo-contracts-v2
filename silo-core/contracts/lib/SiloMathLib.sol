@@ -57,6 +57,7 @@ library SiloMathLib {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
             daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
+            // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
             collateralInterest = accruedInterest - daoAndDeployerRevenue;
         }
 
@@ -64,7 +65,7 @@ library SiloMathLib {
     }
 
     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
-    /// @param _debtAssets The total amount of debt assets before accrued interest
+    /// @param _totalDebtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
     /// @return accruedInterest The total amount of interest accrued on the debt assets
