@@ -89,9 +89,11 @@ library SiloMathLib {
             // save to uncheck because total amount can not be more than type.max
             uint256 cap = type(uint256).max - _debtAssets;
 
-            accruedInterest = cap < accruedInterest ? cap : accruedInterest;
+            if (cap < accruedInterest) {
+                // overflow on interest
+                accruedInterest = cap;
+            }
 
-            // safe to uncheck because we have cap
             debtAssetsWithInterest = _debtAssets + accruedInterest;
         }
     }
