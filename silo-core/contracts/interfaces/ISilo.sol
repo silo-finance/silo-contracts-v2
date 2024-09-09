@@ -111,7 +111,8 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     }
 
     struct SiloStorage {
-        /// @dev Current amount of fees accrued by DAO and Deployer
+        /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
+        /// but not yet withdrawn
         uint192 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
