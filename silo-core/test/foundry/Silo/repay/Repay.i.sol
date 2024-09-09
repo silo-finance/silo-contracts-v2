@@ -219,43 +219,57 @@ contract RepayTest is SiloLittleHelper, Test {
     */
     function test_repay_overflowInterest() public {
         address borrower = makeAddr("borrower");
+        address borrower2 = makeAddr("borrower2");
 
-        uint256 shares1 = _depositForBorrow(type(uint128).max, makeAddr("user1"));
+        uint256 shares1 = _depositForBorrow(type(uint160).max, makeAddr("user1"));
         uint256 shares2 = _depositForBorrow(1, makeAddr("user2"));
         uint256 shares3 = _depositForBorrow(1e18, makeAddr("user3"));
 
-        uint256 shares4 = _depositCollateral(type(uint128).max, borrower, TWO_ASSETS);
-        uint256 debtShares = _borrow(type(uint128).max / 2, borrower, TWO_ASSETS);
+        _depositCollateral(type(uint160).max, borrower, TWO_ASSETS);
+        uint256 debtShares = _borrow(type(uint160).max / 100 * 75, borrower, TWO_ASSETS);
+
+        _depositCollateral(type(uint160).max / 100 * 25 * 2, borrower2, TWO_ASSETS);
+        uint256 debtShares2 = _borrow(type(uint160).max / 100 * 25, borrower2, TWO_ASSETS);
 
         uint256 ltvBefore = siloLens.getLtv(silo1, borrower);
 
         emit log_named_decimal_uint("LTV before", ltvBefore, 16);
         _printUtilization(silo1);
-
-//        for (uint256 i; ltvBefore == siloLens.getLtv(silo0, borrower); i++) {
-//            vm.warp(type(uint64).max - block.timestamp);
-        vm.warp(1 days);
+//        vm.warp(1 days);
+        vm.warp(type(uint64).max);
+//
+//        for (uint i;; i++) {
+//            uint256 newLtv = siloLens.getLtv(silo1, borrower);
+//
+//            if (ltvBefore != newLtv) {
+//                ltvBefore = newLtv;
+//                vm.warp(365 days * i);
+//
+//            } else break;
 //        }
+//        vm.warp(10 days);
+//        vm.warp(365 days * 100);
 
-        silo1.accrueInterest();
+//        silo1.accrueInterest();
 
         emit log_named_decimal_uint("LTV after", siloLens.getLtv(silo0, borrower), 16);
         _printUtilization(silo1);
-//
-//        // looks like we can overflow on IRM even when we have overflow detection
-//        _repayShares(type(uint256).max, debtShares, borrower);
-//
-//        uint256 withdraw1 = _withdraw(makeAddr("user1"), shares1);
-//        emit log_named_uint("deposit1", type(uint256).max / 4);
-//        emit log_named_uint("withdraw1", withdraw1);
-//
-//        uint256 withdraw2 = _withdraw(makeAddr("user2"), shares2);
-//        emit log_named_uint("deposit2", 1);
-//        emit log_named_uint("withdraw2", withdraw2);
-//
-//        uint256 withdraw3 = _withdraw(makeAddr("user3"), shares3);
-//        emit log_named_uint("deposit3", 1e18);
-//        emit log_named_uint("withdraw3", withdraw3);
+
+        // looks like we can overflow on IRM even when we have overflow detection
+        _repayShares(71836824604316538412736169661295280194393138298027975, debtShares, borrower);
+        _repayShares(23945608201438846137578723220431760064797712766009325, debtShares2, borrower2);
+
+        uint256 withdraw1 = _withdraw(makeAddr("user1"), shares1);
+        emit log_named_uint("deposit1", type(uint160).max);
+        emit log_named_uint("withdraw1", withdraw1);
+
+        uint256 withdraw2 = _withdraw(makeAddr("user2"), shares2);
+        emit log_named_uint("deposit2", 1);
+        emit log_named_uint("withdraw2", withdraw2);
+
+        uint256 withdraw3 = _withdraw(makeAddr("user3"), shares3);
+        emit log_named_uint("deposit3", 1e18);
+        emit log_named_uint("withdraw3", withdraw3);
     }
 
     function _repayShares_notFullWithInterest_withDust() private {
