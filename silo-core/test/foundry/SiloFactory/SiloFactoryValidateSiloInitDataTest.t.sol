@@ -87,7 +87,6 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         siloFactory.validateSiloInitData(initData);
 
         initData.solvencyOracle0 = address(1);
-
         initData.maxLtvOracle1 = address(1);
         vm.expectRevert(ISiloFactory.OracleMisconfiguration.selector);
         siloFactory.validateSiloInitData(initData);
@@ -96,6 +95,11 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.maxLtvOracle1 = address(0);
         vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
+
+        initData.callBeforeQuote0 = false;
+        initData.callBeforeQuote1 = false;
+        initData.solvencyOracle0 = address(0);
+        initData.maxLtvOracle1 = address(0);
 
         initData.deployerFee = 0.01e18;
 
@@ -166,6 +170,9 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         assertTrue(siloFactory.validateSiloInitData(initData));
     }
 
+    /*
+    forge test -vv --mt test_validateSiloInitData_oracles
+    */
     function test_validateSiloInitData_oracles() public {
         ISiloConfig.InitData memory initData;
 
@@ -190,6 +197,18 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.interestRateModel0 = address(100006);
         initData.interestRateModel1 = initData.interestRateModel0;
 
+        // verify we have valid config as begin
         assertTrue(siloFactory.validateSiloInitData(initData));
+
+
+//        OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
+//        solvencyOracle0.quoteTokenMock(makeAddr("quoteToken"));
+//        initData.solvencyOracle0 = solvencyOracle0.ADDRESS();
+//        assertTrue(siloFactory.validateSiloInitData(initData));
+
+//        OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
+//        solvencyOracle0.quoteTokenMock(address(1));
+//        initData.solvencyOracle0 = solvencyOracle0.ADDRESS();
+
     }
 }
