@@ -189,9 +189,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             revert OracleMisconfiguration();
         }
 
+        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
+
         _verifyQuoteTokens(_initData);
 
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
         if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
