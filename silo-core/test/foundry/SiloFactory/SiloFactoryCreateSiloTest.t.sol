@@ -90,6 +90,9 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
+        // TODO check for both tokens
+        // assertEq(configData0.token, initData.token0, "configData0.token");
+        // assertEq(configData0.hookReceiver, initData.hookReceiver, "configData0.hookReceiver");
         assertTrue(configData0.silo != address(0), "configData0.silo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
         assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");

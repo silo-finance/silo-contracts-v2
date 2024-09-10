@@ -2,6 +2,10 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC721Metadata} from "openzeppelin5/token/ERC721/extensions/IERC721Metadata.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IERC721Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
@@ -72,6 +76,63 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         assertTrue(isSilo, "silo0 is not a silo after burn");
         isSilo = siloFactory.isSilo(address(silo1));
         assertTrue(isSilo, "silo1 is not a silo after burn");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_tokenURI
+    */
+    function test_tokenURI() public {
+        uint256 firstSiloId = 1;
+        address siloConfigFromFactory = siloFactory.idToSiloConfig(firstSiloId);
+
+        string memory expectedURI = string.concat(
+            "https://v2.app.silo.finance/markets/",
+            Strings.toString(block.chainid),
+            "/",
+            Strings.toHexString(siloConfigFromFactory)
+        );
+
+        // The example of a link. The foundry may generate different addresses/hashes, address of a Config may change.
+        // https://v2.app.silo.finance/markets/31337/0x45c9fcf98d9d4b4a7d0daba0411208139a9b06a3
+        string memory tokenURI = IERC721Metadata(address(siloFactory)).tokenURI(firstSiloId);
+        assertEq(tokenURI, expectedURI, "actual token URI does not match with expected");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_tokenURIUpdate
+    */
+    function test_tokenURIUpdate(string calldata _newBaseURI) public {
+        uint256 firstSiloId = 1;
+        address siloConfigFromFactory = siloFactory.idToSiloConfig(firstSiloId);
+
+        vm.prank(Ownable(address(siloFactory)).owner());
+        siloFactory.setBaseURI(_newBaseURI);
+
+         string memory expectedURI = string.concat(
+            _newBaseURI,
+            Strings.toString(block.chainid),
+            "/",
+            Strings.toHexString(siloConfigFromFactory)
+        );
+
+        string memory tokenURI = IERC721Metadata(address(siloFactory)).tokenURI(firstSiloId);
+        assertEq(tokenURI, expectedURI, "actual token URI does not match with expected");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_tokenURIReverts
+    */
+    function test_tokenURIRevertsNonExistingSilo() public {
+        uint256 existingSiloId = 1;
+        uint256 nonExistingSiloId = 2;
+
+        assertTrue(
+            bytes(IERC721Metadata(address(siloFactory)).tokenURI(existingSiloId)).length > 0,
+            "token URI does not exist for existing Silo"
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, nonExistingSiloId));
+        IERC721Metadata(address(siloFactory)).tokenURI(nonExistingSiloId);
     }
 
     /*
