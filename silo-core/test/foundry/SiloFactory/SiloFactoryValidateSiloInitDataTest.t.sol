@@ -11,6 +11,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloFactoryDeploy} from "silo-core/deploy/SiloFactoryDeploy.s.sol";
 
+import {OracleMock} from "../_mocks/OracleMock.sol";
+
 /*
 forge test -vv --mc SiloFactoryValidateSiloInitDataTest
 */
@@ -74,6 +76,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
+
         initData.maxLtvOracle0 = address(1);
         vm.expectRevert(ISiloFactory.OracleMisconfiguration.selector);
         siloFactory.validateSiloInitData(initData);
@@ -95,7 +98,8 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.solvencyOracle1 = address(1);
+        OracleMock solvencyOracle1 = new OracleMock(makeAddr("solvencyOracle1"));
+        initData.solvencyOracle1 = solvencyOracle1.ADDRESS();
 
         initData.deployerFee = 0.01e18;
 
