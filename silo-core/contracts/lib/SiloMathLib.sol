@@ -63,12 +63,6 @@ library SiloMathLib {
             // save to uncheck because variable can not be more than max
             uint256 cap = type(uint256).max - _collateralAssets;
 
-            // TODO if we cap interest on debt and now we cap on collateral - can it have impact on something?
-            // eg. is it possible to generate more debt so then we can not withdraw collateral
-            // because we short with tokens or something?
-            // scenario: collateral is 70%max, debt is 50%max, interest 40%max
-            // but on collateral it will be cap to 30%max (because 70% + 40% will give overflow).
-            // what happen with 10% diff? will users lose money on interest overflow?
             if (cap < collateralInterest) {
                 collateralInterest = cap;
             }
