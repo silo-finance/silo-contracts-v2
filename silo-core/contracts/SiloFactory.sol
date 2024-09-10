@@ -8,6 +8,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
+import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
@@ -180,6 +181,20 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
             revert OracleMisconfiguration();
+        }
+
+        if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 != address(0)) {
+            address maxLtvOracle0Quote = ISiloOracle(_initData.maxLtvOracle0).quoteToken();
+            address solvencyOracle0Quote = ISiloOracle(_initData.solvencyOracle0).quoteToken();
+
+            if (maxLtvOracle0Quote != solvencyOracle0Quote) revert InvalidQuote();
+        }
+
+        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 != address(0)) {
+            address maxLtvOracle1Quote = ISiloOracle(_initData.maxLtvOracle1).quoteToken();
+            address solvencyOracle1Quote = ISiloOracle(_initData.solvencyOracle1).quoteToken();
+
+            if (maxLtvOracle1Quote != solvencyOracle1Quote) revert InvalidQuote();
         }
 
         if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
