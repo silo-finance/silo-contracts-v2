@@ -51,14 +51,13 @@ library SiloMathLib {
         )
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
-        uint256 collateralInterest;
 
         unchecked {
             // If we overflow on multiplication it should not revert tx, we will get lower fees
             daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
             // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
-            collateralInterest = accruedInterest - daoAndDeployerRevenue;
+            uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
 
             // save to uncheck because variable can not be more than max
             uint256 cap = type(uint256).max - _collateralAssets;
