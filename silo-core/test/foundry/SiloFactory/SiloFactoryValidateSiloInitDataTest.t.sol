@@ -198,17 +198,37 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.interestRateModel1 = initData.interestRateModel0;
 
         // verify we have valid config as begin
-        assertTrue(siloFactory.validateSiloInitData(initData));
+        assertTrue(siloFactory.validateSiloInitData(initData), "#0");
 
 
-//        OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
-//        solvencyOracle0.quoteTokenMock(makeAddr("quoteToken"));
-//        initData.solvencyOracle0 = solvencyOracle0.ADDRESS();
-//        assertTrue(siloFactory.validateSiloInitData(initData));
+        OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
+        solvencyOracle0.quoteTokenMock(makeAddr("quoteToken"));
+        initData.solvencyOracle0 = solvencyOracle0.ADDRESS();
+        assertTrue(siloFactory.validateSiloInitData(initData), "#1");
 
-//        OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
-//        solvencyOracle0.quoteTokenMock(address(1));
-//        initData.solvencyOracle0 = solvencyOracle0.ADDRESS();
+        OracleMock maxLtvOracle0 = new OracleMock(makeAddr("maxLtvOracle0"));
+        maxLtvOracle0.quoteTokenMock(address(1));
+        initData.maxLtvOracle0 = maxLtvOracle0.ADDRESS();
+        vm.expectRevert(ISiloFactory.InvalidQuoteToken.selector);
+        siloFactory.validateSiloInitData(initData);
 
+        maxLtvOracle0.quoteTokenMock(makeAddr("quoteToken"));
+
+        OracleMock solvencyOracle1 = new OracleMock(makeAddr("solvencyOracle1"));
+        solvencyOracle1.quoteTokenMock(address(1));
+        initData.solvencyOracle1 = solvencyOracle1.ADDRESS();
+        vm.expectRevert(ISiloFactory.InvalidQuoteToken.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        solvencyOracle1.quoteTokenMock(makeAddr("quoteToken"));
+
+        OracleMock maxLtvOracle1 = new OracleMock(makeAddr("maxLtvOracle1"));
+        maxLtvOracle1.quoteTokenMock(address(1));
+        initData.maxLtvOracle1 = maxLtvOracle1.ADDRESS();
+        vm.expectRevert(ISiloFactory.InvalidQuoteToken.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        maxLtvOracle1.quoteTokenMock(makeAddr("quoteToken"));
+        assertTrue(siloFactory.validateSiloInitData(initData), "#0");
     }
 }

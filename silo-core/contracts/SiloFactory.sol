@@ -337,10 +337,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
         address expectedQuoteToken;
 
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
         expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
-        _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
     }
 
     function _verifyQuoteToken(address _expectedQuoteToken, address _oracle)
