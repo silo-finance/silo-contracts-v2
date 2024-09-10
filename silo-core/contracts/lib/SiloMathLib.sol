@@ -124,7 +124,7 @@ library SiloMathLib {
         pure
         returns (uint256 utilization)
     {
-        if (_collateralAssets == 0 || _debtAssets == 0) return 0;
+        if (_collateralAssets == 0 || _debtAssets == 0 || _dp == 0) return 0;
 
         unchecked {
             /*
