@@ -54,7 +54,8 @@ interface ISiloFactory is IERC721 {
 
     /// @notice Initialize SiloFactory contract.
     /// @dev SiloFactory is not a clonable contract. initialize() method is here because we have circular dependency:
-    /// SiloFactory needs to know Silo address and Silo implementation (clonable) needs to know the factory address.
+    /// SiloFactory needs to know Silo implementation (clonable) and Silo implementation needs to know 
+    /// the factory address.
     /// @param _siloImpl Address of the Silo implementation.
     /// @param _shareCollateralTokenImpl Address of the ShareCollateralToken implementation.
     /// @param _shareDebtTokenImpl Address of the ShareDebtToken implementation.
