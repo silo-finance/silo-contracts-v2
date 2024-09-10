@@ -184,17 +184,17 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         }
 
         if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 != address(0)) {
-            address maxLtvOracle0Quote = ISiloOracle(_initData.maxLtvOracle0).quoteToken();
-            address solvencyOracle0Quote = ISiloOracle(_initData.solvencyOracle0).quoteToken();
+            address maxLtvOracle0QuoteToken = ISiloOracle(_initData.maxLtvOracle0).quoteToken();
+            address solvencyOracle0QuoteToken = ISiloOracle(_initData.solvencyOracle0).quoteToken();
 
-            if (maxLtvOracle0Quote != solvencyOracle0Quote) revert InvalidQuote();
+            if (maxLtvOracle0QuoteToken != solvencyOracle0QuoteToken) revert InvalidQuoteToken();
         }
 
         if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 != address(0)) {
-            address maxLtvOracle1Quote = ISiloOracle(_initData.maxLtvOracle1).quoteToken();
-            address solvencyOracle1Quote = ISiloOracle(_initData.solvencyOracle1).quoteToken();
+            address maxLtvOracle1QuoteToken = ISiloOracle(_initData.maxLtvOracle1).quoteToken();
+            address solvencyOracle1QuoteToken = ISiloOracle(_initData.solvencyOracle1).quoteToken();
 
-            if (maxLtvOracle1Quote != solvencyOracle1Quote) revert InvalidQuote();
+            if (maxLtvOracle1QuoteToken != solvencyOracle1QuoteToken) revert InvalidQuoteToken();
         }
 
         if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();

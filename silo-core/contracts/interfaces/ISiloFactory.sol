@@ -51,7 +51,7 @@ interface ISiloFactory is IERC721 {
     error InvalidIrmConfig();
     error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
-    error InvalidQuote();
+    error InvalidQuoteToken();
 
     /// @notice Initialize SiloFactory contract.
     /// @dev SiloFactory is not a clonable contract. initialize() method is here because we have circular dependency:
