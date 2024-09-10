@@ -183,25 +183,13 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             revert OracleMisconfiguration();
         }
 
-        if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 != address(0)) {
-            address maxLtvOracle0QuoteToken = ISiloOracle(_initData.maxLtvOracle0).quoteToken();
-            address solvencyOracle0QuoteToken = ISiloOracle(_initData.solvencyOracle0).quoteToken();
-
-            if (maxLtvOracle0QuoteToken != solvencyOracle0QuoteToken) revert InvalidQuoteToken();
-        }
-
-        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 != address(0)) {
-            address maxLtvOracle1QuoteToken = ISiloOracle(_initData.maxLtvOracle1).quoteToken();
-            address solvencyOracle1QuoteToken = ISiloOracle(_initData.solvencyOracle1).quoteToken();
-
-            if (maxLtvOracle1QuoteToken != solvencyOracle1QuoteToken) revert InvalidQuoteToken();
-        }
-
         if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
 
         if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
             revert OracleMisconfiguration();
         }
+
+        _verifyQuoteTokens(_initData);
 
         if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
@@ -343,5 +331,28 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
         configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
+    }
+
+    function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
+        address expectedQuoteToken;
+
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
+        _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
+    }
+
+    function _verifyQuoteToken(address _expectedQuoteToken, address _oracle)
+        internal
+        virtual
+        view
+        returns (address quoteToken)
+    {
+        if (_oracle == address(0)) return _expectedQuoteToken;
+
+        quoteToken = ISiloOracle(_oracle).quoteToken();
+
+        if (_expectedQuoteToken == address(0)) return quoteToken;
+        if (_expectedQuoteToken != quoteToken) revert InvalidQuoteToken();
     }
 }
