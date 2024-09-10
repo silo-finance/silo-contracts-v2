@@ -680,9 +680,15 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets, uint256 shares)
     {
+        bool interruptExecution;
+
         (
-            assets, shares
+            assets, shares, interruptExecution
         ) = Actions.deposit(_assets, _shares, _receiver, _collateralType);
+
+        if (interruptExecution) {
+            return (assets, shares);
+        }
 
         if (_collateralType == CollateralType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);

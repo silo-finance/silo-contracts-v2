@@ -71,9 +71,13 @@ library Actions {
         ISilo.CollateralType _collateralType
     )
         external
-        returns (uint256 assets, uint256 shares)
+        returns (uint256 assets, uint256 shares, bool interruptExecution)
     {
         _hookCallBeforeDeposit(_collateralType, _assets, _shares, _receiver);
+
+        if (interruptExecution) {
+            return (0, 0, interruptExecution);
+        }
 
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
