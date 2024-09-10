@@ -96,6 +96,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         external
         virtual
         override(IHookReceiver, PartialLiquidation)
+        returns (bool interruptExecution)
     {
         // Do not expect any actions.
         revert RequestNotSupported();
@@ -106,13 +107,14 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         external
         virtual
         override(IHookReceiver, PartialLiquidation)
+        returns (bool interruptExecution)
     {
         IGauge theGauge = configuredGauges[IShareToken(msg.sender)];
 
         if (theGauge == IGauge(address(0))) revert GaugeIsNotConfigured();
 
-        if (theGauge.is_killed()) return; // Do not revert if gauge is killed. Ignore the action.
-        if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case
+        if (theGauge.is_killed()) return false; // Do not revert if gauge is killed. Ignore the action.
+        if (!_getHooksAfter(_silo).matchAction(_action)) return false; // Should not happen, but just in case
 
         Hook.AfterTokenTransfer memory input = _inputAndOutput.afterTokenTransferDecode();
 

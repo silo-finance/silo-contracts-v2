@@ -404,14 +404,19 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 assets)
     {
         uint256 toShares;
+        bool interruptExecution;
 
-        (assets, toShares) = Actions.transitionCollateral(
+        (assets, toShares, interruptExecution) = Actions.transitionCollateral(
             TransitionCollateralArgs({
                 shares: _shares,
                 owner: _owner,
                 transitionFrom: _transitionFrom
             })
         );
+
+        if (interruptExecution) {
+            return assets;
+        }
 
         if (_transitionFrom == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _owner, _owner, assets, _shares);
@@ -443,7 +448,13 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function switchCollateralToThisSilo() external virtual {
-        Actions.switchCollateralToThisSilo();
+        bool interruptExecution;
+        interruptExecution = Actions.switchCollateralToThisSilo();
+
+        if (interruptExecution) {
+            return;
+        }
+
         emit CollateralTypeChanged(msg.sender);
     }
 
@@ -458,8 +469,10 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
+        bool interruptExecution;
+
         (
-            depositedShares, borrowedShares
+            depositedShares, borrowedShares, interruptExecution
         ) = Actions.leverageSameAsset(
             ISilo.LeverageSameAssetArgs({
                 depositAssets: _depositAssets,
@@ -468,6 +481,10 @@ contract Silo is ISilo, ShareCollateralToken {
                 collateralType: _collateralType
             })
         );
+
+        if (interruptExecution) {
+            return (depositedShares, borrowedShares);
+        }
 
         emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);
 
@@ -485,8 +502,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool interruptExecution;
 
-        (assets, shares) = Actions.borrow(
+        (assets, shares, interruptExecution) = Actions.borrow(
             BorrowArgs({
                 assets: _assets,
                 shares: 0,
@@ -494,6 +512,10 @@ contract Silo is ISilo, ShareCollateralToken {
                 borrower: _borrower
             })
         );
+
+        if (interruptExecution) {
+            return shares;
+        }
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
@@ -504,8 +526,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool interruptExecution;
 
-        (assets, shares) = Actions.borrowSameAsset(
+        (assets, shares, interruptExecution) = Actions.borrowSameAsset(
             BorrowArgs({
                 assets: _assets,
                 shares: 0,
@@ -513,6 +536,10 @@ contract Silo is ISilo, ShareCollateralToken {
                 borrower: _borrower
             })
         );
+
+        if (interruptExecution) {
+            return shares;
+        }
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
@@ -540,8 +567,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 assets)
     {
         uint256 shares;
+        bool interruptExecution;
 
-        (assets, shares) = Actions.borrow(
+        (assets, shares, interruptExecution) = Actions.borrow(
             BorrowArgs({
                 assets: 0,
                 shares: _shares,
@@ -549,6 +577,10 @@ contract Silo is ISilo, ShareCollateralToken {
                 borrower: _borrower
             })
         );
+
+        if (interruptExecution) {
+            return assets;
+        }
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
@@ -576,13 +608,18 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool interruptExecution;
 
-        (assets, shares) = Actions.repay({
+        (assets, shares, interruptExecution) = Actions.repay({
             _assets: _assets,
             _shares: 0,
             _borrower: _borrower,
             _repayer: msg.sender
         });
+
+        if (interruptExecution) {
+            return shares;
+        }
 
         emit Repay(msg.sender, _borrower, assets, shares);
     }
@@ -611,13 +648,18 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 assets)
     {
         uint256 shares;
+        bool interruptExecution;
 
-        (assets, shares) = Actions.repay({
+        (assets, shares, interruptExecution) = Actions.repay({
             _assets: 0,
             _shares: _shares,
             _borrower: _borrower,
             _repayer: msg.sender
         });
+
+        if (interruptExecution) {
+            return assets;
+        }
 
         emit Repay(msg.sender, _borrower, assets, shares);
     }
@@ -640,7 +682,13 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (bool success)
     {
-        success = Actions.flashLoan(_receiver, _token, _amount, _data);
+        bool interruptExecution;
+        (success, interruptExecution) = Actions.flashLoan(_receiver, _token, _amount, _data);
+
+        if (interruptExecution) {
+            return success;
+        }
+
         if (success) emit FlashLoan(_amount);
     }
 
@@ -709,7 +757,9 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        (assets, shares) = Actions.withdraw(
+        bool interruptExecution;
+
+        (assets, shares, interruptExecution) = Actions.withdraw(
             WithdrawArgs({
                 assets: _assets,
                 shares: _shares,
@@ -719,6 +769,10 @@ contract Silo is ISilo, ShareCollateralToken {
                 collateralType: _collateralType
             })
         );
+
+        if (interruptExecution) {
+            return (assets, shares);
+        }
 
         if (_collateralType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);

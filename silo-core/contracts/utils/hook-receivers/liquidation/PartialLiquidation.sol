@@ -36,11 +36,11 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         _initialize(_siloConfig);
     }
 
-    function beforeAction(address, uint256, bytes calldata) external virtual {
+    function beforeAction(address, uint256, bytes calldata) external virtual returns (bool) {
         // not in use
     }
 
-    function afterAction(address, uint256, bytes calldata) external virtual {
+    function afterAction(address, uint256, bytes calldata) external virtual returns (bool) {
         // not in use
     }
 
