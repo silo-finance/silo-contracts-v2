@@ -13,26 +13,8 @@ library ShareCollateralTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     /// @dev Check if sender is solvent after the transfer
-    function afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal {
-        _afterTokenTransfer(_sender, _recipient, _amount);
-    }
-
-    /// @dev Check if sender is solvent after the transfer
-    /// @notice this is a copy of afterTokenTransfer but set as external
-    function afterTokenTransferExternal(address _sender, address _recipient, uint256 _amount) external {
-        _afterTokenTransfer(_sender, _recipient, _amount);
-    }
-
-    /// @dev Check if sender is solvent after the transfer
-    /// @notice this is a copy of afterTokenTransfer but set as external
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) private {
-        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
-
-        // for minting or burning, Silo is responsible to check all necessary conditions
-        // for transfer make sure that _sender is solvent after transfer
-        if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
-            if (!_isSolventAfterCollateralTransfer(_sender)) revert IShareToken.SenderNotSolventAfterTransfer();
-        }
+    function afterTokenTransfer(address _sender, address _recipient, uint256 _amount) external {
+        if (!_isSolventAfterCollateralTransfer(_sender)) revert IShareToken.SenderNotSolventAfterTransfer();
 
         // note: make sure to call original/inherited method as well when you call this one for collateral
         // ShareTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
