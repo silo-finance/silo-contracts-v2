@@ -83,7 +83,14 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function utilizationData() external view virtual returns (UtilizationData memory) {
-        return Views.utilizationData();
+        // moving it to lib will increase size
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        return UtilizationData({
+            collateralAssets: $.totalAssets[AssetTypes.COLLATERAL],
+            debtAssets: $.totalAssets[AssetTypes.DEBT],
+            interestRateTimestamp: $.interestRateTimestamp
+        });
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {
@@ -97,12 +104,23 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
-        totalCollateralAssets = Views.getCollateralAssets();
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
+
+        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
+            thisSiloConfig.silo,
+            thisSiloConfig.interestRateModel,
+            thisSiloConfig.daoFee,
+            thisSiloConfig.deployerFee
+        );
     }
 
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
-        totalDebtAssets = Views.getDebtAssets();
+        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
+
+        totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
+            thisSiloConfig.silo, thisSiloConfig.interestRateModel
+        );
     }
 
     /// @inheritdoc ISilo
@@ -112,7 +130,10 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
     {
-        (totalCollateralAssets, totalProtectedAssets) = Views.getCollateralAndProtectedAssets();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalProtectedAssets = $.totalAssets[AssetTypes.PROTECTED];
     }
 
     /// @inheritdoc ISilo
@@ -122,7 +143,10 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
     {
-        (totalCollateralAssets, totalDebtAssets) = Views.getCollateralAndDebtAssets();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
     }
 
     // ERC4626
@@ -163,7 +187,8 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
-        maxAssets = Views.maxDeposit(CollateralType.Collateral);
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        return _maxDepositOrMint($.totalAssets[AssetTypes.COLLATERAL]);
     }
 
     /// @inheritdoc IERC4626
@@ -182,7 +207,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return Views.maxMint(CollateralType.Collateral);
+        return _maxDepositOrMint(totalSupply());
     }
 
     /// @inheritdoc IERC4626
@@ -248,7 +273,13 @@ contract Silo is ISilo, ShareCollateralToken {
             uint256 debtAssets
         )
     {
-        return Views.getSiloStorage();
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        daoAndDeployerRevenue = $.daoAndDeployerRevenue;
+        interestRateTimestamp = $.interestRateTimestamp;
+        protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
+        collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        debtAssets = $.totalAssets[AssetTypes.DEBT];
     }
 
     /// @inheritdoc ISilo
@@ -284,7 +315,8 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 maxAssets)
     {
-        maxAssets = Views.maxDeposit(_collateralType);
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        return _maxDepositOrMint($.totalAssets[uint256(_collateralType)]);
     }
 
     /// @inheritdoc ISilo
@@ -777,6 +809,15 @@ contract Silo is ISilo, ShareCollateralToken {
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_SHARES, assetType
         );
+    }
+
+    function _maxDepositOrMint(uint256 _totalCollateralAssets)
+        internal
+        view
+        virtual
+        returns (uint256 maxAssetsOrShares)
+    {
+        return SiloERC4626Lib.maxDepositOrMint(_totalCollateralAssets);
     }
 
     function _maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
