@@ -13,7 +13,7 @@ library ShareCollateralTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     /// @dev Check if sender is solvent after the transfer
-    function afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal {
+    function afterTokenTransfer(address _sender, address _recipient, uint256 _amount) external {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
 
         // for minting or burning, Silo is responsible to check all necessary conditions
