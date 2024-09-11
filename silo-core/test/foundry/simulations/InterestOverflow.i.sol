@@ -43,9 +43,8 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         vm.warp(1 days);
 
         for (uint i;; i++) {
-            silo1.accrueInterest(); // TODO why when this is off, test fail?
-            // looks like when I acrue interest more often, then interest are higner
-            // eg 4,9M% vs 90M%
+            // if we apply interest often, we will generate more interest in shorter time
+            silo1.accrueInterest();
 
             uint256 newLtv = siloLens.getLtv(silo1, borrower);
 
