@@ -96,7 +96,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         external
         virtual
         override(IHookReceiver, PartialLiquidation)
-        returns (bool interruptExecution)
+        returns (bool interruptExecution, bytes memory returnData)
     {
         // Do not expect any actions.
         revert RequestNotSupported();

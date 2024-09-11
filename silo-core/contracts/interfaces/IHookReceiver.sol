@@ -25,7 +25,7 @@ interface IHookReceiver {
         bytes calldata _input
     )
         external
-        returns (bool interruptExecution);
+        returns (bool interruptExecution, bytes memory returnData);
 
     function afterAction(
         address _silo,
