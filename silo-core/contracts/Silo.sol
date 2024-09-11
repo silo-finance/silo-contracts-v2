@@ -82,8 +82,17 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function utilizationData() external view virtual returns (UtilizationData memory) {
-        return Views.utilizationData();
+    function utilizationData() external view virtual returns (
+        uint256 collateralAssets,
+        uint256 debtAssets,
+        uint64 interestRateTimestamp
+    ) {
+        // moving it to lib will increase size
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        debtAssets = $.totalAssets[AssetTypes.DEBT];
+        interestRateTimestamp = $.interestRateTimestamp;
     }
 
     function getLiquidity() external view virtual returns (uint256 liquidity) {

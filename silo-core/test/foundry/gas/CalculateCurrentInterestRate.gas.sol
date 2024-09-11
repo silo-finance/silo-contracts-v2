@@ -31,17 +31,17 @@ contract CalculateCurrentInterestRateGasTest is Gas, Test {
         ISiloConfig.ConfigData memory config = silo1.config().getConfig(address(silo1));
 
         IInterestRateModelV2.ConfigWithState memory c = IInterestRateModelV2(config.interestRateModel).getConfig(address(silo1));
-        ISilo.UtilizationData memory data = ISilo(silo1).utilizationData();
+        (uint256 collateralAssets, uint256 debtAssets, uint64 interestRateTimestamp) = ISilo(silo1).utilizationData();
 
         _action(
             DEPOSITOR,
             config.interestRateModel,
             abi.encodeCall(IInterestRateModelV2.calculateCurrentInterestRate, (
                 c,
-                data.collateralAssets,
-                data.debtAssets,
-                data.interestRateTimestamp,
-                data.interestRateTimestamp + 30 days
+                collateralAssets,
+                debtAssets,
+                interestRateTimestamp,
+                interestRateTimestamp + 30 days
             )),
             "CalculateCurrentInterestRate",
             12607

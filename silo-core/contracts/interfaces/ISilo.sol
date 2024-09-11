@@ -100,16 +100,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         ISilo.CollateralType transitionFrom;
     }
 
-    struct UtilizationData {
-        /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
-        /// It also includes token amount that has been borrowed.
-        uint256 collateralAssets;
-        /// @dev DEBT: Amount of asset token that has been borrowed plus accrued interest.
-        uint256 debtAssets;
-        /// @dev timestamp of the last interest accrual
-        uint64 interestRateTimestamp;
-    }
-
     struct SiloStorage {
         /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
         /// but not yet withdrawn
@@ -223,7 +213,15 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     function factory() external view returns (ISiloFactory siloFactory);
 
     /// @notice Fetches the utilization data of the silo used by IRM
-    function utilizationData() external view returns (UtilizationData memory utilizationData);
+    /// @return collateralAssets Amount of asset token that has been deposited to Silo plus interest earned by
+    /// depositors. It also includes token amount that has been borrowed.
+    /// @return debtAssets Amount of asset token that has been borrowed plus accrued interest.
+    /// @return interestRateTimestamp timestamp of the last interest accrual
+    function utilizationData() external view returns (
+        uint256 collateralAssets,
+        uint256 debtAssets,
+        uint64 interestRateTimestamp
+    );
 
     /// @notice Fetches the real (available to borrow) liquidity in the silo, it does include interest
     /// @return liquidity The amount of liquidity

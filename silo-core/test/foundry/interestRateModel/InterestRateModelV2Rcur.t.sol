@@ -54,16 +54,14 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
                 assertLe(diff, 1, _concatMsg(i, "allow maximum of 0.01% (1bps) deviation"));
             }
 
-            ISilo.UtilizationData memory utilizationData = ISilo.UtilizationData(
-                testCase.input.totalDeposits,
-                testCase.input.totalBorrowAmount,
-                uint64(testCase.input.lastTransactionTime)
-            );
+            uint256 collateralAssets = testCase.input.totalDeposits;
+            uint256 debtAssets = testCase.input.totalBorrowAmount;
+            uint64 interestRateTimestamp = uint64(testCase.input.lastTransactionTime);
 
             IRMv2Impl.mockSetup(silo, testCase.input.integratorState, testCase.input.Tcrit);
 
             bytes memory encodedData = abi.encodeWithSelector(ISilo.utilizationData.selector);
-            vm.mockCall(silo, encodedData, abi.encode(utilizationData));
+            vm.mockCall(silo, encodedData, abi.encode(collateralAssets, debtAssets, interestRateTimestamp));
             vm.expectCall(silo, encodedData);
 
             uint256 mockedRcur = IRMv2Impl.getCurrentInterestRate(silo, testCase.input.currentTime);

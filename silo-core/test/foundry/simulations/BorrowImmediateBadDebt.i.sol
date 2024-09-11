@@ -63,9 +63,9 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
         uint256 ltvBefore = silo1.getLtv(borrower);
         assertEq(ltvBefore, 0.5e18, "LTV is 50%");
 
-        ISilo.UtilizationData memory data = silo1.utilizationData();
+        (uint256 collateralAssets, uint256 debtAssets,) = silo1.utilizationData();
 
-        assertEq(data.debtAssets * 1e18 / data.collateralAssets, 1e18, "100% utilization");
+        assertEq(debtAssets * 1e18 / collateralAssets, 1e18, "100% utilization");
 
         uint256 solvencyTime = 8 days;
         vm.warp(block.timestamp + solvencyTime);
@@ -122,9 +122,9 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
         uint256 ltvBefore = silo1.getLtv(borrower);
         assertEq(ltvBefore, 842696629213483147, "LTV is just below LT");
 
-        ISilo.UtilizationData memory data = silo1.utilizationData();
+        (uint256 collateralAssets, uint256 debtAssets,) = silo1.utilizationData();
 
-        assertEq(data.debtAssets * 1e18 / data.collateralAssets, 1e18, "100% utilization");
+        assertEq(debtAssets * 1e18 / collateralAssets, 1e18, "100% utilization");
 
         uint256 solvencyTime = 1 days;
         vm.warp(block.timestamp + solvencyTime);

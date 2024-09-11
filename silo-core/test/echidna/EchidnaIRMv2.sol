@@ -46,16 +46,6 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         uint64 interestRateTimestamp;
     }
 
-    struct UtilizationData {
-        /// @dev COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
-        /// It also includes token amount that has been borrowed.
-        uint256 collateralAssets;
-        /// @dev DEBT: Amount of asset token that has been borrowed plus accrued interest.
-        uint256 debtAssets;
-        /// @dev timestamp of the last interest accrual
-        uint64 interestRateTimestamp;
-    }
-
     uint256 totalCollateral;
     uint256 totalDebt;
     uint64 interestRateTimestamp;
@@ -89,12 +79,15 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         interestRateTimestamp = uint40(block.timestamp);
     }
 
-    function utilizationData() external view virtual returns (UtilizationData memory) {
-        return UtilizationData({
-            collateralAssets: totalCollateral,
-            debtAssets: totalDebt,
-            interestRateTimestamp: interestRateTimestamp
-        });
+    function utilizationData()
+        external
+        view
+        virtual
+        returns (uint256 collateralAssets, uint256 debtAssets, uint64 interestRateTimestamp)
+    {
+        collateralAssets = totalCollateral;
+        debtAssets = totalDebt;
+        interestRateTimestamp = interestRateTimestamp;
     }
 
     function _fetchConfigAndUtilization() internal view returns (IInterestRateModelV2.ConfigWithState memory config, int256 utilization) {

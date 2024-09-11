@@ -138,13 +138,15 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         override
         returns (uint256 rcomp)
     {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+        (uint256 collateralAssets,
+            uint256 debtAssets,
+            uint64 interestRateTimestamp) = ISilo(_silo).utilizationData();
 
         (rcomp,,) = calculateCompoundInterestRate(
             getConfig(_silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
+            collateralAssets,
+            debtAssets,
+            interestRateTimestamp,
             _blockTimestamp
         );
     }
@@ -157,13 +159,15 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         override
         returns (bool overflow)
     {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+        (uint256 collateralAssets,
+            uint256 debtAssets,
+            uint64 interestRateTimestamp) = ISilo(_silo).utilizationData();
 
         (,,,overflow) = calculateCompoundInterestRateWithOverflowDetection(
             getConfig(_silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
+            collateralAssets,
+            debtAssets,
+            interestRateTimestamp,
             _blockTimestamp
         );
     }
@@ -176,13 +180,15 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         override
         returns (uint256 rcur)
     {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+        (uint256 collateralAssets,
+            uint256 debtAssets,
+            uint64 interestRateTimestamp) = ISilo(_silo).utilizationData();
 
         rcur = calculateCurrentInterestRate(
             getConfig(_silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
+            collateralAssets,
+            debtAssets,
+            interestRateTimestamp,
             _blockTimestamp
         );
     }
