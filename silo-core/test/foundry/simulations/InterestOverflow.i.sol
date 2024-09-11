@@ -99,6 +99,13 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         _withdrawAndCheck(makeAddr("user4"), 0, 2);
 
+        {
+            (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            assertEq(token1.balanceOf(address(silo1)), daoAndDeployerRevenue + dust, "got balance for fees");
+            silo1.withdrawFees();
+            assertEq(token1.balanceOf(address(silo1)), dust, "dust left");
+        }
+
         assertEq(_printUtilization(silo1).collateralAssets, dust, "collateral dust left");
         assertEq(withdraw2, dust, "dust is an amount of 1 share (rounding)");
 
