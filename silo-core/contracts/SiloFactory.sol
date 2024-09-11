@@ -8,6 +8,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
+import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
@@ -189,6 +190,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         }
 
         if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
+
+        _verifyQuoteTokens(_initData);
+
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
         if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
         if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
@@ -328,5 +332,28 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
         configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
+    }
+
+    function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
+        address expectedQuoteToken;
+
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
+    }
+
+    function _verifyQuoteToken(address _expectedQuoteToken, address _oracle)
+        internal
+        virtual
+        view
+        returns (address quoteToken)
+    {
+        if (_oracle == address(0)) return _expectedQuoteToken;
+
+        quoteToken = ISiloOracle(_oracle).quoteToken();
+
+        if (_expectedQuoteToken == address(0)) return quoteToken;
+        if (_expectedQuoteToken != quoteToken) revert InvalidQuoteToken();
     }
 }
