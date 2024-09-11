@@ -228,7 +228,7 @@ library Actions {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {
-            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer);
+            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, msg.sender, msg.value);
 
             interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(
                 address(this), Hook.REPAY, data
@@ -708,7 +708,13 @@ library Actions {
 
         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return false;
 
-        bytes memory data = abi.encodePacked(_assets, _shares, _receiver);
+        bytes memory data = abi.encodePacked(
+            _assets,
+            _shares,
+            _receiver,
+            msg.sender,
+            msg.value
+        );
 
         interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(
             address(this), action, data
@@ -743,7 +749,12 @@ library Actions {
         if (!_shareStorage.hookSetup.hooksBefore.matchAction(Hook.LEVERAGE_SAME_ASSET)) return false;
 
         bytes memory data = abi.encodePacked(
-            _args.depositAssets, _args.borrowAssets, _args.borrower, _args.collateralType
+            _args.depositAssets,
+            _args.borrowAssets,
+            _args.borrower,
+            _args.collateralType,
+            msg.sender,
+            msg.value
         );
 
         interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(

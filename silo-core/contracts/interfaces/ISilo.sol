@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
-
+import {ISiloERC4626, IERC20, IERC20Metadata} from "./ISiloERC4626.sol";
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
@@ -10,7 +9,7 @@ import {ISiloFactory} from "./ISiloFactory.sol";
 import {IHookReceiver} from "./IHookReceiver.sol";
 
 // solhint-disable ordering
-interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
+interface ISilo is IERC20, ISiloERC4626, IERC3156FlashLender {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -292,6 +291,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @dev Reverts for debt asset type
     function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)
         external
+        payable
         returns (uint256 shares);
 
     /// @notice Implements IERC4626.maxMint for protected (non-borrowable) collateral and collateral
@@ -304,7 +304,10 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     /// @notice Implements IERC4626.mint for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
-    function mint(uint256 _shares, address _receiver, CollateralType _collateralType) external returns (uint256 assets);
+    function mint(uint256 _shares, address _receiver, CollateralType _collateralType)
+        external
+        payable
+        returns (uint256 assets);
 
     /// @notice Implements IERC4626.maxWithdraw for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
@@ -379,6 +382,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @return borrowShares Amount of shares equivalent to the borrowed assets
     function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType)
         external
+        payable
         returns (uint256 depositShares, uint256 borrowShares);
 
     /// @notice Allows an address to borrow a specified amount of assets
@@ -430,7 +434,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @param _assets Amount of assets to be repaid
     /// @param _borrower Address of the borrower whose debt is being repaid
     /// @return shares The equivalent number of shares for the provided asset amount
-    function repay(uint256 _assets, address _borrower) external returns (uint256 shares);
+    function repay(uint256 _assets, address _borrower) external payable returns (uint256 shares);
 
     /// @notice Calculates the maximum number of shares that can be repaid for a given borrower
     /// @param _borrower Address of the borrower

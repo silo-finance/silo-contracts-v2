@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ISilo, IERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
+import {ISilo, ISiloERC4626, IERC3156FlashLender} from "./interfaces/ISilo.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 
 import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
@@ -127,17 +127,17 @@ contract Silo is ISilo, ShareCollateralToken {
 
     // ERC4626
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function asset() external view virtual returns (address assetTokenAddress) {
         return ShareTokenLib.siloConfig().getAssetForSilo(address(this));
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
         (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
@@ -149,7 +149,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
@@ -161,51 +161,52 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function maxDeposit(address /* _receiver */) external view virtual returns (uint256 maxAssets) {
         maxAssets = Views.maxDeposit(CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {
         return _previewDeposit(_assets, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function deposit(uint256 _assets, address _receiver)
         external
+        payable
         virtual
         returns (uint256 shares)
     {
         (, shares) = _deposit(_assets, 0 /* shares */, _receiver, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
         return Views.maxMint(CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
         return _previewMint(_shares, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {
+    /// @inheritdoc ISiloERC4626
+    function mint(uint256 _shares, address _receiver) external payable virtual returns (uint256 assets) {
         (assets,) = _deposit(0 /* assets */, _shares, _receiver, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = _maxWithdraw(_owner, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function previewWithdraw(uint256 _assets) external view virtual returns (uint256 shares) {
         return _previewWithdraw(_assets, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function withdraw(uint256 _assets, address _receiver, address _owner)
         external
         virtual
@@ -214,17 +215,17 @@ contract Silo is ISilo, ShareCollateralToken {
         (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
         (, maxShares) = _maxWithdraw(_owner, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function previewRedeem(uint256 _shares) external view virtual returns (uint256 assets) {
         return _previewRedeem(_shares, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    /// @inheritdoc ISiloERC4626
     function redeem(uint256 _shares, address _receiver, address _owner)
         external
         virtual
@@ -300,6 +301,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)
         external
+        payable
         virtual
         returns (uint256 shares)
     {
@@ -329,6 +331,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function mint(uint256 _shares, address _receiver, CollateralType _collateralType)
         external
+        payable
         virtual
         returns (uint256 assets)
     {
@@ -466,6 +469,7 @@ contract Silo is ISilo, ShareCollateralToken {
         CollateralType _collateralType
     )
         external
+        payable
         virtual
         returns (uint256 depositedShares, uint256 borrowedShares)
     {
@@ -604,6 +608,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function repay(uint256 _assets, address _borrower)
         external
+        payable
         virtual
         returns (uint256 shares)
     {
