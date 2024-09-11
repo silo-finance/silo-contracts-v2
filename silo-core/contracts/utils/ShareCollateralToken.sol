@@ -27,6 +27,8 @@ abstract contract ShareCollateralToken is ShareToken {
 
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+        // in case Silo need more space, override this method and use `ShareCollateralTokenLib.afterTokenTransferEx`
+        // it will give you 2,4KB
         ShareCollateralTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
