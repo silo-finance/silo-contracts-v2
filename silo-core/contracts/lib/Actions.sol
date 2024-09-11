@@ -626,17 +626,17 @@ library Actions {
         ISilo.WithdrawArgs calldata _args,
         uint256 assets,
         uint256 shares
-    ) private returns (bool interruptExecution) {
+    ) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         uint256 action = Hook.withdrawAction(_args.collateralType);
 
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return false;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data =
             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);
 
-        interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
             address(this), action, data
         );
     }
@@ -661,10 +661,10 @@ library Actions {
         uint256 action,
         uint256 assets,
         uint256 shares
-    ) private returns (bool interruptExecution) {
+    ) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return false;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(
             _args.assets,
@@ -675,7 +675,7 @@ library Actions {
             shares
         );
 
-        interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
             address(this), action, data
         );
     }
@@ -700,15 +700,15 @@ library Actions {
         ISilo.TransitionCollateralArgs memory _args,
         uint256 _shares,
         uint256 _assets
-    ) private returns (bool interruptExecution) {
+    ) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         uint256 action = Hook.transitionCollateralAction(_args.transitionFrom);
 
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return false;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_shares, _args.owner, _assets);
 
-        interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
             address(this), action, data
         );
     }
@@ -744,15 +744,15 @@ library Actions {
         address _receiver,
         uint256 _exactAssets,
         uint256 _exactShare
-    ) private returns (bool interruptExecution) {
+    ) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
         uint256 action = Hook.depositAction(_collateralType);
 
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return false;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
-        interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
             address(this), action, data
         );
     }
@@ -783,10 +783,10 @@ library Actions {
         uint256 _borrowedAssets,
         uint256 _depositedShares,
         uint256 _borrowedShares
-    ) private returns (bool interruptExecution) {
+    ) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return false;
+        if (!_shareStorage.hookSetup.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
 
         bytes memory data = abi.encodePacked(
             _args.depositAssets,
@@ -797,7 +797,7 @@ library Actions {
             _borrowedShares
         );
 
-        interruptExecution = IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
+        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
             address(this), Hook.LEVERAGE_SAME_ASSET, data
         );
     }
