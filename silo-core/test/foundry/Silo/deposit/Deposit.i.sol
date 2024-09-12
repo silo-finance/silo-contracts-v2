@@ -85,28 +85,7 @@ contract DepositTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateral.collateralShareToken).totalSupply(), one);
         assertEq(silo0.getCollateralAssets(), one);
 
-        uint depositForBorrow = 1000*one;
-        uint toBorrow = 200*one;
-
-        _makeDeposit(silo0, token0, depositForBorrow, borrower, ISilo.CollateralType.Collateral);
-        vm.prank(borrower);
-        uint shares = silo0.borrowSameAsset(toBorrow, borrower, borrower);
-
-        uint256 timeForward = 70 days;
-        vm.warp(block.timestamp + timeForward);
-
-        uint256 toRepay = silo0.maxRepay(borrower);
-
-        assertTrue(toRepay > toBorrow);
-
-        vm.prank(borrower);
-        token0.approve(address(silo0), toRepay);
-
-        _mintTokens(token0, toRepay, borrower);
-
-        vm.prank(borrower);
-        shares = silo0.repay(toRepay, borrower);
-
+        _repayLoan(borrower, 200*one);
         // console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         // console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
 
@@ -120,16 +99,39 @@ contract DepositTest is SiloLittleHelper, Test {
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
 
-        uint toDepositMore = 5*one;
-        _makeDeposit(silo0, token0, toDepositMore, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo0, token0, 5 * one, depositor, ISilo.CollateralType.Collateral);
         vm.prank(depositor);
-        silo0.withdraw(toDepositMore, depositor, depositor);
+        silo0.withdraw(5 * one, depositor, depositor);
         _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
+        
 
-        // plus one to numerator
-        // plus one to denumenator
-        _makeDeposit(silo0, token0, 1000 * one, depositor, ISilo.CollateralType.Collateral);
-        console.log("*** After first user deposits ", toDepositMore, " ***");
+        _makeDeposit(silo0, token0, 11 * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw(11 * one, depositor, depositor);
+
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+
+        _makeDeposit(silo0, token0, 14 * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw(14 * one, depositor, depositor);
+
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+        _makeDeposit(silo0, token0, (6*2+5) * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw((6*2+5) * one, depositor, depositor);
+
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+
+        _makeDeposit(silo0, token0, (7*2+6) * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw((7*2+6) * one, depositor, depositor);
+
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+        console.log("*** Make it 7:1 ratio***");
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
 
@@ -140,6 +142,27 @@ contract DepositTest is SiloLittleHelper, Test {
         //     console.log("collateralShareToken.totalSupply() ", IShareToken(collateral.collateralShareToken).totalSupply());
         //     console.log("silo0.getCollateralAssets() ", silo0.getCollateralAssets());
         // }
+    }
+
+    function _repayLoan(address _borrower, uint _toBorrow) internal {
+        uint256 depositAmount = _toBorrow * 12 / 8;
+        
+        _makeDeposit(silo0, token0, depositAmount, _borrower, ISilo.CollateralType.Collateral);
+        vm.prank(_borrower);
+        uint shares = silo0.borrowSameAsset(_toBorrow, _borrower, _borrower);
+
+        vm.warp(block.timestamp + 70 days);
+
+        uint256 toRepay = silo0.maxRepay(_borrower);
+        // assertTrue(toRepay > _toBorrow);
+
+        vm.prank(_borrower);
+        token0.approve(address(silo0), toRepay);
+
+        _mintTokens(token0, toRepay, _borrower);
+
+        vm.prank(_borrower);
+        shares = silo0.repay(toRepay, _borrower);
     }
 
     /*
