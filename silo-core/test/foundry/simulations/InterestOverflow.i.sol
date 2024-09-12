@@ -29,10 +29,10 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         uint256 shares3 = _depositForBorrow(1e18, makeAddr("user3"));
 
         _depositCollateral(type(uint160).max, borrower, TWO_ASSETS);
-        uint256 debtShares = _borrow(type(uint160).max / 100 * 75, borrower, TWO_ASSETS);
+        _borrow(type(uint160).max / 100 * 75, borrower, TWO_ASSETS);
 
         _depositCollateral(type(uint160).max / 100 * 25 * 2, borrower2, TWO_ASSETS);
-        uint256 debtShares2 = _borrow(type(uint160).max / 100 * 25, borrower2, TWO_ASSETS);
+        _borrow(type(uint160).max / 100 * 25, borrower2, TWO_ASSETS);
 
         // now move into future until we overflow interest
 
@@ -94,7 +94,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         _withdrawAndCheck(makeAddr("user1"), type(uint160).max, shares1);
 
-        uint256 withdraw3 = _withdrawAndCheck(makeAddr("user3"), 1e18, shares3);
+        _withdrawAndCheck(makeAddr("user3"), 1e18, shares3);
 
         _withdrawAndCheck(makeAddr("user4"), 0, 2);
 
