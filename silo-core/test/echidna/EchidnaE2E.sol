@@ -16,6 +16,8 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
@@ -69,8 +71,18 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         _asset1 = new TestERC20Token("Test Token1", "TT1", 18);
         _initData(address(_asset0), address(_asset1));
 
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
+
         // deploy silo
-        siloConfig = siloFactory.createSilo(siloData["MOCK"]);
+        siloConfig = siloFactory.createSilo(
+            siloData["MOCK"],
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(payable(_vault0));
         vault1 = Silo(payable(_vault1));

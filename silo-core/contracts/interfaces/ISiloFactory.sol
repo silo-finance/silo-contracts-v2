@@ -33,8 +33,6 @@ interface ISiloFactory is IERC721 {
     /// @param daoFeeReceiver Address of the new DAO fee receiver.
     event DaoFeeReceiverChanged(address daoFeeReceiver);
 
-    error InvalidInitialization();
-    error Uninitialized();
     error MissingHookReceiver();
     error ZeroAddress();
     error EmptyToken0();
@@ -53,27 +51,19 @@ interface ISiloFactory is IERC721 {
     error OracleMisconfiguration();
     error InvalidQuoteToken();
 
-    /// @notice Initialize SiloFactory contract.
-    /// @dev SiloFactory is not a clonable contract. initialize() method is here because we have circular dependency:
-    /// SiloFactory needs to know Silo implementation (clonable) and Silo implementation needs to know 
-    /// the factory address.
-    /// @param _siloImpl Address of the Silo implementation.
-    /// @param _shareCollateralTokenImpl Address of the ShareCollateralToken implementation.
-    /// @param _shareDebtTokenImpl Address of the ShareDebtToken implementation.
-    /// @param _daoFee The accrued interest fee to be taken for the DAO (in 18 decimals points).
-    /// @param _daoFeeReceiver The DAO fee receiver address.
-    function initialize(
-        address _siloImpl,
-        address _shareCollateralTokenImpl,
-        address _shareDebtTokenImpl,
-        uint256 _daoFee,
-        address _daoFeeReceiver
-    ) external;
-
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.
-    /// @return siloConfig Config for the created Silo.
-    function createSilo(ISiloConfig.InitData memory _initData) external returns (ISiloConfig siloConfig);
+    /// @param _siloImpl Address of the `Silo` implementation.
+    /// @param _shareProtectedCollateralTokenImpl Address of the `ShareProtectedCollateralToken` implementation.
+    /// @param _shareDebtTokenImpl Address of the `ShareDebtToken` implementation.
+    function createSilo(
+        ISiloConfig.InitData memory _initData,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
+    )
+        external
+        returns (ISiloConfig siloConfig);
 
     /// @notice NFT ownership represents the deployer fee receiver for the each Silo ID.  After burning, 
     /// the deployer fee is sent to the DAO. Burning doesn't affect Silo's behavior. It is only about fee distribution.
@@ -122,15 +112,6 @@ interface ISiloFactory is IERC721 {
 
     /// @notice The recipient of DAO fees.
     function daoFeeReceiver() external view returns (address);
-
-    /// @notice Address of Silo implementation.
-    function siloImpl() external view returns (address);
-
-    /// @notice Address of ShareProtectedCollateralToken implementation.
-    function shareProtectedCollateralTokenImpl() external view returns (address);
-
-    /// @notice Address of ShareDebtToken implementation.
-    function shareDebtTokenImpl() external view returns (address);
 
     /// @notice Get SiloConfig address by Silo id.
     function idToSiloConfig(uint256 _id) external view returns (address);
