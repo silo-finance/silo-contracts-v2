@@ -130,14 +130,20 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         address siloImpl = makeAddr("siloImpl");
         address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
         address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
+        ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
+
+        vm.expectRevert(ISiloFactory.ZeroAddress.selector); // silo config empty
+        siloFactory.createSilo(
+            initData, ISiloConfig(address(0)), siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+        );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // silo impl empty
-        siloFactory.createSilo(initData, address(0), shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+        siloFactory.createSilo(initData, config, address(0), shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareProtectedCollateralTokenImpl empty
-        siloFactory.createSilo(initData, siloImpl, address(0), shareDebtTokenImpl);
+        siloFactory.createSilo(initData, config, siloImpl, address(0), shareDebtTokenImpl);
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareDebtTokenImpl empty
-        siloFactory.createSilo(initData, siloImpl, shareProtectedCollateralTokenImpl, address(0));
+        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, address(0));
     }
 }
