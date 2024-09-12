@@ -10,17 +10,71 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 /// ShareDebtToken (SHARE_DEBT_TOKEN_0, SHARE_DEBT_TOKEN_1)
 library CloneDeterministic {
     /// @dev Deterministic salt for Silo0
-    bytes32 private constant SILO_0 = keccak256("Silo0");
+    bytes32 private constant _SILO_0 = keccak256("Silo0");
     /// @dev Deterministic salt for ShareProtectedCollateralToken Silo0
-    bytes32 private constant SHARE_PROTECTED_COLLATERAL_TOKEN_0 = keccak256("ShareProtectedCollateralToken0");
+    bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_0 = keccak256("ShareProtectedCollateralToken0");
     /// @dev Deterministic salt for ShareDebtToken Silo0
-    bytes32 private constant SHARE_DEBT_TOKEN_0 = keccak256("ShareDebtToken0");
+    bytes32 private constant _SHARE_DEBT_TOKEN_0 = keccak256("ShareDebtToken0");
     /// @dev Deterministic salt for Silo1
-    bytes32 private constant SILO_1 = keccak256("Silo1");
+    bytes32 private constant _SILO_1 = keccak256("Silo1");
     /// @dev Deterministic salt for ShareProtectedCollateralToken Silo1
-    bytes32 private constant SHARE_PROTECTED_COLLATERAL_TOKEN_1 = keccak256("ShareProtectedCollateralToken1");
+    bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_1 = keccak256("ShareProtectedCollateralToken1");
     /// @dev Deterministic salt for ShareDebtToken Silo1
-    bytes32 private constant SHARE_DEBT_TOKEN_1 = keccak256("ShareDebtToken1");
+    bytes32 private constant _SHARE_DEBT_TOKEN_1 = keccak256("ShareDebtToken1");
+
+    /// @notice Deploys a Silo0 clone.
+    /// @param _implmentation The Silo implementation to be cloned.
+    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
+    function silo0(address _implmentation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implmentation, _silo0Salt(_siloId));
+    }
+
+    /// @notice Deploys a Silo1 clone.
+    /// @param _implmentation The Silo implementation to be cloned.
+    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
+    function silo1(address _implmentation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implmentation, _silo1Salt(_siloId));
+    }
+
+    /// @notice Deploys a protected share token clone for the silo0.
+    /// @param _implmentation The protected share token implementation to be cloned.
+    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
+    function shareProtectedCollateralToken0(
+        address _implmentation,
+        uint256 _siloId
+    )
+        internal
+        returns (address instance)
+    {
+        instance = Clones.cloneDeterministic(_implmentation, _shareProtectedCollateralToken0Salt(_siloId));
+    }
+
+    /// @notice Deploys a debt share token clone for the silo0.
+    /// @param _implmentation The debt share token implementation to be cloned.
+    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
+    function shareDebtToken0(address _implmentation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implmentation, _shareDebtToken0Salt(_siloId));
+    }
+
+    /// @notice Deploys a protected share token  clone for the silo1.
+    /// @param _implmentation The protected share token implementation to be cloned.
+    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
+    function shareProtectedCollateralToken1(
+        address _implmentation,
+        uint256 _siloId
+    )
+        internal
+        returns (address instance)
+    {
+        instance = Clones.cloneDeterministic(_implmentation, _shareProtectedCollateralToken1Salt(_siloId));
+    }
+
+    /// @notice Deploys a debt share token clone for the silo1.
+    /// @param _implmentation The debt share token implementation to be cloned.
+    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
+    function shareDebtToken1(address _implmentation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implmentation, _shareDebtToken1Salt(_siloId));
+    }
 
     /// @notice Predicts the address of the SiloConfig _SILO0.
     /// @param _siloImpl The Silo implementation address.
@@ -126,81 +180,39 @@ library CloneDeterministic {
         );
     }
 
-    /// @notice Deploys a Silo0 clone.
-    /// @param _implmentation The Silo implementation to be cloned.
-    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function silo0(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _silo0Salt(_siloId));
-    }
-
-    /// @notice Deploys a Silo1 clone.
-    /// @param _implmentation The Silo implementation to be cloned.
-    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function silo1(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _silo1Salt(_siloId));
-    }
-
-    /// @notice Deploys a protected share token clone for the silo0.
-    /// @param _implmentation The protected share token implementation to be cloned.
-    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function shareProtectedCollateralToken0(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _shareProtectedCollateralToken0Salt(_siloId));
-    }
-
-    /// @notice Deploys a debt share token clone for the silo0.
-    /// @param _implmentation The debt share token implementation to be cloned.
-    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function shareDebtToken0(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _shareDebtToken0Salt(_siloId));
-    }
-
-    /// @notice Deploys a protected share token  clone for the silo1.
-    /// @param _implmentation The protected share token implementation to be cloned.
-    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function shareProtectedCollateralToken1(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _shareProtectedCollateralToken1Salt(_siloId));
-    }
-
-    /// @notice Deploys a debt share token clone for the silo1.
-    /// @param _implmentation The debt share token implementation to be cloned.
-    /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function shareDebtToken1(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _shareDebtToken1Salt(_siloId));
-    }
-
     /// @notice Generates the salt for the `Silo0` `create2` operations.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function _silo0Salt(uint256 _siloId) private view returns (bytes32 salt) {
-        salt = keccak256(abi.encodePacked(_siloId, SILO_0));
+    function _silo0Salt(uint256 _siloId) private pure returns (bytes32 salt) {
+        salt = keccak256(abi.encodePacked(_siloId, _SILO_0));
     }
 
     /// @notice Generates the salt for the `Silo1` `create2` operations.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function _silo1Salt(uint256 _siloId) private pure returns (bytes32 salt) {
-        salt = keccak256(abi.encodePacked(_siloId, SILO_1));
+        salt = keccak256(abi.encodePacked(_siloId, _SILO_1));
     }
 
     /// @notice Generates the salt for the `ShareProtectedCollateralToken0` `create2` operations.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function _shareProtectedCollateralToken0Salt(uint256 _siloId) private pure returns (bytes32 salt) {
-        salt = keccak256(abi.encodePacked(_siloId, SHARE_PROTECTED_COLLATERAL_TOKEN_0));
+        salt = keccak256(abi.encodePacked(_siloId, _SHARE_PROTECTED_COLLATERAL_TOKEN_0));
     }
 
     /// @notice Generates the salt for the `ShareDebtToken0` `create2` operations.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function _shareDebtToken0Salt(uint256 _siloId) private pure returns (bytes32 salt) {
-        salt = keccak256(abi.encodePacked(_siloId, SHARE_DEBT_TOKEN_0));
+        salt = keccak256(abi.encodePacked(_siloId, _SHARE_DEBT_TOKEN_0));
     }
 
     /// @notice Generates the salt for the `ShareProtectedCollateralToken1` `create2` operations.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function _shareProtectedCollateralToken1Salt(uint256 _siloId) private pure returns (bytes32 salt) {
-        salt = keccak256(abi.encodePacked(_siloId, SHARE_PROTECTED_COLLATERAL_TOKEN_1));
+        salt = keccak256(abi.encodePacked(_siloId, _SHARE_PROTECTED_COLLATERAL_TOKEN_1));
     }
 
     /// @notice Generates the salt for the `ShareDebtToken1` `create2` operations.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function _shareDebtToken1Salt(uint256 _siloId) private pure returns (bytes32 salt) {
-        salt = keccak256(abi.encodePacked(_siloId, SHARE_DEBT_TOKEN_1));
+        salt = keccak256(abi.encodePacked(_siloId, _SHARE_DEBT_TOKEN_1));
     }
 }
