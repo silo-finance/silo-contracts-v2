@@ -22,10 +22,6 @@ import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.s
 contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
     using SiloLensLib for ISilo;
 
-    function forwardTransferFromNoChecks(address, address, uint256) external pure override {
-        revert Forbidden();
-    }
-
     /// @inheritdoc IShareTokenInitializable
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);
@@ -47,6 +43,10 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
 
         _setReceiveApproval(owner, _msgSender(), _amount);
+    }
+
+    function forwardTransferFromNoChecks(address, address, uint256) external pure virtual override {
+        revert Forbidden();
     }
 
     /// @inheritdoc IERC20R

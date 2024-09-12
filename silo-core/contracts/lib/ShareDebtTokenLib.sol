@@ -12,6 +12,8 @@ import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 // TODO do we need lib here? debt token size is not a concern, so maybe we can avoid this lib, unless we want to move
 // before/after share to `_update`.
 
+// solhint-disable ordering
+
 library ShareDebtTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 

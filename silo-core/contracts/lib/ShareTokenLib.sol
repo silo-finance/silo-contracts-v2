@@ -11,6 +11,8 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {Hook} from "../lib/Hook.sol";
 
+// solhint-disable ordering
+
 library ShareTokenLib {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;

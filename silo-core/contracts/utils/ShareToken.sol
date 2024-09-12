@@ -76,14 +76,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         _disableInitializers();
     }
 
-    function silo() external view virtual returns (ISilo) {
-        return _getSilo();
-    }
-
-    function siloConfig() external view returns (ISiloConfig) {
-        return _getSiloConfig();
-    }
-
     /// @inheritdoc IShareToken
     function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
@@ -103,6 +95,14 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.transferWithChecks = false;
         _transfer(_from, _to, _amount);
         $.transferWithChecks = true;
+    }
+
+    function silo() external view virtual returns (ISilo) {
+        return _getSilo();
+    }
+
+    function siloConfig() external view virtual returns (ISiloConfig) {
+        return _getSiloConfig();
     }
 
     function hookSetup() external view virtual returns (HookSetup memory) {
