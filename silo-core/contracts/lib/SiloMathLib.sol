@@ -63,6 +63,7 @@ library SiloMathLib {
             uint256 cap = type(uint256).max - _collateralAssets;
 
             if (cap < collateralInterest) {
+                // avoid overflow on interest
                 collateralInterest = cap;
             }
 
@@ -103,7 +104,7 @@ library SiloMathLib {
             uint256 cap = type(uint256).max - _totalDebtAssets;
 
             if (accruedInterest > cap) {
-                // overflow on interest
+                // avoid overflow on interest
                 accruedInterest = cap;
             }
 
