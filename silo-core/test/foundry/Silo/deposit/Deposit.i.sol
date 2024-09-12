@@ -128,10 +128,30 @@ contract DepositTest is SiloLittleHelper, Test {
         _makeDeposit(silo0, token0, (7*2+6) * one, depositor, ISilo.CollateralType.Collateral);
         vm.prank(depositor);
         silo0.withdraw((7*2+6) * one, depositor, depositor);
-
         _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
 
-        console.log("*** Make it 7:1 ratio***");
+        _makeDeposit(silo0, token0, (7) * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw((7) * one, depositor, depositor);
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+        _makeDeposit(silo0, token0, (8) * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw((8) * one, depositor, depositor);
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+        _makeDeposit(silo0, token0, (9) * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw((9) * one, depositor, depositor);
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+        _makeDeposit(silo0, token0, (10) * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw((10) * one, depositor, depositor);
+        _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
+
+        console.log("*** Make it 11:1 ratio***");
+
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
 
