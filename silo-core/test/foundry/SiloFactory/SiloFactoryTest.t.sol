@@ -81,7 +81,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
     /*
     forge test -vv --ffi --mt test_tokenURI
     */
-    function test_tokenURI() public {
+    function test_tokenURI() public view {
         uint256 firstSiloId = 1;
         address siloConfigFromFactory = siloFactory.idToSiloConfig(firstSiloId);
 

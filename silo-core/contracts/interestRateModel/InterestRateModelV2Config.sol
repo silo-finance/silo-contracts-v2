@@ -5,8 +5,6 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 
-// solhint-disable var-name-mixedcase
-
 /// @title InterestRateModelV2Config
 /// @notice Please never deploy config manually, always use factory, because factory does necessary checkes.
 contract InterestRateModelV2Config is IInterestRateModelV2Config {

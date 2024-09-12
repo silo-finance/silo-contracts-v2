@@ -13,7 +13,7 @@ library ShareCollateralTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     /// @dev Check if sender is solvent after the transfer
-    function afterTokenTransfer(address _sender, address _recipient, uint256 _amount) external {
+    function afterTokenTransfer(address _sender, address /* _recipient */, uint256 /* _amount */) external {
         if (!_isSolventAfterCollateralTransfer(_sender)) revert IShareToken.SenderNotSolventAfterTransfer();
 
         // note: make sure to call original/inherited method as well when you call this one for collateral

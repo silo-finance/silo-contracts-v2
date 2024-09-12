@@ -42,8 +42,7 @@ contract SiloRouter {
         bytes options;
     }
 
-    // @dev native asset wrapped token. In case of Ether, it's WETH.
-    // solhint-disable-next-line var-name-mixedcase
+    /// @dev native asset wrapped token. In case of Ether, it's WETH.
     IWrappedNativeToken public immutable WRAPPED_NATIVE_TOKEN;
 
     error ApprovalFailed();

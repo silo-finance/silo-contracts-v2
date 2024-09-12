@@ -113,7 +113,7 @@ contract AccrueInterestForAssetTest is Test {
         );
     }
 
-    function _$() internal view returns (ISilo.SiloStorage storage $) {
+    function _$() internal pure returns (ISilo.SiloStorage storage $) {
         return SiloStorageLib.getSiloStorage();
     }
 }
