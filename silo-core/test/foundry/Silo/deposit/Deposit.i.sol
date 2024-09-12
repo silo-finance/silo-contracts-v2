@@ -149,8 +149,15 @@ contract DepositTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         silo0.withdraw((10) * one, depositor, depositor);
         _makeDeposit(silo0, token0, 1 * one, depositor, ISilo.CollateralType.Collateral);
-
         console.log("*** Make it 11:1 ratio***");
+
+        _makeDeposit(silo0, token0, 11 * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw(one, depositor, depositor);
+
+        _makeDeposit(silo0, token0, 21 * one, depositor, ISilo.CollateralType.Collateral);
+        vm.prank(depositor);
+        silo0.withdraw(one, depositor, depositor);
 
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
