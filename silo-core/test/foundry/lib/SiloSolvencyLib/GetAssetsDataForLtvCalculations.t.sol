@@ -17,6 +17,8 @@ import {SiloMock} from "silo-core/test/foundry/_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "silo-core/test/foundry/_mocks/InterestRateModelMock.sol";
 
 contract SiloFactoryHelper is SiloFactory {
+    constructor(uint256 daoFee, address daoFeeReceiver) SiloFactory(daoFee, daoFeeReceiver) {}
+
     function copyConfig(ISiloConfig.InitData memory _initData)
         external
         pure
@@ -42,7 +44,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
     function setUp() public {
         dataReader = new GetAssetsDataForLtvCalculationsTestData();
-        siloFactoryHelper = new SiloFactoryHelper();
+        siloFactoryHelper = new SiloFactoryHelper(0, makeAddr("daoFeeReceiver"));
     }
 
     function getData(GetAssetsDataForLtvCalculationsTestData.ScenarioData memory scenario)

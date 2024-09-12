@@ -24,8 +24,7 @@ contract SiloFactorySettersTest is Test {
     address hacker = makeAddr("Hacker");
 
     function setUp() public {
-        siloFactory = new SiloFactory();
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+        siloFactory = new SiloFactory(daoFee, daoFeeReceiver);
     }
 
     /*

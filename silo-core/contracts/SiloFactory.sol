@@ -26,9 +26,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     uint256 public maxFlashloanFee;
     uint256 public maxLiquidationFee;
     address public daoFeeReceiver;
-    address public siloImpl;
-    address public shareProtectedCollateralTokenImpl;
-    address public shareDebtTokenImpl;
 
     string public baseURI;
 
@@ -37,32 +34,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     uint256 internal _siloId;
 
-    constructor() ERC721("Silo Finance Fee Receiver", "feeSILO") Ownable(msg.sender) {}
-
-    /// @inheritdoc ISiloFactory
-    function initialize(
-        address _siloImpl,
-        address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl,
+    constructor(
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external virtual onlyOwner {
-        if (_siloId != 0) revert InvalidInitialization();
-
+    )
+        ERC721("Silo Finance Fee Receiver", "feeSILO")
+        Ownable(msg.sender)
+    {
         // start IDs from 1
         _siloId = 1;
 
-        if (
-            _siloImpl == address(0) ||
-            _shareProtectedCollateralTokenImpl == address(0) ||
-            _shareDebtTokenImpl == address(0)
-        ) {
-            revert ZeroAddress();
-        }
-
-        siloImpl = _siloImpl;
-        shareProtectedCollateralTokenImpl = _shareProtectedCollateralTokenImpl;
-        shareDebtTokenImpl = _shareDebtTokenImpl;
         baseURI = "https://v2.app.silo.finance/markets/";
 
         uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
@@ -78,13 +59,28 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
-    function createSilo(ISiloConfig.InitData memory _initData) external virtual returns (ISiloConfig siloConfig) {
+    function createSilo(
+        ISiloConfig.InitData memory _initData,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
+    )
+        external
+        virtual
+        returns (ISiloConfig siloConfig)
+    {
+        if (
+            _siloImpl == address(0) ||
+            _shareProtectedCollateralTokenImpl == address(0) ||
+            _shareDebtTokenImpl == address(0)
+        ) {
+            revert ZeroAddress();
+        }
+
         validateSiloInitData(_initData);
         (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
 
         uint256 nextSiloId = _siloId;
-
-        if (nextSiloId == 0) revert Uninitialized();
 
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
@@ -92,10 +88,15 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
-        _cloneShareTokens(configData0, configData1);
+        _cloneShareTokens(
+            configData0,
+            configData1,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl
+        );
 
-        configData0.silo = Clones.clone(siloImpl);
-        configData1.silo = Clones.clone(siloImpl);
+        configData0.silo = Clones.clone(_siloImpl);
+        configData1.silo = Clones.clone(_siloImpl);
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
 
@@ -261,14 +262,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     function _cloneShareTokens(
         ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1
+        ISiloConfig.ConfigData memory configData1,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
     ) internal virtual {
-        configData0.protectedShareToken = Clones.clone(shareProtectedCollateralTokenImpl);
+        configData0.protectedShareToken = Clones.clone(_shareProtectedCollateralTokenImpl);
         configData0.collateralShareToken = configData0.silo;
-        configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
-        configData1.protectedShareToken = Clones.clone(shareProtectedCollateralTokenImpl);
+        configData0.debtShareToken = Clones.clone(_shareDebtTokenImpl);
+        configData1.protectedShareToken = Clones.clone(_shareProtectedCollateralTokenImpl);
         configData1.collateralShareToken = configData1.silo;
-        configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
+        configData1.debtShareToken = Clones.clone(_shareDebtTokenImpl);
     }
 
     function _initializeShareTokens(

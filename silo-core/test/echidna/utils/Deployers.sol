@@ -177,8 +177,13 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloFactory(address feeReceiver) internal {
-        siloFactory = ISiloFactory(address(new SiloFactory()));
-        siloFactoryInternal = ISiloFactory(address(new SiloFactory()));
+        uint256 daoFee = 0.15e18;
+        address daoFeeReceiver = feeReceiver == address(0)
+            ? address(0)
+            : feeReceiver;
+
+        siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
+        siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
 
         address siloImpl = address(new Silo(siloFactory));
         address siloImplInternal = address(
@@ -187,27 +192,6 @@ contract Deployers is VyperDeployer, Data {
 
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
-
-        uint256 daoFee = 0.15e18;
-        address daoFeeReceiver = feeReceiver == address(0)
-            ? address(0)
-            : feeReceiver;
-
-        siloFactory.initialize(
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl,
-            daoFee,
-            daoFeeReceiver
-        );
-
-        siloFactoryInternal.initialize(
-            siloImplInternal,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl,
-            daoFee,
-            daoFeeReceiver
-        );
 
         address timelock = address(timelockController);
         Ownable(address(siloFactory)).transferOwnership(timelock);
@@ -233,6 +217,16 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloDeployer() internal {
-        siloDeployer = ISiloDeployer(address(new SiloDeployer(interestRateModelV2ConfigFactory, siloFactory)));
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
+
+        siloDeployer = ISiloDeployer(address(new SiloDeployer(
+            interestRateModelV2ConfigFactory,
+            siloFactory,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        )));
     }
 }

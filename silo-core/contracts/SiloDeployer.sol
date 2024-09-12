@@ -14,15 +14,26 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
 /// @notice Silo Deployer
 contract SiloDeployer is ISiloDeployer {
+    // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
+    address public immutable SILO_IMPL;
+    address public immutable SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL;
+    address public immutable SHARE_DEBT_TOKEN_IMPL;
+    // solhint-enable var-name-mixedcase
 
     constructor(
         IInterestRateModelV2Factory _irmConfigFactory,
-        ISiloFactory _siloFactory
+        ISiloFactory _siloFactory,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
         SILO_FACTORY = _siloFactory;
+        SILO_IMPL = _siloImpl;
+        SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL = _shareProtectedCollateralTokenImpl;
+        SHARE_DEBT_TOKEN_IMPL = _shareDebtTokenImpl;
     }
 
     /// @inheritdoc ISiloDeployer
@@ -43,7 +54,12 @@ contract SiloDeployer is ISiloDeployer {
         // clone hook receiver if needed
         _cloneHookReceiver(_siloInitData, _clonableHookReceiver.implementation);
         // create Silo
-        siloConfig = SILO_FACTORY.createSilo(_siloInitData);
+        siloConfig = SILO_FACTORY.createSilo(
+            _siloInitData,
+            SILO_IMPL,
+            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
+            SHARE_DEBT_TOKEN_IMPL
+        );
         // initialize hook receiver only if it was cloned
         _initializeHookReceiver(_siloInitData, siloConfig, _clonableHookReceiver);
 
