@@ -3,8 +3,6 @@ pragma solidity >=0.5.0;
 
 import {IInterestRateModelV2Config} from "./IInterestRateModelV2Config.sol";
 
-// solhint-disable var-name-mixedcase
-
 interface IInterestRateModelV2 {
     struct Config {
         // uopt ∈ (0, 1) – optimal utilization;

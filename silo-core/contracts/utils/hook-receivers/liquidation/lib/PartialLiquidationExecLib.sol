@@ -57,6 +57,7 @@ library PartialLiquidationExecLib {
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
+    // solhint-disable-next-line function-max-lines
     function maxLiquidation(ISiloConfig _siloConfig, address _borrower)
         internal
         view

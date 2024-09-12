@@ -16,7 +16,7 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
         factory = _siloFactory;
     }
 
-    function _$() internal returns (ISilo.SiloStorage storage) {
+    function _$() internal pure returns (ISilo.SiloStorage storage) {
         return SiloStorageLib.getSiloStorage();
     }
 

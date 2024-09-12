@@ -45,7 +45,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     }
 
     /// @inheritdoc IPartialLiquidation
-    function liquidationCall( // solhint-disable-line function-max-lines
+    function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _collateralAsset,
         address _debtAsset,
         address _borrower,

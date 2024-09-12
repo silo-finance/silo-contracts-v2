@@ -14,10 +14,8 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
 /// @notice Silo Deployer
 contract SiloDeployer is ISiloDeployer {
-    // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
-    // solhint-enable var-name-mixedcase
 
     constructor(
         IInterestRateModelV2Factory _irmConfigFactory,

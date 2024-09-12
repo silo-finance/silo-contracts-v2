@@ -8,8 +8,6 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
 import {Hook} from "./lib/Hook.sol";
 
-// solhint-disable var-name-mixedcase
-
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
 /// data access using immutable variables.
