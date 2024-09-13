@@ -5,7 +5,7 @@ import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
+FOUNDRY_PROFILE=core CONFIG=ETH_USDC_UniswapV3_Silo \
     forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

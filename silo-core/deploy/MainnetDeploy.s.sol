@@ -9,6 +9,8 @@ import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {PartialLiquidationDeploy} from "./PartialLiquidationDeploy.s.sol";
 import {GaugeHookReceiverDeploy} from "./GaugeHookReceiverDeploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
+import {SiloLensDeploy} from "./SiloLensDeploy.s.sol";
+import {SiloRouterDeploy} from "./SiloRouterDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -18,18 +20,22 @@ import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
 contract MainnetDeploy is CommonDeploy {
     function run() public {
         SiloFactoryDeploy siloFactoryDeploy = new SiloFactoryDeploy();
-        InterestRateModelV2FactoryDeploy interestRateModelV2ConfigFactoryDeploy =
+        InterestRateModelV2FactoryDeploy interestRateModelV2FactoryDeploy =
             new InterestRateModelV2FactoryDeploy();
         InterestRateModelV2Deploy interestRateModelV2Deploy = new InterestRateModelV2Deploy();
         PartialLiquidationDeploy siloLiquidationDeploy = new PartialLiquidationDeploy();
         GaugeHookReceiverDeploy gaugeHookReceiverDeploy = new GaugeHookReceiverDeploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
+        SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
+        SiloRouterDeploy siloRouterDeploy = new SiloRouterDeploy();
 
         siloFactoryDeploy.run();
-        interestRateModelV2ConfigFactoryDeploy.run();
+        interestRateModelV2FactoryDeploy.run();
         interestRateModelV2Deploy.run();
         siloLiquidationDeploy.run();
         gaugeHookReceiverDeploy.run();
         siloDeployerDeploy.run();
+        siloLensDeploy.run();
+        siloRouterDeploy.run();
     }
 }

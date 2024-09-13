@@ -16,7 +16,7 @@ library SiloConfigsNames {
     string public constant ETH_USDC_UNI_V3_SILO_NO_HOOK = "ETH-USDC_UniswapV3_Silo_no_hook";
 
     string public constant FULL_CONFIG_TEST = "FULL_CONFIG_TEST";
-    string public constant ETH_USDC_UNI_V3_SILO = "ETH-USDC_UniswapV3_Silo";
+    string public constant ETH_USDC_UNI_V3_SILO = "ETH_USDC_UniswapV3_Silo";
 }
 
 library SiloDeployments {
