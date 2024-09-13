@@ -22,9 +22,11 @@ The **Silo Protocol** is a decentralized lending protocol. It allows users to de
 
 The hooks system allows external contracts or modules to execute additional logic at two key points: **before** and **after** the core logic of each protocol action. While the protocol is fully functional without hooks, the system provides an extension point for developers and users who wish to enforce additional checks, perform external calls, or execute custom business logic surrounding core operations.
 
-Each action within the protocol is associated with two types of hooks:
+Each action within the protocol (except for the share tokens transfer) is associated with two types of hooks:
 - **Before Action Hook**: Invoked **before** any logic of the action is executed. This can be used to perform validation checks, eligibility assessments, or custom logic before the main action takes place.
 - **After Action Hook**: Invoked **after** all logic of the action is completed. This allows developers to perform follow-up tasks such as logging, notifications, or additional off-chain and on-chain integrations.
+
+Share tokens transfer only has an **After Action Hook**.
 
 ### Some concepts
 
