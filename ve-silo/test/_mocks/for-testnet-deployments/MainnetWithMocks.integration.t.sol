@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 

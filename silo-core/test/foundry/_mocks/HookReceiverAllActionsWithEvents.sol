@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloHookReceiver, IHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/SiloHookReceiver.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
@@ -10,22 +11,18 @@ import {console} from "forge-std/console.sol";
 
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
-contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
+contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceiver {
     using Hook for uint256;
 
     bool internal constant _IS_BEFORE = true;
     bool internal constant _IS_AFTER = false;
     bool internal constant _SAME_ASSET = true;
     bool internal constant _NOT_SAME_ASSET = false;
-    bool internal constant _LEVERAGE = true;
-    bool internal constant _NOT_LEVERAGE = false;
 
     uint24 internal immutable _SILO0_ACTIONS_BEFORE;
     uint24 internal immutable _SILO0_ACTIONS_AFTER;
     uint24 internal immutable _SILO1_ACTIONS_BEFORE;
     uint24 internal immutable _SILO1_ACTIONS_AFTER;
-
-    ISiloConfig public siloConfig;
 
     bool public revertAllActions;
 
@@ -97,9 +94,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 borrowedAssets,
         uint256 borrowedShares,
         address borrower,
-        address receiver,
-        bool isLeverage,
-        bool isSameAsset
+        address receiver
     );
 
     event BorrowAfterHA(
@@ -109,9 +104,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         address borrower,
         address receiver,
         uint256 returnedAssets,
-        uint256 returnedShares,
-        bool isLeverage,
-        bool isSameAsset
+        uint256 returnedShares
     );
 
     event RepayBeforeHA(
@@ -158,31 +151,9 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         uint256 borrowedShares
     );
 
-    event LiquidationBeforeHA(
-        address silo,
-        address siloWithDebt,
-        address collateralAsset,
-        address debtAsset,
-        address borrower,
-        uint256 debtToCover,
-        bool receiveSToken
-    );
+    event SwitchCollateralBeforeHA(address user);
 
-    event LiquidationAfterHA(
-        address silo,
-        address siloWithDebt,
-        address collateralAsset,
-        address debtAsset,
-        address borrower,
-        uint256 debtToCover,
-        bool receiveSToken,
-        uint256 withdrawCollateral,
-        uint256 repayDebtAssets
-    );
-
-    event SwitchCollateralBeforeHA(bool sameAsset, address user);
-
-    event SwitchCollateralAfterHA(bool sameAsset, address user);
+    event SwitchCollateralAfterHA(address user);
 
     event FlashLoanBeforeHA(address silo, address receiver, address token, uint256 amount);
 
@@ -209,7 +180,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     }
 
     /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _siloConfig, bytes calldata) external {
+    function initialize(ISiloConfig _siloConfig, bytes calldata) external override (IHookReceiver, PartialLiquidation) {
         siloConfig = _siloConfig;
 
         (address silo0, address silo1) = siloConfig.getSilos();
@@ -219,18 +190,34 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         _setHookConfig(silo1, _SILO1_ACTIONS_BEFORE, _SILO1_ACTIONS_AFTER);
     }
 
+    function hookReceiverConfig(address _silo)
+        external
+        view
+        virtual
+        override (IHookReceiver, PartialLiquidation)
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
+        return _hookReceiverConfig(_silo);
+    }
+
     function revertAnyAction() external {
         revertAllActions = true;
     }
 
     /// @inheritdoc IHookReceiver
-    function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
+        external
+        override (IHookReceiver, PartialLiquidation)
+    {
         if (revertAllActions) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
     }
 
     /// @inheritdoc IHookReceiver
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
+        external
+        override (IHookReceiver, PartialLiquidation)
+    {
         if (revertAllActions) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
     }
@@ -246,6 +233,8 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
             _processLeverageSameAsset(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW)) {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
+        } else if (_action.matchAction(Hook.BORROW_SAME_ASSET)) {
+            _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.REPAY)) {
             _processRepay(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.FLASH_LOAN)) {
@@ -255,7 +244,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
         } else if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) {
             _processTransitionCollateral(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.LIQUIDATION)) {
-            _processLiquidation(_silo, _inputAndOutput, _isBefore);
+            revert("Hook.LIQUIDATION should not be called, because liquidator is a hook");
         } else {
             revert UnknownAction();
         }
@@ -370,26 +359,14 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     }
 
     function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _NOT_SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_LEVERAGE, _SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _LEVERAGE, _SAME_ASSET);
-        } else if (_action.matchAction(Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET))) {
-            _processBorrowAction(_silo, _inputAndOutput, _isBefore, _NOT_LEVERAGE, _NOT_SAME_ASSET);
+        if (_action.matchAction(Hook.BORROW) || _action.matchAction(Hook.BORROW_SAME_ASSET)) {
+            _processBorrowAction(_silo, _inputAndOutput, _isBefore);
         } else {
             revert UnknownBorrowAction();
         }
     }
 
-    function _processBorrowAction(
-        address _silo,
-        bytes calldata _inputAndOutput,
-        bool _isBefore,
-        bool _isLeverage,
-        bool _isSameAsset
-    ) internal {
+    function _processBorrowAction(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
         if (_isBefore) {
             Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_inputAndOutput);
 
@@ -398,9 +375,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.assets,
                 input.shares,
                 input.borrower,
-                input.receiver,
-                _isLeverage,
-                _isSameAsset
+                input.receiver
             );
         } else {
             Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
@@ -412,9 +387,7 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.borrower,
                 input.receiver,
                 input.borrowedAssets,
-                input.borrowedShares,
-                _isLeverage,
-                _isSameAsset
+                input.borrowedShares
             );
         }
     }
@@ -455,17 +428,11 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
     ) internal {
         Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_inputAndOutput);
 
-        if (_action.matchAction(Hook.switchCollateralAction(_SAME_ASSET))) {
+        if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
             if (_isBefore) {
-                emit SwitchCollateralBeforeHA(_SAME_ASSET, input.user);
+                emit SwitchCollateralBeforeHA(input.user);
             } else {
-                emit SwitchCollateralAfterHA(_SAME_ASSET, input.user);
-            }
-        } else if (_action.matchAction(Hook.switchCollateralAction(_NOT_SAME_ASSET))) {
-            if (_isBefore) {
-                emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET, input.user);
-            } else {
-                emit SwitchCollateralAfterHA(_NOT_SAME_ASSET, input.user);
+                emit SwitchCollateralAfterHA(input.user);
             }
         } else {
             revert UnknownSwitchCollateralAction();
@@ -508,36 +475,6 @@ contract HookReceiverAllActionsWithEvents is SiloHookReceiver {
                 input.collateralType,
                 input.depositedShares,
                 input.borrowedShares
-            );
-        }
-    }
-
-    function _processLiquidation(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_isBefore) {
-            Hook.BeforeLiquidationInput memory input = Hook.beforeLiquidationDecode(_inputAndOutput);
-
-            emit LiquidationBeforeHA(
-                _silo,
-                input.siloWithDebt,
-                input.collateralAsset,
-                input.debtAsset,
-                input.borrower,
-                input.debtToCover,
-                input.receiveSToken
-            );
-        } else {
-            Hook.AfterLiquidationInput memory input = Hook.afterLiquidationDecode(_inputAndOutput);
-
-            emit LiquidationAfterHA(
-                _silo,
-                input.siloWithDebt,
-                input.collateralAsset,
-                input.debtAsset,
-                input.borrower,
-                input.debtToCover,
-                input.receiveSToken,
-                input.withdrawCollateral,
-                input.repayDebtAssets
             );
         }
     }

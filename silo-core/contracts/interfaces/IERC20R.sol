@@ -4,6 +4,10 @@ pragma solidity >=0.5.0;
 /// @dev This interface stands for "ERC20 Reversed",
 /// in the sense that the recipient of a transfer needs to approve the transfer amount first
 interface IERC20R {
+    struct Storage {
+        mapping(address owner => mapping(address recipient => uint256 allowance)) _receiveAllowances;
+    }
+
     /// @dev Emitted when the allowance of a `_receiver` for an `_owner` is set by
     /// a call to {changeReceiveApproval}. `value` is the new allowance.
     /// @param _owner previous owner of the debt

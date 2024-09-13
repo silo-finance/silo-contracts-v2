@@ -2,7 +2,8 @@
 pragma solidity 0.8.24;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -82,7 +83,7 @@ contract VotingEscrowRemapperTest is IntegrationTest {
     }
 
     function testChildChainReceiveUpdatePermissions() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         remapper.setVeSiloDelegator(veSiloDelegator);
 
         _setVeSiloDelegator();

@@ -17,13 +17,13 @@ pragma solidity 0.8.24;
 import {IFeeDistributor} from "./interfaces/IFeeDistributor.sol";
 import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
 
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 import {OptionalOnlyCaller} from "../utils/OptionalOnlyCaller.sol";
 import {InputHelpers} from "../utils/InputHelpers.sol";
-import {SafeERC20, IERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
-import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
+import {SafeMath} from "ve-silo/contracts/utils/SafeMath.sol";
+import {SafeERC20, IERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {EIP712} from "openzeppelin5/utils/cryptography/EIP712.sol";
 
 // solhint-disable not-rely-on-time
 // solhint-disable ordering

@@ -17,8 +17,6 @@ import {SiloLendingLibImpl} from "../../_common/SiloLendingLibImpl.sol";
    forge test -vv --mc BorrowTest
 */
 contract BorrowTest is Test {
-    ISilo.Assets public totalDebt;
-
     // solhint-disable immutable-vars-naming
     TokenMock immutable public protectedShareToken;
     TokenMock immutable public collateralShareToken;
@@ -42,10 +40,6 @@ contract BorrowTest is Test {
         );
     }
 
-    function setUp() public {
-        totalDebt.assets = 0;
-    }
-
     /*
     forge test -vv --mt test_borrow_zeros
     */
@@ -56,7 +50,6 @@ contract BorrowTest is Test {
         address receiver;
         address borrower;
         address spender;
-        uint256 totalCollateralAssets;
 
         vm.expectRevert(ISilo.ZeroAssets.selector);
 
@@ -68,12 +61,8 @@ contract BorrowTest is Test {
                 assets: assets,
                 shares: shares,
                 receiver: receiver,
-                borrower: borrower,
-                sameAsset: false,
-                leverage: false
-            }),
-            totalCollateralAssets,
-            totalDebt
+                borrower: borrower
+            })
         );
     }
 
@@ -88,8 +77,6 @@ contract BorrowTest is Test {
             vm.clearMockedCalls();
             emit log_string(testDatas[i].name);
             bool txReverts = testDatas[i].output.reverts != bytes4(0);
-
-            totalDebt.assets = testDatas[i].input.initTotalDebt;
 
             if (testDatas[i].mocks.debtSharesTotalSupplyMock) {
                 debtShareToken.totalSupplyMock(testDatas[i].mocks.debtSharesTotalSupply, !txReverts);
@@ -116,7 +103,7 @@ contract BorrowTest is Test {
                 testDatas[i].input.receiver,
                 testDatas[i].input.borrower,
                 testDatas[i].input.spender,
-                totalDebt,
+                testDatas[i].input.initTotalDebt,
                 testDatas[i].input.totalCollateralAssets
             );
 

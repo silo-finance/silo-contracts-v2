@@ -24,7 +24,6 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     address immutable BORROWER;
 
     ISiloConfig siloConfig;
-    bool sameAsset = false;
 
     constructor() {
         DEPOSITOR = makeAddr("Depositor");
@@ -46,17 +45,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
         vm.expectRevert(
             abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
         );
-        silo1.borrow(ASSETS, RECEIVER, BORROWER, SAME_ASSET);
-    }
-
-    /*
-    forge test --ffi -vv --mt test_borrow_WithoutAllowance_2
-    */
-    function test_borrow_WithoutAllowance_2() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
-        );
-        silo1.borrow(ASSETS, RECEIVER, BORROWER, !SAME_ASSET);
+        silo1.borrow(ASSETS, RECEIVER, BORROWER);
     }
 
     /*
@@ -74,7 +63,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(RECEIVER), 0, "RECEIVER no tokens before");
 
-        silo1.borrow(ASSETS / 2, RECEIVER, BORROWER, sameAsset);
+        silo1.borrow(ASSETS / 2, RECEIVER, BORROWER);
 
         assertEq(IShareToken(debtShareToken).balanceOf(BORROWER), ASSETS / 2, "BORROWER has debt after");
         assertEq(IShareToken(debtShareToken).balanceOf(DEPOSITOR), 0, "DEPOSITOR no debt after");

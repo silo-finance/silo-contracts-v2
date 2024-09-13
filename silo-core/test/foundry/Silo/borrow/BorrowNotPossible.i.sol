@@ -15,14 +15,11 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc BorrowNotPossibleTest
 */
 contract BorrowNotPossibleTest is SiloLittleHelper, Test {
-    bool sameAsset;
-
     function setUp() public {
         _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
-        (
-            ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1,
-        ) = silo0.config().getConfigs(address(silo0), address(0), 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory cfg0 = silo0.config().getConfig(address(silo0));
+        ISiloConfig.ConfigData memory cfg1 = silo0.config().getConfig(address(silo1));
 
         assertEq(cfg0.maxLtv, 0, "borrow OFF");
         assertGt(cfg1.maxLtv, 0, "borrow ON");
@@ -40,7 +37,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         _depositForBorrow(depositAssets, borrower);
 
         vm.prank(borrower);
-        silo0.borrow(1, borrower, borrower, sameAsset);
+        silo0.borrow(1, borrower, borrower);
     }
 
     /*
@@ -56,7 +53,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        silo1.borrow(1, borrower, borrower, sameAsset);
+        silo1.borrow(1, borrower, borrower);
     }
 
     /*
@@ -72,6 +69,6 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
         _depositForBorrow(_depositAmount, depositor);
 
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
-        _borrow(_borrowAmount, address(this), sameAsset);
+        _borrow(_borrowAmount, address(this));
     }
 }

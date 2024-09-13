@@ -1,6 +1,5 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
-    "liquidationModule": "InvalidLiquidationModule",
     "hookReceiver": "NO_HOOK_RECEIVER",
     "hookReceiverImplementation": "InvalidHookReceiver",
     "deployerFee": 1000,

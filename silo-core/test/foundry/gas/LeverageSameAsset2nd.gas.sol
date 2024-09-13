@@ -14,8 +14,11 @@ contract LeverageSameAsset2ndGasTest is Gas, Test {
     function setUp() public {
         _gasTestsInit();
 
-        _depositCollateral(ASSETS * 10, BORROWER, SAME_ASSET);
-        _borrow(ASSETS, BORROWER, SAME_ASSET);
+        bool toSilo1 = true;
+
+        _depositCollateral(ASSETS * 10, BORROWER, toSilo1);
+        _depositCollateral(ASSETS * 10, BORROWER, !toSilo1);
+        _borrow(ASSETS, BORROWER);
     }
 
     function test_gas_leverageSameAsset2nd() public {
@@ -31,7 +34,7 @@ contract LeverageSameAsset2ndGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.leverageSameAsset, (depositAssets, ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "LeverageSameAsset 2nd (no interest)",
-            119041
+            143876
         );
     }
 }

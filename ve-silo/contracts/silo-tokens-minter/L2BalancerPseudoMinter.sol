@@ -14,10 +14,11 @@
 
 pragma solidity 0.8.24;
 
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+
 import {ISiloChildChainGauge} from "ve-silo/contracts/gauges/interfaces/ISiloChildChainGauge.sol";
 import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiquidityGaugeFactory.sol";
-import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "openzeppelin-contracts/utils/math/SafeMath.sol";
+import {SafeMath} from "ve-silo/contracts/utils/SafeMath.sol";
 
 import {BalancerMinter, IERC20} from "./BalancerMinter.sol";
 

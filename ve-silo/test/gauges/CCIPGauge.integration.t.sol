@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
@@ -22,6 +22,7 @@ import {CCIPGaugeFactoryArbitrumDeploy} from "ve-silo/deploy/CCIPGaugeFactoryArb
 import {CCIPGaugeFactory} from "ve-silo/contracts/gauges/ccip/CCIPGaugeFactory.sol";
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IChainlinkPriceFeedLike} from "ve-silo/test/gauges/interfaces/IChainlinkPriceFeedLike.sol";
+import {CCIPTransferMessageLib} from "./CCIPTransferMessageLib.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeTest --ffi -vvv
 contract CCIPGaugeTest is IntegrationTest {
@@ -32,8 +33,6 @@ contract CCIPGaugeTest is IntegrationTest {
     address internal constant _WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
     address internal constant _CHAINLINK_PRICE_FEED = 0x13015e4E6f839E1Aa1016DF521ea458ecA20438c;
     address internal constant _CHAINLINL_PRICE_UPDATER = 0x6e37f4c82d9A31cc42B445874dd3c3De97AB553f;
-    bytes32 internal constant _MESSAGE_ID_LINK = 0xca02c5a19721352d1f0719e496196c08e5af1defb96060cec431645fc81cfd77;
-    bytes32 internal constant _MESSAGE_ID_ETH = 0x8ebff861e6a0cd95f4b5ab90f255247b1ab24cf978a0ea64c21962a248779105;
     uint64 internal constant _DESTINATION_CHAIN = 5009297550715157269;
 
     address internal _minter = makeAddr("Minter");
@@ -85,8 +84,9 @@ contract CCIPGaugeTest is IntegrationTest {
         bytes memory anyExtraArgs = abi.encodePacked("any extra args");
 
         // Test permissions and configuration
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(makeAddr("another than an owner"));
+        address sender = makeAddr("another than an owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, sender));
+        vm.prank(sender);
         _gauge.setExtraArgs(anyExtraArgs);
 
         vm.expectEmit(false, false, false, true);
@@ -125,11 +125,12 @@ contract CCIPGaugeTest is IntegrationTest {
         deal(_LINK, gauge, fees);
         deal(_WSTLINK, gauge, initialGaugeBalance);
 
-        vm.expectEmit(false, false, false, true);
-        emit CCIPTransferMessage(_MESSAGE_ID_LINK);
+        vm.recordLogs();
 
         vm.prank(_checkpointer);
         _gauge.checkpoint();
+
+        CCIPTransferMessageLib.expectEmit();
 
         uint256 gaugeBalance = IERC20(_WSTLINK).balanceOf(gauge);
 
@@ -163,11 +164,12 @@ contract CCIPGaugeTest is IntegrationTest {
 
         assertEq(gaugeBalance, initialGaugeBalance, "Expect to have an initial balance");
 
-        vm.expectEmit(false, false, false, true);
-        emit CCIPTransferMessage(_MESSAGE_ID_ETH);
+        vm.recordLogs();
 
         vm.prank(_checkpointer);
         _gauge.checkpoint{value: fees}();
+
+        CCIPTransferMessageLib.expectEmit();
 
         gaugeBalance = IERC20(_WSTLINK).balanceOf(gauge);
 

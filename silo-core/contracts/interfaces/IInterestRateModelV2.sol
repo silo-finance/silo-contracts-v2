@@ -3,8 +3,6 @@ pragma solidity >=0.5.0;
 
 import {IInterestRateModelV2Config} from "./IInterestRateModelV2Config.sol";
 
-// solhint-disable var-name-mixedcase
-
 interface IInterestRateModelV2 {
     struct Config {
         // uopt ∈ (0, 1) – optimal utilization;
@@ -53,13 +51,12 @@ interface IInterestRateModelV2 {
         int128 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
         int128 Tcrit;
-        IInterestRateModelV2Config config;
     }
     /* solhint-enable */
 
     error AddressZero();
     error DeployConfigFirst();
-    error AlreadyConnected();
+    error AlreadyInitialized();
 
     error InvalidBeta();
     error InvalidKcrit();

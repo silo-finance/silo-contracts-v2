@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -75,7 +76,7 @@ contract FeeSwapperTest is IntegrationTest {
     }
 
     function testOnlyOwnerCanConfigureSwappers() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _addSwapper(address(this), _testAsset, _testSwap);
 
         vm.expectEmit(false, false, true, true);

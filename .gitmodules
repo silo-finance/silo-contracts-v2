@@ -6,22 +6,10 @@
 	path = gitmodules/silo-foundry-utils
 	url = https://github.com/silo-finance/silo-foundry-utils
 	branch = v0.0.16
-[submodule "gitmodules/openzeppelin-contracts"]
-	path = gitmodules/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-	branch = v4.9.3
-[submodule "gitmodules/openzeppelin-contracts-upgradeable"]
-	path = gitmodules/openzeppelin-contracts-upgradeable
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
-	branch = v4.9.0
 [submodule "gitmodules/uniswap/v3-periphery"]
 	path = gitmodules/uniswap/v3-periphery
 	url = https://github.com/Uniswap/v3-periphery
 	branch = v1.3.0
-[submodule "gitmodules/openzeppelin-contracts-upgradeable@v3.4.2"]
-	path = gitmodules/openzeppelin-contracts-upgradeable@v3.4.2
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
-	branch = v3.4.2
 [submodule "gitmodules/uniswap/v3-core"]
 	path = gitmodules/uniswap/v3-core
 	url = https://github.com/Uniswap/v3-core

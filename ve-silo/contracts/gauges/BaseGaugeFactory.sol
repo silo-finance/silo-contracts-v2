@@ -16,7 +16,7 @@ pragma solidity 0.8.24;
 
 import {ILiquidityGaugeFactory} from "balancer-labs/v2-interfaces/liquidity-mining/ILiquidityGaugeFactory.sol";
 
-import {Clones} from "openzeppelin-contracts/proxy/Clones.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 // solhint-disable ordering
 

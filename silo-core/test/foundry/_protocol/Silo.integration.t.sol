@@ -105,7 +105,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         uint256 borrowAmount = 10_000e6;
 
         vm.prank(_alice);
-        ISilo(silo1).borrow(borrowAmount, _alice, _alice, false /* sameAsset */);
+        ISilo(silo1).borrow(borrowAmount, _alice, _alice);
 
         assertEq(IERC20(debtShareToken).balanceOf(_alice), borrowAmount, "Should have debt shares tokens");
     }
@@ -148,7 +148,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         emit log("\n  silo-core:");
         emit log_named_address("SiloFactory", address(siloFactory));
         emit log_named_address("InterestRateModelV2", address(interestRateModelV2));
-        emit log_named_address("InterestRateModelV2ConfigFactory", address(interestRateModelV2ConfigFactory));
+        emit log_named_address("InterestRateModelV2Factory", address(interestRateModelV2ConfigFactory));
         emit log_named_address("HookReceiver", address(gaugeHookReceiver));
         emit log("\n  silo-oracles:");
         emit log_named_address("ChainlinkV3OracleFactory", address(chainlinkV3OracleFactory));

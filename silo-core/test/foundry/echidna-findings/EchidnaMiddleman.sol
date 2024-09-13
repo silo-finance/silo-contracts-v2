@@ -9,7 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {EchidnaSetup} from "./EchidnaSetup.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
@@ -35,7 +35,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
-        silo.borrow(_amount, actor, actor, false /* sameAsset */);
+        silo.borrow(_amount, actor, actor);
     }
 
     function __previewDeposit_doesNotReturnMoreThanDeposit(uint8 _actor, uint256 _assets)
@@ -69,10 +69,10 @@ contract EchidnaMiddleman is EchidnaSetup {
         emit log_named_string("    function", "__maxBorrow_correctReturnValue");
 
         address actor = _chooseActor(_actor);
-        maxAssets = silo0.maxBorrow(actor, false /* sameAsset */);
+        maxAssets = silo0.maxBorrow(actor);
 
         vm.prank(actor);
-        shares = silo0.borrow(maxAssets, actor, actor, false /* sameAsset */); // should not revert!
+        shares = silo0.borrow(maxAssets, actor, actor); // should not revert!
     }
 
     function __mint(uint8 _actor, bool _siloZero, uint256 _shares) internal {
@@ -90,11 +90,11 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         address actor = _chooseActor(_actor);
 
-        maxBorrow = silo0.maxBorrowShares(actor, false /* sameAsset */);
+        maxBorrow = silo0.maxBorrowShares(actor);
         assertGt(maxBorrow, 0, "in echidna scenarios we exclude zeros, so we should not get it here as well");
 
         vm.prank(actor);
-        shares = silo0.borrowShares(maxBorrow, actor, actor, false /* sameAsset */);
+        shares = silo0.borrowShares(maxBorrow, actor, actor);
     }
 
     function __repayNeverReturnsZeroAssets(uint8 actorIndex, bool vaultZero, uint256 shares) public {
@@ -115,14 +115,14 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(actor);
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
 
         vm.prank(actor);
-        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
+        partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, false);
     }
 
     function __maxWithdraw_correctMax(uint8 _actor) internal {
@@ -139,9 +139,8 @@ contract EchidnaMiddleman is EchidnaSetup {
         if (maxAssets == 0) {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
-                ISiloConfig.ConfigData memory debtConfig,
-                ISiloConfig.DebtInfo memory debtInfo
-            ) = siloConfig.getConfigs(address(_siloWithCollateral), actor, Hook.WITHDRAW);
+                ISiloConfig.ConfigData memory debtConfig
+            ) = siloConfig.getConfigsForSolvency(actor);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
@@ -226,7 +225,12 @@ contract EchidnaMiddleman is EchidnaSetup {
             emit log_named_uint("maxRedeem                    sum", maxAssetsSumAfter);
             emit log_named_int("assets diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumAfter.toInt256());
 
-            assertGe(maxWithdrawSumBefore, maxAssetsSumAfter, "price is flat, so there should be no gains (we accept 1 wei diff)");
+            assertGe(
+                maxWithdrawSumBefore,
+                maxAssetsSumAfter,
+                "price is flat, so there should be no gains (we accept 1 wei diff)"
+            );
+
             assertLe(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei diff");
         }
 
@@ -261,7 +265,12 @@ contract EchidnaMiddleman is EchidnaSetup {
                 emit log_named_uint("maxWithdraw                   sum", maxAssetsSumBack);
                 emit log_named_int("assets diff", maxWithdrawSumBefore.toInt256() - maxAssetsSumBack.toInt256());
 
-                assertGe(maxWithdrawSumBefore, maxAssetsSumBack, "price is flat, so there should be no gains (we accept 1 wei diff)");
+                assertGe(
+                    maxWithdrawSumBefore,
+                    maxAssetsSumBack,
+                    "price is flat, so there should be no gains (we accept 1 wei diff)"
+                );
+
                 assertLe(maxWithdrawSumBefore - maxAssetsSumBack, 1, "we accept 1 wei diff");
             }
 
@@ -293,13 +302,13 @@ contract EchidnaMiddleman is EchidnaSetup {
         (bool isSolvent, ISilo siloWithDebt,) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), actor);
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(actor);
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
         __prepareForLiquidationRepay(siloWithDebt, actor, debtToRepay);
 
         vm.prank(actor);
-        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares);
+        partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares);
     }
 
     function __debtSharesNeverLargerThanDebt() internal {
@@ -325,7 +334,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
-        silo.borrowShares(_shares, actor, actor, false /* sameAsset */);
+        silo.borrowShares(_shares, actor, actor);
     }
 
     function __maxRedeem_correctMax(uint8 _actorIndex) internal {
@@ -422,10 +431,10 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "expect user to be solvent, not solvent should be ignored by echidna");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(address(actor));
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        try partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
+        try partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
             emit log("Solvent user liquidated!");
             assertTrue(false, "Solvent user liquidated!");
         } catch {
@@ -441,7 +450,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertFalse(isSolvent, "expect not solvent user");
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(address(actor));
         assertFalse(isSolvent, "expect user to be not insolvent");
 
         uint256 ltvBefore = siloWithCollateral.getLtv(address(actor));
@@ -455,7 +464,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
-        partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, false);
+        partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, false);
 
         uint256 ltvAfter = siloWithDebt.getLtv(address(actor));
         emit log_named_decimal_uint("afterLtv:", ltvAfter, 16);
@@ -484,11 +493,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 lt = siloWithDebt.getLt();
         uint256 ltv = siloWithDebt.getLtv(address(actor));
 
-        (, uint256 debtToRepay) = partialLiquidation.maxLiquidation(address(siloWithDebt), address(actor));
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(address(actor));
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
 
-        try partialLiquidation.liquidationCall(address(siloWithDebt), debt, collateral, actor, debtToRepay, _receiveShares) {
+        try partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, _receiveShares) {
             emit log_named_decimal_uint("User LTV:", ltv, 16);
             emit log_named_decimal_uint("Liq Threshold:", lt, 16);
             emit log("User liquidated!");

@@ -24,12 +24,8 @@ interface IGaugeHookReceiver is IHookReceiver {
     error WrongGaugeShareToken();
     /// @dev Revert on an attempt to remove a `gauge` that still can mint SILO tokens
     error CantRemoveActiveGauge();
-    /// @dev Revert if the gauge hook receiver already has a configured gauge
-    error AlreadyConfigured();
     /// @dev Revert on an attempt to set a gauge with a zero address
     error EmptyGaugeAddress();
-    /// @dev Revert if provided silo configuration during initialization is empty
-    error EmptySiloConfig();
     /// @dev Revert if the hook received `beforeAction` notification
     error RequestNotSupported();
     /// @dev Revert on an attempt to remove not configured gauge
@@ -48,4 +44,14 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// @notice Remove the gauge from the hook receiver for the share token
     /// @param _shareToken Share token for which the gauge needs to be removed
     function removeGauge(IShareToken _shareToken) external;
+
+    /// @notice Get the gauge
+    function gauge() external view returns (IGauge);
+
+    /// @notice Get the share token
+    function shareToken() external view returns (IShareToken);
+
+    /// @notice Get the gauge for the share token
+    /// @param _shareToken Share token
+    function configuredGauges(IShareToken _shareToken) external view returns (IGauge);
 }

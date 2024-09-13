@@ -2,69 +2,51 @@
 pragma solidity 0.8.24;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
-import {IShareToken} from "./interfaces/IShareToken.sol";
+import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
+import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
+import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
-import {ISilo, Silo} from "./Silo.sol";
-import {Creator} from "./utils/Creator.sol";
 import {Hook} from "./lib/Hook.sol";
+import {Views} from "./lib/Views.sol";
+import {CloneDeterministic} from "./lib/CloneDeterministic.sol";
 
-contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
+contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev max fee is 40%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.4e18;
 
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
 
-    uint256 private _siloId;
-
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public daoFee;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public maxDeployerFee;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public maxFlashloanFee;
-    /// @dev denominated in 18 decimals points. 1e18 == 100%.
     uint256 public maxLiquidationFee;
-
     address public daoFeeReceiver;
 
-    address public siloImpl;
-    address public shareCollateralTokenImpl;
-    address public shareDebtTokenImpl;
+    string public baseURI;
 
-    mapping(uint256 id => address[2] silos) private _idToSilos;
-    mapping(address silo => uint256 id) public siloToId;
+    mapping(uint256 id => address siloConfig) public idToSiloConfig;
+    mapping(address silo => bool) public isSilo;
 
-    constructor() ERC721("Silo Finance Fee Receiver", "feeSILO") Ownable(msg.sender) {}
+    uint256 internal _siloId;
 
-    /// @dev SiloFactory is not clonable contract. initialize() method is here only because we have
-    /// circular dependency: SiloFactory needs to know Silo address and Silo needs to know factory address.
-    /// Because of that, `initialize()` will be always executed on deployed factory, so there is no need for
-    /// disabling initializer by calling `_disableInitializers()` in constructor, especially that only creator can init.
-    function initialize(
-        address _siloImpl,
-        address _shareCollateralTokenImpl,
-        address _shareDebtTokenImpl,
+    constructor(
         uint256 _daoFee,
         address _daoFeeReceiver
-    ) external virtual onlyCreator {
-        if (_siloId != 0) revert InvalidInitialization();
-
+    )
+        ERC721("Silo Finance Fee Receiver", "feeSILO")
+        Ownable(msg.sender)
+    {
         // start IDs from 1
         _siloId = 1;
 
-        if (_siloImpl == address(0) || _shareCollateralTokenImpl == address(0) || _shareDebtTokenImpl == address(0)) {
-            revert ZeroAddress();
-        }
-
-        siloImpl = _siloImpl;
-        shareCollateralTokenImpl = _shareCollateralTokenImpl;
-        shareDebtTokenImpl = _shareDebtTokenImpl;
+        baseURI = "https://v2.app.silo.finance/markets/";
 
         uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
         uint256 _newMaxFlashloanFee = 0.15e18; // 15% max flashloan fee
@@ -78,88 +60,125 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         _setMaxLiquidationFee(_newMaxLiquidationFee);
     }
 
-    /// @dev share tokens in _configData are overridden so can be set to address(0). Sanity data validation
-    ///      is done by SiloConfig.
-    /// @param _initData silo initialization data
-    function createSilo(ISiloConfig.InitData memory _initData) external virtual returns (ISiloConfig siloConfig) {
+    /// @inheritdoc ISiloFactory
+    function createSilo( // solhint-disable-line function-max-lines
+        ISiloConfig.InitData memory _initData,
+        ISiloConfig _siloConfig,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
+    )
+        external
+        virtual
+    {
+        if (
+            _siloImpl == address(0) ||
+            _shareProtectedCollateralTokenImpl == address(0) ||
+            _shareDebtTokenImpl == address(0) ||
+            address(_siloConfig) == address(0)
+        ) {
+            revert ZeroAddress();
+        }
+
         validateSiloInitData(_initData);
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
+
+        ISiloConfig.ConfigData memory configData0;
+        ISiloConfig.ConfigData memory configData1;
+
+        (configData0, configData1) = Views.copySiloConfig(_initData);
 
         uint256 nextSiloId = _siloId;
-
-        if (nextSiloId == 0) revert Uninitialized();
-
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
-        _cloneShareTokens(configData0, configData1);
+        _cloneShareTokens(
+            configData0,
+            configData1,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            nextSiloId
+        );
 
-        configData0.silo = Clones.clone(siloImpl);
-        configData1.silo = Clones.clone(siloImpl);
+        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
+        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
-
-        ISilo(configData0.silo).initialize(siloConfig, _initData.interestRateModelConfig0);
-        ISilo(configData1.silo).initialize(siloConfig, _initData.interestRateModelConfig1);
+        ISilo(configData0.silo).initialize(_siloConfig);
+        ISilo(configData1.silo).initialize(_siloConfig);
 
         _initializeShareTokens(configData0, configData1);
 
         ISilo(configData0.silo).updateHooks();
         ISilo(configData1.silo).updateHooks();
 
-        siloToId[configData0.silo] = nextSiloId;
-        siloToId[configData1.silo] = nextSiloId;
-        _idToSilos[nextSiloId] = [configData0.silo, configData1.silo];
+        idToSiloConfig[nextSiloId] = address(_siloConfig);
+
+        isSilo[configData0.silo] = true;
+        isSilo[configData1.silo] = true;
 
         if (_initData.deployer != address(0)) {
             _mint(_initData.deployer, nextSiloId);
         }
 
-        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
+        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(_siloConfig));
     }
 
+    /// @inheritdoc ISiloFactory
+    function burn(uint256 _siloIdToBurn) external virtual {
+        _burn(_siloIdToBurn);
+    }
+
+    /// @inheritdoc ISiloFactory
     function setDaoFee(uint256 _newDaoFee) external virtual onlyOwner {
         _setDaoFee(_newDaoFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setMaxDeployerFee(uint256 _newMaxDeployerFee) external virtual onlyOwner {
         _setMaxDeployerFee(_newMaxDeployerFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setMaxFlashloanFee(uint256 _newMaxFlashloanFee) external virtual onlyOwner {
         _setMaxFlashloanFee(_newMaxFlashloanFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setMaxLiquidationFee(uint256 _newMaxLiquidationFee) external virtual onlyOwner {
         _setMaxLiquidationFee(_newMaxLiquidationFee);
     }
 
+    /// @inheritdoc ISiloFactory
     function setDaoFeeReceiver(address _newDaoFeeReceiver) external virtual onlyOwner {
         _setDaoFeeReceiver(_newDaoFeeReceiver);
     }
 
-    function isSilo(address _silo) external view virtual returns (bool) {
-        return siloToId[_silo] != 0;
+    /// @inheritdoc ISiloFactory
+    function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
+        baseURI = _newBaseURI;
     }
 
-    function idToSilos(uint256 _id) external view virtual returns (address[2] memory silos) {
-        silos = _idToSilos[_id];
-    }
-
+    /// @inheritdoc ISiloFactory
     function getNextSiloId() external view virtual returns (uint256) {
         return _siloId;
     }
 
+    /// @inheritdoc ISiloFactory
     function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
-        return (daoFeeReceiver, _ownerOf(siloToId[_silo]));
+        uint256 siloID = ISilo(_silo).config().SILO_ID();
+        return (daoFeeReceiver, _ownerOf(siloID));
     }
 
+    /// @inheritdoc ISiloFactory
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
         // solhint-disable-previous-line code-complexity
-        if (_initData.liquidationModule == address(0)) revert MissingLiquidationModule();
+        if (_initData.hookReceiver == address(0)) revert MissingHookReceiver();
+
+        if (_initData.token0 == address(0)) revert EmptyToken0();
+        if (_initData.token1 == address(0)) revert EmptyToken1();
+
         if (_initData.token0 == _initData.token1) revert SameAsset();
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
         if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
@@ -170,37 +189,44 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
             revert OracleMisconfiguration();
         }
 
-        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert BeforeCall();
+        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
 
         if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
             revert OracleMisconfiguration();
         }
 
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert BeforeCall();
-        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFee();
-        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFee();
-        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFee();
-        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFee();
-        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFee();
+        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
 
-        if (_initData.interestRateModelConfig0 == address(0) || _initData.interestRateModelConfig1 == address(0)) {
-            revert InvalidIrmConfig();
-        }
+        _verifyQuoteTokens(_initData);
+
+        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
+        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
+        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
+        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
+        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
+        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
 
         if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
             revert InvalidIrm();
         }
 
-        if (_initData.token0 == address(0) || _initData.token1 == address(0)) {
-            revert EmptySiloAsset(_initData.token0, _initData.token1);
-        }
-
         return true;
     }
 
+    /// @inheritdoc ERC721
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        _requireOwned(tokenId);
+
+        return string.concat(
+            baseURI,
+            Strings.toString(block.chainid),
+            "/",
+            Strings.toHexString(idToSiloConfig[tokenId])
+        );
+    }
+
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        if (_newDaoFee > MAX_FEE) revert MaxFee();
+        if (_newDaoFee > MAX_FEE) revert MaxFeeExceeded();
 
         daoFee = _newDaoFee;
 
@@ -208,7 +234,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
-        if (_newMaxDeployerFee >= MAX_FEE) revert MaxFee();
+        if (_newMaxDeployerFee > MAX_FEE) revert MaxFeeExceeded();
 
         maxDeployerFee = _newMaxDeployerFee;
 
@@ -216,7 +242,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
-        if (_newMaxFlashloanFee >= MAX_FEE) revert MaxFee();
+        if (_newMaxFlashloanFee > MAX_FEE) revert MaxFeeExceeded();
 
         maxFlashloanFee = _newMaxFlashloanFee;
 
@@ -224,7 +250,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        if (_newMaxLiquidationFee >= MAX_FEE) revert MaxFee();
+        if (_newMaxLiquidationFee > MAX_FEE) revert MaxFeeExceeded();
 
         maxLiquidationFee = _newMaxLiquidationFee;
 
@@ -241,14 +267,24 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
 
     function _cloneShareTokens(
         ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1
+        ISiloConfig.ConfigData memory configData1,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _nextSiloId
     ) internal virtual {
-        configData0.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData0.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData0.debtShareToken = Clones.clone(shareDebtTokenImpl);
-        configData1.protectedShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData1.collateralShareToken = Clones.clone(shareCollateralTokenImpl);
-        configData1.debtShareToken = Clones.clone(shareDebtTokenImpl);
+        configData0.collateralShareToken = configData0.silo;
+        configData1.collateralShareToken = configData1.silo;
+
+        configData0.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken0(
+            _shareProtectedCollateralTokenImpl, _nextSiloId
+        );
+
+        configData1.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken1(
+            _shareProtectedCollateralTokenImpl, _nextSiloId
+        );
+
+        configData0.debtShareToken = CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _nextSiloId);
+        configData1.debtShareToken = CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _nextSiloId);
     }
 
     function _initializeShareTokens(
@@ -256,66 +292,47 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, Creator {
         ISiloConfig.ConfigData memory configData1
     ) internal virtual {
         uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
-        uint24 collateralTokenType = uint24(Hook.COLLATERAL_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
 
         // initialize configData0
         ISilo silo0 = ISilo(configData0.silo);
         address hookReceiver0 = configData0.hookReceiver;
 
-        IShareToken(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
-        IShareToken(configData0.collateralShareToken).initialize(silo0, hookReceiver0, collateralTokenType);
-        IShareToken(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
+        IShareTokenInitializable(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
+        IShareTokenInitializable(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
 
         // initialize configData1
         ISilo silo1 = ISilo(configData1.silo);
         address hookReceiver1 = configData1.hookReceiver;
 
-        IShareToken(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
-        IShareToken(configData1.collateralShareToken).initialize(silo1, hookReceiver1, collateralTokenType);
-        IShareToken(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
+        IShareTokenInitializable(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
+        IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
-        return "//app.silo.finance/silo/";
+        return baseURI;
     }
 
-    function _copyConfig(ISiloConfig.InitData memory _initData)
-        internal
-        pure
-        virtual
-        returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
-    {
-        configData0.hookReceiver = _initData.hookReceiver;
-        configData0.liquidationModule = _initData.liquidationModule;
-        configData0.token = _initData.token0;
-        configData0.solvencyOracle = _initData.solvencyOracle0;
-        // If maxLtv oracle is not set, fallback to solvency oracle
-        configData0.maxLtvOracle = _initData.maxLtvOracle0 == address(0)
-            ? _initData.solvencyOracle0
-            : _initData.maxLtvOracle0;
-        configData0.interestRateModel = _initData.interestRateModel0;
-        configData0.maxLtv = _initData.maxLtv0;
-        configData0.lt = _initData.lt0;
-        configData0.deployerFee = _initData.deployerFee;
-        configData0.liquidationFee = _initData.liquidationFee0;
-        configData0.flashloanFee = _initData.flashloanFee0;
-        configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
+    function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
+        address expectedQuoteToken;
 
-        configData1.hookReceiver = _initData.hookReceiver;
-        configData1.liquidationModule = _initData.liquidationModule;
-        configData1.token = _initData.token1;
-        configData1.solvencyOracle = _initData.solvencyOracle1;
-        // If maxLtv oracle is not set, fallback to solvency oracle
-        configData1.maxLtvOracle = _initData.maxLtvOracle1 == address(0)
-            ? _initData.solvencyOracle1
-            : _initData.maxLtvOracle1;
-        configData1.interestRateModel = _initData.interestRateModel1;
-        configData1.maxLtv = _initData.maxLtv1;
-        configData1.lt = _initData.lt1;
-        configData1.deployerFee = _initData.deployerFee;
-        configData1.liquidationFee = _initData.liquidationFee1;
-        configData1.flashloanFee = _initData.flashloanFee1;
-        configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
+        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
+    }
+
+    function _verifyQuoteToken(address _expectedQuoteToken, address _oracle)
+        internal
+        virtual
+        view
+        returns (address quoteToken)
+    {
+        if (_oracle == address(0)) return _expectedQuoteToken;
+
+        quoteToken = ISiloOracle(_oracle).quoteToken();
+
+        if (_expectedQuoteToken == address(0)) return quoteToken;
+        if (_expectedQuoteToken != quoteToken) revert InvalidQuoteToken();
     }
 }

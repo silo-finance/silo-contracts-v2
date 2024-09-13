@@ -8,17 +8,18 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
-import {console} from "forge-std/console.sol";
-
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageSameAssetTest
 */
 contract LeverageSameAssetTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISilo.CollateralType constant public COLLATERAL = ISilo.CollateralType.Collateral;
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
 
@@ -85,7 +86,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
 
         silo0.leverageSameAsset(depositAssets, anyBorrowAssets, borrower, COLLATERAL);
     }
-    
+
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_revertLeverageTooHigh
     */
@@ -98,6 +99,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
 
         // 1 wei above max
         uint256 borrowAssets = maxLtv * depositAssets / 1e18 + 1;
+        depositAssets = borrowAssets - 1;
 
         vm.prank(borrower);
         vm.expectRevert(ISilo.LeverageTooHigh.selector);
@@ -194,7 +196,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         silo0.leverageSameAsset(depositAssets, borrowAssets, borrower, collateralType);
 
         uint256 expectedLiquidity; 
-        
+
         if (_isCollateral) {
             expectedLiquidity = availableLiquidity + depositAssets - borrowAssets;
         } else { // protected
@@ -213,12 +215,12 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         assertEq(sharesToAssets, depositAssets, "User should receive more assets deposited than he had");
     }
 
-    function _expectShares(address _token, uint256 _expected) internal {
+    function _expectShares(address _token, uint256 _expected) internal view {
         uint256 balance = IERC20(_token).balanceOf(borrower);
         assertEq(balance, _expected);
     }
 
-    function _expectLiquidity(uint256 _expected) internal {
+    function _expectLiquidity(uint256 _expected) internal view {
         uint256 liquidity = silo0.getRawLiquidity();
         assertEq(liquidity, _expected);
     }

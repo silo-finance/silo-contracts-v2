@@ -15,16 +15,16 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ILeverageBorrower} from "silo-core/contracts/interfaces/ILeverageBorrower.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {HookReceiverAllActionsWithEvents as HookMock} from "../../_mocks/HookReceiverAllActionsWithEvents.sol";
 
 /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloHooksActionsTest
-contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorrower {
+contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
     using Hook for uint256;
  
     uint256 constant public NO_ACTIONS = 0;
@@ -33,7 +33,6 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
     bool constant public EXPECT_BEFORE = true;
     bool constant public EXPECT_AFTER = false;
     bytes32 constant public FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-    bytes32 constant public LEVERAGE_CALLBACK = keccak256("ILeverageBorrower.onLeverage");
 
     ISilo.CollateralType constant public COLLATERAL = ISilo.CollateralType.Collateral;
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
@@ -49,12 +48,6 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
     // to avoid copying them all `SiloHooksActionsTest` derives from it so we can use them in the test
     constructor() HookMock(0, 0, 0, 0) {}
 
-    function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-    }
-
     // For the flash loan tests
     function onFlashLoan(address, address _token, uint256 _amount, uint256 _fee, bytes calldata)
         external
@@ -64,24 +57,13 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         return FLASHLOAN_CALLBACK;
     }
 
-    // For the leverage tests
-    function onLeverage(address, address, address _asset, uint256 _assets, bytes calldata)
-        external
-        returns (bytes32)
-    {
-        IERC20(_asset).approve(address(msg.sender), _assets);
-        ISilo(msg.sender).deposit(_assets, address(this), COLLATERAL);
-
-        return LEVERAGE_CALLBACK;
-    }
-
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBeforeAfterHookActions
     function testDepositFnBeforeAfterHookActions() public {
         uint256 beforeActions = Hook.depositAction(COLLATERAL);
         uint256 afterActions = Hook.depositAction(PROTECTED);
 
         HookMock hookReceiverMock = new HookMock(beforeActions, NO_ACTIONS, NO_ACTIONS, afterActions);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 amount = 1e18;
 
@@ -103,7 +85,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 afterActions = beforeActions;
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 amount = 1e18;
 
@@ -127,7 +109,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 amount = 1e18;
 
@@ -147,7 +129,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 afterActions = Hook.withdrawAction(PROTECTED);
 
         HookMock hookReceiverMock = new HookMock(beforeActions, NO_ACTIONS, NO_ACTIONS, afterActions);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 amount = 1e18;
 
@@ -173,7 +155,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 afterActions = beforeActions;
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 amount = 1e18;
 
@@ -201,7 +183,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 amount = 1e18;
 
@@ -222,33 +204,49 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testBorrowNotLeverageNotSameAsset
     function testBorrowNotLeverageNotSameAsset() public {
-        uint256 beforeActions = Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET);
+        uint256 beforeActions = Hook.BORROW;
         uint256 afterActions = beforeActions;
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         _depositForBorrowNotSameAsset();
 
         uint256 borrowAmount = 1e18;
 
-        _siloBorrowBothHooks(silo0, _borrower, _borrower, borrowAmount, _NOT_SAME_ASSET);
+        _siloBorrowBothHooks(silo0, _borrower, _borrower, borrowAmount);
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testBorrowNotLeverageNotSameAssetAllHooks
     function testBorrowNotLeverageNotSameAssetAllHooks() public {
-        uint256 beforeActions = Hook.borrowAction(_NOT_LEVERAGE, _NOT_SAME_ASSET);
+        uint256 beforeActions = Hook.BORROW;
 
         uint256 afterActions = beforeActions.addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         _depositForBorrowNotSameAsset();
 
         uint256 borrowAmount = 1e18;
 
-        _siloBorrowAllHooks(silo0, _borrower, _borrower, borrowAmount, _NOT_SAME_ASSET);
+        _siloBorrowAllHooks(silo0, _borrower, _borrower, borrowAmount);
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testBorrowSameAssetAllHooks
+    function testBorrowSameAssetAllHooks() public {
+        uint256 beforeActions = Hook.BORROW_SAME_ASSET;
+
+        uint256 afterActions = beforeActions.addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, afterActions, NO_ACTIONS, NO_ACTIONS);
+        _deploySiloWithHook(address(hookReceiverMock));
+
+        _depositForBorrowSameAsset();
+
+        uint256 borrowAmount = 1e18;
+
+        _siloBorrowSameAssetAllHooks(silo0, _borrower, _borrower, borrowAmount);
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRepayBeforeHooks
@@ -256,7 +254,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 beforeActions = Hook.REPAY;
 
         HookMock hookReceiverMock = new HookMock(beforeActions, NO_ACTIONS, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
         uint256 collateralAmount = 100e18;
@@ -267,7 +265,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 borrowAmount = 1e18;
 
         vm.prank(_borrower);
-        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+        silo0.borrow(borrowAmount, _borrower, _borrower);
 
         _siloRepayBeforeHook(silo0, token0, _borrower, _borrower, borrowAmount);
 
@@ -281,7 +279,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, collateralAmount, COLLATERAL);
 
         vm.prank(_borrower);
-        silo1.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+        silo1.borrow(borrowAmount, _borrower, _borrower);
 
         _siloRepayNoHooks(silo1, token1, _borrower, _borrower, borrowAmount);
     }
@@ -292,7 +290,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 afterAction = beforeActions.addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(NO_ACTIONS, NO_ACTIONS, beforeActions, afterAction);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
         uint256 collateralAmount = 100e18;
@@ -303,7 +301,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 borrowAmount = 1e18;
 
         vm.prank(_borrower);
-        silo1.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+        silo1.borrow(borrowAmount, _borrower, _borrower);
 
         _siloRepayAllHooks(silo1, token1, _borrower, _borrower, borrowAmount);
     }
@@ -314,7 +312,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 afterAction = beforeActions;
 
         HookMock hookReceiverMock = new HookMock(NO_ACTIONS, NO_ACTIONS, beforeActions, afterAction);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
 
@@ -339,11 +337,11 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetHooks
     function testSwitchCollateralSameAssetHooks() public {
-        uint256 beforeActions = Hook.switchCollateralAction(_SAME_ASSET);
+        uint256 beforeActions = Hook.SWITCH_COLLATERAL;
         uint256 afterAction = beforeActions;
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
         uint256 collateralAmount = 100e18;
@@ -355,25 +353,25 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 borrowAmount = 1e18;
 
         vm.prank(_borrower);
-        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+        silo0.borrow(borrowAmount, _borrower, _borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralBeforeHA(_SAME_ASSET, _borrower);
+        emit SwitchCollateralBeforeHA(_borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralAfterHA(_SAME_ASSET, _borrower);
+        emit SwitchCollateralAfterHA(_borrower);
 
         vm.prank(_borrower);
-        silo0.switchCollateralTo(_SAME_ASSET);
+        silo0.switchCollateralToThisSilo();
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralTwoAssetsHooks
     function testSwitchCollateralTwoAssetsHooks() public {
-        uint256 beforeActions = Hook.switchCollateralAction(_NOT_SAME_ASSET);
+        uint256 beforeActions = Hook.SWITCH_COLLATERAL;
         uint256 afterAction = beforeActions;
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
         uint256 collateralAmount = 100e18;
@@ -385,16 +383,16 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         uint256 borrowAmount = 1e18;
 
         vm.prank(_borrower);
-        silo0.borrow(borrowAmount, _borrower, _borrower, _SAME_ASSET);
+        silo0.borrow(borrowAmount, _borrower, _borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralBeforeHA(_NOT_SAME_ASSET, _borrower);
+        emit SwitchCollateralBeforeHA(_borrower);
 
         vm.expectEmit(true, true, true, true);
-        emit SwitchCollateralAfterHA(_NOT_SAME_ASSET, _borrower);
+        emit SwitchCollateralAfterHA(_borrower);
 
         vm.prank(_borrower);
-        silo0.switchCollateralTo(_NOT_SAME_ASSET);
+        silo0.switchCollateralToThisSilo();
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionCollateralToProtectedAllHooks
@@ -406,7 +404,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
 
@@ -424,7 +422,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
 
@@ -442,7 +440,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         _siloLeverageSameAssetAllHooks(COLLATERAL);
     }
@@ -456,43 +454,21 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         _siloLeverageSameAssetAllHooks(PROTECTED);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiqudationReceiveSTokenFalseAllHooks
-    function testLiqudationReceiveSTokenFalseAllHooks() public {
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidationReceiveSTokenFalseAllHooks
+    function testLiquidationReceiveSTokenFalseAllHooks() public {
         bool receiveSToken = false;
         _liquidationTest(receiveSToken);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiqudationReceiveSTokenTrueAllHooks
-    function testLiqudationReceiveSTokenTrueAllHooks() public {
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidationReceiveSTokenTrueAllHooks
+    function testLiquidationReceiveSTokenTrueAllHooks() public {
         bool receiveSToken = true;
         _liquidationTest(receiveSToken);
-    }
-
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLeverageAllHooks
-    function testLeverageAllHooks() public {
-        uint256 beforeActions = Hook.borrowAction(_LEVERAGE, _NOT_SAME_ASSET)
-            .addAction(Hook.depositAction(COLLATERAL));
-
-        uint256 afterAction = beforeActions
-            .addAction(Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN))
-            .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
-
-        HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
-
-        _depositForBorrowNotSameAsset();
-
-        uint256 borrowAmount = 1e18;
-
-        token0.mint(address(this), borrowAmount);
-
-        _siloLeverageAllHooks(silo0, _borrower, address(this), borrowAmount);
     }
 
     function _siloDepositWithHook(
@@ -716,11 +692,10 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         ISilo _silo,
         address _borrowerAddr,
         address _receiver,
-        uint256 _amount,
-        bool _isSameAsset
+        uint256 _amount
     ) internal {
         vm.expectEmit(true, true, true, true);
-        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver, _NOT_LEVERAGE, _isSameAsset);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver);
 
         vm.expectEmit(true, true, true, true);
 
@@ -731,24 +706,21 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             _borrowerAddr,
             _receiver,
             _amount,
-            _amount,
-            _NOT_LEVERAGE,
-            _isSameAsset
+            _amount
         );
 
         vm.prank(_borrowerAddr);
-        _silo.borrow(_amount, _borrowerAddr, _receiver, _isSameAsset);
+        _silo.borrow(_amount, _borrowerAddr, _receiver);
     }
 
     function _siloBorrowAllHooks(
         ISilo _silo,
         address _borrowerAddr,
         address _receiver,
-        uint256 _amount,
-        bool _isSameAsset
+        uint256 _amount
     ) internal {
         vm.expectEmit(true, true, true, true);
-        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver, _NOT_LEVERAGE, _isSameAsset);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver);
 
         vm.expectEmit(true, true, true, true);
 
@@ -771,13 +743,48 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             _borrowerAddr,
             _receiver,
             _amount,
-            _amount,
-            _NOT_LEVERAGE,
-            _isSameAsset
+            _amount
         );
 
         vm.prank(_borrowerAddr);
-        _silo.borrow(_amount, _borrowerAddr, _receiver, _isSameAsset);
+        _silo.borrow(_amount, _borrowerAddr, _receiver);
+    }
+
+    function _siloBorrowSameAssetAllHooks(
+        ISilo _silo,
+        address _borrowerAddr,
+        address _receiver,
+        uint256 _amount
+    ) internal {
+        vm.expectEmit(true, true, true, true);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit DebtShareTokenAfterHA(
+            address(_silo),
+            address(0), // because we mint debt share tokens
+            _receiver,
+            _amount,
+            0, // no balance for the sender
+            _amount, // balance
+            _amount // total supply
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit BorrowAfterHA(
+            address(_silo),
+            _amount,
+            SHARES_0,
+            _borrowerAddr,
+            _receiver,
+            _amount,
+            _amount
+        );
+
+        vm.prank(_borrowerAddr);
+        _silo.borrowSameAsset(_amount, _borrowerAddr, _receiver);
     }
 
     function _siloRepayBeforeHook(
@@ -853,7 +860,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, NO_ACTIONS, NO_ACTIONS);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         uint256 depositAmount = 100e18;
 
@@ -979,34 +986,36 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
     }
 
     function _liquidationTest(bool _receiveSToken) internal {
-        uint256 beforeActions = Hook.LIQUIDATION;
+        uint256 beforeActions;
 
         uint256 afterAction = beforeActions
             .addAction(Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN)) // as we have protected deposit
             .addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
 
         HookMock hookReceiverMock = new HookMock(beforeActions, afterAction, beforeActions, afterAction);
-        deploySiloWithHook(address(hookReceiverMock));
+        _deploySiloWithHook(address(hookReceiverMock));
 
         _depositForBorrowNotSameAsset();
 
         uint256 borrowAmount = 70e18;
 
         vm.prank(_borrower);
-        silo0.borrow(borrowAmount, _borrower, _borrower, _NOT_SAME_ASSET);
+        silo0.borrow(borrowAmount, _borrower, _borrower);
 
         // liquidation
         vm.warp(block.timestamp + 70 days);
 
         uint256 collateralToLiquidate;
         uint256 debtToRepay;
+        bool sTokenRequired;
 
-        (collateralToLiquidate, debtToRepay) = partialLiquidation.maxLiquidation(address(silo0), _borrower);
+        (collateralToLiquidate, debtToRepay, sTokenRequired) = partialLiquidation.maxLiquidation(_borrower);
 
+        assertTrue(sTokenRequired, "sTokenRequired not required");
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
 
         token0.mint(address(this), debtToRepay);
-        token0.approve(address(silo0), debtToRepay);
+        token0.approve(address(partialLiquidation), debtToRepay);
 
         _liquidationAllHooks(_borrower, debtToRepay, borrowAmount, _receiveSToken);
     }
@@ -1018,21 +1027,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         bool _receiveSToken
     ) internal {
         uint256 expectedWithdrawCollateral = 100000000000000000000;
-        uint256 expectedRepayDebtAssets = 25600000000000000000000;
+        // uint256 expectedRepayDebtAssets = 25600000000000000000000; not in use
 
         vm.expectEmit(true, true, true, true);
-        
-        emit LiquidationBeforeHA(
-            address(silo0),
-            address(silo0),
-            address(token1),
-            address(token0),
-            _borrowerAddr,
-            _debtToRepay,
-            _receiveSToken
-        );
-
-        // vm.expectEmit(true, true, true, true);
 
         emit DebtShareTokenAfterHA(
             address(silo0),
@@ -1060,102 +1057,17 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         } else {
             emit ShareTokenAfterHA(
                 address(silo1),
-                _borrowerAddr,
-                address(0), // because we burn tokens
+                address(partialLiquidation),
+                address(0), // recipient: because at the end we burn
                 expectedWithdrawCollateral,
-                0, // no balance for the sender
-                0, // no balance
-                0, // no total supply
+                0, // senderBalance: no balance for the sender
+                0, // recipientBalance: no balance
+                0, // totalSupply: no total supply
                 PROTECTED
             );
         }
 
-        vm.expectEmit(true, true, true, true);
-
-        emit LiquidationAfterHA(
-            address(silo0),
-            address(silo0),
-            address(token1),
-            address(token0),
-            _borrowerAddr,
-            _debtToRepay,
-            _receiveSToken,
-            expectedWithdrawCollateral,
-            expectedRepayDebtAssets
-        );
-
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token1), address(token0), _borrower, _debtToRepay, _receiveSToken
-        );
-    }
-
-    function _siloLeverageAllHooks(
-        ISilo _silo,
-        address _borrowerAddr,
-        address _receiver,
-        uint256 _amount
-    ) internal {
-        bytes memory data;
-
-        vm.expectEmit(true, true, true, true);
-
-        emit BorrowBeforeHA(
-            address(_silo),
-            _amount,
-            SHARES_0,
-            _borrowerAddr,
-            _receiver,
-            _LEVERAGE,
-            _NOT_SAME_ASSET
-        );
-
-        vm.expectEmit(true, true, true, true);
-
-        emit DebtShareTokenAfterHA(
-            address(_silo),
-            address(0), // because we mint debt share tokens
-            _borrowerAddr,
-            _amount,
-            0, // no balance for the sender
-            _amount, // balance
-            _amount // total supply
-        );
-
-        vm.expectEmit(true, true, true, true);
-        emit DepositBeforeHA(address(_silo), _amount, SHARES_0, _receiver, COLLATERAL);
-
-        vm.expectEmit(true, true, true, true);
-
-        emit ShareTokenAfterHA( // deposit onLeverage
-            address(_silo),
-            address(0), // because we mint tokens
-            _receiver,
-            _amount,
-            0, // no balance for the sender
-            _amount, // balance
-            100e18 + _amount, // total supply
-            COLLATERAL
-        );
-
-        vm.expectEmit(true, true, true, true);
-        emit DepositAfterHA(address(_silo), _amount, SHARES_0, _amount, _amount, _receiver, COLLATERAL);
-
-        vm.expectEmit(true, true, true, true);
-
-        emit BorrowAfterHA(
-            address(_silo),
-            _amount,
-            SHARES_0,
-            _borrowerAddr,
-            _receiver,
-            _amount,
-            _amount,
-            _LEVERAGE,
-            _NOT_SAME_ASSET
-        );
-
-        vm.prank(_borrowerAddr);
-        _silo.leverage(_amount, ILeverageBorrower(_receiver), _borrowerAddr, _NOT_SAME_ASSET, data);
+        partialLiquidation.liquidationCall(address(token1), address(token0), _borrower, _debtToRepay, _receiveSToken);
     }
 
     function _depositForBorrowNotSameAsset() internal {
@@ -1166,7 +1078,15 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
     }
 
-    function deploySiloWithHook(address _hookReceiver) internal {
+    function _depositForBorrowSameAsset() internal {
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, collateralAmount, PROTECTED);
+    }
+
+    function _deploySiloWithHook(address _hookReceiver) internal {
         _siloFixture = new SiloFixture();
         SiloConfigOverride memory configOverride;
 
@@ -1175,7 +1095,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock, ILeverageBorr
         configOverride.hookReceiverImplementation = _hookReceiver;
         configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        (_siloConfig, silo0, silo1,,, partialLiquidation) = _siloFixture.deploy_local(configOverride);
+        address hook;
+        (_siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);
+        partialLiquidation = IPartialLiquidation(hook);
 
         __init(MintableToken(configOverride.token0), MintableToken(configOverride.token1), silo0, silo1);
 

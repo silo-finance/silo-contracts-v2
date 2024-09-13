@@ -56,10 +56,14 @@ interface ISiloChildChainGauge {
     function period_timestamp(int128 _period) external view returns (uint256);
     function integrate_inv_supply(int128 _period) external view returns (uint256);
     function integrate_inv_supply_of(address _user) external view returns (uint256);
+    function inflation_rate(uint256 _week) external view returns (uint256);
     function version() external view returns (string memory);
     function factory() external view returns (ILiquidityGaugeFactory);
     function authorizer_adaptor() external view returns (address);
     function integrate_checkpoint_of(address _user) external view returns (uint256);
+    function lp_token() external view returns (address);
+    function bal_pseudo_minter() external view returns (address);
+    function voting_escrow_delegation_proxy() external view returns (address);
 
     // solhint-enable func-name-mixedcase
     // solhint-enable func-param-name-mixedcase

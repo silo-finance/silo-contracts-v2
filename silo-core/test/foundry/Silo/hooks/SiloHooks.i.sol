@@ -15,8 +15,8 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ContractThatAcceptsETH} from "silo-core/test/foundry/_mocks/ContractThatAcceptsETH.sol";
-import {SiloTestExtension} from "silo-core/test/foundry/_mocks/SiloTestExtension.sol";
-import {SiloFixtureWithFeeDistributor as SiloFixture} from "../../_common/fixtures/SiloFixtureWithFeeDistributor.sol";
+import {SiloStorageExtension} from "silo-core/test/foundry/_mocks/SiloStorageExtension.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -60,15 +60,15 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksInitializationAfterDeployment
     */
     function testHooksInitializationAfterDeployment() public view {
-        (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
+        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
 
-        assertEq(silo0HookesBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
-        assertEq(silo0HookesAfter, HOOKS_AFTER, "hooksAfter is not initialized");
+        assertEq(silo0Hooks.hooksBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
+        assertEq(silo0Hooks.hooksAfter, HOOKS_AFTER, "hooksAfter is not initialized");
 
-        (,uint24 silo1HookesBefore, uint24 silo1HookesAfter,) = silo1.sharedStorage();
+        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
 
-        assertEq(silo1HookesBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
-        assertEq(silo1HookesAfter, HOOKS_AFTER, "hooksAfter is not initialized");
+        assertEq(silo1Hooks.hooksBefore, HOOKS_BEFORE, "hooksBefore is not initialized");
+        assertEq(silo1Hooks.hooksAfter, HOOKS_AFTER, "hooksAfter is not initialized");
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksUpdate
@@ -80,17 +80,17 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
         silo0.updateHooks();
 
-        (,uint24 silo0HookesBefore, uint24 silo0HookesAfter,) = silo0.sharedStorage();
+        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
 
-        assertEq(silo0HookesBefore, newHooksBefore, "hooksBefore is not updated");
-        assertEq(silo0HookesAfter, newHooksAfter, "hooksAfter is not updated");
+        assertEq(silo0Hooks.hooksBefore, newHooksBefore, "hooksBefore is not updated");
+        assertEq(silo0Hooks.hooksAfter, newHooksAfter, "hooksAfter is not updated");
 
         silo1.updateHooks();
 
-        (,uint24 silo1HookesBefore, uint24 silo1HookesAfter,) = silo1.sharedStorage();
+        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
 
-        assertEq(silo1HookesBefore, newHooksBefore, "hooksBefore is not updated");
-        assertEq(silo1HookesAfter, newHooksAfter, "hooksAfter is not updated");
+        assertEq(silo1Hooks.hooksBefore, newHooksBefore, "hooksBefore is not updated");
+        assertEq(silo1Hooks.hooksAfter, newHooksAfter, "hooksAfter is not updated");
     }
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSilo
@@ -135,21 +135,21 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         uint256 assetType = uint256(ISilo.AssetType.Collateral);
         uint256 expectedTotalCollateralAssets = 1_9999_9999e18;
 
-        address target = address(new SiloTestExtension());
+        address target = address(new SiloStorageExtension());
 
         bytes memory data = abi.encodeWithSelector(
-            SiloTestExtension.testSiloStorageMutation.selector,
+            SiloStorageExtension.siloStorageMutation.selector,
             assetType,
             expectedTotalCollateralAssets
         );
 
-        uint256 totalCollateralBeforeCall = silo0.total(assetType);
+        uint256 totalCollateralBeforeCall = silo0.getTotalAssetsStorage(assetType);
         assertEq(totalCollateralBeforeCall, 0, "Expect to have no collateral assets");
 
         vm.prank(_hookReceiverAddr);
         silo0.callOnBehalfOfSilo(target, amoutToSend, ISilo.CallType.Delegatecall, data);
 
-        uint256 totalCollateralAfterCall = silo0.total(assetType);
+        uint256 totalCollateralAfterCall = silo0.getTotalAssetsStorage(assetType);
         assertEq(totalCollateralAfterCall, expectedTotalCollateralAssets, "Expect to have collateral assets");
     }
 

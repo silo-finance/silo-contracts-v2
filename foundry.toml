@@ -9,7 +9,7 @@ libs = [
     'silo-vaults/node_modules'
 ]
 out = 'cache/foundry/out'
-evm_version = 'shanghai'
+evm_version = 'cancun'
 
 [profile.amm-periphery]
 src = 'silo-amm-periphery/contracts'
@@ -30,6 +30,7 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
@@ -41,6 +42,7 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
@@ -51,6 +53,7 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}
 ]

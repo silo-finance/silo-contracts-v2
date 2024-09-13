@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {Context} from "openzeppelin-contracts/utils/Context.sol";
+import {Context} from "openzeppelin5/utils/Context.sol";
 
 /// @title Manageable
 /// @notice Implements simple manager role that can be changed by a manger or external owner role

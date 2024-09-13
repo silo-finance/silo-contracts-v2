@@ -11,8 +11,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";
@@ -76,17 +74,21 @@ contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address hookImpl = beforeCreateSilo(siloInitData);
 
-        if (hookImpl != address(0) && hookReceiverImplementation != hookImpl) {
-            hookReceiverImplementation = hookImpl;
-        }
+        console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
+        console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
+
+        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
         ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
         vm.startBroadcast(deployerPrivateKey);
+
+        console2.log("[SiloCommonDeploy] siloInitData.token0", siloInitData.token0);
+        console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
+        console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
         siloConfig = siloDeployer.deploy(
             oracles,
@@ -264,8 +266,10 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function beforeCreateSilo(
-        ISiloConfig.InitData memory
-    ) internal virtual returns (address _hookImplementation) {
+        ISiloConfig.InitData memory,
+        address _hookReceiverImplementation
+    ) internal virtual returns (address hookImplementation) {
+        hookImplementation = _hookReceiverImplementation;
     }
 
     function _getClonableHookReceiverConfig(address _implementation)

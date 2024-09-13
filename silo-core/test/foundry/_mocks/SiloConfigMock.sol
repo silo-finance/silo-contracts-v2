@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 
 contract SiloConfigMock is Test {
     address public immutable ADDRESS;
@@ -42,6 +43,13 @@ contract SiloConfigMock is Test {
         bytes memory data = abi.encodeWithSelector(ISiloConfig.getSilos.selector);
 
         vm.mockCall(ADDRESS, data, abi.encode(_silo0, _silo1));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function reentrancyGuardEnteredMock(bool _status) external {
+        bytes memory data = abi.encodeWithSelector(ICrossReentrancyGuard.reentrancyGuardEntered.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(_status));
         vm.expectCall(ADDRESS, data);
     }
 }

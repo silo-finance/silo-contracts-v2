@@ -5,6 +5,10 @@ import {IERC20R} from "../interfaces/IERC20R.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
+import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
+import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
+import {ShareDebtTokenLib} from "../lib/ShareDebtTokenLib.sol";
+import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo
@@ -15,14 +19,12 @@ import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 /// to any recipient as long as receiving wallet approves the transfer. In other words, anyone can
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
-contract ShareDebtToken is IERC20R, ShareToken {
+contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
     using SiloLensLib for ISilo;
 
-    mapping(address owner => mapping(address recipient => uint256 allowance)) private _receiveAllowances;
-
-    /// @param _silo Silo address for which tokens was deployed
-    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual initializer {
-        __ShareToken_init(_silo, _hookReceiver, _tokenType);
+    /// @inheritdoc IShareTokenInitializable
+    function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
+        _shareTokenInitialize(_silo, _hookReceiver, _tokenType);
     }
 
     /// @inheritdoc IShareToken
@@ -32,18 +34,26 @@ contract ShareDebtToken is IERC20R, ShareToken {
     }
 
     /// @inheritdoc IShareToken
-    function burn(address _owner, address, uint256 _amount) external virtual override onlySilo {
+    function burn(address _owner, address /* _spender */, uint256 _amount) external virtual override onlySilo {
         _burn(_owner, _amount);
     }
 
     /// @inheritdoc IERC20R
     function setReceiveApproval(address owner, uint256 _amount) external virtual override {
+        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
+
         _setReceiveApproval(owner, _msgSender(), _amount);
+    }
+
+    function forwardTransferFromNoChecks(address, address, uint256) external pure virtual override {
+        revert Forbidden();
     }
 
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
-        uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
+        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
+
+        uint256 currentAllowance = ShareDebtTokenLib.receiveAllowance(_owner, _msgSender());
 
         uint256 newAllowance;
 
@@ -57,13 +67,16 @@ contract ShareDebtToken is IERC20R, ShareToken {
 
     /// @inheritdoc IERC20R
     function increaseReceiveAllowance(address _owner, uint256 _addedValue) public virtual override {
-        uint256 currentAllowance = _receiveAllowances[_owner][_msgSender()];
+        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
+
+        uint256 currentAllowance = ShareDebtTokenLib.receiveAllowance(_owner, _msgSender());
+
         _setReceiveApproval(_owner, _msgSender(), currentAllowance + _addedValue);
     }
 
     /// @inheritdoc IERC20R
     function receiveAllowance(address _owner, address _recipient) public view virtual override returns (uint256) {
-        return _receiveAllowances[_owner][_recipient];
+        return ShareDebtTokenLib.receiveAllowance(_owner, _recipient);
     }
 
     /// @dev Set approval for `_owner` to send debt to `_recipient`
@@ -71,53 +84,30 @@ contract ShareDebtToken is IERC20R, ShareToken {
     /// @param _recipient wallet that allows `_owner` to send debt to its wallet
     /// @param _amount amount of token allowed to be transferred
     function _setReceiveApproval(address _owner, address _recipient, uint256 _amount) internal virtual {
-        if (_owner == address(0)) revert OwnerIsZero();
-        if (_recipient == address(0)) revert RecipientIsZero();
+        if (_owner == address(0)) revert IShareToken.OwnerIsZero();
+        if (_recipient == address(0)) revert IShareToken.RecipientIsZero();
 
-        _receiveAllowances[_owner][_recipient] = _amount;
+        IERC20R.Storage storage $ = ShareDebtTokenLib.getIERC20RStorage();
+
+        $._receiveAllowances[_owner][_recipient] = _amount;
 
         emit ReceiveApproval(_owner, _recipient, _amount);
     }
 
     /// @dev Check receive allowance and if recipient is allowed to accept debt from silo
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        // If we are minting or burning, Silo is responsible to check all necessary conditions
-        if (_isTransfer(_sender, _recipient)) {
-            // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`
-            siloConfig.onDebtTransfer(_sender, _recipient);
+        (
+            uint256 newDebtAllowance, bool updateRequired
+        ) = ShareDebtTokenLib.beforeTokenTransfer(_sender, _recipient, _amount);
 
-            // _recipient must approve debt transfer, _sender does not have to
-            uint256 currentAllowance = receiveAllowance(_sender, _recipient);
-            if (currentAllowance < _amount) revert AmountExceedsAllowance();
-
-            // There can't be an underflow in the subtraction because of the previous check
-            unchecked {
-                // update debt allowance
-                _setReceiveApproval(_sender, _recipient, currentAllowance - _amount);
-            }
+        if (updateRequired) {
+            _setReceiveApproval(_sender, _recipient, newDebtAllowance);
         }
     }
 
     /// @dev Check if recipient is solvent after debt transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        // debt transfer is such a rare use case and extra gas is worth additional security,
-        // so we do not return even when _amount == 0
-
-        // if we are minting or burning, Silo is responsible to check all necessary conditions
-        // if we are NOT minting and not burning, it means we are transferring
-        // make sure that _recipient is solvent after transfer
-        if (_isTransfer(_sender, _recipient)) {
-            _callOracleBeforeQuote(_recipient);
-            if (!silo.isSolvent(_recipient)) revert RecipientNotSolventAfterTransfer();
-        }
-
-        // we need to close debt on transfer and burn
-        if (_sender != address(0) && balanceOf(_sender) == 0) {
-            // we can have debt in one silo only, so when you transfer all your debt we can close position
-            // we can close only when _amount > 0, otherwise you can transfer 0 and close debt in other silo
-            if (_amount != 0) siloConfig.closeDebt(_sender);
-        }
-
+        ShareDebtTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ERC20, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/libraries/Client.sol";
@@ -30,6 +30,7 @@ import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {CheckpointerAdaptorMock} from "../_mocks/CheckpointerAdaptorMock.sol";
 import {CCIPGaugeFactory} from "ve-silo/contracts/gauges/ccip/CCIPGaugeFactory.sol";
 import {IChainlinkPriceFeedLike} from "ve-silo/test/gauges/interfaces/IChainlinkPriceFeedLike.sol";
+import {CCIPTransferMessageLib} from "./CCIPTransferMessageLib.sol";
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeCheckpointer --ffi -vvv
 contract CCIPGaugeCheckpointer is IntegrationTest {
@@ -45,11 +46,6 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     address internal constant _WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
     address internal constant _CHAINLINK_PRICE_FEED = 0x13015e4E6f839E1Aa1016DF521ea458ecA20438c;
     address internal constant _CHAINLINL_PRICE_UPDATER = 0x6e37f4c82d9A31cc42B445874dd3c3De97AB553f;
-    bytes32 internal constant _MESSAGE_ID_LINK = 0x3eb650f8a0c216460b663f236fd26522f34ab8bc58047507dc1843338ae3e9eb;
-    bytes32 internal constant _MESSAGE_ID_ETH = 0x56f6f20b128703450d2e8b8ff243cc7f88365fe666e6eec84a366f8b97998ef3;
-
-    bytes32 internal constant _MESSAGE_ID_LINK_WITH_ETH =
-        0xc7e48fe05f1ebf70b3b13632a351478b19e3a7a39e0154b72e59417ffc94e2a0;
 
     address internal _minter = makeAddr("Minter");
     address internal _tokenAdmin = makeAddr("Token Admin");
@@ -62,12 +58,15 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     address internal _gaugeFactory;
     address internal _deployer;
 
+    uint256 internal _snapshotId;
+
     IStakelessGaugeCheckpointerAdaptor internal _adaptor;
     ICCIPGaugeCheckpointer internal _checkpointer;
     ICCIPGauge internal _gauge;
 
     event CCIPTransferMessage(bytes32 newMessage);
 
+    // solhint-disable-next-line function-max-lines
     function setUp() public {
         vm.createSelectFork(
             getChainRpcUrl(ARBITRUM_ONE_ALIAS),
@@ -118,6 +117,8 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         vm.prank(_deployer);
         _adaptor.setStakelessGaugeCheckpointer(address(_checkpointer));
+
+        _snapshotId = vm.snapshot();
     }
 
     // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeLINK --ffi -vvv
@@ -127,10 +128,11 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         _updateChainlinkPriceFeed();
 
-        vm.expectEmit(false, false, false, true);
-        emit CCIPTransferMessage(_MESSAGE_ID_LINK);
+        vm.recordLogs();
 
         _checkpointer.checkpointSingleGauge(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.LINK);
+
+        CCIPTransferMessageLib.expectEmit();
 
         _afterCheckpointGaugeWithLINK();
         _ensureThereIsNoLeftovers(address(_gauge));
@@ -149,11 +151,12 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         assertEq(userCheckpointer.balance, 0, "User checkpointer should not have ether");
         assertEq(address(gaugeWithETH).balance, amountOfEthToFrontLoad, "Gauge should have ether");
 
-        vm.expectEmit(false, false, false, true);
-        emit CCIPTransferMessage(_MESSAGE_ID_LINK_WITH_ETH);
+        vm.recordLogs();
 
         vm.prank(userCheckpointer);
         _checkpointer.checkpointSingleGauge(_GAUGE_TYPE, gaugeWithETH, ICCIPGauge.PayFeesIn.LINK);
+
+        CCIPTransferMessageLib.expectEmit();
 
         // Ensure we have correct balances
         // User should receive an ether from the gauge balance after checkpoint
@@ -187,11 +190,12 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         assertEq(gaugeBalance, _GAUGE_BALANCE, "Expect to have an initial balance");
 
-        vm.expectEmit(false, false, false, true);
-        emit CCIPTransferMessage(_MESSAGE_ID_ETH);
+        vm.recordLogs();
 
         vm.prank(_user);
         _checkpointer.checkpointSingleGauge{value: fees}(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.Native);
+
+        CCIPTransferMessageLib.expectEmit();
 
         assertEq(_user.balance, extraFee, "Expect to receive extra ether from the fee");
 
@@ -225,11 +229,12 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         assertEq(gaugeBalance, _GAUGE_BALANCE, "Expect to have an initial balance");
 
-        vm.expectEmit(false, false, false, true);
-        emit CCIPTransferMessage(_MESSAGE_ID_ETH);
+        vm.recordLogs();
 
         vm.prank(_user);
         _checkpointer.checkpointSingleGauge{value: fees}(_GAUGE_TYPE, _gauge, ICCIPGauge.PayFeesIn.Native);
+
+        CCIPTransferMessageLib.expectEmit();
 
         uint256 unclaimedAfter = _gauge.unclaimedIncentives();
         
@@ -272,7 +277,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
     }
 
     function _setupGaugeWithFrontLoadedEth(uint256 _ethAmount) internal returns (ICCIPGauge _createdGauge) {
-        address expectedGauge = 0x68C0e6E54f5CfA0BbfC93E83758f87845C3B7088;
+        address expectedGauge = _createExpectedGauge();
 
         payable(expectedGauge).transfer(_ethAmount);
 
@@ -291,6 +296,16 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
 
         vm.prank(_deployer);
         _checkpointer.addGaugesWithVerifiedType(_GAUGE_TYPE, gauges);
+    }
+
+    function _createExpectedGauge() internal returns (address _createdGauge) {
+        _createdGauge = CCIPGaugeFactory(_gaugeFactory).create(
+            _chaildChainGauge2,
+            _RELATIVE_WEIGHT_CAP,
+            _DESTINATION_CHAIN
+        );
+
+        vm.revertTo(_snapshotId);
     }
     
     // Ether/LINK leftover should be returned to the user

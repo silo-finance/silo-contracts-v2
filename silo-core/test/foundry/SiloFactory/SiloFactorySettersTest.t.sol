@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
 /*
@@ -22,8 +24,7 @@ contract SiloFactorySettersTest is Test {
     address hacker = makeAddr("Hacker");
 
     function setUp() public {
-        siloFactory = new SiloFactory();
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+        siloFactory = new SiloFactory(daoFee, daoFeeReceiver);
     }
 
     /*
@@ -32,9 +33,9 @@ contract SiloFactorySettersTest is Test {
     function test_setDaoFee(uint256 _newDaoFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newDaoFee < maxFee);
+        vm.assume(_newDaoFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setDaoFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -52,9 +53,9 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxDeployerFee(uint256 _newMaxDeployerFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxDeployerFee < maxFee);
+        vm.assume(_newMaxDeployerFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxDeployerFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -72,9 +73,9 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxFlashloanFee(uint256 _newMaxFlashloanFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxFlashloanFee < maxFee);
+        vm.assume(_newMaxFlashloanFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxFlashloanFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -92,9 +93,9 @@ contract SiloFactorySettersTest is Test {
     function test_setMaxLiquidationFee(uint256 _newMaxLiquidationFee) public {
         uint256 maxFee = siloFactory.MAX_FEE();
 
-        vm.assume(_newMaxLiquidationFee < maxFee);
+        vm.assume(_newMaxLiquidationFee <= maxFee);
 
-        vm.expectRevert(ISiloFactory.MaxFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
         siloFactory.setMaxLiquidationFee(maxFee + 1);
 
         vm.prank(hacker);
@@ -123,9 +124,38 @@ contract SiloFactorySettersTest is Test {
 
         assertEq(siloFactory.daoFeeReceiver(), _newDaoFeeReceiver);
 
-        (address dao, address deployer) = siloFactory.getFeeReceivers(address(1));
+        address silo = makeAddr("Silo");
+        address config = makeAddr("SiloConfig");
+
+        vm.mockCall(
+            silo,
+            abi.encodeWithSelector(ISilo.config.selector),
+            abi.encode(config)
+        );
+
+        vm.mockCall(
+            config,
+            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
+            abi.encode(1)
+        );
+
+        (address dao, address deployer) = siloFactory.getFeeReceivers(silo);
 
         assertEq(dao, _newDaoFeeReceiver);
         assertEq(deployer, address(0));
+    }
+
+    /*
+    forge test -vv --mt test_setBaseURI
+    */
+    function test_setBaseURI(string calldata _newBaseURI) public {
+        vm.assume(keccak256(bytes(_newBaseURI)) != keccak256(bytes(siloFactory.baseURI())));
+
+        vm.prank(hacker);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
+        siloFactory.setBaseURI(_newBaseURI);
+
+        siloFactory.setBaseURI(_newBaseURI);
+        assertEq(siloFactory.baseURI(), _newBaseURI);
     }
 }

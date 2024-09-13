@@ -15,8 +15,6 @@ contract SiloDeployValidation is IntegrationTest {
     // names of the interest rate models smart contracts in the SiloConfigsNames.LOCAL_INVALID_IRM
     string constant internal _INVALID_IRM0 = "InterestRateModel0";
     string constant internal _INVALID_IRM1 = "InterestRateModel1";
-    // the name of the liquidation module smart contract in the SiloConfigsNames.LOCAL_INVALID_LIQUIDATION_MODULE
-    string constant internal _INVALID_LIQUIDATION = "InvalidLiquidationModule";
 
     SiloDeployWithGaugeHookReceiver internal _siloDeploy;
 
@@ -35,24 +33,10 @@ contract SiloDeployValidation is IntegrationTest {
         _siloDeploy.run();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_invalidLiquidationModule
-    function test_invalidLiquidationModule() public {
-        // mocking the gauge hook receiver contract as it is before the liquidation module
-        AddrLib.setAddress(_INVALID_HOOK_RECEIVER, makeAddr(_INVALID_HOOK_RECEIVER));
-
-        vm.expectRevert(abi.encodeWithSelector(
-            SiloConfigData.DeployedContractNotFound.selector,
-            _INVALID_LIQUIDATION
-        ));
-
-        _siloDeploy.run();
-    }
-
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_invalidIRM
     function test_invalidIRM() public {
         // mocking contracts that are before an interest rate model
         AddrLib.setAddress(_INVALID_HOOK_RECEIVER, makeAddr(_INVALID_HOOK_RECEIVER));
-        AddrLib.setAddress(_INVALID_LIQUIDATION, makeAddr(_INVALID_LIQUIDATION));
 
         vm.expectRevert(abi.encodeWithSelector(
             SiloConfigData.DeployedContractNotFound.selector,

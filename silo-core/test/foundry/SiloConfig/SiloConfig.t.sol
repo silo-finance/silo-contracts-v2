@@ -2,10 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 
 // solhint-disable func-name-mixedcase
 
@@ -16,7 +18,7 @@ contract SiloConfigTest is Test {
     address internal _wrongSilo = makeAddr("wrongSilo");
     address internal _silo0Default = makeAddr("silo0");
     address internal _silo1Default = makeAddr("silo1");
-    address internal _liquidationModuleDefault = makeAddr("liquidationModule");
+    address internal _hookReceiverModuleDefault = makeAddr("hookReceiver");
 
     ISiloConfig.ConfigData internal _configDataDefault0;
     ISiloConfig.ConfigData internal _configDataDefault1;
@@ -26,17 +28,17 @@ contract SiloConfigTest is Test {
     function setUp() public {
         _configDataDefault0.silo = _silo0Default;
         _configDataDefault0.token = makeAddr("token0");
-        _configDataDefault0.collateralShareToken = makeAddr("collateralShareToken0");
+        _configDataDefault0.collateralShareToken = _silo0Default;
         _configDataDefault0.protectedShareToken = makeAddr("protectedShareToken0");
         _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
-        _configDataDefault0.liquidationModule = _liquidationModuleDefault;
+        _configDataDefault0.hookReceiver = _hookReceiverModuleDefault;
 
         _configDataDefault1.silo = _silo1Default;
         _configDataDefault1.token = makeAddr("token1");
-        _configDataDefault1.collateralShareToken = makeAddr("collateralShareToken1");
+        _configDataDefault1.collateralShareToken = _silo1Default;
         _configDataDefault1.protectedShareToken = makeAddr("protectedShareToken1");
         _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
-        _configDataDefault1.liquidationModule = _liquidationModuleDefault;
+        _configDataDefault1.hookReceiver = _hookReceiverModuleDefault;
 
         _siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
 
@@ -71,13 +73,12 @@ contract SiloConfigTest is Test {
         vm.assume(_configData0.deployerFee < 0.5e18);
 
         // when using assume, it reject too many inputs
-        _configData0.liquidationModule = _configData1.liquidationModule; 
         _configData0.hookReceiver = _configData1.hookReceiver;
 
-        _configData0.otherSilo = _configData1.silo;
-        _configData1.otherSilo = _configData0.silo;
         _configData1.daoFee = _configData0.daoFee;
         _configData1.deployerFee = _configData0.deployerFee;
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
 
         siloConfig = new SiloConfig(_siloId, _configData0, _configData1);
     }
@@ -94,6 +95,64 @@ contract SiloConfigTest is Test {
 
         vm.expectRevert(ISiloConfig.FeeTooHigh.selector);
         new SiloConfig(1, _configData0, _configData1);
+    }
+
+    /*
+    forge test -vv --mt test_accrueInterestForSilo_WrongSilo
+    */
+    function test_accrueInterestForSilo_WrongSilo() public {
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.accrueInterestForSilo(anySilo);
+    }
+
+    /*
+    forge test -vv --mt test_accrueInterestForSilo
+    */
+    function test_accrueInterestForSilo() public {
+        bytes memory data = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
+        );
+
+        vm.mockCall(_silo0Default, data, abi.encode(true));
+        vm.expectCall(_silo0Default, data);
+
+        _siloConfig.accrueInterestForSilo(_silo0Default);
+
+        data = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault1.interestRateModel, _configDataDefault1.daoFee, _configDataDefault1.deployerFee)
+        );
+
+        vm.mockCall(_silo1Default, data, abi.encode(true));
+        vm.expectCall(_silo1Default, data);
+
+        _siloConfig.accrueInterestForSilo(_silo1Default);
+    }
+
+    /*
+    forge test -vv --mt test_accrueInterestForBothSilos
+    */
+    function test_accrueInterestForBothSilos() public {
+        bytes memory dataSilo0 = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault0.interestRateModel, _configDataDefault0.daoFee, _configDataDefault0.deployerFee)
+        );
+
+        vm.mockCall(_silo0Default, dataSilo0, abi.encode(true));
+        vm.expectCall(_silo0Default, dataSilo0);
+
+        bytes memory dataSilo1 = abi.encodeCall(
+            ISilo.accrueInterestForConfig,
+            (_configDataDefault1.interestRateModel, _configDataDefault1.daoFee, _configDataDefault1.deployerFee)
+        );
+
+        vm.mockCall(_silo1Default, dataSilo1, abi.encode(true));
+        vm.expectCall(_silo1Default, dataSilo1);
+
+        _siloConfig.accrueInterestForBothSilos();
     }
 
     /*
@@ -126,12 +185,12 @@ contract SiloConfigTest is Test {
 
         (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(_configData0.silo);
         assertEq(protectedShareToken, _configData0.protectedShareToken);
-        assertEq(collateralShareToken, _configData0.collateralShareToken);
+        assertEq(collateralShareToken, _configData0.silo);
         assertEq(debtShareToken, _configData0.debtShareToken);
 
         (protectedShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(_configData1.silo);
         assertEq(protectedShareToken, _configData1.protectedShareToken);
-        assertEq(collateralShareToken, _configData1.collateralShareToken);
+        assertEq(collateralShareToken, _configData1.silo);
         assertEq(debtShareToken, _configData1.debtShareToken);
     }
 
@@ -162,16 +221,37 @@ contract SiloConfigTest is Test {
     ) public {
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
-        vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        siloConfig.getConfigs(_wrongSilo, address(0), 0 /* always 0 for external calls */);
+        (address silo0, address silo1) = siloConfig.getSilos();
 
-        (
-            ISiloConfig.ConfigData memory c0,
-            ISiloConfig.ConfigData memory c1,
-        ) = siloConfig.getConfigs(_configData0.silo, address(0), 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory c0 = siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory c1 = siloConfig.getConfig(silo1);
 
         assertEq(keccak256(abi.encode(c0)), keccak256(abi.encode(_configData0)));
         assertEq(keccak256(abi.encode(c1)), keccak256(abi.encode(_configData1)));
+    }
+
+    /*
+    forge test -vv --mt test_getConfigsForWithdraw_WrongSilo
+    */
+    function test_getConfigsForWithdraw_WrongSilo() public {
+        SiloConfig siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
+
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        siloConfig.getConfigsForWithdraw(anySilo, address(0));
+    }
+
+    /*
+    forge test -vv --mt test_getConfigsForBorrow_WrongSilo
+    */
+    function test_getConfigsForBorrow_WrongSilo() public {
+        SiloConfig siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
+
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        siloConfig.getConfigsForBorrow(anySilo);
     }
 
     /*
@@ -185,6 +265,8 @@ contract SiloConfigTest is Test {
     ) public {
         // we always using #0 setup for hookReceiver
         _configData1.hookReceiver = _configData0.hookReceiver;
+        _configData0.collateralShareToken = _configData0.silo;
+        _configData1.collateralShareToken = _configData1.silo;
 
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 
@@ -227,73 +309,270 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    forge test -vv --mt test_openDebt_revertOnOnlySilo
+    forge test -vv --mt test_getDebtShareTokenAndAsset_revertOnOnlySilo
     */
-    function test_openDebt_revertOnOnlySilo() public {
-        vm.expectRevert(ISiloConfig.OnlySilo.selector);
-        _siloConfig.accrueInterestAndGetConfigs(makeAddr("SomeSilo"), makeAddr("Borrower"), Hook.BORROW);
+    function test_getDebtShareTokenAndAsset_revertOnOnlySilo() public {
+        address anySilo = makeAddr("anySilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.getDebtShareTokenAndAsset(anySilo);
     }
 
     /*
-    forge test -vv --mt test_openDebt_pass
+    forge test -vv --mt test_getDebtShareTokenAndAsset_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_getDebtShareTokenAndAsset_fuzz(uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+
+        address shareToken;
+        address asset;
+
+        ISilo.CollateralType collateralType = ISilo.CollateralType.Collateral;
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData0.silo, collateralType);
+
+        assertEq(shareToken, _configData0.silo);
+        assertEq(asset, _configData0.token);
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData1.silo, collateralType);
+
+        assertEq(shareToken, _configData1.silo);
+        assertEq(asset, _configData1.token);
+
+        collateralType = ISilo.CollateralType.Protected;
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData0.silo, collateralType);
+
+        assertEq(shareToken, _configData0.protectedShareToken);
+        assertEq(asset, _configData0.token);
+
+        (shareToken, asset) = siloConfig.getCollateralShareTokenAndAsset(_configData1.silo, collateralType);
+
+        assertEq(shareToken, _configData1.protectedShareToken);
+        assertEq(asset, _configData1.token);
+    }
+
+    /*
+    forge test -vv --mt test_getCollateralShareTokenAndAsset_revertWrongSilo
+    */
+    function test_getCollateralShareTokenAndAsset_revertWrongSilo() public {
+        address anySilo = makeAddr("anySilo");
+        ISilo.CollateralType collateralType = ISilo.CollateralType.Collateral;
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.getCollateralShareTokenAndAsset(anySilo, collateralType);
+
+        collateralType = ISilo.CollateralType.Protected;
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.getCollateralShareTokenAndAsset(anySilo, collateralType);
+    }
+
+    /*
+    forge test -vv --mt test_getCollateralShareTokenAndAsset_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_getCollateralShareTokenAndAsset_fuzz(
+        uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+
+        address debtToken;
+        address asset;
+
+        (debtToken, asset) = siloConfig.getDebtShareTokenAndAsset(_configData0.silo);
+
+        assertEq(debtToken, _configData0.debtShareToken);
+        assertEq(asset, _configData0.token);
+
+        (debtToken, asset) = siloConfig.getDebtShareTokenAndAsset(_configData1.silo);
+
+        assertEq(debtToken, _configData1.debtShareToken);
+    }
+
+    /*
+    forge test -vv --mt test_setCollateralSilo_revertOnOnlySilo
+    */
+    function test_setCollateralSilo_revertOnOnlySilo() public {
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
+        _siloConfig.setThisSiloAsCollateralSilo(makeAddr("borrower"));
+
+        vm.expectRevert(ISiloConfig.OnlySilo.selector);
+        _siloConfig.setOtherSiloAsCollateralSilo(makeAddr("borrower"));
+    }
+
+    /*
+    forge test -vv --mt test_setThisSiloAsCollateralSilo
+    */
+    function test_setThisSiloAsCollateralSilo() public {
+        address borrower = makeAddr("borrower");
+
+        vm.prank(_silo0Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        address configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo0Default), configuredSilo);
+
+        vm.prank(_silo1Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo1Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_setThisSiloAsCollateralSilo_MultipleTimes
+    */
+    function test_setThisSiloAsCollateralSilo_MultipleTimes() public {
+        address borrower = makeAddr("borrower");
+        address configuredSilo;
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo0Default);
+            _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo0Default), configuredSilo);
+        }
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo1Default);
+            _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo1Default), configuredSilo);
+        }
+    }
+
+    /*
+    forge test -vv --mt test_setOtherSiloAsCollateralSilo
+    */
+    function test_setOtherSiloAsCollateralSilo() public {
+        address borrower = makeAddr("borrower");
+
+        vm.prank(_silo0Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+        address configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo1Default), configuredSilo);
+
+        vm.prank(_silo1Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo0Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_setOtherSiloAsCollateralSilo_MultipleTimes
+    */
+    function test_setOtherSiloAsCollateralSilo_MultipleTimes() public {
+        address borrower = makeAddr("borrower");
+        address configuredSilo;
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo0Default);
+            _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo1Default), configuredSilo);
+        }
+
+        for (uint256 i; i < 3; i++) {
+            vm.prank(_silo1Default);
+            _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+            configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+            assertEq(address(_silo0Default), configuredSilo);
+        }
+    }
+
+    /*
+    forge test -vv --mt test_borrowerCollateralSilo
+    */
+    function test_borrowerCollateralSilo() public {
+        address borrower = makeAddr("borrower");
+
+        address configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(0), configuredSilo);
+
+        vm.prank(_silo0Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo1Default), configuredSilo);
+
+        vm.prank(_silo0Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
+
+        assertEq(address(_silo0Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_setCollateralSilo_pass
     */
     function test_openDebt_pass() public {
-        vm.prank(_silo0Default);
-        _siloConfig.accrueInterestAndGetConfigs(_silo0Default, makeAddr("Borrower 1"), Hook.BORROW);
+        address borrower1 = makeAddr("Borrower 1");
+        address borrower2 = makeAddr("Borrower 2");
+
+        _mockShareTokensBlances(borrower1, 1, 0);
+        _mockShareTokensBlances(borrower2, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.setThisSiloAsCollateralSilo(borrower1);
 
         vm.prank(_silo1Default);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1Default, makeAddr("Borrower 2"), Hook.BORROW);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower2);
+
+        vm.prank(_silo0Default);
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower1);
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower2);
     }
 
     /*
     forge test -vv --mt test_getConfigs_zero
     */
-    function test_getConfigs_zero() public view {
-        address silo = _silo0Default;
+    function test_getConfigs_zero() public {
+        vm.mockCall(
+            _configDataDefault0.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, address(0)),
+            abi.encode(0)
+        );
+
+        vm.mockCall(
+            _configDataDefault1.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, address(0)),
+            abi.encode(0)
+        );
 
         (
-            ISiloConfig.ConfigData memory siloConfig,
-            ISiloConfig.ConfigData memory otherSiloConfig,
-            ISiloConfig.DebtInfo memory debtInfo
-        ) = _siloConfig.getConfigs(silo, address(0), 0 /* always 0 for external calls */);
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _siloConfig.getConfigsForSolvency(address(0));
 
-        ISiloConfig.DebtInfo memory emptyDebtInfo;
 
-        assertEq(siloConfig.silo, silo, "first config should be for silo");
-        assertEq(otherSiloConfig.silo, _silo1Default);
-        assertEq(abi.encode(emptyDebtInfo), abi.encode(debtInfo), "debtInfo should be empty");
-    }
-
-    /*
-    forge test -vv --mt test_openDebt_skipsIfAlreadyOpen
-    */
-    function test_openDebt_skipsIfAlreadyOpen() public {    
-        address borrower = makeAddr("borrower");
-
-        vm.prank(_silo0Default);
-        (,, ISiloConfig.DebtInfo memory debtInfo1) = _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            borrower,
-            Hook.BORROW
-        );
-
-        vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
-
-        vm.prank(_silo0Default);
-        (,, ISiloConfig.DebtInfo memory debtInfo2) = _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            borrower,
-            Hook.BORROW
-        );
-
-        assertEq(abi.encode(debtInfo1), abi.encode(debtInfo2), "nothing should change");
+        assertEq(collateralConfig.silo, address(0), "User has no debt - config should be empty");
+        assertEq(debtConfig.silo, address(0), "User has no debt - config should be empty");
     }
 
     /*
@@ -302,17 +581,19 @@ contract SiloConfigTest is Test {
     function test_openDebt_debtInThisSilo() public {
         address borrower = makeAddr("borrower");
 
-        vm.prank(_silo0Default);
-        (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            borrower,
-            Hook.BORROW | Hook.SAME_ASSET
-        );
+        _mockShareTokensBlances(borrower, 1, 0);
 
-        assertTrue(debtInfo.debtPresent);
-        assertTrue(debtInfo.sameAsset);
-        assertTrue(debtInfo.debtInSilo0);
-        assertTrue(debtInfo.debtInThisSilo);
+        vm.prank(_silo0Default);
+        _siloConfig.setThisSiloAsCollateralSilo(borrower);
+
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(borrower);
+
+        assertTrue(debtConfig.silo != address(0));
+        assertTrue(debtConfig.silo == collateralConfig.silo);
+        assertTrue(debtConfig.silo == _silo0Default);
     }
 
     /*
@@ -321,23 +602,27 @@ contract SiloConfigTest is Test {
     function test_openDebt_debtInOtherSilo() public {
         address borrower = makeAddr("borrower");
 
-        vm.prank(_silo1Default);
-        _siloConfig.accrueInterestAndGetConfigs(_silo1Default, borrower, Hook.BORROW);
+        _mockShareTokensBlances(borrower, 0, 1);
 
         vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.setOtherSiloAsCollateralSilo(borrower);
 
-        (,, ISiloConfig.DebtInfo memory debtInfo) = _siloConfig.getConfigs(_silo0Default, borrower, Hook.BORROW);
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
 
-        assertTrue(debtInfo.debtPresent);
-        assertTrue(!debtInfo.sameAsset);
-        assertTrue(!debtInfo.debtInSilo0);
-        assertTrue(!debtInfo.debtInThisSilo);
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(borrower);
 
-        (,, debtInfo) = _siloConfig.getConfigs(_silo1Default, address(1), 0 /* always 0 for external calls */);
-        ISiloConfig.DebtInfo memory emptyDebtInfo;
+        assertTrue(debtConfig.silo != address(0), "debt silo is empty");
+        assertTrue(debtConfig.silo != collateralConfig.silo, "same asset");
+        assertTrue(debtConfig.silo == _silo1Default, "wrong debt silo");
 
-        assertEq(abi.encode(emptyDebtInfo), abi.encode(debtInfo), "debtInfo should be empty");
+        address otherUser = makeAddr("otherUser");
+        _mockShareTokensBlances(otherUser, 0, 0);
+
+        (collateralConfig, debtConfig) = _siloConfig.getConfigsForSolvency(otherUser);
+
+        assertEq(collateralConfig.silo, address(0), "config should be empty");
+        assertEq(debtConfig.silo, address(0), "config should be empty");
     }
 
     /*
@@ -346,26 +631,43 @@ contract SiloConfigTest is Test {
     /// forge-config: core-test.fuzz.runs = 10
     function test_onDebtTransfer_clone(bool _silo0, bool sameAsset) public {
         address silo = _silo0 ? _silo0Default : _silo1Default;
-        uint256 action = sameAsset ? Hook.BORROW | Hook.SAME_ASSET : Hook.BORROW;
 
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        uint256 balance0 = _silo0 ? 1 : 0;
+        uint256 balance1 = _silo0 ? 0 : 1;
+
+        _mockShareTokensBlances(from, balance0, balance1);
+
         vm.prank(silo);
-        (,, ISiloConfig.DebtInfo memory debtInfoFrom) = _siloConfig.accrueInterestAndGetConfigs(
-            silo,
-            from,
-            action
-        );
+
+        if (sameAsset) {
+            _siloConfig.setThisSiloAsCollateralSilo(from);
+        } else {
+            _siloConfig.setOtherSiloAsCollateralSilo(from);
+        }
+
+        _mockShareTokensBlances(to, 0, 0);
+
+        ISiloConfig.ConfigData memory collateralConfigFrom;
+        ISiloConfig.ConfigData memory debtConfigFrom;
+
+        (collateralConfigFrom, debtConfigFrom) = _siloConfig.getConfigsForSolvency(from);
 
         vm.prank(_silo0 ? _configDataDefault0.debtShareToken : _configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
-        (
-            ,, ISiloConfig.DebtInfo memory debtInfoTo
-        ) = _siloConfig.getConfigs(silo, to, 0 /* always 0 for external calls */);
+        _mockShareTokensBlances(from, 0, 0);
+        _mockShareTokensBlances(to, balance0, balance1);
 
-        assertEq(abi.encode(debtInfoFrom), abi.encode(debtInfoTo), "debt should be same if called for same silo");
+        ISiloConfig.ConfigData memory collateralConfigTo;
+        ISiloConfig.ConfigData memory debtConfigTo;
+
+        (collateralConfigTo, debtConfigTo) = _siloConfig.getConfigsForSolvency(to);
+
+        assertEq(collateralConfigTo.silo, collateralConfigFrom.silo, "silo should be the same");
+        assertEq(debtConfigTo.silo, debtConfigFrom.silo, "debt silo should be the same");
     }
 
     /*
@@ -405,6 +707,8 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
+        _mockShareTokensBlances(to, 0, 0);
+
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
     }
@@ -415,6 +719,8 @@ contract SiloConfigTest is Test {
     function test_onDebtTransfer_allowedForDebtShareToken1() public {
         address from = makeAddr("from");
         address to = makeAddr("to");
+
+        _mockShareTokensBlances(to, 0, 0);
 
         vm.prank(_configDataDefault1.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
@@ -427,41 +733,21 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
-        vm.prank(_silo0Default);
-        _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            from,
-            Hook.BORROW | Hook.SAME_ASSET
-        );
+        _mockShareTokensBlances(from, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.setThisSiloAsCollateralSilo(from);
+
+        _mockShareTokensBlances(to, 0, 1);
 
         vm.prank(_silo1Default);
-        _siloConfig.accrueInterestAndGetConfigs(
-            _silo1Default,
-            to,
-            Hook.BORROW | Hook.SAME_ASSET
-        );
+        _siloConfig.setThisSiloAsCollateralSilo(to);
 
-        vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
-
-        vm.prank(_configDataDefault0.debtShareToken);
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
+        vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
-        vm.prank(_configDataDefault0.debtShareToken);
-        // this will pass, because `from` has debt in 0
-        _siloConfig.onDebtTransfer(to, from);
-
-        vm.prank(_configDataDefault1.debtShareToken);
-        // this will pass, because `to` has debt in 1
-        _siloConfig.onDebtTransfer(from, to);
-
-        vm.prank(_configDataDefault1.debtShareToken);
-        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
-        _siloConfig.onDebtTransfer(to, from);
+        _mockShareTokensBlances(to, 1, 1);
     }
 
     /*
@@ -471,109 +757,33 @@ contract SiloConfigTest is Test {
         address from = makeAddr("from");
         address to = makeAddr("to");
 
-        vm.prank(_silo0Default);
-        _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            from,
-            Hook.BORROW | Hook.SAME_ASSET
-        );
+        _mockShareTokensBlances(from, 0, 0);
+        _mockShareTokensBlances(to, 0, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.setThisSiloAsCollateralSilo(from);
+
+        _mockShareTokensBlances(from, 1, 0);
 
         vm.prank(_silo0Default);
-        _siloConfig.accrueInterestAndGetConfigs(
-            _silo0Default,
-            to,
-            Hook.BORROW
-        );
+        _siloConfig.setOtherSiloAsCollateralSilo(to);
 
-        vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
+        _mockShareTokensBlances(to, 1, 0);
 
         vm.prank(_configDataDefault0.debtShareToken);
         _siloConfig.onDebtTransfer(from, to);
 
-        (
-            ,, ISiloConfig.DebtInfo memory debtInfoTo
-        ) = _siloConfig.getConfigs(_silo1Default, to, 0 /* always 0 for external calls */);
+        _mockShareTokensBlances(from, 0, 0);
+        _mockShareTokensBlances(to, 2, 0);
 
-        assertTrue(debtInfoTo.debtPresent, "debtPresent");
-        assertTrue(!debtInfoTo.sameAsset, "sameAsset is not cloned when debt already open");
-        assertTrue(debtInfoTo.debtInSilo0, "debtInSilo0");
-        assertTrue(!debtInfoTo.debtInThisSilo, "call is from silo1, so debt should not be in THIS silo");
-    }
+        ISiloConfig.ConfigData memory collateral;
+        ISiloConfig.ConfigData memory debt;
 
-    /*
-    forge test -vv --mt test_closeDebt_OnlySiloOrDebtShareToken
-    */
-    function test_closeDebt_OnlySiloOrDebtShareToken() public {
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(address(0));
+        (collateral, debt) = _siloConfig.getConfigsForSolvency(to);
 
-        vm.prank(_configDataDefault0.collateralShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault0.collateralShareToken);
-
-        vm.prank(_configDataDefault0.protectedShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault0.protectedShareToken);
-
-        vm.prank(_configDataDefault1.collateralShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault1.collateralShareToken);
-
-        vm.prank(_configDataDefault1.protectedShareToken);
-        vm.expectRevert(ISiloConfig.OnlySiloOrDebtShareToken.selector);
-        _siloConfig.closeDebt(_configDataDefault1.protectedShareToken);
-    }
-
-    /*
-    forge test -vv --mt test_closeDebtPermissions
-    */
-    function test_closeDebtPermissions() public {
-        address borrower = makeAddr("borrower");
-
-        // can only be called by silos or debt share tokens
-
-        vm.prank(_silo0Default);
-        _siloConfig.closeDebt(borrower);
-
-        vm.prank(_silo1Default);
-        _siloConfig.closeDebt(borrower);
-
-        vm.prank(_configDataDefault0.debtShareToken);
-        _siloConfig.closeDebt(borrower);
-
-        vm.prank(_configDataDefault1.debtShareToken);
-        _siloConfig.closeDebt(borrower);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_closeDebt_pass
-    */
-    function test_closeDebt_pass() public {
-        address borrower = makeAddr("borrower");
-
-        vm.prank(_silo1Default);
-        _siloConfig.accrueInterestAndGetConfigs(
-            _silo1Default,
-            borrower,
-            Hook.BORROW | Hook.SAME_ASSET
-        );
-
-        vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
-
-        vm.prank(_silo0Default); // other silo can close debt
-        _siloConfig.closeDebt(borrower);
-
-        ISiloConfig.DebtInfo memory emptyDebtInfo;
-        (
-            ,, ISiloConfig.DebtInfo memory debt
-        ) = _siloConfig.getConfigs(_silo1Default, borrower, 0 /* always 0 for external calls */);
-
-        assertEq(abi.encode(emptyDebtInfo), abi.encode(debt), "debt should be deleted");
+        assertTrue(debt.silo != address(0), "debtPresent");
+        assertTrue(debt.silo != collateral.silo, "sameAsset is not cloned when debt already open");
+        assertTrue(debt.silo == _silo0Default, "debt in other silo");
     }
 
     /*
@@ -583,7 +793,7 @@ contract SiloConfigTest is Test {
     function test_crossNonReentrantBefore_error_fuzz(address _callee) public {
         vm.assume(_callee != _silo0Default);
         vm.assume(_callee != _silo1Default);
-        vm.assume(_callee != _liquidationModuleDefault);
+        vm.assume(_callee != _hookReceiverModuleDefault);
         vm.assume(_callee != _configDataDefault0.collateralShareToken);
         vm.assume(_callee != _configDataDefault0.protectedShareToken);
         vm.assume(_callee != _configDataDefault0.debtShareToken);
@@ -591,25 +801,23 @@ contract SiloConfigTest is Test {
         vm.assume(_callee != _configDataDefault1.protectedShareToken);
         vm.assume(_callee != _configDataDefault1.debtShareToken);
 
-        uint256 anyAction = 0;
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
+        _siloConfig.turnOnReentrancyProtection();
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBeforePermissions
     */
     function test_crossNonReentrantBeforePermissions() public {
-        uint256 anyAction = 0;
         // Permissions check error
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
+        _siloConfig.turnOnReentrancyProtection();
 
         // _onlySiloOrTokenOrLiquidation permissions check (calls should not revert)
         _callNonReentrantBeforeAndAfter(_silo0Default);
         _callNonReentrantBeforeAndAfter(_silo1Default);
-        _callNonReentrantBeforeAndAfter(_liquidationModuleDefault);
+        _callNonReentrantBeforeAndAfter(_hookReceiverModuleDefault);
         _callNonReentrantBeforeAndAfter(_configDataDefault0.collateralShareToken);
         _callNonReentrantBeforeAndAfter(_configDataDefault0.protectedShareToken);
         _callNonReentrantBeforeAndAfter(_configDataDefault0.debtShareToken);
@@ -625,7 +833,7 @@ contract SiloConfigTest is Test {
     function test_crossNonReentrantAfter_error_fuzz(address _callee) public {
         vm.assume(_callee != _silo0Default);
         vm.assume(_callee != _silo1Default);
-        vm.assume(_callee != _liquidationModuleDefault);
+        vm.assume(_callee != _hookReceiverModuleDefault);
         vm.assume(_callee != _configDataDefault0.collateralShareToken);
         vm.assume(_callee != _configDataDefault0.protectedShareToken);
         vm.assume(_callee != _configDataDefault0.debtShareToken);
@@ -635,8 +843,8 @@ contract SiloConfigTest is Test {
 
         // Permissions check error
         vm.prank(_callee);
-        vm.expectRevert(ISiloConfig.OnlySiloOrLiquidationModule.selector);
-        _siloConfig.crossNonReentrantAfter();
+        vm.expectRevert(ISiloConfig.OnlySiloOrTokenOrHookReceiver.selector);
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     /*
@@ -647,7 +855,7 @@ contract SiloConfigTest is Test {
         // (calls should not revert)
         _callNonReentrantBeforeAndAfterPermissions(_silo0Default);
         _callNonReentrantBeforeAndAfterPermissions(_silo1Default);
-        _callNonReentrantBeforeAndAfterPermissions(_liquidationModuleDefault);
+        _callNonReentrantBeforeAndAfterPermissions(_hookReceiverModuleDefault);
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.collateralShareToken);
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.protectedShareToken);
         _callNonReentrantBeforeAndAfterPermissions(_configDataDefault0.debtShareToken);
@@ -657,102 +865,146 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigWrongSilo
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo
     */
-    function test_accrueInterestAndGetConfigWrongSilo() public {
-        _mockWrongSiloAccrueInterest();
+    function test_hasDebtInOtherSilo() public {
+        address user = makeAddr("user");
 
-        vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.accrueInterestAndGetConfig(_wrongSilo, 0);
+        // Create a debt in the silo1
+        _mockShareTokensBlances(user, 0, 1);
+
+        bool hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertTrue(hasDebt, "user has debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        // Create a debt in the silo0
+        _mockShareTokensBlances(user, 1, 0);
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertTrue(hasDebt, "user has debt in other silo");
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigConfigs
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo
     */
-    function test_accrueInterestAndGetConfigConfigs() public {
-        ISiloConfig.ConfigData memory configData0 = _siloConfig.accrueInterestAndGetConfig(_silo0Default, 0);
-        assertEq(configData0.silo, _silo0Default);
+    function test_getDebtSilo() public {
+        address user = makeAddr("user");
+
+        // Create a debt in the silo0
+        _mockShareTokensBlances(user, 1, 0);
+
+        address debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(_silo0Default), "debt silo should be silo0");
+
+        // Create a debt in the silo1
+        _mockShareTokensBlances(user, 0, 1);
+
+        debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(_silo1Default), "debt silo should be silo1");
+
+        // Debt in two silo should not be possible.
+        // Create a debt in two silos only for testing
+        _mockShareTokensBlances(user, 1, 1);
+
+        vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
+        _siloConfig.getDebtSilo(user);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo_notDebt
+    */
+    function test_getDebtSilo_notDebt() public {
+        address user = makeAddr("user");
+
+        // no debt
+        _mockShareTokensBlances(user, 0, 0);
+
+        address debtSilo = _siloConfig.getDebtSilo(user);
+        assertEq(debtSilo, address(0), "user has no debt");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_noDebt
+    */
+    function test_hasDebtInOtherSilo_noDebt() public {
+        address user = makeAddr("user");
+
+        // no debt
+        _mockShareTokensBlances(user, 0, 0);
+
+        bool hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo0Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+
+        hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
+        assertFalse(hasDebt, "user has no debt in other silo");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_siloID_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 3
+    function test_siloID_fuzz(
+        uint256 _siloId,
+        ISiloConfig.ConfigData memory _configData0,
+        ISiloConfig.ConfigData memory _configData1
+    ) public {
+        SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
+        assertEq(siloConfig.SILO_ID(), _siloId);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_turnOnReentrancyProtection_revertCrossReentrantCall
+    */
+    function test_turnOnReentrancyProtection_revertCrossReentrantCall() public {
+        vm.prank(_silo0Default);
+        _siloConfig.turnOnReentrancyProtection();
 
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
-
-        ISiloConfig.ConfigData memory configData1 = _siloConfig.accrueInterestAndGetConfig(_silo1Default, 0);
-        assertEq(configData1.silo, _silo1Default);
-
-        vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        _siloConfig.turnOnReentrancyProtection();
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigOptimisedWrongSilo
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_turnOffReentrancyProtection_revertCrossReentrancyNotActive
     */
-    function test_accrueInterestAndGetConfigOptimisedWrongSilo() public {
-        uint256 anyAction = 0;
-        _mockWrongSiloAccrueInterest();
-
-        vm.prank(_wrongSilo);
-        vm.expectRevert(ISiloConfig.WrongSilo.selector);
-        _siloConfig.accrueInterestAndGetConfigOptimised(anyAction, ISilo.CollateralType.Collateral);
+    function test_turnOffReentrancyProtection_revertCrossReentrancyNotActive() public {
+        vm.prank(_silo0Default);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrancyNotActive.selector);
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigOptimisedCollateral
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_reentrancyGuardEntered
     */
-    function test_accrueInterestAndGetConfigOptimisedCollateral() public {
-        uint256 anyAction = 0;
-        
-        _accrueInterestAndGetConfigOptimisedTest(
-            anyAction,
-            _configDataDefault0.collateralShareToken,
-            _configDataDefault1.collateralShareToken,
-            ISilo.CollateralType.Collateral
-        );
-    }
+    function test_reentrancyGuardEntered() public {
+        assertFalse(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return false");
 
-    /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigOptimisedProtected
-    */
-    function test_accrueInterestAndGetConfigOptimisedProtected() public {
-        uint256 anyAction = 0;
+        vm.prank(_silo0Default);
+        _siloConfig.turnOnReentrancyProtection();
+        assertTrue(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return true");
 
-        _accrueInterestAndGetConfigOptimisedTest(
-            anyAction,
-            _configDataDefault0.protectedShareToken,
-            _configDataDefault1.protectedShareToken,
-            ISilo.CollateralType.Protected
-        );
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_accrueInterestAndGetConfigOptimisedRepay
-    */
-    function test_accrueInterestAndGetConfigOptimisedRepay() public {
-        uint256 repayAction = Hook.REPAY;
-
-        _accrueInterestAndGetConfigOptimisedTest(
-            repayAction,
-            _configDataDefault0.debtShareToken,
-            _configDataDefault1.debtShareToken,
-            ISilo.CollateralType(0) // type not necessary
-        );
+        vm.prank(_silo0Default);
+        _siloConfig.turnOffReentrancyProtection();
+        assertFalse(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return false");
     }
 
     function _callNonReentrantBeforeAndAfter(address _callee) internal {
-        uint256 anyAction = 0;
-
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        _siloConfig.turnOnReentrancyProtection();
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     function _callNonReentrantBeforeAndAfterPermissions(address _callee) internal {
-        uint256 anyAction = 0;
-
         vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantBefore(anyAction);
+        _siloConfig.turnOnReentrancyProtection();
         vm.prank(_callee);
-        _siloConfig.crossNonReentrantAfter();
+        _siloConfig.turnOffReentrancyProtection();
     }
 
     function _mockWrongSiloAccrueInterest() internal {
@@ -765,41 +1017,17 @@ contract SiloConfigTest is Test {
         vm.expectCall(_wrongSilo, data);
     }
 
-    function _accrueInterestAndGetConfigOptimisedTest(
-        uint256 _action,
-        address _expectedShareToken0,
-        address _expectedShareToken1,
-        ISilo.CollateralType _collateralType
-    ) internal {
-        address shareToken;
-        address asset;
-        address hookReceiver;
-        address liquidationModule;
+    function _mockShareTokensBlances(address _user, uint256 _balance0, uint256 _balance1) internal {
+        vm.mockCall(
+            _configDataDefault0.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, _user),
+            abi.encode(_balance0)
+        );
 
-        vm.prank(_silo0Default);
-
-        (shareToken, asset, hookReceiver, liquidationModule) =
-            _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
-
-        vm.prank(_silo0Default);
-        _siloConfig.crossNonReentrantAfter();
-
-        assertEq(shareToken, _expectedShareToken0);
-        assertEq(asset, _configDataDefault0.token);
-        assertEq(hookReceiver, _configDataDefault0.hookReceiver);
-        assertEq(liquidationModule, _liquidationModuleDefault);
-
-        vm.prank(_silo1Default);
-
-        (shareToken, asset, hookReceiver, liquidationModule) =
-            _siloConfig.accrueInterestAndGetConfigOptimised(_action, _collateralType);
-
-        assertEq(shareToken, _expectedShareToken1);
-        assertEq(asset, _configDataDefault1.token);
-        assertEq(hookReceiver, _configDataDefault1.hookReceiver);
-        assertEq(liquidationModule, _liquidationModuleDefault);
-
-        vm.prank(_silo1Default);
-        _siloConfig.crossNonReentrantAfter();
+        vm.mockCall(
+            _configDataDefault1.debtShareToken,
+            abi.encodeCall(IERC20.balanceOf, _user),
+            abi.encode(_balance1)
+        );
     }
 }

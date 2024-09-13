@@ -24,6 +24,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = true;
     uint256 constant DUST_LEFT = 4;
+    uint256 constant LIQUIDATION_ROUNDING_ERROR = 5;
 
     ISiloConfig siloConfig;
 
@@ -36,12 +37,19 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         _printState("initial state");
 
         // we cresting debt on silo0, because lt there is 85 and in silo0 95, so it is easier to test because of dust
-        _depositCollateral(COLLATERAL, BORROWER, !SAME_TOKEN);
-        _printState("after deposit collateral");
+        vm.prank(BORROWER);
+        token0.mint(BORROWER, COLLATERAL);
 
         vm.prank(BORROWER);
-        silo0.borrow(DEBT, BORROWER, BORROWER, SAME_TOKEN);
-        _printState("after borrow");
+        token0.approve(address(silo0), COLLATERAL);
+
+        vm.prank(BORROWER);
+        silo0.leverageSameAsset(
+            COLLATERAL,
+            DEBT,
+            BORROWER,
+            ISilo.CollateralType.Collateral
+        );
 
         uint256 timeForward = 120 days;
         vm.warp(block.timestamp + timeForward);
@@ -49,17 +57,13 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(silo0.getLiquidity(), 0, "with bad debt and no depositors, no liquidity");
         _printState("after time forward");
 
-        (
-            , uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         token0.mint(address(this), debtToRepay);
-        token0.approve(address(silo0), debtToRepay);
+        token0.approve(address(partialLiquidation), debtToRepay);
         bool receiveSToken;
 
-        partialLiquidation.liquidationCall(
-            address(silo0), address(token0), address(token0), BORROWER, debtToRepay, receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToRepay, receiveSToken);
         _printState("after liquidation");
 
         assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
@@ -70,14 +74,30 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo0));
 
         assertEq(IShareToken(configData.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
-        assertEq(IShareToken(configData.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
+        // We have 1 wei leftover because of the rounding policy.
+        // We round down when converting to shares on liquidation.
         assertEq(IShareToken(configData.protectedShareToken).totalSupply(), 0, "expected protectedShareToken 0");
         assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
 
-        assertEq(token0.balanceOf(address(silo0)), DUST_LEFT, "no balance after withdraw fees (except dust!)");
-        assertEq(silo0.total(AssetTypes.COLLATERAL), DUST_LEFT, "storage AssetType.Collateral");
-        assertEq(silo0.getCollateralAssets(), DUST_LEFT, "total collateral == 4, dust!");
-        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
+        assertEq(
+            token0.balanceOf(address(silo0)),
+            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            "no balance after withdraw fees (except dust!)"
+        );
+
+        assertEq(
+            silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL),
+            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            "storage AssetType.Collateral"
+        );
+
+        assertEq(
+            silo0.getCollateralAssets(),
+            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            "total collateral == 4, dust!"
+        );
+
+        assertEq(silo0.getLiquidity(), DUST_LEFT + LIQUIDATION_ROUNDING_ERROR, "getLiquidity == 4, dust!");
 
         emit log_named_uint("there is no users in silo, but balance is", DUST_LEFT);
     }
@@ -202,23 +222,19 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     function _printState(string memory _title) private {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,,
-        ) = siloConfig.getConfigs(address(silo0), BORROWER, 0 /* always 0 for external calls */);
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
 
         emit log_named_string("================ ", _title);
 
         emit log_named_decimal_uint("[silo0] borrower LTV ", silo0.getLtv(BORROWER), 16);
         emit log_named_decimal_uint("[silo0] borrower collateral shares ", IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER), 18);
         emit log_named_decimal_uint("[silo0] borrower debt (max repay)", silo0.maxRepay(BORROWER), 18);
-        emit log_named_decimal_uint("[silo0] collateral assets RAW (storage)", silo0.total(AssetTypes.COLLATERAL), 18);
+        emit log_named_decimal_uint("[silo0] collateral assets RAW (storage)", silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL), 18);
         emit log_named_decimal_uint("[silo0] collateral assets with interest", silo0.getCollateralAssets(), 18);
         emit log_named_decimal_uint("[silo0] liquidity", silo0.getLiquidity(), 18);
         emit log_named_decimal_uint("[silo0] balanceOf(silo)", token0.balanceOf(address(silo0)), 18);
 
-        (
-            uint256 collateralToWithdraw, uint256 debtToRepay
-        ) = partialLiquidation.maxLiquidation(address(silo0), BORROWER);
+        (uint256 collateralToWithdraw, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         if (debtToRepay != 0) {
             emit log_named_decimal_uint("[silo0] liquidation possible, collateralToWithdraw", collateralToWithdraw, 18);

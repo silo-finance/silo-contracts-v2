@@ -19,7 +19,7 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
 
         vm.startPrank(BORROWER);
         silo0.deposit(ASSETS * 10, BORROWER);
-        silo1.borrow(ASSETS, BORROWER, BORROWER, false /* sameAsset */);
+        silo1.borrow(ASSETS, BORROWER, BORROWER);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
@@ -32,7 +32,7 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.CollateralType.Collateral)),
             "Withdraw partial with accrue interest",
-            177426
+            182115
         );
     }
 }

@@ -4,11 +4,8 @@ pragma solidity >=0.5.0;
 import {ISilo} from "./ISilo.sol";
 
 interface ISiloLens {
-    /// @notice Checks if borrowing is possible for a given borrower
-    /// @param _silo Address of the silo
-    /// @param _borrower Address of the borrower to check for borrowing possibility
-    /// @return True if borrowing is possible for the borrower, otherwise false
-    function borrowPossible(ISilo _silo, address _borrower) external view returns (bool);
+    /// @return liquidity based on contract state (without interest, fees)
+    function getRawLiquidity(ISilo _silo) external view returns (uint256 liquidity);
 
     /// @notice Retrieves the maximum loan-to-value (LTV) ratio
     /// @param _silo Address of the silo

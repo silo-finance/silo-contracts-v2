@@ -6,13 +6,11 @@ import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC462
 import {IERC3156FlashLender} from "./IERC3156FlashLender.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 import {ISiloFactory} from "./ISiloFactory.sol";
-import {ILeverageBorrower} from "./ILeverageBorrower.sol";
-import {ILiquidationProcess} from "./ILiquidationProcess.sol";
 
 import {IHookReceiver} from "./IHookReceiver.sol";
 
 // solhint-disable ordering
-interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
+interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
     ///      outdate. Some calculations require accrued interest to return current state of Silo. This struct is used
     ///      to make a decision inside functions if interest should be accrued in memory to work on updated values.
@@ -80,35 +78,26 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint256 shares;
         address receiver;
         address borrower;
-        bool sameAsset;
-        bool leverage;
     }
 
-    struct SharedStorage {
-        ISiloConfig siloConfig;
-        uint24 hooksBefore;
-        uint24 hooksAfter;
-        IHookReceiver hookReceiver;
+    /// @param depositAssets Amount of assets the user wishes to deposit.
+    /// @param borrowAssets Amount of assets the user wishes to borrow.
+    /// @param borrower Address of the borrower
+    /// @param collateralType Type of the asset being deposited (Collateral or Protected)
+    struct LeverageSameAssetArgs {
+        uint256 depositAssets;
+        uint256 borrowAssets;
+        address borrower;
+        ISilo.CollateralType collateralType;
     }
 
-    /// @dev this struct is used for all types of assets: collateral, protected and debt
-    /// @param assets based on type:
-    /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
-    /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
-    /// - COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
-    /// It also includes token amount that has been borrowed.
-    /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
-    struct Assets {
-        uint256 assets;
-    }
-
-    /// @dev Storage struct that holds all required data for a single token market
-    /// @param daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
-    /// @param interestRateTimestamp timestamp of the last interest accrual
-    /// @param assets map of assets
-    struct SiloData {
-        uint192 daoAndDeployerFees;
-        uint64 interestRateTimestamp;
+    /// @param shares Amount of shares the user wishes to transit.
+    /// @param owner owner of the shares after transition.
+    /// @param transitionFrom type of collateral that will be transitioned.
+    struct TransitionCollateralArgs {
+        uint256 shares;
+        address owner;
+        ISilo.CollateralType transitionFrom;
     }
 
     struct UtilizationData {
@@ -119,6 +108,26 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
         uint256 debtAssets;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
+    }
+
+    struct SiloStorage {
+        /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
+        /// but not yet withdrawn
+        uint192 daoAndDeployerRevenue;
+        /// @dev timestamp of the last interest accrual
+        uint64 interestRateTimestamp;
+
+        /// @dev silo is just for one asset,
+        /// but this one asset can be of three types: mapping key is uint256(AssetType), so we store `assets` by type.
+        /// Assets based on type:
+        /// - PROTECTED COLLATERAL: Amount of asset token that has been deposited to Silo that can be ONLY used
+        /// as collateral. These deposits do NOT earn interest and CANNOT be borrowed.
+        /// - COLLATERAL: Amount of asset token that has been deposited to Silo plus interest earned by depositors.
+        /// It also includes token amount that has been borrowed.
+        /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
+        /// `totalAssets` can have outdated value (without interest), if you doing view call (of off-chain call)
+        /// please use getters eg `getCollateralAssets()` to fetch value that includes interest.
+        mapping(uint256 assetType => uint256 assets) totalAssets;
     }
 
     /// @notice Emitted on protected deposit
@@ -156,7 +165,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     /// @notice emitted only when collateral has been switched to other one
-    event CollateralTypeChanged(address indexed borrower, bool sameAseet);
+    event CollateralTypeChanged(address indexed borrower);
 
     event HooksUpdated(uint24 hooksBefore, uint24 hooksAfter);
 
@@ -171,13 +180,11 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error BorrowNotPossible();
     error WrongToken();
     error EarnedZero();
-    error NothingToPay();
     error FlashloanFailed();
     error LeverageFailed();
     error AboveMaxLtv();
     error ZeroAssets();
     error ZeroShares();
-    error OnlyLiquidationModule();
     error Insolvency();
     error ThereIsDebtInOtherSilo();
     error NoDebt();
@@ -185,9 +192,10 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     error LeverageTooHigh();
     error SiloInitialized();
     error OnlyHookReceiver();
-    error OnlySiloConfig();
     error NoLiquidity();
     error InputCanBeAssetsOrShares();
+    error CollateralSiloAlreadySet();
+    error RepayTooHigh();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
@@ -201,22 +209,11 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
 
     /// @notice Initialize Silo
     /// @param _siloConfig address of ISiloConfig with full config for this Silo
-    /// @param _modelConfigAddress address of a config contract used by IRM
-    function initialize(ISiloConfig _siloConfig, address _modelConfigAddress) external;
+    function initialize(ISiloConfig _siloConfig) external;
 
     /// @notice Update hooks configuration for Silo
     /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external;
-
-    function sharedStorage()
-        external
-        view
-        returns (
-            ISiloConfig siloConfig,
-            uint24 hooksBefore,
-            uint24 hooksAfter,
-            IHookReceiver hookReceiver
-        );
 
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
@@ -225,11 +222,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @return siloFactory The associated factory of the silo
     function factory() external view returns (ISiloFactory siloFactory);
 
-    /// @notice Fetches the data related to the silo
-    /// @return daoAndDeployerFees Current amount of fees accrued by DAO and Deployer
-    /// @return interestRateTimestamp Timestamp of the last interest accrual
-    function siloData() external view returns (uint192 daoAndDeployerFees, uint64 interestRateTimestamp);
-
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
 
@@ -237,15 +229,26 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @return liquidity The amount of liquidity
     function getLiquidity() external view returns (uint256 liquidity);
 
-    function getRawLiquidity() external view returns (uint256 liquidity);
-
     /// @notice Determines if a borrower is solvent
     /// @param _borrower Address of the borrower to check for solvency
     /// @return True if the borrower is solvent, otherwise false
     function isSolvent(address _borrower) external view returns (bool);
 
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    function total(uint256 _assetType) external view returns (uint256);
+    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256);
+
+    /// @notice Direct storage access to silo storage
+    /// @dev See struct `SiloStorage` for more details
+    function getSiloStorage()
+        external
+        view
+        returns (
+            uint192 daoAndDeployerRevenue,
+            uint64 interestRateTimestamp,
+            uint256 protectedAssets,
+            uint256 collateralAssets,
+            uint256 debtAssets
+        );
 
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
@@ -258,7 +261,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Retrieves the total amounts of collateral and protected (non-borrowable) assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalProtectedAssets The total amount of protected (non-borrowable) assets
-    function getCollateralAndProtectedAssets()
+    function getCollateralAndProtectedTotalsStorage()
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
@@ -266,7 +269,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @notice Retrieves the total amounts of collateral and debt assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
-    function getCollateralAndDebtAssets()
+    function getCollateralAndDebtTotalsStorage()
         external
         view
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
@@ -336,20 +339,29 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// leaving the protocol
     /// @param _shares Amount of shares to be transitioned
     /// @param _owner Owner of the assets being transitioned
-    /// @param _withdrawType Specifies if the transition is from collateral or protected assets
+    /// @param _transitionFrom Specifies if the transition is from collateral or protected assets
     /// @return assets Amount of assets transitioned
-    function transitionCollateral(uint256 _shares, address _owner, CollateralType _withdrawType)
+    function transitionCollateral(uint256 _shares, address _owner, CollateralType _transitionFrom)
         external
         returns (uint256 assets);
-
-    function switchCollateralTo(bool _sameToken) external;
+    
+    /// @notice Switches the collateral silo to this silo
+    /// @dev Revert if the collateral silo is already set
+    function switchCollateralToThisSilo() external;
 
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower
     /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
     /// That means, in some cases when you borrow maxAssets, you will be able to borrow again eg. up to 2wei
     /// Reason for underestimation is to return value that will not cause borrow revert
-    function maxBorrow(address _borrower, bool _sameAsset) external view returns (uint256 maxAssets);
+    function maxBorrow(address _borrower) external view returns (uint256 maxAssets);
+
+    /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
+    /// @param _borrower Address of the potential borrower
+    /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
+    /// That means, in some cases when you borrow maxAssets, you will be able to borrow again eg. up to 2wei
+    /// Reason for underestimation is to return value that will not cause borrow revert
+    function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets);
 
     /// @notice Previews the amount of shares equivalent to the given asset amount for borrowing
     /// @param _assets Amount of assets to preview the equivalent shares for
@@ -373,15 +385,22 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _assets Amount of assets to borrow
     /// @param _receiver Address receiving the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
-    /// @param _sameAsset TRUE if user wants to borrow and collateralize the same asset. FALSE otherwise.
     /// @return shares Amount of shares equivalent to the borrowed assets
-    function borrow(uint256 _assets, address _receiver, address _borrower, bool _sameAsset)
+    function borrow(uint256 _assets, address _receiver, address _borrower)
+        external returns (uint256 shares);
+
+    /// @notice Allows an address to borrow a specified amount of assets
+    /// @param _assets Amount of assets to borrow
+    /// @param _receiver Address receiving the borrowed assets
+    /// @param _borrower Address responsible for the borrowed assets
+    /// @return shares Amount of shares equivalent to the borrowed assets
+    function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
         external returns (uint256 shares);
 
     /// @notice Calculates the maximum amount of shares that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower
     /// @return maxShares Maximum number of shares that the borrower can borrow
-    function maxBorrowShares(address _borrower, bool _sameAsset) external view returns (uint256 maxShares);
+    function maxBorrowShares(address _borrower) external view returns (uint256 maxShares);
 
     /// @notice Previews the amount of assets equivalent to the given share amount for borrowing
     /// @param _shares Amount of shares to preview the equivalent assets for
@@ -393,7 +412,7 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _receiver Address to receive the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
     /// @return assets Amount of assets borrowed
-    function borrowShares(uint256 _shares, address _receiver, address _borrower, bool _sameAsset)
+    function borrowShares(uint256 _shares, address _receiver, address _borrower)
         external
         returns (uint256 assets);
 
@@ -428,24 +447,6 @@ interface ISilo is IERC4626, IERC3156FlashLender, ILiquidationProcess {
     /// @param _borrower The address of the borrower for whom to repay the loan
     /// @return assets The equivalent assets amount for the provided shares
     function repayShares(uint256 _shares, address _borrower) external returns (uint256 assets);
-
-    /// @notice Allows a user to leverage their assets to borrow more, given the collateralization ratio constraints
-    /// @dev This function's design follows the flash loan pattern and assumes that the user will deposit the proper
-    /// amount of collateral by the end of the transaction
-    /// @param _assets The number of assets the borrower wants to borrow
-    /// @param _receiver The borrower contract that will receive the borrowed assets
-    /// @param _borrower The address of the borrower leveraging the assets
-    /// @param _data Arbitrary bytes data that might be needed for additional logic in the `_receiver` callback
-    /// @return shares The number of shares representing the leveraged borrowed amount
-    function leverage(
-        uint256 _assets,
-        ILeverageBorrower _receiver,
-        address _borrower,
-        bool _sameAsset,
-        bytes calldata _data
-    )
-        external
-        returns (uint256 shares);
 
     /// @notice Accrues interest for the asset and returns the accrued interest amount
     /// @return accruedInterest The total interest accrued during this operation

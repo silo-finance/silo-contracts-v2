@@ -16,8 +16,8 @@ pragma solidity 0.8.24;
 
 import {IVeDelegation} from "@balancer-labs/v2-interfaces/contracts/liquidity-mining/IVeDelegation.sol";
 
-import {IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 contract VotingEscrowDelegationProxy is Ownable2Step {
     IERC20 private immutable _votingEscrow;
@@ -28,7 +28,7 @@ contract VotingEscrowDelegationProxy is Ownable2Step {
     constructor(
         IERC20 votingEscrow,
         IVeDelegation delegation
-    ) {
+    ) Ownable(msg.sender) {
         _votingEscrow = votingEscrow;
         _delegation = delegation;
     }

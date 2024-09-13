@@ -19,34 +19,30 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
-    function _setUp(bool _sameAsset) private {
+    function _setUp() private {
         siloConfig = _setUpLocalFixture();
 
         // we need to have something to borrow
         _depositForBorrow(0.5e18, address(1));
 
-        _depositCollateral(2e18, address(this), _sameAsset, ISilo.CollateralType.Collateral);
-        _depositCollateral(1e18, address(this), _sameAsset, ISilo.CollateralType.Protected);
+        _deposit(2e18, address(this), ISilo.CollateralType.Collateral);
+        _deposit(1e18, address(this), ISilo.CollateralType.Protected);
 
-        _borrow(0.1e18, address(this), _sameAsset);
+        _borrow(0.1e18, address(this));
     }
 
     /*
     forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_
     */
     function test_withdraw_all_possible_Collateral_1token() public {
-        _withdraw_all_possible_Collateral(SAME_ASSET);
+        _withdraw_all_possible_Collateral();
     }
 
-    function test_withdraw_all_possible_Collateral_2tokens() public {
-        _withdraw_all_possible_Collateral(TWO_ASSETS);
-    }
-
-    function _withdraw_all_possible_Collateral(bool _sameAsset) private {
-        _setUp(_sameAsset);
+    function _withdraw_all_possible_Collateral() private {
+        _setUp();
         address borrower = address(this);
 
-        ISilo collateralSilo = _sameAsset ? silo1 : silo0;
+        ISilo collateralSilo = silo0;
 
         (
             address protectedShareToken, address collateralShareToken,
@@ -64,9 +60,9 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
         // you can withdraw more because interest are smaller
-        uint256 expectedProtectedWithdraw = _sameAsset ? 894736842105263156 : 882352941176470587;
+        uint256 expectedProtectedWithdraw = 882352941176470587;
         uint256 expectedCollateralLeft = 1e18 - expectedProtectedWithdraw;
-        assertLe(0.1e18 * 1e18 / expectedCollateralLeft, _sameAsset ? 0.95e18 : 0.85e18, "LTV holds");
+        assertLe(0.1e18 * 1e18 / expectedCollateralLeft, 0.85e18, "LTV holds");
 
         assertTrue(collateralSilo.isSolvent(address(this)), "must stay solvent");
 
@@ -83,7 +79,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         assertLe(
             collateralSilo.getCollateralAssets(),
-            1 + (_sameAsset ? 0.5e18 : 0), // there is additional collateral
+            1,
             "#1 CollateralAssets should be withdrawn (if we withdraw based on max assets, we can underestimate by 1)"
         );
 
@@ -113,7 +109,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         assertLe(
             collateralSilo.getCollateralAssets(),
-            1 + (_sameAsset ? 0.5e18 : 0), // there is additional collateral
+            1,
             "#2 CollateralAssets should be withdrawn (if we withdraw based on max assets, we can underestimate by 1)"
         );
 

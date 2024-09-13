@@ -2,7 +2,6 @@
 pragma solidity 0.8.24;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
-import {ERC20 as ERC20WithoutMint, IERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {Client} from "chainlink-ccip/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 
 import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol";
@@ -19,19 +18,13 @@ import {ILiquidityGaugeFactory} from "ve-silo/contracts/gauges/interfaces/ILiqui
 import {ISiloMock as ISilo} from "ve-silo/test/_mocks/ISiloMock.sol";
 import {IVotingEscrowChildChain} from "ve-silo/contracts/voting-escrow/interfaces/IVotingEscrowChildChain.sol";
 import {VotingEscrowChildChainTest} from "ve-silo/test/voting-escrow/VotingEscrowChildChain.unit.t.sol";
+import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
 import {
     ISiloFactoryWithFeeDetails as ISiloFactory
 } from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
 // solhint-disable max-states-count
-
-contract ERC20 is ERC20WithoutMint {
-    constructor(string memory name, string memory symbol) ERC20WithoutMint(name, symbol) {}
-    function mint(address _account, uint256 _amount) external {
-        _mint(_account, _amount);
-    }
-}
 
 // FOUNDRY_PROFILE=ve-silo-test forge test --mc L2Test --ffi -vvv
 contract L2Test is IntegrationTest {
@@ -94,8 +87,8 @@ contract L2Test is IntegrationTest {
         _votingEscrowChildTest = new VotingEscrowChildChainTest();
     }
 
-    function testIt() public {
-        _mockCalls();
+    function testChildChainIntegration() public {
+        _mockSiloCoreCalls(); // mock silo core calls as it is not deployed
 
         // create gauges
         ISiloChildChainGauge gauge = _createGauge();
@@ -110,31 +103,39 @@ contract L2Test is IntegrationTest {
         // transfer incentives (SILO token)
         _transferIncentives(gauge);
 
-        // Expect to transfer all incentives to the `_l2PseudoMinter` during the user checkpoint
-        gauge.user_checkpoint(_bob);
+        // user checkpoint and inflation rate
+        _userCheckpointAndInflationRate(gauge);
 
         uint256 integrateCheckpointBob = gauge.integrate_checkpoint_of(_bob);
         assertTrue(integrateCheckpointBob != 0, "User is not check pointed");
 
         _verifyClaimable(ISiloChildChainGauge(gauge));
 
-        uint256 pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
-        assertEq(pseudoMinterBalance, _INCENTIVES_AMOUNT, "Invalid `_l2PseudoMinter` balance");
-
-        vm.warp(block.timestamp + 10 days);
-
-        vm.prank(_bob);
-        _l2PseudoMinter.mint(address(gauge));
-
-        uint256 userBalance = _siloToken.balanceOf(_bob);
-        assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
+        _mintIncentives(gauge);
 
         _verifyMintedStats(gauge);
 
         _rewardwsFees(gauge);
     }
 
-    function _verifyMintedStats(ISiloChildChainGauge _gauge) internal {
+    function _mintIncentives(ISiloChildChainGauge _gauge) internal {
+        uint256 pseudoMinterBalance = _siloToken.balanceOf(address(_l2PseudoMinter));
+        assertEq(pseudoMinterBalance, _INCENTIVES_AMOUNT, "Invalid `_l2PseudoMinter` balance");
+
+        vm.warp(block.timestamp + 10 days);
+
+        vm.prank(_bob);
+        _l2PseudoMinter.mint(address(_gauge));
+
+        uint256 userBalance = _siloToken.balanceOf(_bob);
+        assertEq(userBalance, _EXPECTED_USER_BAL, "Expect user to receive incentives");
+
+        uint256 claimableTotal = _gauge.claimable_tokens(_bob);
+
+        assertEq(claimableTotal, 0, "Expect to have an empty claimable balance");
+    }
+
+    function _verifyMintedStats(ISiloChildChainGauge _gauge) internal view {
         uint256 totalMinted = _l2PseudoMinter.minted(_bob, address(_gauge));
         uint256 expectedMinted = totalMinted - (totalMinted * 10 / 100 + totalMinted * 20 / 100);
         uint256 mintedToUser = _l2PseudoMinter.mintedToUser(_bob, address(_gauge));
@@ -197,6 +198,10 @@ contract L2Test is IntegrationTest {
         claimableTotal = _gauge.claimable_tokens(_bob);
         (claimableTokens, feeDao, feeDeployer) = _gauge.claimable_tokens_with_fees(_bob);
 
+        assertNotEq(feeDao, 0, "DAO fee is zero");
+        assertNotEq(feeDeployer, 0, "Deployer fee is zero");
+        assertNotEq(claimableTokens, 0, "Claimable tokens are zero");
+
         assertTrue(claimableTotal == (claimableTokens + feeDao + feeDeployer));
 
         uint256 expectedFeeDao = claimableTotal * 10 / 100;
@@ -208,7 +213,27 @@ contract L2Test is IntegrationTest {
         assertEq(expectedToReceive, claimableTokens, "Wrong number of the user tokens");
     }
 
-    function _mockCalls() internal {
+    function _userCheckpointAndInflationRate(ISiloChildChainGauge _gauge) internal {
+        // inflation retes before the user checkpoint
+        uint256 currentWeek = block.timestamp / 1 weeks;
+        uint256 inflationRateBefore = _gauge.inflation_rate(currentWeek);
+
+        uint256 siloAmountPerWeek = _siloToken.balanceOf(address(_gauge));
+
+        // Expect to transfer all incentives to the `_l2PseudoMinter` during the user checkpoint
+        _gauge.user_checkpoint(_bob);
+
+        uint256 currentWeekTimestamp = currentWeek * 1 weeks;
+        uint256 nextWeekTimestamp = currentWeekTimestamp + 1 weeks;
+
+        uint256 expectedInflationRage = inflationRateBefore + siloAmountPerWeek / (nextWeekTimestamp - block.timestamp);
+
+        uint256 inflationRateAfter = _gauge.inflation_rate(currentWeek);
+
+        assertEq(inflationRateAfter, expectedInflationRage, "Inflation rate is not correct");
+    }
+
+    function _mockSiloCoreCalls() internal {
         vm.mockCall(
             _shareToken,
             abi.encodeWithSelector(IShareToken.balanceOf.selector, _bob),

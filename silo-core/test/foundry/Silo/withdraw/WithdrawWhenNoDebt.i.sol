@@ -7,6 +7,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
@@ -14,7 +15,8 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
-import {SiloFixture, SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -25,10 +27,6 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, makeAddr("Timelock"));
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, makeAddr("FeeDistributor"));
-
         token0 = new MintableToken(18);
         token1 = new MintableToken(18);
 
@@ -37,17 +35,17 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         // Hook receiver config doesn't matter for this test
         hookReceiverMock.hookReceiverConfigMock(0, 0);
 
-        address hookReceiverAddr = hookReceiverMock.ADDRESS();
-
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
-        overrides.hookReceiver = hookReceiverAddr;
+        overrides.hookReceiver = hookReceiverMock.ADDRESS();
         overrides.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
-        SiloFixture siloFixture = new SiloFixture();
+        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
 
-        (siloConfig, silo0, silo1,,, partialLiquidation) = siloFixture.deploy_local(overrides);
+        address hook;
+        (siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        partialLiquidation = IPartialLiquidation(hook);
     }
 
     /*
@@ -93,7 +91,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 2e18, "collateral burned");
         assertEq(gotShares, sharesBefore, "withdraw all shares");
 
-        assertEq(silo0.total(AssetTypes.PROTECTED), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), 0, "protected Assets should be withdrawn");
     }
 
     /*
@@ -126,7 +124,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
 
         _userWithdrawing();
 
-        assertEq(silo0.total(AssetTypes.PROTECTED), 11e18 + 1, "protected Assets should be withdrawn");
+        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), 11e18 + 1, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 22e18 + 1, "protected Assets should be withdrawn");
     }
 
@@ -159,7 +157,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Protected);
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Collateral);
 
-        assertEq(silo0.total(AssetTypes.PROTECTED), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), 0, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 0, "protected Assets should be withdrawn");
     }
 

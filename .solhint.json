@@ -10,6 +10,7 @@
     "no-empty-blocks": "off",
     "comprehensive-interface": "off",
     "not-rely-on-time": "off",
+    "var-name-mixedcase": "off",
     "reason-string": [
       "warn",
       {

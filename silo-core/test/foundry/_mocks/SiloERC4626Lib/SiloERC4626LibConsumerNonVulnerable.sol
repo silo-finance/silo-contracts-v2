@@ -5,14 +5,13 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
 contract SiloERC4626LibConsumerNonVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
-    mapping(uint256 assetType => ISilo.Assets) internal _total;
-
     constructor() {
-        _total[AssetTypes.COLLATERAL].assets = INITIAL_TOTAL;
+        SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL] = INITIAL_TOTAL;
     }
 
     function deposit(
@@ -30,11 +29,11 @@ contract SiloERC4626LibConsumerNonVulnerable {
             _shares,
             _receiver,
             _collateralShareToken,
-            _total[AssetTypes.COLLATERAL]
+            ISilo.CollateralType.Collateral
         );
     }
 
     function getTotalCollateral() public view returns (uint256) {
-        return _total[AssetTypes.COLLATERAL].assets;
+        return SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.COLLATERAL];
     }
 }

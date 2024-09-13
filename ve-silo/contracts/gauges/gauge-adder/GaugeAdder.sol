@@ -16,8 +16,8 @@ pragma solidity 0.8.24;
 
 import {IGaugeAdder, ILiquidityGaugeFactory, IGaugeController} from "../interfaces/IGaugeAdder.sol";
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 // solhint-disable ordering
 
@@ -34,7 +34,7 @@ contract GaugeAdder is IGaugeAdder, Ownable2Step, ReentrancyGuard {
     // Mapping from gauge type to address of approved factory for that type
     mapping(string => ILiquidityGaugeFactory) private _gaugeTypeFactory;
 
-    constructor(IGaugeController gaugeController)
+    constructor(IGaugeController gaugeController) Ownable(msg.sender)
     {
         _gaugeController = gaugeController;
     }

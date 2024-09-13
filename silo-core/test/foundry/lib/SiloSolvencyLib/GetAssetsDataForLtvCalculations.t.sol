@@ -9,6 +9,7 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {Views} from "silo-core/contracts/lib/Views.sol";
 
 import {GetAssetsDataForLtvCalculationsTestData} from
     "silo-core/test/foundry/data-readers/GetAssetsDataForLtvCalculationsTestData.sol";
@@ -16,20 +17,9 @@ import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloMock} from "silo-core/test/foundry/_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "silo-core/test/foundry/_mocks/InterestRateModelMock.sol";
 
-contract SiloFactoryHelper is SiloFactory {
-    function copyConfig(ISiloConfig.InitData memory _initData)
-        external
-        pure
-        returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
-    {
-        return _copyConfig(_initData);
-    }
-}
-
 // forge test -vv --ffi --mc GetAssetsDataForLtvCalculationsTest
 contract GetAssetsDataForLtvCalculationsTest is Test {
     GetAssetsDataForLtvCalculationsTestData dataReader;
-    SiloFactoryHelper siloFactoryHelper;
 
     address public protectedShareToken = makeAddr("ProtectedShareToken");
     address public collateralShareToken = makeAddr("CollateralShareToken");
@@ -42,7 +32,6 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
     function setUp() public {
         dataReader = new GetAssetsDataForLtvCalculationsTestData();
-        siloFactoryHelper = new SiloFactoryHelper();
     }
 
     function getData(GetAssetsDataForLtvCalculationsTestData.ScenarioData memory scenario)
@@ -68,7 +57,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             initData.solvencyOracle1 = address(uint160(scenario.input.debtConfig.solvencyOracle));
             initData.interestRateModel1 = interestRateModelMock.ADDRESS();
 
-            (collateralConfig, debtConfig) = siloFactoryHelper.copyConfig(initData);
+            (collateralConfig, debtConfig) = Views.copySiloConfig(initData);
         }
 
         collateralConfig.protectedShareToken = protectedShareToken;
