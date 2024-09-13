@@ -12,15 +12,19 @@ library CloneDeterministic {
     /// @dev Deterministic salt for Silo0
     bytes32 private constant _SILO_0 = keccak256("create2.salt.Silo0");
     /// @dev Deterministic salt for ShareProtectedCollateralToken Silo0
-    bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_0 = keccak256("ShareProtectedCollateralToken0");
+    bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_0 =keccak256(
+        "create2.salt.ShareProtectedCollateralToken0"
+    );
     /// @dev Deterministic salt for ShareDebtToken Silo0
-    bytes32 private constant _SHARE_DEBT_TOKEN_0 = keccak256("ShareDebtToken0");
+    bytes32 private constant _SHARE_DEBT_TOKEN_0 = keccak256("create2.salt.ShareDebtToken0");
     /// @dev Deterministic salt for Silo1
-    bytes32 private constant _SILO_1 = keccak256("Silo1");
+    bytes32 private constant _SILO_1 = keccak256("create2.salt.Silo1");
     /// @dev Deterministic salt for ShareProtectedCollateralToken Silo1
-    bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_1 = keccak256("ShareProtectedCollateralToken1");
+    bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_1 = keccak256(
+        "create2.salt.ShareProtectedCollateralToken1"
+    );
     /// @dev Deterministic salt for ShareDebtToken Silo1
-    bytes32 private constant _SHARE_DEBT_TOKEN_1 = keccak256("ShareDebtToken1");
+    bytes32 private constant _SHARE_DEBT_TOKEN_1 = keccak256("create2.salt.ShareDebtToken1");
 
     /// @notice Deploys a Silo0 clone.
     /// @param _implmentation The Silo implementation to be cloned.
