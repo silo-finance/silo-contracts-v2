@@ -1,8 +1,8 @@
 {
   "arbitrum_one": {
-    "ETH-USDC_UniswapV3_Silo": "0xcd9e05b6975B578152075aa25d65Fd59709584A7"
+    "ETH-USDC_UniswapV3_Silo": "0x21428806e4FD753028454d52A9A72C094bEd44B7"
   },
   "optimism": {
-    "UniswapV3-WETH-USDC-Silo": "0x44f2be0b6a075dD4E65B846B1E59B1dEFC7eE910"
+    "UniswapV3-WETH-USDC-Silo": "0xa07197fDB6d1e376673539DEe298102e42F4EE49"
   }
 }
