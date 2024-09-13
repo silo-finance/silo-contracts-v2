@@ -61,7 +61,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
-    function createSilo(
+    function createSilo( // solhint-disable-line function-max-lines
         ISiloConfig.InitData memory _initData,
         ISiloConfig _siloConfig,
         address _siloImpl,
@@ -88,7 +88,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         (configData0, configData1) = Views.copySiloConfig(_initData);
 
         uint256 nextSiloId = _siloId;
-
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 

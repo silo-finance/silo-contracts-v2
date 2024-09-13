@@ -18,6 +18,8 @@ import {AssetTypes} from "./AssetTypes.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
+// solhint-disable ordering
+
 library Views {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
