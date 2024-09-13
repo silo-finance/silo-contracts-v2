@@ -10,7 +10,7 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 /// ShareDebtToken (SHARE_DEBT_TOKEN_0, SHARE_DEBT_TOKEN_1)
 library CloneDeterministic {
     /// @dev Deterministic salt for Silo0
-    bytes32 private constant _SILO_0 = keccak256("Silo0");
+    bytes32 private constant _SILO_0 = keccak256("create2.salt.Silo0");
     /// @dev Deterministic salt for ShareProtectedCollateralToken Silo0
     bytes32 private constant _SHARE_PROTECTED_COLLATERAL_TOKEN_0 = keccak256("ShareProtectedCollateralToken0");
     /// @dev Deterministic salt for ShareDebtToken Silo0
