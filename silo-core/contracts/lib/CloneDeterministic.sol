@@ -90,7 +90,7 @@ library CloneDeterministic {
         address _deployer
     )
         internal
-        view
+        pure
         returns (address addr)
     {
         addr = Clones.predictDeterministicAddress(_siloImpl, _silo0Salt(_siloId), _deployer);
@@ -106,7 +106,7 @@ library CloneDeterministic {
         address _deployer
     )
         internal
-        view
+        pure
         returns (address addr)
     {
         addr = Clones.predictDeterministicAddress(_siloImpl, _silo1Salt(_siloId), _deployer);
@@ -122,7 +122,7 @@ library CloneDeterministic {
         address _deployer
     )
         internal
-        view
+        pure
         returns (address addr)
     {
         addr = Clones.predictDeterministicAddress(
@@ -140,7 +140,7 @@ library CloneDeterministic {
         address _deployer
     )
         internal
-        view
+        pure
         returns (address addr)
     {
         addr = Clones.predictDeterministicAddress(
@@ -158,7 +158,7 @@ library CloneDeterministic {
         address _deployer
     )
         internal
-        view
+        pure
         returns (address addr)
     {
         addr = Clones.predictDeterministicAddress(
@@ -176,7 +176,7 @@ library CloneDeterministic {
         address _deployer
     )
         internal
-        view
+        pure
         returns (address addr)
     {
         addr = Clones.predictDeterministicAddress(
