@@ -30,8 +30,23 @@ contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
+        // deploy silo config
+        siloConfig = _deploySiloConfig(
+            siloData["MOCK"],
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         // deploy silo
-        siloConfig = siloFactory.createSilo(siloData["MOCK"], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+        siloFactory.createSilo(
+            siloData["MOCK"],
+            siloConfig,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         (address _vault0, /* address _vault1 */) = siloConfig.getSilos();
 
         initialize(address(_vault0), address(_asset0), false);

@@ -53,17 +53,18 @@ interface ISiloFactory is IERC721 {
 
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.
+    /// @param _siloConfig Silo configuration.
     /// @param _siloImpl Address of the `Silo` implementation.
     /// @param _shareProtectedCollateralTokenImpl Address of the `ShareProtectedCollateralToken` implementation.
     /// @param _shareDebtTokenImpl Address of the `ShareDebtToken` implementation.
     function createSilo(
         ISiloConfig.InitData memory _initData,
+        ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl
     )
-        external
-        returns (ISiloConfig siloConfig);
+        external;
 
     /// @notice NFT ownership represents the deployer fee receiver for the each Silo ID.  After burning, 
     /// the deployer fee is sent to the DAO. Burning doesn't affect Silo's behavior. It is only about fee distribution.

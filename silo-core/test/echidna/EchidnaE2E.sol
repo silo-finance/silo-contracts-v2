@@ -75,9 +75,18 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
-        // deploy silo
-        siloConfig = siloFactory.createSilo(
+        // deploy silo config
+        siloConfig = _deploySiloConfig(
             siloData["MOCK"],
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
+        // deploy silo
+        siloFactory.createSilo(
+            siloData["MOCK"],
+            siloConfig,
             siloImpl,
             shareProtectedCollateralTokenImpl,
             shareDebtTokenImpl
@@ -93,6 +102,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             actors.push(new Actor(Silo(payable(_vault0)), Silo(payable(_vault1))));
         }
     }
+
     /* ================================================================
                             Echidna invariants
        ================================================================ */

@@ -13,6 +13,8 @@ import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {Hook} from "./lib/Hook.sol";
+import {Views} from "./lib/Views.sol";
+import {CloneDeterministic} from "./lib/CloneDeterministic.sol";
 
 contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev max fee is 40%, 1e18 == 100%
@@ -61,24 +63,29 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @inheritdoc ISiloFactory
     function createSilo(
         ISiloConfig.InitData memory _initData,
+        ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl
     )
         external
         virtual
-        returns (ISiloConfig siloConfig)
     {
         if (
             _siloImpl == address(0) ||
             _shareProtectedCollateralTokenImpl == address(0) ||
-            _shareDebtTokenImpl == address(0)
+            _shareDebtTokenImpl == address(0) ||
+            address(_siloConfig) == address(0)
         ) {
             revert ZeroAddress();
         }
 
         validateSiloInitData(_initData);
-        (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1) = _copyConfig(_initData);
+
+        ISiloConfig.ConfigData memory configData0;
+        ISiloConfig.ConfigData memory configData1;
+
+        (configData0, configData1) = Views.copySiloConfig(_initData);
 
         uint256 nextSiloId = _siloId;
 
@@ -92,23 +99,22 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             configData0,
             configData1,
             _shareProtectedCollateralTokenImpl,
-            _shareDebtTokenImpl
+            _shareDebtTokenImpl,
+            nextSiloId
         );
 
-        configData0.silo = Clones.clone(_siloImpl);
-        configData1.silo = Clones.clone(_siloImpl);
+        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
+        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
-
-        ISilo(configData0.silo).initialize(siloConfig);
-        ISilo(configData1.silo).initialize(siloConfig);
+        ISilo(configData0.silo).initialize(_siloConfig);
+        ISilo(configData1.silo).initialize(_siloConfig);
 
         _initializeShareTokens(configData0, configData1);
 
         ISilo(configData0.silo).updateHooks();
         ISilo(configData1.silo).updateHooks();
 
-        idToSiloConfig[nextSiloId] = address(siloConfig);
+        idToSiloConfig[nextSiloId] = address(_siloConfig);
 
         isSilo[configData0.silo] = true;
         isSilo[configData1.silo] = true;
@@ -117,7 +123,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _mint(_initData.deployer, nextSiloId);
         }
 
-        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(siloConfig));
+        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(_siloConfig));
     }
 
     /// @inheritdoc ISiloFactory
@@ -264,14 +270,22 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         ISiloConfig.ConfigData memory configData0,
         ISiloConfig.ConfigData memory configData1,
         address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl
+        address _shareDebtTokenImpl,
+        uint256 _nextSiloId
     ) internal virtual {
-        configData0.protectedShareToken = Clones.clone(_shareProtectedCollateralTokenImpl);
         configData0.collateralShareToken = configData0.silo;
-        configData0.debtShareToken = Clones.clone(_shareDebtTokenImpl);
-        configData1.protectedShareToken = Clones.clone(_shareProtectedCollateralTokenImpl);
         configData1.collateralShareToken = configData1.silo;
-        configData1.debtShareToken = Clones.clone(_shareDebtTokenImpl);
+
+        configData0.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken0(
+            _shareProtectedCollateralTokenImpl, _nextSiloId
+        );
+
+        configData1.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken1(
+            _shareProtectedCollateralTokenImpl, _nextSiloId
+        );
+
+        configData0.debtShareToken = CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _nextSiloId);
+        configData1.debtShareToken = CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _nextSiloId);
     }
 
     function _initializeShareTokens(
@@ -298,43 +312,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
-    }
-
-    function _copyConfig(ISiloConfig.InitData memory _initData)
-        internal
-        pure
-        virtual
-        returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
-    {
-        configData0.hookReceiver = _initData.hookReceiver;
-        configData0.token = _initData.token0;
-        configData0.solvencyOracle = _initData.solvencyOracle0;
-        // If maxLtv oracle is not set, fallback to solvency oracle
-        configData0.maxLtvOracle = _initData.maxLtvOracle0 == address(0)
-            ? _initData.solvencyOracle0
-            : _initData.maxLtvOracle0;
-        configData0.interestRateModel = _initData.interestRateModel0;
-        configData0.maxLtv = _initData.maxLtv0;
-        configData0.lt = _initData.lt0;
-        configData0.deployerFee = _initData.deployerFee;
-        configData0.liquidationFee = _initData.liquidationFee0;
-        configData0.flashloanFee = _initData.flashloanFee0;
-        configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
-
-        configData1.hookReceiver = _initData.hookReceiver;
-        configData1.token = _initData.token1;
-        configData1.solvencyOracle = _initData.solvencyOracle1;
-        // If maxLtv oracle is not set, fallback to solvency oracle
-        configData1.maxLtvOracle = _initData.maxLtvOracle1 == address(0)
-            ? _initData.solvencyOracle1
-            : _initData.maxLtvOracle1;
-        configData1.interestRateModel = _initData.interestRateModel1;
-        configData1.maxLtv = _initData.maxLtv1;
-        configData1.lt = _initData.lt1;
-        configData1.deployerFee = _initData.deployerFee;
-        configData1.liquidationFee = _initData.liquidationFee1;
-        configData1.flashloanFee = _initData.flashloanFee1;
-        configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
     }
 
     function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
