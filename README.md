@@ -123,8 +123,7 @@ yarn workspace <workspaceName> <commandName> ...
 brew install lcov
 
 rm lcov.info
-mkdir coverage/interestRateModel
-FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_" | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
+FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_anvil_|test_reentrancy" | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
 genhtml --ignore-errors inconsistent -o coverage/silo-core/interestRateModel lcov.info
 
 FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --via-ir --ffi | grep -i 'silo-core/contracts/interestRateModel' > coverage/interestRateModel/results.txt
