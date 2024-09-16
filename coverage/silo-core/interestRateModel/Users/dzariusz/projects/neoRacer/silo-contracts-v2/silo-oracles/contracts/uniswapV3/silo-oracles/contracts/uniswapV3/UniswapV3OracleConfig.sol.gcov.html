@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - Users/dzariusz/projects/neoRacer/silo-contracts-v2/silo-oracles/contracts/uniswapV3/silo-oracles/contracts/uniswapV3/UniswapV3OracleConfig.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../../../../../index.html">top level</a> - <a href="index.html">/Users/dzariusz/projects/neoRacer/silo-contracts-v2/silo-oracles/contracts/uniswapV3/silo-oracles/contracts/uniswapV3</a> - UniswapV3OracleConfig.sol<span style="font-size: 80%;"> (source / <a href="UniswapV3OracleConfig.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-16 16:13:59</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity &gt;=0.5.0;</span>
+<span id="L3"><span class="lineNum">       3</span>              : pragma abicoder v2;</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : import {IUniswapV3Pool} from  &quot;uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : import {IUniswapV3Oracle} from &quot;../interfaces/IUniswapV3Oracle.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : /// @notice to keep config contract size low (this is the one that will be deployed each time)</span>
+<span id="L10"><span class="lineNum">      10</span>              : /// factory contract take over verification. You should not deploy or use config that was not created by factory.</span>
+<span id="L11"><span class="lineNum">      11</span>              : contract UniswapV3OracleConfig {</span>
+<span id="L12"><span class="lineNum">      12</span>              :     /// @dev UniV3 pool address that is used for TWAP price</span>
+<span id="L13"><span class="lineNum">      13</span>              :     IUniswapV3Pool internal immutable _POOL; // solhint-disable-line var-name-mixedcase</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              :     /// @dev Base asset</span>
+<span id="L16"><span class="lineNum">      16</span>              :     address internal immutable _BASE_TOKEN; // solhint-disable-line var-name-mixedcase</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span>              :     /// @dev Asset in which oracle denominates its price</span>
+<span id="L19"><span class="lineNum">      19</span>              :     address internal immutable _QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span>              :     /// @dev TWAP period in seconds</span>
+<span id="L22"><span class="lineNum">      22</span>              :     uint32 internal immutable _PERIOD_FOR_AVG_PRICE; // solhint-disable-line var-name-mixedcase</span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span>              :     /// @dev how many observations we need for provided periodForAvgPrice and blockTime</span>
+<span id="L25"><span class="lineNum">      25</span>              :     uint16 internal immutable _REQUIRED_CARDINALITY; // solhint-disable-line var-name-mixedcase</span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span>              :     /// @dev It is number with 1 decimal eg blockTime=5 =&gt; 0.5 sec</span>
+<span id="L28"><span class="lineNum">      28</span>              :     /// It is better to set it bit lower than higher that avg block time</span>
+<span id="L29"><span class="lineNum">      29</span>              :     /// eg. if ETH block time is 13~13.5s, you can set it to 12s</span>
+<span id="L30"><span class="lineNum">      30</span>              :     uint8 internal immutable _BLOCK_TIME; // solhint-disable-line var-name-mixedcase</span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor(</span></span>
+<span id="L33"><span class="lineNum">      33</span>              :         IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config,</span>
+<span id="L34"><span class="lineNum">      34</span>              :         uint16 _requiredCardinality</span>
+<span id="L35"><span class="lineNum">      35</span>              :     ) {</span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         _REQUIRED_CARDINALITY = _requiredCardinality;</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :         _POOL = _config.pool;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :         _BASE_TOKEN = _config.baseToken;</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :         _QUOTE_TOKEN = _config.quoteToken;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :         _PERIOD_FOR_AVG_PRICE = _config.periodForAvgPrice;</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :         _BLOCK_TIME = _config.blockTime;</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     }</span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :     function getConfig() external view virtual returns (IUniswapV3Oracle.UniswapV3Config memory config) {</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :         config.pool = _POOL;</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :         config.baseToken = _BASE_TOKEN;</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaUNC">           0 :         config.quoteToken = _QUOTE_TOKEN;</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :         config.periodForAvgPrice = _PERIOD_FOR_AVG_PRICE;</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :         config.requiredCardinality = _REQUIRED_CARDINALITY;</span></span>
+<span id="L50"><span class="lineNum">      50</span>              :     }</span>
+<span id="L51"><span class="lineNum">      51</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

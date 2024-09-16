@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - test/foundry/utils/hook-receivers/liquidation/lib/PartialLiquidationLib/silo-core/test/foundry/utils/hook-receivers/liquidation/lib/PartialLiquidationLib/MaxRepayRawMath.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../../../../../../../../../index.html">top level</a> - <a href="index.html">test/foundry/utils/hook-receivers/liquidation/lib/PartialLiquidationLib/silo-core/test/foundry/utils/hook-receivers/liquidation/lib/PartialLiquidationLib</a> - MaxRepayRawMath.sol<span style="font-size: 80%;"> (source / <a href="MaxRepayRawMath.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-16 16:13:59</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.20;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : // forge test -vv --mc MaxLiquidationTest</span>
+<span id="L5"><span class="lineNum">       5</span>              : contract MaxRepayRawMath {</span>
+<span id="L6"><span class="lineNum">       6</span>              :     uint256 private constant _DECIMALS_POINTS = 1e18;</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              :     /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LT</span>
+<span id="L9"><span class="lineNum">       9</span>              :     /// where Dv: debt value, Cv: collateral value, LT: expected LT, f: liquidation fee, x: is value we looking for</span>
+<span id="L10"><span class="lineNum">      10</span>              :     /// x = (Dv - LT * Cv) / (DP - LT - LT * f)</span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC tlaBgGNC">         259 :     function _estimateMaxRepayValueRaw(</span></span>
+<span id="L12"><span class="lineNum">      12</span>              :         uint256 _totalBorrowerDebtValue,</span>
+<span id="L13"><span class="lineNum">      13</span>              :         uint256 _totalBorrowerCollateralValue,</span>
+<span id="L14"><span class="lineNum">      14</span>              :         uint256 _ltvAfterLiquidation,</span>
+<span id="L15"><span class="lineNum">      15</span>              :         uint256 _liquidityFee</span>
+<span id="L16"><span class="lineNum">      16</span>              :     )</span>
+<span id="L17"><span class="lineNum">      17</span>              :         internal pure returns (uint256 repayValue)</span>
+<span id="L18"><span class="lineNum">      18</span>              :     {</span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">         259 :         uint256 tmp = _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS;</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">         259 :         if (_ltvAfterLiquidation + tmp &gt; _DECIMALS_POINTS) return _totalBorrowerDebtValue;</span></span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">         259 :         uint256 divider =</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">         259 :             _DECIMALS_POINTS - _ltvAfterLiquidation - _ltvAfterLiquidation * _liquidityFee / _DECIMALS_POINTS;</span></span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">         259 :         if (divider == 0) return 0;</span></span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         259 :         repayValue = (</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :             _totalBorrowerDebtValue - _ltvAfterLiquidation * _totalBorrowerCollateralValue / _DECIMALS_POINTS</span>
+<span id="L29"><span class="lineNum">      29</span>              :         ) * _DECIMALS_POINTS / divider;</span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">         259 :         return repayValue &gt; _totalBorrowerDebtValue ? _totalBorrowerDebtValue : repayValue;</span></span>
+<span id="L32"><span class="lineNum">      32</span>              :     }</span>
+<span id="L33"><span class="lineNum">      33</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

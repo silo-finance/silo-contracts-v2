@@ -34,10 +34,10 @@ broadcast
 
 common/addresses/anvil.json
 
-coverage
+# coverage
 !coverage/silo-core.txt
 !coverage/silo-oracles.txt
-lcov.info
+# lcov.info
 
 # echidna
 corpus/

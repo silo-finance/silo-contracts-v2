@@ -1,0 +1,1 @@
+genhtml --ignore-errors inconsistent -o coverage/silo-core/interestRateModel lcov.info

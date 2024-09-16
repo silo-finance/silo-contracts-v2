@@ -1,0 +1,290 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - test/foundry/_protocol/silo-core/test/foundry/_protocol/VeSiloFeatures.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">test/foundry/_protocol/silo-core/test/foundry/_protocol</a> - VeSiloFeatures.sol<span style="font-size: 80%;"> (source / <a href="VeSiloFeatures.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">85</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-16 16:13:59</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.20;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {Ownable2Step, Ownable} from &quot;openzeppelin5/access/Ownable2Step.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {IERC20} from &quot;openzeppelin5/token/ERC20/ERC20.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {StdStorage, stdStorage} from &quot;forge-std/StdStorage.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : import {IGaugeAdder} from &quot;ve-silo/contracts/gauges/interfaces/IGaugeAdder.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : import {IFeesManager} from &quot;ve-silo/contracts/silo-tokens-minter/interfaces/IFeesManager.sol&quot;;</span>
+<span id="L10"><span class="lineNum">      10</span>              : import {IGaugeController} from &quot;ve-silo/contracts/gauges/interfaces/IGaugeController.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {ISiloLiquidityGauge} from &quot;ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {CommonSiloIntegration} from &quot;./CommonSiloIntegration.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span>              : import {</span>
+<span id="L15"><span class="lineNum">      15</span>              :     IBalancerVaultLike as Vault,</span>
+<span id="L16"><span class="lineNum">      16</span>              :     IAsset</span>
+<span id="L17"><span class="lineNum">      17</span>              : } from &quot;ve-silo/contracts/fees-distribution/interfaces/IBalancerVaultLike.sol&quot;;</span>
+<span id="L18"><span class="lineNum">      18</span>              : </span>
+<span id="L19"><span class="lineNum">      19</span>              : contract VeSiloFeatures is CommonSiloIntegration {</span>
+<span id="L20"><span class="lineNum">      20</span>              :     using stdStorage for StdStorage;</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span>              :     // Ethereum</span>
+<span id="L23"><span class="lineNum">      23</span>              :     bytes32 constant internal _BALANCER_POOL_ID = 0x9cc64ee4cb672bc04c54b00a37e1ed75b2cc19dd0002000000000000000004c1;</span>
+<span id="L24"><span class="lineNum">      24</span>              :     uint256 internal constant _WEIGHT_CAP = 1e18;</span>
+<span id="L25"><span class="lineNum">      25</span>              :     uint256 internal constant _WEEK = 604800;</span>
+<span id="L26"><span class="lineNum">      26</span>              :     uint256 internal constant _BPS_MAX = 1e4;</span>
+<span id="L27"><span class="lineNum">      27</span>              :     uint256 internal constant _DAO_FEE = 1e3; // 10%</span>
+<span id="L28"><span class="lineNum">      28</span>              :     uint256 internal constant _DEPLOYER_FEE = 2e3; // 20%</span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC tlaBgUNC">           0 :     function _whiteListUser(address _user) internal {</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :         vm.prank(_deployer);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :         smartWalletChecker.allowlistAddress(_user);</span></span>
+<span id="L33"><span class="lineNum">      33</span>              :     }</span>
+<span id="L34"><span class="lineNum">      34</span>              : </span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :     function _configureSmartWalletChecker() internal {</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         vm.prank(address(timelock));</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :         veSilo.commit_smart_wallet_checker(address(smartWalletChecker));</span></span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :         vm.prank(address(timelock));</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :         veSilo.apply_smart_wallet_checker();</span></span>
+<span id="L41"><span class="lineNum">      41</span>              :     }</span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaUNC">           0 :     function _createGauge(address _shareToken) internal returns (address gauge) {</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :         vm.prank(_deployer);</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :         gauge = factory.create(_WEIGHT_CAP, _shareToken);</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :         vm.label(gauge, &quot;Gauge&quot;);</span></span>
+<span id="L47"><span class="lineNum">      47</span>              :     }</span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :     function _checkpointUsers(ISiloLiquidityGauge _gauge) internal {</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :         assertEq(_gauge.integrate_fraction(_bob), 0, &quot;Should not have earned incentives&quot;);</span></span>
+<span id="L51"><span class="lineNum">      51</span>              : </span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :         vm.warp(block.timestamp + _WEEK + 1);</span></span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :         vm.prank(_bob);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 :         _gauge.user_checkpoint(_bob);</span></span>
+<span id="L56"><span class="lineNum">      56</span>              : </span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaUNC">           0 :         assertTrue(_gauge.integrate_fraction(_bob) != 0, &quot;Should have earned incentives&quot;);</span></span>
+<span id="L58"><span class="lineNum">      58</span>              :     }</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC">           0 :     function _getVotingPower(address _user, uint256 _siloToLock) internal returns (uint256 votingPower){</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :         vm.prank(_user);</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaUNC">           0 :         _siloToken.approve(address(veSilo), _siloToLock);</span></span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaUNC">           0 :         uint256 unlockTime = block.timestamp + 365 * 24 * 3600;</span></span>
+<span id="L65"><span class="lineNum">      65</span>              : </span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC">           0 :         vm.prank(_user);</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaUNC">           0 :         veSilo.create_lock(_siloToLock, unlockTime);</span></span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :         votingPower = veSilo.balanceOf(_user);</span></span>
+<span id="L70"><span class="lineNum">      70</span>              :     }</span>
+<span id="L71"><span class="lineNum">      71</span>              : </span>
+<span id="L72"><span class="lineNum">      72</span>              :     // solhint-disable-next-line function-max-lines</span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :     function _executeProposal(</span></span>
+<span id="L74"><span class="lineNum">      74</span>              :         address[] memory targets,</span>
+<span id="L75"><span class="lineNum">      75</span>              :         uint256[] memory values,</span>
+<span id="L76"><span class="lineNum">      76</span>              :         bytes[] memory calldatas</span>
+<span id="L77"><span class="lineNum">      77</span>              :     )</span>
+<span id="L78"><span class="lineNum">      78</span>              :         internal</span>
+<span id="L79"><span class="lineNum">      79</span>              :     {</span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC">           0 :         string memory description = &quot;Test proposal&quot;;</span></span>
+<span id="L81"><span class="lineNum">      81</span>              : </span>
+<span id="L82"><span class="lineNum">      82</span>              :         // pushing time a little bit forward</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC">           0 :         vm.warp(block.timestamp + 3_600);</span></span>
+<span id="L84"><span class="lineNum">      84</span>              : </span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :         vm.prank(_bob);</span></span>
+<span id="L86"><span class="lineNum">      86</span>              : </span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC">           0 :         uint256 proposalId = siloGovernor.propose(</span></span>
+<span id="L88"><span class="lineNum">      88</span>              :             targets,</span>
+<span id="L89"><span class="lineNum">      89</span>              :             values,</span>
+<span id="L90"><span class="lineNum">      90</span>              :             calldatas,</span>
+<span id="L91"><span class="lineNum">      91</span>              :             description</span>
+<span id="L92"><span class="lineNum">      92</span>              :         );</span>
+<span id="L93"><span class="lineNum">      93</span>              : </span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaUNC">           0 :         uint256 snapshot = siloGovernor.proposalSnapshot(proposalId);</span></span>
+<span id="L95"><span class="lineNum">      95</span>              :         // pushing time to change a proposal to an active status</span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaUNC">           0 :         vm.warp(snapshot + 3_600);</span></span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaUNC">           0 :         vm.prank(_bob);</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaUNC">           0 :         siloGovernor.castVote(proposalId, 1);</span></span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaUNC">           0 :         vm.warp(snapshot + 1 weeks + 1 seconds);</span></span>
+<span id="L102"><span class="lineNum">     102</span>              : </span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC">           0 :         siloGovernor.queue(</span></span>
+<span id="L104"><span class="lineNum">     104</span>              :             targets,</span>
+<span id="L105"><span class="lineNum">     105</span>              :             values,</span>
+<span id="L106"><span class="lineNum">     106</span>              :             calldatas,</span>
+<span id="L107"><span class="lineNum">     107</span>              :             keccak256(bytes(description))</span>
+<span id="L108"><span class="lineNum">     108</span>              :         );</span>
+<span id="L109"><span class="lineNum">     109</span>              : </span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaUNC">           0 :         vm.warp(block.timestamp + 3_600);</span></span>
+<span id="L111"><span class="lineNum">     111</span>              : </span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :         siloGovernor.execute(</span></span>
+<span id="L113"><span class="lineNum">     113</span>              :             targets,</span>
+<span id="L114"><span class="lineNum">     114</span>              :             values,</span>
+<span id="L115"><span class="lineNum">     115</span>              :             calldatas,</span>
+<span id="L116"><span class="lineNum">     116</span>              :             keccak256(bytes(description))</span>
+<span id="L117"><span class="lineNum">     117</span>              :         );</span>
+<span id="L118"><span class="lineNum">     118</span>              :     }</span>
+<span id="L119"><span class="lineNum">     119</span>              : </span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaUNC">           0 :     function _addGauge(address _gauge) internal {</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaUNC">           0 :         address[] memory targets = new address[](6);</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC">           0 :         targets[0] = address(gaugeController);</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaUNC">           0 :         targets[1] = address(gaugeController);</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :         targets[2] = address(gaugeAdder);</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaUNC">           0 :         targets[3] = address(gaugeAdder);</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :         targets[4] = address(gaugeAdder);</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaUNC">           0 :         targets[5] = address(gaugeAdder);</span></span>
+<span id="L128"><span class="lineNum">     128</span>              : </span>
+<span id="L129"><span class="lineNum">     129</span>              :         // Empty values</span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaUNC">           0 :         uint256[] memory values = new uint256[](6);</span></span>
+<span id="L131"><span class="lineNum">     131</span>              : </span>
+<span id="L132"><span class="lineNum">     132</span>              :         // Functions inputs</span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaUNC">           0 :         bytes[] memory calldatas = new bytes[](6);</span></span>
+<span id="L134"><span class="lineNum">     134</span>              :         </span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC">           0 :         string memory gaugeTypeName = new string(64);</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC">           0 :         gaugeTypeName = &quot;Mainnet gauge&quot;;</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :         calldatas[0] = abi.encodeWithSignature(&quot;add_type(string,uint256)&quot;, gaugeTypeName, 1e18);</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC">           0 :         calldatas[1] = abi.encodeCall(IGaugeController.set_gauge_adder, address(gaugeAdder));</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :         calldatas[2] = abi.encodePacked(Ownable2Step.acceptOwnership.selector);</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaUNC">           0 :         calldatas[3] = abi.encodeCall(IGaugeAdder.addGaugeType, gaugeTypeName);</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaUNC">           0 :         calldatas[4] = abi.encodeCall(IGaugeAdder.setGaugeFactory, (factory, gaugeTypeName));</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaUNC">           0 :         calldatas[5] = abi.encodeCall(IGaugeAdder.addGauge, (address(_gauge), gaugeTypeName));</span></span>
+<span id="L143"><span class="lineNum">     143</span>              : </span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC">           0 :         _executeProposal(targets, values, calldatas);</span></span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaUNC">           0 :         assertEq(gaugeController.n_gauge_types(), 1, &quot;An invalid number of the gauge types&quot;);</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaUNC">           0 :         assertEq(gaugeController.n_gauges(), 1, &quot;Should be 1 gauge in the gaugeController&quot;);</span></span>
+<span id="L148"><span class="lineNum">     148</span>              :     }</span>
+<span id="L149"><span class="lineNum">     149</span>              : </span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC">           0 :     function _voteForGauge(address _gauge) internal {</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaUNC">           0 :         vm.prank(_bob);</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :         gaugeController.vote_for_gauge_weights(_gauge, 10000);</span></span>
+<span id="L153"><span class="lineNum">     153</span>              :     }</span>
+<span id="L154"><span class="lineNum">     154</span>              : </span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :     function _setVeSiloFees() internal {</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaUNC">           0 :         vm.prank(_deployer);</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :         IFeesManager(address(mainnetMinter)).setFees(_DAO_FEE, _DEPLOYER_FEE);</span></span>
+<span id="L158"><span class="lineNum">     158</span>              :     }</span>
+<span id="L159"><span class="lineNum">     159</span>              : </span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaUNC">           0 :     function _verifyClaimable(ISiloLiquidityGauge _gauge) internal {</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaUNC">           0 :         vm.warp(block.timestamp + _WEEK + 1);</span></span>
+<span id="L162"><span class="lineNum">     162</span>              : </span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaUNC">           0 :         uint256 claimableTotal;</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaUNC">           0 :         uint256 claimableTokens;</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :         uint256 feeDao;</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :         uint256 feeDeployer;</span></span>
+<span id="L167"><span class="lineNum">     167</span>              : </span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaUNC">           0 :         claimableTotal = _gauge.claimable_tokens(_bob);</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 :         (claimableTokens, feeDao, feeDeployer) = _gauge.claimable_tokens_with_fees(_bob);</span></span>
+<span id="L170"><span class="lineNum">     170</span>              : </span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :         assertTrue(claimableTotal == (claimableTokens + feeDao + feeDeployer));</span></span>
+<span id="L172"><span class="lineNum">     172</span>              : </span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaUNC">           0 :         uint256 expectedFeeDao = claimableTotal * _DAO_FEE / _BPS_MAX;</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaUNC">           0 :         uint256 expectedFeeDeployer = claimableTotal * _DEPLOYER_FEE / _BPS_MAX;</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaUNC">           0 :         uint256 expectedToReceive = claimableTotal - expectedFeeDao - expectedFeeDeployer;</span></span>
+<span id="L176"><span class="lineNum">     176</span>              : </span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaUNC">           0 :         assertEq(expectedFeeDao, feeDao, &quot;Wrong DAO fee&quot;);</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :         assertEq(expectedFeeDeployer, feeDeployer, &quot;Wrong deployer fee&quot;);</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC">           0 :         assertEq(expectedToReceive, claimableTokens, &quot;Wrong number of the user tokens&quot;);</span></span>
+<span id="L180"><span class="lineNum">     180</span>              :     }</span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC">           0 :     function _getIncentives(address _gauge) internal {</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :         _getUserIncentives(_bob, _gauge);</span></span>
+<span id="L184"><span class="lineNum">     184</span>              :     }</span>
+<span id="L185"><span class="lineNum">     185</span>              : </span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :     function _getUserIncentives(address _user, address _gauge) internal {</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :         IERC20 siloToken = IERC20(getAddress(SILO_TOKEN));</span></span>
+<span id="L188"><span class="lineNum">     188</span>              : </span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :         assertEq(siloToken.balanceOf(_user), 0);</span></span>
+<span id="L190"><span class="lineNum">     190</span>              : </span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :         vm.prank(_user);</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :         mainnetMinter.setMinterApproval(_user, true);</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :         vm.prank(_user);</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :         mainnetMinter.mintFor(_gauge, _user);</span></span>
+<span id="L195"><span class="lineNum">     195</span>              : </span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :         assertTrue(siloToken.balanceOf(_user) != 0);</span></span>
+<span id="L197"><span class="lineNum">     197</span>              : </span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaUNC">           0 :         uint256 totalMinted = mainnetMinter.minted(_user, _gauge);</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :         uint256 expectedMinted = totalMinted - (totalMinted * 10 / 100 + totalMinted * 20 / 100);</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaUNC">           0 :         uint256 mintedToUser = mainnetMinter.mintedToUser(_user, _gauge);</span></span>
+<span id="L201"><span class="lineNum">     201</span>              : </span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :         assertEq(mintedToUser, expectedMinted, &quot;Counters of minted tokens did not mutch&quot;);</span></span>
+<span id="L203"><span class="lineNum">     203</span>              :     }</span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaUNC">           0 :     function _activeteBlancerTokenAdmin() internal {</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaUNC">           0 :         stdstore</span></span>
+<span id="L207"><span class="lineNum">     207</span>              :             .target(getAddress(SILO_TOKEN))</span>
+<span id="L208"><span class="lineNum">     208</span>              :             .sig(Ownable.owner.selector)</span>
+<span id="L209"><span class="lineNum">     209</span>              :             .checked_write(address(balancerTokenAdmin));</span>
+<span id="L210"><span class="lineNum">     210</span>              : </span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaUNC">           0 :         vm.prank(_deployer);</span></span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaUNC">           0 :         balancerTokenAdmin.activate();</span></span>
+<span id="L213"><span class="lineNum">     213</span>              :     }</span>
+<span id="L214"><span class="lineNum">     214</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

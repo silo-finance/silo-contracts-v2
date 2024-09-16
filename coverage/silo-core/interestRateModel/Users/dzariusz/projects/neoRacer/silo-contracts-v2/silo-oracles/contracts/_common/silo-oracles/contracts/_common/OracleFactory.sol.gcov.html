@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - Users/dzariusz/projects/neoRacer/silo-contracts-v2/silo-oracles/contracts/_common/silo-oracles/contracts/_common/OracleFactory.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../../../../../index.html">top level</a> - <a href="index.html">/Users/dzariusz/projects/neoRacer/silo-contracts-v2/silo-oracles/contracts/_common/silo-oracles/contracts/_common</a> - OracleFactory.sol<span style="font-size: 80%;"> (source / <a href="OracleFactory.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-16 16:13:59</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity &gt;=0.7.6 &lt;0.9.0;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : abstract contract OracleFactory {</span>
+<span id="L6"><span class="lineNum">       6</span>              :     /// @dev implementation that will be cloned</span>
+<span id="L7"><span class="lineNum">       7</span>              :     address public immutable ORACLE_IMPLEMENTATION; // solhint-disable-line var-name-mixedcase</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              :     /// @dev hash(config) =&gt; oracle contract</span>
+<span id="L10"><span class="lineNum">      10</span>              :     /// oracle ID is determine by initial configuration, the logic is the same, so config is the only difference</span>
+<span id="L11"><span class="lineNum">      11</span>              :     /// that's why we can use it as ID, at the same time we can detect duplicated and save gas by reusing same config</span>
+<span id="L12"><span class="lineNum">      12</span>              :     /// multiple times</span>
+<span id="L13"><span class="lineNum">      13</span>              :     mapping(bytes32 =&gt; address) public getConfigAddress;</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              :     /// @dev config address =&gt; oracle address</span>
+<span id="L16"><span class="lineNum">      16</span>              :     mapping(address =&gt; address) public getOracleAddress;</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span>              :     /// @dev config ID and config address should be easily accessible directly from oracle contract</span>
+<span id="L19"><span class="lineNum">      19</span>              :     event NewOracle(address indexed oracle);</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor(address _oracleImplementation) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :         if (_oracleImplementation == address(0)) revert(&quot;ZeroAddress&quot;);</span></span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :         ORACLE_IMPLEMENTATION = _oracleImplementation;</span></span>
+<span id="L25"><span class="lineNum">      25</span>              :     }</span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span>              :     /// @dev execute this method from target factory, to save ID and update mappings</span>
+<span id="L28"><span class="lineNum">      28</span>              :     /// @param _newOracle new oracle address</span>
+<span id="L29"><span class="lineNum">      29</span>              :     /// @param _newConfig oracle config address</span>
+<span id="L30"><span class="lineNum">      30</span>              :     /// @param _configId oracle config ID, hash(config)</span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :     function _saveOracle(address _newOracle, address _newConfig, bytes32 _configId) internal virtual {</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :         if (getConfigAddress[_configId] != address(0)) revert(&quot;ConfigAlreadyExist&quot;);</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :         getConfigAddress[_configId] = _newConfig;</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :         // config and oracle is 1:1 so no need to check if oracle exists</span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         getOracleAddress[_newConfig] = _newOracle;</span></span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :         emit NewOracle(_newOracle);</span></span>
+<span id="L39"><span class="lineNum">      39</span>              :     }</span>
+<span id="L40"><span class="lineNum">      40</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
