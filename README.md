@@ -126,9 +126,6 @@ rm lcov.info
 FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_anvil_|test_reentrancy" | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
 genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
 
-FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --via-ir --ffi | grep -i 'silo-core/contracts/interestRateModel' > coverage/interestRateModel/results.txt
-genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
-
 rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
 genhtml -o coverage/silo-oracles/ lcov.info
