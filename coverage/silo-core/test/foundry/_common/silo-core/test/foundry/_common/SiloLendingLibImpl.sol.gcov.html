@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - test/foundry/_common/silo-core/test/foundry/_common/SiloLendingLibImpl.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">test/foundry/_common/silo-core/test/foundry/_common</a> - SiloLendingLibImpl.sol<span style="font-size: 80%;"> (source / <a href="SiloLendingLibImpl.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-17 12:34:54</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: UNLICENSED</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.20;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {ISiloConfig} from &quot;silo-core/contracts/interfaces/ISiloConfig.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {ISilo} from &quot;silo-core/contracts/interfaces/ISilo.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {AssetTypes} from &quot;silo-core/contracts/lib/AssetTypes.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {SiloLendingLib} from &quot;silo-core/contracts/lib/SiloLendingLib.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {SiloStorageLib} from &quot;silo-core/contracts/lib/SiloStorageLib.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : contract SiloLendingLibImpl {</span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC tlaBgGNC">          12 :     function borrow(</span></span>
+<span id="L12"><span class="lineNum">      12</span>              :         address _debtShareToken,</span>
+<span id="L13"><span class="lineNum">      13</span>              :         address _token,</span>
+<span id="L14"><span class="lineNum">      14</span>              :         uint256 _assets,</span>
+<span id="L15"><span class="lineNum">      15</span>              :         uint256 _shares,</span>
+<span id="L16"><span class="lineNum">      16</span>              :         address _receiver,</span>
+<span id="L17"><span class="lineNum">      17</span>              :         address _borrower,</span>
+<span id="L18"><span class="lineNum">      18</span>              :         address _spender,</span>
+<span id="L19"><span class="lineNum">      19</span>              :         uint256 _totalDebt,</span>
+<span id="L20"><span class="lineNum">      20</span>              :         uint256 _totalCollateralAssets</span>
+<span id="L21"><span class="lineNum">      21</span>              :     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {</span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">          12 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">          12 :         $.totalAssets[AssetTypes.DEBT] = _totalDebt;</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">          12 :         $.totalAssets[AssetTypes.COLLATERAL] = _totalCollateralAssets;</span></span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">          12 :         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :             _debtShareToken,</span>
+<span id="L29"><span class="lineNum">      29</span>              :             _token,</span>
+<span id="L30"><span class="lineNum">      30</span>              :             _spender,</span>
+<span id="L31"><span class="lineNum">      31</span>              :             ISilo.BorrowArgs({</span>
+<span id="L32"><span class="lineNum">      32</span>              :                 assets: _assets,</span>
+<span id="L33"><span class="lineNum">      33</span>              :                 shares: _shares,</span>
+<span id="L34"><span class="lineNum">      34</span>              :                 receiver: _receiver,</span>
+<span id="L35"><span class="lineNum">      35</span>              :                 borrower: _borrower</span>
+<span id="L36"><span class="lineNum">      36</span>              :             })</span>
+<span id="L37"><span class="lineNum">      37</span>              :         );</span>
+<span id="L38"><span class="lineNum">      38</span>              :     }</span>
+<span id="L39"><span class="lineNum">      39</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

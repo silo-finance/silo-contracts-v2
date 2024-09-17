@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - deploy/silo-core/deploy/SiloDeployerDeploy.s.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">deploy/silo-core/deploy</a> - SiloDeployerDeploy.s.sol<span style="font-size: 80%;"> (source / <a href="SiloDeployerDeploy.s.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">14</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-17 12:34:54</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.24;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {CommonDeploy} from &quot;./_CommonDeploy.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {SiloCoreContracts, SiloCoreDeployments} from &quot;silo-core/common/SiloCoreContracts.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {VeSiloContracts, VeSiloDeployments} from &quot;ve-silo/common/VeSiloContracts.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {SiloDeployer} from &quot;silo-core/contracts/SiloDeployer.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {IInterestRateModelV2Factory} from &quot;silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : import {ISiloFactory} from &quot;silo-core/contracts/interfaces/ISiloFactory.sol&quot;;</span>
+<span id="L10"><span class="lineNum">      10</span>              : import {ISiloDeployer} from &quot;silo-core/contracts/interfaces/ISiloDeployer.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {Silo} from &quot;silo-core/contracts/Silo.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {ShareProtectedCollateralToken} from &quot;silo-core/contracts/utils/ShareProtectedCollateralToken.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : import {ShareDebtToken} from &quot;silo-core/contracts/utils/ShareDebtToken.sol&quot;;</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : /**</span>
+<span id="L16"><span class="lineNum">      16</span>              :     FOUNDRY_PROFILE=core \</span>
+<span id="L17"><span class="lineNum">      17</span>              :         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \</span>
+<span id="L18"><span class="lineNum">      18</span>              :         --ffi --broadcast --rpc-url http://127.0.0.1:8545</span>
+<span id="L19"><span class="lineNum">      19</span>              :  */</span>
+<span id="L20"><span class="lineNum">      20</span>              : contract SiloDeployerDeploy is CommonDeploy {</span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">         520 :     function run() public returns (ISiloDeployer siloDeployer) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">         520 :         string memory chainAlias = getChainAlias();</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">         520 :         uint256 deployerPrivateKey = uint256(vm.envBytes32(&quot;PRIVATE_KEY&quot;));</span></span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">         520 :         ISiloFactory siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));</span></span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         520 :         address irmConfigFactory = SiloCoreDeployments.get(</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :             SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY,</span>
+<span id="L29"><span class="lineNum">      29</span>              :             chainAlias</span>
+<span id="L30"><span class="lineNum">      30</span>              :         );</span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">         520 :         vm.startBroadcast(deployerPrivateKey);</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">         520 :         address siloImpl = address(new Silo(siloFactory));</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         520 :         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">         520 :         address shareDebtTokenImpl = address(new ShareDebtToken());</span></span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">         520 :         siloDeployer = ISiloDeployer(address(new SiloDeployer(</span></span>
+<span id="L39"><span class="lineNum">      39</span>              :             IInterestRateModelV2Factory(irmConfigFactory),</span>
+<span id="L40"><span class="lineNum">      40</span>              :             siloFactory,</span>
+<span id="L41"><span class="lineNum">      41</span>              :             siloImpl,</span>
+<span id="L42"><span class="lineNum">      42</span>              :             shareProtectedCollateralTokenImpl,</span>
+<span id="L43"><span class="lineNum">      43</span>              :             shareDebtTokenImpl</span>
+<span id="L44"><span class="lineNum">      44</span>              :         )));</span>
+<span id="L45"><span class="lineNum">      45</span>              : </span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">         520 :         vm.stopBroadcast();</span></span>
+<span id="L47"><span class="lineNum">      47</span>              : </span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">         520 :         _registerDeployment(address(siloDeployer), SiloCoreContracts.SILO_DEPLOYER);</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         520 :         _registerDeployment(address(siloImpl), SiloCoreContracts.SILO);</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         520 :         _registerDeployment(address(shareProtectedCollateralTokenImpl), SiloCoreContracts.SHARE_PORTECTED_COLLATERAL_TOKEN);</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         520 :         _registerDeployment(address(shareDebtTokenImpl), SiloCoreContracts.SHARE_DEBT_TOKEN);</span></span>
+<span id="L52"><span class="lineNum">      52</span>              :     }</span>
+<span id="L53"><span class="lineNum">      53</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - Users/dzariusz/projects/neoRacer/silo-contracts-v2/silo-oracles/contracts/chainlinkV3/silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../../../../../index.html">top level</a> - <a href="index.html">/Users/dzariusz/projects/neoRacer/silo-contracts-v2/silo-oracles/contracts/chainlinkV3/silo-oracles/contracts/chainlinkV3</a> - ChainlinkV3OracleConfig.sol<span style="font-size: 80%;"> (source / <a href="ChainlinkV3OracleConfig.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2024-09-17 12:34:54</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: MIT</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.24;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {IERC20Metadata} from &quot;openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {AggregatorV3Interface} from &quot;chainlink/v0.8/interfaces/AggregatorV3Interface.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {ISiloOracle} from &quot;silo-core/contracts/interfaces/ISiloOracle.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {IChainlinkV3Oracle} from &quot;../interfaces/IChainlinkV3Oracle.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {Layer1OracleConfig} from &quot;../_common/Layer1OracleConfig.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : contract ChainlinkV3OracleConfig is Layer1OracleConfig {</span>
+<span id="L11"><span class="lineNum">      11</span>              :     /// @dev Chainlink aggregator</span>
+<span id="L12"><span class="lineNum">      12</span>              :     AggregatorV3Interface internal immutable _AGGREGATOR; // solhint-disable-line var-name-mixedcase</span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span>              :     /// @dev secondary Chainlink aggregator to convert price to quote</span>
+<span id="L15"><span class="lineNum">      15</span>              :     AggregatorV3Interface internal immutable _SECONDARY_AGGREGATOR; // solhint-disable-line var-name-mixedcase</span>
+<span id="L16"><span class="lineNum">      16</span>              : </span>
+<span id="L17"><span class="lineNum">      17</span>              :     /// @dev Threshold used to determine if the price returned by the _SECONDARY_AGGREGATOR is valid</span>
+<span id="L18"><span class="lineNum">      18</span>              :     uint256 internal immutable _SECONDARY_HEARTBEAT; // solhint-disable-line var-name-mixedcase</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span>              :     /// @dev this can be set to true to convert primary price into price denominated in quote</span>
+<span id="L21"><span class="lineNum">      21</span>              :     /// assuming that both AGGREGATORS providing price in the same token</span>
+<span id="L22"><span class="lineNum">      22</span>              :     bool internal immutable _CONVERT_TO_QUOTE; // solhint-disable-line var-name-mixedcase</span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span>              :     /// @dev all verification should be done by factory</span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor(</span></span>
+<span id="L26"><span class="lineNum">      26</span>              :         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,</span>
+<span id="L27"><span class="lineNum">      27</span>              :         uint256 _normalizationDivider,</span>
+<span id="L28"><span class="lineNum">      28</span>              :         uint256 _normalizationMultiplier</span>
+<span id="L29"><span class="lineNum">      29</span>              :     )</span>
+<span id="L30"><span class="lineNum">      30</span>              :         Layer1OracleConfig(</span>
+<span id="L31"><span class="lineNum">      31</span>              :             _config.baseToken,</span>
+<span id="L32"><span class="lineNum">      32</span>              :             _config.quoteToken,</span>
+<span id="L33"><span class="lineNum">      33</span>              :             _config.primaryHeartbeat,</span>
+<span id="L34"><span class="lineNum">      34</span>              :             _normalizationDivider,</span>
+<span id="L35"><span class="lineNum">      35</span>              :             _normalizationMultiplier</span>
+<span id="L36"><span class="lineNum">      36</span>              :         )</span>
+<span id="L37"><span class="lineNum">      37</span>              :     {</span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :         _AGGREGATOR = _config.primaryAggregator;</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :         _SECONDARY_AGGREGATOR = _config.secondaryAggregator;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :         _SECONDARY_HEARTBEAT = _config.secondaryHeartbeat;</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :         _CONVERT_TO_QUOTE = address(_config.secondaryAggregator) != address(0);</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     }</span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :     function getConfig() external view virtual returns (IChainlinkV3Oracle.ChainlinkV3Config memory config) {</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :         config.primaryAggregator = _AGGREGATOR;</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :         config.secondaryAggregator = _SECONDARY_AGGREGATOR;</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaUNC">           0 :         config.primaryHeartbeat = _HEARTBEAT;</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :         config.secondaryHeartbeat = _SECONDARY_HEARTBEAT;</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :         config.normalizationDivider = _DECIMALS_NORMALIZATION_DIVIDER;</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :         config.normalizationMultiplier = _DECIMALS_NORMALIZATION_MULTIPLIER;</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :         config.baseToken = _BASE_TOKEN;</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :         config.quoteToken = _QUOTE_TOKEN;</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :         config.convertToQuote = _CONVERT_TO_QUOTE;</span></span>
+<span id="L54"><span class="lineNum">      54</span>              :     }</span>
+<span id="L55"><span class="lineNum">      55</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
