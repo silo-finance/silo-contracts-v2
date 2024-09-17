@@ -1,1 +1,0 @@
-genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
