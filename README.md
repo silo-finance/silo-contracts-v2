@@ -125,7 +125,8 @@ brew install lcov
 rm lcov.info
 mkdir coverage
 
-FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_anvil_|test_reentrancy" | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
+FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core-report.txt
+cat coverage/silo-core-report.txt | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
 genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
 
 rm lcov.info
