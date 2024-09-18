@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-
-import {console} from "forge-std/console.sol";
 
 /*
     forge test -vv --ffi --mc CollateralTokenInflationAttack
@@ -126,7 +122,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         uint256 maxWithdraw = silo0.maxWithdraw(depositor);
 
-        console.log("maxWithdraw", maxWithdraw);
+        emit log_named_uint("maxWithdraw", maxWithdraw);
 
         // redeeming the deposit
         uint256 redeemShares = silo0.maxRedeem(depositor);
@@ -146,8 +142,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         uint256 balanceOfDepositor = token0.balanceOf(depositor);
         assertEq(receivedAmount, balanceOfDepositor);
 
-        console.log("receivedAmount: ", receivedAmount);
-        console.log("depositAmount: ", depositsAmounts[anyDepositor]);
+        emit log_named_uint("receivedAmount: ", receivedAmount);
+        emit log_named_uint("depositAmount: ", depositsAmounts[anyDepositor]);
     }
 
     function _messWithRatio() internal returns (uint256 depositedForAttack) { 
@@ -177,7 +173,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
             depositedForAttack = depositedForAttack + toDeposit - 1;
         }
 
-        console.log("[_doAttack] gas used: ", gasStart - gasleft());
+        emit log_named_uint("[_doAttack] gas used: ", gasStart - gasleft());
     }
 
     function _repayLoan(address _borrower, uint _toBorrow) internal {
