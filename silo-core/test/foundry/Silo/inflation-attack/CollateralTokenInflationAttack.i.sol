@@ -97,7 +97,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
             address _depositor = makeAddr(user);
             depositors[i] = _depositor;
 
-            uint256 toDeposit = 1e18;//silo0.getCollateralAssets();
+            uint256 toDeposit = silo0.getCollateralAssets();
             _makeDeposit(silo0, token0, toDeposit, _depositor, ISilo.CollateralType.Collateral);
 
             depositsAmounts[i] = toDeposit;
@@ -136,8 +136,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         vm.prank(depositor);
         uint256 receivedAmount = silo0.redeem(redeemShares, depositor, depositor);
 
-        // depositor received less than he deposited
-        assertTrue(receivedAmount < depositsAmounts[anyDepositor]);
+        // depositor received less than he deposited and a difference is > 1e6 (arbitrary number)
+        assertTrue(depositsAmounts[anyDepositor] - receivedAmount > 1e6);
 
         // depositor received all his shares
         sharesBalance = IShareToken(collateralShareToken).balanceOf(depositor);
@@ -148,7 +148,6 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         console.log("receivedAmount: ", receivedAmount);
         console.log("depositAmount: ", depositsAmounts[anyDepositor]);
-        console.log("1e18: ", 1e18);
     }
 
     function _messWithRatio() internal returns (uint256 depositedForAttack) { 
