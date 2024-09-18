@@ -4,6 +4,8 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
@@ -13,8 +15,10 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 */
 contract ShareManipulationTest is SiloLittleHelper, Test {
+    ISiloConfig siloConfig;
+
     function setUp() public {
-        _setUpLocalFixture();
+        siloConfig = _setUpLocalFixture();
     }
 
     /*
@@ -154,16 +158,20 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
 
         // _repay(silo1.maxRepay(borrower), borrower);
 
-        for(uint256 i; i < 15; i++) {
+        for(uint256 i; i < 100; i++) {
             // vm.warp(block.timestamp + 1);
 
-            // emit log_named_uint("#i", i);
+             emit log_named_uint("#i", i);
+            _printBorrowRatio();
+
             // emit log_named_decimal_uint("_initial", _initial, 18);
 
             uint256 borrowAmount = (_initial % 10_000e18);
 
             _borrow(borrowAmount, borrower);
-            _repay(silo1.maxRepay(borrower) - 1, borrower);
+            _printBorrowRatio();
+
+        _repay(silo1.maxRepay(borrower) - 1, borrower);
 
             _initial = silo1.getDebtAssets();
         }
@@ -175,10 +183,10 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("ratio DECREASED?? by", ratioDiff, 18);
 //        emit log_named_decimal_uint("moneySpend", moneySpend, 18);
 
-        emit log_named_decimal_uint("maxRepay(borrower)", repayBefore, 18);
-        emit log_named_decimal_uint("maxRepay(borrower)", silo1.maxRepay(borrower), 18);
-        emit log_named_decimal_uint("maxRepay(borrower2)", silo1.maxRepay(borrower2), 18);
-        emit log_named_decimal_uint("maxRepay(borrower3)", silo1.maxRepay(borrower3), 18);
+        emit log_named_decimal_uint("BEFORE maxRepay(borrower)", repayBefore, 18);
+        emit log_named_decimal_uint("AFTER maxRepay(borrower)", silo1.maxRepay(borrower), 18);
+        emit log_named_decimal_uint("AFTER maxRepay(borrower2)", silo1.maxRepay(borrower2), 18);
+        emit log_named_decimal_uint("AFTER maxRepay(borrower3)", silo1.maxRepay(borrower3), 18);
 
         _repay(silo1.maxRepay(borrower), borrower);
         _printBorrowRatio();
@@ -188,8 +196,17 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
     }
 
     function _printBorrowRatio() internal {
+        (address collateralShare,, address debtShare) = siloConfig.getShareTokens(address(silo1));
+        emit log("---------");
+        emit log_named_uint("[silo1] debt share totalSupply ", IShareToken(debtShare).totalSupply());
+        emit log_named_uint("[silo1] debt asset total ", silo1.getDebtAssets());
+        emit log_named_uint("[silo1] balanceOf(borrower) ", IShareToken(debtShare).balanceOf(makeAddr("borrower")));
+        emit log_named_uint("[silo1] balanceOf(borrower2) ", IShareToken(debtShare).balanceOf(makeAddr("borrower2")));
+        emit log_named_uint("[silo1] balanceOf(borrower3) ", IShareToken(debtShare).balanceOf(makeAddr("borrower3")));
+
         emit log_named_uint("[silo1] 1e18 share =", silo1.previewBorrowShares(1e18));
         emit log_named_uint("[silo1] 1 share =", silo1.previewBorrowShares(1));
+        emit log("---------");
     }
 
     function _printCollateralRatio(uint256 _offset) internal {
