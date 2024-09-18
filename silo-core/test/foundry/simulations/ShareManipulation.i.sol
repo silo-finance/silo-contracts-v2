@@ -151,9 +151,9 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
             // 850003201235761988 = 32573,
             // 32573 / 3201235794561 => 0.000001%
             // simply not worth it
-            _borrowRepay();
+//            _borrowRepay();
 
-            // silo1.accrueInterest(); // to boost %
+             silo1.accrueInterest(); // to boost %
         }
 
         assertGt(silo1.previewBorrowShares(precision * offset), precision, "require not to have 1:1 ratio");
@@ -194,7 +194,10 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
 
         uint256 ratioDiff = ratioBefore - silo1.previewBorrowShares(precision * offset);
         // how we decreasing and "where it goes"?
-        
+        // we repay MORE because of rounding, so every time attacker do this, he repay more
+        // and this "more" is what other borrowers will not pay
+        //
+
         emit log_named_decimal_uint("ratio DECREASED?? by", ratioDiff, 18);
 //        emit log_named_decimal_uint("moneySpend", moneySpend, 18);
 
@@ -221,7 +224,12 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         uint256 borrowAmount = (_amount % 0.7e18);
 
         _borrow(borrowAmount, makeAddr("borrower"));
-        _repay(silo1.maxRepay(makeAddr("borrower")) - 1, makeAddr("borrower"));
+
+        uint256 toRapay = silo1.maxRepay(makeAddr("borrower")) - 1;
+        emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
+        emit log_named_decimal_uint("toRapay", toRapay, 18);
+
+        _repay(toRapay, makeAddr("borrower"));
 
         _printBorrowRatio();
     }
