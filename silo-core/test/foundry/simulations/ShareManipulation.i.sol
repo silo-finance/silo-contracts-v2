@@ -37,6 +37,11 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
 
         _depositCollateral(1e18, borrower, TWO_ASSETS);
         _depositForBorrow(1e18, depositor);
+
+        // when there are other users, results to change ratio is MUCH harder
+        // I'm over gas limit with execution when I add this one user
+        // because % are growing much much slower, I changes moving time in days, and after years I dog 1 wei diff.
+        _depositForBorrow(100e18, makeAddr("any"));
         _borrow(0.75e18, borrower);
 
         uint256 precision = 1e18;
@@ -44,8 +49,14 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         uint256 offset = 10 ** 0;
 
         // the higher number you check the faster we get result
-        while(silo1.convertToAssets(precision * offset) == precision) {
-            vm.warp(block.timestamp + 1);
+//        while (silo1.convertToAssets(precision * offset) == precision) {
+//            vm.warp(block.timestamp + 1);
+//        }
+
+        // let's wait untill user insolvent
+        while (silo1.isSolvent(borrower)) {
+            vm.warp(block.timestamp + 1 days);
+            silo1.accrueInterest(); // to boost %
         }
 
         emit log_named_uint("DIFF", silo1.convertToAssets(precision * offset));
@@ -68,7 +79,7 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("maxWithdraw(depositor)", withdrawBefore, 18);
         emit log_named_decimal_uint("maxRepay(borrower)", repayBefore, 18);
 
-        for(uint256 i; i < 150_000; i++) {
+        for(uint256 i; i < 100; i++) {
             // time helps increase ratio because there are interests involve
             // if attacker will wait 1sec between iterations, attack will take ~2days
             // HOWEVER: with time ratio grows MOSTLY because of interest, not the tx
@@ -91,7 +102,7 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         emit log_named_uint("ratioBefore", ratioBefore);
 
         uint256 ratioDiff = silo1.convertToAssets(precision * offset) - ratioBefore;
-        emit log_named_decimal_uint("ratio increased by", ratioDiff, 18);
+        emit log_named_decimal_uint(">>>>>> ratio increased by", ratioDiff, 18);
         emit log_named_decimal_uint("moneySpend", moneySpend, 18);
 
         emit log_named_decimal_uint("maxRepay(borrower)", repayBefore, 18);
