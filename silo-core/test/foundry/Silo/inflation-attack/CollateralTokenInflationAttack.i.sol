@@ -195,7 +195,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         _mintTokens(token0, toRepay, _borrower);
 
-        assertEq(silo0.isSolvent(_borrower), true);
+        assertTrue(silo0.isSolvent(_borrower));
 
         vm.prank(_borrower);
         shares = silo0.repay(toRepay, _borrower);
