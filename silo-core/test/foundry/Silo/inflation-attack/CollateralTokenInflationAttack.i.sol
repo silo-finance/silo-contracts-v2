@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -15,6 +16,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
     forge test -vv --ffi --mc CollateralTokenInflationAttack
 */
 contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -191,6 +194,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         token0.approve(address(silo0), toRepay);
 
         _mintTokens(token0, toRepay, _borrower);
+
+        assertEq(silo0.isSolvent(_borrower), true);
 
         vm.prank(_borrower);
         shares = silo0.repay(toRepay, _borrower);
