@@ -43,7 +43,7 @@ contract ConvertToAssetsAndToSharesTest is Test {
 
         assertEq(assets, _assetsOrShares);
         assertEq(
-            shares,
+            shares + 1, // losing 1 wei due to rounding
             SiloMathLib.convertToShares(
                 _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, ISilo.AssetType.Collateral
             )

@@ -33,7 +33,7 @@ contract ConvertToAssetsTest is Test {
         });
 
         cases[1] = TestCase({
-            shares: 10,
+            shares: 10000,
             totalAssets: 0,
             totalShares: 0,
             rounding: Rounding.DOWN,
@@ -42,63 +42,63 @@ contract ConvertToAssetsTest is Test {
         });
 
         cases[2] = TestCase({
-            shares: 333,
+            shares: 333333,
             totalAssets: 1000,
-            totalShares: 999,
+            totalShares: 999000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 333
         });
 
         cases[3] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 999,
+            totalShares: 999000,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
             result: 334
         });
 
         cases[4] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 1000,
+            totalShares: 1000000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 333
         });
 
         cases[5] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 1000,
+            totalShares: 1000000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 333
         });
 
         cases[6] = TestCase({
-            shares: 1,
+            shares: 1000,
             totalAssets: 1000,
-            totalShares: 1,
+            totalShares: 1000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 500
         });
 
         cases[7] = TestCase({
-            shares: 1,
+            shares: 1000,
             totalAssets: 1000,
-            totalShares: 1,
+            totalShares: 1000,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
             result: 501
         });
 
         cases[8] = TestCase({
-            shares: 1,
+            shares: 1000,
             totalAssets: 1000,
-            totalShares: 10,
+            totalShares: 10000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
             result: 91
@@ -123,54 +123,54 @@ contract ConvertToAssetsTest is Test {
         });
 
         cases[11] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 999,
+            totalShares: 999000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 333
         });
 
         cases[12] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 999,
+            totalShares: 999000,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Debt,
             result: 334
         });
 
         cases[13] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 1000,
+            totalShares: 1000000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 333
         });
 
         cases[14] = TestCase({
-            shares: 333,
+            shares: 333000,
             totalAssets: 1000,
-            totalShares: 1000,
+            totalShares: 1000000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 333
         });
 
         cases[15] = TestCase({
-            shares: 1,
+            shares: 1000,
             totalAssets: 1000,
-            totalShares: 1,
+            totalShares: 1000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Debt,
             result: 1000
         });
 
         cases[16] = TestCase({
-            shares: 1,
+            shares: 1000,
             totalAssets: 1000,
-            totalShares: 1,
+            totalShares: 1000,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Debt,
             result: 1000
