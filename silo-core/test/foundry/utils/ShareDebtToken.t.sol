@@ -31,6 +31,14 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_debtToken_forwardTransferFromNoChecks
+    */
+    function test_debtToken_forwardTransferFromNoChecks() public {
+        vm.expectRevert(IShareToken.Forbidden.selector);
+        shareDebtToken.forwardTransferFromNoChecks(address(1), address(2), 3);
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_address_zero
     */
     function test_debtToken_transfer_address_zero() public {
