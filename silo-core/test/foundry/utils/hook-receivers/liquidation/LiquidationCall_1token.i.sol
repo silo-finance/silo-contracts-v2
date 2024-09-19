@@ -591,7 +591,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function test_liquidationCall_badDebt_full_withToken_1token() public {
         bool receiveSToken;
         address liquidator = makeAddr("liquidator");
-        uint256 dust = 2 + 3; // +3 rounding error
+        uint256 dust = 2 + 1; // +1 rounding error
 
         // repay
         vm.expectCall(
@@ -602,7 +602,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         // redeem collateral
         vm.expectCall(
             address(token0),
-            abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 27_154148001939861632)
+            abi.encodeWithSelector(IERC20.transfer.selector, liquidator, 27_154148001939861634)
         );
 
         _liquidationCall_badDebt_full(receiveSToken);
@@ -725,12 +725,12 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             );
         } else {
             assertEq(
-                token0.balanceOf(address(silo0)) - 5, // dust(2) + rounding error(3)
+                token0.balanceOf(address(silo0)) - 3, // dust(2) + rounding error(1)
                 daoAndDeployerRevenue,
                 "[!_receiveSToken] silo has just fees"
             );
 
-            assertEq(silo0.getCollateralAssets(), 5, "only dust (2) + rounding error (3) left from collateral");
+            assertEq(silo0.getCollateralAssets(), 3, "only dust (2) + rounding error (1) left from collateral");
         }
 
         assertEq(silo0.getDebtAssets(), 0, "debt is repay");
@@ -738,8 +738,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         if (!_receiveSToken) {
             assertEq(
                 token0.balanceOf(liquidator),
-                // -3 for rounding error, +2 to balace out underestimation
-                100e18 - debtToRepay + collateralToLiquidate - 3 + 2,
+                // -1 for rounding error, +2 to balance out underestimation
+                100e18 - debtToRepay + collateralToLiquidate - 1 + 2,
                 "liquidator should get all collateral because of full liquidation"
             );
         }
