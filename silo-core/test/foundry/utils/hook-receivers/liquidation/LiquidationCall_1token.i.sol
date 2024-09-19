@@ -13,6 +13,7 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../../_common/MintableToken.sol";
@@ -26,6 +27,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
+    uint256 constant COLLATERAL_SHARES = COLLATERAL * SiloMathLib._DECIMALS_OFFSET_POW;
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = true;
 
@@ -644,11 +646,14 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             )
         );
 
+        uint256 roundingDust = 105;
+        assertLt(roundingDust, SiloMathLib._DECIMALS_OFFSET_POW, "you can not set dust higher that 1.0 share");
+
         // shares -> liquidator (because of receive sToken)
         vm.expectCall(
             collateralConfig.collateralShareToken,
             abi.encodeWithSelector(
-                IShareToken.forwardTransferFromNoChecks.selector, BORROWER, liquidator, COLLATERAL - 1
+                IShareToken.forwardTransferFromNoChecks.selector, BORROWER, liquidator, COLLATERAL_SHARES - roundingDust
             )
         );
 
@@ -656,14 +661,14 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         assertEq(
             IShareToken(collateralConfig.collateralShareToken).balanceOf(liquidator),
-            COLLATERAL - 1,
+            COLLATERAL_SHARES - roundingDust,
             "liquidator should have s-collateral, because of sToken"
         );
 
         assertEq(
             IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER),
-            1,
-            "BORROWER should have NO s-collateral"
+            roundingDust,
+            "BORROWER should have NO s-collateral (expect only rounding dust)"
         );
 
         _assertLiquidationModuleDoNotHaveTokens();
