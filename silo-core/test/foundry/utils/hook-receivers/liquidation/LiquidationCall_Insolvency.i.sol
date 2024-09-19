@@ -5,18 +5,12 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../../../_common/MintableToken.sol";
-
 
 /*
     forge test -vv --ffi --mc LiquidationCallInsolvencyTest
@@ -25,7 +19,7 @@ contract LiquidationCallInsolvencyTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture();
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_LTV50_SILO);
         token1.setOnDemand(true);
     }
 
@@ -35,24 +29,26 @@ contract LiquidationCallInsolvencyTest is SiloLittleHelper, Test {
     function test_self_Insolvency_1() public {
         address borrower = makeAddr("borrower");
 
-        _depositCollateral(1e18, borrower, TWO_ASSETS);
-        _depositForBorrow(0.75e18, address(1));
-        _borrow(0.75e18, borrower, TWO_ASSETS);
-        _withdraw(0.10e18, borrower);
+        _depositCollateral(9999, borrower, TWO_ASSETS);
+        _depositForBorrow(6664, address(1));
+        _borrow(6664, borrower, TWO_ASSETS);
+        _withdraw(1, borrower);
 
+        uint256 t = 1 days;
         while(silo1.isSolvent(borrower)) {
-            vm.warp(block.timestamp + 10 seconds);
+            vm.warp(block.timestamp + t);
         }
 
-        vm.warp(block.timestamp - 10 seconds);
-
-        while(silo1.isSolvent(borrower)) {
-            vm.warp(block.timestamp + 1);
-        }
-
-        vm.warp(block.timestamp - 1);
+        vm.warp(block.timestamp - t);
+//
+//        while(silo1.isSolvent(borrower)) {
+//            vm.warp(block.timestamp + 1);
+//        }
+//
+//        vm.warp(block.timestamp - 1);
         silo1.accrueInterest();
 
+        emit log_named_uint("time", block.timestamp);
         assertTrue(silo1.isSolvent(borrower), "time reversed - user solvent");
 
         uint256 debtToCover = silo1.maxRepay(borrower) - 1;
