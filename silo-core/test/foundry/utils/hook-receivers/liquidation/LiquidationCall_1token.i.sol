@@ -347,8 +347,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         // move forward with time so we can have interests
 
-        uint256 timeForward = 120 days;
-        vm.warp(block.timestamp + timeForward);
+        { // too deep
+            uint256 timeForward = 120 days;
+            vm.warp(block.timestamp + timeForward);
+        }
+
         // expected debt should grow from 7.5 => ~55
         emit log_named_decimal_uint("user ltv", silo0.getLtv(BORROWER), 16);
         assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
@@ -436,6 +439,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         }
 
         { // too deep
+            uint256 timeForward = 120 days; // MUST MATCH previous declaration, this copy is because coverage too deep
+
             (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
             (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
@@ -467,8 +472,10 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         // move forward with time so we can have interests
 
+        {
         uint256 timeForward = 150 days;
         vm.warp(block.timestamp + timeForward);
+        }
         // expected debt should grow from 7.5 => ~73
         emit log_named_decimal_uint("user ltv", silo0.getLtv(BORROWER), 16);
         assertGt(silo0.getLtv(BORROWER), 1e18, "expect bad debt");
@@ -556,6 +563,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         }
 
         { // too deep
+            uint256 timeForward = 150 days; // MUST MATCH previous, this copy is because coverage throws too deep
+
             (, uint64 interestRateTimestamp0After,,,) = silo0.getSiloStorage();
             (, uint64 interestRateTimestamp1After,,,) = silo1.getSiloStorage();
 
