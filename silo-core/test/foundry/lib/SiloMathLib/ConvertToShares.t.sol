@@ -36,7 +36,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 0,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 200000
+            result: 200000000
         });
 
         cases[2] = TestCase({
@@ -45,7 +45,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 1000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 20
+            result: 39
         });
 
         cases[3] = TestCase({
@@ -54,7 +54,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 999,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 333
+            result: 665
         });
 
         cases[4] = TestCase({
@@ -63,7 +63,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 999,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 332
+            result: 665
         });
 
         cases[5] = TestCase({
@@ -72,7 +72,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 999,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
-            result: 333
+            result: 666
         });
 
         cases[6] = TestCase({
@@ -81,7 +81,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 1000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 333
+            result: 666
         });
 
         cases[7] = TestCase({
@@ -90,7 +90,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 1000,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
-            result: 334
+            result: 666
         });
 
         cases[8] = TestCase({
@@ -99,7 +99,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 1,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 0
+            result: 1
         });
 
         cases[9] = TestCase({
@@ -108,7 +108,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 1000,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 500
+            result: 1000
         });
 
         cases[10] = TestCase({
@@ -117,7 +117,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 1000,
             rounding: Rounding.UP,
             assetType: ISilo.AssetType.Collateral,
-            result: 501
+            result: 1000
         });
 
         cases[11] = TestCase({
@@ -225,7 +225,7 @@ contract ConvertToSharesTest is Test {
             totalShares: 0,
             rounding: Rounding.DOWN,
             assetType: ISilo.AssetType.Collateral,
-            result: 1
+            result: 1000
         });
     }
 
@@ -269,7 +269,7 @@ contract ConvertToSharesTest is Test {
         totalAssets += toDeposit;
         totalShares += shares1;
 
-        assertEq(shares1, 1, "#1 got shares");
+        assertEq(shares1, 1000, "#1 got shares");
         assertEq(totalAssets, 4 + 1, "#2 totalAssets = dust + deposit");
 
         toDeposit = 100;
@@ -285,9 +285,9 @@ contract ConvertToSharesTest is Test {
         totalAssets += toDeposit;
         totalShares += shares2;
 
-        assertEq(shares2, 33, "#2 got shares"); // 100 * (1 + 1) / (5 + 1) = 33.33 => down => 33
+        assertEq(shares2, 33333, "#2 got shares"); // 100 * (1 + 1) / (5 + 1) = 33.33 => down => 33
         assertEq(totalAssets, 4 + 1 + 100, "#2 totalAssets");
-        assertEq(totalShares, 34, "#2 totalShares");
+        assertEq(totalShares, 34333, "#2 totalShares");
 
         assertEq(SiloMathLib.convertToAssets({
             _shares: shares1,
