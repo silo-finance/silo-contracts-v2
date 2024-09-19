@@ -397,7 +397,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         token0.mint(address(this), debtToCover);
         token0.approve(address(partialLiquidation), debtToCover);
 
-        assertEq(silo0.convertToAssets(1), 4, "rounding error atm");
+        assertEq(silo0.convertToAssets(1), 0, "rounding error atm");
 
         partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToCover, receiveSToken);
 
@@ -410,8 +410,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         { // too deep
             uint256 dust = 4;
             // newest liquidation process is based on sToken transfer and recalculating shares from assets,
-            // this leads to less assets in result, rounding error for this test is 5
-            uint256 roundingError = 5;
+            // this leads to less assets in result, rounding error for this test is 1
+            uint256 roundingError = 1;
 
             { // too deep
                 uint256 daoAndDeployerRevenue = interest * (0.15e18 + 0.10e18) / 1e18; // dao fee + deployer fee
