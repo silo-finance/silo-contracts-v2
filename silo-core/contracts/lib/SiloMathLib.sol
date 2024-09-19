@@ -10,8 +10,10 @@ library SiloMathLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    uint256 internal constant _DECIMALS_OFFSET = 3;
+
     /// @dev this is constant version of openzeppelin5/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
-    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 0;
+    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** _DECIMALS_OFFSET;
 
     /// @notice Returns available liquidity to be borrowed
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
