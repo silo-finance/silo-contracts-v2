@@ -48,6 +48,7 @@ contract ShareTokenTest is Test {
 
         sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
+        // offset for the debt token is 1
         assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
     }
 

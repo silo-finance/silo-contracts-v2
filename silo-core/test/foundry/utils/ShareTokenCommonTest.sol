@@ -11,6 +11,7 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
 // solhint-disable ordering
 
@@ -294,6 +295,27 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     function _shareTokenSiloConfig(IShareToken _shareToken) internal view {
         ISiloConfig shareTokenSiloConfig = _shareToken.siloConfig();
         assertEq(address(shareTokenSiloConfig), address(siloConfig), "Should be equal to siloConfig");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_collateralShareTokenDecimals
+    */
+    function test_collateralShareTokenDecimals() public {
+        (address protected0, address collateral0,) = siloConfig.getShareTokens(address(silo0));
+        (address protected1, address collateral1,) = siloConfig.getShareTokens(address(silo1));
+
+        _collateralShareTokenDecimals(IShareToken(collateral0), address(token0));
+        _collateralShareTokenDecimals(IShareToken(protected0), address(token0));
+
+        _collateralShareTokenDecimals(IShareToken(collateral1), address(token1));
+        _collateralShareTokenDecimals(IShareToken(protected1), address(token1));
+    }
+
+    function _collateralShareTokenDecimals(IShareToken _collateralToken, address _siloAsset) internal {
+        uint256 assetDecimals = IShareToken(_siloAsset).decimals();
+        uint256 collateralDecimals = _collateralToken.decimals();
+
+        assertEq(10 ** (collateralDecimals - assetDecimals), SiloMathLib._DECIMALS_OFFSET_POW, "invalid offset");
     }
 
     /*
