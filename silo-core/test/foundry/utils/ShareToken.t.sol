@@ -35,10 +35,9 @@ contract ShareTokenTest is Test {
         owner = makeAddr("Owner");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_ShareToken_decimals
-    function test_ShareToken_decimals() public {
-        uint8 decimals = 8;
-        Token token = new Token(decimals);
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_ShareToken_decimals_fuzz
+    function test_ShareToken_decimals_fuzz(uint8 _decimals) public {
+        Token token = new Token(_decimals);
 
         ISiloConfig.ConfigData memory configData;
         configData.token = address(token);
