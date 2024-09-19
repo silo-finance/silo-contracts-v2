@@ -11,7 +11,6 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 
-// solhint-disable var-name-mixedcase
 // solhint-disable func-name-mixedcase
 
 /// @dev same as `InterestRateModelV2` but with checked math and all public methods
@@ -459,5 +458,3 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         return _rcur > cap ? cap : _rcur;
     }
 }
-
-// solhint-enable var-name-mixedcase

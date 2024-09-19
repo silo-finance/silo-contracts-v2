@@ -27,6 +27,8 @@ import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/int
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
+import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
+import {Views} from "silo-core/contracts/lib/Views.sol";
 
 contract Deployers is VyperDeployer, Data {
     address timelockAdmin = address(0xb4b3);
@@ -177,8 +179,13 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloFactory(address feeReceiver) internal {
-        siloFactory = ISiloFactory(address(new SiloFactory()));
-        siloFactoryInternal = ISiloFactory(address(new SiloFactory()));
+        uint256 daoFee = 0.15e18;
+        address daoFeeReceiver = feeReceiver == address(0)
+            ? address(0)
+            : feeReceiver;
+
+        siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
+        siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
 
         address siloImpl = address(new Silo(siloFactory));
         address siloImplInternal = address(
@@ -187,27 +194,6 @@ contract Deployers is VyperDeployer, Data {
 
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
-
-        uint256 daoFee = 0.15e18;
-        address daoFeeReceiver = feeReceiver == address(0)
-            ? address(0)
-            : feeReceiver;
-
-        siloFactory.initialize(
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl,
-            daoFee,
-            daoFeeReceiver
-        );
-
-        siloFactoryInternal.initialize(
-            siloImplInternal,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl,
-            daoFee,
-            daoFeeReceiver
-        );
 
         address timelock = address(timelockController);
         Ownable(address(siloFactory)).transferOwnership(timelock);
@@ -233,6 +219,62 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloDeployer() internal {
-        siloDeployer = ISiloDeployer(address(new SiloDeployer(interestRateModelV2ConfigFactory, siloFactory)));
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
+
+        siloDeployer = ISiloDeployer(address(new SiloDeployer(
+            interestRateModelV2ConfigFactory,
+            siloFactory,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        )));
+    }
+
+    function _deploySiloConfig(
+        ISiloConfig.InitData memory _siloInitData,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
+    ) internal returns (ISiloConfig siloConfig) {
+        uint256 nextSiloId = siloFactory.getNextSiloId();
+
+        ISiloConfig.ConfigData memory configData0;
+        ISiloConfig.ConfigData memory configData1;
+
+        (configData0, configData1) = Views.copySiloConfig(_siloInitData);
+
+        configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
+        configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, nextSiloId, address(siloFactory));
+
+        configData0.collateralShareToken = configData0.silo;
+        configData1.collateralShareToken = configData1.silo;
+
+        configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
+            _shareProtectedCollateralTokenImpl,
+            nextSiloId,
+            address(siloFactory)
+        );
+
+        configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
+            _shareProtectedCollateralTokenImpl,
+            nextSiloId,
+            address(siloFactory)
+        );
+
+        configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
+            _shareDebtTokenImpl,
+            nextSiloId,
+            address(siloFactory)
+        );
+
+        configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
+            _shareDebtTokenImpl,
+            nextSiloId,
+            address(siloFactory)
+        );
+
+        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
 }

@@ -354,18 +354,33 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         );
 
         // counter example without zero
-        uint256 gasStart = gasleft();
         (
             uint256 collateralAssetsToLiquidate,
             uint256 collateralValueToLiquidate
         ) = PartialLiquidationLib.calculateCollateralsToLiquidate(
             debtValueToCover, totalBorrowerCollateralValue, totalBorrowerCollateralAssets, liquidationFee
         );
+
+        assertEq(collateralAssetsToLiquidate, 1010000000000000000);
+        assertEq(collateralValueToLiquidate, 2020000000000000000);
+    }
+
+    /*
+    forge test -vv --mt test_gas_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
+    */
+    function test_gas_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public view {
+        uint256 debtValueToCover = 2e18;
+        uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
+        uint256 totalBorrowerCollateralAssets = 10e18;
+        uint256 liquidationFee = 0.01e18; // 1%
+
+        uint256 gasStart = gasleft();
+        PartialLiquidationLib.calculateCollateralsToLiquidate(
+            debtValueToCover, totalBorrowerCollateralValue, totalBorrowerCollateralAssets, liquidationFee
+        );
         uint256 gasEnd = gasleft();
 
         assertLe(gasStart - gasEnd, 575, "optimise calculateCollateralToLiquidate()");
-        assertEq(collateralAssetsToLiquidate, 1010000000000000000);
-        assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
 
     /*
@@ -388,15 +403,23 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertEq(fromCollateral, 8, "fromCollateral (10, 2) => 8");
         assertEq(fromProtected, 2, "fromProtected (10, 2) => 2");
 
-        uint256 gasStart = gasleft();
         (fromCollateral, fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
-        uint256 gasEnd = gasleft();
 
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
         assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
+    }
+
+    /*
+    forge test -vv --mt test_gas_PartialLiquidationLib_splitReceiveCollateralToLiquidate
+    */
+    function test_gas_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public view {
+        uint256 gasStart = gasleft();
+        PartialLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
+        uint256 gasEnd = gasleft();
+
         assertLe(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
     }
-    
+
     /*
      forge test -vv --mt test_PartialLiquidationLib_maxLiquidationPreview_unchecked_fuzz
     */

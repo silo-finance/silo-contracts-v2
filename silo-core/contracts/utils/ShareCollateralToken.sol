@@ -27,7 +27,14 @@ abstract contract ShareCollateralToken is ShareToken {
 
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
-        ShareCollateralTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+
+        // for minting or burning, Silo is responsible to check all necessary conditions
+        // for transfer make sure that _sender is solvent after transfer
+        if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
+            ShareCollateralTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
+        }
+
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
     }
 }

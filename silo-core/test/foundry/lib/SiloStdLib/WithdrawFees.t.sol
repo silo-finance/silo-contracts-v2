@@ -27,7 +27,7 @@ contract WithdrawFeesTest is Test {
     SiloFactoryMock siloFactory;
     TokenMock token;
 
-    function _$() internal returns (ISilo.SiloStorage storage) {
+    function _$() internal pure returns (ISilo.SiloStorage storage) {
         return SiloStorageLib.getSiloStorage();
     }
 

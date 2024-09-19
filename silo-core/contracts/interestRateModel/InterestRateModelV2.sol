@@ -11,7 +11,6 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 
-// solhint-disable var-name-mixedcase
 // solhint-disable func-name-mixedcase
 
 /// @title InterestRateModelV2
@@ -466,5 +465,3 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         return _rcur > cap ? cap : _rcur;
     }
 }
-
-// solhint-enable var-name-mixedcase

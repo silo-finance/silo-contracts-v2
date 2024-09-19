@@ -22,7 +22,7 @@ import {VeSiloFeatures} from "./VeSiloFeatures.sol";
     4. Clean deployments artifacts './silo-core/test/scripts/deployments-clean.sh'
  */
 contract SiloIntegrationTest is VeSiloFeatures {
-   function testVeSiloWithSiloCoreAndSiloOracles() public {
+   function test_anvil_VeSiloWithSiloCoreAndSiloOracles() public {
        _printContracts();
        _configureSmartWalletChecker();
        _setVeSiloFees();

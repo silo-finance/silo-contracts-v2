@@ -12,15 +12,18 @@ import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 // TODO do we need lib here? debt token size is not a concern, so maybe we can avoid this lib, unless we want to move
 // before/after share to `_update`.
 
+// solhint-disable ordering
+
 library ShareDebtTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     // keccak256(abi.encode(uint256(keccak256("silo.storage.ERC20R")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant StorageLocation = 0x5a499b742bad5e18c139447ced974d19a977bcf86e03691ee458d10efcd04d00;
+    bytes32 private constant _STORAGE_LOCATION = 0x5a499b742bad5e18c139447ced974d19a977bcf86e03691ee458d10efcd04d00;
 
     function getIERC20RStorage() internal pure returns (IERC20R.Storage storage $) {
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := StorageLocation
+            $.slot := _STORAGE_LOCATION
         }
     }
 
@@ -52,7 +55,7 @@ library ShareDebtTokenLib {
     }
 
     /// @dev Check if recipient is solvent after debt transfer
-    function afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal {
+    function afterTokenTransfer(address _sender, address _recipient, uint256 /* _amount */) internal {
         // debt transfer is such a rare use case and extra gas is worth additional security,
         // so we do not return even when _amount == 0
 

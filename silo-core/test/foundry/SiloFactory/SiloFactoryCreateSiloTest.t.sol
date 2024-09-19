@@ -47,30 +47,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     }
 
     /*
-    forge test -vv --ffi --mt test_failToCreateSiloWhenUninitialized
-    */
-    function test_failToCreateSiloWhenUninitialized() public {
-        SiloFactory siloFactoryTest = new SiloFactory();
-
-        // ensure that the factory is uninitialized
-        assertEq(siloFactoryTest.getNextSiloId(), 0);
-
-        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
-
-        initData.hookReceiver = makeAddr("hookReceiver");
-        initData.token0 = makeAddr("token0");
-        initData.token1 = makeAddr("token1");
-        initData.deployerFee = 0;
-        initData.flashloanFee0 = 0;
-        initData.flashloanFee1 = 0;
-        initData.liquidationFee0 = 0;
-        initData.liquidationFee1 = 0;
-
-        vm.expectRevert(ISiloFactory.Uninitialized.selector);
-        siloFactoryTest.createSilo(initData);
-    }
-
-    /*
     forge test -vv --ffi --mt test_createSilo
     */
     function test_createSilo() public {
@@ -90,6 +66,9 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
+        // TODO check for both tokens
+        // assertEq(configData0.token, initData.token0, "configData0.token");
+        // assertEq(configData0.hookReceiver, initData.hookReceiver, "configData0.hookReceiver");
         assertTrue(configData0.silo != address(0), "configData0.silo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
         assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");
@@ -139,18 +118,32 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareTokenInitializable(configData0.protectedShareToken).initialize(ISilo(configData0.silo), address(0), 0);
-
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareTokenInitializable(configData0.debtShareToken).initialize(ISilo(configData0.silo), address(0), 0);
-
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareTokenInitializable(configData1.protectedShareToken).initialize(ISilo(configData1.silo), address(0), 0);
-
-        vm.expectRevert(ISiloFactory.InvalidInitialization.selector);
-        IShareTokenInitializable(configData1.debtShareToken).initialize(ISilo(configData1.silo), address(0), 0);
-
         assertEq(siloFactory.ownerOf(1), initData.deployer);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_createSilo_zeroes
+    */
+    function test_createSilo_zeroes() public {
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
+
+        address siloImpl = makeAddr("siloImpl");
+        address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
+        address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
+        ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
+
+        vm.expectRevert(ISiloFactory.ZeroAddress.selector); // silo config empty
+        siloFactory.createSilo(
+            initData, ISiloConfig(address(0)), siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+        );
+
+        vm.expectRevert(ISiloFactory.ZeroAddress.selector); // silo impl empty
+        siloFactory.createSilo(initData, config, address(0), shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+
+        vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareProtectedCollateralTokenImpl empty
+        siloFactory.createSilo(initData, config, siloImpl, address(0), shareDebtTokenImpl);
+
+        vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareDebtTokenImpl empty
+        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, address(0));
     }
 }

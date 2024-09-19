@@ -24,8 +24,7 @@ contract SiloFactorySettersTest is Test {
     address hacker = makeAddr("Hacker");
 
     function setUp() public {
-        siloFactory = new SiloFactory();
-        siloFactory.initialize(siloImpl, shareCollateralTokenImpl, shareDebtTokenImpl, daoFee, daoFeeReceiver);
+        siloFactory = new SiloFactory(daoFee, daoFeeReceiver);
     }
 
     /*
@@ -144,5 +143,19 @@ contract SiloFactorySettersTest is Test {
 
         assertEq(dao, _newDaoFeeReceiver);
         assertEq(deployer, address(0));
+    }
+
+    /*
+    forge test -vv --mt test_setBaseURI
+    */
+    function test_setBaseURI(string calldata _newBaseURI) public {
+        vm.assume(keccak256(bytes(_newBaseURI)) != keccak256(bytes(siloFactory.baseURI())));
+
+        vm.prank(hacker);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
+        siloFactory.setBaseURI(_newBaseURI);
+
+        siloFactory.setBaseURI(_newBaseURI);
+        assertEq(siloFactory.baseURI(), _newBaseURI);
     }
 }

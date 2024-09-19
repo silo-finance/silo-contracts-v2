@@ -44,6 +44,5 @@ corpus/
 crytic-export
 
 # certora
->>>>>>> 0.1.1
 .certora_internal
 runSilo.sh

@@ -51,7 +51,7 @@ contract TokenHelperTest is Test {
         assertEq(TokenHelper.assertAndGetDecimals(token), decimals);
     }
 
-    function test_removeZeros() public {
+    function test_removeZeros() public pure {
         assertEq(TokenHelper.removeZeros(""), "");
         assertEq(TokenHelper.removeZeros("0"), "0");
         assertEq(TokenHelper.removeZeros(abi.encode(0x20)), " ");

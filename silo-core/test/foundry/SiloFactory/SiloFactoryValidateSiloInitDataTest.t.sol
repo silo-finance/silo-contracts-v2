@@ -11,6 +11,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloFactoryDeploy} from "silo-core/deploy/SiloFactoryDeploy.s.sol";
 
+import {OracleMock} from "../_mocks/OracleMock.sol";
+
 /*
 forge test -vv --mc SiloFactoryValidateSiloInitDataTest
 */
@@ -85,7 +87,6 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         siloFactory.validateSiloInitData(initData);
 
         initData.solvencyOracle0 = address(1);
-
         initData.maxLtvOracle1 = address(1);
         vm.expectRevert(ISiloFactory.OracleMisconfiguration.selector);
         siloFactory.validateSiloInitData(initData);
@@ -95,7 +96,10 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidCallBeforeQuote.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.solvencyOracle1 = address(1);
+        initData.callBeforeQuote0 = false;
+        initData.callBeforeQuote1 = false;
+        initData.solvencyOracle0 = address(0);
+        initData.maxLtvOracle1 = address(0);
 
         initData.deployerFee = 0.01e18;
 
@@ -109,7 +113,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.deployerFee = siloFactory.maxDeployerFee() + 1;
 
-        vm.expectRevert(ISiloFactory.MaxDeployerFee.selector);
+        vm.expectRevert(ISiloFactory.MaxDeployerFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.deployerFee = 0.01e18;
@@ -119,7 +123,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.flashloanFee0 = uint64(siloFactory.maxFlashloanFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxFlashloanFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFlashloanFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.flashloanFee0 = 0.01e18;
@@ -129,7 +133,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.flashloanFee1 = uint64(siloFactory.maxFlashloanFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxFlashloanFee.selector);
+        vm.expectRevert(ISiloFactory.MaxFlashloanFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.flashloanFee1 = 0.01e18;
@@ -139,13 +143,13 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.liquidationFee0 = uint64(siloFactory.maxLiquidationFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
+        vm.expectRevert(ISiloFactory.MaxLiquidationFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.liquidationFee0 = 0.01e18;
         initData.liquidationFee1 = uint64(siloFactory.maxLiquidationFee() + 1);
 
-        vm.expectRevert(ISiloFactory.MaxLiquidationFee.selector);
+        vm.expectRevert(ISiloFactory.MaxLiquidationFeeExceeded.selector);
         siloFactory.validateSiloInitData(initData);
 
         initData.liquidationFee1 = 0.01e18;
@@ -164,5 +168,67 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         initData.interestRateModel1 = initData.interestRateModel0;
 
         assertTrue(siloFactory.validateSiloInitData(initData));
+    }
+
+    /*
+    forge test -vv --mt test_validateSiloInitData_oracles
+    */
+    function test_validateSiloInitData_oracles() public {
+        ISiloConfig.InitData memory initData;
+
+        initData.hookReceiver = address(2);
+        initData.token0 = address(1);
+        initData.token1 = address(2);
+
+        initData.maxLtv0 = 0.75e18;
+        initData.maxLtv1 = 0.65e18;
+
+        initData.lt0 = 0.85e18;
+        initData.lt1 = 0.75e18;
+
+        initData.deployer = address(100001);
+        initData.deployerFee = 0.01e18;
+
+        initData.flashloanFee0 = 0.01e18;
+        initData.flashloanFee1 = 0.01e18;
+        initData.liquidationFee0 = 0.01e18;
+        initData.liquidationFee1 = 0.01e18;
+
+        initData.interestRateModel0 = address(100006);
+        initData.interestRateModel1 = initData.interestRateModel0;
+
+        // verify we have valid config as begin
+        assertTrue(siloFactory.validateSiloInitData(initData), "#0");
+
+
+        OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
+        solvencyOracle0.quoteTokenMock(makeAddr("quoteToken"));
+        initData.solvencyOracle0 = solvencyOracle0.ADDRESS();
+        assertTrue(siloFactory.validateSiloInitData(initData), "#1");
+
+        OracleMock maxLtvOracle0 = new OracleMock(makeAddr("maxLtvOracle0"));
+        maxLtvOracle0.quoteTokenMock(address(1));
+        initData.maxLtvOracle0 = maxLtvOracle0.ADDRESS();
+        vm.expectRevert(ISiloFactory.InvalidQuoteToken.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        maxLtvOracle0.quoteTokenMock(makeAddr("quoteToken"));
+
+        OracleMock solvencyOracle1 = new OracleMock(makeAddr("solvencyOracle1"));
+        solvencyOracle1.quoteTokenMock(address(1));
+        initData.solvencyOracle1 = solvencyOracle1.ADDRESS();
+        vm.expectRevert(ISiloFactory.InvalidQuoteToken.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        solvencyOracle1.quoteTokenMock(makeAddr("quoteToken"));
+
+        OracleMock maxLtvOracle1 = new OracleMock(makeAddr("maxLtvOracle1"));
+        maxLtvOracle1.quoteTokenMock(address(1));
+        initData.maxLtvOracle1 = maxLtvOracle1.ADDRESS();
+        vm.expectRevert(ISiloFactory.InvalidQuoteToken.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        maxLtvOracle1.quoteTokenMock(makeAddr("quoteToken"));
+        assertTrue(siloFactory.validateSiloInitData(initData), "#0");
     }
 }
