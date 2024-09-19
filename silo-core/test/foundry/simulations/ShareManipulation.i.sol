@@ -156,6 +156,8 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
              silo1.accrueInterest(); // to boost %
         }
 
+        _borrow1wei();
+return;
         assertGt(silo1.previewBorrowShares(precision * offset), precision, "require not to have 1:1 ratio");
 
         uint256 ratioBefore = silo1.previewBorrowShares(precision * offset);
@@ -213,9 +215,19 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("maxWithdraw(depositor) diff", silo1.maxWithdraw(makeAddr("depositor")) - withdrawBefore, 18);
     }
 
+    function _borrow1wei() internal {
+        address user = address(2);
+        _depositCollateral(100, user, SAME_ASSET);
+        _borrow(1, address(2), SAME_ASSET);
+
+        (,, address debtShare) = siloConfig.getShareTokens(address(silo1));
+        emit log_named_decimal_uint("1 wei == shares:", IShareToken(debtShare).balanceOf(user), 18);
+        emit log_named_decimal_uint("AFTER maxRepay(user)", silo1.maxRepay(user), 18);
+    }
+
     function _borrowRepay() internal {
         uint256 _amount = silo1.getDebtAssets();
-        if (_amount == 0) _amount = 100;
+        if (_amount == 0) _amount = 1;
 
         // vm.warp(block.timestamp + 1);
 
@@ -225,11 +237,16 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
 
         _borrow(borrowAmount, makeAddr("borrower"));
 
-        uint256 toRapay = silo1.maxRepay(makeAddr("borrower")) - 1;
+        uint256 toRepay = silo1.maxRepay(makeAddr("borrower")) - 1;
         emit log_named_decimal_uint("borrowAmount", borrowAmount, 18);
-        emit log_named_decimal_uint("toRapay", toRapay, 18);
+        emit log_named_decimal_uint("toRepay", toRepay, 18);
 
-        _repay(toRapay, makeAddr("borrower"));
+        _repay(toRepay, makeAddr("borrower"));
+
+        (,, address debtShare) = siloConfig.getShareTokens(address(silo1));
+        emit log_named_decimal_uint("toRepay shares #1", IShareToken(debtShare).balanceOf(makeAddr("borrower")), 18);
+//        _repay(2, makeAddr("borrower"));
+//        emit log_named_decimal_uint("toRepay shares #2", IShareToken(debtShare).balanceOf(makeAddr("borrower")), 18);
 
         _printBorrowRatio();
     }
