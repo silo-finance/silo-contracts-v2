@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.20;
 
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+
 contract GetExactLiquidationAmountsTestData {
-    uint256 constant SHARES_OFFSET = 10 ** 2;
+    uint256 constant SHARES_OFFSET = SiloMathLib._DECIMALS_OFFSET_POW;
 
     struct Input {
         address user;
