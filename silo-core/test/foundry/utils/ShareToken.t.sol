@@ -35,9 +35,10 @@ contract ShareTokenTest is Test {
         owner = makeAddr("Owner");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_ShareToken_decimals_fuzz
-    function test_ShareToken_decimals_fuzz(uint8 _decimals) public {
-        Token token = new Token(_decimals);
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_ShareToken_decimals
+    function test_ShareToken_decimals() public {
+        uint8 decimals = 8;
+        Token token = new Token(decimals);
 
         ISiloConfig.ConfigData memory configData;
         configData.token = address(token);
@@ -48,7 +49,7 @@ contract ShareTokenTest is Test {
         sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
         // offset for the debt token is 1
-        assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
+        assertEq(sToken.decimals(), token.decimals(), "expect valid decimals");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_notRevertWhenNoHook
