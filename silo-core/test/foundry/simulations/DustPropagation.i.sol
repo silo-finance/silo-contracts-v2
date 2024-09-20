@@ -8,6 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
@@ -23,8 +24,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     uint256 constant COLLATERAL = 10e18;
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = true;
-    uint256 constant DUST_LEFT = 4;
-    uint256 constant LIQUIDATION_ROUNDING_ERROR = 5;
+    uint256 constant DUST_LEFT = 5;
 
     ISiloConfig siloConfig;
 
@@ -81,31 +81,36 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         assertEq(
             token0.balanceOf(address(silo0)),
-            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            DUST_LEFT,
             "no balance after withdraw fees (except dust!)"
         );
 
         assertEq(
             silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            DUST_LEFT,
             "storage AssetType.Collateral"
         );
 
         assertEq(
             silo0.getCollateralAssets(),
-            DUST_LEFT + LIQUIDATION_ROUNDING_ERROR,
+            DUST_LEFT,
             "total collateral == 4, dust!"
         );
 
-        assertEq(silo0.getLiquidity(), DUST_LEFT + LIQUIDATION_ROUNDING_ERROR, "getLiquidity == 4, dust!");
+        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
 
-        emit log_named_uint("there is no users in silo, but balance is", DUST_LEFT);
+        emit log_named_uint("there is no users in silo, but balance is", token0.balanceOf(address(silo0)));
+
+        emit log_named_uint(
+            "IShareToken(configData.collateralShareToken).totalSupply()",
+            IShareToken(configData.collateralShareToken).totalSupply()
+        );
     }
 
     /*
     forge test -vv --ffi --mt test_dustPropagation_oneUser
     */
-    function test__skip__dustPropagation_oneUser() public {
+    function test_dustPropagation_oneUser() public {
         address user1 = makeAddr("user1");
 
         /*
@@ -125,23 +130,25 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
             ^ we never enter into this `if` for non debt assets, because we always adding +1 for both variables
             and this is why this dust will be forever locked in silo.
-            Atm the only downside I noticed: it creates "minimal deposit" situation.
+            Atm the only downside I noticed: it creates "minimal deposit" situation, when you actually can
         */
-        uint256 assets = DUST_LEFT + 1;
-        uint256 shares1 = _deposit(assets, user1);
+        uint256 shares1 = _deposit(1, user1);
         emit log_named_uint("[user1] shares1", shares1);
 
-        uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
-        assertEq(maxWithdraw1, DUST_LEFT + assets - 1, "[user1] maxWithdraw with dust, -1 for rounding down");
-        assertEq(_redeem(shares1, user1), DUST_LEFT + assets - 1, "[user1] withdrawn assets, -1 for rounding down");
+        assertEq(silo0.maxWithdraw(user1), 0, "[user1] maxWithdraw 0 - not enough shares to withdraw asset");
 
-        assertEq(silo0.getLiquidity(), 1, "getLiquidity == 1, dust left");
+        shares1 += _deposit(1, user1);
+        emit log_named_uint("[user1] shares1", shares1);
+        assertEq(silo0.maxWithdraw(user1), 1, "[user1] maxWithdraw 1");
+
+        // +2 because we deposited it
+        assertEq(silo0.getLiquidity(), DUST_LEFT + 2, "getLiquidity == 1, dust left");
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_twoUsers
+    forge test -vv --ffi --mt test_dustPropagation_twoUsers
     */
-    function test__skip__dustPropagation_twoUsers() public {
+    function test_dustPropagation_twoUsers() public {
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
 
@@ -155,20 +162,20 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
         uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
 
-        assertEq(maxWithdraw1, DUST_LEFT + assets - 1, "[user1] maxWithdraw with dust, because he was first");
+        assertEq(maxWithdraw1, assets, "[user1] maxWithdraw");
         assertEq(maxWithdraw2, assets, "[user2] maxWithdraw");
 
-        assertEq(_redeem(shares1, user1), DUST_LEFT + assets - 1, "[user1] withdrawn assets");
+        assertEq(_redeem(shares1, user1), assets, "[user1] withdrawn assets");
         assertEq(_redeem(shares2, user2), assets, "[user2] withdrawn assets");
 
-        assertEq(silo0.getLiquidity(), 1, "getLiquidity == 1, dust");
+        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 1, dust");
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_noInterest_twoUsers_fuzz
+    forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test__skip__dustPropagation_noInterest_twoUsers_fuzz(
+    function test_dustPropagation_noInterest_twoUsers_fuzz(
         uint128 deposit1, uint128 deposit2
     ) public {
 //        (uint128 deposit1, uint128 deposit2) = (13181, 49673014963301);
@@ -190,7 +197,10 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_uint("dust was", DUST_LEFT);
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
 
-        assertEq(silo0.getLiquidity(), 0, "no interest, so expecting no dust on deposit-withdraw");
+        assertLe(
+            silo0.getLiquidity() - DUST_LEFT,
+            1,
+            "no interest, so expecting no dust on deposit-withdraw, only rounding down is expected");
     }
 
     function _withdrawFromSilo(address _user, uint256 _deposited, uint256 _shares) internal {
