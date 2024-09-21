@@ -1,4 +1,4 @@
-/* SiloMethods.spec */
+/* Valid states example spec */
 using Silo0 as silo0;  // NOTE: Alias for `currentContract` in this example
 using Silo1 as silo1;  // NOTE: This is redundant in this example
 
@@ -37,6 +37,7 @@ methods {
 
     // Dispatcher
     function _.accrueInterest() external => DISPATCHER(true);
+    function _.getCollateralAndProtectedTotalsStorage() external  => DISPATCHER(true);
 
     // ---- `SiloConfig` -------------------------------------------------------
     function _.accrueInterestForSilo(address) external => DISPATCHER(true);
@@ -56,7 +57,6 @@ methods {
     function _.getFeesWithAsset(address) external  => DISPATCHER(true);
     function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
     function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
-    function _.getCollateralAndProtectedTotalsStorage() external  => DISPATCHER(true);
 
     // `CrossReentrancyGuard`
     function _.turnOnReentrancyProtection() external => DISPATCHER(true);
@@ -83,7 +83,7 @@ methods {
     // ---- `IERC3156FlashBorrower` --------------------------------------------
     // NOTE: Since `onFlashLoan` is not a view function, strictly speaking this is unsound.
     // function _.onFlashLoan(address,address,uint256,uint256,bytes) external => NONDET;
-    
+
     // ---- `ISiloFactory` -----------------------------------------------------
     // NOTE: Strictly speaking summarizing `getFeeReceivers` as `CONSTANT` is an under
     // approximation.
@@ -101,7 +101,7 @@ methods {
         address _borrower,
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal returns (bool) => simplified_solvent(_debtConfig, _borrower);
-    
+
     // ---- `IHookReceiver` ----------------------------------------------------
     // TODO: are these sound?
     function _.beforeAction(address, uint256, bytes) external => NONDET DELETE;
@@ -270,18 +270,10 @@ function setupConfig() {
     require silo1.config() == siloConfig;
 }
 
-
 // ---- Rules ------------------------------------------------------------------
 
-/**
-certoraRun certora/config/silo/silo0.conf \
-    --parametric_contracts Silo0 \
-    --msg "VS_Silo_interestRateTimestamp_daoAndDeployerRevenue" \
-    --rule "VS_Silo_interestRateTimestamp_daoAndDeployerRevenue" \
-    --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
-*/
-// TODO: fix property doc (renaming)
-// TODO: Is this a correct way to prove the property? Seems weak
+/// @title If interest rate timestamp is zero then fees are also zero
+/// TODO: Perhaps use an invariant for this?
 rule VS_Silo_interestRateTimestamp_daoAndDeployerRevenue(
     env e,
     method f,
@@ -315,14 +307,9 @@ rule VS_Silo_interestRateTimestamp_daoAndDeployerRevenue(
     );
 }
 
-/**
-certoraRun certora/config/silo/silo0.conf \
-    --parametric_contracts Silo0 \
-    --msg "VS_Silo_totalBorrowAmount" \
-    --rule "VS_Silo_totalBorrowAmount" \
-    --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
-*/
-// TODO: Why not as an invariant? This seems weak.
+
+/// @title Non-zero debt assets implies non-zero collateral
+/// TODO: Better use an invariant, which is stronger
 rule VS_Silo_totalBorrowAmount(env e, method f, calldataarg args) filtered {
     f -> (
         !f.isView &&
@@ -352,6 +339,7 @@ rule VS_Silo_totalBorrowAmount(env e, method f, calldataarg args) filtered {
 }
 
 
+/// @title This is the invariant version of `VS_Silo_totalBorrowAmount` above
 invariant VS_Silo_totalBorrowAmount_invariant()
     silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Debt)) != 0 => (
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) != 0
