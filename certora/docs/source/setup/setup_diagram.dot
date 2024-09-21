@@ -1,0 +1,132 @@
+digraph {
+    graph [
+        bgcolor=gray90 color=blue fontcolor=gray9
+            labelloc=t nodesep=0.5 ranksep=0.5 margin=0
+            rankdir=TB 
+    ]
+    node [
+    color=green fontcolor=gray9
+        shape=Mrecord fontname="DejaVu Sans Mono" fontsize=8
+    ]
+    edge [
+    color=goldenrod fontcolor=gray9
+        arrowhead=normal
+        fontname="DejaVu Sans Mono" fontsize=8
+    ]
+
+    SiloConfig [
+    label="{SiloConfig|
+        <_SILO0> _SILO0\l |
+        <_TOKEN0> _TOKEN0\l |
+        <_DEBT_SHARE_TOKEN0> _DEBT_SHARE_TOKEN0\l |
+        <_COLLATERAL_SHARE_TOKEN0> _COLLATERAL_SHARE_TOKEN0\l |
+        <_PROTECTED_COLLATERAL_SHARE_TOKEN0> _PROTECTED_COLLATERAL_SHARE_TOKEN0\l | 
+        <_SILO1> _SILO1\l |
+        <_TOKEN1> _TOKEN1\l |
+        <_DEBT_SHARE_TOKEN1> _DEBT_SHARE_TOKEN1\l |
+        <_COLLATERAL_SHARE_TOKEN1> _COLLATERAL_SHARE_TOKEN1\l |
+        <_PROTECTED_COLLATERAL_SHARE_TOKEN1> _PROTECTED_COLLATERAL_SHARE_TOKEN1\l}"
+        tooltip="silo-core/contracts/SiloConfig.sol"
+    ]
+    SiloConfig:_SILO0 -> Silo0
+    SiloConfig:_TOKEN0 -> Token0
+    SiloConfig:_DEBT_SHARE_TOKEN0 -> ShareDebtToken0
+    SiloConfig:_COLLATERAL_SHARE_TOKEN0 -> ShareCollateralToken0
+    SiloConfig:_PROTECTED_COLLATERAL_SHARE_TOKEN0 -> ShareProtectedCollateralToken0
+
+    SiloConfig:_SILO1 -> Silo1
+    SiloConfig:_TOKEN1 -> Token1
+    SiloConfig:_DEBT_SHARE_TOKEN1 -> ShareDebtToken1
+    SiloConfig:_COLLATERAL_SHARE_TOKEN1 -> ShareCollateralToken1
+    SiloConfig:_PROTECTED_COLLATERAL_SHARE_TOKEN1 -> ShareProtectedCollateralToken1
+
+    ERC20 [label="ERC20" tooltip="@openzeppelin/contracts/token/ERC20/ERC20.sol"]
+    ERC20 -> Token0 [color=green]
+    ERC20 -> Token1 [color=green]
+
+    ShareDebtToken [
+    label="ShareDebtToken"
+        tooltip="silo-core/contracts/utils/ShareDebtToken.sol"
+    ]
+    ShareDebtToken -> ShareDebtToken0 [color=green]
+    ShareDebtToken -> ShareDebtToken1 [color=green]
+
+    ShareCollateralToken [
+    label="ShareCollateralToken"
+        tooltip="silo-core/contracts/utils/ShareCollateralToken.sol"
+    ]
+    ShareCollateralToken -> ShareCollateralToken0 [color=green]
+    ShareCollateralToken -> ShareCollateralToken1 [color=green]
+    ShareCollateralToken -> ShareProtectedCollateralToken0 [color=green]
+    ShareCollateralToken -> ShareProtectedCollateralToken1 [color=green]
+
+    SiloHarness [
+    label="SiloHarness"
+        tooltip="certora/harness/SiloHarness.sol"
+        href="https://github.com/Certora/silo-contracts-v2-mirror/blob/shoham/cleaned-setup/certora/harness/SiloHarness.sol"
+        target="_blank"
+    ]
+    Silo [label="Silo" tooltip="silo-core/contracts/Silo.sol"]           
+    Silo -> SiloHarness [color=green]
+    SiloHarness -> Silo0 [color=green]
+    SiloHarness -> Silo1 [color=green]
+
+    subgraph cluster_0 {
+        label="Silo-0"
+            edge [color=green]
+            Silo0 [
+            label="Silo0"
+                tooltip="certora/harness/silo0/Silo0.sol"
+                href="https://github.com/Certora/silo-contracts-v2-mirror/blob/shoham/cleaned-setup/certora/harness/silo0/Silo0.sol"
+                target="_blank"
+            ]
+
+            Token0 [
+            label="Token0"
+                tooltip="certora/mocks/Token0.sol"
+                href="https://github.com/Certora/silo-contracts-v2-mirror/blob/shoham/cleaned-setup/certora/mocks/Token0.sol"
+                target="_blank"
+            ]
+            ShareDebtToken0 [
+            label="ShareDebtToken0"
+                tooltip="certora/harness/silo0/ShareDebtToken0.sol"
+            ]
+            ShareCollateralToken0 [
+            label="ShareCollateralToken0"
+                tooltip="certora/harness/silo0/ShareCollateralToken0.sol"
+            ]
+            ShareProtectedCollateralToken0 [
+            label="ShareProtectedCollateralToken0"
+                tooltip="certora/harness/silo0/ShareProtectedCollateralToken0.sol"
+            ]
+    }
+
+    subgraph cluster_1 {
+        label="Silo-1"
+            edge [color=green]
+            Silo1 [
+            label="Silo1"
+                tooltip="certora/harness/silo1/Silo1.sol"
+                href="https://github.com/Certora/silo-contracts-v2-mirror/blob/shoham/cleaned-setup/certora/harness/silo1/Silo1.sol"
+                target="_blank"
+            ]
+            Token1 [
+            label="Token1"
+                tooltip="certora/mocks/Token1.sol"
+                href="https://github.com/Certora/silo-contracts-v2-mirror/blob/shoham/cleaned-setup/certora/mocks/Token1.sol"
+                target="_blank"
+            ]
+            ShareDebtToken1 [
+            label="ShareDebtToken1"
+                tooltip="certora/harness/silo1/ShareDebtToken1.sol"
+            ]
+            ShareCollateralToken1 [
+            label="ShareCollateralToken1"
+                tooltip="certora/harness/silo1/ShareCollateralToken1.sol"
+            ]
+            ShareProtectedCollateralToken1 [
+            label="ShareProtectedCollateralToken1"
+                tooltip="certora/harness/silo1/ShareProtectedCollateralToken1.sol"
+            ]
+    }
+}

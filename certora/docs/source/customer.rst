@@ -216,9 +216,9 @@ Valid states
 
 ----
 
-.. index:: VS_Silo_interestRateTimestamp_daoAndDeployerFees
+.. index:: VS_Silo_interestRateTimestamp_daoAndDeployerRevenue
 
-.. describe:: VS_Silo_interestRateTimestamp_daoAndDeployerFees
+.. describe:: VS_Silo_interestRateTimestamp_daoAndDeployerRevenue
 
    **Status:** Done
 

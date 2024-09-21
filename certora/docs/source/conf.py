@@ -93,7 +93,14 @@ link_to_github = True
 #     "@reward-streams-confs": "../../euler-reward-streams/certora/conf/",
 #     "@reward-streams-harness": "../../euler-reward-streams/certora/harness/",
 # }
-path_remappings = {"@specs": "../../specs", "@silo-specs": "../../specs/silo"}
+path_remappings = {
+    "@specs": "../../specs",
+    "@silo-specs": "../../specs/silo",
+    "@silo-configs": "../../config/silo",
+    "@mocks": "../../mocks",
+    "@harness": "../../harness",
+    "@openzeppelin": "../../../gitmodules/openzeppelin-contracts-5/",
+}
 
 
 # -- Options for todo extension ----------------------------------------------
@@ -111,6 +118,13 @@ spelling_word_list_filename = "spelling_wordlist.txt"
 # DOES scan git log for contributor names to add them to list of correct spelling.
 # This results in a warning when not working over a git repository.
 spelling_ignore_contributor_names = False
+
+
+# -- graphviz configuration --------------------------------------------------
+# See https://www.sphinx-doc.org/en/master/usage/extensions/graphviz.html
+graphviz_output_format = "svg"  # Supports hover and links
+# For links, add ``target``, e.g. ``target="_blank"``.
+# See https://www.w3.org/TR/html401/types.html#type-frame-target for ``target`` options
 
 
 # -- add CVL syntax highlighting ---------------------------------------------

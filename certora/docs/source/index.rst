@@ -2,8 +2,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Silo V2
-=======
+Silo V2 Verification
+====================
 
 .. The main table of contents, possible options:
    :maxdepth: integer - determines how many nested levels to show in the table
@@ -16,6 +16,7 @@ Silo V2
    :numbered: 2
    :caption: Contents:
 
+   ./setup/index
    ./customer
    ./high
    ./silo_props
