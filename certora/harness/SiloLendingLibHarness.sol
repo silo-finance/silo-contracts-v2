@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.24;
 
 import { ISiloConfig } from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import { SiloLendingLib } from "silo-core/contracts/lib/SiloLendingLib.sol";
@@ -7,24 +7,18 @@ import { SiloMock } from "../mocks/SiloMock.sol";
 
 contract SiloLendingLibHarness is SiloMock {
     function maxBorrow(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
+        ISiloConfig _siloConfig,
         address _borrower,
-        uint256 _totalDebtAssets,
-        uint256 _totalDebtShares,
-        ISiloConfig _siloConfig
+        bool _sameAsset
     )
         external
         view
         returns (uint256 assets, uint256 shares)
     {
         return SiloLendingLib.maxBorrow(
-            _collateralConfig,
-            _debtConfig,
+            _siloConfig,
             _borrower,
-            _totalDebtAssets,
-            _totalDebtShares,
-            _siloConfig
+            _sameAsset
         );
     }
 

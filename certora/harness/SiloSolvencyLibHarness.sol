@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.24;
 
 import { SiloSolvencyLib, ISiloConfig, ISilo} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import { ConfigForLib } from "./ConfigForLib.sol";
@@ -8,19 +8,19 @@ contract SiloSolvencyLibHarness is ConfigForLib {
 
     function isSolvent(
         address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 debtShareBalance
+        ISilo.AccrueInterestInMemory _accrueInMemory
     ) external view returns (bool) {
         ISiloConfig.ConfigData memory _collateralConfig = collateralConfig;
         ISiloConfig.ConfigData memory _debtConfig = debtConfig;
+        ISiloConfig.DebtInfo memory _debtInfo = debtInfo;
         
         return SiloSolvencyLib.isSolvent
         (
             _collateralConfig,
             _debtConfig,
+            _debtInfo,
             _borrower,
-            _accrueInMemory,
-            debtShareBalance
+            _accrueInMemory
         );
     }
 

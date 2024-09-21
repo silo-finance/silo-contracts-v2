@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity ^0.8.24;
 
 import { ISiloConfig } from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 
@@ -7,6 +7,7 @@ abstract contract ConfigForLib {
 
     ISiloConfig.ConfigData internal collateralConfig;
     ISiloConfig.ConfigData internal debtConfig;
+    ISiloConfig.DebtInfo internal debtInfo;
 
     function addNumToAddress(address a, uint8 b) external pure returns (address) {
         uint256 num = uint160(a) + uint160(b);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.21;
+pragma solidity ^0.8.24;
 
 interface ISiloMock {
     /// @notice Retrieves the total amounts of collateral and debt assets
@@ -19,7 +19,7 @@ interface ISiloMock {
         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets);
     
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    function total(AssetType _assetType) external view returns (uint256);
+    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256);
 
     /// @dev There are 3 types of accounting in the system: for non-borrowable collateral deposit called "protected",
     ///      for borrowable collateral deposit called "collateral" and for borrowed tokens called "debt". System does

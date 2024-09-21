@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.21;
+pragma solidity ^0.8.24;
 
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 //import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
