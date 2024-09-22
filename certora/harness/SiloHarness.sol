@@ -39,14 +39,6 @@ contract SiloHarness is Silo {
         return ShareTokenLib.siloConfig().reentrancyGuardEntered();
     }
 
-    // TODO: is removing this ok?
-    /*
-    function reentrancyGuardStatus() external view returns (uint256) {
-        (bool entered, uint256 status) = ShareTokenLib.siloConfig().crossReentrantStatus();
-        return status;
-    }
-    */
-
     // TODO: this function is no longer needed
     function getDaoFee() external view returns (uint256) {
         (uint256 daoFee,,, ) = ShareTokenLib.siloConfig().getFeesWithAsset(address(this));
@@ -98,16 +90,4 @@ contract SiloHarness is Silo {
             debtShareBalance
         );
     }
-
-    /* TODO: removed - use hook instead of munging CrossReentrancy.sol
-    function wasCalled_crossNonReentrantBefore() external view returns (bool) {
-        bool res = ShareTokenLib.siloConfig().wasCalled_crossNonReentrantBefore();
-        return res;
-    }
-
-    function wasCalled_crossNonReentrantAfter() external view returns (bool) {
-        bool res = ShareTokenLib.siloConfig().wasCalled_crossNonReentrantAfter();
-        return res;
-    }
-    */
 }

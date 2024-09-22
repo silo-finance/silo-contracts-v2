@@ -2,21 +2,19 @@ using SiloConfig as siloConfig;
 
 methods {
     // Summaries for all the siloConfig getters 
-    function siloConfig.getAssetForSilo(address _silo) external returns(address) => getAssetForSiloSumm(_silo) DELETE;
+    function siloConfig.getAssetForSilo(
+        address _silo
+    ) external returns(address) => getAssetForSiloSumm(_silo) DELETE;
     
-    function siloConfig.getSilos() external returns(address, address) => getSilosSumm() DELETE;
+    function siloConfig.getSilos() external returns (address, address) => getSilosSumm() DELETE;
     
-    // returns (address protectedShareToken, address collateralShareToken, address debtShareToken)
-    function siloConfig.getShareTokens(address _silo) external returns(address, address, address) => getShareTokensSumm(_silo) DELETE;
+    function siloConfig.getShareTokens(
+        address _silo
+    ) external returns (address, address, address) => getShareTokensSumm(_silo) DELETE;
     
-    // returns (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset)
-    function siloConfig.getFeesWithAsset(address _silo) external returns(uint256, uint256, uint256, address) => getFeesWithAssetSumm(_silo) DELETE;
-
-    // TODO: is deleting this OK?
-    //function siloConfig.getConfig(address _silo) external returns(ISiloConfig.ConfigData memory) envfree => getConfigSumm(_silo) DELETE;
-
-    // TODO: is deleting this OK?
-    //function siloConfig.getConfigs(address _silo) external returns(ISiloConfig.ConfigData memory,ISiloConfig.ConfigData memory) envfree => getConfigsSumm(_silo) DELETE;
+    function siloConfig.getFeesWithAsset(
+        address _silo
+    ) external returns(uint256, uint256, uint256, address) => getFeesWithAssetSumm(_silo) DELETE;
 }
 
 definition MAX_LTV_PERCENT() returns uint256 = 10^18;
