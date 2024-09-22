@@ -18,11 +18,6 @@ Unit tests
    :cvl:`deposit`, :cvl:`mint`, :cvl:`withdraw`, :cvl:`redeem`, :cvl:`liquidationCall`,
    :cvl:`accrueInterest`, :cvl:`leverage`, :cvl:`repay` and :cvl:`repayShares`.
 
-   .. dropdown:: Rule
-
-      .. cvlinclude:: @silo-specs/unit-tests/UnitTestsSilo0.spec
-         :caption:
-
 ----
 
 Variable changes
@@ -45,12 +40,6 @@ Variable changes
    The balance of the silo in the underlying asset should increase for the same amount
    as :cvl:`Silo._total[ISilo.AssetType.Collateral].assets` increased.
 
-   .. dropdown:: Rule
-
-      .. cvlinclude:: @silo-specs/variable-changes/VariableChangesSilo0.spec
-         :cvlobject: VC_Silo_total_collateral_increase
-         :caption:
-
 ----
 
 .. index:: VC_Silo_total_collateral_decrease
@@ -65,12 +54,6 @@ Variable changes
 
    The balance of the silo in the underlying asset should decrease for the same amount
    as :cvl:`Silo._total[ISilo.AssetType.Collateral].assets` decreased,
-
-   .. dropdown:: Rule
-
-      .. cvlinclude:: @silo-specs/variable-changes/VariableChangesSilo0.spec
-         :cvlobject: VC_Silo_total_collateral_decrease
-         :caption:
 
 ----
 
@@ -231,6 +214,8 @@ Valid states
    #. :cvl:`_siloData.daoAndDeployerFees` can increase without
       :cvl:`_siloData.interestRateTimestamp` only on flashLoan fn.
 
+   .. rubric:: See :doc:`../valid_states` for results.
+
 ----
 
 .. index:: VS_Silo_totalBorrowAmount
@@ -245,6 +230,8 @@ Valid states
 
    :cvl:`Silo._total[ISilo.AssetType.Debt].assets` is not zero
    :math:`\implies` :cvl:`Silo._total[ISilo.AssetType.Collateral].assets` is not zero.
+   
+   .. rubric:: See :doc:`../valid_states` for results.
 
 ----
 
@@ -378,12 +365,10 @@ High level properties
 
    **Type:** High-level-property
 
-   Additive deposit for the state *while do* :cvl:`deposit(x + y)` should be the same as
+   Additive deposit for the state, i.e. :cvl:`deposit(x + y)` should be the same as
    :cvl:`deposit(x) + deposit(y)`.
-   Apply for :cvl:`mint`, :cvl:`withdraw`, :cvl:`redeem`, :cvl:`repay`, :cvl:`repayShares`,
+   Applies to :cvl:`mint`, :cvl:`withdraw`, :cvl:`redeem`, :cvl:`repay`, :cvl:`repayShares`,
    :cvl:`borrow` and :cvl:`borrowShares`.
-   
-   .. todo:: Unclear phrasing in deposit additivity -- verify.
 
 ----
 
@@ -478,8 +463,6 @@ Risk analysis
    **Type:** Risk-analysis
 
    A user should not be able to fully repay a loan with less amount than he borrowed.
-
-   .. todo:: Are there no edge-cases?
 
 ----
 
@@ -611,11 +594,6 @@ Risk analysis
 
    Moreover, :cvl:`_siloData.interestRateTimestamp` can only increase.
 
-   .. todo::
-
-      :cvl:`daoAndDeployerFees` changed to :cvl:`daoAndDeployerRevenue` -- verify this
-      has no meaningful impact.
-
 ----
 
 .. index:: HLP_silo_anyone_for_anyone
@@ -700,8 +678,6 @@ Risk analysis
    **Type:** Risk-analysis
 
    Cross silo read-only reentrancy check. Allowed methods for reentrancy: :cvl:`flashLoan`.
-
-   .. todo:: Is this still relevant and correct?
 
 ----
 

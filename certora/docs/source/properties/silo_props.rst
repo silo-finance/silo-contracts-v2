@@ -32,8 +32,6 @@ Silo Properties
 
    Allowed changes: timestamp, ...
 
-   .. todo:: What are the other allowed changes.
-
 ----
 
 .. index:: SiloProp3
@@ -48,7 +46,7 @@ Silo Properties
 
    Accruals happen at the expected interactions.
 
-   .. todo:: Is this a duplicate?
+   .. todo:: Might be a duplicate.
 
 ----
 
@@ -88,14 +86,14 @@ Silo Properties
 
    **Status:** None
 
-   **Severity:** High
+   **Severity:** Med
 
    **Type:**
 
    Value of debt shares are only increasing (the amount of underlying collateral tokens
-   represented by :math:`x` shares can only increase)
+   represented by :math:`x` shares can only increase).
 
-   .. todo:: That isn’t necessarily true, but interesting to check.
+   .. note:: This isn't true, but it might be worthwhile listing where exactly it is violated.
 
 ----
 
@@ -175,8 +173,6 @@ Silo Properties
 
    No user’s shares are worth more than the totals for that asset type.
 
-   .. todo:: There might be a stronger constraints?
-
 ----
 
 .. index:: SiloProp12
@@ -189,10 +185,8 @@ Silo Properties
 
    **Type:**
 
-   Functions that get :cvl:`assetType` should all (currently) revert if the assetType is
-   :cvl:`debtToken`.
-
-   .. todo:: Why should this be true?
+   Functions that get :cvl:`assetType` should all (currently) revert if the
+   :cvl:`assetType` is :cvl:`debtToken`.
 
 ----
 
@@ -207,8 +201,6 @@ Silo Properties
    **Type:**
 
    Protected funds are not affecting interest rate calculations.
-
-   
 
 ----
 
@@ -225,10 +217,6 @@ Silo Properties
    Any call On :cvl:`Silo0` (ands all its tokens and associated contracts) Should
    yield the same result as the same call, but with accrueInterest called before it,
    on :cvl:`Silo1`.
-
-   .. todo:: Is this correct?
-
-   
 
 ----
 
@@ -263,11 +251,7 @@ Silo Properties
    A call to :cvl:`deposit()` with amount that is smaller than returned by
    :cvl:`MaxDesposit()` should not revert (for a given user).
 
-   .. todo::
-
-      * Possible duplicate.
-      * Are there no other conditions for reverting?
-
+   .. todo:: Possible duplicate.
 
 ----
 
@@ -284,13 +268,6 @@ Silo Properties
    Invariant - Silo's total collateral assets are at least the total supply of the
    :cvl:`CollateralShare` Token.
 
-   .. dropdown:: Rule
-
-      .. cvlinclude:: @silo-specs/variable-changes/VariableChangesSilo0.spec
-         :cvlobject: collateralAssetsBoundShareTokenTotalSupply
-         :caption:
-   
-
 ----
 
 .. index:: SiloProp19
@@ -306,12 +283,6 @@ Silo Properties
    Invariant - Silo's total protected collateral assets are at least the total supply
    of the :cvl:`ShareProtectedCollateral` token.
 
-   .. dropdown:: Rule
-
-      .. cvlinclude:: @silo-specs/variable-changes/VariableChangesSilo0.spec
-         :cvlobject: protectedAssetsBoundProtectedShareTokenTotalSupply
-         :caption:
-
 ----
 
 .. index:: SiloProp20
@@ -325,12 +296,6 @@ Silo Properties
    **Type:** Valid-state
 
    Invariant - Silo cannot have assets of any type when the interest rate timestamp is 0.
-
-   .. dropdown:: Rule
-
-      .. cvlinclude:: @silo-specs/variable-changes/VariableChangesSilo0.spec
-         :cvlobject: cannotHaveAssestWithZeroInterestRateTimestamp
-         :caption:
 
 ----
 
@@ -422,7 +387,7 @@ Silo Properties
    Might be implemented as a front-run rule on liquidation (and check the amount of
    collateral yielded to the liquidator).
 
-   .. todo::
+   .. note::
    
       * Might be trivially wrong for extremely indebted positions?
       * can one get 0 collateral back?

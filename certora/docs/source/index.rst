@@ -13,15 +13,11 @@ Silo V2 Verification
 
 .. toctree::
    :maxdepth: 1
-   :numbered: 2
    :caption: Contents:
 
-   ./setup/index
-   ./customer
-   ./high
-   ./silo_props
-   ./misc
-
+   ./general_setup.rst
+   ./valid_states
+   ./properties/index
 
 
 .. The following is a trick to get the general index on the side bar.

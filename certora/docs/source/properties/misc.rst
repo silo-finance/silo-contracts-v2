@@ -14,8 +14,6 @@ ShareToken.sol Properties
 
    For any token, any change in any balance should always call _beforeTransfer()
 
-   
-
 ----
 
 .. index:: ShareToken2
@@ -28,8 +26,6 @@ ShareToken.sol Properties
 
    ERC20 property of total_supply matching all share balances
 
-   
-
 ----
 
 .. index:: ShareToken3
@@ -41,8 +37,6 @@ ShareToken.sol Properties
    **Severity:** Med
 
    Can’t re-init
-
-   
 
 ----
 
@@ -59,8 +53,6 @@ ShareDebtToken Properties
 
    ERC20 property of total_supply matching all share balances
 
-   
-
 ----
 
 .. index:: ShareDebtToken2
@@ -73,8 +65,6 @@ ShareDebtToken Properties
 
    Debt token cannot be sent away to users that don’t approve it
 
-   
-
 ----
 
 .. index:: ShareDebtToken3
@@ -86,8 +76,6 @@ ShareDebtToken Properties
    **Severity:** Med
 
    Debt tokens cannot be sent away to users to make them insolvent (this should be covered by the high level rule - 1)
-
-   
 
 ----
 
@@ -104,8 +92,6 @@ SiloConfig Properties
 
    Anything it returns should be immutable (no action against the config should change)
 
-   
-
 ----
 
 .. index:: SiloConfig2
@@ -118,7 +104,8 @@ SiloConfig Properties
 
    LTV configs (lt vs maxlt) are configured in a certain way
 
-   maxlt is less than lt, probably less than 90% of lt. This property is required for other properties around the system, and is a configuration assumption
+   maxlt is less than lt, probably less than 90% of lt.
+   This property is required for other properties around the system, and is a configuration assumption
 
 ----
 
@@ -134,8 +121,6 @@ SiloFactory Properties
    **Severity:** Low
 
    Silo factory can only be initialized once
-
-   
 
 ----
 
@@ -164,9 +149,8 @@ ShareCollateralToken Properties
 
    **Severity:** High
 
-   Collateral shares shouldn’t be sent if it makes the user liquidatable/insolvent (should be covered by the high level rule - 1)
-
-   
+   Collateral shares shouldn’t be sent if it makes the user liquidatable/insolvent
+   (should be covered by the high level rule - 1)
 
 ----
 
@@ -181,4 +165,5 @@ InterestRateModel Properties
 
    **Severity:** 
 
-   Any call by a silo that returns some value, cannot be front-runnable by another silo (or any address) such that this call returns a different value
+   Any call by a silo that returns some value, cannot be front-runnable by another
+   silo (or any address) such that this call returns a different value

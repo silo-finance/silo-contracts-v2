@@ -13,8 +13,6 @@ from docsinfra.sphinx_utils import TAGS, CVL2Lexer
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "Silo V2"
-copyright = "2024, Certora, Inc"
-author = "Certora, Inc"
 
 # Generate dev-build
 tags.add(TAGS.is_dev_build)  # noqa: F821
@@ -100,6 +98,7 @@ path_remappings = {
     "@mocks": "../../mocks",
     "@harness": "../../harness",
     "@openzeppelin": "../../../gitmodules/openzeppelin-contracts-5/",
+    "@lib": "../../../silo-core/contracts/lib",
 }
 
 

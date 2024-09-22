@@ -85,13 +85,13 @@ High level properties
 
    **Type:** High-level-property
 
-   One user action should not lower the “health” factor of another user (filter out debt transfers)
+   One user action should not lower the “health” factor of another user
+   (filter out debt transfers).
 
-   .. todo::
+   .. note::
 
-      * except accrue?
-      * also might be violated due to collateral value lowering?
-        (see violated property deposit can't lower share rate)
+      Also might be violated due to collateral value lowering?
+      (see violated property deposit can't lower share rate).
 
 ----
 
@@ -141,8 +141,6 @@ High level properties
 
    There should never be an advantage to self liquidate or self repay, the end debt and
    collateral values on both silos should be the same
-
-   .. todo:: What is the severity of this?
 
 ----
 
