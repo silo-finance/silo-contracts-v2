@@ -6,6 +6,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {MaxWithdrawCommon} from "./MaxWithdrawCommon.sol";
 
@@ -42,7 +43,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         _deposit(_assets2, address(1)); // any
 
         uint256 maxRedeem = silo0.maxRedeem(borrower);
-        assertEq(maxRedeem, _assets, "max withdraw == _assets/shares if no interest");
+        assertEq(maxRedeem, _assets * SiloMathLib._DECIMALS_OFFSET_POW, "max withdraw == _assets/shares if no interest");
 
         _assertBorrowerCanNotRedeemMore(maxRedeem); // no borrow here, so flag does not matter
         _assertBorrowerHasNothingToRedeem();
