@@ -4,8 +4,6 @@ Valid states example
 
 Setup notes
 -----------
-* Summarized :solidity:`ISiloOracle.quote` as using a constant price of 1 -- a
-  simplification.
 * Summarized :solidity:`ShareToken._afterTokenTransfer` as constant. This is an
   **under-approximation** since it simply ignores all side-effects of this function.
   However leaving the call to :solidity:`IHookReceiver` unresolved caused havoc issues.
@@ -28,7 +26,7 @@ Setup notes
 
 Rules and results
 -----------------
-Report link: `Rule Report`_.
+Report link: `Valid States Rule Report`_.
 
 .. index:: VS_Silo_interestRateTimestamp_daoAndDeployerRevenue
 
@@ -42,7 +40,7 @@ Report link: `Rule Report`_.
 
    **Verification status:** Verified
 
-   **Rule report:** `Rule Report`_
+   **Rule report:** `Valid States Rule Report`_
 
    Property:
       #. :cvl:`_siloData.interestRateTimestamp` is zero :math:`\implies`
@@ -81,7 +79,7 @@ Report link: `Rule Report`_.
 
    **Verification status:** Violated
 
-   **Rule report:** `Rule Report`_
+   **Rule report:** `Valid States Rule Report`_
 
    Property:
       :cvl:`Silo._total[ISilo.AssetType.Debt].assets` is not zero
@@ -128,7 +126,7 @@ Report link: `Rule Report`_.
 
    **Verification status:** Violated
 
-   **Rule report:** `Rule Report`_
+   **Rule report:** `Valid States Rule Report`_
 
    This rule is a rephrasing as an invariant of the rule :cvl:`VS_Silo_totalBorrowAmount`
    above
@@ -150,9 +148,8 @@ Report link: `Rule Report`_.
          :caption: :clink:`Rule link<@silo-specs/valid_states_example.spec>`
 
 
-
 .. Links
    -----
 
-.. _Rule Report:
+.. _Valid States Rule Report:
    https://prover.certora.com/output/98279/bcf378e7addb4ed0a4708eaa5e54222e?anonymousKey=87ace563ed5d962265e7375bdc44bed1682d0d21

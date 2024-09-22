@@ -15,8 +15,9 @@ Silo V2 Verification
    :maxdepth: 1
    :caption: Contents:
 
-   ./general_setup.rst
+   ./general_setup
    ./valid_states
+   ./high_example
    ./properties/index
 
 

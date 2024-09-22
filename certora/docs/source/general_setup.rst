@@ -74,6 +74,16 @@ link a slot to the :cvl:`SiloConfig` contract to resolve the call. Instead we us
    :end-at: turnOffReentrancyProtection
    :caption: :clink:`DISPATCHER summary example<@silo-specs/valid_states_example.spec>`
 
+ISiloOracle
+^^^^^^^^^^^
+* Summarized :solidity:`ISiloOracle.quote` as using a constant price of 1, this is a
+  simplification.
+* The function :solidity:`beforeQuote` was summarized as :cvl:`NONDET`, which
+  essentially ignores any side-effects.
+
+.. attention:: Both summarizations are under approximations.
+
+
 Mathematical simplification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 We've summarized :solidity:`mulDiv` as a CVL function, which helps reduce the risk
