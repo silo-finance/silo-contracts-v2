@@ -105,7 +105,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_previewWithdraw_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
+    function test_previewWithdraw_min_fuzz(uint112 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
         _depositForTestPreview(_assetsOrShares);
@@ -114,7 +114,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         if (_interest) _applyInterest();
 
-        uint256 minInput = _useRedeem() ? 1 : silo1.convertToAssets(1);
+        uint256 minInput = _useRedeem() ? silo1.convertToShares(1) : silo1.convertToAssets(SiloMathLib._DECIMALS_OFFSET_POW);
         uint256 minPreview = _getPreview(minInput);
 
         if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
