@@ -19,9 +19,12 @@ General notes
 
 ----
 
+Contracts
+---------
+
 SiloConfig
-----------
-We use `linking`_ to connect :cvl:`SiloConfig` immutable addresses to the respective
+^^^^^^^^^^
+We used `linking`_ to connect :cvl:`SiloConfig` immutable addresses to the respective
 contracts. For example:
 
 .. cvlinclude:: @silo-configs/valid_states_example.conf
@@ -29,10 +32,11 @@ contracts. For example:
    :end-at: ]
    :caption:
 
-----
+Note that there is a single unique :cvl:`SiloConfig` in the scene, used by all other
+contracts.
 
 Base tokens
------------
+^^^^^^^^^^^
 Both mock tokens used in the setup, :clink:`Token0<@mocks/Token0.sol>` and 
 :clink:`Token1<@mocks/Token1.sol>`, inherit from
 :clink:`@openzeppelin/contracts/token/ERC20/ERC20.sol`.
@@ -43,12 +47,53 @@ Both mock tokens used in the setup, :clink:`Token0<@mocks/Token0.sol>` and
    implementation reverts on transfer to address zero or insufficient funds.
    Other implementation may simply return :solidity:`false`.
 
-----
-
 Silos
------
+^^^^^
 Both silos inherit from :clink:`SiloHarness<@harness/SiloHarness.sol>`, which
 exposes certain functions and data needed for specs.
+
+----
+
+Summaries
+---------
+
+SiloConfig
+^^^^^^^^^^
+For many calls to :cvl:`SiloConfig`, such as the one shown below, we cannot
+link a slot to the :cvl:`SiloConfig` contract to resolve the call. Instead we use
+:cvl:`DISPATCHER` summaries.
+
+.. cvlinclude:: @lib/Actions.sol
+   :start-at: function deposit
+   :end-at: siloConfig.accrueInterestForSilo
+   :emphasize-lines: 14-
+   :caption: :clink:`Call to SiloConfig from Action library<@lib/Actions.sol>`
+
+.. cvlinclude:: @silo-specs/valid_states_example.spec
+   :start-at: CrossReentrancyGuard
+   :end-at: turnOffReentrancyProtection
+   :caption: :clink:`DISPATCHER summary example<@silo-specs/valid_states_example.spec>`
+
+Mathematical simplification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We've summarized :solidity:`mulDiv` as a CVL function, which helps reduce the risk
+of timeout. For example:
+
+.. cvlinclude:: @silo-specs/valid_states_example.spec
+   :cvlobject: cvlMulDiv
+   :caption: :clink:`from valid_states_example.spec<@silo-specs/valid_states_example.spec>`
+
+.. attention::
+
+   The summarized function never reverts. Hence this summarization would not be
+   appropriate for certain rules, like rules checking revert conditions.
+
+----
+
+Configuration
+-------------
+* Used Solidity version 0.8.24 throughout.
+* Used ``"loop_iter": "2"``.
 
 
 .. Links
