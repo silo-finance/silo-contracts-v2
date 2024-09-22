@@ -13,82 +13,83 @@
     Note. Since the `ShareToken` contracts inherit the `ERC20` we should summarize the
     internal functions. However, since there are also external calls such as
     `IShareToken(_shareToken).totalSupply()`, we summarize only the external calls.
-
-   TODO:
-   - Are the random failures `nondetSuccess` needed?
-   - Finish `shareTokenMintCVL` and `shareTokenBurnCVL`
-   - `DELETE` all functions to ensure no CVL calls to them.
 */
+
+using ShareDebtToken0 as shareDebtToken0;
+using ShareCollateralToken0 as shareCollateralToken0;
+using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
+
+using ShareDebtToken1 as shareDebtToken1;
+using ShareCollateralToken1 as shareCollateralToken1;
+using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
+
 methods {
     // Standard `ERC20`
     function _.decimals() external => PER_CALLEE_CONSTANT;  // Not called internally
 
     // The functions `name` and `symbol` are deleted since they cause memory partitioning
     // problems.
-    function _.name() external => NONDET DELETE; //TODO: can we use PER_CALLEE_CONSTANT?
-    function _.symbol() external => NONDET DELETE; // TODO: can we use PER_CALLEE_CONSTANT?
+    function _.name() external => PER_CALLEE_CONSTANT DELETE;
+    function _.symbol() external => PER_CALLEE_CONSTANT DELETE;
 
     function _.totalSupply() external => totalSupplyByToken[calledContract] expect uint256 DELETE;
-    //function _.totalSupply() internal => totalSupplyByToken[calledContract] expect uint256;
-
     function _.balanceOf(
         address a
     ) external => balanceByToken[calledContract][a] expect uint256 DELETE;
-    //function _.balanceOf(
-    //    address a
-    //) internal => balanceByToken[calledContract][a] expect uint256;
-
     function _.allowance(
         address a,
         address b
     ) external => allowanceByToken[calledContract][a][b] expect uint256 DELETE;
-    //function _.allowance(
-    //    address a,
-    //    address b
-    //) internal => allowanceByToken[calledContract][a][b] expect uint256;
-
     function _.approve(
         address a,
         uint256 x
     ) external with (env e) => approveCVL(calledContract, e.msg.sender, a, x) expect bool DELETE;
-    //function _.approve(
-    //    address a,
-    //    uint256 x
-    //) internal with (env e) => approveCVL(calledContract, e.msg.sender, a, x) expect bool;
-
     function _.transfer(
         address a, uint256 x
     ) external with (env e) => transferCVL(calledContract, e.msg.sender, a, x) expect bool DELETE;
-    //function _.transfer(
-    //    address a, uint256 x
-    //) internal with (env e) => transferCVL(calledContract, e.msg.sender, a, x) expect bool;
-
     function _.transferFrom(
         address a,
         address b,
         uint256 x
     ) external with (env e) => transferFromCVL(calledContract, e.msg.sender, a, b, x) expect bool DELETE;
-    //function _.transferFrom(
-    //    address a,
-    //    address b,
-    //    uint256 x
-    //) internal with (env e) => transferFromCVL(calledContract, e.msg.sender, a, b, x) expect bool;
 
     // `IShareToken` (these functions are only external, not public)
     function _.mint(
         address _owner,
         address _spender,
         uint256 _amount
-    ) external with (env e) => shareTokenMintCVL(calledContract, _owner, _spender, _amount) expect void;
+    ) external with (env e) => shareTokenMintCVL(
+        calledContract,
+        _owner,
+        _spender,
+        _amount
+    ) expect void DELETE;
     function _.burn(
         address _owner,
         address _spender,
         uint256 _amount
-    ) external with (env e) => shareTokenBurnCVL(calledContract, _owner, _spender, _amount) expect void;
+    ) external with (env e) => shareTokenBurnCVL(
+        calledContract,
+        _owner,
+        _spender,
+        _amount
+    ) expect void DELETE;
 
     function _.balanceOfAndTotalSupply(
         address _account
     ) external => balanceOfAndTotalSupplyCVL(calledContract, _account) expect (uint256, uint256);
+
+    function _.forwardTransferFromNoChecks(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external with (env e) => transferFromNoChecksCVL(
+        calledContract,
+        e.msg.sender,
+        _from,
+        _to,
+        _amount
+    ) expect void DELETE;
 }
 
 // ---- Storage ----------------------------------------------------------------
@@ -144,6 +145,20 @@ function transferFromCVL(
 }
 
 
+/// @title Implementation of `forwardTransferFromNoChecks` in CVL
+/// TODO: Does not revert!
+function transferFromNoChecksCVL(
+    address token,
+    address msgSender,
+    address from,
+    address to,
+    uint256 amount
+) {
+    require msgSender == currentContract;
+    transferCVL(token, from, to, amount);
+}
+
+
 /// @title Implementation of `ERC20.transfer` in CVL
 function transferCVL(address token, address from, address to, uint256 amount) returns bool {
     // should be randomly reverting xxx
@@ -165,8 +180,9 @@ function shareTokenMintCVL(
     address _spender,
     uint256 _amount
 ) {
-    // TODO: if (token == shareCollateralToken0 || token 
-    _spendAllowanceCVL(token, _owner, _spender, _amount);
+    if (token == shareDebtToken0 || token == shareDebtToken1) {
+        _spendAllowanceCVL(token, _owner, _spender, _amount);
+    }
     _mintCVL(token, _owner, _amount);
 }
 
@@ -178,8 +194,12 @@ function shareTokenBurnCVL(
     address _spender,
     uint256 _amount
 ) {
-    // TODO: if (token == shareCollateralToken0 || token 
-    _spendAllowanceCVL(token, _owner, _spender, _amount);
+    if (
+        token == shareCollateralToken0 || token == shareCollateralToken1 ||
+        token == shareProtectedCollateralToken0 || token == shareProtectedCollateralToken1
+       ) {
+        _spendAllowanceCVL(token, _owner, _spender, _amount);
+    }
     _burnCVL(token, _owner, _amount);
 }
 
