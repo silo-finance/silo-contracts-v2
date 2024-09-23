@@ -187,13 +187,13 @@ contract Deployers is VyperDeployer, Data {
         siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
         siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
 
-        address siloImpl = address(new Silo(siloFactory));
-        address siloImplInternal = address(
-            new SiloInternal(siloFactoryInternal)
-        );
+        // address siloImpl = address(new Silo(siloFactory));
+        // address siloImplInternal = address(
+        //     new SiloInternal(siloFactoryInternal)
+        // );
 
-        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
-        address shareDebtTokenImpl = address(new ShareDebtToken());
+        // address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        // address shareDebtTokenImpl = address(new ShareDebtToken());
 
         address timelock = address(timelockController);
         Ownable(address(siloFactory)).transferOwnership(timelock);

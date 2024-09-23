@@ -311,7 +311,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         _collateralShareTokenDecimals(IShareToken(protected1), address(token1));
     }
 
-    function _collateralShareTokenDecimals(IShareToken _collateralToken, address _siloAsset) internal {
+    function _collateralShareTokenDecimals(IShareToken _collateralToken, address _siloAsset) internal view {
         uint256 assetDecimals = IShareToken(_siloAsset).decimals();
         uint256 collateralDecimals = _collateralToken.decimals();
 
