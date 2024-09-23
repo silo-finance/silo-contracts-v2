@@ -5,7 +5,7 @@ To build the files locally.
 
 1. In a clean Python virtual environment, run from the repositories root:
 ```bash
-pip3 install -r certora/docs/requirements.txt
+pip3 install -r certora/docs/_requirements.txt
 ```
 2. In the same environment run:
 ```bash
@@ -13,6 +13,9 @@ sphinx-build -b html certora/docs/source/ certora/docs/build/html -t is_dev_buil
 ```
 3. The built html docs index file is in `certora/docs/build/html/index.html` and
    you can view it in your browser.
+   
+> [!IMPORTANT]  
+> The documentation requires installation of [Graphviz](https://graphviz.org/).
    
 ## More information
 More information can be found in
