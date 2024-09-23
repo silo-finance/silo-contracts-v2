@@ -41,6 +41,7 @@ on:
       - silo-vaults/**/*.js
       - silo-vaults/**/*.json
       - package.json
+      - foundry.toml
       - yarn.lock
       - gitmodules/*
       - .gitmodules
@@ -72,6 +73,7 @@ on:
       - silo-vaults/**/*.js
       - silo-vaults/**/*.json
       - package.json
+      - foundry.toml
       - yarn.lock
       - gitmodules/*
       - .gitmodules
