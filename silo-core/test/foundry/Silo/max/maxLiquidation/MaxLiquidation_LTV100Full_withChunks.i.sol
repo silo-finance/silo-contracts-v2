@@ -25,14 +25,13 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
         emit log_named_decimal_uint("[LTV100FullWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
-        for (uint256 i; i < 5; i++) {
+        for (uint256 i; i < 6; i++) {
             emit log_named_uint("[LTV100FullWithChunks] case ------------------------", i);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
             (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
-
-            emit log_named_uint("[LTV100FullWithChunks] debtToCover", debtToCover);
+            if (debtToCover == 0) continue;
 
             { // too deep
                 bool isSolvent = silo0.isSolvent(borrower);

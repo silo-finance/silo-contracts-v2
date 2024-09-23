@@ -283,6 +283,9 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
             uint256 almostEverything = _debtToCover < minAssets ? minAssets : _debtToCover - minAssets;
             return almostEverything < minAssets ? minAssets : almostEverything;
+        } else if (_i == 5) {
+            // for iteration 5, we liquidating whatever left
+            return _debtToCover;
         } else revert("this should never happen");
     }
 
