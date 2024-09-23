@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -126,7 +127,13 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
 
         previewShares1 = silo1.previewDeposit(_assets, assetType);
 
-        assertLe(previewShares1, _assets, "with interests, we can receive less shares than assets amount");
+        // we have different rounding direction for general conversion method nad preview deposit
+        // so it can produce slight different result on precision level, that's why we divide by precision
+        assertLe(
+            previewShares1 / SiloMathLib._DECIMALS_OFFSET_POW,
+            _assets,
+            "with interests, we can receive less shares than assets amount"
+        );
 
         emit log_named_uint("previewShares1", previewShares1);
 
