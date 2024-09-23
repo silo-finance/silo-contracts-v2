@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {MintableToken} from "../../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
@@ -48,12 +49,12 @@ contract MaxMintTest is SiloLittleHelper, Test {
 
         assertEq(silo0.maxMint(borrower), _REAL_ASSETS_LIMIT, "real max deposit");
 
-        _mintForBorrow(toBorrow, toBorrow, depositor);
-        _mint(toBorrow * 2, toBorrow * 2, borrower);
+        _mintForBorrow(toBorrow, silo0.convertToShares(toBorrow), depositor);
+        _mint(toBorrow * 2, silo0.convertToShares(toBorrow * 2), borrower);
         _borrow(toBorrow, borrower);
 
-        assertEq(silo0.maxMint(borrower), _REAL_ASSETS_LIMIT - toBorrow * 2, "max deposit after mint");
-        assertEq(silo1.maxMint(borrower), _REAL_ASSETS_LIMIT - toBorrow, "can deposit with debt");
+        assertEq(silo0.maxMint(borrower), _REAL_ASSETS_LIMIT - silo0.convertToShares(toBorrow * 2), "max deposit after mint");
+        assertEq(silo1.maxMint(borrower), _REAL_ASSETS_LIMIT - silo0.convertToShares(toBorrow), "can deposit with debt");
     }
 
     /*
@@ -77,7 +78,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
         /// we probably can deposit more, but if for our way of defining max we get 0, we dont need to test deposit 0
         if (maxMint == 0) return;
 
-        uint256 minted = _mintForBorrow(maxMint, maxMint, depositor);
+        uint256 minted = _mintForBorrow(maxMint, silo1.convertToShares(maxMint), depositor);
 
         _assertWeCanBorrowAfterMaxDeposit(_initialDeposit + minted, borrower);
     }
@@ -156,7 +157,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
         token1.transfer(depositor, token1.balanceOf(borrower));
 
         token1.setOnDemand(true);
-        _mintForBorrow(maxMint, maxMint, depositor);
+        _mintForBorrow(maxMint, silo1.convertToShares(maxMint), depositor);
         token1.setOnDemand(false);
 
         _assertWeCanBorrowAfterMaxDeposit(maxMint, borrower);
