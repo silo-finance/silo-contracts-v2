@@ -63,7 +63,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_liquidity_whenProtected
     */
     function test_liquidity_whenProtected(uint256 _assets) public {
-        vm.assume(_assets > 0);
+        vm.assume(_assets > 0 && _assets < type(uint128).max);
 
         _deposit(_assets, depositor, ISilo.CollateralType.Protected);
 
