@@ -57,9 +57,12 @@ library Views {
             address protectedToken, address collateralToken,
         ) = ShareTokenLib.siloConfig().getShareTokens(address(this));
 
-        address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
+        IShareToken shareToken = _collateralType == ISilo.CollateralType.Collateral
+            ? IShareToken(collateralToken)
+            : IShareToken(protectedToken);
 
-        return SiloERC4626Lib.maxDepositOrMint(IShareToken(shareToken).totalSupply());
+        // maxDepositOrMint is "virtual" calculation, because of that it is not necessary to convert to assets
+        return SiloERC4626Lib.maxDepositOrMint(shareToken.totalSupply() / SiloMathLib._DECIMALS_OFFSET_POW);
     }
 
     function maxDeposit(ISilo.CollateralType _collateralType) internal view returns (uint256 maxAssets) {
