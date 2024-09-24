@@ -143,7 +143,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             if (
                 protectedShares != 0
                 && (
-                    SiloMathLib._DECIMALS_OFFSET_POW > 1
+                    SiloMathLib._DECIMALS_OFFSET_POW == 1
                     || ISilo(collateralConfig.silo).convertToAssets(collateralShares, ISilo.AssetType.Protected) != 0
                 )
             ) {
