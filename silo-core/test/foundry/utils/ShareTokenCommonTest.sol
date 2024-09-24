@@ -300,7 +300,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_collateralShareTokenDecimals
     */
-    function test_collateralShareTokenDecimals() public {
+    function test_collateralShareTokenDecimals() public view {
         (address protected0, address collateral0,) = siloConfig.getShareTokens(address(silo0));
         (address protected1, address collateral1,) = siloConfig.getShareTokens(address(silo1));
 

@@ -126,12 +126,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             // if share token offset is more than 0, positive number of shares can generate 0 assets
             // so there is a need to check assets before we withdraw collateral/protected
 
-            if (collateralShares != 0
-                && (
-                    SiloMathLib._DECIMALS_OFFSET_POW == 1
-                    || ISilo(collateralConfig.silo).convertToAssets(collateralShares) != 0
-                )
-            ) {
+            if (collateralShares != 0) {
                 withdrawCollateral = ISilo(collateralConfig.silo).redeem(
                     collateralShares,
                     msg.sender,
@@ -140,13 +135,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
                 );
             }
 
-            if (
-                protectedShares != 0
-                && (
-                    SiloMathLib._DECIMALS_OFFSET_POW == 1
-                    || ISilo(collateralConfig.silo).convertToAssets(collateralShares, ISilo.AssetType.Protected) != 0
-                )
-            ) {
+            if (protectedShares != 0) {
                 unchecked {
                     // protected and collateral values were split from total collateral to withdraw,
                     // so we will not overflow when we sum them back, especially that on redeem, we rounding down

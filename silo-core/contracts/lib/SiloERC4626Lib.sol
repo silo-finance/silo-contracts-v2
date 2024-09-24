@@ -260,27 +260,4 @@ library SiloERC4626Lib {
             unchecked { assets--; }
         }
     }
-
-    /// @notice Determines the maximum amount of collateral a user can deposit
-    /// This function is estimation to reduce gas usage. In theory, if silo total assets will be close to virtual limit
-    /// and returned max assets will be eg 1, then it might be not possible to actually deposit 1wei because
-    /// tx will revert with ZeroShares error. This is unreal case in real world scenario so we ignoring it.
-    /// @dev The function checks, if deposit is possible for the given user, and if so, returns a constant
-    /// representing no deposit limit
-    /// @param _totalCollateralAssets total deposited collateral
-    /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
-    function maxDepositOrMint(uint256 _totalCollateralAssets)
-        internal
-        pure
-        returns (uint256 maxAssetsOrShares)
-    {
-        // safe to unchecked because we checking manually to prevent revert
-        unchecked {
-            maxAssetsOrShares = _totalCollateralAssets == 0
-                ? _VIRTUAL_DEPOSIT_LIMIT
-                : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT)
-                        ? 0
-                        : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
-        }
-    }
 }
