@@ -309,10 +309,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseURI;
-    }
-
     function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
         address expectedQuoteToken;
 
