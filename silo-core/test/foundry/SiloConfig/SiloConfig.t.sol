@@ -890,6 +890,17 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_wrongSilo
+    */
+    function test_hasDebtInOtherSilo_wrongSilo() public {
+        address user = makeAddr("user");
+        address wrongSilo = makeAddr("wrongSilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.hasDebtInOtherSilo(wrongSilo, user);
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo
     */
     function test_getDebtSilo() public {
