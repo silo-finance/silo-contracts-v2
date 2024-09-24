@@ -343,7 +343,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
     */
-    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public view {
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public pure {
         uint256 debtValueToCover = 2e18;
         uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
         uint256 totalBorrowerCollateralAssets = 10e18;
@@ -386,7 +386,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_splitReceiveCollateralToLiquidate
     */
-    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public view {
+    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public pure {
         (uint256 fromCollateral, uint256 fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
         assertEq(fromCollateral, 0, "fromCollateral (0,0) => 0");
         assertEq(fromProtected, 0, "fromProtected (0,0) => 0");

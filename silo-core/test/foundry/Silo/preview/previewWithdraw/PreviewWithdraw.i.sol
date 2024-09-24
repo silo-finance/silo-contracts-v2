@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {MintableToken} from "../../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
@@ -43,7 +44,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         uint256 preview = _getPreview(amountIn);
 
-        assertEq(preview, amountIn, "previewWithdraw == assets == shares, when no interest");
+        _assertEqPrevAmountInSharesWhenNoInterest(preview, amountIn);
 
         _assertPreviewWithdraw(preview, amountIn);
     }
@@ -72,7 +73,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint256 preview = _getPreview(amountToUse);
 
         if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
-            assertEq(preview, amountToUse, "previewWithdraw == assets == shares, when no interest");
+            _assertEqPrevAmountInSharesWhenNoInterest(preview, amountToUse);
         }
 
         _assertPreviewWithdraw(preview, amountToUse);
@@ -94,7 +95,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint256 preview = _getPreview(_assetsOrShares);
 
         if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
-            assertEq(preview, _assetsOrShares, "previewWithdraw == assets == shares, when no interest");
+            _assertEqPrevAmountInSharesWhenNoInterest(preview, _assetsOrShares);
         }
 
         _assertPreviewWithdraw(preview, _assetsOrShares);
@@ -104,7 +105,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_previewWithdraw_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
+    function test_previewWithdraw_min_fuzz(uint112 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
         _depositForTestPreview(_assetsOrShares);
@@ -113,11 +114,12 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         if (_interest) _applyInterest();
 
-        uint256 minInput = _useRedeem() ? 1 : silo1.convertToAssets(1);
+        uint256 minInput = _useRedeem() ? silo1.convertToShares(1) : silo1.convertToAssets(SiloMathLib._DECIMALS_OFFSET_POW);
         uint256 minPreview = _getPreview(minInput);
 
         if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
-            assertEq(minPreview, minInput, "previewWithdraw == assets == shares, when no interest");
+            _assertEqPrevAmountInSharesWhenNoInterest(minPreview, minInput);
+
         }
 
         _assertPreviewWithdraw(minPreview, minInput);
@@ -144,7 +146,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
         uint256 maxPreview = _getPreview(maxInput);
 
         if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
-            assertEq(maxPreview, maxInput, "previewWithdraw == assets == shares, when no interest");
+            _assertEqPrevAmountInSharesWhenNoInterest(maxPreview, maxInput);
         }
 
         _assertPreviewWithdraw(maxPreview, maxInput);
@@ -216,7 +218,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
             ? silo1.previewRedeem(_amountToUse, _collateralType())
             : silo1.previewWithdraw(_amountToUse, _collateralType());
     }
-    
+
     function _useRedeem() internal pure virtual returns (bool) {
         return false;
     }
@@ -227,5 +229,10 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
     function _sameAsset() internal pure virtual returns (bool) {
         return false;
+    }
+
+    function _assertEqPrevAmountInSharesWhenNoInterest(uint256 _preview, uint256 _amountIn) private pure {
+        if (_useRedeem()) assertEq(_preview, _amountIn / SiloMathLib._DECIMALS_OFFSET_POW, "previewWithdraw == assets == shares, when no interest");
+        else assertEq(_preview, _amountIn * SiloMathLib._DECIMALS_OFFSET_POW, "previewWithdraw == assets == shares, when no interest");
     }
 }

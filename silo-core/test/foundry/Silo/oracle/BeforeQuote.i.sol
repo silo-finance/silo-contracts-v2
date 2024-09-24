@@ -8,6 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
@@ -142,7 +143,8 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
 
         vm.prank(borrower);
         vm.expectRevert(IShareToken.SenderNotSolventAfterTransfer.selector);
-        IShareToken(collateral).transfer(depositor, depositAssets);
+        IShareToken(collateral).transfer(depositor, depositAssets * SiloMathLib._DECIMALS_OFFSET_POW);
+
     }
 
     /*

@@ -123,6 +123,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
             // so solvency will not be checked in silo on redeem action
 
+            // if share token offset is more than 0, positive number of shares can generate 0 assets
+            // so there is a need to check assets before we withdraw collateral/protected
+
             if (collateralShares != 0) {
                 withdrawCollateral = ISilo(collateralConfig.silo).redeem(
                     collateralShares,

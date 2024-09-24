@@ -101,6 +101,22 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         assertEq(debtToRepay, 0, "[_assertBorrowerIsSolvent] silo1.debtToRepay");
     }
 
+    function _assertLiquidationHookHasNoBalance() internal view {
+        assertEq(token0.balanceOf(address(partialLiquidation)), 0, "token0.balanceOf(partialLiquidation)");
+        assertEq(token1.balanceOf(address(partialLiquidation)), 0, "token1.balanceOf(partialLiquidation)");
+
+        (address collateralShare, address protectedShare, address debtShare) = siloConfig.getShareTokens(address(silo0));
+        assertEq(IShareToken(collateralShare).balanceOf(address(partialLiquidation)), 0, "collateralShare2.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(protectedShare).balanceOf(address(partialLiquidation)), 0, "protectedShare2.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(debtShare).balanceOf(address(partialLiquidation)), 0, "debtShare2.balanceOf(partialLiquidation)");
+
+        (collateralShare, protectedShare, debtShare) = siloConfig.getShareTokens(address(silo1));
+        assertEq(IShareToken(collateralShare).balanceOf(address(partialLiquidation)), 0, "collateralShare1.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(protectedShare).balanceOf(address(partialLiquidation)), 0, "protectedShare1.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(debtShare).balanceOf(address(partialLiquidation)), 0, "debtShare1.balanceOf(partialLiquidation)");
+
+    }
+
     function _assertBorrowerIsNotSolvent(bool _hasBadDebt) internal {
         uint256 ltv = silo1.getLtv(borrower);
         emit log_named_decimal_uint("[_assertBorrowerIsNotSolvent] LTV", ltv, 16);
@@ -197,6 +213,8 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
         (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken, _self);
 
+        _assertLiquidationHookHasNoBalance();
+
         if (_sameToken) {
             assertEq(
                 siloBalanceBefore0,
@@ -283,6 +301,9 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
             uint256 almostEverything = _debtToCover < minAssets ? minAssets : _debtToCover - minAssets;
             return almostEverything < minAssets ? minAssets : almostEverything;
+        } else if (_i == 5) {
+            // for iteration 5, we liquidating whatever left
+            return _debtToCover;
         } else revert("this should never happen");
     }
 
@@ -292,13 +313,23 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     {
         if (_self) vm.prank(borrower);
 
-        return partialLiquidation.liquidationCall(
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            _debtToCover,
-            _receiveSToken
-        );
+        try partialLiquidation.liquidationCall(
+                address(_sameToken ? token1 : token0),
+                address(token1),
+                borrower,
+                _debtToCover,
+                _receiveSToken
+            )
+            returns (uint256 collateral, uint256 debt)
+        {
+            return (collateral, debt);
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+
+            bytes4 expectedError = bytes4(keccak256(abi.encodePacked("NothingToWithdraw()")));
+
+            assertEq(errorType, expectedError, "only NothingToWithdraw error is expected");
+        }
     }
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)

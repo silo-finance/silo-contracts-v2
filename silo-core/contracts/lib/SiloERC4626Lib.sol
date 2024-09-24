@@ -29,7 +29,7 @@ library SiloERC4626Lib {
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
     ///      deposited. In our case, we want to limit this value in a way, that after max deposit we can do borrow.
     ///      That's why we decided to go with type(uint128).max - which is anyway high enough to consume any totalSupply
-    uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint128).max;
+    uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint256).max;
 
     /// @notice Deposit assets into the silo
     /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
@@ -258,29 +258,6 @@ library SiloERC4626Lib {
         if (assets != 0) {
             // even if we using rounding Down, we still need underestimation with 1wei
             unchecked { assets--; }
-        }
-    }
-
-    /// @notice Determines the maximum amount of collateral a user can deposit
-    /// This function is estimation to reduce gas usage. In theory, if silo total assets will be close to virtual limit
-    /// and returned max assets will be eg 1, then it might be not possible to actually deposit 1wei because
-    /// tx will revert with ZeroShares error. This is unreal case in real world scenario so we ignoring it.
-    /// @dev The function checks, if deposit is possible for the given user, and if so, returns a constant
-    /// representing no deposit limit
-    /// @param _totalCollateralAssets total deposited collateral
-    /// @return maxAssetsOrShares Maximum assets/shares a user can deposit
-    function maxDepositOrMint(uint256 _totalCollateralAssets)
-        internal
-        pure
-        returns (uint256 maxAssetsOrShares)
-    {
-        // safe to unchecked because we checking manually to prevent revert
-        unchecked {
-            maxAssetsOrShares = _totalCollateralAssets == 0
-                ? _VIRTUAL_DEPOSIT_LIMIT
-                : (_totalCollateralAssets >= _VIRTUAL_DEPOSIT_LIMIT)
-                        ? 0
-                        : _VIRTUAL_DEPOSIT_LIMIT - _totalCollateralAssets;
         }
     }
 }

@@ -48,23 +48,12 @@ library Views {
         return SiloLendingLib.maxBorrow(_borrower, _sameAsset);
     }
 
-    function maxMint(ISilo.CollateralType _collateralType)
-        external
-        view
-        returns (uint256 maxShares)
-    {
-        (
-            address protectedToken, address collateralToken,
-        ) = ShareTokenLib.siloConfig().getShareTokens(address(this));
-
-        address shareToken = _collateralType == ISilo.CollateralType.Collateral ? collateralToken : protectedToken;
-
-        return SiloERC4626Lib.maxDepositOrMint(IShareToken(shareToken).totalSupply());
+    function maxMint() external pure returns (uint256 maxShares) {
+        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
     }
 
-    function maxDeposit(ISilo.CollateralType _collateralType) internal view returns (uint256 maxAssets) {
-        uint256 totalCollateralAssets = SiloStorageLib.getSiloStorage().totalAssets[uint256(_collateralType)];
-        return SiloERC4626Lib.maxDepositOrMint(totalCollateralAssets);
+    function maxDeposit() internal pure returns (uint256 maxAssets) {
+        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
     }
 
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)

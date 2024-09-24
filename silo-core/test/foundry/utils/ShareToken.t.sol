@@ -48,7 +48,8 @@ contract ShareTokenTest is Test {
 
         sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
-        assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
+        // offset for the debt token is 1
+        assertEq(sToken.decimals(), token.decimals(), "expect valid decimals");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_notRevertWhenNoHook

@@ -22,10 +22,10 @@ contract MaxMintWithTypeReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo0().maxMint(anyAddr, ISilo.CollateralType.Collateral);
-        TestStateLib.silo1().maxMint(anyAddr, ISilo.CollateralType.Collateral);
+        TestStateLib.silo0().maxMint(anyAddr);
+        TestStateLib.silo1().maxMint(anyAddr);
 
-        TestStateLib.silo0().maxMint(anyAddr, ISilo.CollateralType.Protected);
-        TestStateLib.silo1().maxMint(anyAddr, ISilo.CollateralType.Protected);
+        TestStateLib.silo0().maxMint(anyAddr);
+        TestStateLib.silo1().maxMint(anyAddr);
     }
 }

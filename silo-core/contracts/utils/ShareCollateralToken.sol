@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
+import {SiloMathLib} from "../lib/SiloMathLib.sol";
 import {ShareCollateralTokenLib} from "../lib/ShareCollateralTokenLib.sol";
 import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
@@ -23,6 +24,11 @@ abstract contract ShareCollateralToken is ShareToken {
     function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
         _burn(_owner, _amount);
+    }
+
+    /// @dev decimals of share token
+    function decimals() public view virtual override(ShareToken) returns (uint8) {
+        return ShareTokenLib.decimals() + uint8(SiloMathLib._DECIMALS_OFFSET);
     }
 
     /// @dev Check if sender is solvent after the transfer

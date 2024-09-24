@@ -12,6 +12,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../../_common/MintableToken.sol";
@@ -431,7 +432,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     */
     function test_liquidationCall_badDebt_full_withSToken_2tokens() public {
         bool receiveSToken = true;
-        uint256 collateralSharesToLiquidate = 10e18;
+        uint256 collateralSharesToLiquidate = 10e18 * SiloMathLib._DECIMALS_OFFSET_POW;
         address liquidator = makeAddr("liquidator");
 
         (
@@ -441,9 +442,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         // IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         vm.expectCall(
             debtConfig.token,
-            abi.encodeWithSelector(
-                IERC20.transferFrom.selector, liquidator, address(partialLiquidation), 1e20
-            )
+            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(partialLiquidation), 1e20)
         );
 
         // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);

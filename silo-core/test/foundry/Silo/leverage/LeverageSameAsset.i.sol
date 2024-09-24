@@ -13,12 +13,14 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {ShareTokenDecimalsPowLib} from "../../_common/ShareTokenDecimalsPowLib.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageSameAssetTest
 */
 contract LeverageSameAssetTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+    using ShareTokenDecimalsPowLib for uint256;
 
     ISilo.CollateralType constant public COLLATERAL = ISilo.CollateralType.Collateral;
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
@@ -122,7 +124,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         emit Borrow(borrower, borrower, borrower, maxBorrowAssets, maxBorrowAssets);
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(borrower, borrower, depositAssets, depositAssets);
+        emit Deposit(borrower, borrower, depositAssets, depositAssets.decimalsOffsetPow());
 
         vm.prank(borrower);
         silo0.leverageSameAsset(depositAssets, maxBorrowAssets, borrower, COLLATERAL);
@@ -144,7 +146,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         emit Borrow(borrower, borrower, borrower, maxBorrowAssets, maxBorrowAssets);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositProtected(borrower, borrower, depositAssets, depositAssets);
+        emit DepositProtected(borrower, borrower, depositAssets, depositAssets.decimalsOffsetPow());
 
         vm.prank(borrower);
         silo0.leverageSameAsset(depositAssets, maxBorrowAssets, borrower, PROTECTED);
@@ -206,7 +208,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         _expectLiquidity(expectedLiquidity);
 
         _expectShares(zeroSharesToken, 0);
-        _expectShares(withSharesToken, depositAssets);
+        _expectShares(withSharesToken, depositAssets.decimalsOffsetPow());
         _expectShares(debtShareToken, borrowAssets);
 
         uint256 receivedShares = IERC20(withSharesToken).balanceOf(borrower);

@@ -337,8 +337,8 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         emit log("Timestamp is increased by 41 seconds");
 
-        emit log("User 0 deposits 1157...127042 assets into Silo 1");
-        _deposit(115792089237316195417293883273301227089434195242432897623355228563449095127042, user0);
+        emit log("User 0 deposits type(uint128).max assets into Silo 1");
+        _deposit(type(uint128).max, user0);
 
         uint256 liquidity = silo0.getLiquidity();
         emit log_named_uint("liquidity on the fly", liquidity);

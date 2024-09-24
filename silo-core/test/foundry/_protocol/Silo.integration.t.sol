@@ -11,6 +11,7 @@ import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {ShareTokenDecimalsPowLib} from "silo-core/test/foundry/_common/ShareTokenDecimalsPowLib.sol";
 import {VeSiloFeatures} from "./VeSiloFeatures.sol";
 
 /**
@@ -22,30 +23,32 @@ import {VeSiloFeatures} from "./VeSiloFeatures.sol";
     4. Clean deployments artifacts './silo-core/test/scripts/deployments-clean.sh'
  */
 contract SiloIntegrationTest is VeSiloFeatures {
-   function test_anvil_VeSiloWithSiloCoreAndSiloOracles() public {
-       _printContracts();
-       _configureSmartWalletChecker();
-       _setVeSiloFees();
-       _whiteListUser(_bob);
+    using ShareTokenDecimalsPowLib for uint256;
 
-       uint256 siloTokens = 1000_000e18;
-       deal(address(_siloToken), _bob, siloTokens);
+    function test_anvil_VeSiloWithSiloCoreAndSiloOracles() public {
+        _printContracts();
+        _configureSmartWalletChecker();
+        _setVeSiloFees();
+        _whiteListUser(_bob);
 
-       _getVotingPower(_bob, siloTokens);
-       ISiloConfig siloConfig = ISiloConfig(SiloDeployments.get(getChainAlias(), SiloConfigsNames.FULL_CONFIG_TEST));
-       _activeteBlancerTokenAdmin();
-       (address hookReceiver, address shareToken) = _getHookReceiverForCollateralToken(siloConfig);
-       address gauge = _createGauge(shareToken);
-       _configureGaugeHookReceiver(hookReceiver, IShareToken(shareToken), gauge);
-       _addGauge(gauge);
-       _voteForGauge(gauge);
-       _depositIntoSilo(siloConfig, ISiloLiquidityGauge(gauge));
-       _checkpointUsers(ISiloLiquidityGauge(gauge));
-       _verifyClaimable(ISiloLiquidityGauge(gauge));
-       _getIncentives(gauge);
-       _borrowFromSilo(siloConfig);
-       _repay(siloConfig);
-   }
+        uint256 siloTokens = 1000_000e18;
+        deal(address(_siloToken), _bob, siloTokens);
+
+        _getVotingPower(_bob, siloTokens);
+        ISiloConfig siloConfig = ISiloConfig(SiloDeployments.get(getChainAlias(), SiloConfigsNames.FULL_CONFIG_TEST));
+        _activeteBlancerTokenAdmin();
+        (address hookReceiver, address shareToken) = _getHookReceiverForCollateralToken(siloConfig);
+        address gauge = _createGauge(shareToken);
+        _configureGaugeHookReceiver(hookReceiver, IShareToken(shareToken), gauge);
+        _addGauge(gauge);
+        _voteForGauge(gauge);
+        _depositIntoSilo(siloConfig, ISiloLiquidityGauge(gauge));
+        _checkpointUsers(ISiloLiquidityGauge(gauge));
+        _verifyClaimable(ISiloLiquidityGauge(gauge));
+        _getIncentives(gauge);
+        _borrowFromSilo(siloConfig);
+        _repay(siloConfig);
+    }
 
     function _configureGaugeHookReceiver(address _hookReceiver, IShareToken _shareToken, address _gauge) internal {
          address[] memory targets = new address[](1);
@@ -81,9 +84,17 @@ contract SiloIntegrationTest is VeSiloFeatures {
         ISilo(silo1).deposit(amountToDeposit, _bob, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
-        assertEq(IERC20(collateralShareToken).balanceOf(_bob), amountToDeposit, "Invalid number of shares tokens");
+        assertEq(
+            IERC20(collateralShareToken).balanceOf(_bob),
+            amountToDeposit.decimalsOffsetPow(),
+            "Invalid number of shares tokens"
+        );
 
-        assertEq(_gauge.working_balances(_bob), amountToDeposit, "Should have working balance");
+        assertEq(
+            _gauge.working_balances(_bob),
+            amountToDeposit.decimalsOffsetPow(),
+            "Should have working balance"
+        );
     }
 
     function _borrowFromSilo(ISiloConfig _siloConfig) internal {
