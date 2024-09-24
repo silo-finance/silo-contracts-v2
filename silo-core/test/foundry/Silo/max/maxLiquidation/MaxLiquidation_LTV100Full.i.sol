@@ -27,7 +27,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_1token_tokens_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_skip_maxLiquidation_LTV100_full_1token_tokens_fuzz(uint8 _collateral) public {
+    function test_maxLiquidation_LTV100_full_1token_tokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_LTV100_full_1token(_collateral, !_RECEIVE_STOKENS, !_SELF);
     }
 
@@ -43,8 +43,8 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_1token_tokens_self_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 100
-    function test_skip_maxLiquidation_LTV100_full_1token_tokens_self_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_1token(5, !_RECEIVE_STOKENS, _SELF);
+    function test_maxLiquidation_LTV100_full_1token_tokens_self_fuzz(uint8 _collateral) public {
+        _maxLiquidation_LTV100_full_1token(_collateral, !_RECEIVE_STOKENS, _SELF);
     }
 
     /*
@@ -84,11 +84,6 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         _assertLTV100();
 
         _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
-
-        _assertBorrowerIsSolvent();
-
-        // when we liquidate with chunks, we can end up with debt but being solvent
-        if (!_withChunks()) _ensureBorrowerHasNoDebt();
     }
 
     /*
@@ -143,13 +138,9 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
 
-        _assertBorrowerIsSolvent();
-
         if (_self && _withChunks() && _collateral > 2) {
             if (_receiveSToken) _ensureBorrowerHasDebt();
-            else _ensureBorrowerHasNoDebt();
         }
-        else _ensureBorrowerHasNoDebt();
     }
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)

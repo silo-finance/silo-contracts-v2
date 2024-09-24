@@ -40,14 +40,8 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
         _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
 
         // with bad debt + chunks any final scenario is possible: user can have debt or not, be solvent or not.
-        // we can assert only to not have bad debt because liquidation here is not calculating profit
-        // we will liquidate till the end or until LTV <= 100%
-        uint256 ltv = silo1.getLtv(borrower);
-
-        // there might be a case, where we left with 0 collateral and some debt, in that case LTV == max
-        if (ltv != type(uint256).max) {
-            assertLe(silo1.getLtv(borrower), 1e18, "expect no bad debt anymore");
-        }
+        // when we add option that position will leave with dust shares, then final state can be anything
+        // so there is no more checks we can do
     }
 
     function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken, bool _self) internal override {
@@ -104,6 +98,11 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
             emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
+
+            if (collateralToLiquidate == 0) {
+                assertGt(silo0.getLtv(borrower), 1e18, "when no collateral we expect bad debt");
+                continue;
+            }
 
             uint256 testDebtToCover = _calculateChunk(debtToCover, i);
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);

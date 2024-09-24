@@ -36,7 +36,7 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
             if (collateralToLiquidate == 0) {
                 assertGe(silo0.getLtv(borrower), 1e18, "if we don't have collateral we expect bad debt");
-                return (0, 0);
+                continue;
             }
 
             { // too deep
