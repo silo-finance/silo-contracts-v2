@@ -31,7 +31,13 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
             (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            emit log_named_uint("[LTV100FullWithChunks] collateralToLiquidate", collateralToLiquidate);
             if (debtToCover == 0) continue;
+
+            if (collateralToLiquidate == 0) {
+                assertGe(silo0.getLtv(borrower), 1e18, "if we don't have collateral we expect bad debt");
+                return (0, 0);
+            }
 
             { // too deep
                 bool isSolvent = silo0.isSolvent(borrower);
