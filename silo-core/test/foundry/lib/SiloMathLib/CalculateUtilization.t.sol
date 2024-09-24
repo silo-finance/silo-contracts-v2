@@ -36,4 +36,19 @@ contract CalculateUtilizationTest is Test {
 
         assertTrue(SiloMathLib.calculateUtilization(_dp, _collateralAssets, _debtAssets) <= _dp);
     }
+
+    /*
+    forge test -vv --mt test_utilizationEqualDP_fuzz
+    */
+    function test_utilizationEqualDP_fuzz(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)
+        public
+        pure
+    {
+        vm.assume(_dp != 0 && _collateralAssets != 0 && _debtAssets != 0);
+        vm.assume(type(uint256).max / _dp < _debtAssets / _collateralAssets);
+
+        uint256 utilization = SiloMathLib.calculateUtilization(_dp, _collateralAssets, _debtAssets);
+
+        assertEq(utilization, _dp);
+    }
 }
