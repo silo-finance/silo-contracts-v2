@@ -29,7 +29,7 @@ library SiloERC4626Lib {
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
     ///      deposited. In our case, we want to limit this value in a way, that after max deposit we can do borrow.
     ///      That's why we decided to go with type(uint128).max - which is anyway high enough to consume any totalSupply
-    uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint128).max;
+    uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint256).max;
 
     /// @notice Deposit assets into the silo
     /// @param _token The ERC20 token address being deposited; 0 means tokens will not be transferred. Useful for
