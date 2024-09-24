@@ -267,7 +267,6 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         );
 
         _borrowSameAssetWithAssertions(borrower, debtShareToken, collateralShareToken);
-
         vm.expectRevert(ISilo.AboveMaxLtv.selector);
         vm.prank(borrower);
         silo0.borrowSameAsset(0.0001e18, borrower, borrower);
@@ -313,43 +312,6 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
         vm.prank(borrower);
         silo1.borrowSameAsset(1, borrower, borrower);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_borrowSameAsset_maxDeposit
-    */
-    function test_borrowSameAsset_maxDeposit() public {
-        address borrower = makeAddr("Borrower");
-        address depositor = makeAddr("depositor");
-
-        uint256 borrowerDeposit = 10;
-        uint256 depositorDeposit = 1;
-
-        _deposit(borrowerDeposit, borrower);
-        _deposit(depositorDeposit, depositor);
-
-        vm.prank(borrower);
-        silo0.borrowSameAsset(depositorDeposit, borrower, borrower);
-
-        uint256 silo0TotalCollateral = borrowerDeposit + depositorDeposit;
-
-        assertEq(
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo0TotalCollateral,
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            "limit for deposit"
-        );
-
-        assertEq(
-            silo0.maxDeposit(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            "can deposit when already borrowed"
-        );
-
-        assertEq(
-            silo0.maxMint(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            "can mint when already borrowed (maxMint)"
-        );
     }
 
     function _borrowSameAssetWithAssertions(

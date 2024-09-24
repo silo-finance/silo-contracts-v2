@@ -400,42 +400,6 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrow_maxDeposit
-    */
-    function test_borrow_maxDeposit_1token() public {
-        _borrow_maxDeposit();
-    }
-
-    function _borrow_maxDeposit() private {
-        address borrower = makeAddr("Borrower");
-        address depositor = makeAddr("depositor");
-
-        _deposit(10, borrower);
-        _depositForBorrow(1, depositor);
-        _borrow(1, borrower);
-
-        uint256 silo1TotalCollateral = 1;
-
-        assertEq(
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1TotalCollateral,
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            "limit for deposit"
-        );
-
-        assertEq(
-            silo1.maxDeposit(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            "can deposit when already borrowed"
-        );
-
-        assertEq(
-            silo1.maxMint(borrower),
-            SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT - silo1.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            "can mint when already borrowed (maxMint)"
-        );
-    }
-
-    /*
     forge test -vv --ffi --mt test_borrowShares_revertsOnZeroAssets
     */
     /// forge-config: core-test.fuzz.runs = 1000

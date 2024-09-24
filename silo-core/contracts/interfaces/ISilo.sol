@@ -280,10 +280,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Implements IERC4626.convertToAssets for each asset type
     function convertToAssets(uint256 _shares, AssetType _assetType) external view returns (uint256 assets);
 
-    /// @notice Implements IERC4626.maxDeposit for protected (non-borrowable) collateral and collateral
-    /// @dev _collateralType is ignored because maxDeposit is the same for both asset types
-    function maxDeposit(address _receiver, CollateralType _collateralType) external view returns (uint256 maxAssets);
-
     /// @notice Implements IERC4626.previewDeposit for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
     function previewDeposit(uint256 _assets, CollateralType _collateralType) external view returns (uint256 shares);
@@ -293,10 +289,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)
         external
         returns (uint256 shares);
-
-    /// @notice Implements IERC4626.maxMint for protected (non-borrowable) collateral and collateral
-    /// @dev _collateralType is ignored because maxDeposit is the same for both asset types
-    function maxMint(address _receiver, CollateralType _collateralType) external view returns (uint256 maxShares);
 
     /// @notice Implements IERC4626.previewMint for protected (non-borrowable) collateral and collateral
     /// @dev Reverts for debt asset type
