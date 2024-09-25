@@ -184,7 +184,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         _makeDeposit(silo0, token0, 1, attacker, ISilo.CollateralType.Collateral);
 
-        _repayLoan(borrower, 200);
+        _borrowAndRepay(borrower, 200);
 
         uint256 borrowerAssets = silo0.maxWithdraw(borrower);
 
@@ -206,7 +206,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         emit log_named_uint("[_doAttack] gas used: ", gasStart - gasleft());
     }
 
-    function _repayLoan(address _borrower, uint _toBorrow) internal {
+    function _borrowAndRepay(address _borrower, uint _toBorrow) internal {
         uint256 depositAmount = _toBorrow * 12 / 8;
         
         _makeDeposit(silo0, token0, depositAmount, _borrower, ISilo.CollateralType.Collateral);
