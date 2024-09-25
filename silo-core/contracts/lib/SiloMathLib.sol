@@ -178,6 +178,7 @@ library SiloMathLib {
     ) internal pure returns (uint256) {
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
+        // TODO: certora rule to check if totalAssets can be 0 if totalShares > 0 - in context of debt. We want to make sure to never devide by 0 in mulDiv.
         // initially, in case of debt, if silo is empty we return shares==assets
         // for collateral, this will never be the case, because of `+1` in line above
         if (totalShares == 0) return _assets;
@@ -319,6 +320,7 @@ library SiloMathLib {
         ISilo.AssetType _assetType
     ) private pure returns (uint256 totalShares, uint256 totalAssets) {
         if (_totalShares == 0) {
+            // TODO: suggest certora/auditors to investigate this assumption
             // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
             // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
             // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state

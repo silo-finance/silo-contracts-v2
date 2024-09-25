@@ -360,6 +360,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
         uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
 
+        // TODO: implement certora rule for check below that should never happen
         if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 

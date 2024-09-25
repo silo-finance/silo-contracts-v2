@@ -85,6 +85,7 @@ library SiloStdLib {
         view
         returns (uint256 totalAssets, uint256 totalShares)
     {
+        // TODO: why not call getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType); directly?
         return getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
     }
 

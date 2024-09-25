@@ -67,6 +67,7 @@ library Actions {
             address shareToken, address asset
         ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);
 
+        // TODO: use named parameters. Apply to other places as well.
         (assets, shares) = SiloERC4626Lib.deposit(
             asset,
             msg.sender,

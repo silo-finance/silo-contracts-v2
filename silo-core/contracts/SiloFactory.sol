@@ -102,6 +102,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             nextSiloId
         );
 
+        // TODO: Execute this before _cloneShareTokens
         configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
         configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
 
@@ -122,6 +123,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _mint(_initData.deployer, nextSiloId);
         }
 
+        // TODO: emit implementation addresses
         emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(_siloConfig));
     }
 
@@ -157,6 +159,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @inheritdoc ISiloFactory
     function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
+        // TODO: Emit event
         baseURI = _newBaseURI;
     }
 
@@ -171,6 +174,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         return (daoFeeReceiver, _ownerOf(siloID));
     }
 
+    // TODO: Move validateSiloInitData to Views lib and call it in copySiloConfig
     /// @inheritdoc ISiloFactory
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
         // solhint-disable-previous-line code-complexity

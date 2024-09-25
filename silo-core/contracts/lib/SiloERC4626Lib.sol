@@ -56,6 +56,7 @@ library SiloERC4626Lib {
 
         uint256 totalAssets = $.totalAssets[uint256(_collateralType)];
 
+        // TODO: rename convertToAssetsOrToShares
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -63,6 +64,7 @@ library SiloERC4626Lib {
             _collateralShareToken.totalSupply(),
             Rounding.DEPOSIT_TO_ASSETS,
             Rounding.DEPOSIT_TO_SHARES,
+            // TODO: why not use _collateralType here?
             ISilo.AssetType.Collateral
         );
 
@@ -73,6 +75,7 @@ library SiloERC4626Lib {
         // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
         // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
         // unchecked {
+        // TODO: remove unchecked and comment
         $.totalAssets[uint256(_collateralType)] = totalAssets + assets;
         // }
 
@@ -191,6 +194,7 @@ library SiloERC4626Lib {
                 ISilo.AssetType(uint256(_collateralType))
             );
 
+            // TODO: certora rule, getLiquidity() should always be available for withdraw
             if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
 
             assets = liquidity;

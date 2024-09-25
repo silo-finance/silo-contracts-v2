@@ -48,6 +48,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// of the hook receiver developer to handle it if needed.
     receive() external payable {}
 
+    // TODO: add nat spec to say that this is required by share token interface
     function silo() external view virtual override returns (ISilo) {
         return this;
     }
@@ -86,6 +87,7 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.utilizationData();
     }
 
+    // TODO: add natspec and explain what "liquidity" is. And explain that interest is included in the liquidity.
     function getLiquidity() external view virtual returns (uint256 liquidity) {
         return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());
     }
@@ -778,6 +780,7 @@ contract Silo is ISilo, ShareCollateralToken {
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal virtual returns (uint256 accruedInterest) {
+        // TODO: remove Actions.accrueInterestForAsset and call SiloLendingLib.accrueInterestForAsset
         accruedInterest = Actions.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }

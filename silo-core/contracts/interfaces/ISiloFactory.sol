@@ -117,6 +117,7 @@ interface ISiloFactory is IERC721 {
     /// @notice Get SiloConfig address by Silo id.
     function idToSiloConfig(uint256 _id) external view returns (address);
 
+    // TODO: Add comment to state explicitly that anyone can deploy a Silo with any configuration and isSilo cannot be used as security check
     /// @notice True if the address is Silo, false otherwise.
     function isSilo(address _silo) external view returns (bool);
 
