@@ -91,6 +91,11 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         assertEq(attackerDeposits, 1073741823);
         assertEq(receivedAmount,   1073741824); // 1 wei more?
+
+        // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
+
+        // assertEq(attackerDeposits, 1073741823);
+        // assertEq(receivedAmount,   1073709057);
         // assertEq(attackerDeposits - receivedAmount, 32766);
     }
 
