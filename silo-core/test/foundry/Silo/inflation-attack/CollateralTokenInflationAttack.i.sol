@@ -42,7 +42,9 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         vm.prank(victim);
         token0.approve(address(silo0), siloCollateralAssets);
 
-        // we can't deposit less than ~`siloCollateralAssets`
+        // siloCollateralAssets : 1073741825
+        // 1 share =            : 536870913
+        // "limit" is 50% of siloCollateralAssets
         vm.prank(victim);
         vm.expectRevert(ISilo.ZeroShares.selector);
         silo0.deposit(1e8, victim, ISilo.CollateralType.Collateral);
