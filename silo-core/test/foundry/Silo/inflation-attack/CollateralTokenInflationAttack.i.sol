@@ -26,6 +26,9 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_vault_denial_of_service_attack_deposit_lock
+
+    @dev An issue reloved by increasing the decimals offset for the collateral share token.
+         See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
     */
     function test_vault_denial_of_service_attack_deposit_lock() public {
         address victim = makeAddr("Victim");
@@ -57,6 +60,9 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_vault_denial_of_service_attack_funds_recovery
+
+    @dev An issue reloved by increasing the decimals offset for the collateral share token.
+         See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
     */
     function test_vault_denial_of_service_attack_funds_recovery() public {
         address attacker = makeAddr("Attacker");
@@ -84,6 +90,9 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
     /*
     forge test -vv --ffi --mt test_vault_denial_of_service_attack_withdraw_issue
+
+    @dev An issue reloved by increasing the decimals offset for the collateral share token.
+         See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
     */
     function test_vault_denial_of_service_attack_withdraw_issue() public {
         _messWithRatio();
