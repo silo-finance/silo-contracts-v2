@@ -78,9 +78,25 @@ methods {
     function _.getFeeReceivers(address) external => CONSTANT;
 
     // ---- `ShareToken` -------------------------------------------------------
-    // NOTE: Summarizing `_afterTokenTransfer` as `CONSTANT` is an under-approximation!
+    // NOTE: Summarizing `ShareToken._afterTokenTransfer` as `CONSTANT` is an under-approximation!
     // NOTE: Must be summarized since it calls `balanceOf` and `totalSupply`
-    function _._afterTokenTransfer(address,address,uint256) internal => CONSTANT;
+    // function ShareToken._afterTokenTransfer(address,address,uint256) internal => CONSTANT;
+    
+    function Silo0.silo() external returns (address) envfree;
+    function ShareDebtToken0.silo() external returns (address) envfree;
+    function ShareProtectedCollateralToken0.silo() external returns (address) envfree;
+
+    function Silo0.siloConfig() external returns (address) envfree;
+    function ShareDebtToken0.siloConfig() external returns (address) envfree;
+    function ShareProtectedCollateralToken0.siloConfig() external returns (address) envfree;
+
+    function Silo1.silo() external returns (address) envfree;
+    function ShareDebtToken1.silo() external returns (address) envfree;
+    function ShareProtectedCollateralToken1.silo() external returns (address) envfree;
+
+    function Silo1.siloConfig() external returns (address) envfree;
+    function ShareDebtToken1.siloConfig() external returns (address) envfree;
+    function ShareProtectedCollateralToken1.siloConfig() external returns (address) envfree;
 
     // ---- `Actions` ----------------------------------------------------------
     function Actions._hookCallBeforeBorrow(ISilo.BorrowArgs memory, uint256) internal => NONDET;
@@ -149,26 +165,24 @@ function simplified_solvent(
 function doesntHaveCollateralAsWellAsDebt(address user)
 {
     require !(  //cannot have collateral AND debt on `silo0`
-            (balanceByToken[shareCollateralToken0][user] > 0 || 
+            (balanceByToken[silo0][user] > 0 || 
              balanceByToken[shareProtectedCollateralToken0][user] > 0) &&
             balanceByToken[shareDebtToken0][user] > 0);
 
     require !(  //cannot have collateral AND debt on `silo1`
-            (balanceByToken[shareCollateralToken1][user] > 0 || 
+            (balanceByToken[silo1][user] > 0 || 
              balanceByToken[shareProtectedCollateralToken1][user] > 0) &&
             balanceByToken[shareDebtToken1][user] > 0);
 }
 
 function completeSiloSetupAddress(address sender)
 {
-    require sender != shareCollateralToken0;
+    require sender != silo0;
     require sender != shareDebtToken0;
     require sender != shareProtectedCollateralToken0;
     require sender != shareProtectedCollateralToken1;
     require sender != shareDebtToken1;
-    require sender != shareCollateralToken1;
-    // require sender != siloConfig;  TODO: removed for re-setup
-    require sender != currentContract;  /// Silo0
+    require sender != silo1;
     require sender != token0;
     require sender != token1;
     doesntHaveCollateralAsWellAsDebt(sender);
@@ -184,7 +198,7 @@ function completeSiloSetupAddress(address sender)
             silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Protected)) == 0
             );
     require (
-            totalSupplyByToken[shareCollateralToken0] == 0 <=>
+            totalSupplyByToken[silo0] == 0 <=>
             silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) == 0
             );
 
@@ -197,7 +211,7 @@ function completeSiloSetupAddress(address sender)
             silo1.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Protected)) == 0
             );
     require (
-            totalSupplyByToken[shareCollateralToken1] == 0 <=>
+            totalSupplyByToken[silo1] == 0 <=>
             silo1.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) == 0
             );
 
@@ -212,35 +226,56 @@ function completeSiloSetupEnv(env e) {
     require require_uint64(e.block.timestamp) >= silo1.getSiloDataInterestRateTimestamp(e);
 }
 
+
+/// @title Sets up the tokens, shares and config
+function setupTokensSharesConfig() {
+    require silo0.silo() == silo0;
+    require shareDebtToken0.silo() == silo0;
+    require shareProtectedCollateralToken0.silo() == silo0;
+    
+    require silo0.config() == siloConfig;
+    require silo0.siloConfig() == siloConfig;
+    require shareDebtToken0.siloConfig() == siloConfig;
+    require shareProtectedCollateralToken0.siloConfig() == siloConfig;
+
+    require silo1.silo() == silo1;
+    require shareDebtToken1.silo() == silo1;
+    require shareProtectedCollateralToken1.silo() == silo1;
+    
+    require silo1.config() == siloConfig;
+    require silo1.siloConfig() == siloConfig;
+    require shareDebtToken1.siloConfig() == siloConfig;
+    require shareProtectedCollateralToken1.siloConfig() == siloConfig;
+}
+
 // ---- Rules ------------------------------------------------------------------
 
 /// @title Two mints are not better than one
 rule HLP_mint_breakingUpNotBeneficial_full(env e, address receiver)
 {
     completeSiloSetupEnv(e);
-    // totalSupplyMoreThanBalance(receiver);
+    setupTokensSharesConfig();
+
     totalSupplyMoreThanBalanceERC20(token0, receiver);
-    totalSupplyMoreThanBalanceERC20(shareCollateralToken0, receiver);
+    totalSupplyMoreThanBalanceERC20(silo0, receiver);
     totalSupplyMoreThanBalanceERC20(shareProtectedCollateralToken0, receiver);
     totalSupplyMoreThanBalanceERC20(token0, e.msg.sender);
-    totalSupplyMoreThanBalanceERC20(shareCollateralToken0, e.msg.sender);
+    totalSupplyMoreThanBalanceERC20(silo0, e.msg.sender);
     totalSupplyMoreThanBalanceERC20(shareProtectedCollateralToken0, e.msg.sender);
+
     require totalSupplyByToken[token0] >= require_uint256(
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Protected)) +
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) +
         balanceByToken[token0][receiver]
     );
 
-    require config() == siloConfig;
-    require silo1.config() == siloConfig;
-
     uint256 shares;
     uint256 sharesAttempt1;
     uint256 sharesAttempt2;
-    require shares == sharesAttempt1 + sharesAttempt2;
+    require shares == sharesAttempt1 + sharesAttempt2;  // TODO: Prove without this line!
 
     mathint balanceTokenBefore = balanceByToken[token0][e.msg.sender];
-    mathint balanceCollateralBefore = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralBefore = balanceByToken[silo0][receiver];
     mathint balanceProtectedCollateralBefore = balanceByToken[shareProtectedCollateralToken0][receiver];
 
     storage init = lastStorage;
@@ -248,17 +283,17 @@ rule HLP_mint_breakingUpNotBeneficial_full(env e, address receiver)
 
     mint(e, shares, receiver, anyType);
     mathint balanceTokenAfterSum = balanceByToken[token0][e.msg.sender];
-    mathint balanceCollateralAfterSum = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralAfterSum = balanceByToken[silo0][receiver];
     mathint balanceProtectedCollateralAfterSum = balanceByToken[shareProtectedCollateralToken0][receiver];
 
     mint(e, sharesAttempt1, receiver, anyType) at init;
     mathint balanceTokenAfter1 = balanceByToken[token0][e.msg.sender];
-    mathint balanceCollateralAfter1 = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralAfter1 = balanceByToken[silo0][receiver];
     mathint balanceProtectedCollateralAfter1 = balanceByToken[shareProtectedCollateralToken0][receiver];
 
     mint(e, sharesAttempt2, receiver, anyType);
     mathint balanceTokenAfter1_2 = balanceByToken[token0][e.msg.sender];
-    mathint balanceCollateralAfter1_2 = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralAfter1_2 = balanceByToken[silo0][receiver];
     mathint balanceProtectedCollateralAfter1_2 = balanceByToken[shareProtectedCollateralToken0][receiver];
 
     mathint diffTokenCombined = balanceTokenAfterSum - balanceTokenBefore;
@@ -282,36 +317,35 @@ rule HLP_mint_breakingUpNotBeneficial_full(env e, address receiver)
 /// @title User should not profit by depositing and immediately redeeming
 rule HLP_DepositRedeemNotProfitable(env e, address receiver, uint256 assets)
 {
-    require config() == siloConfig;
-    require silo1.config() == siloConfig;  // TODO: same config for both?
-
     completeSiloSetupEnv(e);
+    setupTokensSharesConfig();
+
     totalSupplyMoreThanBalanceERC20(token0, receiver);
     totalSupplyMoreThanBalanceERC20(token0, e.msg.sender);
-    totalSupplyMoreThanBalanceERC20(shareCollateralToken0, receiver);
-    totalSupplyMoreThanBalanceERC20(shareCollateralToken0, e.msg.sender);
+    totalSupplyMoreThanBalanceERC20(silo0, receiver);
+    totalSupplyMoreThanBalanceERC20(silo0, e.msg.sender);
     require totalSupplyByToken[token0] >= require_uint256(
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Protected)) +
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) +
         balanceByToken[token0][receiver]
     );
 
-    mathint balanceCollateralBefore = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralBefore = balanceByToken[silo0][receiver];
     mathint balanceTokenBefore = balanceByToken[token0][e.msg.sender];
 
     // TODO: This requirement is necessary due to a bug in the code, unless we
     // proved an invariant: "zero shares implies zero assets"
-    require totalSupplyByToken[shareCollateralToken0] > 0;
+    require totalSupplyByToken[silo0] > 0;
 
     // TODO: This deposit is the same as depositing `CollateralType.Collateral`
     //       What about depositing `CollateralType.Protected`?
     mathint sharesM1 = deposit(e, assets, receiver);
-    mathint balanceCollateralM1 = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralM1 = balanceByToken[silo0][receiver];
     mathint balanceTokenM1 = balanceByToken[token0][e.msg.sender];
 
     uint256 shares;
     mathint assetsR = redeem(e, shares, e.msg.sender, receiver);
-    mathint balanceCollateralR = balanceByToken[shareCollateralToken0][receiver];
+    mathint balanceCollateralR = balanceByToken[silo0][receiver];
     mathint balanceTokenR = balanceByToken[token0][e.msg.sender];
 
     assert balanceCollateralR > balanceCollateralBefore => balanceTokenR < balanceTokenBefore;

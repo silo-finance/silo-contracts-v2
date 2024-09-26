@@ -44,10 +44,10 @@ ghost uint256 lt1;
 
 function getShareTokensSumm(address _silo) returns (address, address, address) {
 	if(_silo == silo0) {
-		  return (shareProtectedCollateralToken0, shareCollateralToken0, shareDebtToken0);
+		  return (shareProtectedCollateralToken0, silo0, shareDebtToken0);
       } 
       else if(_silo == silo1) {
-		  return (shareProtectedCollateralToken1, shareCollateralToken1, shareDebtToken1);
+		  return (shareProtectedCollateralToken1, silo1, shareDebtToken1);
       } 
       else {
 		  assert false, "Did not expect a silo instance different from Silo0 and Silo1";
@@ -63,9 +63,8 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
     require data.maxLtv <= data.lt;
     if(_silo == silo0) {
         require data.silo == silo0;
-        // require data.otherSilo == silo1;  // TODO: removed for re-setup
         require data.protectedShareToken == shareProtectedCollateralToken0;
-        require data.collateralShareToken == shareCollateralToken0;
+        require data.collateralShareToken == silo0;
         require data.debtShareToken == shareDebtToken0;
         require data.token == token0;
         require data.flashloanFee == flashloanFee0;
@@ -75,9 +74,8 @@ function getConfigSumm(address _silo) returns ISiloConfig.ConfigData {
     }
     else if(_silo == silo1) { 
         require data.silo == silo1;
-        // require data.otherSilo == silo0;  // TODO: removed for re-setup
         require data.protectedShareToken == shareProtectedCollateralToken1;
-        require data.collateralShareToken == shareCollateralToken1;
+        require data.collateralShareToken == silo1;
         require data.debtShareToken == shareDebtToken1;
         require data.token == token1;
         require data.flashloanFee == flashloanFee1;

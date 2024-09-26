@@ -6,12 +6,10 @@ using SiloConfig as siloConfig;
 
 using Token0 as token0;
 using ShareDebtToken0 as shareDebtToken0;
-using ShareCollateralToken0 as shareCollateralToken0;
 using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
 
 using Token1 as token1;
 using ShareDebtToken1 as shareDebtToken1;
-using ShareCollateralToken1 as shareCollateralToken1;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 
 methods {
@@ -19,14 +17,9 @@ methods {
     // Getters
     function Silo0.getTotalAssetsStorage(uint256) external returns(uint256) envfree;
     function Silo1.getTotalAssetsStorage(uint256) external returns(uint256) envfree;
-    
+
     function Silo0.config() external returns (address) envfree;
     function Silo1.config() external returns (address) envfree;
-
-    function Silo0.getTotalAssetsStorage(uint256) external returns (uint256) envfree;
-    function Silo1.getTotalAssetsStorage(uint256) external returns (uint256) envfree;
-
-    function _.getTotalAssetsStorage(uint256) external => DISPATCHER(true);
 
     // Harness
     function Silo0.getSiloDataInterestRateTimestamp() external returns(uint64) envfree;
@@ -36,8 +29,10 @@ methods {
     function Silo1.getSiloDataDaoAndDeployerRevenue() external returns(uint192) envfree;
 
     // Dispatcher
+    function _.getTotalAssetsStorage(uint256) external => DISPATCHER(true);
     function _.accrueInterest() external => DISPATCHER(true);
     function _.getCollateralAndProtectedTotalsStorage() external  => DISPATCHER(true);
+    function _.isSolvent(address) external => DISPATCHER(true);
 
     // ---- `SiloConfig` -------------------------------------------------------
     function _.accrueInterestForSilo(address) external => DISPATCHER(true);
@@ -57,6 +52,7 @@ methods {
     function _.getFeesWithAsset(address) external  => DISPATCHER(true);
     function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
     function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
+    function _.getDebtShareTokenAndAsset(address) external  => DISPATCHER(true);
 
     // `CrossReentrancyGuard`
     function _.turnOnReentrancyProtection() external => DISPATCHER(true);
@@ -72,7 +68,7 @@ methods {
 
     // ---- `ISiloOracle` ------------------------------------------------------
     // NOTE: Since `beforeQuote` is not a view function, strictly speaking this is unsound.
-    function _.beforeQuote(address) external => NONDET;
+    function _.beforeQuote(address) external => NONDET DELETE;
 
     // NOTE: Summarizes as fixed price of 1 -- an under-approximation.
     function _.quote(
@@ -91,7 +87,7 @@ methods {
 
     // ---- `ShareToken` -------------------------------------------------------
     // NOTE: Summarizing `_afterTokenTransfer` as `CONSTANT` is an under-approximation!
-    function _._afterTokenTransfer(address,address,uint256) internal => CONSTANT;
+    //function _._afterTokenTransfer(address,address,uint256) internal => CONSTANT;
     
     // ---- `SiloSolvencyLib` --------------------------------------------------
     // NOTE: Simplifies the solvency calculation, probably not an under-approximation
@@ -117,24 +113,40 @@ methods {
     // ---- Tokens -------------------------------------------------------------
     // Specific tokens
     function Token0.balanceOf(address) external returns (uint256) envfree;
+    function Silo0.balanceOf(address) external returns (uint256) envfree;
     function ShareDebtToken0.balanceOf(address) external returns (uint256) envfree;
-    function ShareCollateralToken0.balanceOf(address) external returns (uint256) envfree;
     function ShareProtectedCollateralToken0.balanceOf(address) external returns (uint256) envfree;
     
     function Token0.totalSupply() external returns (uint256) envfree;
+    function Silo0.totalSupply() external returns (uint256) envfree;
     function ShareDebtToken0.totalSupply() external returns (uint256) envfree;
-    function ShareCollateralToken0.totalSupply() external returns (uint256) envfree;
     function ShareProtectedCollateralToken0.totalSupply() external returns (uint256) envfree;
     
+    function Silo0.silo() external returns (address) envfree;
+    function ShareDebtToken0.silo() external returns (address) envfree;
+    function ShareProtectedCollateralToken0.silo() external returns (address) envfree;
+
+    function Silo0.siloConfig() external returns (address) envfree;
+    function ShareDebtToken0.siloConfig() external returns (address) envfree;
+    function ShareProtectedCollateralToken0.siloConfig() external returns (address) envfree;
+    
     function Token1.balanceOf(address) external returns (uint256) envfree;
+    function Silo1.balanceOf(address) external returns (uint256) envfree;
     function ShareDebtToken1.balanceOf(address) external returns (uint256) envfree;
-    function ShareCollateralToken1.balanceOf(address) external returns (uint256) envfree;
     function ShareProtectedCollateralToken1.balanceOf(address) external returns (uint256) envfree;
     
     function Token1.totalSupply() external returns (uint256) envfree;
+    function Silo1.totalSupply() external returns (uint256) envfree;
     function ShareDebtToken1.totalSupply() external returns (uint256) envfree;
-    function ShareCollateralToken1.totalSupply() external returns (uint256) envfree;
     function ShareProtectedCollateralToken1.totalSupply() external returns (uint256) envfree;
+
+    function Silo1.silo() external returns (address) envfree;
+    function ShareDebtToken1.silo() external returns (address) envfree;
+    function ShareProtectedCollateralToken1.silo() external returns (address) envfree;
+
+    function Silo1.siloConfig() external returns (address) envfree;
+    function ShareDebtToken1.siloConfig() external returns (address) envfree;
+    function ShareProtectedCollateralToken1.siloConfig() external returns (address) envfree;
 
     // The functions `name` and `symbol` are deleted since they cause memory partitioning
     // problems.
@@ -189,19 +201,17 @@ function simplified_solvent(
 function setupSiloEnvTimestamp(env e) {
     // We can not have `block.timestamp` less than `interestRateTimestamp`
     require e.block.timestamp < (1 << 64);
-    require require_uint64(e.block.timestamp) >= silo0.getSiloDataInterestRateTimestamp(e);
-    require require_uint64(e.block.timestamp) >= silo1.getSiloDataInterestRateTimestamp(e);
+    require require_uint64(e.block.timestamp) >= silo0.getSiloDataInterestRateTimestamp();
+    require require_uint64(e.block.timestamp) >= silo1.getSiloDataInterestRateTimestamp();
 }
 
 
 /// @title Set an address that is different from all contracts in the scene
 function siloSetupAddress(address sender) {
-    require sender != shareCollateralToken0;
     require sender != shareDebtToken0;
     require sender != shareProtectedCollateralToken0;
     require sender != shareProtectedCollateralToken1;
     require sender != shareDebtToken1;
-    require sender != shareCollateralToken1;
     require sender != siloConfig;
     require sender != currentContract;  // `Silo0`
     require sender != silo1;
@@ -214,7 +224,7 @@ function doesntHaveCollateralAsWellAsDebt(address user) {
     // Cannot have collateral AND debt on `silo0`
     require !(
         (
-            shareCollateralToken0.balanceOf(user) > 0 || 
+            silo0.balanceOf(user) > 0 || 
             shareProtectedCollateralToken0.balanceOf(user) > 0
         ) &&
         shareDebtToken0.balanceOf(user) > 0
@@ -223,7 +233,7 @@ function doesntHaveCollateralAsWellAsDebt(address user) {
     // Cannot have collateral AND debt on `silo1`
     require !(
         (
-            shareCollateralToken1.balanceOf(user) > 0 || 
+            silo1.balanceOf(user) > 0 || 
             shareProtectedCollateralToken1.balanceOf(user) > 0
         ) &&
         shareDebtToken1.balanceOf(user) > 0
@@ -245,7 +255,7 @@ function zeroSharesIsZeroAssets() {
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Protected)) == 0
     );
     require (
-        shareCollateralToken0.totalSupply() == 0 <=>
+        silo0.totalSupply() == 0 <=>
         silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) == 0
     );
 
@@ -258,16 +268,31 @@ function zeroSharesIsZeroAssets() {
         silo1.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Protected)) == 0
     );
     require (
-        shareCollateralToken1.totalSupply() == 0 <=>
+        silo1.totalSupply() == 0 <=>
         silo1.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) == 0
     );
 }
 
 
-/// @title Sets up the silos with the same config
-function setupConfig() {
+/// @title Sets up the tokens, shares and config
+function setupTokensSharesConfig() {
+    require silo0.silo() == silo0;
+    require shareDebtToken0.silo() == silo0;
+    require shareProtectedCollateralToken0.silo() == silo0;
+    
     require silo0.config() == siloConfig;
+    require silo0.siloConfig() == siloConfig;
+    require shareDebtToken0.siloConfig() == siloConfig;
+    require shareProtectedCollateralToken0.siloConfig() == siloConfig;
+
+    require silo1.silo() == silo1;
+    require shareDebtToken1.silo() == silo1;
+    require shareProtectedCollateralToken1.silo() == silo1;
+    
     require silo1.config() == siloConfig;
+    require silo1.siloConfig() == siloConfig;
+    require shareDebtToken1.siloConfig() == siloConfig;
+    require shareProtectedCollateralToken1.siloConfig() == siloConfig;
 }
 
 // ---- Rules ------------------------------------------------------------------
@@ -290,6 +315,7 @@ rule VS_Silo_interestRateTimestamp_daoAndDeployerRevenue(
     )
 } {
     // Setup
+    setupTokensSharesConfig();
     setupSiloEnvTimestamp(e);
     siloSetupAddress(e.msg.sender);
 
@@ -323,6 +349,7 @@ rule VS_Silo_totalBorrowAmount(env e, method f, calldataarg args) filtered {
         f.selector != sig:redeem(uint256,address,address,ISilo.CollateralType).selector
     )
 } {
+    setupTokensSharesConfig();
     setupSiloEnvTimestamp(e);
     siloSetupAddress(e.msg.sender);
 
@@ -352,6 +379,7 @@ invariant VS_Silo_totalBorrowAmount_invariant()
     }
     {
         preserved with (env e) {
+            setupTokensSharesConfig();
             setupSiloEnvTimestamp(e);
             siloSetupAddress(e.msg.sender);
         }
@@ -361,9 +389,41 @@ invariant VS_Silo_totalBorrowAmount_invariant()
             address _borrower,
             ISilo.CollateralType _collateralType
         ) with (env e) {
+            setupTokensSharesConfig();
             setupSiloEnvTimestamp(e);
             siloSetupAddress(e.msg.sender);
             siloSetupAddress(_borrower);
             zeroSharesIsZeroAssets();
         }
+    }
+
+/// @title This is a stronger invariant version of `VS_Silo_totalBorrowAmount` above
+invariant VS_Silo_totalBorrowAmount_stronger_invariant()
+    (
+        silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Collateral)) >=
+        silo0.getTotalAssetsStorage(require_uint256(ISilo.AssetType.Debt))
+    )
+    filtered {
+        f -> (
+            // TODO: Contains a `delegatecall`, can it be filtered out?
+            f.selector != sig:callOnBehalfOfSilo(address,uint256,ISilo.CallType,bytes).selector &&
+
+            // The following functions violate this invariant:
+            f.selector != sig:_accrueInterest_orig().selector &&
+            f.selector != sig:_callAccrueInterestForAsset_orig(address,uint256,uint256,address).selector &&
+            f.selector != sig:accrueInterest().selector &&
+            f.selector != sig:accrueInterestForConfig(address,uint256,uint256).selector &&
+            f.selector != sig:deposit(uint256,address).selector &&
+            f.selector != sig:deposit(uint256,address,ISilo.CollateralType).selector &&
+            f.selector != sig:leverageSameAsset(uint256,uint256,address,ISilo.CollateralType).selector &&
+            f.selector != sig:mint(uint256,address).selector &&
+            f.selector != sig:mint(uint256,address,ISilo.CollateralType).selector &&
+            f.selector != sig:redeem(uint256,address,address,ISilo.CollateralType).selector &&
+            f.selector != sig:repay(uint256,address).selector &&
+            f.selector != sig:repayShares(uint256,address).selector &&
+            f.selector != sig:switchCollateralToThisSilo().selector &&
+            f.selector != sig:transitionCollateral(uint256,address,ISilo.CollateralType).selector &&
+            f.selector != sig:withdraw(uint256,address,address,ISilo.CollateralType).selector &&
+            f.selector != sig:withdrawFees().selector
+        )
     }

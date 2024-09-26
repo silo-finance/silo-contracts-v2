@@ -16,11 +16,9 @@
 */
 
 using ShareDebtToken0 as shareDebtToken0;
-using ShareCollateralToken0 as shareCollateralToken0;
 using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
 
 using ShareDebtToken1 as shareDebtToken1;
-using ShareCollateralToken1 as shareCollateralToken1;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 
 methods {
@@ -195,7 +193,7 @@ function shareTokenBurnCVL(
     uint256 _amount
 ) {
     if (
-        token == shareCollateralToken0 || token == shareCollateralToken1 ||
+        token == silo0 || token == silo1 ||
         token == shareProtectedCollateralToken0 || token == shareProtectedCollateralToken1
        ) {
         _spendAllowanceCVL(token, _owner, _spender, _amount);
