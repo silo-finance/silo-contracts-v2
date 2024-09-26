@@ -212,6 +212,7 @@ library SiloSolvencyLib {
         returns (uint256 sumOfCollateralValue, uint256 debtValue)
     {
         uint256 sumOfCollateralAssets;
+        // TODO: remove unchecked
         // safe because we adding same token, so it is under same total supply
         unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
 

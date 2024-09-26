@@ -53,8 +53,15 @@ library SiloMathLib {
         )
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
+        
+        // TODO: certora rule getCollateralAmountsWithInterest should never return lower values for collateralAssetsWithInterest and debtAssetsWithInterest than _collateralAssets and _debtAssets inputs.
+        // TODO: certora rule getDebtAmountsWithInterest should never return values where debtAssetsWithInterest + accruedInterest overflows
 
         unchecked {
+            // TODO: Add an example below to the comment about daoAndDeployerRevenue overflow. Make sure below exapmple is correct.
+            // Example:
+            // X * (0.4e18 + 0.4e18) / 1e18 => X - (0.4e18 + 0.4e18) / 1e18
+
             // If we overflow on multiplication it should not revert tx, we will get lower fees
             daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
@@ -88,7 +95,21 @@ library SiloMathLib {
             return (_totalDebtAssets, 0);
         }
 
+        // TODO: certora rule getDebtAmountsWithInterest should never return lower value for debtAssetsWithInterest than _totalDebtAssets input
+        // TODO: certora rule getDebtAmountsWithInterest should never return values where sum of debtAssetsWithInterest and accruedInterest overflows
+
         unchecked {
+            // TODO: detect overflow at the end and do not accrue interest if it will overflow
+            // example below. 15min or don't do it.
+
+            // accruedInterest = _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
+            // debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
+
+            // if (debtAssetsWithInterest < _totalDebtAssets) {
+            //     debtAssetsWithInterest = _totalDebtAssets;
+            //     accruedInterest = 0;
+            // }
+
             /*
             how to prevent overflow on: _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST):
             1. max > _totalDebtAssets * _rcomp / _PRECISION_DECIMALS
@@ -147,6 +168,7 @@ library SiloMathLib {
         }
     }
 
+    // TODO: remane this to `convertToAssetsOrToShares`
     function convertToAssetsAndToShares(
         uint256 _assets,
         uint256 _shares,
@@ -195,6 +217,7 @@ library SiloMathLib {
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets) {
+        // TODO: certora rule calling any of deposit/withdraw/repay/borrow should not change the result of convertToShares and convertToAssets (+/- 1 wei at a time).
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
         // initially, in case of debt, if silo is empty we return shares==assets
@@ -328,6 +351,7 @@ library SiloMathLib {
         }
 
         unchecked {
+            // TODO: remove unchecked
             // I think we can afford to uncheck +1
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)

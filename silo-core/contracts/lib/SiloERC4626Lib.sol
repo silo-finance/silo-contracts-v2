@@ -56,7 +56,6 @@ library SiloERC4626Lib {
 
         uint256 totalAssets = $.totalAssets[uint256(_collateralType)];
 
-        // TODO: rename convertToAssetsOrToShares
         (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
             _assets,
             _shares,
@@ -130,11 +129,13 @@ library SiloERC4626Lib {
             // check liquidity
             if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
 
+            // TODO: remove unchecked and comment
             // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
             // `assets` and interest
             unchecked { $.totalAssets[uint256(_args.collateralType)] = totalAssets - assets; }
         }
 
+        // TODO: adjust comment to mention reentrancy protection that disallows reentrancy
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
         // can potentially reenter but state changes are already completed.
         IShareToken(_shareToken).burn(_args.owner, _args.spender, shares);

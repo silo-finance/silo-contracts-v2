@@ -146,6 +146,7 @@ contract Silo is ISilo, ShareCollateralToken {
         (uint256 totalSiloAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
+        // TODO: make sure rounding follows previewDeposit. Remove Rounding.DEFAULT_TO_SHARES
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, AssetType.Collateral
         );
@@ -158,6 +159,7 @@ contract Silo is ISilo, ShareCollateralToken {
         (uint256 totalSiloAssets, uint256 totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
 
+        // TODO: make sure rounding follows previewMint, Rounding.DEFAULT_TO_ASSETS
         return SiloMathLib.convertToAssets(
             _shares, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_ASSETS, AssetType.Collateral
         );
@@ -213,6 +215,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 shares)
     {
+        // TODO: make params named, apply globally, use your best judgement
         (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, CollateralType.Collateral);
     }
 
@@ -235,6 +238,7 @@ contract Silo is ISilo, ShareCollateralToken {
         // avoid magic number 0
         uint256 zeroAssets = 0;
 
+        // TODO: make params named, apply globally, use your best judgement
         (assets,) = _withdraw(zeroAssets, _shares, _receiver, _owner, msg.sender, CollateralType.Collateral);
     }
 
@@ -259,6 +263,8 @@ contract Silo is ISilo, ShareCollateralToken {
             uint256 totalSiloAssets, uint256 totalShares
         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
+        // TODO: make sure rounding follows previewDeposit. Remove Rounding.DEFAULT_TO_SHARES
+        // TODO: make sure rounding for debt follows previewBorrow
         return SiloMathLib.convertToShares(
             _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, _assetType
         );
@@ -270,6 +276,8 @@ contract Silo is ISilo, ShareCollateralToken {
             uint256 totalSiloAssets, uint256 totalShares
         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
+        // TODO: make sure rounding follows previewMint, Rounding.DEFAULT_TO_ASSETS
+        // TODO: make sure rounding for debt follows previewBorrowShares
         return SiloMathLib.convertToAssets(
             _shares,
             totalSiloAssets,
@@ -551,6 +559,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: certora rule repay() should never revert if user has debt
     /// @inheritdoc ISilo
     function repay(uint256 _assets, address _borrower)
         external
@@ -673,6 +682,7 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
+    // TODO: certora rule withdraw() should never revert if liquidity is available and user has no debt
     function _withdraw(
         uint256 _assets,
         uint256 _shares,
@@ -770,6 +780,8 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.maxWithdraw(_owner, _collateralType);
     }
 
+    // TODO: certora rule _accrueInterest() should never revert
+    // TODO: certora rule _accrueInterest() should never decrease total collateral and total debt
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
         ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();
         accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
