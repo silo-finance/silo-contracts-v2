@@ -57,8 +57,6 @@ Prover optimizations, and also prevents calling them from CVL.
 
 Configuration
 ^^^^^^^^^^^^^
-* ``"prover_version": "eric/CERT-7219"`` -- The Prover needs to use a specific branch
-  for now (this branch fixes an issue with the Prover that affected these runs).
 * ``"multi_assert_check": true`` -- Runs each CVL :cvl:`assert` statement as a separate
   rule. This is necessary to prevent timeouts.
 
@@ -66,13 +64,13 @@ Configuration
 
 Rules and results
 -----------------
-Report link: `High Level Properties Rule Report`_
 
-.. danger::
+Reports
+^^^^^^^
+* `HLP_mint_breakingUpNotBeneficial_full Report`_
+* `HLP_DepositRedeemNotProfitable Report`_
 
-   To avoid timeouts, this report used ``--rule_sanity none``. Hence we did not check
-   for vacuity.
-
+----
 
 .. index:: HLP_mint_breakingUpNotBeneficial_full
 
@@ -84,50 +82,49 @@ Report link: `High Level Properties Rule Report`_
 
    **Implementation status:** Done
 
-   **Verification status:** Partial (one assertion times out, no vacuity checks)
+   **Verification status:** Partial (one assertion times out)
 
-   **Rule report:** `High Level Properties Rule Report`_ 
+   **Rule report:** `HLP_mint_breakingUpNotBeneficial_full Report`_ 
 
    Property:
       Minting amount :math:`a` followed by amount :math:`b` has no advantage over
       minting once amount :math:`a+b`.
 
-   To start we have:
-
-   * :math:`T_0` -- the balance of :cvl:`msg.sender` in :cvl:`token0` at start.
-   * :math:`C_0` -- the balance of :cvl:`msg.sender` in :cvl:`shareCollateralToken0` at start.
-   * :math:`P_0` -- the balance of :cvl:`msg.sender` in :cvl:`shareProtectedCollateralToken0`
-     at start.
-
-   The balances after minting amount :math:`s` are:
-
-   * :math:`T_s` -- new balance in :cvl:`token0` at start.
-   * :math:`C_s` -- new balance in :cvl:`shareCollateralToken0` at start.
-   * :math:`P_s` -- new balance in :cvl:`shareProtectedCollateralToken0` at start.
-
-   After minting amounts :math:`s_1` and :math:`s_2` (where :math:`s_1 + s_2 = s`):
-
-   * :math:`T_q` -- new balance in :cvl:`token0` at start.
-   * :math:`C_q` -- new balance in :cvl:`shareCollateralToken0` at start.
-   * :math:`P_q` -- new balance in :cvl:`shareProtectedCollateralToken0` at start.
-
-   The rule contains two assertions:
-
-   #. Either :math:`T_q - T_0 < T_s - T_0` or
-
-      * :math:`C_q - C_0 \leq C_s - C_0 + 1` and
-      * :math:`P_q - P_0 \leq P_s - P_0 + 1`.
-
-   #. Either:
-
-      * :math:`C_q - C_0 < C_s - C_0` or
-      * :math:`P_q - P_0 < P_s - P_0` or
-      * :math:`T_q - T_0 \leq T_s - T_0`.
+      To start we have:
+   
+      * :math:`T_0` -- the balance of :cvl:`msg.sender` in :cvl:`token0` at start.
+      * :math:`C_0` -- the balance of :cvl:`msg.sender` in :cvl:`shareCollateralToken0` at start.
+      * :math:`P_0` -- the balance of :cvl:`msg.sender` in :cvl:`shareProtectedCollateralToken0`
+        at start.
+   
+      The balances after minting amount :math:`s` are:
+   
+      * :math:`T_s` -- new balance in :cvl:`token0` at start.
+      * :math:`C_s` -- new balance in :cvl:`shareCollateralToken0` at start.
+      * :math:`P_s` -- new balance in :cvl:`shareProtectedCollateralToken0` at start.
+   
+      After minting amounts :math:`s_1` and :math:`s_2` (where :math:`s_1 + s_2 = s`):
+   
+      * :math:`T_q` -- new balance in :cvl:`token0` at start.
+      * :math:`C_q` -- new balance in :cvl:`shareCollateralToken0` at start.
+      * :math:`P_q` -- new balance in :cvl:`shareProtectedCollateralToken0` at start.
+   
+      The rule contains two assertions:
+   
+      #. Either :math:`T_q - T_0 < T_s - T_0` or
+   
+         * :math:`C_q - C_0 \leq C_s - C_0 + 1` and
+         * :math:`P_q - P_0 \leq P_s - P_0 + 1`.
+   
+      #. Either:
+   
+         * :math:`C_q - C_0 < C_s - C_0` or
+         * :math:`P_q - P_0 < P_s - P_0` or
+         * :math:`T_q - T_0 \leq T_s - T_0`.
 
    .. attention::
 
-      * Only the first assertion is verified, the second times out.
-      * Also note that there was no sanity check.
+      Only the first assertion is verified, the second times out.
 
    .. dropdown:: Rule
 
@@ -147,14 +144,12 @@ Report link: `High Level Properties Rule Report`_
 
    **Implementation status:** Done
 
-   **Verification status:** Verified (without vacuity checks)
+   **Verification status:** Partial (one assertion times out)
 
-   **Rule report:** `High Level Properties Rule Report`_ 
+   **Rule report:** `HLP_DepositRedeemNotProfitable Report`_ 
 
    Property:
       User should not profit by depositing and immediately redeeming.
-
-   .. attention:: There was no sanity check.
 
    .. dropdown:: Rule
 
@@ -167,3 +162,9 @@ Report link: `High Level Properties Rule Report`_
 
 .. _High Level Properties Rule Report:
    https://prover.certora.com/output/98279/2a009183589f4bf3a1ec79d1f428d2bb?anonymousKey=18a7c2d975a57eff094b298ddc9fbc839b953d05
+
+.. _HLP_mint_breakingUpNotBeneficial_full Report:
+   https://prover.certora.com/output/98279/a9e0eab59ef84fbcbe0960b5d192604c?anonymousKey=8e168e2caa140b64e6b8dbdae4eccbb136824084
+
+.. _HLP_DepositRedeemNotProfitable Report:
+   https://prover.certora.com/output/98279/f857e287af234a62b5ec67d6a51e74e9?anonymousKey=642e6bb62e1f8b7963572774c1b66082f0e9f088

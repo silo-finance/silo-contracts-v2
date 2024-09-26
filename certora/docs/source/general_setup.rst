@@ -93,6 +93,17 @@ of timeout. For example:
    :cvlobject: cvlMulDiv
    :caption: :clink:`from valid_states_example.spec<@silo-specs/valid_states_example.spec>`
 
+**Notes:**
+
+* The :cvl:`(x * y / denominator)` is calculated as a :cvl:`mathint`, so it is exact.
+* The code in :clink:`PRBMathCommon.mulDiv<@lib/PRBMathCommon.sol>` requires
+  that :cvl:`denominator > (x * y) // 2^256`, so the end result does not overflow.
+  Which is similar the CVL summary.
+* The code in :clink:`PRBMathCommon.mulDiv<@lib/PRBMathCommon.sol>` also requires
+  that :cvl:`denominator > 0`.
+* The function `Math.mulDiv<@openzeppelin/contracts/utils/math/Math.sol>` behaves
+  similarly.
+
 .. attention::
 
    The summarized function never reverts. Hence this summarization would not be
@@ -102,8 +113,11 @@ of timeout. For example:
 
 Configuration
 -------------
-* Used Solidity version 0.8.24 throughout.
+* Used Solidity compiler version *0.8.24* throughout.
+* The jobs were ran using *certora-cli-beta 7.16.0*.
 * Used ``"loop_iter": "2"``.
+* The jobs used the latest *master* branch of the Prover, i.e.
+  ``"prover_version": "master"``, since we need some recent features.
 
 
 .. Links
