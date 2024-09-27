@@ -89,28 +89,13 @@ library SiloMathLib {
         }
 
         unchecked {
-            /*
-            how to prevent overflow on: _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST):
-            1. max > _totalDebtAssets * _rcomp / _PRECISION_DECIMALS
-            2. max / _rcomp > _totalDebtAssets / _PRECISION_DECIMALS
-            */
-            // save to unchecked because we only have division and `_rcomp` is not 0 based on above check
-            if (type(uint256).max / _rcomp > _totalDebtAssets / _PRECISION_DECIMALS) {
-                accruedInterest = _totalDebtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
-            } else {
-                // we have overflow on accruedInterest
-                accruedInterest = type(uint256).max;
-            }
-
-            // save to uncheck because variable `_totalDebtAssets` can not be more than type.max
-            uint256 cap = type(uint256).max - _totalDebtAssets;
-
-            if (accruedInterest > cap) {
-                // avoid overflow on interest
-                accruedInterest = cap;
-            }
-
+            accruedInterest = _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
+
+            if (debtAssetsWithInterest < _totalDebtAssets) {
+                debtAssetsWithInterest = _totalDebtAssets;
+                accruedInterest = 0;
+            }
         }
     }
 
