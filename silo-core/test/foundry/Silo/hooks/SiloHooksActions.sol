@@ -337,6 +337,70 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo1.flashLoan(IERC3156FlashBorrower(address(this)), address(token1), flashLoanAmount, data);
     }
 
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetBeforeHooks
+    function testSwitchCollateralSameAssetBeforeHooks() public {
+        uint256 beforeActions = Hook.SWITCH_COLLATERAL;
+
+        HookMock hookReceiverMock = new HookMock(beforeActions, NO_ACTIONS, beforeActions, NO_ACTIONS);
+        _deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, collateralAmount, PROTECTED);
+        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
+
+        uint256 borrowAmount = 1e18;
+
+        vm.prank(_borrower);
+        silo0.borrow(borrowAmount, _borrower, _borrower);
+
+        vm.expectEmit(true, true, true, true);
+        emit SwitchCollateralBeforeHA(_borrower);
+
+        vm.prank(_borrower);
+        silo0.switchCollateralToThisSilo();
+
+        // Ensure there are no other hook calls.
+        _siloHookReceiver.revertAfterAction();
+
+        vm.prank(_borrower);
+        silo1.switchCollateralToThisSilo();
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetAfterHooks
+    function testSwitchCollateralSameAssetAfterHooks() public {
+        uint256 afterActions = Hook.SWITCH_COLLATERAL;
+
+        HookMock hookReceiverMock = new HookMock(NO_ACTIONS, afterActions, NO_ACTIONS, afterActions);
+        _deploySiloWithHook(address(hookReceiverMock));
+
+        uint256 depositAmount = 100e18;
+        uint256 collateralAmount = 100e18;
+
+        _siloDepositWithoutHook(silo0, token0, _depositor, _depositor, depositAmount, COLLATERAL);
+        _siloDepositWithoutHook(silo0, token0, _borrower, _borrower, collateralAmount, PROTECTED);
+        _siloDepositWithoutHook(silo1, token1, _borrower, _borrower, collateralAmount, PROTECTED);
+
+        uint256 borrowAmount = 1e18;
+
+        vm.prank(_borrower);
+        silo0.borrow(borrowAmount, _borrower, _borrower);
+
+        vm.expectEmit(true, true, true, true);
+        emit SwitchCollateralAfterHA(_borrower);
+
+        vm.prank(_borrower);
+        silo0.switchCollateralToThisSilo();
+
+        // Ensure there are no other hook calls.
+        _siloHookReceiver.revertBeforeAction();
+
+        vm.prank(_borrower);
+        silo1.switchCollateralToThisSilo();
+    }
+
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetHooks
     function testSwitchCollateralSameAssetHooks() public {
         uint256 beforeActions = Hook.SWITCH_COLLATERAL;
