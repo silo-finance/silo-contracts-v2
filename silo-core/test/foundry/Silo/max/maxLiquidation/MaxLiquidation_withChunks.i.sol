@@ -15,7 +15,7 @@ import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
     using SiloLensLib for ISilo;
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -42,7 +42,7 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
 
             (
                 uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;

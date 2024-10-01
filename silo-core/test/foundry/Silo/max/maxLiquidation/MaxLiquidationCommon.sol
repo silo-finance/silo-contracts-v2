@@ -16,7 +16,6 @@ import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
     bool internal constant _RECEIVE_STOKENS = true;
-    bool internal constant _SELF = true;
 
     ISiloConfig siloConfig;
     address immutable depositor;
@@ -205,13 +204,13 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         else assertLe(a, b, _msg);
     }
 
-    function _executeLiquidationAndRunChecks(bool _sameToken, bool _receiveSToken, bool _self) internal {
+    function _executeLiquidationAndRunChecks(bool _sameToken, bool _receiveSToken) internal {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
-        uint256 liquidatorBalanceBefore0 = token0.balanceOf(_self ? borrower : address(this));
+        uint256 liquidatorBalanceBefore0 = token0.balanceOf(address(this));
 
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken, _self);
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken);
 
         _assertLiquidationHookHasNoBalance();
 
@@ -262,7 +261,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 );
 
                 assertEq(
-                    token0.balanceOf(_self ? borrower : address(this)),
+                    token0.balanceOf(address(this)),
                     liquidatorBalanceBefore0 + withdrawCollateral,
                     "collateral was moved to liquidator"
                 );
@@ -307,12 +306,10 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         } else revert("this should never happen");
     }
 
-    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken, bool _self)
+    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
         internal
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        if (_self) vm.prank(borrower);
-
         try partialLiquidation.liquidationCall(
                 address(_sameToken ? token1 : token0),
                 address(token1),
@@ -332,7 +329,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         }
     }
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
