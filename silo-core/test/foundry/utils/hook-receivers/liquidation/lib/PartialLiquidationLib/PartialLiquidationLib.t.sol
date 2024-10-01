@@ -90,8 +90,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
                 debtToCover: data[i].input.debtToCover,
-                liquidationFee: data[i].input.liquidationFee,
-                selfLiquidation: false
+                liquidationFee: data[i].input.liquidationFee
             });
 
             (
@@ -207,8 +206,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
                 debtToCover: _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
-                liquidationFee: data[i].input.liquidityFee,
-                selfLiquidation: false
+                liquidationFee: data[i].input.liquidityFee
             });
 
             (
@@ -287,8 +285,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             collateralConfigAsset: address(0),
             debtConfigAsset: address(0),
             debtToCover: _debtToCover,
-            liquidationFee: _liquidationFee,
-            selfLiquidation: false
+            liquidationFee: _liquidationFee
         });
 
         (

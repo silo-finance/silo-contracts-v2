@@ -777,41 +777,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         }
     }
 
-    // Property: A user self-liquidating cannot gain assets or shares
-    function selfLiquidationDoesNotResultInMoreSharesOrAssets(
-        uint8 _actorIndex,
-        uint256 debtToRepay,
-        bool receiveSToken
-    )
-        public
-    {
-        emit LogUint256("[selfLiquidationDoesNotResultInMoreSharesOrAssets] block.timestamp:", block.timestamp);
-
-        Actor actor = _selectActor(_actorIndex);
-        (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-
-        Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        Silo otherVault = _vaultZeroWithDebt ? vault1 : vault0;
-
-        (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(otherVault));
-        (,, address debtShareToken ) = siloConfig.getShareTokens(address(vault));
-
-        { // to deep
-            uint256 procBalanceBefore = IShareToken(protectedShareToken).balanceOf(address(actor));
-            uint256 collBalanceBefore = IShareToken(collateralShareToken).balanceOf(address(actor));
-            uint256 debtBalanceBefore = IShareToken(debtShareToken).balanceOf(address(actor));
-            actor.liquidationCall(address(actor), debtToRepay, receiveSToken, siloConfig);
-
-            uint256 procBalanceAfter = IShareToken(protectedShareToken).balanceOf(address(actor));
-            uint256 collBalanceAfter = IShareToken(collateralShareToken).balanceOf(address(actor));
-            uint256 debtBalanceAfter = IShareToken(debtShareToken).balanceOf(address(actor));
-
-            assertLte(procBalanceAfter, procBalanceBefore, "Protected shares balance increased");
-            assertLte(collBalanceAfter, collBalanceBefore, "Collateral shares balance increased");
-            assertLte(debtBalanceAfter, debtBalanceBefore, "Debt shares balance increased");
-        }
-    }
-
     // Property: A user transitioning his collateral cannot receive more shares
     function transitionCollateral_doesNotResultInMoreShares(
         uint8 _actorIndex,
