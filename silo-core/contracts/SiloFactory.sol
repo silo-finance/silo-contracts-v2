@@ -23,6 +23,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
 
+    // TODO: add natspec about decimals
     uint256 public daoFee;
     uint256 public maxDeployerFee;
     uint256 public maxFlashloanFee;

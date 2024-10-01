@@ -26,6 +26,7 @@ library SiloStdLib {
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
     function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
+        // TODO: return 0 instead of revert
         if (_amount == 0) revert ZeroAmount();
 
         // all user set fees are in 18 decimals points

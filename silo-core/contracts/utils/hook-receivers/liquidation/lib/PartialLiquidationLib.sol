@@ -28,6 +28,7 @@ library PartialLiquidationLib {
     /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
+    // TODO: adjust commnet to state that _DEBT_DUST_LEVEL is a % of total debt value. If repay value is more than _DEBT_DUST_LEVEL % of total debt value, we will force full liquidation.
     /// @dev if repay value : total debt value during liquidation is higher than _DEBT_DUST_LEVEL_IN_BP
     /// then we will force full liquidation,
     /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
@@ -77,6 +78,7 @@ library PartialLiquidationLib {
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 
+    // TODO: update comment because sTokens transfers do not revert anymore
     /// @dev in case of self liquidation or in case of bad debt, we do not apply any restrictions.
     /// We do not have restriction how much user need to repay, so there is no point of having restrictions on self
     /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV

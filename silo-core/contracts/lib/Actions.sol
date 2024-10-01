@@ -265,6 +265,7 @@ library Actions {
         });
 
         // receive collateral
+        // TODO: this should be on the top as input validation
         if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
         uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
@@ -297,6 +298,10 @@ library Actions {
             ? collateralShareToken
             : protectedShareToken;
 
+        // TODO: certora rule during transitionCollateral share tokens balances should change only for the same address (owner)
+        // TODO: certora rule transitionCollateral should not change underlaying assets balance
+        // TODO: certora rule transitionCollateral should not increase users assets
+        // TODO: certora rule transitionCollateral should not decrease user assets by more than 1-2 wei
         (assets, shares) = SiloERC4626Lib.withdraw({
             _asset: address(0), // empty token because we don't want to transfer
             _shareToken: shareTokenFrom,
@@ -318,6 +323,7 @@ library Actions {
 
         (assets, toShares) = SiloERC4626Lib.deposit({
             _token: address(0), // empty token because we don't want to transfer
+            // TODO: _depositor should be msg.sender
             _depositor: _args.owner,
             _assets: assets,
             _shares: 0,
@@ -325,6 +331,8 @@ library Actions {
             _collateralShareToken: IShareToken(shareTokenTo),
             _collateralType: depositType
         });
+
+        // TODO: add solvency check
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -361,6 +369,7 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
+        // TODO: should use hook after
         if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
                 address(this), action, abi.encodePacked(msg.sender)
@@ -368,6 +377,7 @@ library Actions {
         }
     }
 
+    // TODO: mention in natspec lack of reentrancy protection
     /// @notice Executes a flash loan, sending the requested amount to the receiver and expecting it back with a fee
     /// @param _receiver The entity that will receive the flash loan and is expected to return it with a fee
     /// @param _token The token that is being borrowed in the flash loan
@@ -395,6 +405,7 @@ library Actions {
 
         if (fee > type(uint192).max) revert FeeOverflow();
 
+        // TODO: require _amount < maxFlashLoan
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != _FLASHLOAN_CALLBACK) {
@@ -403,6 +414,7 @@ library Actions {
 
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
+        // TODO: increase fees before callback
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
@@ -449,6 +461,7 @@ library Actions {
 
         uint256 protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
 
+        // TODO: certora rule for comment below
         // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
         unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
 
@@ -463,6 +476,7 @@ library Actions {
             // deployer was never setup or deployer NFT has been burned
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
+            // TODO: rename to daoRevenue and deployerRevenue
             // split fees proportionally
             uint256 daoFees = earnedFees * daoFee;
             uint256 deployerFees;
@@ -588,6 +602,7 @@ library Actions {
 
         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
+        // TODO: add spender address to data
         bytes memory data = abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);
@@ -603,6 +618,7 @@ library Actions {
 
         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;
 
+        // TODO: add spender address to data
         bytes memory data = abi.encodePacked(
             _args.assets,
             _args.shares,

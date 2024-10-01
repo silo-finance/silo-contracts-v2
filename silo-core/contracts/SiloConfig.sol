@@ -144,6 +144,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO1 : _SILO0;
     }
 
+    // TODO: update natspec, change `_to_` to `_recipient`. Explain that we are inheriting position type (same asset/other asset borrow) from sender
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
         if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();

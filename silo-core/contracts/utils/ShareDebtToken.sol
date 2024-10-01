@@ -45,6 +45,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         _setReceiveApproval(owner, _msgSender(), _amount);
     }
 
+    // TODO: make sure this function is properly overridden - make sure we have test for that
     function forwardTransferFromNoChecks(address, address, uint256) external pure virtual override {
         revert Forbidden();
     }

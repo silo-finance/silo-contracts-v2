@@ -152,6 +152,10 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: review all unchecked math operations
+    // TODO: do we follow check effects interactions pattern? Oracles calls and before quote calls etc.
+    // TODO: check how msg.sender is used in the contracts
+    // TODO: follow user inputs and which data can be manipulated by the user
     /// @inheritdoc IERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
@@ -167,6 +171,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external pure virtual returns (uint256 maxAssets) {
+        // TODO: replace maxDeposit with constant
         maxAssets = Views.maxDeposit();
     }
 
@@ -303,6 +308,7 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 shares)
     {
+        // TODO: make params named, apply globally, use your best judgement
         (, shares) = _deposit(_assets, 0, /* shares */ _receiver, _collateralType);
     }
 
@@ -412,12 +418,27 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
+    // TODO: certora rule when user borrows maxAssets returned by maxBorrow, borrow should not revert becaue of solvency check
+    // TODO: up to 2 wei underestimateion should be removed from natspec
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
+        // TODO: use named params
         (maxAssets,) = Views.maxBorrow(_borrower, false /* same asset */);
     }
 
+    // TODO: change order of functions to match ERC4626
+    // maxBorrow
+    // previewBorrow
+    // borrow
+    // maxBorrowShares
+    // previewBorrowShares
+    // borrowShares
+    // maxBorrowSameAsset
+    // borrowSameAsset
+    // leverageSameAsset
+
     function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
+        // TODO: use named params
         (maxAssets,) = Views.maxBorrow(_borrower, true /* same asset */);
     }
 
@@ -432,6 +453,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: add natspec
     function switchCollateralToThisSilo() external virtual {
         Actions.switchCollateralToThisSilo();
         emit CollateralTypeChanged(msg.sender);
@@ -488,6 +510,7 @@ contract Silo is ISilo, ShareCollateralToken {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
+    // TODO: add more details to natspec
     /// @inheritdoc ISilo
     function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
         external
@@ -509,6 +532,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
+        // TODO: use named params
         (,maxShares) = Views.maxBorrow(_borrower, false /* same asset */);
     }
 
@@ -580,6 +604,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxRepayShares(address _borrower) external view virtual returns (uint256 shares) {
+        // TODO: get debtShareToken using getDebtShareTokenAndAsset
         ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
     }
@@ -615,6 +640,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
+        // TODO: it should exclude protected assets
         maxLoan = _token == ShareTokenLib.siloConfig().getAssetForSilo(address(this))
             ? IERC20(_token).balanceOf(address(this))
             : 0;
@@ -654,10 +680,13 @@ contract Silo is ISilo, ShareCollateralToken {
     function withdrawFees() external virtual {
         _accrueInterest();
         Actions.withdrawFees(this);
+        // TODO: emit event with paid fees
     }
 
+    // TODO: use enum AssetType _assetType instead of uint256 _assetType - just function signature
+    // TODO: should be on the top of the file
     /// @inheritdoc ISilo
-    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
+    function getTotalAssetsStorage(AssetType _assetType) external view returns (uint256 totalAssetsByType) {
         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
     }
 

@@ -39,6 +39,9 @@ interface IPartialLiquidation {
     error LiquidationTooBig();
     error UnknownRatio();
 
+    // TODO: change notice to: Function to liquidate insolvent position
+    // TODO: change "bonus" to liquidation fee
+    // TODO: add comment about how and why function reverts
     /// @notice Function to liquidate a non-healthy debt collateral-wise
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
     ///   a amount of the `collateralAsset` plus a bonus to cover market risk
@@ -48,6 +51,7 @@ interface IPartialLiquidation {
     /// @param _user The address of the borrower getting liquidated
     /// @param _debtToCover The debt amount of borrowed `asset` the liquidator wants to cover,
     /// in case this amount is too big, it will be reduced to maximum allowed liquidation amount
+    // TODO: add comment about reverting if debtToCover is more than liquidator specified
     /// @param _receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
     /// @return withdrawCollateral collateral that was send to `msg.sender`, in case of `_receiveSToken` is TRUE,

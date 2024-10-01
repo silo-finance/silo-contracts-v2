@@ -35,6 +35,7 @@ library ShareCollateralTokenLib {
 
         ShareTokenLib.callOracleBeforeQuote(siloConfig, _borrower);
 
+        // TODO: accrue interest instead of using ISilo.AccrueInterestInMemory.Yes
         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
     }
 }

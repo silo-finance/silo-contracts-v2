@@ -23,6 +23,7 @@ library PartialLiquidationExecLib {
         view
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
+        // TODO: named params
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
@@ -125,6 +126,7 @@ library PartialLiquidationExecLib {
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
         uint256 sumOfCollateralAssets;
+        // TODO: remove unchecked
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
@@ -141,8 +143,10 @@ library PartialLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
+        // TODO: return error and revert with it in liquidationCall
         if (_params.selfLiquidation) {
             if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {
+                // TODO: add "full self-liquidation"
                 // only because it is self liquidation, we return all collateral on repay all debt
                 return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
             }

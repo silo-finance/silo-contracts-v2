@@ -178,6 +178,9 @@ library SiloMathLib {
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
+        // TODO: add input validation for zeros values
+        // if (_assets == 0 && _shares == 0) revert ISilo.InputZeroAssetsOrShares();
+
         if (_assets == 0) {
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
@@ -187,6 +190,10 @@ library SiloMathLib {
         } else {
             revert ISilo.InputCanBeAssetsOrShares();
         }
+
+        // TODO: certora rule it should be imposible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in Silo
+        // TODO: make sure to never return _assets == 0 || _shares == 0. Clean up checks in deposit/withdraw/repay/borrow/leverageSameAsset/borrowSameAsset etc.
+        // if (_assets == 0 || _shares == 0) revert ISilo.ReturnZeroAssetsOrShares();
     }
 
     /// @dev Math for collateral is exact copy of
@@ -227,8 +234,10 @@ library SiloMathLib {
         assets = _shares.mulDiv(totalAssets, totalShares, _rounding);
     }
 
+    // TODO: add natspec
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
+        // TODO: rename to _collateralMaxLtv
         uint256 _configMaxLtv,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue

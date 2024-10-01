@@ -173,6 +173,7 @@ library SiloLendingLib {
         // add new debt
         $.totalAssets[AssetTypes.DEBT] = totalDebtAssets + borrowedAssets;
 
+        // TODO: remove reentrancy commens because they are misleading. Apply to other places deposit/repay/withdraw when we transfer tokens.
         // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
         // potentially reenter but the state is correct.
         IShareToken(_debtShareToken).mint(_args.borrower, _spender, borrowedShares);
@@ -204,6 +205,7 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
+        // TODO: named params
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             _collateralConfig,
             _debtConfig,
@@ -223,6 +225,7 @@ library SiloLendingLib {
             borrowerDebtValue
         );
 
+        // TODO: named params
         (assets, shares) = maxBorrowValueToAssetsAndShares(
             maxBorrowValue,
             borrowerDebtValue,
@@ -234,6 +237,7 @@ library SiloLendingLib {
             _totalDebtShares
         );
 
+        // TODO: check also if shrares are 0
         if (assets == 0) return (0, 0);
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
@@ -328,6 +332,7 @@ library SiloLendingLib {
         uint256 _maxBorrowValue,
         uint256 _borrowerDebtValue,
         address _borrower,
+        // TODO: rename to _debtAsset
         address _debtToken,
         address _debtShareToken,
         ISiloOracle _debtOracle,
@@ -345,10 +350,24 @@ library SiloLendingLib {
         if (_borrowerDebtValue == 0) {
             uint256 oneDebtToken = 10 ** IERC20Metadata(_debtToken).decimals();
 
+            // TODO: remove decimals and if statement. Use _PRECISION_DECIMALS for quote and keep only one way of calculating max borrow.
+            // asset is USDC, 6 decimals
+            // quote token is ETH, 18 decimals
+
+            // quote 1e18 USDC / decimals 1e6 = 1e12 (no decimals) / 2500 = 400000000e18
+            // 400000000 * 2500 = 1e12
+
+            // _maxBorrowValue in ETH = 10e18
+            // oneDebtTokenValue = 400000000e18
+            // oneDebtTokenValue / _PRECISION_DECIMALS
+            // assets = 10e18 * 1e18 / 400000000e18 = 24999.999999 wei
+
             uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
                 ? oneDebtToken
                 : _debtOracle.quote(oneDebtToken, _debtToken);
 
+            // TODO: check if tests for different decimal assets are present. If not, add combinations for 18/6 and 6/6 decimals.
+            // TODO: certora rule tests with different decimals
             assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, oneDebtTokenValue, Rounding.MAX_BORROW_TO_ASSETS);
 
             // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
@@ -358,6 +377,7 @@ library SiloLendingLib {
                 assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
             );
         } else {
+            // TODO: remove else based on above solution
             uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
 
             // on LTV calculation, we taking debt value, and we round UP when we calculating shares

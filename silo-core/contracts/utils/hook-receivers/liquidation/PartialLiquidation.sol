@@ -44,11 +44,56 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         // not in use
     }
 
+    // liquidationFee: 5%
+    // collateral: 1000 USDC
+    // debt: 900 USDC
+    // LTV: 90%
+    // LT: 90%
+    // min LTV after liquidation: 90% - 10% = 80%
+
+    // liquidationCall(x)
+
+    // collateral: 1000 USDC - x - x * 5% = 1000 USDC - 1.05x
+    // debt: 900 USDC - x
+
+    // LTV: (900 USDC - x) / (1000 USDC - 1.05x) >= 80%
+
+    // 300 / 370 = 0.8108 LTV
+    // 900 / 1000 = 0.9 LTV
+
+    // liquidation
+    //   - GLOBAL
+    //     - liquidator never repay more than debtToCover
+    //     - user must be insolvent
+    //   - liquidation by third party
+    //     - user is solvent => revert
+    //     - LTV change:
+    //         |    partial liquidation       |     full liquidation      |      bad debt - any liquidation    | 
+    //       - LTV decreases:
+    //         - partial liquidation on a user that liquidaiton size is below dust
+    //       - LTV increases:
+    //         - partial liquidation with bad debt
+    //       - LTV is 0:
+    //         - full liquidation
+    //     - partial liquidation
+    //       - debtToCover is set to above allowed LTV after liquidation => adjust to maximum allowed value
+    //     - full liquidaiton
+    //       - if liqudatior repays more than 90% of debt
+    //     - partial/full liquidation
+    //       - bad debt
+    //         - give collateral + liquidation fee
+    //         - if not enough collateral give all collateral
+    //         - if 0 collateral - revert => use repay instead
+    //   - liquidation by third party with sToken
+
+    // TODO: add natspec
+    // TODO: remove self liquidation
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
+        // TODO: rename to _maxDebtToCover and do not revert
         uint256 _debtToCover,
         bool _receiveSToken
     )
@@ -85,6 +130,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
+        // TODO: change the name of revert to reflect the nature of revert which is we do not allow dust so full liqudiation is required
         if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
 
         emit LiquidationCall(msg.sender, _receiveSToken);
@@ -117,6 +163,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
 
         if (_receiveSToken) {
+            // TODO: call previewRedeem() for both to get correct result
             // this two value were split from total collateral to withdraw, so we will not overflow
             unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
         } else {
@@ -127,6 +174,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             // so there is a need to check assets before we withdraw collateral/protected
 
             if (collateralShares != 0) {
+                // TODO: named params
                 withdrawCollateral = ISilo(collateralConfig.silo).redeem(
                     collateralShares,
                     msg.sender,
@@ -139,6 +187,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
                 unchecked {
                     // protected and collateral values were split from total collateral to withdraw,
                     // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                    // TODO: named params
                     withdrawCollateral += ISilo(collateralConfig.silo).redeem(
                         protectedShares,
                         msg.sender,
@@ -202,6 +251,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     ) internal virtual returns (uint256 shares) {
         if (_withdrawAssets == 0) return 0;
         
+        // TODO: do we have a test to check if it is possible to overestimate shares?
         shares = SiloMathLib.convertToShares(
             _withdrawAssets,
             ISilo(_silo).getTotalAssetsStorage(_assetType),
