@@ -33,7 +33,7 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
         emit log_named_decimal_uint("[DustWithChunks] collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("[DustWithChunks] debtToCover", debtToCover, 18);
         emit log_named_decimal_uint("[DustWithChunks] ltv before", silo0.getLtv(borrower), 16);
-        
+
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[DustWithChunks] case ------------------------", i);
             bool isSolvent = silo0.isSolvent(borrower);
