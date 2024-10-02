@@ -86,6 +86,7 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.utilizationData();
     }
 
+    /// @inheritdoc ISilo
     function getLiquidity() external view virtual returns (uint256 liquidity) {
         return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());
     }
