@@ -111,6 +111,8 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     }
 
     function _assertPreviewMint(uint256 _shares, bool _defaultType, uint8 _type) internal {
+        // we can get overflow on numbers closed to max
+        vm.assume(_shares < type(uint256).max / 1e3);
         vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
 
         (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
