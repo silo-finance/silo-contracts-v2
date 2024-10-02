@@ -150,7 +150,7 @@ contract Silo is ISilo, ShareCollateralToken {
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), AssetType.Collateral);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, AssetType.Collateral
+            _assets, totalSiloAssets, totalShares, Rounding.DEPOSIT_TO_SHARES, AssetType.Collateral
         );
     }
 
@@ -279,7 +279,7 @@ contract Silo is ISilo, ShareCollateralToken {
         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
 
         return SiloMathLib.convertToShares(
-            _assets, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_SHARES, _assetType
+            _assets, totalSiloAssets, totalShares, Rounding.DEPOSIT_TO_SHARES, _assetType
         );
     }
 
