@@ -216,7 +216,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         depositConfig = _getDepositConfig(_silo);
         address debtSilo = getDebtSilo(_depositOwner);
 
-        // TODO: certora rule if user has debt, borrowerCollateralSilo[user] should not be silo0 or silo1
+        // TODO: certora rule if user has debt, borrowerCollateralSilo[user] should be silo0 or silo1 and one of shares tokens balances should not be 0
         if (debtSilo != address(0)) {
             address collateralSilo = borrowerCollateralSilo[_depositOwner];
 
@@ -357,7 +357,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
      }
 
-    // TODO: certora rule if user has debt silo, then share debt token balance is > 0
+    // TODO: certora rule if user has debt silo, then share debt token of debt silo balance is > 0
     // Apply for getDebtSilo, getConfigsForWithdraw, getConfigsForSolvency
     /// @inheritdoc ISiloConfig
     function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {

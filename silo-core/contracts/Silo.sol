@@ -583,7 +583,12 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
-    // TODO: certora rule repay() should never revert if user has debt
+    // TODO: certora rule any user that can repay the debt should be able to repay the debt
+    // TODO: certora rule repay() any other user than borrower can repay
+    // TODO: certora rule repay() user can't over repay
+    // TODO: certora rule repay() if user repay all debt, no extra debt should be created
+    // TODO: certora rule repay() should decrease the debt
+    // TODO: certora rule repay() should reduce only the debt of the borrower
     /// @inheritdoc ISilo
     function repay(uint256 _assets, address _borrower)
         external
@@ -711,7 +716,8 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
-    // TODO: certora rule withdraw() should never revert if liquidity is available and user has no debt
+    // TODO: certora rule withdraw() should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
+    // TODO: certora rule withdraw() user is always solvent after withdraw()
     function _withdraw(
         uint256 _assets,
         uint256 _shares,
@@ -810,7 +816,9 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     // TODO: certora rule _accrueInterest() should never revert
+    // TODO: certora rule _accrueInterest() calling twice is the same as calling once (in a single block)
     // TODO: certora rule _accrueInterest() should never decrease total collateral and total debt
+    // TODO: certora rule _accrueInterest() should be invisible for any other function including other silo and share tokens
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
         ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();
         accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
