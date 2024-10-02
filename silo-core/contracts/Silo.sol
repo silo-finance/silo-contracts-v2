@@ -192,7 +192,12 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {
-        (assets,) = _deposit(0 /* assets */, _shares, _receiver, CollateralType.Collateral);
+        (assets,) = _deposit({
+            _assets: 0,
+            _shares: _shares,
+            _receiver: _receiver,
+            _collateralType: CollateralType.Collateral
+        });
     }
 
     /// @inheritdoc IERC4626
@@ -211,7 +216,14 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, CollateralType.Collateral);
+        (, shares) = _withdraw({
+            _assets: _assets,
+            _shares: 0,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: CollateralType.Collateral
+        });
     }
 
     /// @inheritdoc IERC4626
@@ -230,10 +242,14 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets)
     {
-        // avoid magic number 0
-        uint256 zeroAssets = 0;
-
-        (assets,) = _withdraw(zeroAssets, _shares, _receiver, _owner, msg.sender, CollateralType.Collateral);
+        (assets,) = _withdraw({
+            _assets: 0,
+            _shares: _shares,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: CollateralType.Collateral
+        });
     }
 
     /// @inheritdoc ISilo
@@ -312,7 +328,12 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _deposit(0 /* assets */, _shares, _receiver, _collateralType);
+        (assets,) = _deposit({
+            _assets: 0,
+            _shares: _shares,
+            _receiver: _receiver,
+            _collateralType: _collateralType
+        });
     }
 
     /// @inheritdoc ISilo
@@ -341,7 +362,14 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 shares)
     {
-        (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, _collateralType);
+        (, shares) = _withdraw({
+            _assets: _assets,
+            _shares: 0,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: _collateralType
+        });
     }
 
     /// @inheritdoc ISilo
@@ -370,7 +398,14 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets)
     {
-        (assets,) = _withdraw(0 /* assets */, _shares, _receiver, _owner, msg.sender, _collateralType);
+        (assets,) = _withdraw({
+            _assets: 0,
+            _shares: _shares,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: _collateralType
+        });
     }
 
     /// @inheritdoc ISilo
@@ -404,11 +439,11 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = Views.maxBorrow(_borrower, false /* same asset */);
+        (maxAssets,) = Views.maxBorrow({_borrower: _borrower, _sameAsset: false});
     }
 
     function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
-        (maxAssets,) = Views.maxBorrow(_borrower, true /* same asset */);
+        (maxAssets,) = Views.maxBorrow({_borrower: _borrower, _sameAsset: true});
     }
 
     /// @inheritdoc ISilo
