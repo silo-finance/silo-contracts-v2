@@ -48,14 +48,6 @@ library Views {
         return SiloLendingLib.maxBorrow(_borrower, _sameAsset);
     }
 
-    function maxMint() external pure returns (uint256 maxShares) {
-        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
-    }
-
-    function maxDeposit() internal pure returns (uint256 maxAssets) {
-        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
-    }
-
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
         external
         view
