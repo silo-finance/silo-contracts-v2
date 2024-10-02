@@ -7,6 +7,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -110,21 +111,29 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     }
 
     function _assertPreviewMint(uint256 _shares, bool _defaultType, uint8 _type) internal {
-        vm.assume(_type == 0 || _type == 1);
+        vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
 
-        uint256 previewMint = _defaultType
-            ? silo0.previewMint(_shares)
-            : silo0.previewMint(_shares, ISilo.CollateralType(_type));
+        (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
+
+        uint256 previewMint = _defaultType ? silo0.previewMint(_shares) : silo0.previewMint(_shares, cType);
 
         token0.mint(depositor, previewMint);
 
         vm.startPrank(depositor);
         token0.approve(address(silo0), previewMint);
 
-        uint256 depositedAssets = _defaultType
-            ? silo0.mint(_shares, depositor)
-            : silo0.mint(_shares, depositor, ISilo.CollateralType(_type));
+        uint256 depositedAssets = _defaultType ? silo0.mint(_shares, depositor) : silo0.mint(_shares, depositor, cType);
 
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
+        assertEq(previewMint, silo0.convertToAssets(_shares, aType), "previewMint == convertToAssets");
+    }
+
+    function _castToTypes(bool _defaultType, uint8 _type)
+        private
+        pure
+        returns (ISilo.CollateralType collateralType, ISilo.AssetType assetType)
+    {
+        collateralType = _defaultType ? ISilo.CollateralType.Collateral : ISilo.CollateralType(_type);
+        assetType = _defaultType ? ISilo.AssetType.Collateral : ISilo.AssetType(_type);
     }
 }

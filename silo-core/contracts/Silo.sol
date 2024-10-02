@@ -153,12 +153,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
-        (uint256 totalSiloAssets, uint256 totalShares) =
-            SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), AssetType.Collateral);
-
-        return SiloMathLib.convertToAssets(
-            _shares, totalSiloAssets, totalShares, Rounding.DEFAULT_TO_ASSETS, AssetType.Collateral
-        );
+        return _convertToAssets(_shares, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -274,17 +269,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        (
-            uint256 totalSiloAssets, uint256 totalShares
-        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
-
-        return SiloMathLib.convertToAssets(
-            _shares,
-            totalSiloAssets,
-            totalShares,
-            _assetType == AssetType.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEFAULT_TO_ASSETS,
-            _assetType
-        );
+        return _convertToAssets(_shares, _assetType);
     }
 
     /// @inheritdoc ISilo
@@ -682,6 +667,20 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
+    }
+
+    function _convertToAssets(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
+        (
+            uint256 totalSiloAssets, uint256 totalShares
+        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
+
+        return SiloMathLib.convertToAssets(
+            _shares,
+            totalSiloAssets,
+            totalShares,
+            _assetType == AssetType.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEPOSIT_TO_ASSETS,
+            _assetType
+        );
     }
 
     function _convertToShares(uint256 _assets, AssetType _assetType) internal view virtual returns (uint256 shares) {
