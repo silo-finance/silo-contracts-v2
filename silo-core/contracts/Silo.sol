@@ -149,7 +149,7 @@ contract Silo is ISilo, ShareCollateralToken {
         (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
     }
 
-    // TODO: certora rule result of convertToShares() == previewDeposit() == deposit() should always be the same
+    // TODO: certora rule return value of convertToShares() == previewDeposit() == deposit() should always be the same
     /// @inheritdoc IERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
@@ -163,7 +163,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
-    // TODO: certora rule result of convertToAssets() == previewMint() == mint() should always be the same
+    // TODO: certora rule return value of convertToAssets() == previewMint() == mint() should always be the same
     // TODO: review all unchecked math operations
     // TODO: do we follow check effects interactions pattern? Oracles calls and before quote calls etc.
     // TODO: check how msg.sender is used in the contracts
@@ -250,11 +250,13 @@ contract Silo is ISilo, ShareCollateralToken {
         (, maxShares) = _maxWithdraw(_owner, CollateralType.Collateral);
     }
 
+    // TODO: certora rule return value from previewRedeem() should be equal to redeem()
     /// @inheritdoc IERC4626
     function previewRedeem(uint256 _shares) external view virtual returns (uint256 assets) {
         return _previewRedeem(_shares, CollateralType.Collateral);
     }
 
+    // TODO: certora rule apply everything from withdraw()
     /// @inheritdoc IERC4626
     function redeem(uint256 _shares, address _receiver, address _owner)
         external
@@ -410,6 +412,14 @@ contract Silo is ISilo, ShareCollateralToken {
         (assets,) = _withdraw(0 /* assets */, _shares, _receiver, _owner, msg.sender, _collateralType);
     }
 
+    // TODO: certora rule withdraw() and deposit() should be equal to transitionCollateral() - state changes should be the same
+    // TODO: certora rule if user is solvent transitionCollateral() for `_transitionFrom` == CollateralType.Protected should never revert
+    // TODO: certora rule if user is NOT solvent transitionCollateral() always reverts
+    // TODO: certora rule transitionCollateral() for `_transitionFrom` == CollateralType.Collateral should revert if not enough liquidity is available
+    // TODO: certora rule during transitionCollateral share tokens balances should change only for the same address (owner)
+    // TODO: certora rule transitionCollateral should not change underlying assets balance
+    // TODO: certora rule transitionCollateral should not increase users assets
+    // TODO: certora rule transitionCollateral should not decrease user assets by more than rounding error
     /// @inheritdoc ISilo
     function transitionCollateral(
         uint256 _shares,
@@ -439,8 +449,8 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
-    // TODO: certora rule when user borrows maxAssets returned by maxBorrow, borrow should not revert becaue of solvency check
-    // TODO: up to 2 wei underestimateion should be removed from natspec
+    // TODO: certora rule when user borrows maxAssets returned by maxBorrow, borrow should not revert
+    // TODO: up to 2 wei underestimation should be removed from natspec
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
         // TODO: use named params
@@ -458,11 +468,13 @@ contract Silo is ISilo, ShareCollateralToken {
     // borrowSameAsset
     // leverageSameAsset
 
+    // TODO: certora rule returned value from maxBorrowSameAsset() used for borrowSameAsset() never reverts
     function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
         // TODO: use named params
         (maxAssets,) = Views.maxBorrow(_borrower, true /* same asset */);
     }
 
+    // TODO: certora rule return value of previewBorrow() should be always equal to borrow()
     /// @inheritdoc ISilo
     function previewBorrow(uint256 _assets) external view virtual returns (uint256 shares) {
         (
@@ -474,12 +486,17 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: certora rule user must be solvent after switchCollateralToThisSilo()
+    // TODO: certora rule borrowerCollateralSilo[user] should be set to "this" Silo address. No other state should be changed in either Silo.
     // TODO: add natspec
     function switchCollateralToThisSilo() external virtual {
         Actions.switchCollateralToThisSilo();
         emit CollateralTypeChanged(msg.sender);
     }
 
+    // TODO: certora rule if leverageSameAsset() should never decrease Silo asset balance
+    // TODO: certora rule if maxLtv < 100% then leverageSameAsset() should always increase Silo asset balance
+    // TODO: certora rule leverageSameAsset(x, y) should be always change state equivalent to deposit(x) and borrow(y)
     /// @inheritdoc ISilo
     function leverageSameAsset(
         uint256 _depositAssets,
@@ -511,6 +528,9 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
+    // TODO: certora rule apply all rules from borrowShares()
+    // TODO: certora rule borrow() should decrease Silo balance by exactly `_assets`
+    // TODO: certora rule everybody can exit Silo meaning: calling borrow(), then repay(), all users should be able to withdraw() all funds and withdrawFess() withdraws all fees successfully
     /// @inheritdoc ISilo
     function borrow(uint256 _assets, address _receiver, address _borrower)
         external
@@ -531,6 +551,7 @@ contract Silo is ISilo, ShareCollateralToken {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
+    // TODO: certora rule apply all rules from borrow()
     // TODO: add more details to natspec
     /// @inheritdoc ISilo
     function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
@@ -557,6 +578,7 @@ contract Silo is ISilo, ShareCollateralToken {
         (,maxShares) = Views.maxBorrow(_borrower, false /* same asset */);
     }
 
+    // TODO: certora rule return value of previewBorrowShares() always equals borrowShares()
     /// @inheritdoc ISilo
     function previewBorrowShares(uint256 _shares) external view virtual returns (uint256 assets) {
         (
@@ -568,6 +590,12 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: certora rule borrowShares() should never decrease totalAssets[AssetType.Collateral]
+    // TODO: certora rule borrowShares() should never change totalAssets[AssetType.Protected] and balances of protected and collateral share tokens and total supply for each
+    // TODO: certora rule user should always have ltv below maxLTV after successful call to borrowShares()
+    // TODO: certora rule borrowShares() should always increase debt shares of the borrower
+    // TODO: certora rule borrowShares() should always increase balance of the receiver
+    // TODO: certora rule inverse rules should make sure that difference between before and after values are within rounding error ie. HLP_borrowSharesAndInverse
     /// @inheritdoc ISilo
     function borrowShares(uint256 _shares, address _receiver, address _borrower)
         external
@@ -610,6 +638,7 @@ contract Silo is ISilo, ShareCollateralToken {
     // TODO: certora rule repay() if user repay all debt, no extra debt should be created
     // TODO: certora rule repay() should decrease the debt
     // TODO: certora rule repay() should reduce only the debt of the borrower
+    // TODO: certora rule repay() should not be able to repay more than maxRepay
     /// @inheritdoc ISilo
     function repay(uint256 _assets, address _borrower)
         external
@@ -635,6 +664,7 @@ contract Silo is ISilo, ShareCollateralToken {
         shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
     }
 
+    // TODO: certora rule return value of previewRepayShares() should be always equal to repayShares()
     /// @inheritdoc ISilo
     function previewRepayShares(uint256 _shares) external view virtual returns (uint256 assets) {
         (
@@ -646,6 +676,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: certora rule apply all repay() rules
     /// @inheritdoc ISilo
     function repayShares(uint256 _shares, address _borrower)
         external
@@ -664,6 +695,7 @@ contract Silo is ISilo, ShareCollateralToken {
         emit Repay(msg.sender, _borrower, assets, shares);
     }
 
+    // TODO: certora rule maxFlashLoan() should return the same value before and after deposit/withdraw of protected assets and withdrawFees()
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
         // TODO: it should exclude protected assets
@@ -672,11 +704,14 @@ contract Silo is ISilo, ShareCollateralToken {
             : 0;
     }
 
+    // TODO: certora rule flashFee() returns non-zero value if fee is set to non-zero value
     /// @inheritdoc IERC3156FlashLender
     function flashFee(address _token, uint256 _amount) external view virtual returns (uint256 fee) {
         fee = Views.flashFee(_token, _amount);
     }
 
+    // TODO: certora rule flashLoan() should never change any storage except increasing daoAndDeployerRevenue if flashloanFee is non-zero
+    // TODO: certora rule flashLoan() daoAndDeployerRevenue and Silo asset balance should increase by flashFee()
     /// @inheritdoc IERC3156FlashLender
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
@@ -692,6 +727,7 @@ contract Silo is ISilo, ShareCollateralToken {
         accruedInterest = _accrueInterest();
     }
 
+    // TODO: certora rule accrueInterestForConfig() is equal to accrueInterest(). All storage should be equally updated.
     /// @inheritdoc ISilo
     function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
         external
@@ -702,6 +738,11 @@ contract Silo is ISilo, ShareCollateralToken {
         _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }
 
+    // TODO: certora rule withdrawFees() always increases dao and/or deployer (can be empty address) balances
+    // TODO: certora rule withdrawFees() never increases daoAndDeployerRevenue in the same block
+    // TODO: certora rule withdrawFees() always reverts in a second call in the same block
+    // TODO: certora rule withdrawFees() is ghost function - it should not influence result of any other function in the system (including view functions results)
+    // TODO: certora rule when all debt is paid and all collateral is withdrew, withdrawFees() always increases dao and/or deployer (can be empty address) balances and daoAndDeployerRevenue is set to 0
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
         _accrueInterest();

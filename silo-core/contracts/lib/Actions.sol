@@ -298,10 +298,6 @@ library Actions {
             ? collateralShareToken
             : protectedShareToken;
 
-        // TODO: certora rule during transitionCollateral share tokens balances should change only for the same address (owner)
-        // TODO: certora rule transitionCollateral should not change underlaying assets balance
-        // TODO: certora rule transitionCollateral should not increase users assets
-        // TODO: certora rule transitionCollateral should not decrease user assets by more than 1-2 wei
         (assets, shares) = SiloERC4626Lib.withdraw({
             _asset: address(0), // empty token because we don't want to transfer
             _shareToken: shareTokenFrom,
