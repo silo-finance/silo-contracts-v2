@@ -71,6 +71,8 @@ contract Silo is ISilo, ShareCollateralToken {
         _shareTokenInitialize(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
 
+    // TODO: certora rule updateHooks() should call all share tokens to update their hooks
+    // TODO: certora rule after a call to updateHooks() all share tokens and silo should have the same values for hooksBefore and hooksAfter
     /// @inheritdoc ISilo
     function updateHooks() external {
         (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks();
@@ -92,16 +94,23 @@ contract Silo is ISilo, ShareCollateralToken {
         return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());
     }
 
+    // TODO: certora rule if user has no debt, should always be solvent and ltv == 0
+    // TODO: certora rule if user has debt and no collateral (bad debt), should always be insolvent
     /// @inheritdoc ISilo
     function isSolvent(address _borrower) external view virtual returns (bool) {
         return Views.isSolvent(_borrower);
     }
 
+    // TODO: certora rule getCollateralAssets() == totalAssets[AssetTypes.COLLATERAL] for the same block
+    // TODO: certora rule getCollateralAssets() > totalAssets[AssetTypes.COLLATERAL] with pending interest
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
+        // TODO: replace with totalAssets() implementation
         totalCollateralAssets = Views.getCollateralAssets();
     }
 
+    // TODO: certora rule getDebtAssets() == totalAssets[AssetTypes.DEBT] for the same block
+    // TODO: certora rule getDebtAssets() > totalAssets[AssetTypes.DEBT] with pending interest
     /// @inheritdoc ISilo
     function getDebtAssets() external view virtual returns (uint256 totalDebtAssets) {
         totalDebtAssets = Views.getDebtAssets();
@@ -134,11 +143,13 @@ contract Silo is ISilo, ShareCollateralToken {
         return ShareTokenLib.siloConfig().getAssetForSilo(address(this));
     }
 
+    // TODO: certora rule totalAssets() == getCollateralAssets() always
     /// @inheritdoc IERC4626
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
         (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(AssetType.Collateral);
     }
 
+    // TODO: certora rule result of convertToShares() == previewDeposit() == deposit() should always be the same
     /// @inheritdoc IERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
@@ -152,6 +163,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    // TODO: certora rule result of convertToAssets() == previewMint() == mint() should always be the same
     // TODO: review all unchecked math operations
     // TODO: do we follow check effects interactions pattern? Oracles calls and before quote calls etc.
     // TODO: check how msg.sender is used in the contracts
@@ -180,6 +192,12 @@ contract Silo is ISilo, ShareCollateralToken {
         return _previewDeposit(_assets, CollateralType.Collateral);
     }
 
+    // TODO: certora rule deposit/mint always increase value on any sstore operation
+    // TODO: certora rule collateral share token balance always increses after deposit/mint only for receiver
+    // TODO: certora rule deposit/mint/withdraw/redeem/borrow/borrowShares/repay/repayShares/borrowSameAsset/leverageSameAsset should always call turnOnReentrancyProtection(), turnOffReentrancyProtection()
+    // TODO: certora rule deposit/mint/repay/repayShares/borrowSameAsset/leverageSameAsset should always call accrueInterest() on one (called) Silo
+    // TODO: certora rule withdraw/redeem/borrow/borrowShares should always call accrueInterest() on both Silos
+    // TODO: certora rule deposit/mint/withdraw/redeem/borrow/borrowShares/repay/repayShares/borrowSameAsset/leverageSameAsset should call hookBefore(), hookAfter() - if configured
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver)
         external
@@ -204,6 +222,9 @@ contract Silo is ISilo, ShareCollateralToken {
         (assets,) = _deposit(0 /* assets */, _shares, _receiver, CollateralType.Collateral);
     }
 
+    // TODO: certora rule result of maxWithdraw() should never be more than liquidity of the Silo
+    // TODO: certora rule result of maxWithdraw() used as input to withdraw() should never revert
+    // TODO: certora rule if user has no debt and liquidity is available, shareToken.balanceOf(user) used as input to redeem(), assets from redeem() should be equal to maxWithdraw()
     /// @inheritdoc IERC4626
     function maxWithdraw(address _owner) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = _maxWithdraw(_owner, CollateralType.Collateral);
