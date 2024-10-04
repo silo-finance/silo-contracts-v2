@@ -70,6 +70,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     bool internal immutable _CALL_BEFORE_QUOTE1;
 
+    // TODO: certora rule if borrowerCollateralSilo[user] is set from zero to non-zero value, it never goes back to zero
+    // TODO: certora rule if borrowerCollateralSilo[user] is set from zero to non-zero value, user must have balance in one of debt share tokens - excluding switchCollateralToThisSilo() method
+    // TODO: certora rule if borrowerCollateralSilo[user] is set from zero to non-zero value, one of the debt share token totalSupply() increases
+    // and totalAssets[AssetType.Debt] increases for one of the silos - excluding switchCollateralToThisSilo() method
     mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
     
     /// @param _siloId ID of this pool assigned by factory
@@ -132,18 +136,24 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
     }
 
+    // TODO: certora rule setThisSiloAsCollateralSilo() should be called only by:
+    // borrowSameAsset
+    // leverageSameAsset
+    // switchCollateralToThisSilo
     /// @inheritdoc ISiloConfig
     function setThisSiloAsCollateralSilo(address _borrower) external virtual {
         _onlySilo();
         borrowerCollateralSilo[_borrower] = msg.sender;
     }
 
+    // TODO: certora rule setOtherSiloAsCollateralSilo() should be called only by: borrow, borrowShares
     /// @inheritdoc ISiloConfig
     function setOtherSiloAsCollateralSilo(address _borrower) external virtual {
         _onlySilo();
         borrowerCollateralSilo[_borrower] = msg.sender == _SILO0 ? _SILO1 : _SILO0;
     }
 
+    // TODO: certora rule user should never have balance of debt share token in both silos
     // TODO: update natspec, change `_to_` to `_recipient`. Explain that we are inheriting position type (same asset/other asset borrow) from sender
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
@@ -158,6 +168,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    // TODO: certora rule calling accrueInterestForSilo(_silo) should be equal to calling _silo.accrueInterest()
     /// @inheritdoc ISiloConfig
     function accrueInterestForSilo(address _silo) external virtual {
         address irm;
@@ -177,6 +188,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         );
     }
 
+    // TODO: certora rule calling accrueInterestForBothSilos() should be equal to calling silo0.accrueInterest() and silo1.accrueInterest()
     /// @inheritdoc ISiloConfig
     function accrueInterestForBothSilos() external virtual {
         ISilo(_SILO0).accrueInterestForConfig(
@@ -364,7 +376,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
         uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
 
-        // TODO: implement certora rule for check below that should never happen
         if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 

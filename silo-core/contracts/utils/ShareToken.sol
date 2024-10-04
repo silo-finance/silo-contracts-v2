@@ -232,6 +232,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         _afterTokenTransfer(from, to, value);
     }
 
+    // TODO: certora rule transfer() of any share token should never change any state on either Silo
     /// @dev By default, we do not have any hooks before token transfer. However,
     /// derived contracts can override this function if they need to execute any logic before token transfer.
     function _beforeTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual {}

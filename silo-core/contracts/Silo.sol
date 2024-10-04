@@ -193,7 +193,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     // TODO: certora rule deposit/mint always increase value on any sstore operation
-    // TODO: certora rule collateral share token balance always increses after deposit/mint only for receiver
+    // TODO: certora rule collateral share token balance always increase after deposit/mint only for receiver
     // TODO: certora rule deposit/mint/withdraw/redeem/borrow/borrowShares/repay/repayShares/borrowSameAsset/leverageSameAsset should always call turnOnReentrancyProtection(), turnOffReentrancyProtection()
     // TODO: certora rule deposit/mint/repay/repayShares/borrowSameAsset/leverageSameAsset should always call accrueInterest() on one (called) Silo
     // TODO: certora rule withdraw/redeem/borrow/borrowShares should always call accrueInterest() on both Silos
@@ -212,11 +212,13 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.maxMint();
     }
 
+    // TODO: certora rule result of previewMint() should be equal to result of mint()
     /// @inheritdoc IERC4626
     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {
         return _previewMint(_shares, CollateralType.Collateral);
     }
 
+    // TODO: certora rule apply rules from deposit()
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {
         (assets,) = _deposit(0 /* assets */, _shares, _receiver, CollateralType.Collateral);
@@ -230,11 +232,14 @@ contract Silo is ISilo, ShareCollateralToken {
         (maxAssets,) = _maxWithdraw(_owner, CollateralType.Collateral);
     }
 
-    /// @inheritdoc IERC4626
+    // TODO: certora rule 
+    /// @inheritdoc IERC4626 result of previewWithdraw() should never equal to result of withdraw()
     function previewWithdraw(uint256 _assets) external view virtual returns (uint256 shares) {
         return _previewWithdraw(_assets, CollateralType.Collateral);
     }
 
+    // TODO: certora rule withdraw() should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
+    // TODO: certora rule withdraw() user is always solvent after withdraw()
     /// @inheritdoc IERC4626
     function withdraw(uint256 _assets, address _receiver, address _owner)
         external
@@ -245,6 +250,9 @@ contract Silo is ISilo, ShareCollateralToken {
         (, shares) = _withdraw(_assets, 0 /* shares */, _receiver, _owner, msg.sender, CollateralType.Collateral);
     }
 
+    // TODO: certora rule result of maxRedeem() used as input to redeem() should never revert
+    // TODO: certora rule result of maxRedeem() should never be more than share token balanceOf user
+    // TODO: certora rule if user has no debt and liquidity is available, maxRedeem() output equals shareToken.balanceOf(user)
     /// @inheritdoc IERC4626
     function maxRedeem(address _owner) external view virtual returns (uint256 maxShares) {
         (, maxShares) = _maxWithdraw(_owner, CollateralType.Collateral);
@@ -616,11 +624,16 @@ contract Silo is ISilo, ShareCollateralToken {
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
 
+    // TODO: certora rule maxRepay() should never return more than totalAssets[AssetType.Debt]
+    // TODO: certora rule user that can repay, calling repay() with maxRepay() result should never revert 
+    // TODO: certora rule repay() should not be able to repay more than maxRepay()
+    // TODO: certora rule repaying with maxRepay() value should burn all user share debt token balance 
     /// @inheritdoc ISilo
     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {
         assets = Views.maxRepay(_borrower);
     }
 
+    // TODO: certora rule return value of previewRepay() should be always equal to repay()
     /// @inheritdoc ISilo
     function previewRepay(uint256 _assets) external view virtual returns (uint256 shares) {
         (
@@ -638,7 +651,6 @@ contract Silo is ISilo, ShareCollateralToken {
     // TODO: certora rule repay() if user repay all debt, no extra debt should be created
     // TODO: certora rule repay() should decrease the debt
     // TODO: certora rule repay() should reduce only the debt of the borrower
-    // TODO: certora rule repay() should not be able to repay more than maxRepay
     /// @inheritdoc ISilo
     function repay(uint256 _assets, address _borrower)
         external
@@ -722,6 +734,10 @@ contract Silo is ISilo, ShareCollateralToken {
         if (success) emit FlashLoan(_amount);
     }
 
+    // TODO: certora rule accrueInterest() should never revert
+    // TODO: certora rule accrueInterest() calling twice is the same as calling once (in a single block)
+    // TODO: certora rule accrueInterest() should never decrease total collateral and total debt
+    // TODO: certora rule accrueInterest() should be invisible for any other function including other silo and share tokens
     /// @inheritdoc ISilo
     function accrueInterest() external virtual returns (uint256 accruedInterest) {
         accruedInterest = _accrueInterest();
@@ -778,8 +794,6 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
-    // TODO: certora rule withdraw() should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
-    // TODO: certora rule withdraw() user is always solvent after withdraw()
     function _withdraw(
         uint256 _assets,
         uint256 _shares,
@@ -877,10 +891,6 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.maxWithdraw(_owner, _collateralType);
     }
 
-    // TODO: certora rule _accrueInterest() should never revert
-    // TODO: certora rule _accrueInterest() calling twice is the same as calling once (in a single block)
-    // TODO: certora rule _accrueInterest() should never decrease total collateral and total debt
-    // TODO: certora rule _accrueInterest() should be invisible for any other function including other silo and share tokens
     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {
         ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();
         accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);
