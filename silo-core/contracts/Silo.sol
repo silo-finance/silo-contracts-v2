@@ -441,6 +441,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    /// @inheritdoc ISilo
     function switchCollateralToThisSilo() external virtual {
         Actions.switchCollateralToThisSilo();
         emit CollateralTypeChanged(msg.sender);
