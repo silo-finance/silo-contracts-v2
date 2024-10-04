@@ -39,9 +39,9 @@ interface IPartialLiquidation {
     error LiquidationTooBig();
     error UnknownRatio();
 
-    /// @notice Function to liquidate a non-healthy debt collateral-wise
+    /// @notice Function to liquidate insolvent position
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
-    ///   a amount of the `collateralAsset` plus a bonus to cover market risk
+    ///   a amount of the `collateralAsset` plus a liquidation fee to cover market risk
     /// @dev user can use this method to do self liquidation, it that case, check for LT requirements will be ignored
     /// @param _collateralAsset The address of the underlying asset used as collateral, to receive as result
     /// @param _debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
