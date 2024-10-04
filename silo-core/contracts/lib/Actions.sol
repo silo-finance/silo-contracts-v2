@@ -67,15 +67,15 @@ library Actions {
             address shareToken, address asset
         ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);
 
-        (assets, shares) = SiloERC4626Lib.deposit(
-            asset,
-            msg.sender,
-            _assets,
-            _shares,
-            _receiver,
-            IShareToken(shareToken),
-            _collateralType
-        );
+        (assets, shares) = SiloERC4626Lib.deposit({
+            _token: asset,
+            _depositor: msg.sender,
+            _assets: _assets,
+            _shares: _shares,
+            _receiver: _receiver,
+            _collateralShareToken: IShareToken(shareToken),
+            _collateralType: _collateralType
+        });
 
         siloConfig.turnOffReentrancyProtection();
 
