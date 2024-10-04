@@ -678,7 +678,7 @@ contract Silo is ISilo, ShareCollateralToken {
             _shares,
             totalSiloAssets,
             totalShares,
-            _assetType == AssetType.Debt ? Rounding.DEBT_TO_ASSETS : Rounding.DEPOSIT_TO_ASSETS,
+            _assetType == AssetType.Debt ? Rounding.BORROW_TO_ASSETS : Rounding.DEPOSIT_TO_ASSETS,
             _assetType
         );
     }
