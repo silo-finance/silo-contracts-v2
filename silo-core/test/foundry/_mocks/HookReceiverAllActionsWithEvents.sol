@@ -25,6 +25,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     uint24 internal immutable _SILO1_ACTIONS_AFTER;
 
     bool public revertAllActions;
+    bool public revertOnlyBeforeAction;
+    bool public revertOnlyAfterAction;
 
     // Events to be emitted by the hook receiver to see decoded inputs
     // HA - Hook Action
@@ -204,12 +206,20 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         revertAllActions = true;
     }
 
+    function revertBeforeAction() external {
+        revertOnlyBeforeAction = true;
+    }
+
+    function revertAfterAction() external {
+        revertOnlyAfterAction = true;
+    }
+
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
         override (IHookReceiver, PartialLiquidation)
     {
-        if (revertAllActions) revert ActionsStopped();
+        if (revertAllActions || revertOnlyBeforeAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
     }
 
@@ -218,7 +228,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         external
         override (IHookReceiver, PartialLiquidation)
     {
-        if (revertAllActions) revert ActionsStopped();
+        if (revertAllActions || revertOnlyAfterAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
     }
 

@@ -360,7 +360,7 @@ library Actions {
 
         siloConfig.turnOffReentrancyProtection();
 
-        if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
+        if (_shareStorage.hookSetup.hooksAfter.matchAction(action)) {
             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(
                 address(this), action, abi.encodePacked(msg.sender)
             );
