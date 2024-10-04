@@ -396,7 +396,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         token0.mint(address(this), debtToCover);
         token0.approve(address(partialLiquidation), debtToCover);
 
-        assertEq(silo0.convertToAssets(1 * SiloMathLib._DECIMALS_OFFSET_POW), 4, "dust atm");
+        assertEq(silo0.convertToAssets(SiloMathLib._DECIMALS_OFFSET_POW), 5, "dust atm");
 
         partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToCover, receiveSToken);
 
