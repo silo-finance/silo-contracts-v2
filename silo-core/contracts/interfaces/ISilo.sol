@@ -383,7 +383,8 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     function borrow(uint256 _assets, address _receiver, address _borrower)
         external returns (uint256 shares);
 
-    /// @notice Allows an address to borrow a specified amount of assets
+    /// @notice Allows an address to borrow a specified amount of assets that will be back up with deposit made with the
+    /// same asset
     /// @param _assets Amount of assets to borrow
     /// @param _receiver Address receiving the borrowed assets
     /// @param _borrower Address responsible for the borrowed assets
