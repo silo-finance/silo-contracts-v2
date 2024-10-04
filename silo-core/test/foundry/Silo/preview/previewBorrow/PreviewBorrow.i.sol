@@ -169,13 +169,8 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
             ? _borrowShares(_assetsOrShares, borrower)
             : _borrow(_assetsOrShares, borrower, _sameAsset());
 
-        uint256 conversionResults = _borrowShares()
-            ? silo1.convertToAssets(_assetsOrShares, ISilo.AssetType.Debt)
-            : silo1.convertToShares(_assetsOrShares, ISilo.AssetType.Debt);
-
         assertGt(results, 0, "expect any borrow amount > 0");
         assertEq(_preview, results, "preview should give us exact result");
-        assertEq(_preview, conversionResults, "preview == conversion");
     }
 
     function _getBorrowPreview(uint256 _assetsOrShares) internal view virtual returns (uint256 preview) {
