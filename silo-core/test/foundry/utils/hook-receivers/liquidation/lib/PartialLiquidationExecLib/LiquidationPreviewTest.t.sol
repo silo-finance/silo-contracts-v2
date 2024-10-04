@@ -116,46 +116,9 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         // more debt should cause revert because of _LT_LIQUIDATION_MARGIN_IN_BP
         params.debtToCover += 1;
 
-        // does not revert for self liquidation - counter example first
-        params.selfLiquidation = true;
-        (receiveCollateralAssets, repayDebtAssets) = impl.liquidationPreview(ltvData, params);
-        assertEq(receiveCollateralAssets, maxDebtToCover + 1, "receiveCollateralAssets #2");
-        assertEq(repayDebtAssets, maxDebtToCover + 1, "repayDebtAssets #2");
-
-        params.selfLiquidation = false;
         (receiveCollateralAssets, repayDebtAssets) = impl.liquidationPreview(ltvData, params);
         assertEq(receiveCollateralAssets, maxDebtToCover, "receiveCollateralAssets #3 - cap to max");
         assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets #3 - cap to max");
-    }
-
-    /*
-    forge test -vv --mt test_liquidationPreview_selfLiquidation_whenSolvent
-    */
-    function test_liquidationPreview_selfLiquidation_whenSolvent() public {
-        SiloSolvencyLib.LtvData memory ltvData;
-        ltvData.collateralOracle = ISiloOracle(collateralOracle.ADDRESS());
-        ltvData.debtOracle = ISiloOracle(debtOracle.ADDRESS());
-        ltvData.borrowerCollateralAssets = 1e18;
-        ltvData.borrowerDebtAssets = 1e18;
-
-        PartialLiquidationLib.LiquidationPreviewParams memory params;
-        params.collateralConfigAsset = COLLATERAL_ASSET;
-        params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 0.8e18;
-        params.debtToCover = 2;
-
-        // ltv 50% - user solvent
-        collateralOracle.quoteMock(ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets, COLLATERAL_ASSET, 1e18);
-        debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 0.5e18);
-
-        (uint256 receiveCollateral, uint256 repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
-        assertEq(receiveCollateral, 0, "no collateral - user is solvent");
-        assertEq(repayDebt, 0, "no debt - user is solvent");
-
-        params.selfLiquidation = true;
-        (receiveCollateral, repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
-        assertEq(receiveCollateral, 1, "some collateral - self-liquidation");
-        assertEq(repayDebt, 2, "some debt - self-liquidation");
     }
 
     /*

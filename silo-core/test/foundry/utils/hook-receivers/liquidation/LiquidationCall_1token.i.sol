@@ -120,11 +120,10 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         vm.prank(BORROWER);
         token0.approve(address(partialLiquidation), debtToCover);
 
-        vm.expectEmit(true, true, true, true);
-        emit LiquidationCall(BORROWER, receiveSToken);
+        assertTrue(silo0.isSolvent(BORROWER), "BORROWER solvent");
 
+        vm.expectRevert(IPartialLiquidation.NoDebtToCover.selector);
         vm.prank(BORROWER);
-
         partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToCover, receiveSToken);
 
         _assertLiquidationModuleDoNotHaveTokens();

@@ -123,7 +123,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         revert("not in use");
     }
 
-    function _executeLiquidation(bool, bool, bool) internal pure override
+    function _executeLiquidation(bool, bool) internal pure override
         returns (uint256, uint256)
     {
         revert("not in use");

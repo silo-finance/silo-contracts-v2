@@ -20,7 +20,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     */
     /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_full_1token_sTokens_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_1token(_collateral, _RECEIVE_STOKENS, !_SELF);
+        _maxLiquidation_LTV100_full_1token(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
@@ -28,23 +28,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     */
     /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_full_1token_tokens_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_1token(_collateral, !_RECEIVE_STOKENS, !_SELF);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_1token_sTokens_self_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_1token_sTokens_self_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_1token(_collateral, _RECEIVE_STOKENS, _SELF);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_1token_tokens_self_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_1token_tokens_self_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_1token(_collateral, !_RECEIVE_STOKENS, _SELF);
+        _maxLiquidation_LTV100_full_1token(_collateral, !_RECEIVE_STOKENS);
     }
 
     /*
@@ -53,7 +37,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
     I used `_findLTV100` to find range of numbers for which we jump to 100% for this case setup
     */
-    function _maxLiquidation_LTV100_full_1token(uint8 _collateral, bool _receiveSToken, bool _self) internal virtual {
+    function _maxLiquidation_LTV100_full_1token(uint8 _collateral, bool _receiveSToken) internal virtual {
         bool sameAsset = true;
 
         vm.assume(_collateral < 20);
@@ -83,7 +67,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         _assertLTV100();
 
-        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
     }
 
     /*
@@ -91,7 +75,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     */
     /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_full_2tokens_sToken_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_2tokens(_collateral, _RECEIVE_STOKENS, !_SELF);
+        _maxLiquidation_LTV100_full_2tokens(_collateral, _RECEIVE_STOKENS);
     }
 
     /*
@@ -99,26 +83,10 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
     */
     /// forge-config: core-test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_full_2tokens_token_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_2tokens(_collateral, !_RECEIVE_STOKENS, !_SELF);
+        _maxLiquidation_LTV100_full_2tokens(_collateral, !_RECEIVE_STOKENS);
     }
 
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_sToken_self_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_sToken_self_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_2tokens(_collateral, _RECEIVE_STOKENS, _SELF);
-    }
-
-    /*
-    forge test -vv --ffi --mt test_maxLiquidation_LTV100_full_2tokens_token_self_fuzz
-    */
-    /// forge-config: core-test.fuzz.runs = 100
-    function test_maxLiquidation_LTV100_full_2tokens_token_self_fuzz(uint8 _collateral) public {
-        _maxLiquidation_LTV100_full_2tokens(_collateral, !_RECEIVE_STOKENS, _SELF);
-    }
-
-    function _maxLiquidation_LTV100_full_2tokens(uint8 _collateral, bool _receiveSToken, bool _self) internal {
+    function _maxLiquidation_LTV100_full_2tokens(uint8 _collateral, bool _receiveSToken) internal {
         bool sameAsset = false;
 
         vm.assume(_collateral < 7);
@@ -136,14 +104,10 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         _assertLTV100();
 
-        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
-
-        if (_self && _withChunks() && _collateral > 2) {
-            if (_receiveSToken) _ensureBorrowerHasDebt();
-        }
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
     }
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         virtual
         override
@@ -166,8 +130,6 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         }
 
         assertTrue(!sTokenRequired, "sTokenRequired NOT required");
-
-        if (_self) vm.prank(borrower);
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(_sameToken ? token1 : token0),

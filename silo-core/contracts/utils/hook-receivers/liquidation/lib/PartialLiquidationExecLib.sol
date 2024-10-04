@@ -16,8 +16,7 @@ library PartialLiquidationExecLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
         uint256 _debtToCover,
-        uint256 _liquidationFee,
-        bool _selfLiquidation
+        uint256 _liquidationFee
     )
         internal
         view
@@ -43,8 +42,7 @@ library PartialLiquidationExecLib {
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
                 debtToCover: _debtToCover,
-                liquidationFee: _liquidationFee,
-                selfLiquidation: _selfLiquidation
+                liquidationFee: _liquidationFee
             })
         );
 
@@ -141,12 +139,7 @@ library PartialLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (_params.selfLiquidation) {
-            if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {
-                // only because it is self liquidation, we return all collateral on repay all debt
-                return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
-            }
-        } else if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
+        if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
 
         uint256 ltvAfter;
 
@@ -160,22 +153,5 @@ library PartialLiquidationExecLib {
         );
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
-
-        if (ltvAfter != 0) { // it can be 0 in case of full liquidation
-            if (_params.selfLiquidation) {
-                // There is dependency, based on which LTV will be going up and we need to allow for liquidation
-                // dependency is: (collateral value / debt value) - 1 > fee
-                // when above is true, LTV will go down, otherwise it will always go up.
-                // When it will be going up, we are close to bad debt. This "close" depends on how big fee is.
-                // Based on that, we can not check if (ltvAfter > ltvBefore), we need to allow for liquidation.
-                // In case of self liquidation:
-                // - if user is solvent after liquidation, LTV before does not matter
-                // - if user was solvent but after liquidation it is not, we need to revert
-                // - if user was not solvent, then we need to allow
-                if (ltvBefore <= _params.collateralLt && ltvAfter > _params.collateralLt) {
-                    revert ISilo.Insolvency();
-                }
-            }
-        }
     }
 }

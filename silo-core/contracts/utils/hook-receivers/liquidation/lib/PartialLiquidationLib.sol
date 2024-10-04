@@ -16,7 +16,6 @@ library PartialLiquidationLib {
         address debtConfigAsset;
         uint256 debtToCover;
         uint256 liquidationFee;
-        bool selfLiquidation;
     }
 
     /// @dev this is basically LTV == 100%
@@ -99,8 +98,8 @@ library PartialLiquidationLib {
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
-        if (_params.selfLiquidation || _ltvBefore >= _BAD_DEBT) {
-            // in case of self liquidation OR when we have bad debt, we allow for any amount
+        if (_ltvBefore >= _BAD_DEBT) {
+            // in case of bad debt, we allow for any amount
             debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
@@ -124,7 +123,7 @@ library PartialLiquidationLib {
         }
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
-            debtValueToRepay, _sumOfCollateralValue, _params.selfLiquidation ? 0 : _params.liquidationFee
+            debtValueToRepay, _sumOfCollateralValue, _params.liquidationFee
         );
 
         collateralToLiquidate = valueToAssetsByRatio(

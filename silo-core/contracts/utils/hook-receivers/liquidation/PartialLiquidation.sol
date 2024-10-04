@@ -71,8 +71,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
 
-        bool selfLiquidation = _borrower == msg.sender;
-
         (
             withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
@@ -80,8 +78,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             debtConfig,
             _borrower,
             _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
+            collateralConfig.liquidationFee
         );
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
