@@ -18,6 +18,9 @@ abstract contract CrossReentrancyGuard is ICrossReentrancyGuard {
     uint24 private constant _NOT_ENTERED = 1;
     uint24 private constant _ENTERED = 2;
 
+    // TODO: certora rule all non-view functions (both silos, silo config and all share tokens) must change or read the state of _crossReentrantStatus except:
+    // Silo.flashloan()
+    // ShareToken.forwardTransferFromNoChecks()
     uint256 private _crossReentrantStatus;
 
     constructor() {

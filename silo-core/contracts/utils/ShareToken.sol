@@ -84,6 +84,9 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.hookSetup.hooksAfter = _hooksAfter;
     }
 
+    // TODO: certora rule before and after execution of any function transferWithChecks must be always true
+    // TODO: certora rule during execution of any function other than forwardTransferFromNoChecks, transferWithChecks must be always true
+    // TODO: certora rule forwardTransferFromNoChecks is called from PartialLiquidation.liquidationCall() only
     /// @inheritdoc IShareToken
     function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
         external

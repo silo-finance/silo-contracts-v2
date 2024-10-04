@@ -12,6 +12,9 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 library ShareCollateralTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
+    // TODO: replace afterTokenTransfer with checkSolvencyAfterTransfer. afterTokenTransfer is no longer needed.
+    // _isSolventAfterCollateralTransfer can be renamed and can revert.
+    // Also, remove comment about original/inherited method call. Consider removing ShareCollateralTokenLib and moving logic to other lib.
     /// @dev Check if sender is solvent after the transfer
     function afterTokenTransfer(address _sender, address /* _recipient */, uint256 /* _amount */) external {
         if (!_isSolventAfterCollateralTransfer(_sender)) revert IShareToken.SenderNotSolventAfterTransfer();

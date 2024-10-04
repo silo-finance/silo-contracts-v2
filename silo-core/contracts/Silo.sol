@@ -536,6 +536,8 @@ contract Silo is ISilo, ShareCollateralToken {
         }
     }
 
+    // TODO: certora rule use multiple random steps for rules implementation
+    // TODO: certora rule user debt never decreases unless repay() is called
     // TODO: certora rule apply all rules from borrowShares()
     // TODO: certora rule borrow() should decrease Silo balance by exactly `_assets`
     // TODO: certora rule everybody can exit Silo meaning: calling borrow(), then repay(), all users should be able to withdraw() all funds and withdrawFess() withdraws all fees successfully

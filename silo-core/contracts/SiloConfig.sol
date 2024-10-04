@@ -204,6 +204,9 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         );
     }
 
+    // TODO: certora rule collateralConfig.silo is equal borrowerCollateralSilo[_depositOwner] if there is debt
+    // TODO: certora rule debtConfig.silo is always the silo that debt share token balance is not equal 0 or zero address otherwise
+    // TODO: certora rule if no debt, both configs are zero
     /// @inheritdoc ISiloConfig
     function getConfigsForSolvency(address _borrower) external view virtual returns (
         ConfigData memory collateralConfig,
@@ -219,6 +222,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         debtConfig = getConfig(debtSilo);
     }
 
+    // TODO: certora rule depositConfig.silo is always _silo
+    // TODO: certora rule debtConfig.silo is always the silo that debt share token balance is not equal 0 or zero address otherwise
+    // TODO: certora rule if debtConfig.silo is not zero then collateralConfig.silo is not zero
+    // TODO: certora rule collateralConfig.silo is equal borrowerCollateralSilo[_depositOwner] if there is debt
+    // TODO: certora rule if user has debt, borrowerCollateralSilo[user] should be silo0 or silo1 and one of shares tokens balances should not be 0
+    // TODO: certora rule if no debt, both configs are zero
     /// @inheritdoc ISiloConfig
     function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
         DepositConfig memory depositConfig,
@@ -228,7 +237,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         depositConfig = _getDepositConfig(_silo);
         address debtSilo = getDebtSilo(_depositOwner);
 
-        // TODO: certora rule if user has debt, borrowerCollateralSilo[user] should be silo0 or silo1 and one of shares tokens balances should not be 0
         if (debtSilo != address(0)) {
             address collateralSilo = borrowerCollateralSilo[_depositOwner];
 
@@ -237,6 +245,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
+    // TODO: certora rule debtConfig.silo is always equal _debtSilo
+    // TODO: certora rule collateralConfig.silo is always equal to other silo than _debtSilo
     /// @inheritdoc ISiloConfig
     function getConfigsForBorrow(address _debtSilo)
         external
