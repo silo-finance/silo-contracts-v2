@@ -611,8 +611,8 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxRepayShares(address _borrower) external view virtual returns (uint256 shares) {
-        ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();
-        shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);
+        (address debtShareToken,) = _getSiloConfig().getDebtShareTokenAndAsset(address(this));
+        shares = IShareToken(debtShareToken).balanceOf(_borrower);
     }
 
     /// @inheritdoc ISilo
