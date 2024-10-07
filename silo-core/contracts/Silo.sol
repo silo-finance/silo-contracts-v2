@@ -48,6 +48,7 @@ contract Silo is ISilo, ShareCollateralToken {
     /// of the hook receiver developer to handle it if needed.
     receive() external payable {}
 
+    /// @inheritdoc IShareToken
     function silo() external view virtual override returns (ISilo) {
         return this;
     }
