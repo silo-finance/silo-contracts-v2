@@ -12,6 +12,7 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
+import {Actions} from "silo-core/contracts/lib/Actions.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -109,9 +110,20 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     }
 
     /*
-    forge test -vv --ffi --mt test_gas_flashLoan
+    forge test -vv --ffi --mt test_gas_flashLoan_FlashLoanNotPossible
     */
-    function test_gas_flashLoan(bytes calldata _data) public {
+    function test_gas_flashLoan_FlashLoanNotPossible(bytes calldata _data) public {
+        IERC3156FlashBorrower receiver = IERC3156FlashBorrower(makeAddr("IERC3156FlashBorrower"));
+        uint256 amount = 10e18 + 1;
+
+        vm.expectRevert(Actions.FlashLoanNotPossible.selector);
+        silo0.flashLoan(receiver, address(token0), amount, _data);
+    }
+
+    /*
+    forge test -vv --ffi --mt test_gas_flashLoan_pass
+    */
+    function test_gas_flashLoan_pass(bytes calldata _data) public {
         IERC3156FlashBorrower receiver = IERC3156FlashBorrower(makeAddr("IERC3156FlashBorrower"));
         uint256 amount = 1e18;
         uint256 fee = silo0.flashFee(address(token0), amount);
@@ -141,7 +153,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
             address(silo0),
             abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
             "flashLoan gas",
-            32488,
+            35135,
             500
         );
 
