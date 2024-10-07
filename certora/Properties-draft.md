@@ -52,9 +52,6 @@
 * if user is solvent `transitionCollateral()` for `_transitionFrom` == CollateralType.Protected should never revert
 * if user is NOT solvent `transitionCollateral()` always reverts
 * `transitionCollateral()` for `_transitionFrom` == `CollateralType.Collateral` should revert if not enough liquidity is available
-* during `transitionCollateral()` share tokens balances should change only for the same address (owner)
-* `transitionCollateral()` should not change underlying assets balance
-* `transitionCollateral()` should not increase users assets
 * `transitionCollateral()` should not decrease user assets by more than rounding error
 * return value of `previewBorrow()` should be always equal to `borrow()`
 * user must be solvent after `switchCollateralToThisSilo()`
@@ -101,7 +98,6 @@
 * calling `accrueInterestForSilo(_silo)` should be equal to calling `_silo.accrueInterest()`
 * calling `accrueInterestForBothSilos()` should be equal to calling `silo0.accrueInterest()` and `silo1.accrueInterest()`
 * `transfer()` of any share token should never change any state on either Silo
-* apply all rules from `borrowShares()` to `borrow()`
 * `getConfigsForSolvency()` collateralConfig.silo is equal `borrowerCollateralSilo[_depositOwner]` if there is debt
 * `getConfigsForSolvency()` debtConfig.silo is always the silo that debt share token balance is not equal 0 or zero address otherwise
 * `getConfigsForSolvency()` if no debt, both configs (collateralConfig, debtConfig) are zero
