@@ -74,6 +74,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
         _depositForBorrow(8e18, address(1));
 
         _deposit(10e18, BORROWER);
+        _deposit(1e18, BORROWER, ISilo.CollateralType.Protected);
 
         assertEq(token0.balanceOf(address(this)), 0);
         assertEq(token0.balanceOf(address(silo0)), 10e18);

@@ -620,9 +620,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
-        maxLoan = _token == ShareTokenLib.siloConfig().getAssetForSilo(address(this))
-            ? IERC20(_token).balanceOf(address(this))
-            : 0;
+        maxLoan = Views.maxFlashLoan(_token);
     }
 
     /// @inheritdoc IERC3156FlashLender
