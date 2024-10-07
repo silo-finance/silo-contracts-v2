@@ -163,7 +163,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address /* _receiver */) external pure virtual returns (uint256 maxAssets) {
-        maxAssets = Views.maxDeposit();
+        maxAssets = SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
     }
 
     /// @inheritdoc IERC4626
@@ -182,7 +182,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC4626
     function maxMint(address /* _receiver */) external view virtual returns (uint256 maxShares) {
-        return Views.maxMint();
+        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
     }
 
     /// @inheritdoc IERC4626
