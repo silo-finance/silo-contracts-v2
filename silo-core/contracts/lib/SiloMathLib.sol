@@ -89,9 +89,11 @@ library SiloMathLib {
         }
 
         unchecked {
+            // We intentionally allow overflow here to prevent transaction revert due to interest calculation.
             accruedInterest = _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
 
+            // If overflow occurs, we skip accruing interest.
             if (debtAssetsWithInterest < _totalDebtAssets) {
                 debtAssetsWithInterest = _totalDebtAssets;
                 accruedInterest = 0;
