@@ -145,6 +145,50 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         assertEq(rcur, 0, "expect to get 0 for time 0");
     }
 
+    // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_lastIf
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_lastIf() public view {
+        uint256 rcomp;
+        int256 ri;
+        int256 Tcrit;
+        bool overflow;
+
+        IInterestRateModelV2.ConfigWithState memory config = IInterestRateModelV2.ConfigWithState({
+            uopt: 300000000000000000,
+            ucrit: 500000000000000000,
+            ulow: 700000000000000000,
+            ki: 1761655,
+            kcrit: 63419583967,
+            klow: 3170979198,
+            klin: 634195839,
+            beta: 69444444444444,
+            ri: 0,
+            Tcrit: 0
+        });
+
+        uint256 totalDeposits = 100000457166948244788346880;
+        uint256 totalBorrowAmount = 50000228583474122394173440;
+        uint256 interestRateTimestamp = 48537565;
+        uint256 blockTimestamp = 485411651;
+
+        (rcomp, ri, Tcrit, overflow) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
+            config,
+            totalDeposits, // _totalDeposits,
+            totalBorrowAmount, // _totalBorrowAmount,
+            interestRateTimestamp, // _interestRateTimestamp,
+            blockTimestamp
+        );
+
+        uint256 expectedRcomp = 1385318639015527684336;
+        uint256 expectedRi = 0;
+        uint256 expectedTcrit = 0;
+        bool expectedOverflow = true;
+
+        assertEq(rcomp, expectedRcomp, "expect exact rcomp value");
+        assertEq(uint256(ri), expectedRi, "expect exact ri value");
+        assertEq(uint256(Tcrit), expectedTcrit, "expect exact Tcrit value");
+        assertEq(overflow, expectedOverflow, "expect exact overflow value");
+    }
+
     // forge test -vv --mt test_IRM_calculateRComp
     /// forge-config: core-test.fuzz.runs = 10000
     function test_IRM_calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x) public {
