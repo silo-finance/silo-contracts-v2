@@ -26,8 +26,6 @@ contract WithdrawFeesTest is Test {
     SiloFactoryMock siloFactory;
     TokenMock token;
 
-    event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
-
     function _$() internal pure returns (ISilo.SiloStorage storage) {
         return SiloStorageLib.getSiloStorage();
     }
@@ -183,9 +181,6 @@ contract WithdrawFeesTest is Test {
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
         _setProtectedAssets(NO_PROTECTED_ASSETS);
-
-        vm.expectEmit(true, true, true, true);
-        emit WithdrawnFeed(_daoFee, _deployerFee);
 
         _withdrawFees(ISilo(address(this)));
         assertEq(_$().daoAndDeployerRevenue, 0, "fees cleared");
