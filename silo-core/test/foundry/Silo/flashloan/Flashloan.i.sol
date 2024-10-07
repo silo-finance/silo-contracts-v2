@@ -77,7 +77,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
         _deposit(1e18, BORROWER, ISilo.CollateralType.Protected);
 
         assertEq(token0.balanceOf(address(this)), 0);
-        assertEq(token0.balanceOf(address(silo0)), 10e18);
+        assertEq(token0.balanceOf(address(silo0)), 10e18 + 1e18);
         assertEq(token1.balanceOf(address(silo1)), 8e18);
     }
 
@@ -87,7 +87,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     function test_maxFlashLoan() public view {
         assertEq(silo0.maxFlashLoan(address(token1)), 0);
         assertEq(silo1.maxFlashLoan(address(token0)), 0);
-        assertEq(silo0.maxFlashLoan(address(token0)), 10e18);
+        assertEq(silo0.maxFlashLoan(address(token0)), 10e18, "protected excluded");
         assertEq(silo1.maxFlashLoan(address(token1)), 8e18);
     }
 
