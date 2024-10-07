@@ -124,24 +124,24 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             // so there is a need to check assets before we withdraw collateral/protected
 
             if (collateralShares != 0) {
-                withdrawCollateral = ISilo(collateralConfig.silo).redeem(
-                    collateralShares,
-                    msg.sender,
-                    address(this),
-                    ISilo.CollateralType.Collateral
-                );
+                withdrawCollateral = ISilo(collateralConfig.silo).redeem({
+                    _shares: collateralShares,
+                    _receiver: msg.sender,
+                    _owner: address(this),
+                    _collateralType: ISilo.CollateralType.Collateral
+                });
             }
 
             if (protectedShares != 0) {
                 unchecked {
                     // protected and collateral values were split from total collateral to withdraw,
                     // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    withdrawCollateral += ISilo(collateralConfig.silo).redeem(
-                        protectedShares,
-                        msg.sender,
-                        address(this),
-                        ISilo.CollateralType.Protected
-                    );
+                    withdrawCollateral += ISilo(collateralConfig.silo).redeem({
+                        _shares: protectedShares,
+                        _receiver: msg.sender,
+                        _owner: address(this),
+                        _collateralType: ISilo.CollateralType.Protected
+                    });
                 }
             }
         }

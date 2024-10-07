@@ -204,14 +204,14 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig,
-            _debtConfig,
-            _borrower,
-            ISilo.OracleType.MaxLtv,
-            ISilo.AccrueInterestInMemory.Yes,
-            0 /* no cache */
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations({
+            _collateralConfig: _collateralConfig,
+            _debtConfig: _debtConfig,
+            _borrower: _borrower,
+            _oracleType: ISilo.OracleType.MaxLtv,
+            _accrueInMemory: ISilo.AccrueInterestInMemory.Yes,
+            _debtShareBalanceCached: 0 /* no cache */
+        });
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
@@ -223,16 +223,16 @@ library SiloLendingLib {
             borrowerDebtValue
         );
 
-        (assets, shares) = maxBorrowValueToAssetsAndShares(
-            maxBorrowValue,
-            borrowerDebtValue,
-            _borrower,
-            _debtConfig.token,
-            _debtConfig.debtShareToken,
-            ltvData.debtOracle,
-            _totalDebtAssets,
-            _totalDebtShares
-        );
+        (assets, shares) = maxBorrowValueToAssetsAndShares({
+            _maxBorrowValue: maxBorrowValue,
+            _borrowerDebtValue: borrowerDebtValue,
+            _borrower: _borrower,
+            _debtToken: _debtConfig.token,
+            _debtShareToken: _debtConfig.debtShareToken,
+            _debtOracle: ltvData.debtOracle,
+            _totalDebtAssets: _totalDebtAssets,
+            _totalDebtShares: _totalDebtShares
+        });
 
         if (assets == 0) return (0, 0);
 

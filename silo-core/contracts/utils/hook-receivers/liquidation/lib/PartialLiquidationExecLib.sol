@@ -22,14 +22,14 @@ library PartialLiquidationExecLib {
         view
         returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
     {
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig,
-            _debtConfig,
-            _user,
-            ISilo.OracleType.Solvency,
-            ISilo.AccrueInterestInMemory.No,
-            0 /* no cached balance */
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations({
+            _collateralConfig: _collateralConfig,
+            _debtConfig: _debtConfig,
+            _borrower: _user,
+            _oracleType: ISilo.OracleType.Solvency,
+            _accrueInMemory: ISilo.AccrueInterestInMemory.No,
+            _debtShareBalanceCached:0 /* no cached balance */
+        });
 
         uint256 borrowerCollateralToLiquidate;
 
