@@ -37,7 +37,7 @@ library ShareDebtTokenLib {
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (ShareTokenLib.isTransfer(_sender, _recipient)) {
             // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`.
-            // If `_recepient` has no collateral silo set yet, it will be copiet from sender.
+            // If the `_recipient` has no collateral silo set yet, it will be copied from the sender.
             $.siloConfig.onDebtTransfer(_sender, _recipient);
 
             // _recipient must approve debt transfer, _sender does not have to
@@ -56,9 +56,6 @@ library ShareDebtTokenLib {
 
     /// @dev Check if recipient is solvent after debt transfer
     function afterTokenTransfer(address _sender, address _recipient, uint256 /* _amount */) internal {
-        // debt transfer is such a rare use case and extra gas is worth additional security,
-        // so we do not return even when _amount == 0
-
         // if we are minting or burning, Silo is responsible to check all necessary conditions
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
