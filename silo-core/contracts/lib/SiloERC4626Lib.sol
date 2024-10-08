@@ -69,14 +69,10 @@ library SiloERC4626Lib {
         if (assets == 0) revert ISilo.ZeroAssets();
         if (shares == 0) revert ISilo.ZeroShares();
 
-        // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
-        // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
-        // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
-        // unchecked {
         $.totalAssets[uint256(_collateralType)] = totalAssets + assets;
-        // }
 
-        // Hook receiver is called after `mint` and can reentry but state changes are completed already
+        // Hook receiver is called after `mint` and can reentry but state changes are completed already,
+        // and reentrancy protection is still enabled.
         _collateralShareToken.mint(_receiver, _depositor, shares);
 
         if (_token != address(0)) {
@@ -127,13 +123,12 @@ library SiloERC4626Lib {
             // check liquidity
             if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
 
-            // `assets` can never be more then `totalAssets` because we always increase `totalAssets` by
-            // `assets` and interest
-            unchecked { $.totalAssets[uint256(_args.collateralType)] = totalAssets - assets; }
+            $.totalAssets[uint256(_args.collateralType)] = totalAssets - assets;
         }
 
-        // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver that
-        // can potentially reenter but state changes are already completed.
+        // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver
+        // after tokens transfer and can potentially reenter, but state changes are already completed,
+        // and reentrancy protection is still enabled.
         IShareToken(_shareToken).burn(_args.owner, _args.spender, shares);
 
         if (_asset != address(0)) {
