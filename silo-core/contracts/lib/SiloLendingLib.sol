@@ -339,31 +339,19 @@ library SiloLendingLib {
             return (0, 0);
         }
 
-        if (_borrowerDebtValue == 0) {
-            uint256 debtTokenSample = _PRECISION_DECIMALS;
+        uint256 debtTokenSample = _PRECISION_DECIMALS;
 
-            uint256 debtSampleValue = address(_debtOracle) == address(0)
-                ? debtTokenSample
-                : _debtOracle.quote(debtTokenSample, _debtToken);
+        uint256 debtSampleValue = address(_debtOracle) == address(0)
+            ? debtTokenSample
+            : _debtOracle.quote(debtTokenSample, _debtToken);
 
-            assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
+        assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
-            // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
-            // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
-            // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
-            shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
-            );
-        } else {
-            uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
-
-            // on LTV calculation, we taking debt value, and we round UP when we calculating shares
-            // so here, when we want to calculate shares from value, we need to round down.
-            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, Rounding.MAX_BORROW_TO_SHARES);
-
-            assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
-            );
-        }
+        // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
+        // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
+        // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
+        shares = SiloMathLib.convertToShares(
+            assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
+        );
     }
 }
