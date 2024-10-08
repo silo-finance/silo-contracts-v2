@@ -17,8 +17,8 @@ import {Hook} from "./Hook.sol";
 library SiloLensLib {
     function getRawLiquidity(ISilo _silo) internal view returns (uint256 liquidity) {
         return SiloMathLib.liquidity(
-            _silo.getTotalAssetsStorage(ISilo.AssetType.COLLATERAL),
-            _silo.getTotalAssetsStorage(ISilo.AssetType.DEBT)
+            _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral),
+            _silo.getTotalAssetsStorage(ISilo.AssetType.Debt)
         );
     }
 

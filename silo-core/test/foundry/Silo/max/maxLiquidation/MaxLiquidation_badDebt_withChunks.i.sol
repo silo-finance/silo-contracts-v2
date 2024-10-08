@@ -89,7 +89,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
             emit log_named_uint("debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, borrower));
-            emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(ISilo.AssetType.COLLATERAL));
+            emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral));
             emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
 
             uint256 collateralToLiquidate;
