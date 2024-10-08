@@ -85,7 +85,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
-        (configData0, configData1) = Views.copySiloConfig(_initData);
+        (
+            configData0, configData1
+        ) = Views.copySiloConfig(_initData, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
 
         uint256 nextSiloId = _siloId;
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
@@ -173,7 +175,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @inheritdoc ISiloFactory
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
-        return Views.validateSiloInitData(_initData);
+        return Views.validateSiloInitData(_initData, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
     }
 
     /// @inheritdoc ERC721

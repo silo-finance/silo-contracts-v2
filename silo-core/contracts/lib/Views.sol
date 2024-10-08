@@ -7,6 +7,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
+import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
@@ -184,42 +185,51 @@ library Views {
         configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
     }
 
-    function validateSiloInitData(ISiloConfig.InitData memory _initData) internal view returns (bool) {
+    function validateSiloInitData(
+        ISiloConfig.InitData memory _initData,
+        uint256 _maxDeployerFee,
+        uint256 _maxFlashloanFee,
+        uint256 _maxLiquidationFee
+    ) internal view returns (bool) {
         // solhint-disable-previous-line code-complexity
-        if (_initData.hookReceiver == address(0)) revert MissingHookReceiver();
+        if (_initData.hookReceiver == address(0)) revert ISiloFactory.MissingHookReceiver();
 
-        if (_initData.token0 == address(0)) revert EmptyToken0();
-        if (_initData.token1 == address(0)) revert EmptyToken1();
+        if (_initData.token0 == address(0)) revert ISiloFactory.EmptyToken0();
+        if (_initData.token1 == address(0)) revert ISiloFactory.EmptyToken1();
 
-        if (_initData.token0 == _initData.token1) revert SameAsset();
-        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
-        if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
-        if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert InvalidLt();
+        if (_initData.token0 == _initData.token1) revert ISiloFactory.SameAsset();
+        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert ISiloFactory.InvalidMaxLtv();
+        if (_initData.maxLtv0 > _initData.lt0) revert ISiloFactory.InvalidMaxLtv();
+        if (_initData.maxLtv1 > _initData.lt1) revert ISiloFactory.InvalidMaxLtv();
+        if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert ISiloFactory.InvalidLt();
 
         if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
             revert OracleMisconfiguration();
         }
 
-        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
-
-        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
-            revert OracleMisconfiguration();
+        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) {
+            revert ISiloFactory.InvalidCallBeforeQuote();
         }
 
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
+        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
+            revert ISiloFactory.OracleMisconfiguration();
+        }
+
+        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) {
+            revert ISiloFactory.InvalidCallBeforeQuote();
+        }
 
         _verifyQuoteTokens(_initData);
 
-        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
-        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
-        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
-        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
-        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
+        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert ISiloFactory.InvalidDeployer();
+        if (_initData.deployerFee > _maxDeployerFee) revert ISiloFactory.MaxDeployerFeeExceeded();
+        if (_initData.flashloanFee0 > _maxFlashloanFee) revert ISiloFactory.MaxFlashloanFeeExceeded();
+        if (_initData.flashloanFee1 > _maxFlashloanFee) revert ISiloFactory.MaxFlashloanFeeExceeded();
+        if (_initData.liquidationFee0 > _maxLiquidationFee) revert ISiloFactory.MaxLiquidationFeeExceeded();
+        if (_initData.liquidationFee1 > _maxLiquidationFee) revert ISiloFactory.MaxLiquidationFeeExceeded();
 
         if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
-            revert InvalidIrm();
+            revert ISiloFactory.InvalidIrm();
         }
 
         return true;
