@@ -82,11 +82,13 @@ library Hook {
     /// @param shares The amount of shares to borrow
     /// @param receiver The receiver of the borrow
     /// @param borrower The borrower of the assets
+    /// @param _spender Address which initiates the borrowing action on behalf of the borrower
     struct BeforeBorrowInput {
         uint256 assets;
         uint256 shares;
         address receiver;
         address borrower;
+        address spender;
     }
 
     /// @notice The data structure for the after borrow hook
@@ -94,6 +96,7 @@ library Hook {
     /// @param shares The amount of shares borrowed
     /// @param receiver The receiver of the borrow
     /// @param borrower The borrower of the assets
+    /// @param spender Address which initiates the borrowing action on behalf of the borrower
     /// @param borrowedAssets The exact amount of assets being borrowed
     /// @param borrowedShares The exact amount of shares being borrowed
     struct AfterBorrowInput {
@@ -101,6 +104,7 @@ library Hook {
         uint256 shares;
         address receiver;
         address borrower;
+        address spender;
         uint256 borrowedAssets;
         uint256 borrowedShares;
     }
@@ -451,7 +455,7 @@ library Hook {
         uint256 shares;
         address receiver;
         address borrower;
-
+        address spender;
         assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
@@ -461,9 +465,11 @@ library Hook {
             receiver := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
         }
 
-        input = BeforeBorrowInput(assets, shares, receiver, borrower);
+        input = BeforeBorrowInput(assets, shares, receiver, borrower, spender);
     }
 
     /// @dev Decodes packed data from the after borrow hook
@@ -478,6 +484,7 @@ library Hook {
         uint256 shares;
         address receiver;
         address borrower;
+        address spender;
         uint256 borrowedAssets;
         uint256 borrowedShares;
 
@@ -490,13 +497,15 @@ library Hook {
             receiver := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
             borrowedAssets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
             borrowedShares := mload(add(packed, pointer))
         }
 
-        input = AfterBorrowInput(assets, shares, receiver, borrower, borrowedAssets, borrowedShares);
+        input = AfterBorrowInput(assets, shares, receiver, borrower, spender, borrowedAssets, borrowedShares);
     }
 
     /// @dev Decodes packed data from the before repay hook

@@ -579,15 +579,18 @@ library Actions {
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
     }
 
-    function _hookCallBeforeBorrow(
-        ISilo.BorrowArgs memory _args,
-        uint256 action
-    ) private {
+    function _hookCallBeforeBorrow(ISilo.BorrowArgs memory _args, uint256 action) private {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;
 
-        bytes memory data = abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.borrower);
+        bytes memory data = abi.encodePacked(
+            _args.assets,
+            _args.shares,
+            _args.receiver,
+            _args.borrower,
+            msg.sender // spender
+        );
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);
     }
@@ -607,6 +610,7 @@ library Actions {
             _args.shares,
             _args.receiver,
             _args.borrower,
+            msg.sender, // spender
             assets,
             shares
         );

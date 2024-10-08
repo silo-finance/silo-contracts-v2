@@ -767,7 +767,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         uint256 _amount
     ) internal {
         vm.expectEmit(true, true, true, true);
-        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver, _borrowerAddr);
 
         vm.expectEmit(true, true, true, true);
 
@@ -777,6 +777,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             SHARES_0,
             _borrowerAddr,
             _receiver,
+            _borrowerAddr,
             _amount,
             _amount
         );
@@ -792,7 +793,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         uint256 _amount
     ) internal {
         vm.expectEmit(true, true, true, true);
-        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver, _borrowerAddr);
 
         vm.expectEmit(true, true, true, true);
 
@@ -814,6 +815,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             SHARES_0,
             _borrowerAddr,
             _receiver,
+            _borrowerAddr,
             _amount,
             _amount
         );
@@ -829,7 +831,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         uint256 _amount
     ) internal {
         vm.expectEmit(true, true, true, true);
-        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver);
+        emit BorrowBeforeHA(address(_silo), _amount, SHARES_0, _borrowerAddr, _receiver, _borrowerAddr);
 
         vm.expectEmit(true, true, true, true);
 
@@ -851,6 +853,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             SHARES_0,
             _borrowerAddr,
             _receiver,
+            _borrowerAddr,
             _amount,
             _amount
         );

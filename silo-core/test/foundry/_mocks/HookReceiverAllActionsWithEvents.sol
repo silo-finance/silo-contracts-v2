@@ -96,7 +96,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedAssets,
         uint256 borrowedShares,
         address borrower,
-        address receiver
+        address receiver,
+        address spender
     );
 
     event BorrowAfterHA(
@@ -105,6 +106,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedShares,
         address borrower,
         address receiver,
+        address spender,
         uint256 returnedAssets,
         uint256 returnedShares
     );
@@ -385,7 +387,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.assets,
                 input.shares,
                 input.borrower,
-                input.receiver
+                input.receiver,
+                input.spender
             );
         } else {
             Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
@@ -396,6 +399,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.shares,
                 input.borrower,
                 input.receiver,
+                input.spender,
                 input.borrowedAssets,
                 input.borrowedShares
             );
