@@ -27,8 +27,8 @@ contract UtilizationDataTest is Test {
     */
     function test_utilizationData_data() public {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        $.totalAssets[AssetTypes.COLLATERAL] = 1;
-        $.totalAssets[AssetTypes.DEBT] = 2;
+        $.totalAssets[ISilo.AssetType.Collateral] = 1;
+        $.totalAssets[ISilo.AssetType.Debt] = 2;
         $.interestRateTimestamp = 3;
 
         ISilo.UtilizationData memory data = Views.utilizationData();

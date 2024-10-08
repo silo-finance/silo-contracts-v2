@@ -22,8 +22,8 @@ contract AccrueInterestForAssetTest is Test {
         ISilo.SiloStorage storage $ = _$();
 
         assertEq(accruedInterest, 0, "zero when no data");
-        assertEq($.totalAssets[AssetTypes.COLLATERAL], 0, "totalCollateral 0");
-        assertEq($.totalAssets[AssetTypes.DEBT], 0, "totalDebt 0");
+        assertEq($.totalAssets[ISilo.AssetType.Collateral], 0, "totalCollateral 0");
+        assertEq($.totalAssets[ISilo.AssetType.Debt], 0, "totalDebt 0");
     }
 
     /*
@@ -37,14 +37,14 @@ contract AccrueInterestForAssetTest is Test {
 
         $.interestRateTimestamp = currentTimestamp;
 
-        $.totalAssets[AssetTypes.COLLATERAL] = 1e18;
-        $.totalAssets[AssetTypes.DEBT] = 1e18;
+        $.totalAssets[ISilo.AssetType.Collateral] = 1e18;
+        $.totalAssets[ISilo.AssetType.Debt] = 1e18;
 
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(address(0), 0, 0);
 
         assertEq(accruedInterest, 0, "zero timestamp did not change");
-        assertEq($.totalAssets[AssetTypes.COLLATERAL], 1e18, "totalCollateral - timestamp did not change");
-        assertEq($.totalAssets[AssetTypes.DEBT], 1e18, "totalDebt - timestamp did not change");
+        assertEq($.totalAssets[ISilo.AssetType.Collateral], 1e18, "totalCollateral - timestamp did not change");
+        assertEq($.totalAssets[ISilo.AssetType.Debt], 1e18, "totalDebt - timestamp did not change");
     }
 
     /*
@@ -62,15 +62,15 @@ contract AccrueInterestForAssetTest is Test {
 
         ISilo.SiloStorage storage $ = _$();
 
-        $.totalAssets[AssetTypes.COLLATERAL] = 1e18;
-        $.totalAssets[AssetTypes.DEBT] = 0.5e18;
+        $.totalAssets[ISilo.AssetType.Collateral] = 1e18;
+        $.totalAssets[ISilo.AssetType.Debt] = 0.5e18;
         $.interestRateTimestamp = oldTimestamp;
 
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(irm.ADDRESS(), 0, 0);
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
-        assertEq($.totalAssets[AssetTypes.COLLATERAL], 1.005e18, "totalCollateral");
-        assertEq($.totalAssets[AssetTypes.DEBT], 0.505e18, "totalDebt");
+        assertEq($.totalAssets[ISilo.AssetType.Collateral], 1.005e18, "totalCollateral");
+        assertEq($.totalAssets[ISilo.AssetType.Debt], 0.505e18, "totalDebt");
         assertEq($.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
         assertEq($.daoAndDeployerRevenue, 0, "daoAndDeployerRevenue");
     }
@@ -92,19 +92,19 @@ contract AccrueInterestForAssetTest is Test {
 
         ISilo.SiloStorage storage $ = _$();
 
-        $.totalAssets[AssetTypes.COLLATERAL] = 1e18;
-        $.totalAssets[AssetTypes.DEBT] = 0.5e18;
+        $.totalAssets[ISilo.AssetType.Collateral] = 1e18;
+        $.totalAssets[ISilo.AssetType.Debt] = 0.5e18;
         $.interestRateTimestamp = oldTimestamp;
 
         uint256 accruedInterest = SiloLendingLib.accrueInterestForAsset(irm.ADDRESS(), daoFee, deployerFee);
 
         assertEq(accruedInterest, 0.005e18, "accruedInterest");
         assertEq(
-            $.totalAssets[AssetTypes.COLLATERAL],
+            $.totalAssets[ISilo.AssetType.Collateral],
             1e18 + accruedInterest * (DECIMAL_POINTS - daoFee - deployerFee) / DECIMAL_POINTS,
             "totalCollateral"
         );
-        assertEq($.totalAssets[AssetTypes.DEBT], 0.505e18, "totalDebt");
+        assertEq($.totalAssets[ISilo.AssetType.Debt], 0.505e18, "totalDebt");
         assertEq($.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
         assertEq(
             $.daoAndDeployerRevenue,

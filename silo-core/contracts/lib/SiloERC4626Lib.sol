@@ -54,7 +54,7 @@ library SiloERC4626Lib {
     ) internal returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalAssets = $.totalAssets[uint256(_collateralType)];
+        uint256 totalAssets = $.totalAssets[ISilo.AssetType(uint256(_collateralType))];
 
         (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
@@ -66,11 +66,10 @@ library SiloERC4626Lib {
             ISilo.AssetType(uint256(_collateralType))
         );
 
-        // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
-        // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
-        // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
-        // unchecked {
-        $.totalAssets[uint256(_collateralType)] = totalAssets + assets;
+        if (assets == 0) revert ISilo.ZeroAssets();
+        if (shares == 0) revert ISilo.ZeroShares();
+
+        $.totalAssets[ISilo.AssetType(uint256(_collateralType))] = totalAssets + assets;
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already,
         // and reentrancy protection is still enabled.
@@ -103,7 +102,7 @@ library SiloERC4626Lib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         { // Stack too deep
-            uint256 totalAssets = $.totalAssets[uint256(_args.collateralType)];
+            uint256 totalAssets = $.totalAssets[ISilo.AssetType(uint256(_args.collateralType))];
 
             (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
                 _args.assets,
@@ -116,13 +115,13 @@ library SiloERC4626Lib {
             );
 
             uint256 liquidity = _args.collateralType == ISilo.CollateralType.Collateral
-                ? SiloMathLib.liquidity($.totalAssets[AssetTypes.COLLATERAL], $.totalAssets[AssetTypes.DEBT])
-                : $.totalAssets[AssetTypes.PROTECTED];
+                ? SiloMathLib.liquidity($.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt])
+                : $.totalAssets[ISilo.AssetType.Protected];
 
             // check liquidity
             if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
 
-            $.totalAssets[uint256(_args.collateralType)] = totalAssets - assets;
+            $.totalAssets[ISilo.AssetType(uint256(_args.collateralType))] = totalAssets - assets;
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver
