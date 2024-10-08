@@ -122,7 +122,14 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _mint(_initData.deployer, nextSiloId);
         }
 
-        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(_siloConfig));
+        emit NewSilo(
+            _siloImpl,
+            configData0.token,
+            configData1.token,
+            configData0.silo,
+            configData1.silo,
+            address(_siloConfig)
+        );
     }
 
     /// @inheritdoc ISiloFactory

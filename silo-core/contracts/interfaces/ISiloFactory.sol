@@ -6,12 +6,20 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface ISiloFactory is IERC721 {
     /// @notice Emitted on the creation of a Silo.
+    /// @param implementation Address of the Silo.
     /// @param token0 Address of the first Silo token.
     /// @param token1 Address of the second Silo token.
     /// @param silo0 Address of the first Silo.
     /// @param silo1 Address of the second Silo.
     /// @param siloConfig Address of the SiloConfig.
-    event NewSilo(address indexed token0, address indexed token1, address silo0, address silo1, address siloConfig);
+    event NewSilo(
+        address indexed implementation,
+        address indexed token0,
+        address indexed token1,
+        address silo0,
+        address silo1,
+        address siloConfig
+    );
 
     /// @notice Emitted on the update of DAO fee.
     /// @param daoFee Value of the new DAO fee.
