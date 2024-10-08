@@ -113,7 +113,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         );
 
         vm.expectEmit(true, true, true, true);
-        emit ISiloFactory.BaseURI(expectedURI);
+        emit ISiloFactory.BaseURI(_newBaseURI);
 
         vm.prank(Ownable(address(siloFactory)).owner());
         siloFactory.setBaseURI(_newBaseURI);
