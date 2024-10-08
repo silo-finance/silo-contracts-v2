@@ -6,6 +6,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
+import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 
@@ -22,6 +23,9 @@ import {SiloStorageLib} from "./SiloStorageLib.sol";
 // solhint-disable ordering
 
 library Views {
+    /// @dev max percent is 1e18 == 100%
+    uint256 internal constant _MAX_PERCENT = 1e18;
+
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     function isSolvent(address _borrower) external view returns (bool) {
@@ -147,9 +151,14 @@ library Views {
         totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
     }
 
-    function copySiloConfig(ISiloConfig.InitData memory _initData)
+    function copySiloConfig(
+        ISiloConfig.InitData memory _initData,
+        uint256 _maxDeployerFee,
+        uint256 _maxFlashloanFee,
+        uint256 _maxLiquidationFee
+    )
         internal
-        pure
+        view
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
         validateSiloInitData(_initData);
@@ -201,10 +210,10 @@ library Views {
         if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert ISiloFactory.InvalidMaxLtv();
         if (_initData.maxLtv0 > _initData.lt0) revert ISiloFactory.InvalidMaxLtv();
         if (_initData.maxLtv1 > _initData.lt1) revert ISiloFactory.InvalidMaxLtv();
-        if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert ISiloFactory.InvalidLt();
+        if (_initData.lt0 > _MAX_PERCENT || _initData.lt1 > _MAX_PERCENT) revert ISiloFactory.InvalidLt();
 
         if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
-            revert OracleMisconfiguration();
+            revert ISiloFactory.OracleMisconfiguration();
         }
 
         if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) {
@@ -219,7 +228,7 @@ library Views {
             revert ISiloFactory.InvalidCallBeforeQuote();
         }
 
-        _verifyQuoteTokens(_initData);
+        verifyQuoteTokens(_initData);
 
         if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert ISiloFactory.InvalidDeployer();
         if (_initData.deployerFee > _maxDeployerFee) revert ISiloFactory.MaxDeployerFeeExceeded();
@@ -233,5 +242,28 @@ library Views {
         }
 
         return true;
+    }
+
+    function verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal view {
+        address expectedQuoteToken;
+
+        expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
+        expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
+        expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
+        expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
+    }
+
+    function verifyQuoteToken(address _expectedQuoteToken, address _oracle)
+        internal
+        virtual
+        view
+        returns (address quoteToken)
+    {
+        if (_oracle == address(0)) return _expectedQuoteToken;
+
+        quoteToken = ISiloOracle(_oracle).quoteToken();
+
+        if (_expectedQuoteToken == address(0)) return quoteToken;
+        if (_expectedQuoteToken != quoteToken) revert ISiloFactory.InvalidQuoteToken();
     }
 }

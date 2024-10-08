@@ -273,27 +273,4 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         IShareTokenInitializable(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
         IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
     }
-
-    function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
-        address expectedQuoteToken;
-
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
-    }
-
-    function _verifyQuoteToken(address _expectedQuoteToken, address _oracle)
-        internal
-        virtual
-        view
-        returns (address quoteToken)
-    {
-        if (_oracle == address(0)) return _expectedQuoteToken;
-
-        quoteToken = ISiloOracle(_oracle).quoteToken();
-
-        if (_expectedQuoteToken == address(0)) return quoteToken;
-        if (_expectedQuoteToken != quoteToken) revert InvalidQuoteToken();
-    }
 }
