@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -341,13 +340,13 @@ library SiloLendingLib {
         }
 
         if (_borrowerDebtValue == 0) {
-            uint256 oneDebtAsset = 10 ** IERC20Metadata(_debtAsset).decimals();
+            uint256 debtTokenSample = _PRECISION_DECIMALS;
 
-            uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
-                ? oneDebtAsset
-                : _debtOracle.quote(oneDebtAsset, _debtAsset);
+            uint256 debtSampleValue = address(_debtOracle) == address(0)
+                ? debtTokenSample
+                : _debtOracle.quote(debtTokenSample, _debtToken);
 
-            assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, oneDebtTokenValue, Rounding.MAX_BORROW_TO_ASSETS);
+            assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
             // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
             // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
