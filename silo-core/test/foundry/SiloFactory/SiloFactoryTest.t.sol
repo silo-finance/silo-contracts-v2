@@ -105,15 +105,18 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         uint256 firstSiloId = 1;
         address siloConfigFromFactory = siloFactory.idToSiloConfig(firstSiloId);
 
-        vm.prank(Ownable(address(siloFactory)).owner());
-        siloFactory.setBaseURI(_newBaseURI);
-
-         string memory expectedURI = string.concat(
+        string memory expectedURI = string.concat(
             _newBaseURI,
             Strings.toString(block.chainid),
             "/",
             Strings.toHexString(siloConfigFromFactory)
         );
+
+        vm.expectEmit(true, true, true, true);
+        emit ISiloFactory.BaseURI(expectedURI);
+
+        vm.prank(Ownable(address(siloFactory)).owner());
+        siloFactory.setBaseURI(_newBaseURI);
 
         string memory tokenURI = IERC721Metadata(address(siloFactory)).tokenURI(firstSiloId);
         assertEq(tokenURI, expectedURI, "actual token URI does not match with expected");
