@@ -103,7 +103,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             shareTokenReceiver,
             withdrawAssetsFromCollateral,
             collateralConfig.collateralShareToken,
-            AssetTypes.COLLATERAL
+            ISilo.AssetType.COLLATERAL
         );
 
         protectedShares = _callShareTokenForwardTransferNoChecks(
@@ -112,7 +112,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             shareTokenReceiver,
             withdrawAssetsFromProtected,
             collateralConfig.protectedShareToken,
-            AssetTypes.PROTECTED
+            ISilo.AssetType.PROTECTED
         );
 
         if (_receiveSToken) {
