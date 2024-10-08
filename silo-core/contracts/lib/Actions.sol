@@ -394,6 +394,9 @@ library Actions {
 
         if (fee > type(uint192).max) revert FeeOverflow();
 
+        // cast safe, because we checked `fee > type(uint192).max`
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
+
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != _FLASHLOAN_CALLBACK) {
@@ -401,9 +404,6 @@ library Actions {
         }
 
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
-
-        // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
