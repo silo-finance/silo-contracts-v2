@@ -161,7 +161,7 @@ library Views {
         view
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
-        validateSiloInitData(_initData);
+        validateSiloInitData(_initData, _maxDeployerFee, _maxFlashloanFee, _maxLiquidationFee);
 
         configData0.hookReceiver = _initData.hookReceiver;
         configData0.token = _initData.token0;
@@ -255,7 +255,6 @@ library Views {
 
     function verifyQuoteToken(address _expectedQuoteToken, address _oracle)
         internal
-        virtual
         view
         returns (address quoteToken)
     {

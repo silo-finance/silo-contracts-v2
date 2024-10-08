@@ -57,7 +57,12 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             initData.solvencyOracle1 = address(uint160(scenario.input.debtConfig.solvencyOracle));
             initData.interestRateModel1 = interestRateModelMock.ADDRESS();
 
-            (collateralConfig, debtConfig) = Views.copySiloConfig(initData);
+            (collateralConfig, debtConfig) = Views.copySiloConfig({
+                _initData: initData,
+                _maxDeployerFee: 0.15e18,
+                _maxFlashloanFee: 0.15e18,
+                _maxLiquidationFee: 0.30e18
+            });
         }
 
         collateralConfig.protectedShareToken = protectedShareToken;

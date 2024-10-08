@@ -48,16 +48,12 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         baseURI = "https://v2.app.silo.finance/markets/";
 
-        uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
-        uint256 _newMaxFlashloanFee = 0.15e18; // 15% max flashloan fee
-        uint256 _newMaxLiquidationFee = 0.30e18; // 30% max liquidation fee
-
         _setDaoFee(_daoFee);
         _setDaoFeeReceiver(_daoFeeReceiver);
 
-        _setMaxDeployerFee(_maxDeployerFee);
-        _setMaxFlashloanFee(_newMaxFlashloanFee);
-        _setMaxLiquidationFee(_newMaxLiquidationFee);
+        _setMaxDeployerFee({_newMaxDeployerFee: 0.15e18}); // 15% max deployer fee
+        _setMaxFlashloanFee({_newMaxFlashloanFee: 0.15e18}); // 15% max flashloan fee
+        _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
     }
 
     /// @inheritdoc ISiloFactory
