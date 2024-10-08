@@ -226,6 +226,7 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
+        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeLeverageSameAsset(_args);
@@ -264,7 +265,6 @@ library Actions {
         });
 
         // receive collateral
-        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
         uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
         IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
 
