@@ -158,6 +158,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @inheritdoc ISiloFactory
     function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
         baseURI = _newBaseURI;
+        emit BaseURI(_newBaseURI);
     }
 
     /// @inheritdoc ISiloFactory
