@@ -129,7 +129,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         silo1.withdraw(48e18, borrower, borrower);
 
         emit log("-- flashLoan --");
-        silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
+        silo0.flashLoan(this, address(token0), silo0.maxFlashLoan(address(token0)), "");
         
         // liquidation
         emit log("-- liquidationCall --");
