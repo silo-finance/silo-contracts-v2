@@ -285,7 +285,7 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForSilo(address(this));
+        siloConfig.accrueInterestForBothSilos();
 
         (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(this));
 
@@ -317,13 +317,21 @@ library Actions {
 
         (assets, toShares) = SiloERC4626Lib.deposit({
             _token: address(0), // empty token because we don't want to transfer
-            _depositor: _args.owner,
+            _depositor: msg.sender,
             _assets: assets,
             _shares: 0,
             _receiver: _args.owner,
             _collateralShareToken: IShareToken(shareTokenTo),
             _collateralType: depositType
         });
+
+        // solvency check
+        ISiloConfig.ConfigData memory collateralConfig;
+        ISiloConfig.ConfigData memory debtConfig;
+
+        (collateralConfig, debtConfig) = siloConfig.getConfigsForSolvency(_args.owner);
+
+        _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);
 
         siloConfig.turnOffReentrancyProtection();
 

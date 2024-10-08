@@ -152,8 +152,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
 
         vm.warp(block.timestamp + 100 days);
 
-        assertTrue(!silo0.isSolvent(owner), "this test is for NOT solvent user");
-
+        vm.expectRevert(ISilo.NotSolvent.selector);
         silo0.transitionCollateral(0.5e18, owner, ISilo.CollateralType.Protected);
     }
 }
