@@ -463,18 +463,18 @@ library Actions {
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
-            uint256 daoFees = earnedFees * daoFee;
-            uint256 deployerFees;
+            uint256 daoRevenue = earnedFees * daoFee;
+            uint256 deployerRevenue;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
-                daoFees = daoFees / (daoFee + deployerFee);
-                // `daoFees` is chunk of earnedFees, so safe to uncheck
-                deployerFees = earnedFees - daoFees;
+                daoRevenue = daoRevenue / (daoFee + deployerFee);
+                // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
+                deployerRevenue = earnedFees - daoRevenue;
             }
 
-            IERC20(asset).safeTransfer(daoFeeReceiver, daoFees);
-            IERC20(asset).safeTransfer(deployerFeeReceiver, deployerFees);
+            IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
+            IERC20(asset).safeTransfer(deployerFeeReceiver, deployerRevenue);
         }
     }
 
