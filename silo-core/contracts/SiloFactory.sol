@@ -173,44 +173,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @inheritdoc ISiloFactory
     function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
-        // solhint-disable-previous-line code-complexity
-        if (_initData.hookReceiver == address(0)) revert MissingHookReceiver();
-
-        if (_initData.token0 == address(0)) revert EmptyToken0();
-        if (_initData.token1 == address(0)) revert EmptyToken1();
-
-        if (_initData.token0 == _initData.token1) revert SameAsset();
-        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
-        if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
-        if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert InvalidLt();
-
-        if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
-            revert OracleMisconfiguration();
-        }
-
-        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
-
-        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
-            revert OracleMisconfiguration();
-        }
-
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
-
-        _verifyQuoteTokens(_initData);
-
-        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
-        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
-        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
-        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
-        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
-
-        if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
-            revert InvalidIrm();
-        }
-
-        return true;
+        return Views.validateSiloInitData(_initData);
     }
 
     /// @inheritdoc ERC721
