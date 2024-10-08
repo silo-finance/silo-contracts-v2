@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 /*
 forge test --ffi -vv --mc UtilizationDataTest

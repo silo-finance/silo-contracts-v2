@@ -19,7 +19,6 @@ import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Hook} from "./Hook.sol";
 import {Rounding} from "./Rounding.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "./NonReentrantLib.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";

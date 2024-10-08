@@ -16,7 +16,6 @@ import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 
 // solhint-disable function-max-lines
 

@@ -10,7 +10,6 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library SiloStdLib {

@@ -4,7 +4,6 @@ pragma solidity 0.8.24;
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
 contract SiloERC4626LibConsumerNonVulnerable {

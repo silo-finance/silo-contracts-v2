@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloERC4626LibWithReentrancyIssue} from "./SiloERC4626LibWithReentrancyIssue.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 

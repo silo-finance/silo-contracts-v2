@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";

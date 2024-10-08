@@ -6,7 +6,6 @@ import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";

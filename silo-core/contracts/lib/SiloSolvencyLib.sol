@@ -7,7 +7,6 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 
 library SiloSolvencyLib {
     using Math for uint256;

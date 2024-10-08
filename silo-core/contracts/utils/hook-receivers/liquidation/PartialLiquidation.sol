@@ -18,7 +18,6 @@ import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
@@ -212,7 +211,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         address _receiver,
         uint256 _withdrawAssets,
         address _shareToken,
-        uint256 _assetType
+        ISilo.AssetType _assetType
     ) internal virtual returns (uint256 shares) {
         if (_withdrawAssets == 0) return 0;
         

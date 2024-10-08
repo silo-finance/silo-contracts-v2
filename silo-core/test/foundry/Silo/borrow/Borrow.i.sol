@@ -11,7 +11,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ShareTokenDecimalsPowLib} from "../../_common/ShareTokenDecimalsPowLib.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";

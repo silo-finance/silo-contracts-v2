@@ -11,7 +11,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 import {Hook} from "./Hook.sol";
 
 library SiloLensLib {

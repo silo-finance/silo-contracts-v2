@@ -12,7 +12,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";

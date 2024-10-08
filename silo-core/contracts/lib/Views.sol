@@ -16,7 +16,6 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 

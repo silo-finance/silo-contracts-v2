@@ -11,7 +11,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 library SiloLendingLibWithReentrancyIssue {
     using SafeERC20 for IERC20;
