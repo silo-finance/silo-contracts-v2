@@ -16,7 +16,7 @@ contract GetTotalAssetsStorageReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getTotalAssetsStorage(uint256)";
+        description = "getTotalAssetsStorage(ISilo.AssetType)";
     }
 
     function _ensureItWillNotRevert() internal view {
