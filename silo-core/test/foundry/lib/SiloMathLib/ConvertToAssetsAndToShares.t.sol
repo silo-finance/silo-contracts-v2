@@ -7,9 +7,9 @@ import "silo-core/contracts/lib/SiloMathLib.sol";
 // forge test -vv --mc ConvertToAssetsAndToSharesTest
 contract ConvertToAssetsAndToSharesTest is Test {
     /*
-    forge test -vv --mt test_convertToAssetsAndToShares
+    forge test -vv --mt test_convertToAssetsOrToShares
     */
-    function test_convertToAssetsAndToShares() public pure {
+    function test_convertToAssetsOrToShares() public pure {
         uint256 _assetsOrShares = 10000;
         uint256 _totalAssets = 250000;
         uint256 _totalShares = 250000;
@@ -19,7 +19,7 @@ contract ConvertToAssetsAndToSharesTest is Test {
         uint256 assets;
         uint256 shares;
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             0, _assetsOrShares, _totalAssets, _totalShares, roundingToAssets, roundingToShares, ISilo.AssetType.Debt
         );
 
@@ -31,7 +31,7 @@ contract ConvertToAssetsAndToSharesTest is Test {
         );
         assertEq(shares, _assetsOrShares);
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assetsOrShares,
             0,
             _totalAssets,

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -44,26 +45,30 @@ contract BorrowTest is Test {
     forge test -vv --mt test_borrow_zeros
     */
     function test_borrow_zeros() public {
+        SiloLendingLibImpl impl = new SiloLendingLibImpl();
+
         ISiloConfig.ConfigData memory configData;
-        uint256 assets;
-        uint256 shares;
-        address receiver;
-        address borrower;
-        address spender;
+        configData.debtShareToken = makeAddr("debtShareToken");
 
-        vm.expectRevert(ISilo.ZeroAssets.selector);
-
-        SiloLendingLib.borrow(
+        vm.mockCall(
             configData.debtShareToken,
-            configData.token,
-            spender,
-            ISilo.BorrowArgs({
-                assets: assets,
-                shares: shares,
-                receiver: receiver,
-                borrower: borrower
-            })
+            abi.encodeWithSelector(IERC20.totalSupply.selector),
+            abi.encode(0)
         );
+
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+
+        impl.borrow({
+            _debtShareToken: configData.debtShareToken,
+            _token: configData.token,
+            _assets: 0,
+            _shares: 0,
+            _receiver: address(0),
+            _borrower: address(0),
+            _spender: address(0),
+            _totalDebt: 0,
+            _totalCollateralAssets: 0
+        });
     }
 
     /*

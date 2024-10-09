@@ -107,7 +107,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
 
         if (previewShares1 == 0) {
             // if preview is zero for `_assets`, then deposit should also reverts
-            _depositForBorrowRevert(_assets, depositor, cType, ISilo.ZeroShares.selector);
+            _depositForBorrowRevert(_assets, depositor, cType, ISilo.InputZeroAssetsOrShares.selector);
         } else {
             assertEq(
                 previewShares1,
@@ -136,7 +136,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
         emit log_named_uint("previewShares1", previewShares1);
 
         if (previewShares1 == 0) {
-            _depositForBorrowRevert(_assets, depositor, cType, ISilo.ZeroShares.selector);
+            _depositForBorrowRevert(_assets, depositor, cType, ISilo.InputZeroAssetsOrShares.selector);
         } else {
             assertEq(
                 previewShares1,

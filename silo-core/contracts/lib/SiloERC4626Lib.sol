@@ -56,7 +56,7 @@ library SiloERC4626Lib {
 
         uint256 totalAssets = $.totalAssets[uint256(_collateralType)];
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
             _shares,
             totalAssets,
@@ -66,9 +66,10 @@ library SiloERC4626Lib {
             ISilo.AssetType(uint256(_collateralType))
         );
 
-        if (assets == 0) revert ISilo.ZeroAssets();
-        if (shares == 0) revert ISilo.ZeroShares();
-
+        // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
+        // however, there is (probably unreal but also untested) possibility, where you might borrow from silo
+        // and deposit (like double spend) and with that we could overflow. Better safe than sorry - unchecked removed
+        // unchecked {
         $.totalAssets[uint256(_collateralType)] = totalAssets + assets;
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already,
@@ -104,7 +105,7 @@ library SiloERC4626Lib {
         { // Stack too deep
             uint256 totalAssets = $.totalAssets[uint256(_args.collateralType)];
 
-            (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+            (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
                 _args.assets,
                 _args.shares,
                 totalAssets,
@@ -113,8 +114,6 @@ library SiloERC4626Lib {
                 Rounding.WITHDRAW_TO_SHARES,
                 ISilo.AssetType(uint256(_args.collateralType))
             );
-
-            if (assets == 0 || shares == 0) revert ISilo.NothingToWithdraw();
 
             uint256 liquidity = _args.collateralType == ISilo.CollateralType.Collateral
                 ? SiloMathLib.liquidity($.totalAssets[AssetTypes.COLLATERAL], $.totalAssets[AssetTypes.DEBT])

@@ -185,8 +185,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error FlashloanFailed();
     error LeverageFailed();
     error AboveMaxLtv();
-    error ZeroAssets();
-    error ZeroShares();
     error Insolvency();
     error ThereIsDebtInOtherSilo();
     error NoDebt();
@@ -198,6 +196,8 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();
     error RepayTooHigh();
+    error InputZeroAssetsOrShares();
+    error ReturnZeroAssetsOrShares();
 
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call

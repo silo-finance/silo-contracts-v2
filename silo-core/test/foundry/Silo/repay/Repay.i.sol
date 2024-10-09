@@ -25,7 +25,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_zeros
     */
     function test_repay_zeros() public {
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.repay(0, address(0));
     }
 
@@ -66,7 +66,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _createDebt(assets, borrower);
         vm.warp(block.timestamp + 50 * 365 days); // interest must be big, so conversion 1 asset => share be 0
 
-        vm.expectRevert(ISilo.ZeroShares.selector);
+        vm.expectRevert(ISilo.ReturnZeroAssetsOrShares.selector);
         silo1.repay(assets, borrower);
     }
 

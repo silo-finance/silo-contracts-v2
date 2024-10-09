@@ -123,7 +123,6 @@ library Actions {
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeBorrow(_args, Hook.BORROW);
@@ -157,7 +156,6 @@ library Actions {
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
@@ -225,8 +223,6 @@ library Actions {
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        if (_args.depositAssets == 0 || _args.borrowAssets == 0) revert ISilo.ZeroAssets();
-        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeLeverageSameAsset(_args);

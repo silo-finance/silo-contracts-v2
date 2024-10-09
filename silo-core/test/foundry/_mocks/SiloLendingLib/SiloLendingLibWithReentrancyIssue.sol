@@ -26,13 +26,11 @@ library SiloLendingLibWithReentrancyIssue {
         address _borrower,
         address _repayer
     ) external returns (uint256 assets, uint256 shares) {
-        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
-
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         IShareToken debtShareToken = IShareToken(_configData.debtShareToken);
         uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
             _shares,
             totalDebtAssets,
@@ -41,8 +39,6 @@ library SiloLendingLibWithReentrancyIssue {
             Rounding.REPAY_TO_SHARES,
             ISilo.AssetType.Debt
         );
-
-        if (shares == 0) revert ISilo.ZeroShares();
 
         // fee-on-transfer is ignored
         // If token reenters, no harm done because we didn't change the state yet.

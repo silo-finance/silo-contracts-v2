@@ -33,7 +33,7 @@ library SiloERC4626LibWithReentrancyIssue {
 
         uint256 totalAssets = $.totalAssets[AssetTypes.COLLATERAL];
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
             _shares,
             totalAssets,
