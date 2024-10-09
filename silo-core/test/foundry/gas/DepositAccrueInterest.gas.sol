@@ -34,7 +34,11 @@ contract DepositAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.deposit, (ASSETS, DEPOSITOR, ISilo.CollateralType.Collateral)),
             "DepositAccrueInterest",
+<<<<<<< HEAD
             138180
+=======
+            135481
+>>>>>>> e67ac5e5 (gas after rebase)
         );
     }
 }
