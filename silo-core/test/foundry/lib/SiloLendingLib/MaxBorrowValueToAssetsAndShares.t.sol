@@ -40,8 +40,8 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
                 testDatas[i].input.totalDebtShares
             );
 
-            assertEq(maxAssets, testDatas[i].output.assets, string(abi.encodePacked(testDatas[i].name, " > assets")));
             assertEq(maxShares, testDatas[i].output.shares, string(abi.encodePacked(testDatas[i].name, " > shares")));
+            assertEq(maxAssets, testDatas[i].output.assets, string(abi.encodePacked(testDatas[i].name, " > assets")));
         }
     }
 }

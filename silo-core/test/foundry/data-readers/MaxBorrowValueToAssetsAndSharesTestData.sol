@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.20;
 
-contract MaxBorrowValueToAssetsAndSharesTestData {
-    uint256 constant SHARE_TOKEN_OFFSET = 10 ** 0;
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
+contract MaxBorrowValueToAssetsAndSharesTestData {
     struct Input {
         uint256 maxBorrowValue;
         address debtToken;
@@ -38,33 +38,33 @@ contract MaxBorrowValueToAssetsAndSharesTestData {
         i = _init("no borrow yet");
         allData[i].input.maxBorrowValue = 1;
         allData[i].output.assets = 1;
-        allData[i].output.shares = 1 * SHARE_TOKEN_OFFSET;
+        allData[i].output.shares = 1;
 
         i = _init("no borrow yet case2");
         allData[i].input.maxBorrowValue = 100;
+        allData[i].output.shares = 100;
         allData[i].output.assets = 100;
-        allData[i].output.shares = 100 * SHARE_TOKEN_OFFSET;
 
-        i = _init("has some debt, 1value=1assets");
+        i = _init("with some debt, 1value=1assets");
         allData[i].input.maxBorrowValue = 100;
-        allData[i].input.totalDebtShares = 9 * SHARE_TOKEN_OFFSET;
+        allData[i].input.totalDebtShares = 9;
         allData[i].input.totalDebtAssets = 9;
+        allData[i].output.shares = 100;
         allData[i].output.assets = 100;
-        allData[i].output.shares = 100 * SHARE_TOKEN_OFFSET;
 
         i = _init("has some debt, 1value=0.5assets");
         allData[i].input.maxBorrowValue = 100;
-        allData[i].input.totalDebtShares = 18 * SHARE_TOKEN_OFFSET;
+        allData[i].input.totalDebtShares = 18;
         allData[i].input.totalDebtAssets = 9;
-        allData[i].output.assets = 50;
-        allData[i].output.shares = 100 * SHARE_TOKEN_OFFSET;
+        allData[i].output.shares = 200;
+        allData[i].output.assets = 100; // for no oracle, value == assets, so maxBorrowValue = 100 => 100 assets
 
         i = _init("has some debt, 1value=2assets");
         allData[i].input.maxBorrowValue = 5e18;
-        allData[i].input.totalDebtShares = 400e18 * SHARE_TOKEN_OFFSET;
+        allData[i].input.totalDebtShares = 400e18;
         allData[i].input.totalDebtAssets = 200e18;
-        allData[i].output.assets = 5e18 * 2;
-        allData[i].output.shares = 5e18 * 2 * 2 * SHARE_TOKEN_OFFSET;
+        allData[i].output.shares = (5e18 * 2) * 2;
+        allData[i].output.assets = (5e18 * 2);
 
         return allData;
     }
