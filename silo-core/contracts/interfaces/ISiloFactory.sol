@@ -6,7 +6,7 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface ISiloFactory is IERC721 {
     /// @notice Emitted on the creation of a Silo.
-    /// @param implementation Address of the Silo.
+    /// @param implementation Address of the Silo implementation.
     /// @param token0 Address of the first Silo token.
     /// @param token1 Address of the second Silo token.
     /// @param silo0 Address of the first Silo.
