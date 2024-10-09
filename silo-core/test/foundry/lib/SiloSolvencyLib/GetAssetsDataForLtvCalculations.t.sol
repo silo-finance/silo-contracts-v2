@@ -14,6 +14,7 @@ import {Views} from "silo-core/contracts/lib/Views.sol";
 import {GetAssetsDataForLtvCalculationsTestData} from
     "silo-core/test/foundry/data-readers/GetAssetsDataForLtvCalculationsTestData.sol";
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
+import {OracleMock} from "silo-core/test/foundry/_mocks/OracleMock.sol";
 import {SiloMock} from "silo-core/test/foundry/_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "silo-core/test/foundry/_mocks/InterestRateModelMock.sol";
 
@@ -47,6 +48,35 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
     {
         { // stack too deep
             ISiloConfig.InitData memory initData;
+
+            initData.deployer = makeAddr("deployer");
+            initData.hookReceiver = makeAddr("hookReceiver");
+            initData.token0 = makeAddr("token0");
+            initData.token1 = makeAddr("token1");
+            initData.maxLtv0 = 1;
+            initData.maxLtv1 = 1;
+            initData.lt0 = 1;
+            initData.lt1 = 1;
+
+            if (address(uint160(scenario.input.debtConfig.maxLtvOracle)) != address(0)) {
+                OracleMock om = new OracleMock(address(uint160(scenario.input.debtConfig.maxLtvOracle)));
+                om.quoteTokenMock(makeAddr("quoteToken"));
+            }
+
+            if (address(uint160(scenario.input.debtConfig.solvencyOracle)) != address(0)) {
+                OracleMock om = new OracleMock(address(uint160(scenario.input.debtConfig.solvencyOracle)));
+                om.quoteTokenMock(makeAddr("quoteToken"));
+            }
+
+            if (address(uint160(scenario.input.collateralConfig.maxLtvOracle)) != address(0)) {
+                OracleMock om = new OracleMock(address(uint160(scenario.input.collateralConfig.maxLtvOracle)));
+                om.quoteTokenMock(makeAddr("quoteToken"));
+            }
+
+            if (address(uint160(scenario.input.collateralConfig.solvencyOracle)) != address(0)) {
+                OracleMock om = new OracleMock(address(uint160(scenario.input.collateralConfig.solvencyOracle)));
+                om.quoteTokenMock(makeAddr("quoteToken"));
+            }
 
             initData.maxLtvOracle0 = address(uint160(scenario.input.collateralConfig.maxLtvOracle));
             initData.solvencyOracle0 = address(uint160(scenario.input.collateralConfig.solvencyOracle));
