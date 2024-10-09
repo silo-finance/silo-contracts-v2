@@ -7,18 +7,23 @@ import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
+import {OracleMock} from "silo-core/test/foundry/_mocks/OracleMock.sol";
 import "../../data-readers/MaxBorrowValueToAssetsAndSharesTestData.sol";
 
 /*
     forge test -vv --mc MaxBorrowValueToAssetsAndSharesTest
 */
 contract MaxBorrowValueToAssetsAndSharesTest is Test {
+    address constant ORACLE_ADDRESS = address(0xabcd);
+
     TokenMock immutable debtToken;
+    OracleMock immutable oracle;
 
     MaxBorrowValueToAssetsAndSharesTestData immutable tests;
 
     constructor() {
         debtToken = new TokenMock(address(0xDDDDDDDDDDDDDD));
+        oracle = new OracleMock(ORACLE_ADDRESS);
         tests = new MaxBorrowValueToAssetsAndSharesTestData(debtToken.ADDRESS());
     }
 
@@ -32,10 +37,14 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
             vm.clearMockedCalls();
             emit log_string(testDatas[i].name);
 
+            if (testDatas[i].input.oracleSet) {
+                oracle.quoteMock(1e18, testDatas[i].input.debtToken, testDatas[i].input.debtOracleQuote);
+            }
+
             (uint256 maxAssets, uint256 maxShares) = SiloLendingLib.maxBorrowValueToAssetsAndShares(
                 testDatas[i].input.maxBorrowValue,
                 testDatas[i].input.debtToken,
-                ISiloOracle(address(0)),
+                ISiloOracle(ORACLE_ADDRESS),
                 testDatas[i].input.totalDebtAssets,
                 testDatas[i].input.totalDebtShares
             );

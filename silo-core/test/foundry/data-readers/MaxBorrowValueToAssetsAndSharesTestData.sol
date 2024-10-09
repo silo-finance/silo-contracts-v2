@@ -7,6 +7,8 @@ contract MaxBorrowValueToAssetsAndSharesTestData {
     struct Input {
         uint256 maxBorrowValue;
         address debtToken;
+        bool oracleSet;
+        uint256 debtOracleQuote;
         uint256 totalDebtAssets;
         uint256 totalDebtShares;
     }
@@ -82,6 +84,8 @@ contract MaxBorrowValueToAssetsAndSharesTestData {
         dst.input = Input({
             maxBorrowValue: _src.input.maxBorrowValue,
             debtToken: _src.input.debtToken,
+            oracleSet: _src.input.oracleSet,
+            debtOracleQuote: _src.input.debtOracleQuote,
             totalDebtAssets: _src.input.totalDebtAssets,
             totalDebtShares: _src.input.totalDebtShares
         });
