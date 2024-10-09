@@ -14,14 +14,12 @@ import "../../data-readers/MaxBorrowValueToAssetsAndSharesTestData.sol";
 */
 contract MaxBorrowValueToAssetsAndSharesTest is Test {
     TokenMock immutable debtToken;
-    TokenMock immutable debtShareToken;
 
     MaxBorrowValueToAssetsAndSharesTestData immutable tests;
 
     constructor() {
         debtToken = new TokenMock(address(0xDDDDDDDDDDDDDD));
-        debtShareToken = new TokenMock(address(0xFFFFFFFFFF));
-        tests = new MaxBorrowValueToAssetsAndSharesTestData(debtToken.ADDRESS(), debtShareToken.ADDRESS());
+        tests = new MaxBorrowValueToAssetsAndSharesTestData(debtToken.ADDRESS());
     }
 
     /*
@@ -34,20 +32,9 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
             vm.clearMockedCalls();
             emit log_string(testDatas[i].name);
 
-            if (testDatas[i].input.borrowerDebtValue == 0) {
-                if (testDatas[i].input.maxBorrowValue != 0) {
-                    debtToken.decimalsMock(testDatas[i].mocks.debtTokenDecimals);
-                }
-            } else {
-                debtShareToken.balanceOfMock(testDatas[i].input.borrower, testDatas[i].mocks.debtShareTokenBalanceOf);
-            }
-
             (uint256 maxAssets, uint256 maxShares) = SiloLendingLib.maxBorrowValueToAssetsAndShares(
                 testDatas[i].input.maxBorrowValue,
-                testDatas[i].input.borrowerDebtValue,
-                testDatas[i].input.borrower,
                 testDatas[i].input.debtToken,
-                testDatas[i].input.debtShareToken,
                 ISiloOracle(address(0)),
                 testDatas[i].input.totalDebtAssets,
                 testDatas[i].input.totalDebtShares

@@ -222,10 +222,7 @@ library SiloLendingLib {
 
         (assets, shares) = maxBorrowValueToAssetsAndShares({
             _maxBorrowValue: maxBorrowValue,
-            _borrowerDebtValue: borrowerDebtValue,
-            _borrower: _borrower,
             _debtAsset: _debtConfig.token,
-            _debtShareToken: _debtConfig.debtShareToken,
             _debtOracle: ltvData.debtOracle,
             _totalDebtAssets: _totalDebtAssets,
             _totalDebtShares: _totalDebtShares
@@ -312,10 +309,7 @@ library SiloLendingLib {
 
     /// @notice Calculates the maximum borrowable assets and shares
     /// @param _maxBorrowValue The maximum value that can be borrowed by the user
-    /// @param _borrowerDebtValue The current debt value of the borrower
-    /// @param _borrower The address of the borrower
     /// @param _debtAsset Address of the debt token
-    /// @param _debtShareToken Address of the debt share token
     /// @param _debtOracle Oracle used to get the value of the debt token
     /// @param _totalDebtAssets Total assets of the debt
     /// @param _totalDebtShares Total shares of the debt
@@ -323,10 +317,7 @@ library SiloLendingLib {
     /// @return shares Maximum borrowable shares
     function maxBorrowValueToAssetsAndShares(
         uint256 _maxBorrowValue,
-        uint256 _borrowerDebtValue,
-        address _borrower,
         address _debtAsset,
-        address _debtShareToken,
         ISiloOracle _debtOracle,
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares
