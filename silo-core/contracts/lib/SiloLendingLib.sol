@@ -65,8 +65,7 @@ library SiloLendingLib {
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
         unchecked { $.totalAssets[AssetTypes.DEBT] = totalDebtAssets - assets; }
 
-        // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
-        // no harm done because state changes are completed.
+        // Anyone can repay anyone's debt so no approval check is needed.
         _debtShareToken.burn(_borrower, _repayer, shares);
         // fee-on-transfer is ignored
         // Reentrancy is possible only for view methods (read-only reentrancy),
@@ -173,12 +172,11 @@ library SiloLendingLib {
         // add new debt
         $.totalAssets[AssetTypes.DEBT] = totalDebtAssets + borrowedAssets;
 
-        // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
-        // potentially reenter but the state is correct.
+        // `mint` checks if _spender is allowed to borrow on the account of _borrower.
         IShareToken(_debtShareToken).mint(_args.borrower, _spender, borrowedShares);
 
         if (_token != address(0)) {
-            // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
+            // fee-on-transfer is ignored.
             IERC20(_token).safeTransfer(_args.receiver, borrowedAssets);
         }
     }
