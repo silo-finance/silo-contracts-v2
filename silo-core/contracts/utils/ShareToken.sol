@@ -217,11 +217,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     {
         __ERC20Permit_init(_NAME);
 
-        // Share token name and symbol are created based on a token type
-        // because of that we initialize with empty strings.
-        // See ShareTokenLib.symbol() and ShareTokenLib.name()
-        __ERC20_init("", "");
-
         ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
