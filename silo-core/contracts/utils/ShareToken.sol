@@ -216,7 +216,12 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         initializer
     {
         __ERC20Permit_init(_NAME);
-        __ERC20_init(_NAME, _NAME);
+
+        // Share token name and symbol are created based on a token type
+        // because of that we initialize with empty strings.
+        // See ShareTokenLib.symbol() and ShareTokenLib.name()
+        __ERC20_init("", "");
+
         ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
@@ -264,11 +269,11 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOnReentrancyProtection();
     }
 
-    function _getSiloConfig() internal view returns (ISiloConfig) {
+    function _getSiloConfig() internal view virtual returns (ISiloConfig) {
         return ShareTokenLib.getShareTokenStorage().siloConfig;
     }
     
-    function _getSilo() internal view returns (ISilo) {
+    function _getSilo() internal view virtual returns (ISilo) {
         return ShareTokenLib.getShareTokenStorage().silo;
     }
 }
