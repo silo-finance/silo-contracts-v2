@@ -192,7 +192,7 @@ library SiloMathLib {
 
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
-        uint256 _configMaxLtv,
+        uint256 _collateralMaxLtv,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue
     ) internal pure returns (uint256 maxBorrowValue) {
@@ -201,7 +201,7 @@ library SiloMathLib {
         }
 
         uint256 maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(
-            _configMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE
+            _collateralMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE
         );
 
         unchecked {
@@ -312,11 +312,8 @@ library SiloMathLib {
             _totalAssets = 0;
         }
 
-        unchecked {
-            // I think we can afford to uncheck +1
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
-        }
     }
 }
