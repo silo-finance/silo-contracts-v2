@@ -4,31 +4,50 @@ pragma solidity ^0.8.19;
 // Utils
 import {Actor} from "./utils/Actor.sol";
 
-
 // Contracts
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {SiloInternal} from "../echidna/internal_testing/SiloInternal.sol";
-import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
+import {
+    ShareProtectedCollateralToken
+} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
+import {
+    IInterestRateModelV2,
+    InterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {
+    IGaugeHookReceiver,
+    GaugeHookReceiver
+} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {
+    PartialLiquidation
+} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {
+    ISiloDeployer,
+    SiloDeployer
+} from "silo-core/contracts/SiloDeployer.sol";
 
 // Test Contracts
 import {BaseTest} from "./base/BaseTest.t.sol";
+import {MockFlashLoanReceiver} from "./helpers/FlashLoanReceiver.sol";
 
 // Mock Contracts
-import {
-    TestERC20
-} from "./utils/mocks/TestERC20.sol";
+import {TestERC20} from "./utils/mocks/TestERC20.sol";
+import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
 
 // Interfaces
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
-import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {
+    IInterestRateModelV2ConfigFactory,
+    InterestRateModelV2ConfigFactory
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {
+    IInterestRateModelV2Config,
+    InterestRateModelV2Config
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {ISilo} from "silo-core/contracts/Silo.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {
@@ -43,16 +62,17 @@ contract Setup is BaseTest {
         core_deploySiloLiquidation();
         core_deploySiloFactory(address(this));
         core_deployInterestRateConfigFactory();
-        core_deployInterestRateConfigFactory();
         core_deployInterestRateModel();
         core_deployGaugeHookReceiver();
         core_deploySiloDeployer();
 
         // Deploy assets
         _deployAssets();
-        _initData(address(_asset0), address(_asset1));
+        // Deploy Oracles
+        _deployOracles();
 
         // Create silos
+        _initData(address(_asset0), address(_asset1));
         siloConfig = siloFactory.createSilo(siloData["MOCK"]);
         (_vault0, _vault1) = siloConfig.getSilos();
         silos.push(_vault0);
@@ -60,7 +80,43 @@ contract Setup is BaseTest {
         vault0 = Silo(payable(_vault0));
         vault1 = Silo(payable(_vault1));
 
-        liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
+        // Store all collateral (silos) & debt shareTokens in an array
+        shareTokens.push(_vault0);
+        shareTokens.push(_vault1);
+        (address debtToken0, ) = siloConfig.getDebtShareTokenAndAsset(
+            address(vault0)
+        );
+        shareTokens.push(debtToken0);
+        (address debtToken1, ) = siloConfig.getDebtShareTokenAndAsset(
+            address(vault1)
+        );
+        shareTokens.push(debtToken1);
+
+        debtTokens.push(debtToken0);
+        debtTokens.push(debtToken1);
+
+        // Store the protected collateral tokens in an array
+        (, address protectedCollateralToken0) = siloConfig
+            .getCollateralShareTokenAndAsset(
+            address(vault0),
+            ISilo.CollateralType.Protected
+        );
+
+        (, address protectedCollateralToken1) = siloConfig
+            .getCollateralShareTokenAndAsset(
+            address(vault1),
+            ISilo.CollateralType.Protected
+        );
+
+        protectedTokens.push(protectedCollateralToken0);
+        protectedTokens.push(protectedCollateralToken1);
+
+        liquidationModule = PartialLiquidation(
+            vault0.config().getConfig(_vault0).hookReceiver
+        );
+        liquidationModule.initialize(siloConfig, "");
+
+        flashLoanReceiver = address(new MockFlashLoanReceiver());
     }
 
     /// @notice Deploy protocol actors and initialize their balances
@@ -76,9 +132,10 @@ contract Setup is BaseTest {
         tokens[0] = address(_asset0);
         tokens[1] = address(_asset1);
 
-        address[] memory contracts = new address[](2);
+        address[] memory contracts = new address[](3);
         contracts[0] = address(_vault0);
         contracts[1] = address(_vault1);
+        contracts[2] = address(liquidationModule);
 
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deploy actor proxies and approve system contracts
@@ -120,7 +177,9 @@ contract Setup is BaseTest {
             new SiloInternal(siloFactoryInternal)
         );
 
-        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareProtectedCollateralTokenImpl = address(
+            new ShareProtectedCollateralToken()
+        );
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         uint256 daoFee = 0.15e18;
@@ -150,19 +209,22 @@ contract Setup is BaseTest {
             address(new InterestRateModelV2ConfigFactory())
         );
 
-        IInterestRateModelV2.Config memory interestRateModelConfig = IInterestRateModelV2.Config({
-                uopt: 500000000000000000,
-                ucrit: 900000000000000000,
-                ulow: 300000000000000000,
-                ki: 146805,
-                kcrit: 317097919838,
-                klow: 105699306613,
-                klin: 4439370878,
-                beta: 69444444444444
-            });
+
+            IInterestRateModelV2.Config memory interestRateModelConfig
+         = IInterestRateModelV2.Config({
+            uopt: 500000000000000000,
+            ucrit: 900000000000000000,
+            ulow: 300000000000000000,
+            ki: 146805,
+            kcrit: 317097919838,
+            klow: 105699306613,
+            klin: 4439370878,
+            beta: 69444444444444
+        });
 
         // deploy preset IRM configs
-        (, IInterestRateModelV2Config config) = interestRateModelV2ConfigFactory.create(interestRateModelConfig);
+        (, IInterestRateModelV2Config config) = interestRateModelV2ConfigFactory
+            .create(interestRateModelConfig);
         IRMConfigs["defaultAsset"] = address(config);
     }
 
@@ -181,7 +243,11 @@ contract Setup is BaseTest {
     }
 
     function core_deploySiloDeployer() internal {
-        siloDeployer = ISiloDeployer(address(new SiloDeployer(interestRateModelV2ConfigFactory, siloFactory)));
+        siloDeployer = ISiloDeployer(
+            address(
+                new SiloDeployer(interestRateModelV2ConfigFactory, siloFactory)
+            )
+        );
     }
 
     function _deployAssets() internal {
@@ -189,6 +255,11 @@ contract Setup is BaseTest {
         _asset1 = new TestERC20("Test Token1", "TT1", 18);
         baseAssets.push(address(_asset0));
         baseAssets.push(address(_asset1));
+    }
+
+    function _deployOracles() internal {
+        oracle0 = address(new MockSiloOracle(1 ether, address(_asset1)));
+        oracle1 = address(new MockSiloOracle(1 ether, address(_asset0)));
     }
 
     function _initData(address mock0, address mock1) internal {
@@ -223,12 +294,10 @@ contract Setup is BaseTest {
         ISiloConfig.InitData memory mocks = siloData["FULL"];
         mocks.token0 = mock0;
         mocks.token1 = mock1;
-        mocks.solvencyOracle0 = address(0);
-        mocks.solvencyOracle1 = address(0);
-        mocks.maxLtvOracle0 = address(0);
+        mocks.maxLtvOracle0 = address(0); // TODO configure max ltv oracle
+        mocks.maxLtvOracle1 = address(0);
         mocks.callBeforeQuote0 = false;
         mocks.callBeforeQuote1 = false;
-        mocks.hookReceiver = address(0);
 
         siloData["MOCK"] = mocks;
     }

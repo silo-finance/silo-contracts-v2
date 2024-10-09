@@ -1,25 +1,104 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Interfaces
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+
 // Invariant Contracts
 import {BaseInvariants} from "./invariants/BaseInvariants.t.sol";
+import {SiloMarketInvariants} from "./invariants/SiloMarketInvariants.t.sol";
+import {
+    LendingBorrowingInvariants
+} from "./invariants/LendingBorrowingInvariants.t.sol";
 
 /// @title Invariants
 /// @notice Wrappers for the protocol invariants implemented in each invariants contract
 /// @dev recognised by Echidna when property mode is activated
 /// @dev Inherits BaseInvariants
-abstract contract Invariants is BaseInvariants {
-///////////////////////////////////////////////////////////////////////////////////////////////
-//                                     BASE INVARIANTS                                       //
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-/*  
-
-    E.g. of an invariant wrapper recognized by Echidna and Medusa
+abstract contract Invariants is
+    BaseInvariants,
+    SiloMarketInvariants,
+    LendingBorrowingInvariants
+{
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     BASE INVARIANTS                                       //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function echidna_BASE_INVARIANT() public returns (bool) {
-        assert_BASE_INVARIANT_A();
+        for (uint256 i = 0; i < silos.length; i++) {
+            assert_BASE_INVARIANT_A(silos[i]);
+            assert_BASE_INVARIANT_B(silos[i], debtTokens[i]);
+            assert_BASE_INVARIANT_C(silos[i]);
+            assert_BASE_INVARIANT_E(silos[i], baseAssets[i]);
+            assert_BASE_INVARIANT_F(silos[i], baseAssets[i]);
+            assert_BASE_INVARIANT_G(silos[i], baseAssets[i]);
+            assert_BASE_INVARIANT_H();
+            for (uint256 j = 0; j < actorAddresses.length; j++) {
+                assert_BASE_INVARIANT_D(
+                    silos[i],
+                    debtTokens[i],
+                    protectedTokens[i],
+                    actorAddresses[j]
+                );
+            }
+        }
         return true;
-    } 
-    */
+    }
+
+    function echidna_SILO_INVARIANT() public returns (bool) {
+        for (uint256 i = 0; i < silos.length; i++) {
+            assert_SILO_INVARIANT_A(silos[i]);
+
+            for (uint256 j = 0; j < actorAddresses.length; j++) {
+                assert_SILO_INVARIANT_E(silos[i], actorAddresses[j]);
+                assert_SILO_INVARIANT_F(
+                    silos[i],
+                    debtTokens[i],
+                    actorAddresses[j]
+                );
+            }
+        }
+        return true;
+    }
+
+    function echidna_LENDING_INVARIANT() public returns (bool) {
+        for (uint256 i = 0; i < silos.length; i++) {
+            for (uint256 j = 0; j < actorAddresses.length; j++) {
+                assert_LENDING_INVARIANT_A(silos[i], actorAddresses[j]);
+                assert_LENDING_INVARIANT_C(silos[i], actorAddresses[j]);
+            }
+        }
+        return true;
+    }
+
+    function echidna_BORROWING_INVARIANT() public returns (bool) {
+        for (uint256 j = 0; j < actorAddresses.length; j++) {
+            assert_BORROWING_INVARIANT_E(actorAddresses[j]);
+        }
+        for (uint256 i = 0; i < silos.length; i++) {
+            uint256 sumUserDebt;
+            for (uint256 j = 0; j < actorAddresses.length; j++) {
+                sumUserDebt += IERC20(debtTokens[i]).balanceOf(
+                    actorAddresses[j]
+                );
+
+                assert_BORROWING_INVARIANT_A(
+                    silos[i],
+                    debtTokens[i],
+                    actorAddresses[j]
+                );
+                assert_BORROWING_INVARIANT_D(silos[i], actorAddresses[j]);
+                assert_BORROWING_INVARIANT_G(silos[i], actorAddresses[j]);
+                assert_BORROWING_INVARIANT_H(
+                    silos[i],
+                    shareTokens[i],
+                    actorAddresses[j]
+                );
+            }
+            assert_BORROWING_INVARIANT_B(silos[i], sumUserDebt);
+            assert_BORROWING_INVARIANT_F(silos[i], debtTokens[i]);
+        }
+
+        return true;
+    }
 }

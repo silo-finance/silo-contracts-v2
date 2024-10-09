@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+// Ijnterfaces
+import {ISilo} from "silo-core/contracts/Silo.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+
+// Contracts
+import {HandlerAggregator} from "../HandlerAggregator.t.sol";
+
+/// @title SiloMarketInvariants
+/// @notice Implements Invariants for the protocol
+/// @dev Inherits HandlerAggregator to check actions in assertion testing mode
+abstract contract SiloMarketInvariants is HandlerAggregator {
+    function assert_SILO_INVARIANT_A(address silo) internal {
+        try ISilo(silo).accrueInterest()  {} catch {
+            assertTrue(false, SILO_INVARIANT_A);
+        }
+    }
+
+    /*     function assert_SILO_INVARIANT_D(address silo, address user) internal { TODO wait for response
+        (ISiloConfig.ConfigData memory collateralConfig, ) = siloConfig
+            .getConfigs(user);
+
+        if ()
+
+        assertTrue(false, SILO_INVARIANT_D);
+    } */
+
+    function assert_SILO_INVARIANT_E(address silo, address user) internal {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = siloConfig.getConfigs(user);
+
+        if (debtConfig.silo != address(0)) {
+            assertFalse(collateralConfig.silo == address(0), SILO_INVARIANT_E);
+        }
+    }
+
+    function assert_SILO_INVARIANT_F(
+        address silo,
+        address debtToken,
+        address user
+    ) internal {
+        if (IERC20(debtToken).balanceOf(user) == 0) {
+            (
+                ISiloConfig.ConfigData memory collateralConfig,
+                ISiloConfig.ConfigData memory debtConfig
+            ) = siloConfig.getConfigs(user);
+
+            assertEq(debtConfig.silo, address(0), SILO_INVARIANT_F);
+            assertEq(collateralConfig.silo, address(0), SILO_INVARIANT_F);
+        }
+    }
+}

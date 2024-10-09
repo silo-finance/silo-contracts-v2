@@ -18,16 +18,36 @@ contract SiloConfigHandler is BaseHandler {
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /* 
-    
-    E.g. num of active pools
-    uint256 public activePools;
-        
-    */
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function accrueInterestForSilo(uint8 i) external {
+        address silo = _getRandomSilo(i);
+
+        _before();
+        siloConfig.accrueInterestForSilo(silo);
+        _after();
+
+        // POST-CONDITIONS
+
+        assertGe(
+            defaultVarsAfter[silo].debtAssets,
+            defaultVarsBefore[silo].debtAssets,
+            SILO_HSPOST_A
+        );
+        assertGe(
+            defaultVarsAfter[silo].collateralAssets,
+            defaultVarsBefore[silo].collateralAssets,
+            SILO_HSPOST_A
+        );
+    }
+
+    function accrueInterestForBothSilos() external {
+        _before();
+        siloConfig.accrueInterestForBothSilos();
+        _after();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //

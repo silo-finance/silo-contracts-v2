@@ -23,7 +23,12 @@ contract VaultHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function deposit(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup {
+    function deposit(
+        uint256 _assets,
+        uint8 i,
+        uint8 j,
+        uint8 k
+    ) external setup {
         bool success;
         bytes memory returnData;
 
@@ -35,14 +40,122 @@ contract VaultHandler is BaseHandler {
         ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.deposit.selector, _assets, receiver, _collateralType));
+        (success, returnData) = actor.proxy(
+            target,
+            abi.encodeWithSelector(
+                ISilo.deposit.selector,
+                _assets,
+                receiver,
+                _collateralType
+            )
+        );
+
+        // POST-CONDITIONS
+
+        if (success) {
+            _after();
+
+            assertEq(
+                defaultVarsBefore[target].totalAssets + _assets,
+                defaultVarsAfter[target].totalAssets,
+                LENDING_HSPOST_A
+            );
+        }
+
+        if (_assets == 0) {
+            assertFalse(success, SILO_HSPOST_B);
+        }
+    }
+
+    function mint(
+        uint256 _shares,
+        uint8 i,
+        uint8 j,
+        uint8 k
+    ) external setup {
+        bool success;
+        bytes memory returnData;
+
+        // Get one of the three actors randomly
+        address receiver = _getRandomActor(i);
+
+        address target = _getRandomSilo(j);
+
+        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
+
+        _before();
+        (success, returnData) = actor.proxy(
+            target,
+            abi.encodeWithSelector(
+                ISilo.mint.selector,
+                _shares,
+                receiver,
+                _collateralType
+            )
+        );
+
+        // POST-CONDITIONS
+
+        if (success) {
+            _after();
+
+            assertEq(
+                defaultVarsBefore[target].totalSupply + _shares,
+                defaultVarsAfter[target].totalSupply,
+                LENDING_HSPOST_A
+            );
+        }
+
+        if (_shares == 0) {
+            assertFalse(success, SILO_HSPOST_B);
+        }
+    }
+
+    function withdraw(
+        uint256 _assets,
+        uint8 i,
+        uint8 j,
+        uint8 k
+    ) external setup {
+        bool success;
+        bytes memory returnData;
+
+        // Get one of the three actors randomly
+        address receiver = _getRandomActor(i);
+
+        address target = _getRandomSilo(j);
+
+        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
+
+        _before();
+        (success, returnData) = actor.proxy(
+            target,
+            abi.encodeWithSelector(
+                ISilo.withdraw.selector,
+                _assets,
+                receiver,
+                address(actor),
+                _collateralType
+            )
+        );
+
+        // POST-CONDITIONS
 
         if (success) {
             _after();
         }
+
+        if (_assets == 0) {
+            assertFalse(success, SILO_HSPOST_B);
+        }
     }
 
-    function mint(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
+    function redeem(
+        uint256 _shares,
+        uint8 i,
+        uint8 j,
+        uint8 k
+    ) external setup {
         bool success;
         bytes memory returnData;
 
@@ -54,48 +167,64 @@ contract VaultHandler is BaseHandler {
         ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.mint.selector, _shares, receiver, _collateralType));
+        (success, returnData) = actor.proxy(
+            target,
+            abi.encodeWithSelector(
+                ISilo.redeem.selector,
+                _shares,
+                receiver,
+                address(actor),
+                _collateralType
+            )
+        );
 
         if (success) {
             _after();
         }
-    }
 
-    function withdraw(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address receiver = _getRandomActor(i);
-
-        address target = _getRandomSilo(j);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-
-        _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.withdraw.selector, _assets, receiver, address(actor), _collateralType));
-
-        if (success) {
-            _after();
+        // POST-CONDITIONS
+        if (_shares == 0) {
+            assertFalse(success, SILO_HSPOST_B);
         }
     }
 
-    function redeem(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          PROPERTIES                                       //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function assert_LENDING_INVARIANT_C(uint8 i, uint8 j) public setup {
         bool success;
         bytes memory returnData;
 
-        // Get one of the three actors randomly
-        address receiver = _getRandomActor(i);
+        address target = _getRandomSilo(i);
 
-        address target = _getRandomSilo(j);
+        ISilo.CollateralType _collateralType = ISilo.CollateralType(j % 2);
 
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
+        uint256 maxWithdraw = ISilo(target).maxWithdraw(
+            address(actor),
+            _collateralType
+        );
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.redeem.selector, _shares, receiver, address(actor), _collateralType));
+        (success, returnData) = actor.proxy(
+            target,
+            abi.encodeWithSelector(
+                ISilo.withdraw.selector,
+                maxWithdraw,
+                address(actor),
+                address(actor),
+                _collateralType
+            )
+        );
 
         if (success) {
             _after();
+
+            // POST-CONDITIONS
+        }
+
+        if (maxWithdraw != 0) {
+            assertTrue(success, LENDING_INVARIANT_B);
         }
     }
 

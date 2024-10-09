@@ -41,7 +41,7 @@ lcov.info
 
 # echidna
 corpus/
-crytic-export
+crytic-export/
 
 # certora
 >>>>>>> 0.1.1

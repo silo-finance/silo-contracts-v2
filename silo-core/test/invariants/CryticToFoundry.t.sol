@@ -8,6 +8,8 @@ import "forge-std/console.sol";
 // Contracts
 import {Invariants} from "./Invariants.t.sol";
 import {Setup} from "./Setup.t.sol";
+import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
+import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
 
 /*
  * Test suite that converts from  "fuzz tests" to foundry "unit tests"
@@ -35,16 +37,6 @@ contract CryticToFoundry is Invariants, Setup {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                 BROKEN INVARIANTS REPLAY                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    /*
-
-    E.g. of an foundry test that replays a failed invariant call sequence    
-
-    function test_invariant_Area1_A() public {
-        this.deposit(1);
-        echidna_basicInvariants_pool_B_F_G_2();
-    } 
-    */
 
     /// @dev Needed in order for foundry to recognise the contract as a test, faster debugging
     function testAux() public {}
@@ -78,7 +70,9 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     /// @notice Set up a specific timestamp and actor
-    function _setUpTimestampAndActor(uint256 _timestamp, address _user) internal {
+    function _setUpTimestampAndActor(uint256 _timestamp, address _user)
+        internal
+    {
         vm.warp(_timestamp);
         actor = actors[_user];
     }

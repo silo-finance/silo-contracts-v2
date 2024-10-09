@@ -58,6 +58,9 @@ abstract contract BaseStorage {
     /// @notice The pool admin is set to this contract, the Tester contract
     address internal poolAdmin = address(this);
 
+    /// @notice The actor to which hooks are applied to
+    address internal targetActor;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       SUITE STORAGE                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +102,8 @@ abstract contract BaseStorage {
 	address internal oracle0;
 	address internal oracle1;
 
+    address internal flashLoanReceiver;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       EXTRA VARIABLES                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,6 +113,16 @@ abstract contract BaseStorage {
 
     /// @notice Array of silos for the suite
     address[] internal silos;
+
+    /// @notice Array of share tokens for the suite
+    address[] internal shareTokens;
+
+    /// @notice Array of debt tokens for the suite
+    address[] internal debtTokens;
+
+    /// @notice Array of prototected collaterals share tokens for the suite
+    address[] internal protectedTokens;
+
 
     /// @notice Mapping of silo init data
 	mapping(string identifier => ISiloConfig.InitData siloInitData) internal siloData;

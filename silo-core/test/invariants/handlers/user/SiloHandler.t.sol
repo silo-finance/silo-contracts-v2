@@ -38,25 +38,43 @@ contract SiloHandler is BaseHandler {
         address target = _getRandomSilo(i);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        (success, returnData) = actor.proxy(
+            target,
+            abi.encodeWithSelector(ISilo.accrueInterest.selector)
+        );
 
         if (success) {
             _after();
         }
     }
 
-    function withdrawFees(uint8 i) external setup {
-        bool success;
-        bytes memory returnData;
-
+    function withdrawFees(uint8 i) external {
         address target = _getRandomSilo(i);
 
         _before();
         ISilo(target).withdrawFees();
 
-        if (success) {
-            _after();
+        _after();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                           PROPERTIES                                      //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function assert_SILO_HSPOST_D(uint8 i) external {
+        bool success;
+        address target = _getRandomSilo(i);
+
+        _before();
+        ISilo(target).withdrawFees();
+        try ISilo(target).withdrawFees()  {
+            success = true;
+        } catch {
+            success = false;
         }
+        _after();
+
+        assertFalse(success, SILO_HSPOST_D);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

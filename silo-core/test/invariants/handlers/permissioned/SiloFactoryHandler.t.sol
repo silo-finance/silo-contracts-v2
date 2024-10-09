@@ -3,9 +3,6 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {
-    IERC3156FlashLender
-} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -14,71 +11,37 @@ import "forge-std/console.sol";
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
-/// @title FlashLoanHandler
+/// @title SiloFactoryHandler
 /// @notice Handler test contract for a set of actions
-contract FlashLoanHandler is BaseHandler {
+contract SiloFactoryHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    /* 
-    
-    E.g. num of active pools
-    uint256 public activePools;
-        
-    */
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function flashLoan(
-        uint256 _amount,
-        uint256 _amountToRepay,
-        uint8 i,
-        uint8 j
-    ) external setup {
-        bool success;
-        bytes memory returnData;
+    function setDaoFee(uint256 _newDaoFee) external {
+        siloFactory.setDaoFee(_newDaoFee);
+    }
 
-        address target = _getRandomSilo(i);
+    function setMaxDeployerFee(uint256 _newMaxDeployerFee) internal {
+        siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
+    }
 
-        address token = _getRandomBaseAsset(j);
+    function setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal {
+        siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
+    }
 
-        _before();
-        (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(
-                IERC3156FlashLender.flashLoan.selector,
-                flashLoanReceiver,
-                token,
-                _amount,
-                abi.encode(_amountToRepay, address(actor))
-            )
-        );
-
-        uint256 flashFee = IERC3156FlashLender(target).flashFee(token, _amount);
-
-        // POST-CONDITIONS
-
-        if (_amountToRepay > _amount + flashFee) {
-            assertTrue(success, BORROWING_HSPOST_U1)
-        } else {
-            assertFalse(success, BORROWING_HSPOST_U2)
-        }
-
-        if (success) {
-            _after();
-
-            assertEq(
-                defaultVarsAfter[target].balance,
-                defaultVarsBefore[target].balance + flashFee,
-                BORROWING_HSPOST_T
-            );
-        }
+    function setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal {
+        siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -10,7 +10,9 @@ import {SiloHandler} from './handlers/user/SiloHandler.t.sol';
 
 // Import Permissioned Actions Handler contracts,
 import {SiloConfigHandler} from './handlers/permissioned/SiloConfigHandler.t.sol';
+import {SiloFactoryHandler} from './handlers/permissioned/SiloFactoryHandler.t.sol';
 import {FlashLoanHandler} from './handlers/simulators/FlashLoanHandler.t.sol';
+import {MockOracleHandler} from './handlers/simulators/MockOracleHandler.t.sol';
 
 /// @notice Helper contract to aggregate all handler contracts, inherited in BaseInvariants
 abstract contract HandlerAggregator is
@@ -20,7 +22,9 @@ abstract contract HandlerAggregator is
   LiquidationHandler,
   SiloHandler,
   SiloConfigHandler, // Permissioned Actions
-  FlashLoanHandler // Simulators
+  SiloFactoryHandler,
+  FlashLoanHandler, // Simulators
+  MockOracleHandler
 {
   /// @notice Helper function in case any handler requires additional setup
   function _setUpHandlers() internal {}

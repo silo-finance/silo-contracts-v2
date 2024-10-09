@@ -19,48 +19,78 @@ abstract contract InvariantsSpec {
     //                                          BASE                                             //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                          SILO ROUTER                                      //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// @notice related to silo property UT_Silo_accrueInterest
+    string constant BASE_INVARIANT_A = "BASE_INVARIANT_A: silo.totalAssets == 0 <=> silo.totalSupply == 0";
 
-    string constant ROUTER_INVARIANT_A = "ROUTER_INVARIANT_A: Router ETH balance should always be 0 after function execution"; //custom
+    /// @notice related to silo property UT_Silo_accrueInterest
+    string constant BASE_INVARIANT_B = "BASE_INVARIANT_B: debtShareToken.totalSupply == 0 <=> silo.totalAssets[debt] == 0";
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                          BASE                                             //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// @notice related to silo property VS_Silo_interestRateTimestamp_daoAndDeployerFees
+    string constant BASE_INVARIANT_C = "BASE_INVARIANT_C: siloData.interestRateTimestamp == 0 => siloData.daoAndDeployerFees == 0";
 
-    string constant BASE_INVARIANT_A = "BASE_INVARIANT_A: reentrancyLock == REENTRANCY_UNLOCKED";
+    /// @notice related to silo property VS_Silo_debtShareToken_balance_notZero
+    string constant BASE_INVARIANT_D = "BASE_INVARIANT_D: user is solvent and shareDebtToken.balanceOf(user) != zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) == 0"; // TODO
+
+    /// @notice related to silo property VS_Silo_balance_totalAssets
+    string constant BASE_INVARIANT_E = "BASE_INVARIANT_E: balanceOf(silo) >= silo.totalAssets";
+
+    /// @notice related to silo property VS_silo_getLiquidity_less_equal_balance
+    string constant BASE_INVARIANT_F = "BASE_INVARIANT_F: silo.getLiquidity() <= balanceOf(silo) - silo.totalAssets[Protected] - daoAndDeployerRevenue";
+
+    string constant BASE_INVARIANT_G = "BASE_INVARIANT_G: silo.totalAssets[Protected] <= balanceOf(silo)";
+
+    string constant BASE_INVARIANT_H = "BASE_INVARIANT_H:  reentrancyGuardEntered == false";
+
+    string constant BASE_INVARIANT_I = "BASE_INVARIANT_I: _collateralShareToken totalSupply MUST be the sum of all deposited shares)"; // TODO
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       SILO MARKET                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant SILO_INVARIANT_A = "SILO_INVARIANT_A: Protected collateral (totalAssets[0])"; //TODO: Pending
+    string constant SILO_INVARIANT_A = "SILO_INVARIANT_A: accrueInterest should never revert";
 
-    string constant SILO_INVARIANT_B = "SILO_INVARIANT_B: Protected collateral should be always withdrawable to the fullest"; //custom
+    string constant SILO_INVARIANT_B = "SILO_INVARIANT_B: getCollateralAmountsWithInterest >= _collateralAssets"; // TODO
 
-    string constant SILO_INVARIANT_C = "SILO_INVARIANT_C: Protected collateral total(totalAssets[0])"; //TODO: Pending
+    string constant SILO_INVARIANT_C = "SILO_INVARIANT_C: debtAssetsWithInterest >= _debtAssets"; // TODO
 
-    string constant SILO_INVARIANT_D = "SILO_INVARIANT_D: User must not have debt in more than 1 silo at the same time"; //custom
+    string constant SILO_INVARIANT_D = "SILO_INVARIANT_D: collateralConfig.silo is equal borrowerCollateralSilo[_depositOwner] if there is debt"; // TODO
 
-    string constant SILO_INVARIANT_E = "SILO_INVARIANT_E: When interestRateTimestamp = block.timestamp, totalAssets[COLLATERAL] & totalAssets[DEBT] MUST NOT increase "; //custom
+    string constant SILO_INVARIANT_E = "SILO_INVARIANT_E: if debtConfig.silo is not zero then collateralConfig.silo is not zero";
 
-    string constant SILO_INVARIANT_F = "SILO_INVARIANT_F: Balance after flashloaning a token needs to be => that the initial balance of such token + the flash fee for such amount"; //custom
-
-    string constant SILO_INVARIANT_G = "SILO_INVARIANT_G: _debtShareToken totalsupply MUST increase while borrowing"; //custom
-
-    string constant SILO_INVARIANT_H = "SILO_INVARIANT_H: _debtShareToken totalsupply MUST decrease on repayments"; //custom
-
-    string constant SILO_INVARIANT_I = "SILO_INVARIANT_I: _debtShareToken totalSupply MUST be the sum of all borrowed shares"; //custom
-
-    string constant SILO_INVARIANT_J = "SILO_INVARIANT_J: _collateralShareToken balance MUST increase while depositing"; //custom
-
-    string constant SILO_INVARIANT_K = "SILO_INVARIANT_K: _collateralShareToken balance MUST decrease while withdrawing"; //custom
-
-    string constant SILO_INVARIANT_L = "SILO_INVARIANT_L: _collateralShareToken totalSupply MUST be the sum of all deposited shares"; //custom
+    string constant SILO_INVARIANT_F = "SILO_INVARIANT_F: if no debt, both configs (collateralConfig, debtConfig) are zero";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                              SILO MODULE ERC4626 INVARIANTS                               //
+    //                                          LENDING                                          //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    string constant LENDING_INVARIANT_A = "LENDING_INVARIANT_A: Result of maxWithdraw() should never be more than liquidity of the Silo";
+
+    string constant LENDING_INVARIANT_B = "LENDING_INVARIANT_B: Result of maxWithdraw() used as input to withdraw() should never revert";
+
+    string constant LENDING_INVARIANT_C = "LENDING_INVARIANT_C: If user has no debt and liquidity is available, maxRedeem() output equals shareToken.balanceOf(user)";
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                        BORROWING                                          //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    string constant BORROWING_INVARIANT_A = "BORROWING_INVARIANT_A: debtAssets >= any userDebt";
+
+    string constant BORROWING_INVARIANT_B = "BORROWING_INVARIANT_B: totalBorrowed = sum of all user debt";
+
+    string constant BORROWING_INVARIANT_C = "BORROWING_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0"; // Included in the previous invariant
+
+    string constant BORROWING_INVARIANT_D = "BORROWING_INVARIANT_D: If user has debt in one silo, his share token balance on the other silo should be != 0";
+
+    string constant BORROWING_INVARIANT_E = "BORROWING_INVARIANT_E: A user cannot have debt in two silos at the same moment";
+
+    string constant BORROWING_INVARIANT_F = "BORROWING_INVARIANT_F: totalAssets != 0 => totalShares > 0";
+
+    string constant BORROWING_INVARIANT_G = "BORROWING_INVARIANT_G: if user has no debt, should always be solvent and ltv == 0";
+
+    string constant BORROWING_INVARIANT_H = "BORROWING_INVARIANT_H: result of maxRedeem() should never be more than collateral share token balanceOf user";
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                    SILO  ERC4626 INVARIANTS                               //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice ASSETS
@@ -115,43 +145,13 @@ abstract contract InvariantsSpec {
 
     string constant ERC4626_ROUNDTRIP_INVARIANT_H = "ERC4626_ROUNDTRIP_INVARIANT_H: s = withdraw(a) s' = deposit(a) s' <= s";
 
-    //TODO need to move invariants from SILO Market above to here and overall re-structure
+    /// @notice ADDITIVE
+
+    string constant ERC4626_ROUNDTRIP_INVARIANT_I = "ERC4626_ROUNDTRIP_INVARIANT_I: deposit(x + y) should be the same as deposit(x) + deposit(y)"; // TODO
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                     BORROWING MODULE SILO                                 //
+    //                                          SILO ROUTER                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant BM_INVARIANT_A = "BM_INVARIANT_A: totalBorrowed >= any account owed balance";
-
-    string constant BM_INVARIANT_B = "BM_INVARIANT_B: totalBorrowed = sum of all user debt";
-
-    string constant BM_INVARIANT_C = "BM_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0";
-
-    string constant BM_INVARIANT_D = "BM_INVARIANT_D: User liability should always decrease after repayment";
-
-    string constant BM_INVARIANT_E = "BM_INVARIANT_E: Unhealthy users can not borrow";
-
-    string constant BM_INVARIANT_F = "BM_INVARIANT_F: "; //EMPTY
-
-    string constant BM_INVARIANT_G = "BM_INVARIANT_G: a user should always be able to withdraw all if there is no outstanding debt";
-
-    string constant BM_INVARIANT_H = "BM_INVARIANT_H: If totalBorrows increases new totalBorrows must be less than or equal to borrow cap";
-
-    string constant BM_INVARIANT_I = "BM_INVARIANT_I: "; //EMPTY
-
-    string constant BM_INVARIANT_J = "BM_INVARIANT_J: "; //EMPTY
-
-    string constant BM_INVARIANT_K = "BM_INVARIANT_K: Functions that won't operate when user is unhealthy";
-
-    string constant BM_INVARIANT_L = "BM_INVARIANT_L: Functions that can operate when user is unhealthy";
-
-    string constant BM_INVARIANT_M = ""; //EMPTY
-
-    string constant BM_INVARIANT_N1 = "BM_INVARIANT_N1: borrow/deposit(x) => repay(x) users shouldn't gain any asset"; //NOT SURE RENAMED
-
-    string constant BM_INVARIANT_N2 = "BM_INVARIANT_N2: borrow/deposit(x) => repay(x) users debt shouldn't decrease"; //NOT SURE RENAMED
-
-    string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => collateralValue != 0"; //TODO: REMAKE, DEBT IS BALANCE OF _debtShareToken OF BORROWER
-
-    string constant BM_INVARIANT_P = "BM_INVARIANT_P: a user can always repay debt in full";
+    string constant ROUTER_INVARIANT_A = "ROUTER_INVARIANT_A: Router ETH balance should always be 0 after function execution"; // TODO
 }
