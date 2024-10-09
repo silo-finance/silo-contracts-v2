@@ -44,29 +44,65 @@ contract MaxBorrowValueToAssetsAndSharesTestData {
 
         i = _init("no borrow yet case2");
         allData[i].input.maxBorrowValue = 100;
-        allData[i].output.shares = 100;
         allData[i].output.assets = 100;
+        allData[i].output.shares = 100;
 
         i = _init("with some debt, 1value=1assets");
         allData[i].input.maxBorrowValue = 100;
         allData[i].input.totalDebtShares = 9;
         allData[i].input.totalDebtAssets = 9;
-        allData[i].output.shares = 100;
         allData[i].output.assets = 100;
+        allData[i].output.shares = 100;
 
-        i = _init("has some debt, 1value=0.5assets");
+        i = _init("has some debt, assets:shares is 1:2");
         allData[i].input.maxBorrowValue = 100;
         allData[i].input.totalDebtShares = 18;
         allData[i].input.totalDebtAssets = 9;
-        allData[i].output.shares = 200;
         allData[i].output.assets = 100; // for no oracle, value == assets, so maxBorrowValue = 100 => 100 assets
+        allData[i].output.shares = 200;
 
-        i = _init("has some debt, 1value=2assets");
+        i = _init("has some debt, assets:shares is 1:2, with oracle (1e18) => 3e18");
+        allData[i].input.maxBorrowValue = 100;
+        allData[i].input.totalDebtShares = 18;
+        allData[i].input.totalDebtAssets = 9;
+        allData[i].input.oracleSet = true;
+        allData[i].input.debtOracleQuote = 3e18;
+        allData[i].output.assets = uint256(100) / 3; // rounding down
+        allData[i].output.shares = uint256(100) / 3 * 2; // *2 because of ratio
+
+        i = _init("has some debt, assets:shares is 2:1");
         allData[i].input.maxBorrowValue = 5e18;
         allData[i].input.totalDebtShares = 400e18;
         allData[i].input.totalDebtAssets = 200e18;
-        allData[i].output.shares = (5e18 * 2) * 2;
+        allData[i].output.assets = 5e18;
+        allData[i].output.shares = 5e18 * 2;
+
+        i = _init("has some debt, assets:shares is 2:1, with oracle (1e18) => 1e18");
+        allData[i].input.maxBorrowValue = 5e18;
+        allData[i].input.totalDebtShares = 400e18;
+        allData[i].input.totalDebtAssets = 200e18;
+        allData[i].input.oracleSet = true;
+        allData[i].input.debtOracleQuote = 1e18;
+        allData[i].output.assets = 5e18;
+        allData[i].output.shares = 5e18 * 2;
+
+        i = _init("has some debt, assets:shares is 2:1, with oracle (1e18) => 0.5e18");
+        allData[i].input.maxBorrowValue = 5e18;
+        allData[i].input.totalDebtShares = 400e18;
+        allData[i].input.totalDebtAssets = 200e18;
+        allData[i].input.oracleSet = true;
+        allData[i].input.debtOracleQuote = 0.5e18;
         allData[i].output.assets = (5e18 * 2);
+        allData[i].output.shares = (5e18 * 2) * 2;
+
+        i = _init("has some debt, assets:shares is 2:1, with oracle (1e18) => 1e6 eg different decimals");
+        allData[i].input.maxBorrowValue = 5e6; // value is in quote token, so 6 decimals
+        allData[i].input.totalDebtShares = 400e18;
+        allData[i].input.totalDebtAssets = 200e18;
+        allData[i].input.oracleSet = true;
+        allData[i].input.debtOracleQuote = 1e6;
+        allData[i].output.assets = 5e18;
+        allData[i].output.shares = 5e18 * 2;
 
         return allData;
     }

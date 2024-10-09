@@ -44,13 +44,13 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
             (uint256 maxAssets, uint256 maxShares) = SiloLendingLib.maxBorrowValueToAssetsAndShares(
                 testDatas[i].input.maxBorrowValue,
                 testDatas[i].input.debtToken,
-                ISiloOracle(ORACLE_ADDRESS),
+                testDatas[i].input.oracleSet ? ISiloOracle(ORACLE_ADDRESS) : ISiloOracle(address(0)),
                 testDatas[i].input.totalDebtAssets,
                 testDatas[i].input.totalDebtShares
             );
 
-            assertEq(maxShares, testDatas[i].output.shares, string(abi.encodePacked(testDatas[i].name, " > shares")));
             assertEq(maxAssets, testDatas[i].output.assets, string(abi.encodePacked(testDatas[i].name, " > assets")));
+            assertEq(maxShares, testDatas[i].output.shares, string(abi.encodePacked(testDatas[i].name, " > shares")));
         }
     }
 }
