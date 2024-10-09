@@ -100,11 +100,8 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
         vm.expectRevert(ISilo.Unsupported.selector);
         silo1.flashFee(address(token0), 1e18);
 
-        vm.expectRevert(SiloStdLib.ZeroAmount.selector);
-        silo0.flashFee(address(token0), 0);
-
-        vm.expectRevert(SiloStdLib.ZeroAmount.selector);
-        silo1.flashFee(address(token1), 0);
+        assertEq(silo0.flashFee(address(token0), 0), 0);
+        assertEq(silo1.flashFee(address(token1), 0), 0);
 
         assertEq(silo0.flashFee(address(token0), 1e18), 0.01e18);
         assertEq(silo1.flashFee(address(token1), 1e18), 0.01e18);
