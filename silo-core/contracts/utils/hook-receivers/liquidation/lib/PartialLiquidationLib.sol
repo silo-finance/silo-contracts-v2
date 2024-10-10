@@ -14,7 +14,7 @@ library PartialLiquidationLib {
         uint256 collateralLt;
         address collateralConfigAsset;
         address debtConfigAsset;
-        uint256 debtToCover;
+        uint256 maxDebtToCover;
         uint256 liquidationFee;
     }
 
@@ -100,7 +100,7 @@ library PartialLiquidationLib {
 
         if (_ltvBefore >= _BAD_DEBT) {
             // in case of bad debt, we allow for any amount
-            debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
+            debtToRepay = _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
             uint256 maxRepayValue = estimateMaxRepayValue(
@@ -117,7 +117,7 @@ library PartialLiquidationLib {
             } else {
                 // partial liquidation
                 uint256 maxDebtToRepay = valueToAssetsByRatio(maxRepayValue, _borrowerDebtAssets, _borrowerDebtValue);
-                debtToRepay = _params.debtToCover > maxDebtToRepay ? maxDebtToRepay : _params.debtToCover;
+                debtToRepay = _params.maxDebtToCover > maxDebtToRepay ? maxDebtToRepay : _params.maxDebtToCover;
                 debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
             }
         }
@@ -203,18 +203,18 @@ library PartialLiquidationLib {
         );
     }
 
-    /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
-    /// @param _sumOfCollateral assets or value, but must be in sync with `_debtToCover`
+    /// @param _maxDebtToCover assets or value, but must be in sync with `_totalCollateral`
+    /// @param _sumOfCollateral assets or value, but must be in sync with `_maxDebtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function calculateCollateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFee)
+    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidityFee)
         internal
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _debtToCover * _liquidityFee;
+        uint256 fee = _maxDebtToCover * _liquidityFee;
         unchecked { fee /= _PRECISION_DECIMALS; }
 
-        toLiquidate = _debtToCover + fee;
+        toLiquidate = _maxDebtToCover + fee;
 
         if (toLiquidate > _sumOfCollateral) {
             toLiquidate = _sumOfCollateral;

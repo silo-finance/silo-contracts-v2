@@ -275,38 +275,38 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         }
     }
 
-    function _calculateChunk(uint256 _debtToCover, uint256 _i) internal view returns (uint256 _chunk) {
-        if (_debtToCover == 0) return 0;
+    function _calculateChunk(uint256 _maxDebtToCover, uint256 _i) internal view returns (uint256 _chunk) {
+        if (_maxDebtToCover == 0) return 0;
 
         // min amount of assets that will not generate ZeroShares error
         uint256 minAssets = silo1.previewRepayShares(1);
 
         if (_i < 2 || _i == 4) {
             // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
-            if (_debtToCover < minAssets) {
+            if (_maxDebtToCover < minAssets) {
                 revert("#1 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
 
             return minAssets;
         } else if (_i == 2) {
             // try to liquidate half
-            uint256 half = _debtToCover == 1 ? 1 : _debtToCover / 2;
+            uint256 half = _maxDebtToCover == 1 ? 1 : _maxDebtToCover / 2;
             return half < minAssets ? minAssets: half;
         } else if (_i == 3) {
             // try to liquidate almost everything
-            if (_debtToCover < minAssets) {
+            if (_maxDebtToCover < minAssets) {
                 revert("#2 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
 
-            uint256 almostEverything = _debtToCover < minAssets ? minAssets : _debtToCover - minAssets;
+            uint256 almostEverything = _maxDebtToCover < minAssets ? minAssets : _maxDebtToCover - minAssets;
             return almostEverything < minAssets ? minAssets : almostEverything;
         } else if (_i == 5) {
             // for iteration 5, we liquidating whatever left
-            return _debtToCover;
+            return _maxDebtToCover;
         } else revert("this should never happen");
     }
 
-    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken)
+    function _liquidationCall(uint256 _maxDebtToCover, bool _sameToken, bool _receiveSToken)
         internal
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
@@ -314,7 +314,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 address(_sameToken ? token1 : token0),
                 address(token1),
                 borrower,
-                _debtToCover,
+                _maxDebtToCover,
                 _receiveSToken
             )
             returns (uint256 collateral, uint256 debt)

@@ -15,7 +15,7 @@ library PartialLiquidationExecLib {
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
-        uint256 _debtToCover,
+        uint256 _maxDebtToCover,
         uint256 _liquidationFee
     )
         internal
@@ -41,7 +41,7 @@ library PartialLiquidationExecLib {
                 collateralLt: _collateralConfig.lt,
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
-                debtToCover: _debtToCover,
+                maxDebtToCover: _maxDebtToCover,
                 liquidationFee: _liquidationFee
             })
         );
@@ -126,12 +126,14 @@ library PartialLiquidationExecLib {
         // safe because same asset can not overflow
         unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
 
-        if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
+        if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) return (0, 0);
 
         if (sumOfCollateralAssets == 0) {
             return (
                 0,
-                _params.debtToCover > _ltvData.borrowerDebtAssets ? _ltvData.borrowerDebtAssets : _params.debtToCover
+                _params.maxDebtToCover > _ltvData.borrowerDebtAssets
+                    ? _ltvData.borrowerDebtAssets
+                    : _params.maxDebtToCover
             );
         }
 

@@ -58,7 +58,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         PartialLiquidationLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.debtToCover = 1;
+        params.maxDebtToCover = 1;
 
         ltvData.borrowerCollateralAssets = 1;
         ltvData.borrowerDebtAssets = 1;
@@ -100,7 +100,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
 
         emit log_named_decimal_uint("maxDebtToCover", maxDebtToCover, 18);
 
-        params.debtToCover = maxDebtToCover;
+        params.maxDebtToCover = maxDebtToCover;
         // price is 1:1
         uint256 collateralSum = ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets;
         collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, collateralSum);
@@ -114,7 +114,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets match #1");
 
         // more debt should cause revert because of _LT_LIQUIDATION_MARGIN_IN_BP
-        params.debtToCover += 1;
+        params.maxDebtToCover += 1;
 
         (receiveCollateralAssets, repayDebtAssets) = impl.liquidationPreview(ltvData, params);
         assertEq(receiveCollateralAssets, maxDebtToCover, "receiveCollateralAssets #3 - cap to max");
@@ -133,7 +133,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
         params.collateralLt = 0.8e18;
-        params.debtToCover = 2;
+        params.maxDebtToCover = 2;
 
         // ltv 200% - user NOT solvent
         // no oracle calls
