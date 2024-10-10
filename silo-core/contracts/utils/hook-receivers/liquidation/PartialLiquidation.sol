@@ -114,8 +114,23 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
 
         if (_receiveSToken) {
-            // this two value were split from total collateral to withdraw, so we will not overflow
-            unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
+            if (collateralShares != 0) {
+                withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
+                    collateralShares,
+                    ISilo.CollateralType.Collateral
+                );
+            }
+
+            if (protectedShares != 0) {
+                unchecked {
+                    // protected and collateral values were split from total collateral to withdraw,
+                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                    withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
+                        protectedShares,
+                        ISilo.CollateralType.Protected
+                    );
+                }
+            }
         } else {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
             // so solvency will not be checked in silo on redeem action
