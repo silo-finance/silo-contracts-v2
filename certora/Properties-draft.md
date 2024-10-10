@@ -3,7 +3,7 @@
 * `repay()` any other user than borrower can repay
 * `repay()` user can't over repay
 * `repay()` if user repay all debt, no extra debt should be created
-* `repay()` should decrease the debt
+* `repay()` should decrease the debt (for a single block)
 * `repay()` should reduce only the debt of the borrower
 * `repay()` should not be able to repay more than maxRepay
 * `withdraw()` should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
@@ -12,6 +12,7 @@
 * `accrueInterest()` should be invisible for any other function including other silo and share tokens
 * `accrueInterest()` calling twice is the same as calling once (in a single block)
 * `accrueInterest()` should never decrease total collateral and total debt
+* `accrueInterest()` accruing multiple times withing the same time frame is at least as good as accruing once
 * if user has debt, `borrowerCollateralSilo[user]` should be silo0 or silo1 and one of shares tokens balances should not be 0
 * if user has debt silo, then share debt token of debt silo balance is > 0, apply for `getDebtSilo`, `getConfigsForWithdraw`, `getConfigsForSolvency`
 * debt in two silos is impossible
@@ -24,7 +25,6 @@
 * `getCollateralAmountsWithInterest()` should never return lower values for `collateralAssetsWithInterest` and `debtAssetsWithInterest` than `_collateralAssets` and `_debtAssets` inputs.
 * `getDebtAmountsWithInterest()` should never return values where `debtAssetsWithInterest` + `accruedInterest` overflows
 * `getDebtAmountsWithInterest()` should never return lower value for `debtAssetsWithInterest` than `_totalDebtAssets` input
-* `getDebtAmountsWithInterest()` should never return values where sum of `debtAssetsWithInterest` and `accruedInterest` overflows
 * it should be impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in `Silo`
 * check if totalAssets can be 0 if totalShares > 0 - in context of debt. We want to make sure to never divide by 0 in mulDiv.
 * calling any of deposit/withdraw/repay/borrow should not change the result of convertToShares and convertToAssets (+/- 1 wei at a time).
@@ -46,16 +46,16 @@
 * `withdraw()`/`redeem()`/`borrow()`/`borrowShares()` should always call `accrueInterest()` on both Silos
 * `deposit()`/`mint()`/`withdraw()`/`redeem()`/`borrow()`/`borrowShares()`/`repay()`/`repayShares()`/`borrowSameAsset()`/`leverageSameAsset()` should call `hookBefore()`, `hookAfter()` - if configured
 * result of `maxWithdraw()` should never be more than liquidity of the Silo
-* result of maxWithdraw() used as input to withdraw() should never revert
+* result of `maxWithdraw()` used as input to withdraw() should never revert
 * if user has no debt and liquidity is available, shareToken.balanceOf(user) used as input to redeem(), assets from redeem() should be equal to maxWithdraw()
-* rule `withdraw()` and `deposit()` should be equal to `transitionCollateral()` - state changes should be the same
+* `withdraw()` and `deposit()` should be equal to `transitionCollateral()` - state changes should be the same
 * if user is solvent `transitionCollateral()` for `_transitionFrom` == CollateralType.Protected should never revert
 * if user is NOT solvent `transitionCollateral()` always reverts
 * `transitionCollateral()` for `_transitionFrom` == `CollateralType.Collateral` should revert if not enough liquidity is available
 * `transitionCollateral()` should not decrease user assets by more than rounding error
 * return value of `previewBorrow()` should be always equal to `borrow()`
 * user must be solvent after `switchCollateralToThisSilo()`
-* `borrowerCollateralSilo[user]` should be set to "this" Silo address. No other state should be changed in either Silo.
+* `borrowerCollateralSilo[user]` should be set to "this" Silo address. No other state should be changed in either Silo. ?
 * if `leverageSameAsset()` should never decrease Silo asset balance
 * if `maxLtv < 100%` then `leverageSameAsset()` should always increase Silo asset balance
 * `leverageSameAsset(x, y)` should be always change state equivalent to `deposit(x)` and `borrow(y)`
@@ -105,8 +105,7 @@
 * `getConfigsForWithdraw()` debtConfig.silo is always the silo that debt share token balance is not equal 0 or zero address otherwise
 * `getConfigsForWithdraw()` if debtConfig.silo is not zero then collateralConfig.silo is not zero
 * `getConfigsForWithdraw()` collateralConfig.silo is equal `borrowerCollateralSilo[_depositOwner]` if there is debt
-* `getConfigsForWithdraw()` if user has debt, `borrowerCollateralSilo[user]` should be silo0 or silo1 and one of shares tokens balances should not be 0
-* `getConfigsForWithdraw()` if no debt, both configs are zero
+* `getConfigsForWithdraw()` if no debt, both configs (collateralConfig, debtConfig) are zero
 * `getConfigsForBorrow()` debtConfig.silo is always equal _debtSilo
 * `getConfigsForBorrow()` collateralConfig.silo is always equal to other silo than _debtSilo
 * `_crossReentrantStatus` all non-view functions (both silos, silo config and all share tokens) must change or read the state of `_crossReentrantStatus` except: `Silo.flashloan()`, `ShareToken.forwardTransferFromNoChecks()`
