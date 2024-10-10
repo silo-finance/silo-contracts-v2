@@ -63,7 +63,7 @@ library SiloERC4626Lib {
             _collateralShareToken.totalSupply(),
             Rounding.DEPOSIT_TO_ASSETS,
             Rounding.DEPOSIT_TO_SHARES,
-            ISilo.AssetType.Collateral
+            ISilo.AssetType(uint256(_collateralType))
         );
 
         if (assets == 0) revert ISilo.ZeroAssets();
