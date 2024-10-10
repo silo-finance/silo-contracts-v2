@@ -51,7 +51,7 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
     }
 
     function _liquidationCallReverts(uint256 _debtToCover, bool _sameToken, bool _receiveSToken) private {
-        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+        vm.expectRevert(IPartialLiquidation.FullLiquidationRequired.selector);
 
         partialLiquidation.liquidationCall(
             address(_sameToken ? token1 : token0),

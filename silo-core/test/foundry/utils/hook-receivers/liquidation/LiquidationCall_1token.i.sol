@@ -304,9 +304,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_1token
+    forge test -vv --ffi --mt test_liquidationCall_FullLiquidationRequired_1token
     */
-    function test_liquidationCall_DebtToCoverTooSmall_1token() public {
+    function test_liquidationCall_FullLiquidationRequired_1token() public {
         // move forward with time so we can have interests
         uint256 timeForward = 75 days;
         vm.warp(block.timestamp + timeForward);
@@ -325,10 +325,10 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
 
-        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
+        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with FullLiquidationRequired
         bool receiveSToken;
 
-        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+        vm.expectRevert(IPartialLiquidation.FullLiquidationRequired.selector);
         partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToCover, receiveSToken);
 
         _assertLiquidationModuleDoNotHaveTokens();

@@ -282,9 +282,9 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_DebtToCoverTooSmall_2tokens
+    forge test -vv --ffi --mt test_liquidationCall_FullLiquidationRequired_2tokens
     */
-    function test_liquidationCall_DebtToCoverTooSmall_2tokens() public {
+    function test_liquidationCall_FullLiquidationRequired_2tokens() public {
         assertEq(token1.balanceOf(address(silo1)), silo1.getLiquidity(), "without interest liquidity match balanceOf");
 
         // move forward with time so we can have interests
@@ -303,10 +303,10 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         assertEq(silo1.getLiquidity(), 0, "no liquidity because what was available is less than debt with interest");
         assertEq(debtToRepay, silo1.getDebtAssets(), "debtToRepay is max debt when we forcing full liquidation");
 
-        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with DebtToCoverTooSmall
+        uint256 debtToCover = debtToRepay - 1; // -1 to check if tx reverts with FullLiquidationRequired
         bool receiveSToken;
 
-        vm.expectRevert(IPartialLiquidation.DebtToCoverTooSmall.selector);
+        vm.expectRevert(IPartialLiquidation.FullLiquidationRequired.selector);
         partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, debtToCover, receiveSToken);
 
         _liquidationModuleDoNotHaveTokens();
