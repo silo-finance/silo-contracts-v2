@@ -176,19 +176,19 @@ library SiloSolvencyLib {
     /// @dev calculation never reverts, if there is revert, then it is because of oracle
     /// @param _ltvData Data structure containing relevant information to calculate LTV
     /// @param _collateralToken Address of the collateral token
-    /// @param _debtToken Address of the debt token
+    /// @param _debtAsset Address of the debt token
     /// @return sumOfBorrowerCollateralValue Total value of borrower's collateral
     /// @return totalBorrowerDebtValue Total debt value for the borrower
     /// @return ltvInDp Calculated LTV in 18 decimal precision
     function calculateLtv(
-        SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
+        SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtAsset)
         internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)
     {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
-        ) = getPositionValues(_ltvData, _collateralToken, _debtToken);
+        ) = getPositionValues(_ltvData, _collateralToken, _debtAsset);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
