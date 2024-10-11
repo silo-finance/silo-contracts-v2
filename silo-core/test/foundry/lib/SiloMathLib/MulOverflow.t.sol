@@ -28,9 +28,11 @@ contract MulOverflowTest is Test {
 //        (uint256 _a, uint64 _b) = (6240173072422210561452344582666934667362480069278614001659345185975307149416, 195503844971);
 
         try mulOverflow.mul(_a, _b) {
-            assertFalse(SiloMathLib.mulOverflow(_a, _b), "no overflow");
+            (uint256 mulResult, bool overflow) = SiloMathLib.mulOverflow(_a, _b);
+            assertFalse(overflow, "no overflow");
         } catch {
-            assertTrue(SiloMathLib.mulOverflow(_a, _b), "overflow!");
+            (uint256 mulResult, bool overflow) = SiloMathLib.mulOverflow(_a, _b);
+            assertTrue(overflow, "overflow!");
         }
     }
 }

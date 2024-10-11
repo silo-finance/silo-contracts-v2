@@ -57,12 +57,15 @@ library SiloMathLib {
         unchecked {
             // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
             uint256 fees = _daoFee + _deployerFee;
+            bool overflowDetected;
 
-            daoAndDeployerRevenue = mulOverflow(accruedInterest, fees)
-                // on overflow, we apply less (borrowers already paying for that)
+            (daoAndDeployerRevenue, overflowDetected) = mulOverflow(accruedInterest, fees);
+
+            // div is safe
+            daoAndDeployerRevenue = overflowDetected
+                // on overflow we only divide, so worse case scenario we will get lower revenue
                 ? accruedInterest / _PRECISION_DECIMALS
-                // safe, because we check for overflow manually
-                : accruedInterest * fees / _PRECISION_DECIMALS;
+                : daoAndDeployerRevenue / _PRECISION_DECIMALS;
 
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
             uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
@@ -94,10 +97,11 @@ library SiloMathLib {
             return (_totalDebtAssets, 0);
         }
 
+        bool overflowDetected;
+
         unchecked {
-            accruedInterest = mulOverflow(_totalDebtAssets, _rcomp)
-                ? _totalDebtAssets / _PRECISION_DECIMALS
-                : _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
+            (accruedInterest, overflowDetected) = mulOverflow(_totalDebtAssets, _rcomp);
+            accruedInterest = overflowDetected ? 0 : accruedInterest / _PRECISION_DECIMALS;
 
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
@@ -314,14 +318,14 @@ library SiloMathLib {
         );
     }
 
-    function mulOverflow(uint256 _a, uint256 _b) internal pure returns (bool overflow) {
-        if (_b == 0) return false;
+    function mulOverflow(uint256 _a, uint256 _b) internal pure returns (uint256 mulResult, bool overflow) {
+        if (_a == 0) return (0, false);
 
-        // a * b = c,
-        // a = c / b, if `c` is max, then we know what is our max `a` for which we do not overflow
         unchecked {
+            // we have to uncheck to detect overflow
+            mulResult = _a * _b;
             // safe to unchecked because we do not div by 0
-            overflow = _a >= type(uint256).max / _b;
+            overflow = mulResult / _a != _b;
         }
     }
 
