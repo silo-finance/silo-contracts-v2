@@ -164,7 +164,7 @@ library Views {
         configData0.deployerFee = _initData.deployerFee;
         configData0.liquidationFee = _initData.liquidationFee0;
         configData0.flashloanFee = _initData.flashloanFee0;
-        configData0.callBeforeQuote = _initData.callBeforeQuote0 && configData0.maxLtvOracle != address(0);
+        configData0.callBeforeQuote = _initData.callBeforeQuote0;
 
         configData1.hookReceiver = _initData.hookReceiver;
         configData1.token = _initData.token1;
@@ -179,6 +179,6 @@ library Views {
         configData1.deployerFee = _initData.deployerFee;
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
-        configData1.callBeforeQuote = _initData.callBeforeQuote1 && configData1.maxLtvOracle != address(0);
+        configData1.callBeforeQuote = _initData.callBeforeQuote1;
     }
 }
