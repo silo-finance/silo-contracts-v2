@@ -146,14 +146,14 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToShares(uint256 _assets, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
     function convertToShares(uint256 _assets) external view virtual returns (uint256 shares) {
-        return _convertToShares(_assets, AssetType.Collateral);
+        shares = _convertToShares(_assets, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
     /// @dev For protected (non-borrowable) collateral and debt, use:
     /// `convertToAssets(uint256 _shares, AssetType _assetType)` with `AssetType.Protected` or `AssetType.Debt`
     function convertToAssets(uint256 _shares) external view virtual returns (uint256 assets) {
-        return _convertToAssets(_shares, AssetType.Collateral);
+        assets = _convertToAssets(_shares, AssetType.Collateral);
     }
 
     /// @inheritdoc IERC4626
@@ -264,12 +264,12 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function convertToShares(uint256 _assets, AssetType _assetType) external view virtual returns (uint256 shares) {
-        return _convertToShares(_assets, _assetType);
+        shares = _convertToShares(_assets, _assetType);
     }
 
     /// @inheritdoc ISilo
     function convertToAssets(uint256 _shares, AssetType _assetType) external view virtual returns (uint256 assets) {
-        return _convertToAssets(_shares, _assetType);
+        assets = _convertToAssets(_shares, _assetType);
     }
 
     /// @inheritdoc ISilo
