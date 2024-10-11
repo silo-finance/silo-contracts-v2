@@ -71,13 +71,13 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_NoDebtToCover_whenUserSolvent
+    forge test -vv --ffi --mt test_liquidationCall_UserIsSolvent_whenUserSolvent
     */
-    function test_liquidationCall_NoDebtToCover_whenUserSolvent_1token() public {
+    function test_liquidationCall_UserIsSolvent_whenUserSolvent_1token() public {
         uint256 maxDebtToCover = 1e18;
         bool receiveSToken;
 
-        vm.expectRevert(IPartialLiquidation.NoDebtToCover.selector);
+        vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
 
         partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, maxDebtToCover, receiveSToken);
 
@@ -120,7 +120,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         assertTrue(silo0.isSolvent(BORROWER), "BORROWER solvent");
 
-        vm.expectRevert(IPartialLiquidation.NoDebtToCover.selector);
+        vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
         vm.prank(BORROWER);
         partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, maxDebtToCover, receiveSToken);
 

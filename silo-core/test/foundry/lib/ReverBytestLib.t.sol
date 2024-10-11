@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 
-import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /**
     forge test -vv --mc ReverBytestLibTest
@@ -23,20 +23,20 @@ contract ReverBytestLibTest is Test {
     }
 
     /**
-        forge test -vv --mt test_RevertBytes_errorMsgRevert
+        forge test -vv --mt test_RevertLib_errorMsgRevert
     */
-    function test_RevertBytes_errorMsgRevert() public {
+    function test_RevertLib_errorMsgRevert() public {
         vm.expectRevert(abi.encodeWithSelector(CustomError1.selector, A, B));
-        RevertBytes.revertBytes(errMsg, CUSTOM_ERR);
+        RevertLib.revertBytes(errMsg, CUSTOM_ERR);
     }
 
     /**
-        forge test -vv --mt test_RevertBytes_customErrorRevert
+        forge test -vv --mt test_RevertLib_customErrorRevert
     */
-    function test_RevertBytes_customErrorRevert() public {
+    function test_RevertLib_customErrorRevert() public {
         bytes memory emptyErrMsg;
 
         vm.expectRevert(bytes(CUSTOM_ERR));
-        RevertBytes.revertBytes(emptyErrMsg, CUSTOM_ERR);
+        RevertLib.revertBytes(emptyErrMsg, CUSTOM_ERR);
     }
 }

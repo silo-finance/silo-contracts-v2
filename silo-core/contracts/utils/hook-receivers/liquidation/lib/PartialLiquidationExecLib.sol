@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
@@ -17,7 +18,12 @@ library PartialLiquidationExecLib {
     )
         internal
         view
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
+        returns (
+            uint256 withdrawAssetsFromCollateral,
+            uint256 withdrawAssetsFromProtected,
+            uint256 repayDebtAssets,
+            bytes4 customError
+        )
     {
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations({
             _collateralConfig: _collateralConfig,
@@ -31,7 +37,7 @@ library PartialLiquidationExecLib {
         uint256 borrowerCollateralToLiquidate;
 
         (
-            borrowerCollateralToLiquidate, repayDebtAssets
+            borrowerCollateralToLiquidate, repayDebtAssets, customError
         ) = liquidationPreview(
             ltvData,
             PartialLiquidationLib.LiquidationPreviewParams({
@@ -117,18 +123,23 @@ library PartialLiquidationExecLib {
     )
         internal
         view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
+        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError)
     {
         uint256 sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
 
-        if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) return (0, 0);
+        bytes4 noError;
+
+        if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) {
+            return (0, 0, IPartialLiquidation.NoDebtToCover.selector);
+        }
 
         if (sumOfCollateralAssets == 0) {
             return (
                 0,
                 _params.maxDebtToCover > _ltvData.borrowerDebtAssets
                     ? _ltvData.borrowerDebtAssets
-                    : _params.maxDebtToCover
+                    : _params.maxDebtToCover,
+                customError // no error
             );
         }
 
@@ -136,7 +147,7 @@ library PartialLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
+        if (_params.collateralLt >= ltvBefore) return (0, 0, IPartialLiquidation.UserIsSolvent.selector);
 
         uint256 ltvAfter;
 
@@ -149,6 +160,8 @@ library PartialLiquidationExecLib {
             _params
         );
 
-        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
+        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) {
+            return (0, 0, IPartialLiquidation.NoRepayAssets.selector);
+        }
     }
 }

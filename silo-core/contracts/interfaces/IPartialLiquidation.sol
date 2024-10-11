@@ -36,6 +36,7 @@ interface IPartialLiquidation {
     error InsufficientLiquidation();
     error LiquidationTooBig();
     error UnknownRatio();
+    error NoRepayAssets();
 
     /// @notice Function to liquidate insolvent position
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
