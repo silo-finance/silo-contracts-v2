@@ -235,7 +235,12 @@ contract Deployers is VyperDeployer, Data {
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
-        (configData0, configData1) = Views.copySiloConfig(_siloInitData);
+        (configData0, configData1) = Views.copySiloConfig(
+            _siloInitData,
+            siloFactory.maxDeployerFee(),
+            siloFactory.maxFlashloanFee(),
+            siloFactory.maxLiquidationFee()
+        );
 
         configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
         configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, nextSiloId, address(siloFactory));

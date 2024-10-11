@@ -81,7 +81,12 @@ contract SiloDeployer is ISiloDeployer {
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
-        (configData0, configData1) = Views.copySiloConfig(_siloInitData);
+        (configData0, configData1) = Views.copySiloConfig(
+            _siloInitData,
+            SILO_FACTORY.maxDeployerFee(),
+            SILO_FACTORY.maxFlashloanFee(),
+            SILO_FACTORY.maxLiquidationFee()
+        );
 
         configData0.silo = CloneDeterministic.predictSilo0Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
         configData1.silo = CloneDeterministic.predictSilo1Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
