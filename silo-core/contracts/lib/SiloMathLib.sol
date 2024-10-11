@@ -314,6 +314,17 @@ library SiloMathLib {
         );
     }
 
+    function mulOverflow(uint256 _a, uint256 _b) internal pure returns (bool overflow) {
+        if (_b == 0) return false;
+
+        // a * b = c,
+        // a = c / b, if `c` is max, then we know what is our max `a` for which we do not overflow
+        unchecked {
+            // safe to unchecked because we do not div by 0
+            overflow = _a >= type(uint256).max / _b;
+        }
+    }
+
     /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
     /// itself. It should return actual result and round it up.
     function _commonConvertTo(
@@ -331,10 +342,5 @@ library SiloMathLib {
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
-    }
-
-    function mulOverflow(uint256 _a, uint256 _b) pure returns (bool overflow) {
-        // a * b = c, a = c / b, if c is max, then we know what is our max `a` for which we do not overflow
-        overflow = type(uint256).max / _b <= _a;
     }
 }
