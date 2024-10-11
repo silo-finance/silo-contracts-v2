@@ -55,7 +55,12 @@ library SiloMathLib {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
 
         unchecked {
-            // If we overflow on multiplication it should not revert tx, we will get lower fees
+            // If we overflow on multiplication, it should not revert tx, we will get lower fees
+            // Example:
+            // X * (0.4e18 + 0.4e18) / 1e18 => X - (0.4e18 + 0.4e18) / 1e18
+            // X * (0.4e18 + 0.4e18) / 1e18
+            // X * 0.8e18 / 1e18 => (X + X + X ... + X) / 1e18
+            //
             daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
             // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
