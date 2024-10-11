@@ -25,7 +25,7 @@ contract MulOverflowTest is Test {
     /// forge-config: core-test.fuzz.runs = 1000
     function test_mulOverflow(uint256 _a, uint64 _b) public view {
         vm.assume(_b < 1e18);
-        
+
         try mulOverflow.mul(_a, _b) {
             vm.assume(false);
         } catch {
