@@ -674,7 +674,7 @@ contract Silo is ISilo, ShareCollateralToken {
             uint256 totalSiloAssets, uint256 totalShares
         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
-        return SiloMathLib.convertToAssets(
+        assets = SiloMathLib.convertToAssets(
             _shares,
             totalSiloAssets,
             totalShares,
@@ -688,7 +688,7 @@ contract Silo is ISilo, ShareCollateralToken {
             uint256 totalSiloAssets, uint256 totalShares
         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
 
-        return SiloMathLib.convertToShares(
+        shares = SiloMathLib.convertToShares(
             _assets,
             totalSiloAssets,
             totalShares,
