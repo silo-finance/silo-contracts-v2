@@ -25,8 +25,6 @@ contract MulOverflowTest is Test {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_mulOverflow_fuzz(uint256 _a, uint256 _b) public view {
-//        (uint256 _a, uint64 _b) = (6240173072422210561452344582666934667362480069278614001659345185975307149416, 195503844971);
-
         try mulOverflow.mul(_a, _b) {
             (uint256 mulResult, bool overflow) = SiloMathLib.mulOverflow(_a, _b);
             assertFalse(overflow, "no overflow");
