@@ -672,7 +672,7 @@ contract Silo is ISilo, ShareCollateralToken {
     function _convertToAssets(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
         (
             uint256 totalSiloAssets, uint256 totalShares
-        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
 
         assets = SiloMathLib.convertToAssets(
             _shares,
@@ -686,7 +686,7 @@ contract Silo is ISilo, ShareCollateralToken {
     function _convertToShares(uint256 _assets, AssetType _assetType) internal view virtual returns (uint256 shares) {
         (
             uint256 totalSiloAssets, uint256 totalShares
-        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_assetType);
+        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
 
         shares = SiloMathLib.convertToShares(
             _assets,
