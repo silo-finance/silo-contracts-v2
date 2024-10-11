@@ -55,14 +55,16 @@ library SiloMathLib {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
 
         unchecked {
-            // If we overflow on multiplication, it should not revert tx, we will get lower fees
-            // Example:
-            // X * (0.4e18 + 0.4e18) / 1e18
-            // X * 0.8e18 / 1e18 => (X + X + X ... + X) / 1e18
-            // in that case, if we overflow, we will overflow with X amount, so final result should be less than X
-            daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
+            // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
+            uint256 fees = _daoFee + _deployerFee;
+
+            daoAndDeployerRevenue = mulOverflow(accruedInterest, fees)
+                // on overflow, we apply less (borrowers already paying for that)
+                ? accruedInterest / _PRECISION_DECIMALS
+                // safe, because we check for overflow manually
+                : accruedInterest * fees / _PRECISION_DECIMALS;
+
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
-            // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
             uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
 
             // save to uncheck because variable can not be more than max
@@ -93,8 +95,11 @@ library SiloMathLib {
         }
 
         unchecked {
-            // We intentionally allow overflow here to prevent transaction revert due to interest calculation.
-            accruedInterest = _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
+            accruedInterest = mulOverflow(_totalDebtAssets, _rcomp)
+                ? _totalDebtAssets / _PRECISION_DECIMALS
+                : _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
+
+            // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
 
             // If overflow occurs, we skip accruing interest.
@@ -326,5 +331,10 @@ library SiloMathLib {
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+    }
+
+    function mulOverflow(uint256 _a, uint256 _b) pure returns (bool overflow) {
+        // a * b = c, a = c / b, if c is max, then we know what is our max `a` for which we do not overflow
+        overflow = type(uint256).max / _b <= _a;
     }
 }
