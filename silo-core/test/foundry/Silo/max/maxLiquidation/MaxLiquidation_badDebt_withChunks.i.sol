@@ -93,18 +93,18 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
             emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
 
             uint256 collateralToLiquidate;
-            uint256 debtToCover;
-            (collateralToLiquidate, debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            uint256 maxDebtToCover;
+            (collateralToLiquidate, maxDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
             emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
-            emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
+            emit log_named_uint("[BadDebtWithChunks] maxDebtToCover", maxDebtToCover);
 
             if (collateralToLiquidate == 0) {
                 assertGt(silo0.getLtv(borrower), 1e18, "when no collateral we expect bad debt");
                 continue;
             }
 
-            uint256 testDebtToCover = _calculateChunk(debtToCover, i);
+            uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
 
             (

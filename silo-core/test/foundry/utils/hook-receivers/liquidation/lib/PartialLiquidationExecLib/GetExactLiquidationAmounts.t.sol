@@ -56,7 +56,7 @@ contract GetExactLiquidationAmountsHelper is Test {
     }
 
     function getExactLiquidationAmounts(
-        uint128 _debtToCover,
+        uint128 _maxDebtToCover,
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf,
         uint32 _liquidationFee
@@ -86,7 +86,7 @@ contract GetExactLiquidationAmountsHelper is Test {
             collateralConfig,
             debtConfig,
             makeAddr("borrower"),
-            _debtToCover,
+            _maxDebtToCover,
             _liquidationFee
         );
     }
@@ -126,7 +126,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         ) = _configs();
 
         address user;
-        uint256 debtToCover;
+        uint256 maxDebtToCover;
         uint256 liquidationFee;
 
         P_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(user, 0, 0);
@@ -139,7 +139,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         (
             uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
-        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, debtToCover, liquidationFee);
+        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, maxDebtToCover, liquidationFee);
 
         assertEq(fromCollateral, 0);
         assertEq(fromProtected, 0);
@@ -188,7 +188,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
                 collateralConfig,
                 debtConfig,
                 testData.input.user,
-                testData.input.debtToCover,
+                testData.input.maxDebtToCover,
                 testData.input.liquidationFee
             );
 
@@ -204,12 +204,12 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_getExactLiquidationAmounts_liquidation_fuzz(
-        uint128 _debtToCover,
+        uint128 _maxDebtToCover,
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf
     ) public {
-        vm.assume(_debtToCover != 0);
-        vm.assume(_debtToCover <= _debtUserBalanceOf);
+        vm.assume(_maxDebtToCover != 0);
+        vm.assume(_maxDebtToCover <= _debtUserBalanceOf);
         vm.assume(_collateralUserBalanceOf != 0);
 
         // in this test we assume share is 1:1 assets 1:1 value
@@ -221,7 +221,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
         (
             uint256 collateralToLiquidate,, bool success, bytes4 errorType
-        ) = _tryGetExactLiquidationAmounts(_debtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, 1);
+        ) = _tryGetExactLiquidationAmounts(_maxDebtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, 1);
 
         // we want cases where we do not revert
         vm.assume(success);
@@ -236,13 +236,13 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     }
 
     function _tryGetExactLiquidationAmounts(
-        uint128 _debtToCover,
+        uint128 _maxDebtToCover,
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf,
         uint32 _liquidationFee
     ) internal returns (uint256 collateralToLiquidate, uint256 ltvAfter, bool success, bytes4 errorType) {
         try GetExactLiquidationAmountsHelper(this).getExactLiquidationAmounts(
-            _debtToCover,
+            _maxDebtToCover,
             _collateralUserBalanceOf,
             _debtUserBalanceOf,
             _liquidationFee

@@ -113,8 +113,8 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
-        uint256 debtToCover = type(uint256).max;
+        // to test max, we want to provide higher `_maxDebtToCover` and we expect not higher results
+        uint256 maxDebtToCover = type(uint256).max;
 
         (
             uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
@@ -135,7 +135,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
             address(_sameToken ? token1 : token0),
             address(token1),
             borrower,
-            debtToCover,
+            maxDebtToCover,
             _receiveSToken
         );
 

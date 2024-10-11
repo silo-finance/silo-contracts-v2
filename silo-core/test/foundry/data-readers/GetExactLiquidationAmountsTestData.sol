@@ -8,7 +8,7 @@ contract GetExactLiquidationAmountsTestData {
 
     struct Input {
         address user;
-        uint256 debtToCover;
+        uint256 maxDebtToCover;
         uint256 liquidationFee;
     }
 
@@ -45,12 +45,12 @@ contract GetExactLiquidationAmountsTestData {
 
         data[i].name = "all zeros => zero output";
         data[i].input.user = address(1);
-        data[i].input.debtToCover = 1e18;
+        data[i].input.maxDebtToCover = 1e18;
 
         i++;
         data[i].name = "expect zero output if user has no debt";
         data[i].input.user = address(1);
-        data[i].input.debtToCover = 1e18;
+        data[i].input.maxDebtToCover = 1e18;
 
         data[i].mocks.protectedUserSharesBalanceOf = 1e18 * SHARES_OFFSET;
         data[i].mocks.protectedSharesTotalSupply = 10e18 * SHARES_OFFSET;
@@ -67,7 +67,7 @@ contract GetExactLiquidationAmountsTestData {
         i++;
         data[i].name = "expect zero when user solvent, protected collateral";
         data[i].input.user = address(1);
-        data[i].input.debtToCover = 0.5e18;
+        data[i].input.maxDebtToCover = 0.5e18;
 
         data[i].mocks.protectedUserSharesBalanceOf = 1e18 * SHARES_OFFSET;
         data[i].mocks.protectedSharesTotalSupply = 10e18 * SHARES_OFFSET;
@@ -90,7 +90,7 @@ contract GetExactLiquidationAmountsTestData {
 
     function _clone(GELAData memory _src) private pure returns (GELAData memory dst) {
         dst.input.user = address(1);
-        dst.input.debtToCover = _src.input.debtToCover;
+        dst.input.maxDebtToCover = _src.input.maxDebtToCover;
         dst.input.liquidationFee = _src.input.liquidationFee;
 
         dst.mocks.protectedUserSharesBalanceOf = _src.mocks.protectedUserSharesBalanceOf;

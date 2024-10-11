@@ -49,7 +49,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
-        uint256 _debtToCover,
+        uint256 _maxDebtToCover,
         bool _receiveSToken
     )
         external
@@ -59,7 +59,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         ISiloConfig siloConfigCached = siloConfig;
 
         if (address(siloConfigCached) == address(0)) revert EmptySiloConfig();
-        if (_debtToCover == 0) revert NoDebtToCover();
+        if (_maxDebtToCover == 0) revert NoDebtToCover();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -77,12 +77,14 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             collateralConfig,
             debtConfig,
             _borrower,
-            _debtToCover,
+            _maxDebtToCover,
             collateralConfig.liquidationFee
         );
 
         if (repayDebtAssets == 0) revert NoDebtToCover();
-        if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
+
+        // we do not allow dust so full liquidation is required
+        if (repayDebtAssets > _maxDebtToCover) revert FullLiquidationRequired();
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 

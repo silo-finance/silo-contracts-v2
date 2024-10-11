@@ -102,15 +102,15 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         emit log_named_uint("[DustLiquidation] debtToRepay", debtToRepay);
         emit log_named_uint("[DustLiquidation] collateralToLiquidate", collateralToLiquidate);
 
-        // to test max, we want to provide higher `_debtToCover` and we expect not higher results
+        // to test max, we want to provide higher `_maxDebtToCover` and we expect not higher results
         // also to make sure we can execute with exact `debtToRepay` we will pick exact amount conditionally
-        uint256 debtToCover = debtToRepay % 2 == 0 ? type(uint256).max : debtToRepay;
+        uint256 maxDebtToCover = debtToRepay % 2 == 0 ? type(uint256).max : debtToRepay;
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
             address(_sameToken ? token1 : token0),
             address(token1),
             borrower,
-            debtToCover,
+            maxDebtToCover,
             _receiveSToken
         );
 

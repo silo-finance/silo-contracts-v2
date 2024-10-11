@@ -30,9 +30,9 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
-            (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            (uint256 collateralToLiquidate, uint256 maxDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
             emit log_named_uint("[LTV100FullWithChunks] collateralToLiquidate", collateralToLiquidate);
-            if (debtToCover == 0) continue;
+            if (maxDebtToCover == 0) continue;
 
             if (collateralToLiquidate == 0) {
                 assertGe(silo0.getLtv(borrower), 1e18, "if we don't have collateral we expect bad debt");
@@ -42,13 +42,13 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
             { // too deep
                 bool isSolvent = silo0.isSolvent(borrower);
 
-                if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
-                if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
+                if (isSolvent && maxDebtToCover != 0) revert("if we solvent there should be no liquidation");
+                if (!isSolvent && maxDebtToCover == 0) revert("if we NOT solvent there should be a liquidation");
 
                 if (isSolvent) break;
             }
 
-            uint256 testDebtToCover = _calculateChunk(debtToCover, i);
+            uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
             emit log_named_uint("[LTV100FullWithChunks] testDebtToCover", testDebtToCover);
 
             (

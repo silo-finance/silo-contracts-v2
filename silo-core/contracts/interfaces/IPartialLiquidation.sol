@@ -31,7 +31,7 @@ interface IPartialLiquidation {
     error LiquidityFeeToHi();
     error EmptyDebtToCover();
     error NoDebtToCover();
-    error DebtToCoverTooSmall();
+    error FullLiquidationRequired();
     error OnlyDelegateCall();
     error InvalidSiloForCollateral();
     error UserIsSolvent();
