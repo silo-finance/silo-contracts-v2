@@ -162,14 +162,14 @@ library SiloMathLib {
         uint256 _totalShares,
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint256 shares) {
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
         // initially, in case of debt, if silo is empty we return shares==assets
-        // for collateral, this will never be the case, because of `+1` in line above
+        // for collateral, this will never be the case, because we are adding `+1` and offset in `_commonConvertTo`
         if (totalShares == 0) return _assets;
 
-        return _assets.mulDiv(totalShares, totalAssets, _rounding);
+        shares = _assets.mulDiv(totalShares, totalAssets, _rounding);
     }
 
     /// @dev Math for collateral is exact copy of

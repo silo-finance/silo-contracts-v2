@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -223,10 +222,7 @@ library SiloLendingLib {
 
         (assets, shares) = maxBorrowValueToAssetsAndShares({
             _maxBorrowValue: maxBorrowValue,
-            _borrowerDebtValue: borrowerDebtValue,
-            _borrower: _borrower,
             _debtAsset: _debtConfig.token,
-            _debtShareToken: _debtConfig.debtShareToken,
             _debtOracle: ltvData.debtOracle,
             _totalDebtAssets: _totalDebtAssets,
             _totalDebtShares: _totalDebtShares
@@ -313,10 +309,7 @@ library SiloLendingLib {
 
     /// @notice Calculates the maximum borrowable assets and shares
     /// @param _maxBorrowValue The maximum value that can be borrowed by the user
-    /// @param _borrowerDebtValue The current debt value of the borrower
-    /// @param _borrower The address of the borrower
     /// @param _debtAsset Address of the debt token
-    /// @param _debtShareToken Address of the debt share token
     /// @param _debtOracle Oracle used to get the value of the debt token
     /// @param _totalDebtAssets Total assets of the debt
     /// @param _totalDebtShares Total shares of the debt
@@ -324,10 +317,7 @@ library SiloLendingLib {
     /// @return shares Maximum borrowable shares
     function maxBorrowValueToAssetsAndShares(
         uint256 _maxBorrowValue,
-        uint256 _borrowerDebtValue,
-        address _borrower,
         address _debtAsset,
-        address _debtShareToken,
         ISiloOracle _debtOracle,
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares
@@ -340,31 +330,19 @@ library SiloLendingLib {
             return (0, 0);
         }
 
-        if (_borrowerDebtValue == 0) {
-            uint256 oneDebtAsset = 10 ** IERC20Metadata(_debtAsset).decimals();
+        uint256 debtTokenSample = _PRECISION_DECIMALS;
 
-            uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
-                ? oneDebtAsset
-                : _debtOracle.quote(oneDebtAsset, _debtAsset);
+        uint256 debtSampleValue = address(_debtOracle) == address(0)
+            ? debtTokenSample
+            : _debtOracle.quote(debtTokenSample, _debtAsset);
 
-            assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, oneDebtTokenValue, Rounding.MAX_BORROW_TO_ASSETS);
+        assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
-            // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
-            // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
-            // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
-            shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
-            );
-        } else {
-            uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
-
-            // on LTV calculation, we taking debt value, and we round UP when we calculating shares
-            // so here, when we want to calculate shares from value, we need to round down.
-            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, Rounding.MAX_BORROW_TO_SHARES);
-
-            assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
-            );
-        }
+        // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
+        // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
+        // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
+        shares = SiloMathLib.convertToShares(
+            assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
+        );
     }
 }
