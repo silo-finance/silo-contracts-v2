@@ -78,7 +78,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
 
         RevertLib.revertIfError(customError);
-        // if (repayDebtAssets == 0) revert NoDebtToCover();
 
         // we do not allow dust so full liquidation is required
         if (repayDebtAssets > _maxDebtToCover) revert FullLiquidationRequired();

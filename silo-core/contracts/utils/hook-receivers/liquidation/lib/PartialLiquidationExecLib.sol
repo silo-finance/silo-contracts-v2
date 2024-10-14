@@ -127,8 +127,6 @@ library PartialLiquidationExecLib {
     {
         uint256 sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
 
-        bytes4 noError;
-
         if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) {
             return (0, 0, IPartialLiquidation.NoDebtToCover.selector);
         }
@@ -139,7 +137,7 @@ library PartialLiquidationExecLib {
                 _params.maxDebtToCover > _ltvData.borrowerDebtAssets
                     ? _ltvData.borrowerDebtAssets
                     : _params.maxDebtToCover,
-                customError // no error
+                bytes4(0) // no error
             );
         }
 
