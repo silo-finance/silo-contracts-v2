@@ -111,7 +111,7 @@ function configForEightTokensSetupRequiremments() {
 
 
 function totalSuppliesMoreThanBalances(address user1, address user2) {
-    //assert user1 != user2;
+    require user1 != user2;
     require (
         to_mathint(silo0_R.totalSupply()) >=
         silo0_R.balanceOf(user1) + silo0_R.balanceOf(user2)
