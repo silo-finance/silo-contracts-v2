@@ -225,7 +225,7 @@ library SiloLendingLib {
             _maxBorrowValue: maxBorrowValue,
             _borrowerDebtValue: borrowerDebtValue,
             _borrower: _borrower,
-            _debtToken: _debtConfig.token,
+            _debtAsset: _debtConfig.token,
             _debtShareToken: _debtConfig.debtShareToken,
             _debtOracle: ltvData.debtOracle,
             _totalDebtAssets: _totalDebtAssets,
@@ -315,7 +315,7 @@ library SiloLendingLib {
     /// @param _maxBorrowValue The maximum value that can be borrowed by the user
     /// @param _borrowerDebtValue The current debt value of the borrower
     /// @param _borrower The address of the borrower
-    /// @param _debtToken Address of the debt token
+    /// @param _debtAsset Address of the debt token
     /// @param _debtShareToken Address of the debt share token
     /// @param _debtOracle Oracle used to get the value of the debt token
     /// @param _totalDebtAssets Total assets of the debt
@@ -326,7 +326,7 @@ library SiloLendingLib {
         uint256 _maxBorrowValue,
         uint256 _borrowerDebtValue,
         address _borrower,
-        address _debtToken,
+        address _debtAsset,
         address _debtShareToken,
         ISiloOracle _debtOracle,
         uint256 _totalDebtAssets,
@@ -341,11 +341,11 @@ library SiloLendingLib {
         }
 
         if (_borrowerDebtValue == 0) {
-            uint256 oneDebtToken = 10 ** IERC20Metadata(_debtToken).decimals();
+            uint256 oneDebtAsset = 10 ** IERC20Metadata(_debtAsset).decimals();
 
             uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
-                ? oneDebtToken
-                : _debtOracle.quote(oneDebtToken, _debtToken);
+                ? oneDebtAsset
+                : _debtOracle.quote(oneDebtAsset, _debtAsset);
 
             assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, oneDebtTokenValue, Rounding.MAX_BORROW_TO_ASSETS);
 
