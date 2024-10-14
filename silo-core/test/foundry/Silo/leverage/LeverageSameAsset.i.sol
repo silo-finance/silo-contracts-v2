@@ -77,7 +77,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     */
     function test_leverageSameAsset_noAllowanceDebtToken() public {
         uint256 depositAssets = 100e18;
-        uint256 anyBorrowAssets = 100e18;
+        uint256 anyBorrowAssets = 90e18;
 
         vm.expectRevert(abi.encodeWithSelector(
             IERC20Errors.ERC20InsufficientAllowance.selector,

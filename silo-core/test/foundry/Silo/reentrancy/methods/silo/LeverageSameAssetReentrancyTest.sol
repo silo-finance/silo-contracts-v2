@@ -47,12 +47,12 @@ contract LeverageSameAssetReentrancyTest is MethodReentrancyTest {
         ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.leverageSameAsset(1000, 1000, address(0), ISilo.CollateralType.Collateral);
+        silo0.leverageSameAsset(1000, 900, address(0), ISilo.CollateralType.Collateral);
 
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo1.leverageSameAsset(1000, 1000, address(0), ISilo.CollateralType.Collateral);
+        silo1.leverageSameAsset(1000, 900, address(0), ISilo.CollateralType.Collateral);
     }
 
     function methodDescription() external pure returns (string memory description) {
