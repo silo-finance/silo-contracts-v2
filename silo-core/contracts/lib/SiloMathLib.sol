@@ -54,33 +54,26 @@ library SiloMathLib {
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
 
-        unchecked {
-            // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
-            uint256 fees = _daoFee + _deployerFee;
-            bool overflowDetected;
+        uint256 fees;
 
-            (daoAndDeployerRevenue, overflowDetected) = mulOverflow(accruedInterest, fees);
+        // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
+        unchecked { fees = _daoFee + _deployerFee; }
 
-            // div is safe
-            daoAndDeployerRevenue = overflowDetected
-                // on overflow we only divide, so worse case scenario we will get lower revenue
-                ? accruedInterest / _PRECISION_DECIMALS
-                : daoAndDeployerRevenue / _PRECISION_DECIMALS;
+        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);
 
-            // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
-            uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
+        // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
+        uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
 
-            // save to uncheck because variable can not be more than max
-            uint256 cap = type(uint256).max - _collateralAssets;
+        // save to uncheck because variable can not be more than max
+        uint256 cap = type(uint256).max - _collateralAssets;
 
-            if (cap < collateralInterest) {
-                // avoid overflow on interest
-                collateralInterest = cap;
-            }
-
-            // safe to uncheck because of cap
-            collateralAssetsWithInterest = _collateralAssets + collateralInterest;
+        if (cap < collateralInterest) {
+            // avoid overflow on interest
+            collateralInterest = cap;
         }
+
+        // safe to uncheck because of cap
+        unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }
     }
 
     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
@@ -97,12 +90,9 @@ library SiloMathLib {
             return (_totalDebtAssets, 0);
         }
 
-        bool overflowDetected;
+        accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
 
         unchecked {
-            (accruedInterest, overflowDetected) = mulOverflow(_totalDebtAssets, _rcomp);
-            accruedInterest = overflowDetected ? 0 : accruedInterest / _PRECISION_DECIMALS;
-
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
 
@@ -325,6 +315,23 @@ library SiloMathLib {
             // we have to uncheck to detect overflow
             mulResult = _a * _b;
             overflow = mulResult / _a != _b;
+        }
+    }
+
+    /// @dev reverts on _c == 0
+    function mulDivOverflow(uint256 _a, uint256 _b, uint256 _c)
+        internal
+        pure
+        returns (uint256 mulDivResult)
+    {
+        if (_a == 0) return (0);
+
+        unchecked {
+            // we have to uncheck to detect overflow
+            mulDivResult = _a * _b;
+            if (mulDivResult / _a != _b) return 0;
+
+            mulDivResult /= _c;
         }
     }
 
