@@ -318,7 +318,8 @@ library SiloMathLib {
         }
     }
 
-    /// @dev reverts on _c == 0
+    /// @dev executed `_a * _b / _c`, reverts on _c == 0
+    /// @return on overflow returns 0
     function mulDivOverflow(uint256 _a, uint256 _b, uint256 _c)
         internal
         pure
