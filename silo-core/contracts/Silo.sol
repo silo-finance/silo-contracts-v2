@@ -53,6 +53,11 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
+    function getTotalAssetsStorage(uint256 _assetType) external view virtual returns (uint256 totalAssetsByType) {
+        totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
+    }
+
+    /// @inheritdoc ISilo
     function callOnBehalfOfSilo(address _target, uint256 _value, CallType _callType, bytes calldata _input)
         external
         virtual
@@ -661,11 +666,6 @@ contract Silo is ISilo, ShareCollateralToken {
         _accrueInterest();
         (uint256 daoFees, uint256 deployerFees) = Actions.withdrawFees(this);
         emit WithdrawnFeed(daoFees, deployerFees);
-    }
-
-    /// @inheritdoc ISilo
-    function getTotalAssetsStorage(ISilo.AssetType _assetType) external view returns (uint256 totalAssetsByType) {
-        totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
     }
 
     function _totalAssets() internal view virtual returns (uint256 totalManagedAssets) {
