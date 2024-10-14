@@ -9,7 +9,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -93,7 +92,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 2e18 * SiloMathLib._DECIMALS_OFFSET_POW, "collateral burned");
         assertEq(gotShares, sharesBefore, "withdraw all shares");
 
-        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "protected Assets should be withdrawn");
     }
 
     /*
@@ -126,7 +125,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
 
         _userWithdrawing();
 
-        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), 11e18 + 1, "protected Assets should be withdrawn");
+        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), 11e18 + 1, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 22e18 + 1, "protected Assets should be withdrawn");
     }
 
@@ -159,7 +158,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Protected);
         _withdraw(address(1), _deposit1 - _deposit1 / 2, ISilo.CollateralType.Collateral);
 
-        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), 0, "protected Assets should be withdrawn");
+        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "protected Assets should be withdrawn");
         assertEq(silo0.getCollateralAssets(), 0, "protected Assets should be withdrawn");
     }
 

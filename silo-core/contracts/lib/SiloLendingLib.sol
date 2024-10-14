@@ -17,7 +17,6 @@ import {Rounding} from "./Rounding.sol";
 import {Hook} from "./Hook.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 
 library SiloLendingLib {
     using SafeERC20 for IERC20;
@@ -44,7 +43,7 @@ library SiloLendingLib {
     ) internal returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
         (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
@@ -59,7 +58,7 @@ library SiloLendingLib {
         if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
-        unchecked { $.totalAssets[AssetTypes.DEBT] = totalDebtAssets - assets; }
+        unchecked { $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets - assets; }
 
         // Anyone can repay anyone's debt so no approval check is needed.
         _debtShareToken.burn(_borrower, _repayer, shares);
@@ -97,8 +96,8 @@ library SiloLendingLib {
         }
 
         uint256 totalFees;
-        uint256 totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
-        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
             totalCollateralAssets,
@@ -107,7 +106,7 @@ library SiloLendingLib {
         );
 
         (
-            $.totalAssets[AssetTypes.COLLATERAL], $.totalAssets[AssetTypes.DEBT], totalFees, accruedInterest
+            $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
             totalCollateralAssets,
             totalDebtAssets,
@@ -143,7 +142,7 @@ library SiloLendingLib {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsOrToShares(
             _args.assets,
@@ -155,14 +154,14 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        uint256 totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
         if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)) {
             revert ISilo.NotEnoughLiquidity();
         }
 
         // add new debt
-        $.totalAssets[AssetTypes.DEBT] = totalDebtAssets + borrowedAssets;
+        $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets + borrowedAssets;
 
         // `mint` checks if _spender is allowed to borrow on the account of _borrower.
         IShareToken(_debtShareToken).mint(_args.borrower, _spender, borrowedShares);

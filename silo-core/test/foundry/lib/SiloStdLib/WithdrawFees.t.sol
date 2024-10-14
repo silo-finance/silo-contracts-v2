@@ -8,7 +8,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
 import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
@@ -191,7 +190,7 @@ contract WithdrawFeesTest is Test {
     }
 
     function _setProtectedAssets(uint256 _assets) internal {
-        _$().totalAssets[AssetTypes.PROTECTED] = _assets;
+        _$().totalAssets[ISilo.AssetType.Protected] = _assets;
     }
 
     function _reset() internal {

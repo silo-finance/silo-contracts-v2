@@ -12,7 +12,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
@@ -439,7 +438,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             assertEq(token0.balanceOf(address(silo0)), dust + roundingError, "no balance after withdraw fees (except dust!)");
             assertEq(IShareToken(debtConfig.debtShareToken).totalSupply(), 0, "expected debtShareToken burned");
             assertEq(IShareToken(debtConfig.collateralShareToken).totalSupply(), 0, "expected collateralShareToken burned");
-            assertEq(silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL), dust + roundingError, "storage AssetType.Collateral");
+            assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral), dust + roundingError, "storage AssetType.Collateral");
             assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
             assertEq(silo0.getCollateralAssets(), dust + roundingError, "total collateral == 4+5, dust!");
             assertEq(silo0.getLiquidity(), dust + roundingError, "getLiquidity == 4+5, dust!");

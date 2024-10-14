@@ -22,7 +22,6 @@ import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
 import {Rounding} from "./lib/Rounding.sol";
 import {Hook} from "./lib/Hook.sol";
-import {AssetTypes} from "./lib/AssetTypes.sol";
 import {ShareTokenLib} from "./lib/ShareTokenLib.sol";
 import {SiloStorageLib} from "./lib/SiloStorageLib.sol";
 
@@ -665,7 +664,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256 totalAssetsByType) {
+    function getTotalAssetsStorage(ISilo.AssetType _assetType) external view returns (uint256 totalAssetsByType) {
         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
     }
 

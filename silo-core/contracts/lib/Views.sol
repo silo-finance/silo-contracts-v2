@@ -16,7 +16,6 @@ import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
@@ -63,7 +62,7 @@ library Views {
             _collateralType,
             // 0 for CollateralType.Collateral because it will be calculated internally
             _collateralType == ISilo.CollateralType.Protected
-                ? SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.PROTECTED]
+                ? SiloStorageLib.getSiloStorage().totalAssets[ISilo.AssetType.Protected]
                 : 0
         );
     }
@@ -95,17 +94,17 @@ library Views {
 
         daoAndDeployerRevenue = $.daoAndDeployerRevenue;
         interestRateTimestamp = $.interestRateTimestamp;
-        protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
-        collateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
-        debtAssets = $.totalAssets[AssetTypes.DEBT];
+        protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
+        collateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+        debtAssets = $.totalAssets[ISilo.AssetType.Debt];
     }
 
     function utilizationData() internal view returns (ISilo.UtilizationData memory) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         return ISilo.UtilizationData({
-            collateralAssets: $.totalAssets[AssetTypes.COLLATERAL],
-            debtAssets: $.totalAssets[AssetTypes.DEBT],
+            collateralAssets: $.totalAssets[ISilo.AssetType.Collateral],
+            debtAssets: $.totalAssets[ISilo.AssetType.Debt],
             interestRateTimestamp: $.interestRateTimestamp
         });
     }
@@ -125,8 +124,8 @@ library Views {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
-        totalProtectedAssets = $.totalAssets[AssetTypes.PROTECTED];
+        totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+        totalProtectedAssets = $.totalAssets[ISilo.AssetType.Protected];
     }
 
     function getCollateralAndDebtAssets()
@@ -136,8 +135,8 @@ library Views {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
-        totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+        totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
     }
 
     function copySiloConfig(

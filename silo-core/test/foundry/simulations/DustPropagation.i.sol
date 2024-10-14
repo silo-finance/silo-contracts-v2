@@ -7,7 +7,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -86,7 +85,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         );
 
         assertEq(
-            silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL),
+            silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral),
             DUST_LEFT,
             "storage AssetType.Collateral"
         );
@@ -239,7 +238,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[silo0] borrower LTV ", silo0.getLtv(BORROWER), 16);
         emit log_named_decimal_uint("[silo0] borrower collateral shares ", IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER), 18);
         emit log_named_decimal_uint("[silo0] borrower debt (max repay)", silo0.maxRepay(BORROWER), 18);
-        emit log_named_decimal_uint("[silo0] collateral assets RAW (storage)", silo0.getTotalAssetsStorage(AssetTypes.COLLATERAL), 18);
+        emit log_named_decimal_uint("[silo0] collateral assets RAW (storage)", silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral), 18);
         emit log_named_decimal_uint("[silo0] collateral assets with interest", silo0.getCollateralAssets(), 18);
         emit log_named_decimal_uint("[silo0] liquidity", silo0.getLiquidity(), 18);
         emit log_named_decimal_uint("[silo0] balanceOf(silo)", token0.balanceOf(address(silo0)), 18);

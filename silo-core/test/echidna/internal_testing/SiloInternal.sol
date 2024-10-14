@@ -6,7 +6,6 @@ import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -25,7 +24,7 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
 
         address _asset = _sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).mint(address(this), profit);
-        _$().totalAssets[AssetTypes.COLLATERAL] += profit;
+        _$().totalAssets[ISilo.AssetType.Collateral] += profit;
     }
 
     function recognizeLoss(uint256 loss) public {
@@ -33,6 +32,6 @@ contract SiloInternal is Silo, CryticIERC4626Internal {
 
         address _asset = _sharedStorage.siloConfig.getAssetForSilo(address(this));
         TestERC20Token(address(_asset)).burn(address(this), loss);
-        _$().totalAssets[AssetTypes.COLLATERAL] -= loss;
+        _$().totalAssets[ISilo.AssetType.Collateral] -= loss;
     }
 }

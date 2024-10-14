@@ -7,7 +7,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -113,7 +112,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     function _assertPreviewMint(uint256 _shares, bool _defaultType, uint8 _type) internal {
         // we can get overflow on numbers closed to max
         vm.assume(_shares < type(uint256).max / 1e3);
-        vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
+        vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
 
         (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
 

@@ -16,17 +16,17 @@ contract GetTotalAssetsStorageReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getTotalAssetsStorage(uint256)";
+        description = "getTotalAssetsStorage(uint8)";
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().getTotalAssetsStorage(uint256(ISilo.AssetType.Collateral));
-        TestStateLib.silo1().getTotalAssetsStorage(uint256(ISilo.AssetType.Collateral));
+        TestStateLib.silo0().getTotalAssetsStorage(ISilo.AssetType.Collateral);
+        TestStateLib.silo1().getTotalAssetsStorage(ISilo.AssetType.Collateral);
 
-        TestStateLib.silo0().getTotalAssetsStorage(uint256(ISilo.AssetType.Protected));
-        TestStateLib.silo1().getTotalAssetsStorage(uint256(ISilo.AssetType.Protected));
+        TestStateLib.silo0().getTotalAssetsStorage(ISilo.AssetType.Protected);
+        TestStateLib.silo1().getTotalAssetsStorage(ISilo.AssetType.Protected);
 
-        TestStateLib.silo0().getTotalAssetsStorage(uint256(ISilo.AssetType.Debt));
-        TestStateLib.silo1().getTotalAssetsStorage(uint256(ISilo.AssetType.Debt));
+        TestStateLib.silo0().getTotalAssetsStorage(ISilo.AssetType.Debt);
+        TestStateLib.silo1().getTotalAssetsStorage(ISilo.AssetType.Debt);
     }
 }

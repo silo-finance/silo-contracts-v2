@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 /*
 forge test --ffi -vv --mc UtilizationDataTest
@@ -27,8 +26,8 @@ contract UtilizationDataTest is Test {
     */
     function test_utilizationData_data() public {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        $.totalAssets[AssetTypes.COLLATERAL] = 1;
-        $.totalAssets[AssetTypes.DEBT] = 2;
+        $.totalAssets[ISilo.AssetType.Collateral] = 1;
+        $.totalAssets[ISilo.AssetType.Debt] = 2;
         $.interestRateTimestamp = 3;
 
         ISilo.UtilizationData memory data = Views.utilizationData();

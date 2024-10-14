@@ -132,7 +132,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSiloStorageMutationWithSiloExtension
     function testSiloStorageMutationWithSiloExtension() public {
         uint256 amoutToSend = 0;
-        uint256 assetType = uint256(ISilo.AssetType.Collateral);
+        ISilo.AssetType assetType = ISilo.AssetType.Collateral;
         uint256 expectedTotalCollateralAssets = 1_9999_9999e18;
 
         address target = address(new SiloStorageExtension());

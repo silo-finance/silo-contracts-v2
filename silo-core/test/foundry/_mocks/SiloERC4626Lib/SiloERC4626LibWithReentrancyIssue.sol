@@ -11,7 +11,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 // solhint-disable function-max-lines
 
@@ -31,7 +30,7 @@ library SiloERC4626LibWithReentrancyIssue {
     ) public returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        uint256 totalAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
         (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
@@ -50,7 +49,7 @@ library SiloERC4626LibWithReentrancyIssue {
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         unchecked {
-            $.totalAssets[AssetTypes.COLLATERAL] = totalAssets + assets;
+            $.totalAssets[ISilo.AssetType.Collateral] = totalAssets + assets;
         }
         
         // Hook receiver is called after `mint` and can reentry but state changes are completed already

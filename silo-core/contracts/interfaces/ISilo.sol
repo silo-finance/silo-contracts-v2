@@ -127,7 +127,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         /// - DEBT: Amount of asset token that has been borrowed plus accrued interest.
         /// `totalAssets` can have outdated value (without interest), if you doing view call (of off-chain call)
         /// please use getters eg `getCollateralAssets()` to fetch value that includes interest.
-        mapping(uint256 assetType => uint256 assets) totalAssets;
+        mapping(AssetType assetType => uint256 assets) totalAssets;
     }
 
     /// @notice Emitted on protected deposit
@@ -237,7 +237,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     function isSolvent(address _borrower) external view returns (bool);
 
     /// @notice Retrieves the raw total amount of assets based on provided type (direct storage access)
-    function getTotalAssetsStorage(uint256 _assetType) external view returns (uint256);
+    function getTotalAssetsStorage(AssetType _assetType) external view returns (uint256);
 
     /// @notice Direct storage access to silo storage
     /// @dev See struct `SiloStorage` for more details

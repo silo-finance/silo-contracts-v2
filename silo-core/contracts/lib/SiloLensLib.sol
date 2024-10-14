@@ -11,14 +11,13 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 import {Hook} from "./Hook.sol";
 
 library SiloLensLib {
     function getRawLiquidity(ISilo _silo) internal view returns (uint256 liquidity) {
         return SiloMathLib.liquidity(
-            _silo.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            _silo.getTotalAssetsStorage(AssetTypes.DEBT)
+            _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral),
+            _silo.getTotalAssetsStorage(ISilo.AssetType.Debt)
         );
     }
 

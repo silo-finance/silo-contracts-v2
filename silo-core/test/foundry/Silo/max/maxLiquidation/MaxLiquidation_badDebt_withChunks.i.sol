@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
@@ -89,7 +88,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
             emit log_named_uint("debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, borrower));
-            emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(AssetTypes.COLLATERAL));
+            emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral));
             emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
 
             uint256 collateralToLiquidate;

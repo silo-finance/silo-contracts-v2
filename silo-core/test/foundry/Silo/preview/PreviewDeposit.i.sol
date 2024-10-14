@@ -8,7 +8,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
@@ -35,7 +34,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
-        vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
+        vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
 
         (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
 
@@ -52,7 +51,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
-        vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
+        vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
 
         (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
 
