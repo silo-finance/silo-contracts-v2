@@ -166,7 +166,7 @@ library SiloMathLib {
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
         // initially, in case of debt, if silo is empty we return shares==assets
-        // for collateral, this will never be the case, because we adding `+1` and offset in `_commonConvertTo`
+        // for collateral, this will never be the case, because we are adding `+1` and offset in `_commonConvertTo`
         if (totalShares == 0) return _assets;
 
         shares = _assets.mulDiv(totalShares, totalAssets, _rounding);
