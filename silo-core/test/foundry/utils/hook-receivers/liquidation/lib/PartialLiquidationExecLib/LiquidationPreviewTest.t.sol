@@ -24,24 +24,28 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         SiloSolvencyLib.LtvData memory ltvData;
         PartialLiquidationLib.LiquidationPreviewParams memory params;
 
-        (uint256 receiveCollateral, uint256 repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        uint256 receiveCollateral;
+        uint256 repayDebt;
+        bytes4 customError;
+
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty values");
         assertEq(repayDebt, 0, "zero debt on empty values");
 
         ltvData.borrowerCollateralAssets = 1;
-        (receiveCollateral, repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty debt");
         assertEq(repayDebt, 0, "zero debt on empty debt");
 
         ltvData.borrowerCollateralAssets = 0;
         ltvData.borrowerDebtAssets = 1;
-        (receiveCollateral, repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty collateral");
         assertEq(repayDebt, 0, "zero debt on empty collateral");
 
         ltvData.borrowerCollateralAssets = 1000;
         ltvData.borrowerDebtAssets = 100;
-        (receiveCollateral, repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on solvent borrower");
         assertEq(repayDebt, 0, "zero debt on solvent borrower");
     }
