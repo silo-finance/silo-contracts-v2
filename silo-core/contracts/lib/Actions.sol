@@ -223,6 +223,7 @@ library Actions {
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
+        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
         if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
 
         _hookCallBeforeLeverageSameAsset(_args);
