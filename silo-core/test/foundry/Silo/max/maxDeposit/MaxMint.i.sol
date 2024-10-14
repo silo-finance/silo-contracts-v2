@@ -24,7 +24,7 @@ contract MaxMintTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_maxMint
     */
-    function test_maxMint() public {
+    function test_maxMint() public view {
         assertEq(silo0.maxMint(address(1)), 2 ** 256 - 1, "ERC4626 expect to return 2 ** 256 - 1");
     }
 }

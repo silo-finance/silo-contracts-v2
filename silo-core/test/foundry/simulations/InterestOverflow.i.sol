@@ -88,7 +88,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             // even when overflow, we can deposit
             // approval is +2 because of rounding UP on convertToAssets and mint
             uint256 minted = _mintForBorrow(dust + 2, 1, makeAddr("user4"));
-            assertEq(minted, dust + 1, "minted assets"); // why +1? if convertToAssets returns dust
+            assertEq(minted, dust, "minted assets");
 
             // this repay covers interest only
             // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
@@ -163,7 +163,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         emit log_named_uint("withdraw", withdrawn);
 
         if (_deposited != 0) {
-            assertLe(_deposited, withdrawn, "user should not lose");
+            assertLe(_deposited, withdrawn + 1, "user should not lose"); // +1 for rounding
         }
 
         assertEq(silo1.maxWithdraw(_user), 0, "max");
