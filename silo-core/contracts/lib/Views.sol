@@ -110,17 +110,6 @@ library Views {
         });
     }
 
-    function getCollateralAssets() internal view returns (uint256 totalCollateralAssets) {
-        ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
-
-        totalCollateralAssets = SiloStdLib.getTotalCollateralAssetsWithInterest(
-            thisSiloConfig.silo,
-            thisSiloConfig.interestRateModel,
-            thisSiloConfig.daoFee,
-            thisSiloConfig.deployerFee
-        );
-    }
-
     function getDebtAssets() internal view returns (uint256 totalDebtAssets) {
         ISiloConfig.ConfigData memory thisSiloConfig = ShareTokenLib.getConfig();
 
