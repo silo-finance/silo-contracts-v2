@@ -14,5 +14,6 @@ interface ISiloOracle {
     /// @param _baseToken Address of priced token
     function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount);
 
+    /// @return address of token in which quote (price) is denominated
     function quoteToken() external view returns (address);
 }

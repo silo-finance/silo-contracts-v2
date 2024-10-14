@@ -441,6 +441,7 @@ contract Silo is ISilo, ShareCollateralToken {
         );
     }
 
+    /// @inheritdoc ISilo
     function switchCollateralToThisSilo() external virtual {
         Actions.switchCollateralToThisSilo();
         emit CollateralTypeChanged(msg.sender);
@@ -634,6 +635,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IERC3156FlashLender
+    /// @notice this method neither turn on nor checks reentrancy protection on silo
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
         virtual

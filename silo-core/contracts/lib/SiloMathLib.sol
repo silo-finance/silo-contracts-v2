@@ -194,6 +194,9 @@ library SiloMathLib {
         assets = _shares.mulDiv(totalAssets, totalShares, _rounding);
     }
 
+    /// @param _collateralMaxLtv maxLTV in 18 decimals that is set for debt asset
+    /// @param _sumOfBorrowerCollateralValue borrower total collateral value (including protected)
+    /// @param _borrowerDebtValue total value of borrower debt
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
         uint256 _collateralMaxLtv,

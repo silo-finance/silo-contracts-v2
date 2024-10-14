@@ -127,7 +127,9 @@ interface ISiloFactory is IERC721 {
     /// @notice Get SiloConfig address by Silo id.
     function idToSiloConfig(uint256 _id) external view returns (address);
 
-    /// @notice True if the address is Silo, false otherwise.
+    /// @notice Do not use this method to check if silo is secure. Anyone can deploy silo with any configuration
+    /// and implementation. Most critical part of verification would be to check who deployed it.
+    /// @dev True if the address was deployed using SiloFactory.
     function isSilo(address _silo) external view returns (bool);
 
     /// @notice Id of a next Silo to be deployed. This is an ID of non-existing Silo outside of createSilo

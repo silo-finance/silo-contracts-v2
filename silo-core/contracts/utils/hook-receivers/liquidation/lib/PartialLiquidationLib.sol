@@ -77,11 +77,7 @@ library PartialLiquidationLib {
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 
-    /// @dev in case of self liquidation or in case of bad debt, we do not apply any restrictions.
-    /// We do not have restriction how much user need to repay, so there is no point of having restrictions on self
-    /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
-    /// In case of bad debt, liquidation without restriction will be possible only in case of receiving underlying
-    /// tokens, because sToken transfer fail when we leave user insolvent
+    /// @dev in case of bad debt, we do not apply any restrictions.
     /// @notice might revert when one of this values will be zero:
     /// `_sumOfCollateralValue`, `_borrowerDebtAssets`, `_borrowerDebtValue`
     function liquidationPreview( // solhint-disable-line function-max-lines

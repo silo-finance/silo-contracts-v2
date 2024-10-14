@@ -194,13 +194,13 @@ library Views {
         configData1.callBeforeQuote = _initData.callBeforeQuote1;
     }
 
+    // solhint-disable-next-line code-complexity
     function validateSiloInitData(
         ISiloConfig.InitData memory _initData,
         uint256 _maxDeployerFee,
         uint256 _maxFlashloanFee,
         uint256 _maxLiquidationFee
     ) internal view returns (bool) {
-        // solhint-disable-previous-line code-complexity
         if (_initData.hookReceiver == address(0)) revert ISiloFactory.MissingHookReceiver();
 
         if (_initData.token0 == address(0)) revert ISiloFactory.EmptyToken0();
