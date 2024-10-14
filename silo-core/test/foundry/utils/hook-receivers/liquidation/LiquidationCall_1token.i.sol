@@ -36,6 +36,8 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     event LiquidationCall(address indexed liquidator, bool receiveSToken);
     error SenderNotSolventAfterTransfer();
 
+    event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
+
     function setUp() public {
         siloConfig = _setUpLocalFixture();
 
@@ -427,6 +429,10 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
                 maxDebtToCover - debtToRepay + collateralToLiquidate - roundingError + 2, /* +2 for underestimate */
                 "liquidator should get all borrower collateral, no fee because of bad debt"
             );
+
+            // testing event for coverage
+            vm.expectEmit(true, true, true, true);
+            emit WithdrawnFeed(7247046524394624088, 4831364349596416059);
 
             silo0.withdrawFees();
 

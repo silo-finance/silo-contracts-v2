@@ -437,7 +437,7 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
-    function withdrawFees(ISilo _silo) external {
+    function withdrawFees(ISilo _silo) external returns (uint256 daoRevenue, uint256 deployerRevenue) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 earnedFees = $.daoAndDeployerRevenue;
@@ -471,8 +471,7 @@ library Actions {
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
-            uint256 daoRevenue = earnedFees * daoFee;
-            uint256 deployerRevenue;
+            daoRevenue = earnedFees * daoFee;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck

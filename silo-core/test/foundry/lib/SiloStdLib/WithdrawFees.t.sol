@@ -22,7 +22,6 @@ contract WithdrawFeesTest is Test {
     ISiloConfig public config;
     ISiloFactory public factory;
 
-
     SiloConfigMock siloConfig;
     SiloFactoryMock siloFactory;
     TokenMock token;
@@ -127,6 +126,7 @@ contract WithdrawFeesTest is Test {
         daoFee = 0.20e18;
         deployerFee = 0.01e18;
         daoFees = daoAndDeployerRevenue * 20/21;
+
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
     }
 
@@ -181,6 +181,7 @@ contract WithdrawFeesTest is Test {
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
         _setProtectedAssets(NO_PROTECTED_ASSETS);
+
         _withdrawFees(ISilo(address(this)));
         assertEq(_$().daoAndDeployerRevenue, 0, "fees cleared");
     }
