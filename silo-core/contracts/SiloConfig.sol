@@ -69,7 +69,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     uint256 internal immutable _FLASHLOAN_FEE1;
 
     bool internal immutable _CALL_BEFORE_QUOTE1;
-
+    
+    /// @inheritdoc ISiloConfig
     mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
     
     /// @param _siloId ID of this pool assigned by factory
