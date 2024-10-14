@@ -53,11 +53,6 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getTotalAssetsStorage(uint256 _assetType) external view virtual returns (uint256 totalAssetsByType) {
-        totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
-    }
-
-    /// @inheritdoc ISilo
     function callOnBehalfOfSilo(address _target, uint256 _value, CallType _callType, bytes calldata _input)
         external
         virtual
@@ -101,6 +96,11 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.isSolvent(_borrower);
     }
 
+    /// @inheritdoc ISilo
+    function getTotalAssetsStorage(uint256 _assetType) external view virtual returns (uint256 totalAssetsByType) {
+        totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
+    }
+    
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         totalCollateralAssets = _totalAssets();
