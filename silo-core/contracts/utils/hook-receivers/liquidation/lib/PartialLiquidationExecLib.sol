@@ -122,9 +122,7 @@ library PartialLiquidationExecLib {
         view
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
     {
-        uint256 sumOfCollateralAssets;
-        // safe because same asset can not overflow
-        unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
+        uint256 sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
 
         if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) return (0, 0);
 
