@@ -11,7 +11,7 @@
 
     // ---- Dispatcher ---------------------------------------------------------
     // Using `DISPATCHER` for calls like `IShareToken(debtShareToken).balanceOf(borrower)`
-    function _.decimals() external => DISPATCHER(true);
+    function _.decimals() external => PER_CALLEE_CONSTANT;
     function _.totalSupply() external => DISPATCHER(true);
     function _.balanceOf(address) external => DISPATCHER(true);
     function _.allowance(address,address) external => DISPATCHER(true);
