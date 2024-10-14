@@ -34,7 +34,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
-        vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
+        vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
 
         (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
 
@@ -51,7 +51,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /// forge-config: core-test.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
-        vm.assume(_type == AssetTypes.COLLATERAL || _type == AssetTypes.PROTECTED);
+        vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
 
         (ISilo.CollateralType cType, ISilo.AssetType aType) = _castToTypes(_defaultType, _type);
 

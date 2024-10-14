@@ -153,9 +153,6 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (borrowedShares == 0) revert ISilo.ZeroShares();
-        if (borrowedAssets == 0) revert ISilo.ZeroAssets();
-
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
         if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)) {

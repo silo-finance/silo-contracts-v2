@@ -65,9 +65,6 @@ library SiloERC4626Lib {
             ISilo.AssetType(uint256(_collateralType))
         );
 
-        if (assets == 0) revert ISilo.ZeroAssets();
-        if (shares == 0) revert ISilo.ZeroShares();
-
         $.totalAssets[ISilo.AssetType(uint256(_collateralType))] = totalAssets + assets;
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already,
