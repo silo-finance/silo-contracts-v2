@@ -78,7 +78,8 @@ library SiloLendingLib {
     /// @param _deployerFee Deployer's fee in 18 decimals points
     /// @return accruedInterest The total amount of interest accrued
     function accrueInterestForAsset(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
-        external returns (uint256 accruedInterest)
+        external
+        returns (uint256 accruedInterest)
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
