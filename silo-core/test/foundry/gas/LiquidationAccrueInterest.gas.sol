@@ -40,11 +40,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
                 (address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
-<<<<<<< HEAD
-            444537
-=======
-            441741
->>>>>>> e67ac5e5 (gas after rebase)
+            443767
         );
     }
 }

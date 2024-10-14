@@ -32,11 +32,7 @@ contract RepayPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPartAccrueInterest partial with accrue interest",
-<<<<<<< HEAD
-            143710
-=======
             141565
->>>>>>> e67ac5e5 (gas after rebase)
         );
     }
 }

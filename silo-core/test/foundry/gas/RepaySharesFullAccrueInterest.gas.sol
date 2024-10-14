@@ -37,11 +37,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS, BORROWER),
             "RepaySharesFullAccrueInterest full (shares) with accrue interest",
-<<<<<<< HEAD
-            136410
-=======
             134265
->>>>>>> e67ac5e5 (gas after rebase)
         );
     }
 }
