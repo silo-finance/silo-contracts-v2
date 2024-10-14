@@ -28,12 +28,21 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 forge test -vv --ffi --mc SiloFactoryCreateSiloTest
 */
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
-    string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
+    string public constant SILO_TO_DEPLOY = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
 
     ISiloFactory siloFactory;
     ISiloConfig siloConfig;
     SiloConfigData siloData;
     InterestRateModelConfigData modelData;
+
+    event NewSilo(
+        address indexed implementation,
+        address indexed token0,
+        address indexed token1,
+        address silo0,
+        address silo1,
+        address siloConfig
+    );
 
     function setUp() public {
         siloData = new SiloConfigData();
@@ -145,5 +154,35 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareDebtTokenImpl empty
         siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, address(0));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_createSilo_NewSiloEvent
+    */
+    function test_createSilo_NewSiloEvent() public {
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
+
+        address siloImpl = makeAddr("siloImpl");
+        address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
+        address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
+
+        ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
+
+        initData.hookReceiver = makeAddr("hookReceiver");
+        initData.token0 = makeAddr("token0");
+        initData.token1 = makeAddr("token1");
+        
+        vm.expectEmit(true, true, true, false);
+
+        emit NewSilo(
+            makeAddr("siloImpl"),
+            makeAddr("token0"),
+            makeAddr("token1"),
+            address(0),
+            address(0),
+            makeAddr("siloConfig")
+        );
+
+        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
     }
 }
