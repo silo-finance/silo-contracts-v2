@@ -334,7 +334,7 @@ library SiloLendingLib {
 
         uint256 debtSampleValue = address(_debtOracle) == address(0)
             ? debtTokenSample
-            : _debtOracle.quote(debtTokenSample, _debtToken);
+            : _debtOracle.quote(debtTokenSample, _debtAsset);
 
         assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
