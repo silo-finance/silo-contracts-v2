@@ -4,8 +4,8 @@ pragma solidity 0.8.24;
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
-import {ShareCollateralTokenLib} from "../lib/ShareCollateralTokenLib.sol";
 import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
+import {ShareCollateralTokenLib} from "../lib/ShareCollateralTokenLib.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
@@ -38,7 +38,8 @@ abstract contract ShareCollateralToken is ShareToken {
         // for minting or burning, Silo is responsible to check all necessary conditions
         // for transfer make sure that _sender is solvent after transfer
         if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
-            ShareCollateralTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
+            bool senderIsSolvent = ShareCollateralTokenLib.isSolventAfterCollateralTransfer(_sender);
+            if (!senderIsSolvent) revert IShareToken.SenderNotSolventAfterTransfer();
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
