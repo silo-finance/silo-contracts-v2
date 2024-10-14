@@ -91,6 +91,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
+        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
+        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
+
         _cloneShareTokens(
             configData0,
             configData1,
@@ -98,9 +101,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _shareDebtTokenImpl,
             nextSiloId
         );
-
-        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
-        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
 
         ISilo(configData0.silo).initialize(_siloConfig);
         ISilo(configData1.silo).initialize(_siloConfig);
