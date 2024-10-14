@@ -58,8 +58,8 @@ contract SiloLendingLibBorrowTestData {
         uint256 i;
 
         _init(data[i], "#0 all zeros");
-        data[i].output.reverts = ISilo.ZeroAssets.selector;
-        data[i].mocks.debtSharesTotalSupplyMock = false;
+        data[i].output.reverts = ISilo.InputZeroAssetsOrShares.selector;
+        data[i].mocks.debtSharesTotalSupplyMock = true;
 
         i++;
         _init(data[i], "#1 NotEnoughLiquidity if no collateral");

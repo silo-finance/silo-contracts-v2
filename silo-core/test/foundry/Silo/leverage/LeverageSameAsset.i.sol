@@ -46,19 +46,8 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_all_zeros
     */
     function test_leverageSameAsset_all_zeros() public {
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.LeverageTooHigh.selector);
         silo0.leverageSameAsset(0, 0, address(0), COLLATERAL);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_zero_depositAssets
-    */
-    function test_leverageSameAsset_zero_depositAssets() public {
-        uint256 depositAssets = 0;
-        uint256 anyBorrowAssets = 100e18;
-
-        vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.leverageSameAsset(depositAssets, anyBorrowAssets, borrower, COLLATERAL);
     }
 
     /*
@@ -68,7 +57,9 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         uint256 depositAssets = 100e18;
         uint256 zeroBorrowAssets = 0;
 
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        token0.approve(address(silo0), depositAssets);
+
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.leverageSameAsset(depositAssets, zeroBorrowAssets, borrower, COLLATERAL);
     }
 

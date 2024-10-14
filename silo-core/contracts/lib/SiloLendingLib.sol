@@ -42,13 +42,11 @@ library SiloLendingLib {
         address _borrower,
         address _repayer
     ) internal returns (uint256 assets, uint256 shares) {
-        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
-
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
             _shares,
             totalDebtAssets,
@@ -58,7 +56,6 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (shares == 0) revert ISilo.ZeroShares();
         if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
@@ -143,13 +140,11 @@ library SiloLendingLib {
         internal
         returns (uint256 borrowedAssets, uint256 borrowedShares)
     {
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
-
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
 
-        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
+        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsOrToShares(
             _args.assets,
             _args.shares,
             totalDebtAssets,
@@ -158,9 +153,6 @@ library SiloLendingLib {
             Rounding.BORROW_TO_SHARES,
             ISilo.AssetType.Debt
         );
-
-        if (borrowedShares == 0) revert ISilo.ZeroShares();
-        if (borrowedAssets == 0) revert ISilo.ZeroAssets();
 
         uint256 totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
 

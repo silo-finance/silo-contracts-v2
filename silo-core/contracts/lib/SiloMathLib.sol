@@ -134,7 +134,7 @@ library SiloMathLib {
         }
     }
 
-    function convertToAssetsAndToShares(
+    function convertToAssetsOrToShares(
         uint256 _assets,
         uint256 _shares,
         uint256 _totalAssets,
@@ -143,6 +143,8 @@ library SiloMathLib {
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
+        if (_assets == 0 && _shares == 0) revert ISilo.InputZeroAssetsOrShares();
+
         if (_assets == 0) {
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
@@ -152,6 +154,8 @@ library SiloMathLib {
         } else {
             revert ISilo.InputCanBeAssetsOrShares();
         }
+
+        if (assets == 0 || shares == 0) revert ISilo.ReturnZeroAssetsOrShares();
     }
 
     /// @dev Math for collateral is exact copy of

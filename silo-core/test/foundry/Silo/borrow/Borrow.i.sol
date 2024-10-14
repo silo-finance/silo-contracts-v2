@@ -36,7 +36,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_all_zeros
     */
     function test_borrow_all_zeros() public {
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.borrow(0, address(0), address(0));
     }
 
@@ -47,7 +47,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         uint256 assets = 0;
         address borrower = address(1);
 
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.borrow(assets, borrower, borrower);
     }
 
