@@ -324,7 +324,6 @@ library SiloMathLib {
         unchecked {
             // we have to uncheck to detect overflow
             mulResult = _a * _b;
-            // safe to unchecked because we do not div by 0
             overflow = mulResult / _a != _b;
         }
     }
