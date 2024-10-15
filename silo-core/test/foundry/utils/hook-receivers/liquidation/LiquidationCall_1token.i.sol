@@ -679,7 +679,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     function _liquidationCall_badDebt_full(bool _receiveSToken) internal {
-        uint256 maxDebtToCover = 100e18;
+        uint256 maxDebtToCover = type(uint256).max;
         address liquidator = makeAddr("liquidator");
 
         // move forward with time so we can have interests
@@ -709,7 +709,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(debtToRepay, maxRepay, "debtToRepay == maxRepay");
         assertEq(debtToRepay, silo0.getDebtAssets(), "debtToRepay == all debt");
 
-        token0.mint(liquidator, maxDebtToCover);
+        token0.mint(liquidator, 100e18);
         vm.prank(liquidator);
         token0.approve(address(partialLiquidation), maxDebtToCover);
 
