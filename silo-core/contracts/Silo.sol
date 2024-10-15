@@ -97,7 +97,12 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getTotalAssetsStorage(uint256 _assetType) external view virtual returns (uint256 totalAssetsByType) {
+    function getTotalAssetsStorage(AssetType _assetType)
+        external
+        view
+        virtual
+        returns (uint256 totalAssetsByType)
+    {
         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];
     }
     
