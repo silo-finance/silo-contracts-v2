@@ -49,7 +49,8 @@ interface IPartialLiquidation {
     /// - `_debtAsset` is not a token that `_user` borrow
     /// - `_user` is solvent and there is no debt to cover
     /// - `_maxDebtToCover` is set to cover only part of the debt but full liquidation is required
-    /// - when not enough liquidity to transfer `_user` collateral to liquidator (use `_receiveSToken == true` in that case)
+    /// - when not enough liquidity to transfer from `_user` collateral to liquidator
+    ///   (use `_receiveSToken == true` in that case)
     /// @param _collateralAsset The address of the underlying asset used as collateral, to receive as result
     /// @param _debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
     /// @param _user The address of the borrower getting liquidated
