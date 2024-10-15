@@ -23,7 +23,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     address public otherUser = makeAddr("someOtherUser");
     uint256 public mintAmout = 100e18;
 
-    string private constant _NAME = "SiloShareToken";
+    string private constant _NAME = "SiloShareTokenEIP712Name";
     string private constant _VERSION = "1";
     bytes32 private constant _TYPE_HASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");

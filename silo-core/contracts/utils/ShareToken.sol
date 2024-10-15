@@ -63,7 +63,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    string private constant _NAME = "SiloShareToken";
+    string private constant _NAME = "SiloShareTokenEIP712Name";
 
     modifier onlySilo() {
         if (msg.sender != address(_getSilo())) revert OnlySilo();
@@ -216,7 +216,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         initializer
     {
         __ERC20Permit_init(_NAME);
-        __ERC20_init(_NAME, _NAME);
+
         ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
@@ -264,11 +264,11 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOnReentrancyProtection();
     }
 
-    function _getSiloConfig() internal view returns (ISiloConfig) {
+    function _getSiloConfig() internal view virtual returns (ISiloConfig) {
         return ShareTokenLib.getShareTokenStorage().siloConfig;
     }
     
-    function _getSilo() internal view returns (ISilo) {
+    function _getSilo() internal view virtual returns (ISilo) {
         return ShareTokenLib.getShareTokenStorage().silo;
     }
 }
