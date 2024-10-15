@@ -1,3 +1,5 @@
+/* Integrity of main methods */
+
 import "../summaries/two_silos_summaries.spec";
 import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";

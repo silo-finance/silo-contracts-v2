@@ -94,15 +94,15 @@ function configForEightTokensSetupRequiremments() {
     require silo1_R.silo() == silo1_R;
     require silo1_R.config() == siloConfig_R;
 
-    require shareDebtToken0_R.silo() == silo0;
-    require shareProtectedCollateralToken0_R.silo() == silo0;
+    require shareDebtToken0_R.silo() == silo0_R;
+    require shareProtectedCollateralToken0_R.silo() == silo0_R;
     
     require silo0_R.siloConfig() == siloConfig_R;
     require shareDebtToken0_R.siloConfig() == siloConfig_R;
     require shareDebtToken0_R.siloConfig() == siloConfig_R;
 
-    require shareDebtToken1_R.silo() == silo1;
-    require shareProtectedCollateralToken1_R.silo() == silo1;
+    require shareDebtToken1_R.silo() == silo1_R;
+    require shareProtectedCollateralToken1_R.silo() == silo1_R;
     
     require silo1_R.siloConfig() == siloConfig_R;
     require shareDebtToken1_R.siloConfig() == siloConfig_R;
@@ -146,5 +146,51 @@ function totalSuppliesMoreThanBalances(address user1, address user2) {
     require (
         to_mathint(token1_R.totalSupply()) >=
         token1_R.balanceOf(user1) + token1_R.balanceOf(user2)
+    );
+}
+
+
+function totalSuppliesMoreThanThreeBalances(address user1, address user2, address user3) {
+    require user1 != user2 && user1 != user3 && user2 != user3;
+    require (
+        to_mathint(silo0_R.totalSupply()) >=
+        silo0_R.balanceOf(user1) + silo0_R.balanceOf(user2) + silo0_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareDebtToken0_R.totalSupply()) >=
+        shareDebtToken0_R.balanceOf(user1) +
+        shareDebtToken0_R.balanceOf(user2) +
+        shareDebtToken0_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken0_R.totalSupply()) >=
+        shareProtectedCollateralToken0_R.balanceOf(user1) +
+        shareProtectedCollateralToken0_R.balanceOf(user2) +
+        shareProtectedCollateralToken0_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(token0_R.totalSupply()) >=
+        token0_R.balanceOf(user1) + token0_R.balanceOf(user2) + token0_R.balanceOf(user3)
+    );
+
+    require (
+        to_mathint(silo1_R.totalSupply()) >=
+        silo1_R.balanceOf(user1) + silo1_R.balanceOf(user2) + silo1_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareDebtToken1_R.totalSupply()) >=
+        shareDebtToken1_R.balanceOf(user1) +
+        shareDebtToken1_R.balanceOf(user2) +
+        shareDebtToken1_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken1_R.totalSupply()) >=
+        shareProtectedCollateralToken1_R.balanceOf(user1) +
+        shareProtectedCollateralToken1_R.balanceOf(user2) +
+        shareProtectedCollateralToken1_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(token1_R.totalSupply()) >=
+        token1_R.balanceOf(user1) + token1_R.balanceOf(user2) + token1_R.balanceOf(user3)
     );
 }
