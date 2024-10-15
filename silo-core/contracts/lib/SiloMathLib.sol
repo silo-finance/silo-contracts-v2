@@ -54,24 +54,26 @@ library SiloMathLib {
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
 
-        unchecked {
-            // If we overflow on multiplication it should not revert tx, we will get lower fees
-            daoAndDeployerRevenue = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
-            // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
-            // even when we overflow on above *, daoAndDeployerRevenue will be even lower chunk
-            uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
+        uint256 fees;
 
-            // save to uncheck because variable can not be more than max
-            uint256 cap = type(uint256).max - _collateralAssets;
+        // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
+        unchecked { fees = _daoFee + _deployerFee; }
 
-            if (cap < collateralInterest) {
-                // avoid overflow on interest
-                collateralInterest = cap;
-            }
+        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);
 
-            // safe to uncheck because of cap
-            collateralAssetsWithInterest = _collateralAssets + collateralInterest;
+        // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
+        uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
+
+        // save to uncheck because variable can not be more than max
+        uint256 cap = type(uint256).max - _collateralAssets;
+
+        if (cap < collateralInterest) {
+            // avoid overflow on interest
+            collateralInterest = cap;
         }
+
+        // safe to uncheck because of cap
+        unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }
     }
 
     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
@@ -88,9 +90,10 @@ library SiloMathLib {
             return (_totalDebtAssets, 0);
         }
 
+        accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
+
         unchecked {
-            // We intentionally allow overflow here to prevent transaction revert due to interest calculation.
-            accruedInterest = _totalDebtAssets * _rcomp / _PRECISION_DECIMALS;
+            // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
 
             // If overflow occurs, we skip accruing interest.
@@ -303,6 +306,24 @@ library SiloMathLib {
             Rounding.MAX_WITHDRAW_TO_SHARES,
             ISilo.AssetType(uint256(_collateralType))
         );
+    }
+
+    /// @dev executed `_a * _b / _c`, reverts on _c == 0
+    /// @return mulDivResult on overflow returns 0
+    function mulDivOverflow(uint256 _a, uint256 _b, uint256 _c)
+        internal
+        pure
+        returns (uint256 mulDivResult)
+    {
+        if (_a == 0) return (0);
+
+        unchecked {
+            // we have to uncheck to detect overflow
+            mulDivResult = _a * _b;
+            if (mulDivResult / _a != _b) return 0;
+
+            mulDivResult /= _c;
+        }
     }
 
     /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for

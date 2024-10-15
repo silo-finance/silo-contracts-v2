@@ -111,9 +111,10 @@ contract GetCollateralAmountsWithInterestTest is Test {
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _rcomp,
-        uint256 _daoFee,
-        uint256 _deployerFee
+        uint64 _daoFee,
+        uint64 _deployerFee
     ) public pure {
+        vm.assume(uint256(_daoFee) + _deployerFee <= 1e18);
         SiloMathLib.getCollateralAmountsWithInterest(_collateralAssets, _debtAssets, _rcomp, _daoFee, _deployerFee);
     }
 
