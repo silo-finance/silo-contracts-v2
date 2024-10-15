@@ -44,8 +44,9 @@ interface IPartialLiquidation {
     ///   an equivalent amount in `collateralAsset` plus a liquidation fee to cover market risk
     /// @dev this method reverts when:
     /// - `_maxDebtToCover` is zero
-    /// - `_collateralAsset` or `_debtAsset` does not match the position
-    /// - `_collateralAsset` or `_debtAsset` does not match the position
+    /// - `_collateralAsset` is not `_user` collateral token (note, that user can have both tokens in Silo, but only one
+    ///   is for back up debt
+    /// - `_debtAsset` is not a token that `_user` borrow
     /// - `_user` is solvent and there is no debt to cover
     /// - `_maxDebtToCover` is set to cover only part of the debt but full liquidation is required
     /// - when not enough liquidity to transfer `_user` collateral to liquidator (use `_receiveSToken == true` in that case)
