@@ -630,9 +630,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc IERC3156FlashLender
     function maxFlashLoan(address _token) external view virtual returns (uint256 maxLoan) {
-        maxLoan = _token == ShareTokenLib.siloConfig().getAssetForSilo(address(this))
-            ? IERC20(_token).balanceOf(address(this))
-            : 0;
+        maxLoan = Views.maxFlashLoan(_token);
     }
 
     /// @inheritdoc IERC3156FlashLender
@@ -641,7 +639,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IERC3156FlashLender
-    /// @notice this method neither turn on nor checks reentrancy protection on silo
+    /// @notice Protected deposits are not available for a flash loan.
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
         virtual

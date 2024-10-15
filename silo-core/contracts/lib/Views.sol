@@ -44,6 +44,19 @@ library Views {
         fee = SiloStdLib.flashFee(ShareTokenLib.siloConfig(), _token, _amount);
     }
 
+    function maxFlashLoan(address _token) internal view returns (uint256 maxLoan) {
+        if (_token != ShareTokenLib.siloConfig().getAssetForSilo(address(this))) return 0;
+
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        uint256 protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
+        uint256 balance = IERC20(_token).balanceOf(address(this));
+
+        unchecked {
+            // we check underflow ourself
+            return balance > protectedAssets ? balance - protectedAssets : 0;
+        }
+    }
+
     function maxBorrow(address _borrower, bool _sameAsset)
         external
         view

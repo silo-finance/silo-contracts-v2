@@ -23,6 +23,7 @@ import {CallBeforeQuoteLib} from "./CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "./NonReentrantLib.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
+import {Views} from "./Views.sol";
 
 library Actions {
     using SafeERC20 for IERC20;
@@ -33,6 +34,7 @@ library Actions {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     error FeeOverflow();
+    error FlashLoanNotPossible();
 
     function initialize(ISiloConfig _siloConfig) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
@@ -397,6 +399,8 @@ library Actions {
         uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
 
         if (fee > type(uint192).max) revert FeeOverflow();
+        // this check also verify if token is correct
+        if (_amount > Views.maxFlashLoan(_token)) revert FlashLoanNotPossible();
 
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
