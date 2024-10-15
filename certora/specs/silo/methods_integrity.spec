@@ -1,7 +1,7 @@
 import "../summaries/two_silos_summaries.spec";
 import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";
-import "../summaries/sound.spec";  // safe-approximations
+import "../summaries/safe-approximations.spec";
 
 import "../requirements/tokens_requirements.spec";
 
