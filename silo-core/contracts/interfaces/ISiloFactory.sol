@@ -60,6 +60,7 @@ interface ISiloFactory is IERC721 {
     error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
     error InvalidQuoteToken();
+    error HookIsZeroAddress();
 
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.

@@ -113,7 +113,7 @@ contract SiloFactorySettersTest is Test {
     function test_setDaoFeeReceiver(address _newDaoFeeReceiver) public {
         vm.assume(_newDaoFeeReceiver != address(0));
 
-        vm.expectRevert(ISiloFactory.ZeroAddress.selector);
+        vm.expectRevert(ISiloFactory.HookIsZeroAddress.selector);
         siloFactory.setDaoFeeReceiver(address(0));
 
         vm.prank(hacker);
