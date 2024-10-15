@@ -199,6 +199,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error InputZeroAssetsOrShares();
     error ReturnZeroAssetsOrShares();
 
+    /// @return siloFactory The associated factory of the silo
+    function factory() external view returns (ISiloFactory siloFactory);
+
     /// @notice Method for HookReceiver only to call on behalf of Silo
     /// @param _target address of the contract to call
     /// @param _value amount of ETH to send
@@ -220,9 +223,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Fetches the silo configuration contract
     /// @return siloConfig Address of the configuration contract associated with the silo
     function config() external view returns (ISiloConfig siloConfig);
-
-    /// @return siloFactory The associated factory of the silo
-    function factory() external view returns (ISiloFactory siloFactory);
 
     /// @notice Fetches the utilization data of the silo used by IRM
     function utilizationData() external view returns (UtilizationData memory utilizationData);
@@ -328,21 +328,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         external
         returns (uint256 assets);
 
-    /// @notice Transitions assets between borrowable (collateral) and non-borrowable (protected) states
-    /// @dev This function allows assets to move between collateral and protected (non-borrowable) states without
-    /// leaving the protocol
-    /// @param _shares Amount of shares to be transitioned
-    /// @param _owner Owner of the assets being transitioned
-    /// @param _transitionFrom Specifies if the transition is from collateral or protected assets
-    /// @return assets Amount of assets transitioned
-    function transitionCollateral(uint256 _shares, address _owner, CollateralType _transitionFrom)
-        external
-        returns (uint256 assets);
-    
-    /// @notice Switches the collateral silo to this silo
-    /// @dev Revert if the collateral silo is already set
-    function switchCollateralToThisSilo() external;
-
     /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
     /// @param _borrower Address of the potential borrower
     /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
@@ -350,30 +335,10 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// Reason for underestimation is to return value that will not cause borrow revert
     function maxBorrow(address _borrower) external view returns (uint256 maxAssets);
 
-    /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
-    /// @param _borrower Address of the potential borrower
-    /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
-    /// That means, in some cases when you borrow maxAssets, you will be able to borrow again eg. up to 2wei
-    /// Reason for underestimation is to return value that will not cause borrow revert
-    function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets);
-
     /// @notice Previews the amount of shares equivalent to the given asset amount for borrowing
     /// @param _assets Amount of assets to preview the equivalent shares for
     /// @return shares Amount of shares equivalent to the provided asset amount
     function previewBorrow(uint256 _assets) external view returns (uint256 shares);
-
-    /// @notice Allows an address to borrow a specified amount of same assets in efficient way
-    /// @dev In opposite to regular borrow, Silo will transfer necessary collateral (difference between collateral
-    /// and debt amount) FROM `_borrower`. Existing collateral is not taken into consideration.
-    /// @param _deposit Amount of deposit to leverage
-    /// @param _borrow Amount of assets to borrow
-    /// @param _borrower Address responsible for the borrowed assets
-    /// @param _collateralType asset type for collateral
-    /// @return depositShares Amount of shares equivalent to the collateral assets
-    /// @return borrowShares Amount of shares equivalent to the borrowed assets
-    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType)
-        external
-        returns (uint256 depositShares, uint256 borrowShares);
 
     /// @notice Allows an address to borrow a specified amount of assets
     /// @param _assets Amount of assets to borrow
@@ -381,15 +346,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @param _borrower Address responsible for the borrowed assets
     /// @return shares Amount of shares equivalent to the borrowed assets
     function borrow(uint256 _assets, address _receiver, address _borrower)
-        external returns (uint256 shares);
-
-    /// @notice Allows an address to borrow a specified amount of assets that will be back up with deposit made with the
-    /// same asset
-    /// @param _assets Amount of assets to borrow
-    /// @param _receiver Address receiving the borrowed assets
-    /// @param _borrower Address responsible for the borrowed assets
-    /// @return shares Amount of shares equivalent to the borrowed assets
-    function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
         external returns (uint256 shares);
 
     /// @notice Calculates the maximum amount of shares that can be borrowed by the given address
@@ -401,6 +357,22 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @param _shares Amount of shares to preview the equivalent assets for
     /// @return assets Amount of assets equivalent to the provided share amount
     function previewBorrowShares(uint256 _shares) external view returns (uint256 assets);
+
+    /// @notice Calculates the maximum amount of assets that can be borrowed by the given address
+    /// @param _borrower Address of the potential borrower
+    /// @return maxAssets Maximum amount of assets that the borrower can borrow, this value is underestimated
+    /// That means, in some cases when you borrow maxAssets, you will be able to borrow again eg. up to 2wei
+    /// Reason for underestimation is to return value that will not cause borrow revert
+    function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets);
+
+    /// @notice Allows an address to borrow a specified amount of assets that will be back up with deposit made with the
+    /// same asset
+    /// @param _assets Amount of assets to borrow
+    /// @param _receiver Address receiving the borrowed assets
+    /// @param _borrower Address responsible for the borrowed assets
+    /// @return shares Amount of shares equivalent to the borrowed assets
+    function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
+        external returns (uint256 shares);
 
     /// @notice Allows a user to borrow assets based on the provided share amount
     /// @param _shares Amount of shares to borrow against
@@ -442,6 +414,34 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @param _borrower The address of the borrower for whom to repay the loan
     /// @return assets The equivalent assets amount for the provided shares
     function repayShares(uint256 _shares, address _borrower) external returns (uint256 assets);
+
+    /// @notice Transitions assets between borrowable (collateral) and non-borrowable (protected) states
+    /// @dev This function allows assets to move between collateral and protected (non-borrowable) states without
+    /// leaving the protocol
+    /// @param _shares Amount of shares to be transitioned
+    /// @param _owner Owner of the assets being transitioned
+    /// @param _transitionFrom Specifies if the transition is from collateral or protected assets
+    /// @return assets Amount of assets transitioned
+    function transitionCollateral(uint256 _shares, address _owner, CollateralType _transitionFrom)
+        external
+        returns (uint256 assets);
+
+    /// @notice Switches the collateral silo to this silo
+    /// @dev Revert if the collateral silo is already set
+    function switchCollateralToThisSilo() external;
+
+    /// @notice Allows an address to borrow a specified amount of same assets in efficient way
+    /// @dev In opposite to regular borrow, Silo will transfer necessary collateral (difference between collateral
+    /// and debt amount) FROM `_borrower`. Existing collateral is not taken into consideration.
+    /// @param _deposit Amount of deposit to leverage
+    /// @param _borrow Amount of assets to borrow
+    /// @param _borrower Address responsible for the borrowed assets
+    /// @param _collateralType asset type for collateral
+    /// @return depositShares Amount of shares equivalent to the collateral assets
+    /// @return borrowShares Amount of shares equivalent to the borrowed assets
+    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType)
+        external
+        returns (uint256 depositShares, uint256 borrowShares);
 
     /// @notice Accrues interest for the asset and returns the accrued interest amount
     /// @return accruedInterest The total interest accrued during this operation
