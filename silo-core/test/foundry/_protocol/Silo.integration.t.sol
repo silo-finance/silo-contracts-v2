@@ -113,7 +113,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         ISilo(silo0).deposit(amountToDeposit, _alice, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
-        uint256 borrowAmount = 10_000e6;
+        uint256 borrowAmount = ISilo(silo1).maxBorrow(_alice);
 
         vm.prank(_alice);
         ISilo(silo1).borrow(borrowAmount, _alice, _alice);

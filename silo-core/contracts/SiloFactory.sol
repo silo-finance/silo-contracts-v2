@@ -226,7 +226,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setDaoFeeReceiver(address _newDaoFeeReceiver) internal virtual {
-        if (_newDaoFeeReceiver == address(0)) revert ZeroAddress();
+        if (_newDaoFeeReceiver == address(0)) revert HookIsZeroAddress();
 
         daoFeeReceiver = _newDaoFeeReceiver;
 
