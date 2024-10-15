@@ -45,7 +45,7 @@ interface IPartialLiquidation {
     /// @dev this method reverts when:
     /// - `_maxDebtToCover` is zero
     /// - `_collateralAsset` is not `_user` collateral token (note, that user can have both tokens in Silo, but only one
-    ///   is for back up debt
+    ///   is for backing debt
     /// - `_debtAsset` is not a token that `_user` borrow
     /// - `_user` is solvent and there is no debt to cover
     /// - `_maxDebtToCover` is set to cover only part of the debt but full liquidation is required
