@@ -48,7 +48,7 @@ library Views {
         if (_token != ShareTokenLib.siloConfig().getAssetForSilo(address(this))) return 0;
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        uint256 protectedAssets = $.totalAssets[AssetTypes.PROTECTED];
+        uint256 protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
         uint256 balance = IERC20(_token).balanceOf(address(this));
 
         unchecked {
