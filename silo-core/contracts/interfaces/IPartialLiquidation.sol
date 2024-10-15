@@ -42,11 +42,19 @@ interface IPartialLiquidation {
     /// @notice Function to liquidate insolvent position
     /// - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
     ///   an equivalent amount in `collateralAsset` plus a liquidation fee to cover market risk
-    /// @dev user can use this method to do self liquidation, it that case, check for LT requirements will be ignored
+    /// @dev this method reverts when:
+    /// - `_maxDebtToCover` is zero
+    /// - `_collateralAsset` is not `_user` collateral token (note, that user can have both tokens in Silo, but only one
+    ///   is for backing debt
+    /// - `_debtAsset` is not a token that `_user` borrow
+    /// - `_user` is solvent and there is no debt to cover
+    /// - `_maxDebtToCover` is set to cover only part of the debt but full liquidation is required
+    /// - when not enough liquidity to transfer from `_user` collateral to liquidator
+    ///   (use `_receiveSToken == true` in that case)
     /// @param _collateralAsset The address of the underlying asset used as collateral, to receive as result
     /// @param _debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
     /// @param _user The address of the borrower getting liquidated
-    /// @param _debtToCover The debt amount of borrowed `asset` the liquidator wants to cover,
+    /// @param _maxDebtToCover The maximum debt amount of borrowed `asset` the liquidator wants to cover,
     /// in case this amount is too big, it will be reduced to maximum allowed liquidation amount
     /// @param _receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
@@ -57,7 +65,7 @@ interface IPartialLiquidation {
         address _collateralAsset,
         address _debtAsset,
         address _user,
-        uint256 _debtToCover,
+        uint256 _maxDebtToCover,
         bool _receiveSToken
     )
         external
