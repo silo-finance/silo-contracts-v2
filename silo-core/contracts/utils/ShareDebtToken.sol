@@ -6,7 +6,7 @@ import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
-import {ERC20RStorage} from "../lib/ERC20RStorage.sol";
+import {ERC20RStorageLib} from "../lib/ERC20RStorageLib.sol";
 import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.sol";
 
 /// @title ShareDebtToken
@@ -86,7 +86,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         if (_owner == address(0)) revert IShareToken.OwnerIsZero();
         if (_recipient == address(0)) revert IShareToken.RecipientIsZero();
 
-        IERC20R.Storage storage $ = ERC20RStorage.getIERC20RStorage();
+        IERC20R.Storage storage $ = ERC20RStorageLib.getIERC20RStorage();
 
         $._receiveAllowances[_owner][_recipient] = _amount;
 
@@ -108,7 +108,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
             $.siloConfig.onDebtTransfer(_sender, _recipient);
 
             // _recipient must approve debt transfer, _sender does not have to
-            uint256 currentAllowance = receiveAllowance(_sender, _recipient);
+            uint256 currentAllowance = _receiveAllowance(_sender, _recipient);
             if (currentAllowance < _amount) revert IShareToken.AmountExceedsAllowance();
 
             uint256 newDebtAllowance;
@@ -138,6 +138,6 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
     }
 
     function _receiveAllowance(address _owner, address _recipient) internal view virtual returns (uint256) {
-        return ERC20RStorage.getIERC20RStorage()._receiveAllowances[_owner][_recipient];
+        return ERC20RStorageLib.getIERC20RStorage()._receiveAllowances[_owner][_recipient];
     }
 }

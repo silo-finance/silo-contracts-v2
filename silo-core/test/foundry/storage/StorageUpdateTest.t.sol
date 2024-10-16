@@ -8,7 +8,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
-import {ERC20RStorage} from "silo-core/contracts/lib/ERC20RStorage.sol";
+import {ERC20RStorageLib} from "silo-core/contracts/lib/ERC20RStorageLib.sol";
 
 interface ISomeSilo {
     function accrueInterest() external;
@@ -84,7 +84,7 @@ contract StorageUpdateTest is ISomeSilo, Test {
     function test_ERC20RStoragePointer() public {
         string memory pointerSalt = "silo.storage.ERC20R";
 
-        IERC20R.Storage storage debtTokenStorage = ERC20RStorage.getIERC20RStorage();
+        IERC20R.Storage storage debtTokenStorage = ERC20RStorageLib.getIERC20RStorage();
 
         bytes32 currentPointer;
 
