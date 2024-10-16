@@ -7,7 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {VmLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
+import {SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
@@ -77,7 +77,6 @@ contract SiloConfigData {
             solvencyOracle0: address(0),
             maxLtvOracle0: address(0),
             interestRateModel0: _resolveDeployedContract(config.interestRateModel0),
-            interestRateModelConfig0: address(0),
             maxLtv0: config.maxLtv0 * BP2DP_NORMALIZATION,
             lt0: config.lt0 * BP2DP_NORMALIZATION,
             liquidationFee0: config.liquidationFee0 * BP2DP_NORMALIZATION,
@@ -87,7 +86,6 @@ contract SiloConfigData {
             solvencyOracle1: address(0),
             maxLtvOracle1: address(0),
             interestRateModel1: _resolveDeployedContract(config.interestRateModel1),
-            interestRateModelConfig1: address(0),
             maxLtv1: config.maxLtv1 * BP2DP_NORMALIZATION,
             lt1: config.lt1 * BP2DP_NORMALIZATION,
             liquidationFee1: config.liquidationFee1 * BP2DP_NORMALIZATION,

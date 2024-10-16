@@ -3,11 +3,8 @@ pragma solidity 0.8.24;
 
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
-import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
-
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
-import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 
 
 /// @title SiloLens has some helper methods that can be useful with integration
@@ -16,11 +13,6 @@ contract SiloLens is ISiloLens {
 
     function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
         return _silo.getRawLiquidity();
-    }
-
-    /// @inheritdoc ISiloLens
-    function borrowPossible(ISilo _silo, address _borrower) external view virtual returns (bool possible) {
-        return _silo.borrowPossible(_borrower);
     }
 
     /// @inheritdoc ISiloLens

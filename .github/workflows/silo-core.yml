@@ -70,6 +70,9 @@ jobs:
                 with:
                     path: ./cache/
                     key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    restore-keys: |
+                        silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                        silo-core-contracts-cache-
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
@@ -83,14 +86,15 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
+            -   name: Run single test to build cache for contracts
+                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
+
             -   name: Run Forge build
                 run: |
                     git submodule
                     forge --version
                     FOUNDRY_PROFILE=core forge build --sizes
 
-            -   name: Run single test to build cache for contracts
-                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
     linters:
         needs: silo-core-cache
         runs-on: ubuntu-latest
@@ -153,7 +157,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxDepositTest|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:

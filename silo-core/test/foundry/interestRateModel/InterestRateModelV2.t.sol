@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
@@ -18,8 +18,45 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
 
     uint256 constant DP = 10 ** 18;
 
+    event Initialized(address indexed config);
+
     constructor() {
         INTEREST_RATE_MODEL = new InterestRateModelV2();
+    }
+
+    /*
+    forge test -vv --mt test_initialize_zero
+    */
+    function test_initialize_zero() public {
+        vm.expectRevert(IInterestRateModelV2.AddressZero.selector);
+        INTEREST_RATE_MODEL.initialize(address(0));
+    }
+
+    /*
+    forge test -vv --mt test_initialize_pass
+    */
+    function test_initialize_pass() public {
+        address config = makeAddr("config");
+
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(config);
+
+        INTEREST_RATE_MODEL.initialize(config);
+
+        IInterestRateModelV2Config connectedConfig = INTEREST_RATE_MODEL.irmConfig();
+        assertEq(address(connectedConfig), config, "expect valid config address");
+    }
+
+    /*
+    forge test -vv --mt test_initialize_onlyOnce
+    */
+    function test_initialize_onlyOnce() public {
+        address config = makeAddr("config");
+
+        INTEREST_RATE_MODEL.initialize(config);
+
+        vm.expectRevert(IInterestRateModelV2.AlreadyInitialized.selector);
+        INTEREST_RATE_MODEL.initialize(config);
     }
 
     function test_IRM_decimals() public view {
@@ -105,6 +142,50 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         );
 
         assertEq(rcur, 0, "expect to get 0 for time 0");
+    }
+
+    // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_lastIf
+    function test_IRM_calculateCompoundInterestRateWithOverflowDetection_lastIf() public view {
+        uint256 rcomp;
+        int256 ri;
+        int256 Tcrit;
+        bool overflow;
+
+        IInterestRateModelV2.ConfigWithState memory config = IInterestRateModelV2.ConfigWithState({
+            uopt: 300000000000000000,
+            ucrit: 500000000000000000,
+            ulow: 700000000000000000,
+            ki: 1761655,
+            kcrit: 63419583967,
+            klow: 3170979198,
+            klin: 634195839,
+            beta: 69444444444444,
+            ri: 0,
+            Tcrit: 0
+        });
+
+        uint256 totalDeposits = 100000457166948244788346880;
+        uint256 totalBorrowAmount = 50000228583474122394173440;
+        uint256 interestRateTimestamp = 48537565;
+        uint256 blockTimestamp = 485411651;
+
+        (rcomp, ri, Tcrit, overflow) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
+            config,
+            totalDeposits, // _totalDeposits,
+            totalBorrowAmount, // _totalBorrowAmount,
+            interestRateTimestamp, // _interestRateTimestamp,
+            blockTimestamp
+        );
+
+        uint256 expectedRcomp = 1385318639015527684336;
+        uint256 expectedRi = 0;
+        uint256 expectedTcrit = 0;
+        bool expectedOverflow = true;
+
+        assertEq(rcomp, expectedRcomp, "expect exact rcomp value");
+        assertEq(uint256(ri), expectedRi, "expect exact ri value");
+        assertEq(uint256(Tcrit), expectedTcrit, "expect exact Tcrit value");
+        assertEq(overflow, expectedOverflow, "expect exact overflow value");
     }
 
     // forge test -vv --mt test_IRM_calculateRComp

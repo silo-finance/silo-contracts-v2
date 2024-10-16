@@ -12,7 +12,7 @@ contract TransferReentrancyTest is MethodReentrancyTest {
         MaliciousToken token = MaliciousToken(TestStateLib.token0());
         ISilo silo = TestStateLib.silo0();
         address depositor = makeAddr("Depositor");
-        address recepient = makeAddr("Recepient");
+        address recipient = makeAddr("Recipient");
         uint256 amount = 100e18;
 
         TestStateLib.disableReentrancy();
@@ -28,7 +28,7 @@ contract TransferReentrancyTest is MethodReentrancyTest {
         TestStateLib.enableReentrancy();
 
         vm.prank(depositor);
-        silo.transfer(recepient, amount);
+        silo.transfer(recipient, amount);
     }
 
     function verifyReentrancy() external {

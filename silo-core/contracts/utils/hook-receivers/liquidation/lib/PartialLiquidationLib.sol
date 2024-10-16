@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
@@ -14,9 +13,8 @@ library PartialLiquidationLib {
         uint256 collateralLt;
         address collateralConfigAsset;
         address debtConfigAsset;
-        uint256 debtToCover;
+        uint256 maxDebtToCover;
         uint256 liquidationFee;
-        bool selfLiquidation;
     }
 
     /// @dev this is basically LTV == 100%
@@ -28,9 +26,10 @@ library PartialLiquidationLib {
     /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
-    /// @dev if repay value : total debt value during liquidation is higher than _DEBT_DUST_LEVEL_IN_BP
-    /// then we will force full liquidation,
-    /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
+    /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the 
+    /// _DEBT_DUST_LEVEL threshold, a full liquidation is triggered.
+    /// For example, if the total debt value is 51 and the dust level is set at 98%, 
+    /// then we are unable to liquidate 50, we must proceed to liquidate the entire 51.
     uint256 internal constant _DEBT_DUST_LEVEL = 0.9e18; // 90%
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
@@ -77,11 +76,7 @@ library PartialLiquidationLib {
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 
-    /// @dev in case of self liquidation or in case of bad debt, we do not apply any restrictions.
-    /// We do not have restriction how much user need to repay, so there is no point of having restrictions on self
-    /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
-    /// In case of bad debt, liquidation without restriction will be possible only in case of receiving underlying
-    /// tokens, because sToken transfer fail when we leave user insolvent
+    /// @dev in case of bad debt, we do not apply any restrictions.
     /// @notice might revert when one of this values will be zero:
     /// `_sumOfCollateralValue`, `_borrowerDebtAssets`, `_borrowerDebtValue`
     function liquidationPreview( // solhint-disable-line function-max-lines
@@ -99,9 +94,9 @@ library PartialLiquidationLib {
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
-        if (_params.selfLiquidation || _ltvBefore >= _BAD_DEBT) {
-            // in case of self liquidation OR when we have bad debt, we allow for any amount
-            debtToRepay = _params.debtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.debtToCover;
+        if (_ltvBefore >= _BAD_DEBT) {
+            // in case of bad debt, we allow for any amount
+            debtToRepay = _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
             uint256 maxRepayValue = estimateMaxRepayValue(
@@ -118,13 +113,13 @@ library PartialLiquidationLib {
             } else {
                 // partial liquidation
                 uint256 maxDebtToRepay = valueToAssetsByRatio(maxRepayValue, _borrowerDebtAssets, _borrowerDebtValue);
-                debtToRepay = _params.debtToCover > maxDebtToRepay ? maxDebtToRepay : _params.debtToCover;
+                debtToRepay = _params.maxDebtToCover > maxDebtToRepay ? maxDebtToRepay : _params.maxDebtToCover;
                 debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
             }
         }
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
-            debtValueToRepay, _sumOfCollateralValue, _params.selfLiquidation ? 0 : _params.liquidationFee
+            debtValueToRepay, _sumOfCollateralValue, _params.liquidationFee
         );
 
         collateralToLiquidate = valueToAssetsByRatio(
@@ -204,18 +199,18 @@ library PartialLiquidationLib {
         );
     }
 
-    /// @param _debtToCover assets or value, but must be in sync with `_totalCollateral`
-    /// @param _sumOfCollateral assets or value, but must be in sync with `_debtToCover`
+    /// @param _maxDebtToCover assets or value, but must be in sync with `_totalCollateral`
+    /// @param _sumOfCollateral assets or value, but must be in sync with `_maxDebtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function calculateCollateralToLiquidate(uint256 _debtToCover, uint256 _sumOfCollateral, uint256 _liquidityFee)
+    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidityFee)
         internal
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _debtToCover * _liquidityFee;
+        uint256 fee = _maxDebtToCover * _liquidityFee;
         unchecked { fee /= _PRECISION_DECIMALS; }
 
-        toLiquidate = _debtToCover + fee;
+        toLiquidate = _maxDebtToCover + fee;
 
         if (toLiquidate > _sumOfCollateral) {
             toLiquidate = _sumOfCollateral;
@@ -328,7 +323,7 @@ library PartialLiquidationLib {
 
     /// @notice must stay private because this is not for general LTV, only for ltv after
     function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
-        // there might be cases, where ltv will go up slighty, so we can not unchecked mul based on
+        // there might be cases, where ltv will go up slightly, so we can not unchecked mul based on
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
         ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -44,7 +44,7 @@ contract CalculateCurrentInterestRateGasTest is Gas, Test {
                 data.interestRateTimestamp + 30 days
             )),
             "CalculateCurrentInterestRate",
-            12384
+            13599
         );
     }
 }

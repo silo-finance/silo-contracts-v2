@@ -8,70 +8,69 @@ import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
 import {Hook} from "./lib/Hook.sol";
 
-// solhint-disable var-name-mixedcase
-
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
-/// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
+/// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheaper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     using Hook for uint256;
     
     uint256 public immutable SILO_ID;
 
-    uint256 private immutable _DAO_FEE;
-    uint256 private immutable _DEPLOYER_FEE;
-    address private immutable _HOOK_RECEIVER;
+    uint256 internal immutable _DAO_FEE;
+    uint256 internal immutable _DEPLOYER_FEE;
+    address internal immutable _HOOK_RECEIVER;
 
     // TOKEN #0
 
-    address private immutable _SILO0;
+    address internal immutable _SILO0;
 
-    address private immutable _TOKEN0;
+    address internal immutable _TOKEN0;
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address private immutable _PROTECTED_COLLATERAL_SHARE_TOKEN0;
+    address internal immutable _PROTECTED_COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total deposits of Silo
-    address private immutable _COLLATERAL_SHARE_TOKEN0;
+    address internal immutable _COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total debt of Silo
-    address private immutable _DEBT_SHARE_TOKEN0;
+    address internal immutable _DEBT_SHARE_TOKEN0;
 
-    address private immutable _SOLVENCY_ORACLE0;
-    address private immutable _MAX_LTV_ORACLE0;
+    address internal immutable _SOLVENCY_ORACLE0;
+    address internal immutable _MAX_LTV_ORACLE0;
 
-    address private immutable _INTEREST_RATE_MODEL0;
+    address internal immutable _INTEREST_RATE_MODEL0;
 
-    uint256 private immutable _MAX_LTV0;
-    uint256 private immutable _LT0;
-    uint256 private immutable _LIQUIDATION_FEE0;
-    uint256 private immutable _FLASHLOAN_FEE0;
+    uint256 internal immutable _MAX_LTV0;
+    uint256 internal immutable _LT0;
+    uint256 internal immutable _LIQUIDATION_FEE0;
+    uint256 internal immutable _FLASHLOAN_FEE0;
 
-    bool private immutable _CALL_BEFORE_QUOTE0;
+    bool internal immutable _CALL_BEFORE_QUOTE0;
 
     // TOKEN #1
 
-    address private immutable _SILO1;
+    address internal immutable _SILO1;
 
-    address private immutable _TOKEN1;
+    address internal immutable _TOKEN1;
 
     /// @dev Token that represents a share in total protected deposits of Silo
-    address private immutable _PROTECTED_COLLATERAL_SHARE_TOKEN1;
+    address internal immutable _PROTECTED_COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total deposits of Silo
-    address private immutable _COLLATERAL_SHARE_TOKEN1;
+    address internal immutable _COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total debt of Silo
-    address private immutable _DEBT_SHARE_TOKEN1;
+    address internal immutable _DEBT_SHARE_TOKEN1;
 
-    address private immutable _SOLVENCY_ORACLE1;
-    address private immutable _MAX_LTV_ORACLE1;
+    address internal immutable _SOLVENCY_ORACLE1;
+    address internal immutable _MAX_LTV_ORACLE1;
 
-    address private immutable _INTEREST_RATE_MODEL1;
+    address internal immutable _INTEREST_RATE_MODEL1;
 
-    uint256 private immutable _MAX_LTV1;
-    uint256 private immutable _LT1;
-    uint256 private immutable _LIQUIDATION_FEE1;
-    uint256 private immutable _FLASHLOAN_FEE1;
+    uint256 internal immutable _MAX_LTV1;
+    uint256 internal immutable _LT1;
+    uint256 internal immutable _LIQUIDATION_FEE1;
+    uint256 internal immutable _FLASHLOAN_FEE1;
 
-    bool private immutable _CALL_BEFORE_QUOTE1;
-
+    bool internal immutable _CALL_BEFORE_QUOTE1;
+    
+    /// @inheritdoc ISiloConfig
     mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
     
     /// @param _siloId ID of this pool assigned by factory
@@ -194,7 +193,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigs(address _borrower) external view virtual returns (
+    function getConfigsForSolvency(address _borrower) external view virtual returns (
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
@@ -232,7 +231,15 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
     {
-        address collateralSilo = _debtSilo == _SILO0 ? _SILO1 : _SILO0;
+        address collateralSilo; 
+        
+        if (_debtSilo == _SILO0) {
+            collateralSilo = _SILO1;
+        } else if (_debtSilo == _SILO1) {
+            collateralSilo = _SILO0;
+        } else {
+            revert WrongSilo();
+        }
 
         collateralConfig = getConfig(collateralSilo);
         debtConfig = getConfig(_debtSilo);
@@ -365,7 +372,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO0,
-            otherSilo: _SILO1,
             token: _TOKEN0,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
             collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
@@ -387,7 +393,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO1,
-            otherSilo: _SILO0,
             token: _TOKEN1,
             protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
             collateralShareToken: _COLLATERAL_SHARE_TOKEN1,

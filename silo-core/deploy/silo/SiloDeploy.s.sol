@@ -5,14 +5,9 @@ import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
-import {CommonDeploy, SiloCoreContracts} from "../_CommonDeploy.sol";
-import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
+import {CommonDeploy} from "../_CommonDeploy.sol";
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";

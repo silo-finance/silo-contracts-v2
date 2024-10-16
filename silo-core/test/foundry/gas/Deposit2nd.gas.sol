@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
@@ -24,7 +24,7 @@ contract Deposit2ndGasTest is Gas, Test {
             address(silo0),
             abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "Deposit2nd (no interest)",
-            81823
+            84954
         );
     }
 }

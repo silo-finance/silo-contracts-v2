@@ -7,7 +7,9 @@ import {console} from "forge-std/console.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
+import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
@@ -261,6 +263,10 @@ abstract contract SiloLittleHelper is CommonBase {
         (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
+    }
+
+    function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage _sharedStorage) {
+        _sharedStorage = ShareTokenLib.getShareTokenStorage();
     }
 
     function _printStats(ISiloConfig _siloConfig, address _borrower) internal view {

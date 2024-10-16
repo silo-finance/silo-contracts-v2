@@ -3,12 +3,11 @@ pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -19,11 +18,8 @@ import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookRecei
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 
-import {GaugeHookReceiverDeploy} from "silo-core/deploy/GaugeHookReceiverDeploy.s.sol";
-
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
-import {SiloFixture, SiloConfigOverride} from "../../../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 
@@ -33,7 +29,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     ISiloConfig internal _siloConfig;
 
     uint256 internal constant _SENDER_BAL = 1;
-    uint256 internal constant _RECEPIENT_BAL = 1;
+    uint256 internal constant _RECIPIENT_BAL = 1;
     uint256 internal constant _TS = 1;
     uint256 internal constant _AMOUNT = 0;
 
@@ -62,8 +58,8 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _dao = timelock;
     }
 
-    // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReinitialization
-    function testReinitialization() public {
+    // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReInitialization
+    function testReInitialization() public {
         address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.GAUGE_HOOK_RECEIVER);
 
         bytes memory data = abi.encode(_dao);
@@ -77,12 +73,12 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.initialize(ISiloConfig(address(0)), data);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitlaization
-    function testHookReceiverInitlaization() public view {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitialization
+    function testHookReceiverInitialization() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
-        _testHookReceiverInitlaizationForSilo(silo0);
-        _testHookReceiverInitlaizationForSilo(silo1);
+        _testHookReceiverInitializationForSilo(silo0);
+        _testHookReceiverInitializationForSilo(silo1);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverTransferOwnership
@@ -274,7 +270,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
                 _sender,
                 _SENDER_BAL,
                 _recipient,
-                _RECEPIENT_BAL,
+                _RECIPIENT_BAL,
                 _TS
             )
         );
@@ -289,7 +285,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
             _recipient,
             _AMOUNT,
             _SENDER_BAL,
-            _RECEPIENT_BAL,
+            _RECIPIENT_BAL,
             _TS
         );
     }
@@ -306,7 +302,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectCall(_gaugeToMock, data);
     }
 
-    function _testHookReceiverInitlaizationForSilo(address _silo) internal view {
+    function _testHookReceiverInitializationForSilo(address _silo) internal view {
         IHookReceiver hookReceiver = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 
         assertEq(address(hookReceiver), address(_hookReceiver));

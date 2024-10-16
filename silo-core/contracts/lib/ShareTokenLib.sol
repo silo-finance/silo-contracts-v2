@@ -11,19 +11,23 @@ import {TokenHelper} from "../lib/TokenHelper.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {Hook} from "../lib/Hook.sol";
 
+// solhint-disable ordering
+
 library ShareTokenLib {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     // keccak256(abi.encode(uint256(keccak256("silo.storage.ShareToken")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant StorageLocation = 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200;
+    bytes32 private constant _STORAGE_LOCATION = 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200;
 
     function getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage $) {
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := StorageLocation
+            $.slot := _STORAGE_LOCATION
         }
     }
 
+    // solhint-disable-next-line func-name-mixedcase, private-vars-leading-underscore
     function __ShareToken_init(ISilo _silo, address _hookReceiver, uint24 _tokenType) external {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
 
@@ -104,7 +108,7 @@ library ShareTokenLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _siloConfig.getConfigs(_user);
+        ) = _siloConfig.getConfigsForSolvency(_user);
 
         collateralConfig.callSolvencyOracleBeforeQuote();
         debtConfig.callSolvencyOracleBeforeQuote();

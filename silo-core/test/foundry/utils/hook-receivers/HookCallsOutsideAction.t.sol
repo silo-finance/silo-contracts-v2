@@ -5,11 +5,9 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
@@ -129,7 +127,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         silo1.withdraw(48e18, borrower, borrower);
 
         emit log("-- flashLoan --");
-        silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
+        silo0.flashLoan(this, address(token0), silo0.maxFlashLoan(address(token0)), "");
         
         // liquidation
         emit log("-- liquidationCall --");

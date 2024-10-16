@@ -9,7 +9,7 @@ libs = [
     'silo-vaults/node_modules'
 ]
 out = 'cache/foundry/out'
-evm_version = 'shanghai'
+evm_version = 'cancun'
 
 [profile.amm-periphery]
 src = 'silo-amm-periphery/contracts'
@@ -77,11 +77,13 @@ line_length=119
 src = 've-silo/contracts'
 out = 'cache/foundry/out/ve-silo'
 broadcast = 've-silo/broadcast'
+evm_version = 'paris'
 
 [profile.ve-silo-test]
 src = 've-silo/test'
 out = 'cache/foundry/out/ve-silo'
 broadcast = 've-silo/broadcast'
+evm_version = 'paris'
 
 [profile.vaults]
 src = 'silo-vaults/contracts'

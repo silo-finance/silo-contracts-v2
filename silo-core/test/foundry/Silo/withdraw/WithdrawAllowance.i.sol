@@ -7,10 +7,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-
-import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
@@ -40,7 +38,7 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
         _deposit(ASSETS, DEPOSITOR);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS * SiloMathLib._DECIMALS_OFFSET_POW)
         );
         silo0.withdraw(ASSETS, RECEIVER, DEPOSITOR);
     }
@@ -63,7 +61,7 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
 
         address shareToken = _type == ISilo.CollateralType.Collateral ? collateralShareToken : protectedShareToken;
         vm.prank(DEPOSITOR);
-        IShareToken(shareToken).approve(address(this), ASSETS / 2);
+        IShareToken(shareToken).approve(address(this), (ASSETS / 2) * SiloMathLib._DECIMALS_OFFSET_POW);
 
         assertEq(token0.balanceOf(RECEIVER), 0, "no balance before");
 
@@ -73,7 +71,7 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
         assertEq(IShareToken(shareToken).allowance(DEPOSITOR, address(this)), 0, "allowance used");
 
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, 1)
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW)
         );
         silo0.withdraw(1, RECEIVER, DEPOSITOR, _type);
 

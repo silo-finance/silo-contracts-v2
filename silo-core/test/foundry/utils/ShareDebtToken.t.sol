@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -28,6 +29,25 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         siloConfig = _setUpLocalFixture();
         (,, address debtSToken) = siloConfig.getShareTokens(address(silo1));
         shareDebtToken = ShareDebtToken(debtSToken);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_debtToken_forwardTransferFromNoChecks
+    */
+    function test_debtToken_forwardTransferFromNoChecks() public {
+        vm.expectRevert(IShareToken.Forbidden.selector);
+        shareDebtToken.forwardTransferFromNoChecks(address(1), address(2), 3);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debt_decimals
+    */
+    function test_debt_decimals() public view {
+        assertEq(
+            IERC20Metadata(address(shareDebtToken)).decimals(),
+            IERC20Metadata(address(token1)).decimals(),
+            "expect valid debt decimals"
+        );
     }
 
     /*
@@ -359,6 +379,116 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
         vm.expectRevert(ISiloConfig.DebtExistInOtherSilo.selector);
         shareDebtToken.transfer(receiver, toBorrow);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_shareDebtToken_allowance
+    */
+    function test_shareDebtToken_allowance() public {
+        address user = makeAddr("user");
+        address otherUser = makeAddr("otherUser");
+        uint256 amount = 100e18;
+
+        uint256 allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, 0, "no allowance");
+
+        vm.prank(otherUser);
+        shareDebtToken.setReceiveApproval(user, amount);
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, amount, "allowance set");
+
+        uint256 decreaseAmount = 10e18;
+
+        vm.prank(otherUser);
+        shareDebtToken.decreaseReceiveAllowance(user, decreaseAmount);
+
+        uint256 newAllowance = amount - decreaseAmount;
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, newAllowance, "allowance decreased");
+
+        uint256 increaseAmount = 20e18;
+
+        vm.prank(otherUser);
+        shareDebtToken.increaseReceiveAllowance(user, increaseAmount);
+
+        newAllowance += increaseAmount;
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, newAllowance, "allowance increased");
+
+        uint256 otherAmount = 10000e18;
+
+        vm.prank(otherUser);
+        shareDebtToken.setReceiveApproval(user, otherAmount);
+
+        allowance = shareDebtToken.receiveAllowance(user, otherUser);
+        assertEq(allowance, otherAmount, "allowance overridden");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_allowance
+    */
+    function test_debtToken_transferFrom_allowance() public {
+        address borrower = makeAddr("Borrower");
+        address spender = makeAddr("Spender");
+
+        vm.prank(borrower);
+        shareDebtToken.approve(spender, 1e18);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
+        shareDebtToken.transferFrom(borrower, receiver, 1e18);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_
+    */
+    function test_debtToken_transferFrom_1token() public {
+        _debtToken_transferFrom(SAME_ASSET);
+    }
+
+    function test_debtToken_transferFrom_2tokens() public {
+        _debtToken_transferFrom(TWO_ASSETS);
+    }
+
+    function _debtToken_transferFrom(bool _sameAsset) public {
+        address depositor = makeAddr("Depositor");
+        address spender = makeAddr("Spender");
+        uint256 amount = 100e18;
+
+        _depositCollateral(amount, depositor, _sameAsset, ISilo.CollateralType.Collateral);
+        _depositCollateral(amount, depositor, _sameAsset, ISilo.CollateralType.Protected);
+
+        _depositCollateral(amount * 2, makeAddr("any"), true /* toSilo1 */, ISilo.CollateralType.Collateral);
+
+        uint256 borrowAmount = 150e18;
+        address borrower = depositor;
+
+        _borrow(borrowAmount, borrower, _sameAsset);
+
+        vm.prank(borrower);
+        shareDebtToken.approve(spender, borrowAmount);
+
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(borrower, borrowAmount);
+
+        vm.prank(spender);
+        vm.expectRevert(IShareToken.RecipientNotSolventAfterTransfer.selector);
+        shareDebtToken.transferFrom(borrower, receiver, borrowAmount);
+
+        _depositCollateral(amount * 3, receiver, _sameAsset, ISilo.CollateralType.Collateral);
+
+        uint256 balance = shareDebtToken.balanceOf(receiver);
+
+        assertEq(balance, 0, "receiver has no debt");
+
+        vm.prank(spender);
+        shareDebtToken.transferFrom(borrower, receiver, borrowAmount);
+
+        balance = shareDebtToken.balanceOf(receiver);
+        assertEq(balance, borrowAmount, "receiver has debt");
     }
 
     function _getCollateralState() private returns (address collateralSender, address collateralReceiver) {

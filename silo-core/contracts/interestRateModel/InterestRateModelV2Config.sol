@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 
-// solhint-disable var-name-mixedcase
-
 /// @title InterestRateModelV2Config
-/// @notice Please never deploy config manually, always use factory, because factory does necessary checkes.
+/// @notice Please never deploy config manually, always use factory, because factory does necessary checks.
 contract InterestRateModelV2Config is IInterestRateModelV2Config {
     // uopt ∈ (0, 1) – optimal utilization;
     int256 internal immutable _UOPT;
@@ -50,6 +47,7 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
         _BETA = _config.beta;
     }
 
+    /// @inheritdoc IInterestRateModelV2Config
     function getConfig() external view virtual returns (IInterestRateModelV2.Config memory config) {
         config.uopt = _UOPT;
         config.ucrit = _UCRIT;

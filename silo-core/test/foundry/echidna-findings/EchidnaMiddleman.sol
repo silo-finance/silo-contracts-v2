@@ -8,7 +8,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {EchidnaSetup} from "./EchidnaSetup.sol";
@@ -140,7 +139,7 @@ contract EchidnaMiddleman is EchidnaSetup {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig
-            ) = siloConfig.getConfigs(actor);
+            ) = siloConfig.getConfigsForSolvency(actor);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
@@ -242,7 +241,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             emit log("transition back");
 
-            // TODO here we using same value that we go, it iwll be nice to create another property, where we
+            // TODO here we using same value that we go, it will be nice to create another property, where we
             // using any value
             (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
                 _type == uint8(ISilo.CollateralType.Collateral)

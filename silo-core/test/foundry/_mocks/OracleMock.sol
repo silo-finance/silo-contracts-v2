@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract OracleMock is Test {
     address public immutable ADDRESS;
@@ -16,6 +16,12 @@ contract OracleMock is Test {
     function quoteMock(uint256 _baseAmount, address _baseToken, uint256 _quoteAmount) external {
         bytes memory data = abi.encodeWithSelector(ISiloOracle.quote.selector, _baseAmount, _baseToken);
         vm.mockCall(ADDRESS, data, abi.encode(_quoteAmount));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function quoteTokenMock(address _quoteToken) external {
+        bytes memory data = abi.encodeWithSelector(ISiloOracle.quoteToken.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_quoteToken));
         vm.expectCall(ADDRESS, data);
     }
 

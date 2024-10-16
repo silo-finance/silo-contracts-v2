@@ -11,11 +11,11 @@ import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 import {Deployers} from "./utils/Deployers.sol";
 import {Actor} from "./utils/Actor.sol";
@@ -69,8 +69,27 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         _asset1 = new TestERC20Token("Test Token1", "TT1", 18);
         _initData(address(_asset0), address(_asset1));
 
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
+
+        // deploy silo config
+        siloConfig = _deploySiloConfig(
+            siloData["MOCK"],
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         // deploy silo
-        siloConfig = siloFactory.createSilo(siloData["MOCK"]);
+        siloFactory.createSilo(
+            siloData["MOCK"],
+            siloConfig,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(payable(_vault0));
         vault1 = Silo(payable(_vault1));
@@ -81,6 +100,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             actors.push(new Actor(Silo(payable(_vault0)), Silo(payable(_vault1))));
         }
     }
+
     /* ================================================================
                             Echidna invariants
        ================================================================ */
@@ -379,7 +399,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig
-            ) = siloConfig.getConfigs(address(actor));
+            ) = siloConfig.getConfigsForSolvency(address(actor));
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
@@ -752,41 +772,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             assert(ltvAfter > 0 && ltvAfter < lt);
         } else {
             assertEq(ltvAfter, 0, "when not partial, user should be completely liquidated");
-        }
-    }
-
-    // Property: A user self-liquidating cannot gain assets or shares
-    function selfLiquidationDoesNotResultInMoreSharesOrAssets(
-        uint8 _actorIndex,
-        uint256 debtToRepay,
-        bool receiveSToken
-    )
-        public
-    {
-        emit LogUint256("[selfLiquidationDoesNotResultInMoreSharesOrAssets] block.timestamp:", block.timestamp);
-
-        Actor actor = _selectActor(_actorIndex);
-        (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-
-        Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        Silo otherVault = _vaultZeroWithDebt ? vault1 : vault0;
-
-        (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(otherVault));
-        (,, address debtShareToken ) = siloConfig.getShareTokens(address(vault));
-
-        { // to deep
-            uint256 procBalanceBefore = IShareToken(protectedShareToken).balanceOf(address(actor));
-            uint256 collBalanceBefore = IShareToken(collateralShareToken).balanceOf(address(actor));
-            uint256 debtBalanceBefore = IShareToken(debtShareToken).balanceOf(address(actor));
-            actor.liquidationCall(address(actor), debtToRepay, receiveSToken, siloConfig);
-
-            uint256 procBalanceAfter = IShareToken(protectedShareToken).balanceOf(address(actor));
-            uint256 collBalanceAfter = IShareToken(collateralShareToken).balanceOf(address(actor));
-            uint256 debtBalanceAfter = IShareToken(debtShareToken).balanceOf(address(actor));
-
-            assertLte(procBalanceAfter, procBalanceBefore, "Protected shares balance increased");
-            assertLte(collBalanceAfter, collBalanceBefore, "Collateral shares balance increased");
-            assertLte(debtBalanceAfter, debtBalanceBefore, "Debt shares balance increased");
         }
     }
 

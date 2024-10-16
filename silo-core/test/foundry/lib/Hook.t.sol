@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
@@ -42,5 +42,17 @@ contract HookTest is Test {
         assertTrue(bitmap.matchAction(Hook.WITHDRAW), "match WITHDRAW");
         assertTrue(bitmap.matchAction(Hook.PROTECTED_TOKEN), "match PROTECTED_TOKEN");
         assertTrue(bitmap.matchAction(Hook.WITHDRAW | Hook.PROTECTED_TOKEN), "match all");
+    }
+
+    function test_toBoolean_valid() public pure {
+        assertFalse(Hook._toBoolean(0), "0 == false");
+        assertTrue(Hook._toBoolean(1), "1 == true");
+    }
+
+    function test_toBoolean_invalid(uint8 _invalid) public {
+        vm.assume(_invalid > 1);
+
+        vm.expectRevert();
+        Hook._toBoolean(_invalid);
     }
 }

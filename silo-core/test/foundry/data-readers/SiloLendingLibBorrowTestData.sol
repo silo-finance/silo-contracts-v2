@@ -58,8 +58,8 @@ contract SiloLendingLibBorrowTestData {
         uint256 i;
 
         _init(data[i], "#0 all zeros");
-        data[i].output.reverts = ISilo.ZeroAssets.selector;
-        data[i].mocks.debtSharesTotalSupplyMock = false;
+        data[i].output.reverts = ISilo.InputZeroAssetsOrShares.selector;
+        data[i].mocks.debtSharesTotalSupplyMock = true;
 
         i++;
         _init(data[i], "#1 NotEnoughLiquidity if no collateral");
@@ -174,7 +174,6 @@ contract SiloLendingLibBorrowTestData {
                 daoFee: _src.input.configData.daoFee,
                 deployerFee: _src.input.configData.deployerFee,
                 silo: _src.input.configData.silo,
-                otherSilo: _src.input.configData.otherSilo,
                 token: _src.input.configData.token,
                 protectedShareToken: _src.input.configData.protectedShareToken,
                 collateralShareToken: _src.input.configData.collateralShareToken,

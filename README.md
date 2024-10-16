@@ -124,11 +124,14 @@ brew install lcov
 
 rm lcov.info
 mkdir coverage
-FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --ffi | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
-genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
+
+FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log
+cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
+genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
 
 rm lcov.info
-FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
+FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.log
+cat coverage/silo-oracles-report.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
 genhtml -o coverage/silo-oracles/ lcov.info
 ```
 

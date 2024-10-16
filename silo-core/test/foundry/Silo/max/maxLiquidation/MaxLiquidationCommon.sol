@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -16,7 +16,6 @@ import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
     bool internal constant _RECEIVE_STOKENS = true;
-    bool internal constant _SELF = true;
 
     ISiloConfig siloConfig;
     address immutable depositor;
@@ -99,6 +98,22 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateralToLiquidate, 0, "[_assertBorrowerIsSolvent] silo1.collateralToLiquidate");
         assertEq(debtToRepay, 0, "[_assertBorrowerIsSolvent] silo1.debtToRepay");
+    }
+
+    function _assertLiquidationHookHasNoBalance() internal view {
+        assertEq(token0.balanceOf(address(partialLiquidation)), 0, "token0.balanceOf(partialLiquidation)");
+        assertEq(token1.balanceOf(address(partialLiquidation)), 0, "token1.balanceOf(partialLiquidation)");
+
+        (address collateralShare, address protectedShare, address debtShare) = siloConfig.getShareTokens(address(silo0));
+        assertEq(IShareToken(collateralShare).balanceOf(address(partialLiquidation)), 0, "collateralShare2.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(protectedShare).balanceOf(address(partialLiquidation)), 0, "protectedShare2.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(debtShare).balanceOf(address(partialLiquidation)), 0, "debtShare2.balanceOf(partialLiquidation)");
+
+        (collateralShare, protectedShare, debtShare) = siloConfig.getShareTokens(address(silo1));
+        assertEq(IShareToken(collateralShare).balanceOf(address(partialLiquidation)), 0, "collateralShare1.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(protectedShare).balanceOf(address(partialLiquidation)), 0, "protectedShare1.balanceOf(partialLiquidation)");
+        assertEq(IShareToken(debtShare).balanceOf(address(partialLiquidation)), 0, "debtShare1.balanceOf(partialLiquidation)");
+
     }
 
     function _assertBorrowerIsNotSolvent(bool _hasBadDebt) internal {
@@ -189,13 +204,15 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         else assertLe(a, b, _msg);
     }
 
-    function _executeLiquidationAndRunChecks(bool _sameToken, bool _receiveSToken, bool _self) internal {
+    function _executeLiquidationAndRunChecks(bool _sameToken, bool _receiveSToken) internal {
         uint256 siloBalanceBefore0 = token0.balanceOf(address(silo0));
         uint256 siloBalanceBefore1 = token1.balanceOf(address(silo1));
 
-        uint256 liquidatorBalanceBefore0 = token0.balanceOf(_self ? borrower : address(this));
+        uint256 liquidatorBalanceBefore0 = token0.balanceOf(address(this));
 
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken, _self);
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(_sameToken, _receiveSToken);
+
+        _assertLiquidationHookHasNoBalance();
 
         if (_sameToken) {
             assertEq(
@@ -244,7 +261,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                 );
 
                 assertEq(
-                    token0.balanceOf(_self ? borrower : address(this)),
+                    token0.balanceOf(address(this)),
                     liquidatorBalanceBefore0 + withdrawCollateral,
                     "collateral was moved to liquidator"
                 );
@@ -258,50 +275,61 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         }
     }
 
-    function _calculateChunk(uint256 _debtToCover, uint256 _i) internal view returns (uint256 _chunk) {
-        if (_debtToCover == 0) return 0;
+    function _calculateChunk(uint256 _maxDebtToCover, uint256 _i) internal view returns (uint256 _chunk) {
+        if (_maxDebtToCover == 0) return 0;
 
-        // min amount of assets that will not generate ZeroShares error
+        // min amount of assets that will not generate InputZeroAssetsOrShares error
         uint256 minAssets = silo1.previewRepayShares(1);
 
         if (_i < 2 || _i == 4) {
             // two first iteration and last one (we assume we have max 5 iterations), try to use minimal amount
-            if (_debtToCover < minAssets) {
+            if (_maxDebtToCover < minAssets) {
                 revert("#1 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
 
             return minAssets;
         } else if (_i == 2) {
             // try to liquidate half
-            uint256 half = _debtToCover == 1 ? 1 : _debtToCover / 2;
+            uint256 half = _maxDebtToCover == 1 ? 1 : _maxDebtToCover / 2;
             return half < minAssets ? minAssets: half;
         } else if (_i == 3) {
             // try to liquidate almost everything
-            if (_debtToCover < minAssets) {
+            if (_maxDebtToCover < minAssets) {
                 revert("#2 calculation of maxDebtToCover should never return assets that will generate zero shares");
             }
 
-            uint256 almostEverything = _debtToCover < minAssets ? minAssets : _debtToCover - minAssets;
+            uint256 almostEverything = _maxDebtToCover < minAssets ? minAssets : _maxDebtToCover - minAssets;
             return almostEverything < minAssets ? minAssets : almostEverything;
+        } else if (_i == 5) {
+            // for iteration 5, we liquidating whatever left
+            return _maxDebtToCover;
         } else revert("this should never happen");
     }
 
-    function _liquidationCall(uint256 _debtToCover, bool _sameToken, bool _receiveSToken, bool _self)
+    function _liquidationCall(uint256 _maxDebtToCover, bool _sameToken, bool _receiveSToken)
         internal
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        if (_self) vm.prank(borrower);
+        try partialLiquidation.liquidationCall(
+                address(_sameToken ? token1 : token0),
+                address(token1),
+                borrower,
+                _maxDebtToCover,
+                _receiveSToken
+            )
+            returns (uint256 collateral, uint256 debt)
+        {
+            return (collateral, debt);
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
 
-        return partialLiquidation.liquidationCall(
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            _debtToCover,
-            _receiveSToken
-        );
+            bytes4 expectedError = bytes4(keccak256(abi.encodePacked("ReturnZeroAssetsOrShares()")));
+
+            assertEq(errorType, expectedError, "only ReturnZeroAssetsOrShares error is expected");
+        }
     }
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);

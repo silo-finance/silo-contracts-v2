@@ -7,8 +7,6 @@ import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liqui
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {console} from "forge-std/console.sol";
-
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
 contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceiver {
@@ -25,6 +23,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     uint24 internal immutable _SILO1_ACTIONS_AFTER;
 
     bool public revertAllActions;
+    bool public revertOnlyBeforeAction;
+    bool public revertOnlyAfterAction;
 
     // Events to be emitted by the hook receiver to see decoded inputs
     // HA - Hook Action
@@ -94,7 +94,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedAssets,
         uint256 borrowedShares,
         address borrower,
-        address receiver
+        address receiver,
+        address spender
     );
 
     event BorrowAfterHA(
@@ -103,6 +104,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedShares,
         address borrower,
         address receiver,
+        address spender,
         uint256 returnedAssets,
         uint256 returnedShares
     );
@@ -204,12 +206,20 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         revertAllActions = true;
     }
 
+    function revertBeforeAction() external {
+        revertOnlyBeforeAction = true;
+    }
+
+    function revertAfterAction() external {
+        revertOnlyAfterAction = true;
+    }
+
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
         override (IHookReceiver, PartialLiquidation)
     {
-        if (revertAllActions) revert ActionsStopped();
+        if (revertAllActions || revertOnlyBeforeAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
     }
 
@@ -218,7 +228,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         external
         override (IHookReceiver, PartialLiquidation)
     {
-        if (revertAllActions) revert ActionsStopped();
+        if (revertAllActions || revertOnlyAfterAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
     }
 
@@ -375,7 +385,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.assets,
                 input.shares,
                 input.borrower,
-                input.receiver
+                input.receiver,
+                input.spender
             );
         } else {
             Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
@@ -386,6 +397,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.shares,
                 input.borrower,
                 input.receiver,
+                input.spender,
                 input.borrowedAssets,
                 input.borrowedShares
             );

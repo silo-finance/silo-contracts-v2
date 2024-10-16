@@ -6,7 +6,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 
-contract TransferOwnersipReentrancyTest is MethodReentrancyTest {
+contract RenounceOwnershipReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert");
         _ensureItWillRevert();
@@ -17,7 +17,7 @@ contract TransferOwnersipReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "transferOwnership(address)";
+        description = "renounceOwnership()";
     }
 
     function _ensureItWillRevert() internal {
@@ -28,6 +28,6 @@ contract TransferOwnersipReentrancyTest is MethodReentrancyTest {
             address(this)
         ));
 
-        Ownable2Step(hookReceiver).transferOwnership(address(this));
+        Ownable2Step(hookReceiver).renounceOwnership();
     }
 }

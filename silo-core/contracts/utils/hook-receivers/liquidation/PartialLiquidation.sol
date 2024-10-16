@@ -1,24 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
-import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
-import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
-import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
@@ -45,11 +40,11 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     }
 
     /// @inheritdoc IPartialLiquidation
-    function liquidationCall( // solhint-disable-line function-max-lines
+    function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _collateralAsset,
         address _debtAsset,
         address _borrower,
-        uint256 _debtToCover,
+        uint256 _maxDebtToCover,
         bool _receiveSToken
     )
         external
@@ -59,7 +54,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         ISiloConfig siloConfigCached = siloConfig;
 
         if (address(siloConfigCached) == address(0)) revert EmptySiloConfig();
-        if (_debtToCover == 0) revert NoDebtToCover();
+        if (_maxDebtToCover == 0) revert NoDebtToCover();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -70,22 +65,22 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         uint256 protectedShares;
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
-
-        bool selfLiquidation = _borrower == msg.sender;
+        bytes4 customError;
 
         (
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets, customError
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
             _borrower,
-            _debtToCover,
-            selfLiquidation ? 0 : collateralConfig.liquidationFee,
-            selfLiquidation
+            _maxDebtToCover,
+            collateralConfig.liquidationFee
         );
 
-        if (repayDebtAssets == 0) revert NoDebtToCover();
-        if (repayDebtAssets > _debtToCover) revert DebtToCoverTooSmall();
+        RevertLib.revertIfError(customError);
+
+        // we do not allow dust so full liquidation is required
+        if (repayDebtAssets > _maxDebtToCover) revert FullLiquidationRequired();
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 
@@ -104,7 +99,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             shareTokenReceiver,
             withdrawAssetsFromCollateral,
             collateralConfig.collateralShareToken,
-            AssetTypes.COLLATERAL
+            ISilo.AssetType.Collateral
         );
 
         protectedShares = _callShareTokenForwardTransferNoChecks(
@@ -113,21 +108,13 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             shareTokenReceiver,
             withdrawAssetsFromProtected,
             collateralConfig.protectedShareToken,
-            AssetTypes.PROTECTED
+            ISilo.AssetType.Protected
         );
 
         if (_receiveSToken) {
-            // this two value were split from total collateral to withdraw, so we will not overflow
-            unchecked { withdrawCollateral = withdrawAssetsFromCollateral + withdrawAssetsFromProtected; }
-        } else {
-            // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
-            // so solvency will not be checked in silo on redeem action
-
             if (collateralShares != 0) {
-                withdrawCollateral = ISilo(collateralConfig.silo).redeem(
+                withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
                     collateralShares,
-                    msg.sender,
-                    address(this),
                     ISilo.CollateralType.Collateral
                 );
             }
@@ -136,12 +123,38 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
                 unchecked {
                     // protected and collateral values were split from total collateral to withdraw,
                     // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    withdrawCollateral += ISilo(collateralConfig.silo).redeem(
+                    withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
                         protectedShares,
-                        msg.sender,
-                        address(this),
                         ISilo.CollateralType.Protected
                     );
+                }
+            }
+        } else {
+            // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
+            // so solvency will not be checked in silo on redeem action
+
+            // if share token offset is more than 0, positive number of shares can generate 0 assets
+            // so there is a need to check assets before we withdraw collateral/protected
+
+            if (collateralShares != 0) {
+                withdrawCollateral = ISilo(collateralConfig.silo).redeem({
+                    _shares: collateralShares,
+                    _receiver: msg.sender,
+                    _owner: address(this),
+                    _collateralType: ISilo.CollateralType.Collateral
+                });
+            }
+
+            if (protectedShares != 0) {
+                unchecked {
+                    // protected and collateral values were split from total collateral to withdraw,
+                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                    withdrawCollateral += ISilo(collateralConfig.silo).redeem({
+                        _shares: protectedShares,
+                        _receiver: msg.sender,
+                        _owner: address(this),
+                        _collateralType: ISilo.CollateralType.Protected
+                    });
                 }
             }
         }
@@ -174,7 +187,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             ISiloConfig.ConfigData memory debtConfig
         )
     {
-        (collateralConfig, debtConfig) = _siloConfigCached.getConfigs(_borrower);
+        (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
         if (debtConfig.silo == address(0)) revert UserIsSolvent();
         if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
@@ -183,7 +196,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         ISilo(debtConfig.silo).accrueInterest();
 
         if (collateralConfig.silo != debtConfig.silo) {
-            ISilo(debtConfig.otherSilo).accrueInterest();
+            ISilo(collateralConfig.silo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }
@@ -195,7 +208,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         address _receiver,
         uint256 _withdrawAssets,
         address _shareToken,
-        uint256 _assetType
+        ISilo.AssetType _assetType
     ) internal virtual returns (uint256 shares) {
         if (_withdrawAssets == 0) return 0;
         
@@ -216,7 +229,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             abi.encodeWithSelector(IShareToken.forwardTransferFromNoChecks.selector, _borrower, _receiver, shares)
         );
 
-        if (!success) RevertBytes.revertBytes(result, "");
+        if (!success) RevertLib.revertBytes(result, "");
     }
 
     function _initialize(ISiloConfig _siloConfig) internal virtual {

@@ -34,7 +34,7 @@ interface ISiloDeployer {
     error FailedToCreateAnOracle(address _factory);
 
     /// @dev Revert if for the deployment provided both hook receiver and hook receiver implementation
-    error HookReceiverMissconfigured();
+    error HookReceiverMisconfigured();
 
     /// @notice Deploy silo
     /// @param _oracles Oracles to be create during the silo creation

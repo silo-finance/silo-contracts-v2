@@ -1,9 +1,10 @@
 pragma solidity ^0.8.20;
 
 import {Deployers} from "./utils/Deployers.sol";
-import {ISilo, Silo} from "silo-core/contracts/Silo.sol";
+import {Silo} from "silo-core/contracts/Silo.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
-import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {CryticERC4626PropertyTests} from "properties/ERC4626/ERC4626PropertyTests.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 
@@ -24,8 +25,27 @@ contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
         TestERC20Token _asset1 = new TestERC20Token("Test Token1", "TT1", 18);
         _initData(address(_asset0), address(_asset1));
 
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
+
+        // deploy silo config
+        siloConfig = _deploySiloConfig(
+            siloData["MOCK"],
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         // deploy silo
-        siloConfig = siloFactory.createSilo(siloData["MOCK"]);
+        siloFactory.createSilo(
+            siloData["MOCK"],
+            siloConfig,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl
+        );
+
         (address _vault0, /* address _vault1 */) = siloConfig.getSilos();
 
         initialize(address(_vault0), address(_asset0), false);

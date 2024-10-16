@@ -13,12 +13,14 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {ShareTokenDecimalsPowLib} from "../../_common/ShareTokenDecimalsPowLib.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LeverageSameAssetTest
 */
 contract LeverageSameAssetTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+    using ShareTokenDecimalsPowLib for uint256;
 
     ISilo.CollateralType constant public COLLATERAL = ISilo.CollateralType.Collateral;
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
@@ -44,19 +46,8 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_all_zeros
     */
     function test_leverageSameAsset_all_zeros() public {
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.LeverageTooHigh.selector);
         silo0.leverageSameAsset(0, 0, address(0), COLLATERAL);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_leverageSameAsset_zero_depositAssets
-    */
-    function test_leverageSameAsset_zero_depositAssets() public {
-        uint256 depositAssets = 0;
-        uint256 anyBorrowAssets = 100e18;
-
-        vm.expectRevert(ISilo.ZeroAssets.selector);
-        silo0.leverageSameAsset(depositAssets, anyBorrowAssets, borrower, COLLATERAL);
     }
 
     /*
@@ -66,7 +57,9 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         uint256 depositAssets = 100e18;
         uint256 zeroBorrowAssets = 0;
 
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        token0.approve(address(silo0), depositAssets);
+
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.leverageSameAsset(depositAssets, zeroBorrowAssets, borrower, COLLATERAL);
     }
 
@@ -75,7 +68,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
     */
     function test_leverageSameAsset_noAllowanceDebtToken() public {
         uint256 depositAssets = 100e18;
-        uint256 anyBorrowAssets = 100e18;
+        uint256 anyBorrowAssets = 90e18;
 
         vm.expectRevert(abi.encodeWithSelector(
             IERC20Errors.ERC20InsufficientAllowance.selector,
@@ -122,7 +115,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         emit Borrow(borrower, borrower, borrower, maxBorrowAssets, maxBorrowAssets);
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(borrower, borrower, depositAssets, depositAssets);
+        emit Deposit(borrower, borrower, depositAssets, depositAssets.decimalsOffsetPow());
 
         vm.prank(borrower);
         silo0.leverageSameAsset(depositAssets, maxBorrowAssets, borrower, COLLATERAL);
@@ -144,7 +137,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         emit Borrow(borrower, borrower, borrower, maxBorrowAssets, maxBorrowAssets);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositProtected(borrower, borrower, depositAssets, depositAssets);
+        emit DepositProtected(borrower, borrower, depositAssets, depositAssets.decimalsOffsetPow());
 
         vm.prank(borrower);
         silo0.leverageSameAsset(depositAssets, maxBorrowAssets, borrower, PROTECTED);
@@ -206,7 +199,7 @@ contract LeverageSameAssetTest is SiloLittleHelper, Test {
         _expectLiquidity(expectedLiquidity);
 
         _expectShares(zeroSharesToken, 0);
-        _expectShares(withSharesToken, depositAssets);
+        _expectShares(withSharesToken, depositAssets.decimalsOffsetPow());
         _expectShares(debtShareToken, borrowAssets);
 
         uint256 receivedShares = IERC20(withSharesToken).balanceOf(borrower);

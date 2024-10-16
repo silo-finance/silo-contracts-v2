@@ -7,6 +7,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
@@ -78,13 +79,13 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         _anyDeposit(ISilo.CollateralType.Collateral);
 
         // test
-        vm.expectRevert(ISilo.NothingToWithdraw.selector);
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
         silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Protected);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW));
         silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -93,7 +94,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         // any deposit so we have liquidity
         _anyDeposit(ISilo.CollateralType.Protected);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW));
         silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
     }
 

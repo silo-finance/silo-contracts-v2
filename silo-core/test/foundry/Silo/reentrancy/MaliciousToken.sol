@@ -7,7 +7,6 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Registries} from "./registries/Registries.sol";
 import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
-import {SiloMethodsRegistry} from "./registries/SiloMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "./TestState.sol";
 

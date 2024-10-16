@@ -5,12 +5,10 @@ import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import {ERC20Upgradeable} from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
-import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
@@ -63,7 +61,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    string private constant _NAME = "SiloShareToken";
+    string private constant _NAME = "SiloShareTokenEIP712Name";
 
     modifier onlySilo() {
         if (msg.sender != address(_getSilo())) revert OnlySilo();
@@ -76,15 +74,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         _disableInitializers();
     }
 
-    function silo() external view virtual returns (ISilo) {
-        return _getSilo();
-    }
-
-    function siloConfig() external view returns (ISiloConfig) {
-        return _getSiloConfig();
-    }
-
-    // TODO add tests
     /// @inheritdoc IShareToken
     function synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external virtual onlySilo {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
@@ -104,6 +93,14 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.transferWithChecks = false;
         _transfer(_from, _to, _amount);
         $.transferWithChecks = true;
+    }
+
+    function silo() external view virtual returns (ISilo) {
+        return _getSilo();
+    }
+
+    function siloConfig() external view virtual returns (ISiloConfig) {
+        return _getSiloConfig();
     }
 
     function hookSetup() external view virtual returns (HookSetup memory) {
@@ -217,7 +214,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         initializer
     {
         __ERC20Permit_init(_NAME);
-        __ERC20_init(_NAME, _NAME);
+
         ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
@@ -265,11 +262,11 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOnReentrancyProtection();
     }
 
-    function _getSiloConfig() internal view returns (ISiloConfig) {
+    function _getSiloConfig() internal view virtual returns (ISiloConfig) {
         return ShareTokenLib.getShareTokenStorage().siloConfig;
     }
     
-    function _getSilo() internal view returns (ISilo) {
+    function _getSilo() internal view virtual returns (ISilo) {
         return ShareTokenLib.getShareTokenStorage().silo;
     }
 }

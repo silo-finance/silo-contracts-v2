@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 

@@ -42,15 +42,13 @@ contract SiloRouter {
         bytes options;
     }
 
-    // @dev native asset wrapped token. In case of Ether, it's WETH.
-    // solhint-disable-next-line var-name-mixedcase
+    /// @dev native asset wrapped token. In case of Ether, it's WETH.
     IWrappedNativeToken public immutable WRAPPED_NATIVE_TOKEN;
 
     error ApprovalFailed();
     error ERC20TransferFailed();
     error EthTransferFailed();
     error InvalidSilo();
-    error UnsupportedAction();
 
     constructor(address _wrappedNativeToken) {
         TokenHelper.assertAndGetDecimals(_wrappedNativeToken);
@@ -125,8 +123,6 @@ contract SiloRouter {
             _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.repayShares(data.amount, msg.sender);
-        } else {
-            revert UnsupportedAction();
         }
     }
 

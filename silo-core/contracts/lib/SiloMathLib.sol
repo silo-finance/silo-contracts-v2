@@ -10,8 +10,10 @@ library SiloMathLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    uint256 internal constant _DECIMALS_OFFSET = 3;
+
     /// @dev this is constant version of openzeppelin5/contracts/token/ERC20/extensions/ERC4626._decimalsOffset
-    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** 0;
+    uint256 internal constant _DECIMALS_OFFSET_POW = 10 ** _DECIMALS_OFFSET;
 
     /// @notice Returns available liquidity to be borrowed
     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The
@@ -32,7 +34,7 @@ library SiloMathLib {
     /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
-    /// @return daoAndDeployerFees Total fees amount to be split between DAO and deployer
+    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer
     /// @return accruedInterest The total accrued interest
     function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
@@ -46,40 +48,60 @@ library SiloMathLib {
         returns (
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
-            uint256 daoAndDeployerFees,
+            uint256 daoAndDeployerRevenue,
             uint256 accruedInterest
         )
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
-        uint256 collateralInterest;
 
-        unchecked {
-            // If we overflow on multiplication it should not revert tx, we will get lower fees
-            daoAndDeployerFees = accruedInterest * (_daoFee + _deployerFee) / _PRECISION_DECIMALS;
-            // we will not underflow because daoAndDeployerFees is chunk of accruedInterest
-            collateralInterest = accruedInterest - daoAndDeployerFees;
+        uint256 fees;
+
+        // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
+        unchecked { fees = _daoFee + _deployerFee; }
+
+        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);
+
+        // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
+        uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
+
+        // save to uncheck because variable can not be more than max
+        uint256 cap = type(uint256).max - _collateralAssets;
+
+        if (cap < collateralInterest) {
+            // avoid overflow on interest
+            collateralInterest = cap;
         }
 
-        collateralAssetsWithInterest = _collateralAssets + collateralInterest;
+        // safe to uncheck because of cap
+        unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }
     }
 
-    /// @notice Calculate the debt assets with accrued interest
-    /// @param _debtAssets The total amount of debt assets before accrued interest
+    /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
+    /// @param _totalDebtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
-    /// @return accruedInterest The amount of interest accrued on the debt assets
-    function getDebtAmountsWithInterest(uint256 _debtAssets, uint256 _rcomp)
+    /// @return accruedInterest The total amount of interest accrued on the debt assets
+    function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)
         internal
         pure
         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
-        if (_debtAssets == 0 || _rcomp == 0) {
-            return (_debtAssets, 0);
+        if (_totalDebtAssets == 0 || _rcomp == 0) {
+            return (_totalDebtAssets, 0);
         }
 
-        accruedInterest = _debtAssets.mulDiv(_rcomp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
+        accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
 
-        debtAssetsWithInterest = _debtAssets + accruedInterest;
+        unchecked {
+            // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
+            debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
+
+            // If overflow occurs, we skip accruing interest.
+            if (debtAssetsWithInterest < _totalDebtAssets) {
+                debtAssetsWithInterest = _totalDebtAssets;
+                accruedInterest = 0;
+            }
+        }
     }
 
     /// @notice Calculates fraction between borrowed and deposited amount of tokens denominated in percentage
@@ -89,25 +111,33 @@ library SiloMathLib {
     /// @param _debtAssets current total borrows for assets
     /// @return utilization value, capped to 100%
     /// Limiting utilisation ratio by 100% max will allows us to perform better interest rate computations
-    /// and should not affect any other part of protocol.
+    /// and should not affect any other part of protocol. It is possible to go over 100% only when bad debt.
     function calculateUtilization(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)
         internal
         pure
         returns (uint256 utilization)
     {
-        if (_collateralAssets == 0 || _debtAssets == 0) return 0;
+        if (_collateralAssets == 0 || _debtAssets == 0 || _dp == 0) return 0;
 
-        utilization = _debtAssets * _dp;
-        // _collateralAssets is not 0 based on above check, so it is safe to uncheck this division
         unchecked {
-            utilization /= _collateralAssets;
+            /*
+                how to prevent overflow on: _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST):
+                1. max > _debtAssets * _dp / _collateralAssets
+                2. max / _dp > _debtAssets / _collateralAssets
+            */
+            // save to unchecked because we only have division and `_collateralAssets` is not 0 based on above check
+            if (type(uint256).max / _dp > _debtAssets / _collateralAssets) {
+                utilization = _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST);
+                // cap at 100%
+                if (utilization > _dp) utilization = _dp;
+            } else {
+                // we have overflow
+                utilization = _dp;
+            }
         }
-
-        // cap at 100%
-        if (utilization > _dp) utilization = _dp;
     }
 
-    function convertToAssetsAndToShares(
+    function convertToAssetsOrToShares(
         uint256 _assets,
         uint256 _shares,
         uint256 _totalAssets,
@@ -116,13 +146,19 @@ library SiloMathLib {
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
+        if (_assets == 0 && _shares == 0) revert ISilo.InputZeroAssetsOrShares();
+
         if (_assets == 0) {
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
         } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
-        } else revert ISilo.InputCanBeAssetsOrShares();
+        } else {
+            revert ISilo.InputCanBeAssetsOrShares();
+        }
+
+        if (assets == 0 || shares == 0) revert ISilo.ReturnZeroAssetsOrShares();
     }
 
     /// @dev Math for collateral is exact copy of
@@ -133,14 +169,14 @@ library SiloMathLib {
         uint256 _totalShares,
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint256 shares) {
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
         // initially, in case of debt, if silo is empty we return shares==assets
-        // for collateral, this will never be the case, because of `+1` in line above
+        // for collateral, this will never be the case, because we are adding `+1` and offset in `_commonConvertTo`
         if (totalShares == 0) return _assets;
 
-        return _assets.mulDiv(totalShares, totalAssets, _rounding);
+        shares = _assets.mulDiv(totalShares, totalAssets, _rounding);
     }
 
     /// @dev Math for collateral is exact copy of
@@ -161,9 +197,12 @@ library SiloMathLib {
         assets = _shares.mulDiv(totalAssets, totalShares, _rounding);
     }
 
+    /// @param _collateralMaxLtv maxLTV in 18 decimals that is set for debt asset
+    /// @param _sumOfBorrowerCollateralValue borrower total collateral value (including protected)
+    /// @param _borrowerDebtValue total value of borrower debt
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
-        uint256 _configMaxLtv,
+        uint256 _collateralMaxLtv,
         uint256 _sumOfBorrowerCollateralValue,
         uint256 _borrowerDebtValue
     ) internal pure returns (uint256 maxBorrowValue) {
@@ -172,7 +211,7 @@ library SiloMathLib {
         }
 
         uint256 maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(
-            _configMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE
+            _collateralMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE
         );
 
         unchecked {
@@ -269,6 +308,24 @@ library SiloMathLib {
         );
     }
 
+    /// @dev executed `_a * _b / _c`, reverts on _c == 0
+    /// @return mulDivResult on overflow returns 0
+    function mulDivOverflow(uint256 _a, uint256 _b, uint256 _c)
+        internal
+        pure
+        returns (uint256 mulDivResult)
+    {
+        if (_a == 0) return (0);
+
+        unchecked {
+            // we have to uncheck to detect overflow
+            mulDivResult = _a * _b;
+            if (mulDivResult / _a != _b) return 0;
+
+            mulDivResult /= _c;
+        }
+    }
+
     /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
     /// itself. It should return actual result and round it up.
     function _commonConvertTo(
@@ -283,11 +340,8 @@ library SiloMathLib {
             _totalAssets = 0;
         }
 
-        unchecked {
-            // I think we can afford to uncheck +1
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
-        }
     }
 }

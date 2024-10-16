@@ -7,7 +7,6 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 
 library SiloSolvencyLib {
     using Math for uint256;
@@ -138,7 +137,7 @@ library SiloSolvencyLib {
 
         uint256 totalDebtAssets = _accrueInMemory == ISilo.AccrueInterestInMemory.Yes
             ? SiloStdLib.getTotalDebtAssetsWithInterest(_debtConfig.silo, _debtConfig.interestRateModel)
-            : ISilo(_debtConfig.silo).getTotalAssetsStorage(AssetTypes.DEBT);
+            : ISilo(_debtConfig.silo).getTotalAssetsStorage(ISilo.AssetType.Debt);
 
         // BORROW value -> to assets -> UP
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
@@ -176,19 +175,19 @@ library SiloSolvencyLib {
     /// @dev calculation never reverts, if there is revert, then it is because of oracle
     /// @param _ltvData Data structure containing relevant information to calculate LTV
     /// @param _collateralToken Address of the collateral token
-    /// @param _debtToken Address of the debt token
+    /// @param _debtAsset Address of the debt token
     /// @return sumOfBorrowerCollateralValue Total value of borrower's collateral
     /// @return totalBorrowerDebtValue Total debt value for the borrower
     /// @return ltvInDp Calculated LTV in 18 decimal precision
     function calculateLtv(
-        SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtToken)
+        SiloSolvencyLib.LtvData memory _ltvData, address _collateralToken, address _debtAsset)
         internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvInDp)
     {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
-        ) = getPositionValues(_ltvData, _collateralToken, _debtToken);
+        ) = getPositionValues(_ltvData, _collateralToken, _debtAsset);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
@@ -212,8 +211,8 @@ library SiloSolvencyLib {
         returns (uint256 sumOfCollateralValue, uint256 debtValue)
     {
         uint256 sumOfCollateralAssets;
-        // safe because we adding same token, so it is under same total supply
-        unchecked { sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets; }
+        
+        sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
 
         if (sumOfCollateralAssets != 0) {
             // if no oracle is set, assume price 1, we should also not set oracle for quote token

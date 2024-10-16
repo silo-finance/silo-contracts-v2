@@ -6,25 +6,35 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2ConfigFactory} from "silo-core/contracts/interfaces/IInterestRateModelV2ConfigFactory.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
+import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
+import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
+import {Views} from "silo-core/contracts/lib/Views.sol";
 
 /// @notice Silo Deployer
 contract SiloDeployer is ISiloDeployer {
     // solhint-disable var-name-mixedcase
-    IInterestRateModelV2ConfigFactory public immutable IRM_CONFIG_FACTORY;
+    IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
+    address public immutable SILO_IMPL;
+    address public immutable SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL;
+    address public immutable SHARE_DEBT_TOKEN_IMPL;
     // solhint-enable var-name-mixedcase
 
     constructor(
-        IInterestRateModelV2ConfigFactory _irmConfigFactory,
-        ISiloFactory _siloFactory
+        IInterestRateModelV2Factory _irmConfigFactory,
+        ISiloFactory _siloFactory,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
         SILO_FACTORY = _siloFactory;
+        SILO_IMPL = _siloImpl;
+        SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL = _shareProtectedCollateralTokenImpl;
+        SHARE_DEBT_TOKEN_IMPL = _shareDebtTokenImpl;
     }
 
     /// @inheritdoc ISiloDeployer
@@ -38,21 +48,83 @@ contract SiloDeployer is ISiloDeployer {
         external
         returns (ISiloConfig siloConfig)
     {
-        // setUp IRMs (create configs) and update `_siloInitData`
+        // setUp IRMs (create if needed) and update `_siloInitData`
         _setUpIRMs(_irmConfigData0, _irmConfigData1, _siloInitData);
         // create oracles and update `_siloInitData`
         _createOracles(_siloInitData, _oracles);
         // clone hook receiver if needed
         _cloneHookReceiver(_siloInitData, _clonableHookReceiver.implementation);
-        // create Silo
-        siloConfig = SILO_FACTORY.createSilo(_siloInitData);
+        // deploy `SiloConfig` (with predicted addresses)
+        siloConfig = _deploySiloConfig(_siloInitData);
+        // create silo
+        SILO_FACTORY.createSilo(
+            _siloInitData,
+            siloConfig,
+            SILO_IMPL,
+            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
+            SHARE_DEBT_TOKEN_IMPL
+        );
         // initialize hook receiver only if it was cloned
         _initializeHookReceiver(_siloInitData, siloConfig, _clonableHookReceiver);
 
         emit SiloCreated(siloConfig);
     }
 
-    /// @notice Create IRMs configs and update `_siloInitData`
+    /// @notice Deploy `SiloConfig` with predicted addresses
+    /// @param _siloInitData Silo configuration for the silo creation
+    /// @return siloConfig Deployed `SiloConfig`
+    function _deploySiloConfig(ISiloConfig.InitData memory _siloInitData) internal returns (ISiloConfig siloConfig) {
+        uint256 nextSiloId = SILO_FACTORY.getNextSiloId();
+
+        ISiloConfig.ConfigData memory configData0;
+        ISiloConfig.ConfigData memory configData1;
+
+        (configData0, configData1) = Views.copySiloConfig(
+            _siloInitData,
+            SILO_FACTORY.maxDeployerFee(),
+            SILO_FACTORY.maxFlashloanFee(),
+            SILO_FACTORY.maxLiquidationFee()
+        );
+
+        configData0.silo = CloneDeterministic.predictSilo0Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
+        configData1.silo = CloneDeterministic.predictSilo1Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
+
+        configData0.collateralShareToken = configData0.silo;
+        configData1.collateralShareToken = configData1.silo;
+
+        configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
+            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
+            nextSiloId,
+            address(SILO_FACTORY)
+        );
+
+        configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
+            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
+            nextSiloId,
+            address(SILO_FACTORY)
+        );
+
+        configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
+            SHARE_DEBT_TOKEN_IMPL,
+            nextSiloId,
+            address(SILO_FACTORY)
+        );
+
+        configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
+            SHARE_DEBT_TOKEN_IMPL,
+            nextSiloId,
+            address(SILO_FACTORY)
+        );
+
+        uint256 daoFee = SILO_FACTORY.daoFee();
+
+        configData0.daoFee = daoFee;
+        configData1.daoFee = daoFee;
+
+        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
+    }
+
+    /// @notice Create IRMs and update `_siloInitData`
     /// @param _irmConfigData0 IRM config data for a silo `_TOKEN0`
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
     /// @param _siloInitData Silo configuration for the silo creation
@@ -61,11 +133,11 @@ contract SiloDeployer is ISiloDeployer {
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
     ) internal {
-        (, IInterestRateModelV2Config interestRateModelConfig0) = IRM_CONFIG_FACTORY.create(_irmConfigData0);
-        (, IInterestRateModelV2Config interestRateModelConfig1) = IRM_CONFIG_FACTORY.create(_irmConfigData1);
+        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0);
+        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1);
 
-        _siloInitData.interestRateModelConfig0 = address(interestRateModelConfig0);
-        _siloInitData.interestRateModelConfig1 = address(interestRateModelConfig1);
+        _siloInitData.interestRateModel0 = address(interestRateModel0);
+        _siloInitData.interestRateModel1 = address(interestRateModel1);
     }
 
     /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation
@@ -112,7 +184,7 @@ contract SiloDeployer is ISiloDeployer {
         address _hookReceiverImplementation
     ) internal {
         if (_hookReceiverImplementation != address(0) && _siloInitData.hookReceiver != address(0)) {
-            revert HookReceiverMissconfigured();
+            revert HookReceiverMisconfigured();
         }
 
         if (_hookReceiverImplementation != address(0)) {

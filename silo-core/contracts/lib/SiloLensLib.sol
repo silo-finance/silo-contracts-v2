@@ -2,28 +2,19 @@
 pragma solidity ^0.8.20;
 
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloLens} from "../interfaces/ISiloLens.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
-import {SiloLendingLib} from "./SiloLendingLib.sol";
-import {SiloERC4626Lib} from "./SiloERC4626Lib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
-import {Hook} from "./Hook.sol";
 
 library SiloLensLib {
     function getRawLiquidity(ISilo _silo) internal view returns (uint256 liquidity) {
         return SiloMathLib.liquidity(
-            _silo.getTotalAssetsStorage(AssetTypes.COLLATERAL),
-            _silo.getTotalAssetsStorage(AssetTypes.DEBT)
+            _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral),
+            _silo.getTotalAssetsStorage(ISilo.AssetType.Debt)
         );
-    }
-
-    function borrowPossible(ISilo _silo, address _borrower) internal view returns (bool possible) {
-        possible = !_silo.config().hasDebtInOtherSilo(address(_silo), _borrower);
     }
 
     function getMaxLtv(ISilo _silo) internal view returns (uint256 maxLtv) {
@@ -38,7 +29,7 @@ library SiloLensLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _silo.config().getConfigs(_borrower);
+        ) = _silo.config().getConfigsForSolvency(_borrower);
 
         if (debtConfig.silo != address(0)) {
             ltv = SiloSolvencyLib.getLtv(
