@@ -21,9 +21,6 @@ import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.s
 contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
     using SiloLensLib for ISilo;
 
-    // keccak256(abi.encode(uint256(keccak256("silo.storage.ERC20R")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant _STORAGE_LOCATION = 0x5a499b742bad5e18c139447ced974d19a977bcf86e03691ee458d10efcd04d00;
-
     /// @inheritdoc IShareTokenInitializable
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);
