@@ -63,10 +63,16 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
         assertEq(debtAssets, sumUserDebt, BORROWING_INVARIANT_B);
     }
 
-    function assert_BORROWING_INVARIANT_D(address silo, address user) internal {
+    function assert_BORROWING_INVARIANT_D(
+        address silo,
+        address protectedToken,
+        address user
+    ) internal {
         bool hasDebt = siloConfig.hasDebtInOtherSilo(silo, user);
         if (hasDebt) {
-            assertGt(IERC20(silo).balanceOf(user), 0, BORROWING_INVARIANT_D);
+            uint256 collateralBalance = IERC20(silo).balanceOf(user) +
+                IERC20(protectedToken).balanceOf(user);
+            assertGt(collateralBalance, 0, BORROWING_INVARIANT_D);
         }
     }
 
@@ -81,13 +87,11 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
         }
     }
 
-    function assert_BORROWING_INVARIANT_F(address silo, address debtAsset)
-        internal
-    {
+    function assert_BORROWING_INVARIANT_F(address silo) internal {
         uint256 totalAssets = ISilo(silo).totalAssets();
 
         if (totalAssets != 0) {
-            assertGt(IERC20(debtAsset).totalSupply(), 0, BORROWING_INVARIANT_F);
+            assertGt(IERC20(silo).totalSupply(), 0, BORROWING_INVARIANT_F);
         }
     }
 

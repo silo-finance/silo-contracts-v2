@@ -11,6 +11,8 @@ import {
     LendingBorrowingInvariants
 } from "./invariants/LendingBorrowingInvariants.t.sol";
 
+import "forge-std/console.sol";
+
 /// @title Invariants
 /// @notice Wrappers for the protocol invariants implemented in each invariants contract
 /// @dev recognised by Echidna when property mode is activated
@@ -48,15 +50,10 @@ abstract contract Invariants is
     function echidna_SILO_INVARIANT() public returns (bool) {
         for (uint256 i = 0; i < silos.length; i++) {
             assert_SILO_INVARIANT_A(silos[i]);
-
-            for (uint256 j = 0; j < actorAddresses.length; j++) {
-                assert_SILO_INVARIANT_E(silos[i], actorAddresses[j]);
-                assert_SILO_INVARIANT_F(
-                    silos[i],
-                    debtTokens[i],
-                    actorAddresses[j]
-                );
-            }
+        }
+        for (uint256 j = 0; j < actorAddresses.length; j++) {
+            assert_SILO_INVARIANT_E(actorAddresses[j]);
+            assert_SILO_INVARIANT_F(actorAddresses[j]);
         }
         return true;
     }
@@ -87,7 +84,11 @@ abstract contract Invariants is
                     debtTokens[i],
                     actorAddresses[j]
                 );
-                assert_BORROWING_INVARIANT_D(silos[i], actorAddresses[j]);
+                assert_BORROWING_INVARIANT_D(
+                    silos[i],
+                    protectedTokens[i],
+                    actorAddresses[j]
+                );
                 assert_BORROWING_INVARIANT_G(silos[i], actorAddresses[j]);
                 assert_BORROWING_INVARIANT_H(
                     silos[i],
@@ -96,7 +97,7 @@ abstract contract Invariants is
                 );
             }
             assert_BORROWING_INVARIANT_B(silos[i], sumUserDebt);
-            assert_BORROWING_INVARIANT_F(silos[i], debtTokens[i]);
+            assert_BORROWING_INVARIANT_F(silos[i]);
         }
 
         return true;

@@ -41,6 +41,25 @@ contract CryticToFoundry is Invariants, Setup {
     /// @dev Needed in order for foundry to recognise the contract as a test, faster debugging
     function testAux() public {}
 
+    function test_echidna_BASE_INVARIANT() public {
+        this.leverageSameAsset(2, 1, 0, 0, 0);
+        echidna_BASE_INVARIANT();
+    }
+
+    function test_echidna_BORROWING_INVARIANT() public {
+        this.leverageSameAsset(2, 1, 0, 0, 0);
+        echidna_BORROWING_INVARIANT();
+    }
+
+    function test_echidna_BASE_INVARIANT2() public {
+        _setUpActorAndDelay(USER1, 461381);
+        this.setOraclePrice(83076749736557242056487941267521536,99);
+        _setUpActorAndDelay(USER2, 4381);
+        **wait for 123 seconds**
+        this.leverageSameAsset(2417851639229258349412352,84666295960563771947693112236492259590132031432159098261997530209880644297589,29,245,133);
+        echidna_BASE_INVARIANT();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -9,6 +9,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 // Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 
+import "forge-std/console.sol";
+
 /// @title SiloMarketInvariants
 /// @notice Implements Invariants for the protocol
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
@@ -28,7 +30,7 @@ abstract contract SiloMarketInvariants is HandlerAggregator {
         assertTrue(false, SILO_INVARIANT_D);
     } */
 
-    function assert_SILO_INVARIANT_E(address silo, address user) internal {
+    function assert_SILO_INVARIANT_E(address user) internal {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
@@ -39,12 +41,11 @@ abstract contract SiloMarketInvariants is HandlerAggregator {
         }
     }
 
-    function assert_SILO_INVARIANT_F(
-        address silo,
-        address debtToken,
-        address user
-    ) internal {
-        if (IERC20(debtToken).balanceOf(user) == 0) {
+    function assert_SILO_INVARIANT_F(address user) internal {
+        if (
+            IERC20(debtTokens[0]).balanceOf(user) == 0 &&
+            IERC20(debtTokens[1]).balanceOf(user) == 0
+        ) {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig

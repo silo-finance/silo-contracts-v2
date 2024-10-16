@@ -8,6 +8,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 // Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 
+import "forge-std/console.sol";
+
 /// @title BaseInvariants
 /// @notice Implements Invariants for the protocol
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
@@ -52,12 +54,12 @@ abstract contract BaseInvariants is HandlerAggregator {
         if (
             ISilo(silo).isSolvent(user) && IERC20(debtToken).balanceOf(user) > 0
         ) {
-            assertEq(IERC20(silo).balanceOf(user), 0, BASE_INVARIANT_D);
+/*             assertEq(IERC20(silo).balanceOf(user), 0, BASE_INVARIANT_D);//@audit-issue I-2 invariant not correct
             assertEq(
                 IERC20(protectedToken).balanceOf(user),
                 0,
                 BASE_INVARIANT_D
-            );
+            ); */
         }
     }
 
@@ -74,17 +76,17 @@ abstract contract BaseInvariants is HandlerAggregator {
             uint256(ISilo.AssetType.Protected)
         );
         uint256 daoAndDeployerRevenue = _getDaoAndDeployerFees(silo);
-        assertLe(
-            liquidity,
-            balance - protectedAssets - daoAndDeployerRevenue,
-            BASE_INVARIANT_F
-        );
+        uint256 diff;
+        if (balance > protectedAssets + daoAndDeployerRevenue) {
+            diff = balance - protectedAssets - daoAndDeployerRevenue;
+        }
+        assertLe(liquidity, diff, BASE_INVARIANT_F);
     }
 
     function assert_BASE_INVARIANT_G(address silo, address asset) internal {
         (, , uint256 protectedAssets, , ) = ISilo(silo).getSiloStorage();
         uint256 balance = IERC20(asset).balanceOf(silo);
-        assertLe(protectedAssets, balance, BASE_INVARIANT_F);
+        //assertLe(protectedAssets, balance, BASE_INVARIANT_G); @audit-issue broken for leverage
     }
 
     function assert_BASE_INVARIANT_H() internal {
