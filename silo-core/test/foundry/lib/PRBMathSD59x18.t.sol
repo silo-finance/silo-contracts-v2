@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {PRBMathSD59x18} from "silo-core/contracts/lib/PRBMathSD59x18.sol";

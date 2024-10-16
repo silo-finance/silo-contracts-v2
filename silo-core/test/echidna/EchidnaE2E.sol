@@ -1,4 +1,4 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";

@@ -1,4 +1,4 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {PRBMathSD59x18} from "silo-core/contracts/lib/PRBMathSD59x18.sol";
 import {PRBMathCommon} from "silo-core/contracts/lib/PRBMathCommon.sol";
