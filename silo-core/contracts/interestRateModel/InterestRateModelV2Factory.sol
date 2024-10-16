@@ -7,7 +7,6 @@ import {InterestRateModelV2} from "./InterestRateModelV2.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Factory} from "../interfaces/IInterestRateModelV2Factory.sol";
-import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2Config} from "./InterestRateModelV2Config.sol";
 
 /// @title InterestRateModelV2Factory

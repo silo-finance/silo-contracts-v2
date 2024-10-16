@@ -65,7 +65,7 @@ interface IShareToken is IERC20Metadata {
     function burn(address _owner, address _spender, uint256 _amount) external;
 
     /// @notice TransferFrom method for liquidation
-    /// @param _from wallet from which we transfering tokens
+    /// @param _from wallet from which we transferring tokens
     /// @param _to wallet that will get tokens
     /// @param _amount amount of token to transfer
     function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external;

@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
-import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
-import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";

@@ -47,7 +47,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         _registerDeployment(address(siloDeployer), SiloCoreContracts.SILO_DEPLOYER);
         _registerDeployment(address(siloImpl), SiloCoreContracts.SILO);
-        _registerDeployment(address(shareProtectedCollateralTokenImpl), SiloCoreContracts.SHARE_PORTECTED_COLLATERAL_TOKEN);
+        _registerDeployment(address(shareProtectedCollateralTokenImpl), SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN);
         _registerDeployment(address(shareDebtTokenImpl), SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 }

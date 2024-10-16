@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 interface ISiloOracle {
     /// @notice Hook function to call before `quote` function reads price
     /// @dev This hook function can be used to change state right before the price is read. For example it can be used
-    ///      for curve read re-entrancy protection. In majority of implementations this will be an empty function.
+    ///      for curve read only reentrancy protection. In majority of implementations this will be an empty function.
     ///      WARNING: reverts are propagated to Silo so if `beforeQuote` reverts, Silo reverts as well.
     /// @param _baseToken Address of priced token
     function beforeQuote(address _baseToken) external;

@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
@@ -324,7 +323,7 @@ library PartialLiquidationLib {
 
     /// @notice must stay private because this is not for general LTV, only for ltv after
     function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
-        // there might be cases, where ltv will go up slighty, so we can not unchecked mul based on
+        // there might be cases, where ltv will go up slightly, so we can not unchecked mul based on
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
         ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil

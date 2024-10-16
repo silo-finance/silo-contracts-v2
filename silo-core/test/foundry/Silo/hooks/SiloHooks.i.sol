@@ -181,7 +181,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
 
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMissconfiguration
     function testHooksMissconfiguration() public {
-        vm.expectRevert(ISiloDeployer.HookReceiverMissconfigured.selector);
+        vm.expectRevert(ISiloDeployer.HookReceiverMisconfigured.selector);
         _siloFixture.deploy_local(SiloConfigsNames.LOCAL_HOOKS_MISSCONFIGURATION);
     }
 }

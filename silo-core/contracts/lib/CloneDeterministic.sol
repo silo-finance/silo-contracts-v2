@@ -27,57 +27,57 @@ library CloneDeterministic {
     bytes32 private constant _SHARE_DEBT_TOKEN_1 = keccak256("create2.salt.ShareDebtToken1");
 
     /// @notice Deploys a Silo0 clone.
-    /// @param _implmentation The Silo implementation to be cloned.
+    /// @param _implementation The Silo implementation to be cloned.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function silo0(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _silo0Salt(_siloId));
+    function silo0(address _implementation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implementation, _silo0Salt(_siloId));
     }
 
     /// @notice Deploys a Silo1 clone.
-    /// @param _implmentation The Silo implementation to be cloned.
+    /// @param _implementation The Silo implementation to be cloned.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function silo1(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _silo1Salt(_siloId));
+    function silo1(address _implementation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implementation, _silo1Salt(_siloId));
     }
 
     /// @notice Deploys a protected share token clone for the silo0.
-    /// @param _implmentation The protected share token implementation to be cloned.
+    /// @param _implementation The protected share token implementation to be cloned.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function shareProtectedCollateralToken0(
-        address _implmentation,
+        address _implementation,
         uint256 _siloId
     )
         internal
         returns (address instance)
     {
-        instance = Clones.cloneDeterministic(_implmentation, _shareProtectedCollateralToken0Salt(_siloId));
+        instance = Clones.cloneDeterministic(_implementation, _shareProtectedCollateralToken0Salt(_siloId));
     }
 
     /// @notice Deploys a debt share token clone for the silo0.
-    /// @param _implmentation The debt share token implementation to be cloned.
+    /// @param _implementation The debt share token implementation to be cloned.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function shareDebtToken0(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _shareDebtToken0Salt(_siloId));
+    function shareDebtToken0(address _implementation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implementation, _shareDebtToken0Salt(_siloId));
     }
 
     /// @notice Deploys a protected share token  clone for the silo1.
-    /// @param _implmentation The protected share token implementation to be cloned.
+    /// @param _implementation The protected share token implementation to be cloned.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
     function shareProtectedCollateralToken1(
-        address _implmentation,
+        address _implementation,
         uint256 _siloId
     )
         internal
         returns (address instance)
     {
-        instance = Clones.cloneDeterministic(_implmentation, _shareProtectedCollateralToken1Salt(_siloId));
+        instance = Clones.cloneDeterministic(_implementation, _shareProtectedCollateralToken1Salt(_siloId));
     }
 
     /// @notice Deploys a debt share token clone for the silo1.
-    /// @param _implmentation The debt share token implementation to be cloned.
+    /// @param _implementation The debt share token implementation to be cloned.
     /// @param _siloId The Silo ID (assigned by the `SiloFactory`).
-    function shareDebtToken1(address _implmentation, uint256 _siloId) internal returns (address instance) {
-        instance = Clones.cloneDeterministic(_implmentation, _shareDebtToken1Salt(_siloId));
+    function shareDebtToken1(address _implementation, uint256 _siloId) internal returns (address instance) {
+        instance = Clones.cloneDeterministic(_implementation, _shareDebtToken1Salt(_siloId));
     }
 
     /// @notice Predicts the address of the SiloConfig _SILO0.

@@ -15,7 +15,7 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// @param shareToken Share token for which the gauge was removed
     event GaugeRemoved(address shareToken);
 
-    /// @dev Revert on an attempt to inialize with a zero `_owner` address
+    /// @dev Revert on an attempt to initialize with a zero `_owner` address
     error OwnerIsZeroAddress();
     /// @dev Revert on an attempt to initialize with an invalid `_shareToken` address
     error InvalidShareToken();
