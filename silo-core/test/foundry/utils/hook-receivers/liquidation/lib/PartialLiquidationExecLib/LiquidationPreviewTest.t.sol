@@ -7,7 +7,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {PartialLiquidationExecLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
-
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {OraclesHelper} from "../../../../../_common/OraclesHelper.sol";
 import {PartialLiquidationExecLibImpl} from "../../../../../_common/PartialLiquidationExecLibImpl.sol";
 
@@ -24,26 +24,37 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         SiloSolvencyLib.LtvData memory ltvData;
         PartialLiquidationLib.LiquidationPreviewParams memory params;
 
-        (uint256 receiveCollateral, uint256 repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        params.maxDebtToCover = 10;
+        params.collateralLt = 0.75e18;
+
+        uint256 receiveCollateral;
+        uint256 repayDebt;
+        bytes4 customError;
+
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty values");
         assertEq(repayDebt, 0, "zero debt on empty values");
+        assertEq(customError, IPartialLiquidation.NoDebtToCover.selector, "NoDebtToCover error");
 
         ltvData.borrowerCollateralAssets = 1;
-        (receiveCollateral, repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty debt");
         assertEq(repayDebt, 0, "zero debt on empty debt");
+        assertEq(customError, IPartialLiquidation.NoDebtToCover.selector, "NoDebtToCover error");
 
         ltvData.borrowerCollateralAssets = 0;
         ltvData.borrowerDebtAssets = 1;
-        (receiveCollateral, repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty collateral");
-        assertEq(repayDebt, 0, "zero debt on empty collateral");
+        assertEq(repayDebt, ltvData.borrowerDebtAssets, "has debt on empty collateral");
+        assertEq(customError, bytes4(0), "NoDebtToCover error");
 
         ltvData.borrowerCollateralAssets = 1000;
         ltvData.borrowerDebtAssets = 100;
-        (receiveCollateral, repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (receiveCollateral, repayDebt, customError) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on solvent borrower");
         assertEq(repayDebt, 0, "zero debt on solvent borrower");
+        assertEq(customError, IPartialLiquidation.UserIsSolvent.selector, "NoDebtToCover error");
     }
 
     /*
@@ -66,7 +77,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, 0);
         debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 0);
 
-        (uint256 receiveCollateral, uint256 repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (uint256 receiveCollateral, uint256 repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty values");
         assertEq(repayDebt, 0, "zero debt on empty values");
     }
@@ -106,7 +117,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, ltvData.borrowerDebtAssets);
 
         // does not revert - counter example first
-        (uint256 receiveCollateralAssets, uint256 repayDebtAssets) = impl.liquidationPreview(ltvData, params);
+        (uint256 receiveCollateralAssets, uint256 repayDebtAssets,) = impl.liquidationPreview(ltvData, params);
         // -2 because we underestimating max value
         assertEq(receiveCollateralAssets - 2, maxCollateralToLiquidate, "expect same collateral #1");
         assertEq(receiveCollateralAssets, maxDebtToCover, "same collateral, because price is 1:1 and no fee #1");
@@ -115,7 +126,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         // more debt should cause revert because of _LT_LIQUIDATION_MARGIN_IN_BP
         params.maxDebtToCover += 1;
 
-        (receiveCollateralAssets, repayDebtAssets) = impl.liquidationPreview(ltvData, params);
+        (receiveCollateralAssets, repayDebtAssets,) = impl.liquidationPreview(ltvData, params);
         assertEq(receiveCollateralAssets, maxDebtToCover, "receiveCollateralAssets #3 - cap to max");
         assertEq(repayDebtAssets, maxDebtToCover, "repayDebtAssets #3 - cap to max");
     }
@@ -137,7 +148,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         // ltv 200% - user NOT solvent
         // no oracle calls
 
-        (uint256 receiveCollateral, uint256 repayDebt) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (uint256 receiveCollateral, uint256 repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 2, "receiveCollateral");
         assertEq(repayDebt, 2, "repayDebt");
     }

@@ -13,7 +13,7 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
-import {RevertBytes} from "silo-core/contracts/lib/RevertBytes.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
@@ -65,9 +65,10 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         uint256 protectedShares;
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
+        bytes4 customError;
 
         (
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets
+            withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets, customError
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
@@ -76,7 +77,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             collateralConfig.liquidationFee
         );
 
-        if (repayDebtAssets == 0) revert NoDebtToCover();
+        RevertLib.revertIfError(customError);
 
         // we do not allow dust so full liquidation is required
         if (repayDebtAssets > _maxDebtToCover) revert FullLiquidationRequired();
@@ -228,7 +229,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             abi.encodeWithSelector(IShareToken.forwardTransferFromNoChecks.selector, _borrower, _receiver, shares)
         );
 
-        if (!success) RevertBytes.revertBytes(result, "");
+        if (!success) RevertLib.revertBytes(result, "");
     }
 
     function _initialize(ISiloConfig _siloConfig) internal virtual {

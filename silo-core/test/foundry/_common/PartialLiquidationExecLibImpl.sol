@@ -12,7 +12,7 @@ contract PartialLiquidationExecLibImpl {
     )
         external
         view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
+        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError)
     {
         return PartialLiquidationExecLib.liquidationPreview(_ltvData, _params);
     }

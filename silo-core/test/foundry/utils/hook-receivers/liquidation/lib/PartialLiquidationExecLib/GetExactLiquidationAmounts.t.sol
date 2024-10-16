@@ -58,8 +58,7 @@ contract GetExactLiquidationAmountsHelper is Test {
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf,
         uint32 _liquidationFee
-
-    ) external returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets) {
+    ) external returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 customError) {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _configs();
         uint256 sharesOffset = 10 ** 2;
 
@@ -136,7 +135,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         SILO_B.totalMock(ISilo.AssetType.Debt, 0);
 
         (
-            uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
+            uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets,
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, maxDebtToCover, liquidationFee);
 
         assertEq(fromCollateral, 0);
@@ -181,7 +180,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             SILO_B.totalMock(ISilo.AssetType.Debt, testData.mocks.siloTotalDebtAssets);
 
             (
-                uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets
+                uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets,
             ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
                 collateralConfig,
                 debtConfig,
@@ -244,7 +243,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             _collateralUserBalanceOf,
             _debtUserBalanceOf,
             _liquidationFee
-        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets) {
+        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 customError) {
             collateralToLiquidate = fromCollateral + fromProtected;
             success = true;
 
