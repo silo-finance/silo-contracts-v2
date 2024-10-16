@@ -79,9 +79,9 @@ contract StorageUpdateTest is ISomeSilo, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_shareDebtTokenStoragePointer
+    forge test -vv --ffi --mt test_ERC20RStoragePointer
     */
-    function test_shareDebtTokenStoragePointer() public {
+    function test_ERC20RStoragePointer() public {
         string memory pointerSalt = "silo.storage.ERC20R";
 
         IERC20R.Storage storage debtTokenStorage = ERC20RStorage.getIERC20RStorage();
