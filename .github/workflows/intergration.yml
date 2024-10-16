@@ -94,7 +94,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: latest
+          version: nightly
 
       - name: yarn install
         run: yarn install
