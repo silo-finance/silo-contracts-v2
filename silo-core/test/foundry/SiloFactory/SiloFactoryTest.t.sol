@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
 import {IERC721Metadata} from "openzeppelin5/token/ERC721/extensions/IERC721Metadata.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
@@ -10,22 +9,13 @@ import {IERC721Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IShareTokenInitializable} from "silo-core/contracts/interfaces/IShareTokenInitializable.sol";
-import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
-import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 
-import {SiloFactory, ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
-import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
-import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
+import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 
 /*

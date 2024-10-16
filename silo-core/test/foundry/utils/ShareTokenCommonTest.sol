@@ -21,7 +21,7 @@ FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ShareTokenCommonTest
 contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable {
     address public user = makeAddr("someUser");
     address public otherUser = makeAddr("someOtherUser");
-    uint256 public mintAmout = 100e18;
+    uint256 public mintAmount = 100e18;
 
     string private constant _NAME = "SiloShareTokenEIP712Name";
     string private constant _VERSION = "1";
@@ -71,18 +71,18 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         uint256 balance0 = _shareToken.balanceOf(user);
         uint256 totalSupply0 = _shareToken.totalSupply();
 
-        assertEq(balance0, mintAmout, "balance should be equal to mintAmout");
-        assertEq(totalSupply0, mintAmout, "totalSupply should be equal to mintAmout");
+        assertEq(balance0, mintAmount, "balance should be equal to mintAmount");
+        assertEq(totalSupply0, mintAmount, "totalSupply should be equal to mintAmount");
 
         (uint256 balance1, uint256 totalSupply1) = _shareToken.balanceOfAndTotalSupply(user);
 
-        assertEq(balance0, balance1, "balances mistmatch");
-        assertEq(totalSupply0, totalSupply1, "totalSupply mistmatch");
+        assertEq(balance0, balance1, "balances mismatch");
+        assertEq(totalSupply0, totalSupply1, "totalSupply mismatch");
     }
 
     /*
@@ -94,7 +94,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
 
     function _shareTokenMintPermissions(IShareToken _shareToken) internal {
         vm.expectRevert(IShareToken.OnlySilo.selector);
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
     }
 
     /*
@@ -108,10 +108,10 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.expectEmit(true, true, true, true, address(_shareToken));
-        emit Transfer(address(0), user, mintAmout);
+        emit Transfer(address(0), user, mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
     }
 
     /*
@@ -137,16 +137,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.expectEmit(true, true, true, true, address(_shareToken));
-        emit Transfer(address(0), user, mintAmout);
+        emit Transfer(address(0), user, mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         vm.expectEmit(true, true, true, true, address(_shareToken));
-        emit Transfer(user, address(0), mintAmout);
+        emit Transfer(user, address(0), mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.burn(user, user, mintAmout);
+        _shareToken.burn(user, user, mintAmount);
     }
 
     /*
@@ -160,16 +160,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         vm.prank(user);
-        _shareToken.approve(otherUser, mintAmout);
+        _shareToken.approve(otherUser, mintAmount);
 
         vm.expectEmit(true, true, true, false);
-        emit Transfer(user, address(0), mintAmout);
+        emit Transfer(user, address(0), mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.burn(user, otherUser, mintAmout);
+        _shareToken.burn(user, otherUser, mintAmount);
     }
 
     /*
@@ -406,16 +406,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         uint256 balance = _shareToken.balanceOf(user);
-        assertEq(balance, mintAmout, "expect valid balance for a user");
+        assertEq(balance, mintAmount, "expect valid balance for a user");
 
         vm.prank(address(silo));
-        _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmout);
+        _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
 
         balance = _shareToken.balanceOf(otherUser);
-        assertEq(balance, mintAmout, "expect valid balance for otherUser");
+        assertEq(balance, mintAmount, "expect valid balance for otherUser");
 
         balance = _shareToken.balanceOf(user);
         assertEq(balance, 0, "expect 0 balance for user");

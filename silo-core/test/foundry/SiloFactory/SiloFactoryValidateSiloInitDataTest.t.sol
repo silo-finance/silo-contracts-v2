@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
+import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloFactoryDeploy} from "silo-core/deploy/SiloFactoryDeploy.s.sol";
 
 import {OracleMock} from "../_mocks/OracleMock.sol";

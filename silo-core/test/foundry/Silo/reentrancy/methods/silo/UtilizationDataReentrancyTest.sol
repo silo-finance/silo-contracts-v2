@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract UtilaztionDataReentrancyTest is MethodReentrancyTest {
+contract UtilizationDataReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();

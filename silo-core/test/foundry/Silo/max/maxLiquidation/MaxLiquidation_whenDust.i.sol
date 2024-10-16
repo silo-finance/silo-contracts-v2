@@ -3,8 +3,6 @@ pragma solidity ^0.8.20;
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 

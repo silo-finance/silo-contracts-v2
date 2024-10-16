@@ -424,7 +424,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         shareDebtToken.setReceiveApproval(user, otherAmount);
 
         allowance = shareDebtToken.receiveAllowance(user, otherUser);
-        assertEq(allowance, otherAmount, "allowance overriden");
+        assertEq(allowance, otherAmount, "allowance overridden");
     }
 
     /*

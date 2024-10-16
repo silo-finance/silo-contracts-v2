@@ -3,7 +3,8 @@ pragma solidity 0.8.24;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloRouter} from "silo-core/contracts/SiloRouter.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 

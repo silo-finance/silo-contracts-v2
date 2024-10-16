@@ -6,17 +6,12 @@ import {console2} from "forge-std/console2.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {CommonBase} from "forge-std/Base.sol";
 
-import {OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
-
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-
-import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 struct SiloConfigOverride {
     address token0;
@@ -33,7 +28,7 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 
     SiloConfigOverride internal siloConfigOverride;
 
-    error SiliFixtureHookReceiverImplNotFound(string hookReceiver);
+    error SiloFixtureHookReceiverImplNotFound(string hookReceiver);
 
     constructor(SiloConfigOverride memory _override) {
         siloConfigOverride = _override;

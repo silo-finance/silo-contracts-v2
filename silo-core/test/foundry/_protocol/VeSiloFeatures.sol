@@ -11,11 +11,6 @@ import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeContro
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 import {CommonSiloIntegration} from "./CommonSiloIntegration.sol";
 
-import {
-    IBalancerVaultLike as Vault,
-    IAsset
-} from "ve-silo/contracts/fees-distribution/interfaces/IBalancerVaultLike.sol";
-
 contract VeSiloFeatures is CommonSiloIntegration {
     using stdStorage for StdStorage;
 

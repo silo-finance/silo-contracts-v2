@@ -9,9 +9,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
-
-import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*

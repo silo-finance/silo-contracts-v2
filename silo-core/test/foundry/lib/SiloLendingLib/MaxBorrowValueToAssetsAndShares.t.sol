@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {OracleMock} from "silo-core/test/foundry/_mocks/OracleMock.sol";
-import "../../data-readers/MaxBorrowValueToAssetsAndSharesTestData.sol";
+import {MaxBorrowValueToAssetsAndSharesTestData} from "../../data-readers/MaxBorrowValueToAssetsAndSharesTestData.sol";
 
 /*
     forge test -vv --mc MaxBorrowValueToAssetsAndSharesTest

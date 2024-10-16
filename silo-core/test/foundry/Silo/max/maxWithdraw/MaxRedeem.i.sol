@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -152,7 +151,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         if (_maxRedeem > 0) {
             vm.prank(borrower);
             collateralSilo.redeem(_maxRedeem, borrower, borrower);
-            emit log_named_decimal_uint("LTV after aditional redeem", collateralSilo.getLtv(borrower), 16);
+            emit log_named_decimal_uint("LTV after additional redeem", collateralSilo.getLtv(borrower), 16);
         }
 
         bool isSolvent = collateralSilo.isSolvent(borrower);

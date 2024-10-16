@@ -7,8 +7,6 @@ import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liqui
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {console} from "forge-std/console.sol";
-
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
 contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceiver {

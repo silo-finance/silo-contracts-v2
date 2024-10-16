@@ -8,7 +8,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
@@ -145,7 +144,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares(assets, shares, borrower);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repayed");
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repaid");
 
         assertEq(token1.allowance(borrower, address(silo1)), 0, "NO allowance dust");
     }
@@ -171,7 +170,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares(assetsToRepay, shares, borrower);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repayed");
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repaid");
 
         assertEq(token1.allowance(borrower, address(silo1)), 0, "NO allowance dust");
     }
@@ -230,7 +229,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _repayShares(previewRepay + interest * 3, shares, borrower);
 
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repayed");
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repaid");
 
         // 5697763189689604 is just copy/paste, IRM model QA should test if interest are correct
         uint256 dust = 5697763189689604;

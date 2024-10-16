@@ -4,12 +4,13 @@ pragma solidity ^0.8.20;
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
-import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
-
-import "./InterestRateModelV2Impl.sol";
-import "../_common/InterestRateModelConfigs.sol";
-import "../data-readers/RcompTestData.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
+import {InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
+import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
+import {RcompTestData} from "../data-readers/RcompTestData.sol";
 
 
 // forge test -vv --ffi --mc InterestRateModelV2RcompTest

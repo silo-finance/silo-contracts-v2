@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloStdLib.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {Test} from "forge-std/Test.sol";
 
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
-import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
-import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 /*
 forge test -vv --mc FlashFeeTest

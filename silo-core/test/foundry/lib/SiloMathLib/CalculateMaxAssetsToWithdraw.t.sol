@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {CalculateMaxAssetsToWithdrawTestData} from "../../data-readers/CalculateMaxAssetsToWithdrawTestData.sol";

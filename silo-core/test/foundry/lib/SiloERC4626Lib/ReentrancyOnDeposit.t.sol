@@ -4,7 +4,6 @@ pragma solidity 0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {TokenWithReentrancy} from "silo-core/test/foundry/_mocks/SiloERC4626Lib/TokenWithReentrancy.sol";
 

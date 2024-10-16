@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloHookReceiverHarness} from "silo-core/test/foundry/_mocks/SiloHookReceiverHarness.sol";
 
