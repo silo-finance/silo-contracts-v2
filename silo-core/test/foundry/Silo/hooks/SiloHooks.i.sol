@@ -179,9 +179,9 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance on a hook receiver");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMissconfiguration
-    function testHooksMissconfiguration() public {
-        vm.expectRevert(ISiloDeployer.HookReceiverMissconfigured.selector);
-        _siloFixture.deploy_local(SiloConfigsNames.LOCAL_HOOKS_MISSCONFIGURATION);
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMisconfiguration
+    function testHooksMisconfiguration() public {
+        vm.expectRevert(ISiloDeployer.HookReceiverMisconfigured.selector);
+        _siloFixture.deploy_local(SiloConfigsNames.LOCAL_HOOKS_MISCONFIGURATION);
     }
 }

@@ -3,8 +3,8 @@ pragma solidity 0.8.24;
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
-import {CommonDeploy, SiloCoreContracts} from "./_CommonDeploy.sol";
-
+import {CommonDeploy} from "./_CommonDeploy.sol";
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 

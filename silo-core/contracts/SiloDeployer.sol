@@ -7,8 +7,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
@@ -186,7 +184,7 @@ contract SiloDeployer is ISiloDeployer {
         address _hookReceiverImplementation
     ) internal {
         if (_hookReceiverImplementation != address(0) && _siloInitData.hookReceiver != address(0)) {
-            revert HookReceiverMissconfigured();
+            revert HookReceiverMisconfigured();
         }
 
         if (_hookReceiverImplementation != address(0)) {

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
-import {ISilo} from "./ISilo.sol";
-
 interface IPartialLiquidation {
     struct HookSetup {
         /// @param this is the same as in siloConfig
@@ -60,7 +58,7 @@ interface IPartialLiquidation {
     /// to receive the underlying collateral asset directly
     /// @return withdrawCollateral collateral that was send to `msg.sender`, in case of `_receiveSToken` is TRUE,
     /// `withdrawCollateral` will be estimated, on redeem one can expect this value to be rounded down
-    /// @return repayDebtAssets actual debt value that was repayed by `msg.sender`
+    /// @return repayDebtAssets actual debt value that was repaid by `msg.sender`
     function liquidationCall(
         address _collateralAsset,
         address _debtAsset,

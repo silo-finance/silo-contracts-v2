@@ -9,7 +9,6 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {MintableToken} from "../../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
@@ -171,7 +170,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     function _applyInterest() internal {
         uint256 ltvBefore = siloLens.getLtv(silo1, borrower);
         if (ltvBefore == 1) {
-            // there is no way for this test to apply interst for 1 wei LTV
+            // there is no way for this test to apply interest for 1 wei LTV
             return;
         }
 

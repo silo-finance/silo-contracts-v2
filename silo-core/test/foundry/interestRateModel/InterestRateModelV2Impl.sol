@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 
 contract InterestRateModelV2Impl is InterestRateModelV2 {
     function mockSetup(address _silo, int256 _ri, int256 _Tcrit) external {

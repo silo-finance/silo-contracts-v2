@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.20;
 
-import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
-
 contract MaxBorrowValueToAssetsAndSharesTestData {
     struct Input {
         uint256 maxBorrowValue;

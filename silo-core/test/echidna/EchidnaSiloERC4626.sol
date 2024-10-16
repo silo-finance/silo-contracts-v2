@@ -1,11 +1,10 @@
 pragma solidity ^0.8.20;
 
 import {Deployers} from "./utils/Deployers.sol";
-import {ISilo, Silo} from "silo-core/contracts/Silo.sol";
+import {Silo} from "silo-core/contracts/Silo.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {ISiloFactory, SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {CryticERC4626PropertyTests} from "properties/ERC4626/ERC4626PropertyTests.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 

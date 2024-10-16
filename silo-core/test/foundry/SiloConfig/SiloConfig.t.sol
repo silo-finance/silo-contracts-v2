@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 

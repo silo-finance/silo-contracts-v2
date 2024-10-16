@@ -11,12 +11,9 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../../../_common/MintableToken.sol";
-
 
 /*
     forge test -vv --ffi --mc LiquidationCall1TokenTest
@@ -232,7 +229,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             assertEq(
                 token0.balanceOf(address(silo0)),
                 COLLATERAL - DEBT - (maxDebtToCover + 0.05e5) + maxDebtToCover + roundingError,
-                "collateral should be transfer to liquidator AND debt token should be repayed"
+                "collateral should be transfer to liquidator AND debt token should be repaid"
             );
 
             assertEq(

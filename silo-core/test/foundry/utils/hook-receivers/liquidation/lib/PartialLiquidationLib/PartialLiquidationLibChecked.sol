@@ -303,7 +303,7 @@ library PartialLiquidationLibChecked {
 
     /// @notice must stay private because this is not for general LTV, only for ltv after
     function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
-        // there might be cases, where ltv will go up slighty, so we can not /* unchecked */ mul based on
+        // there might be cases, where ltv will go up slightly, so we can not /* unchecked */ mul based on
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
         /* unchecked */ { ltv /= _collateral; }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
@@ -15,8 +15,6 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../../../_common/MintableToken.sol";
-
 
 /*
     forge test -vv --ffi --mc LiquidationCall2TokensTest
@@ -226,7 +224,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
             assertEq(token0.balanceOf(address(this)), maxDebtToCover + 0.05e5, "liquidator should get collateral + 5% fee");
             assertEq(token0.balanceOf(address(silo0)), COLLATERAL - (maxDebtToCover + 0.05e5), "silo collateral should be transfer to liquidator");
-            assertEq(token1.balanceOf(address(silo1)), 0.5e18 + maxDebtToCover, "debt token should be repayed");
+            assertEq(token1.balanceOf(address(silo1)), 0.5e18 + maxDebtToCover, "debt token should be repaid");
 
             assertEq(silo0.getCollateralAssets(), COLLATERAL - (maxDebtToCover + 0.05e5), "total collateral");
             assertEq(silo1.getDebtAssets(), 8e18 + 911884679907104475, "debt token + interest");

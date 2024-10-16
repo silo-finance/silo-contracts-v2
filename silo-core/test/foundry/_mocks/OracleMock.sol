@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract OracleMock is Test {
     address public immutable ADDRESS;

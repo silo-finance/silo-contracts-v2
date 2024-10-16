@@ -16,7 +16,6 @@ import {ShareCollateralToken} from "./utils/ShareCollateralToken.sol";
 import {Actions} from "./lib/Actions.sol";
 import {Views} from "./lib/Views.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
-import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 import {SiloLendingLib} from "./lib/SiloLendingLib.sol";
 import {SiloERC4626Lib} from "./lib/SiloERC4626Lib.sol";
 import {SiloMathLib} from "./lib/SiloMathLib.sol";
@@ -66,7 +65,7 @@ contract Silo is ISilo, ShareCollateralToken {
     function initialize(ISiloConfig _config) external virtual {
         // silo initialization
         address hookReceiver = Actions.initialize(_config);
-        // silo (vault) share token intialization
+        // silo (vault) share token initialization
         _shareTokenInitialize(this, hookReceiver, uint24(Hook.COLLATERAL_TOKEN));
     }
 

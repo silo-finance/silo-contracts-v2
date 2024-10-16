@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

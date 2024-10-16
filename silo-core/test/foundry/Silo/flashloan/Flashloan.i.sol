@@ -7,15 +7,11 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-import {MintableToken} from "../../_common/MintableToken.sol";
 import {FlashLoanReceiverWithInvalidResponse} from "../../_mocks/FlashLoanReceiverWithInvalidResponse.sol";
 import {Gas} from "../../gas/Gas.sol";
 
@@ -162,9 +158,9 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     }
 
     /*
-    forge test -vv --ffi --mt test_flashLoanInvalidResponce
+    forge test -vv --ffi --mt test_flashLoanInvalidResponse
     */
-    function test_flashLoanInvalidResponce() public {
+    function test_flashLoanInvalidResponse() public {
         bytes memory data;
         uint256 amount = 1e18;
         FlashLoanReceiverWithInvalidResponse receiver = new FlashLoanReceiverWithInvalidResponse();

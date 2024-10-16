@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 
 /// @title InterestRateModelV2Config
-/// @notice Please never deploy config manually, always use factory, because factory does necessary checkes.
+/// @notice Please never deploy config manually, always use factory, because factory does necessary checks.
 contract InterestRateModelV2Config is IInterestRateModelV2Config {
     // uopt ∈ (0, 1) – optimal utilization;
     int256 internal immutable _UOPT;

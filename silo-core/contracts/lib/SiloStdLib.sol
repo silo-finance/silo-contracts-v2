@@ -5,12 +5,10 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library SiloStdLib {
     using SafeERC20 for IERC20;

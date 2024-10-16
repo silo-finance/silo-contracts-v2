@@ -14,7 +14,6 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {Hook} from "./Hook.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
@@ -26,7 +25,7 @@ library SiloLendingLib {
 
     /// @notice Allows repaying borrowed assets either partially or in full
     /// @param _debtShareToken debt share token address
-    /// @param _debtAsset underlaying debt asset address
+    /// @param _debtAsset underlying debt asset address
     /// @param _assets The amount of assets to repay. Use 0 if shares are used.
     /// @param _shares The number of corresponding shares associated with the debt. Use 0 if assets are used.
     /// @param _borrower The account that has the debt

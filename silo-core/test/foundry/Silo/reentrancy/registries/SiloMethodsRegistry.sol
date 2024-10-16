@@ -92,7 +92,7 @@ import {TransferReentrancyTest} from "../methods/silo/TransferReentrancyTest.sol
 import {TransferFromReentrancyTest} from "../methods/silo/TransferFromReentrancyTest.sol";
 import {TransitionCollateralReentrancyTest} from "../methods/silo/TransitionCollateralReentrancyTest.sol";
 import {UpdateHooksReentrancyTest} from "../methods/silo/UpdateHooksReentrancyTest.sol";
-import {UtilaztionDataReentrancyTest} from "../methods/silo/UtilaztionDataReentrancyTest.sol";
+import {UtilizationDataReentrancyTest} from "../methods/silo/UtilizationDataReentrancyTest.sol";
 import {WithdrawReentrancyTest} from "../methods/silo/WithdrawReentrancyTest.sol";
 import {WithdrawWithTypeReentrancyTest} from "../methods/silo/WithdrawWithTypeReentrancyTest.sol";
 import {WithdrawFeesReentrancyTest} from "../methods/silo/WithdrawFeesReentrancyTest.sol";
@@ -181,6 +181,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new SwitchCollateralToThisSiloReentrancyTest());
         _registerMethod(new SymbolReentrancyTest());
         _registerMethod(new SynchronizeHooksReentrancyTest());
+        _registerMethod(new SynchronizeHooksTokenReentrancyTest());
         _registerMethod(new GetTotalAssetsStorageReentrancyTest());
         _registerMethod(new TotalAssetsReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
@@ -188,7 +189,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new TransferFromReentrancyTest());
         _registerMethod(new TransitionCollateralReentrancyTest());
         _registerMethod(new UpdateHooksReentrancyTest());
-        _registerMethod(new UtilaztionDataReentrancyTest());
+        _registerMethod(new UtilizationDataReentrancyTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new WithdrawWithTypeReentrancyTest());
         _registerMethod(new WithdrawFeesReentrancyTest());

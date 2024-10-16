@@ -11,7 +11,6 @@ import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
 import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
-import {TokenHelper} from "../TokenHelper.t.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 // forge test -vv --ffi --mc WithdrawFeesTest

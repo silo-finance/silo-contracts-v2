@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
@@ -134,8 +133,8 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         assertEq(_printUtilization(silo1).collateralAssets, 906695, "collateral dust left");
 
         {
-            assertEq(0, siloLens.getLtv(silo1, borrower), "LTV repayed");
-            assertEq(0, siloLens.getLtv(silo1, borrower2), "LTV repayed2");
+            assertEq(0, siloLens.getLtv(silo1, borrower), "LTV repaid");
+            assertEq(0, siloLens.getLtv(silo1, borrower2), "LTV repaid2");
         }
     }
 

@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
 
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
-import {SiloSolvencyLib} from "../lib/SiloSolvencyLib.sol";
 import {ShareCollateralTokenLib} from "../lib/ShareCollateralTokenLib.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";

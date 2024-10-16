@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 // covered cases:
@@ -55,7 +54,7 @@ contract OrderedConfigsTest is Test {
         _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
 
         _mockAccrueInterestCalls(_configData0, _configData1);
-        _mockShareTokensBlances(_siloUser, 0, 0);
+        _mockShareTokensBalances(_siloUser, 0, 0);
     }
 
     function siloConfigDeploy(
@@ -100,7 +99,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo0NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo0NotSameAsset() public {
-        _mockShareTokensBlances(_siloUser, 1, 0);
+        _mockShareTokensBalances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
@@ -126,7 +125,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo1NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo1NotSameAsset() public {
-        _mockShareTokensBlances(_siloUser, 0, 1);
+        _mockShareTokensBalances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
@@ -152,7 +151,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo0SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo0SameAsset() public {
-        _mockShareTokensBlances(_siloUser, 1, 0);
+        _mockShareTokensBalances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
@@ -178,7 +177,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo1SameAsset() public {
-        _mockShareTokensBlances(_siloUser, 0, 1);
+        _mockShareTokensBalances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
@@ -229,7 +228,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo0NotSameAsset
     function testGetConfigsDebtSilo0NotSameAsset() public {
-        _mockShareTokensBlances(_siloUser, 1, 0);
+        _mockShareTokensBalances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
@@ -245,7 +244,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo0SameAsset
     function testGetConfigsDebtSilo0SameAsset() public {
-        _mockShareTokensBlances(_siloUser, 1, 0);
+        _mockShareTokensBalances(_siloUser, 1, 0);
 
         vm.prank(_silo0);
         _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
@@ -261,7 +260,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSil1NotSameAsset
     function testGetConfigsDebtSil1NotSameAsset() public {
-        _mockShareTokensBlances(_siloUser, 0, 1);
+        _mockShareTokensBalances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.setOtherSiloAsCollateralSilo(_siloUser);
@@ -277,7 +276,7 @@ contract OrderedConfigsTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo1SameAsset
     function testGetConfigsDebtSilo1SameAsset() public {
-        _mockShareTokensBlances(_siloUser, 0, 1);
+        _mockShareTokensBalances(_siloUser, 0, 1);
 
         vm.prank(_silo1);
         _siloConfig.setThisSiloAsCollateralSilo(_siloUser);
@@ -380,7 +379,7 @@ contract OrderedConfigsTest is Test {
         );
     }
 
-    function _mockShareTokensBlances(address _user, uint256 _balance0, uint256 _balance1) internal {
+    function _mockShareTokensBalances(address _user, uint256 _balance0, uint256 _balance1) internal {
         vm.mockCall(
             _configData0.debtShareToken,
             abi.encodeCall(IERC20.balanceOf, _user),

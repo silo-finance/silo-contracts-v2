@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IERC20R} from "../interfaces/IERC20R.sol";

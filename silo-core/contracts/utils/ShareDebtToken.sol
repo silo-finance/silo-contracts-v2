@@ -2,7 +2,6 @@
 pragma solidity 0.8.24;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";

@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";

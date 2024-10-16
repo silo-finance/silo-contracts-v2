@@ -79,13 +79,13 @@ contract SiloLensTest is SiloLittleHelper, Test {
     */
     function test_SiloLens_getLtv() public view {
         // due to initial state
-        uint256 epxectedLtv = _AMOUNT_BORROW * 100 / _AMOUNT_COLLATERAL * 1e18 / 100;
+        uint256 expectedLtv = _AMOUNT_BORROW * 100 / _AMOUNT_COLLATERAL * 1e18 / 100;
 
         uint256 ltvSilo0 = siloLens.getLtv(silo0, _borrower);
-        assertEq(ltvSilo0, epxectedLtv);
+        assertEq(ltvSilo0, expectedLtv);
 
         uint256 ltvSilo1 = siloLens.getLtv(silo1, _borrower);
-        assertEq(ltvSilo1, epxectedLtv);
+        assertEq(ltvSilo1, expectedLtv);
     }
 
     /*
