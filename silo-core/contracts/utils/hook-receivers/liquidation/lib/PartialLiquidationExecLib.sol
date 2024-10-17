@@ -159,6 +159,7 @@ library PartialLiquidationExecLib {
         );
 
         if (receiveCollateralAssets == 0 || repayDebtAssets == 0) {
+            revert("receiveCollateralAssets == 0 || repayDebtAssets == 0");
             return (0, 0, IPartialLiquidation.NoRepayAssets.selector);
         }
     }
