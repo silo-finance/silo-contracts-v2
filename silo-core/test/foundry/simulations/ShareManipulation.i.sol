@@ -10,6 +10,8 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
+    forge test -vv --ffi --mc ShareManipulationTest
+
     1. sergiey example is based on 70day period
     2. depositing and withdrawing does not change share/assets ration (I was not able to do that)
 
