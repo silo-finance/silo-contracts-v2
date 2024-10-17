@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -27,7 +27,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_vault_denial_of_service_attack_deposit_lock
 
-    @dev An issue reloved by increasing the decimals offset for the collateral share token.
+    @dev An issue resolved by increasing the decimals offset for the collateral share token.
          See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
     */
     function test_vault_denial_of_service_attack_deposit_lock() public {
@@ -50,6 +50,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         silo0.deposit(1e8, victim, ISilo.CollateralType.Collateral);
 
         // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
+        // because of that the the following code is commented.
 
         // siloCollateralAssets : 1073741825
         // 1 share =            : 536870913
@@ -67,7 +68,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_vault_denial_of_service_attack_funds_recovery
 
-    @dev An issue reloved by increasing the decimals offset for the collateral share token.
+    @dev An issue resolved by increasing the decimals offset for the collateral share token.
          See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
     */
     function test_vault_denial_of_service_attack_funds_recovery() public {
@@ -102,7 +103,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_vault_denial_of_service_attack_withdraw_issue
 
-    @dev An issue reloved by increasing the decimals offset for the collateral share token.
+    @dev An issue resolved by increasing the decimals offset for the collateral share token.
          See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
     */
     function test_vault_denial_of_service_attack_withdraw_issue() public {
@@ -132,11 +133,12 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         silo0.withdraw(depositsAmounts[anyDepositor], depositor, depositor);
 
         // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
+        // because of that the the following code is commented.
         
         // (, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
         // uint256 sharesBalance = IShareToken(collateralShareToken).balanceOf(depositor);
 
-        // witdrawing the deposit
+        // withdrawing the deposit
         // vm.prank(depositor);
 
         // vm.expectRevert(
