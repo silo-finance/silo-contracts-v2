@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {console2} from "forge-std/console2.sol";
 

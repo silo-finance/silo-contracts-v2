@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -32,7 +32,7 @@ contract TransferCollateralTest is Gas, Test {
             address(collateralShareToken),
             abi.encodeCall(IERC20.transfer, (BORROWER, 1)),
             "TransferCollateral (when debt)",
-            115105
+            114958
         );
     }
 }

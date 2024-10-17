@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";

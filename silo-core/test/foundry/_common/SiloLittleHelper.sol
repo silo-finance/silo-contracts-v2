@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {CommonBase} from "forge-std/Base.sol";
 import {console} from "forge-std/console.sol";

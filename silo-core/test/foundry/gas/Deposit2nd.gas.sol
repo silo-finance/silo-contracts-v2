@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -24,7 +24,7 @@ contract Deposit2ndGasTest is Gas, Test {
             address(silo0),
             abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "Deposit2nd (no interest)",
-            84954
+            84299
         );
     }
 }

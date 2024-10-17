@@ -10,7 +10,7 @@ env:
   RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
   PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
   ANVIL_PORT: 8586
-  ANVIL_FORK_BLOCK_NUMBER: 18938600
+  ANVIL_FORK_BLOCK_NUMBER: 20977800
   SILO_DEPLOYMENT_NODE: "http://127.0.0.1:8586"
 
 on:
@@ -94,7 +94,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-2cb875799419c907cc3709e586ece2559e6b340e
+          version: nightly
 
       - name: yarn install
         run: yarn install

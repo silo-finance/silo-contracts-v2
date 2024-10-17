@@ -1,4 +1,4 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Deployers} from "./utils/Deployers.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -32,7 +32,7 @@ contract WithdrawPartAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.withdraw, (ASSETS / 10, DEPOSITOR, DEPOSITOR, ISilo.CollateralType.Collateral)),
             "Withdraw partial with accrue interest",
-            185046
+            184602
         );
     }
 }
