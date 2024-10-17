@@ -10,6 +10,7 @@ libs = [
 ]
 out = 'cache/foundry/out'
 evm_version = 'cancun'
+gas_limit = '40000000000'
 
 [profile.amm-periphery]
 src = 'silo-amm-periphery/contracts'
