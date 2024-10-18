@@ -1,9 +1,12 @@
 ## Silo Core
-Silo is the main component of the protocol. It implements lending logic, manages and isolates risk, acts as a vault for assets, and performs liquidations. Each Silo is composed of the two asset for which it was created and is immutable after being created. Creation of the Silo is permission less and can be done via [Silo Factory](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/SiloFactory.sol).
+Silo is the main component of the protocol. It implements lending logic, manages and isolates risk, and acts as a vault for assets. Each lending market is composed of the two Silos for which it was created and is immutable after being created. Creation of the Silo is permission less and can be done via [Silo Factory](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/SiloFactory.sol).
 
 |<img src="./docs/_images/silo_v2_core_architecture.jpeg" alt="Silo V2 core architecture" title="Silo V2 core architecture">|
 |:--:| 
 | Silo V2 core architecture |
+
+### Silo hooks system
+The Silo Protocol Hooks System provides an extensible mechanism for interacting with core actions like deposits, withdrawals, borrowing, repayments, leverage operations, collateral transitions, switching collateral, flash loans, and liquidations. Hooks allow external systems to execute custom logic **before** or **after** protocol actions, offering flexibility for validation, logging, or integration with external contracts. While the protocol is fully functional without hooks, they enhance its modularity and allow for seamless interaction with other decentralized systems. For more information see [Hooks.md](./docs/Hooks.md).
 
 ### Silo shares tokens
 For each asset in a Silo, there are two [ERC-20](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareToken.sol) tokens deployed and one [ERC20R](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareDebtToken.sol):
