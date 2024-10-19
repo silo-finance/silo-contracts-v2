@@ -54,7 +54,7 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
+        require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
         unchecked { $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets - assets; }
@@ -155,9 +155,10 @@ library SiloLendingLib {
 
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
-        if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)) {
-            revert ISilo.NotEnoughLiquidity();
-        }
+        require(
+            _token == address(0) || borrowedAssets <= SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets),
+            ISilo.NotEnoughLiquidity()
+        );
 
         // add new debt
         $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets + borrowedAssets;

@@ -53,8 +53,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     {
         ISiloConfig siloConfigCached = siloConfig;
 
-        if (address(siloConfigCached) == address(0)) revert EmptySiloConfig();
-        if (_maxDebtToCover == 0) revert NoDebtToCover();
+        require(address(siloConfigCached) != address(0), EmptySiloConfig());
+        require(_maxDebtToCover != 0, NoDebtToCover());
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -80,7 +80,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         RevertLib.revertIfError(customError);
 
         // we do not allow dust so full liquidation is required
-        if (repayDebtAssets > _maxDebtToCover) revert FullLiquidationRequired();
+        require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 
@@ -189,9 +189,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     {
         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
-        if (debtConfig.silo == address(0)) revert UserIsSolvent();
-        if (_collateralAsset != collateralConfig.token) revert UnexpectedCollateralToken();
-        if (_debtAsset != debtConfig.token) revert UnexpectedDebtToken();
+        require(debtConfig.silo != address(0), UserIsSolvent());
+        require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());
+        require(_debtAsset == debtConfig.token, UnexpectedDebtToken());
 
         ISilo(debtConfig.silo).accrueInterest();
 
@@ -233,8 +233,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     }
 
     function _initialize(ISiloConfig _siloConfig) internal virtual {
-        if (address(_siloConfig) == address(0)) revert EmptySiloConfig();
-        if (address(siloConfig) != address(0)) revert AlreadyConfigured();
+        require(address(_siloConfig) != address(0), EmptySiloConfig());
+        require(address(siloConfig) == address(0), AlreadyConfigured());
 
         siloConfig = _siloConfig;
     }

@@ -83,8 +83,8 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
     /// @param _recipient wallet that allows `_owner` to send debt to its wallet
     /// @param _amount amount of token allowed to be transferred
     function _setReceiveApproval(address _owner, address _recipient, uint256 _amount) internal virtual {
-        if (_owner == address(0)) revert IShareToken.OwnerIsZero();
-        if (_recipient == address(0)) revert IShareToken.RecipientIsZero();
+        require(_owner != address(0), IShareToken.OwnerIsZero());
+        require(_recipient != address(0), IShareToken.RecipientIsZero());
 
         IERC20R.Storage storage $ = ERC20RStorageLib.getIERC20RStorage();
 
@@ -109,7 +109,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
 
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = _receiveAllowance(_sender, _recipient);
-            if (currentAllowance < _amount) revert IShareToken.AmountExceedsAllowance();
+            require(currentAllowance >= _amount, IShareToken.AmountExceedsAllowance());
 
             uint256 newDebtAllowance;
 
@@ -131,7 +131,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         if (ShareTokenLib.isTransfer(_sender, _recipient)) {
             IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
             ShareTokenLib.callOracleBeforeQuote($.siloConfig, _recipient);
-            if (!$.silo.isSolvent(_recipient)) revert IShareToken.RecipientNotSolventAfterTransfer();
+            require($.silo.isSolvent(_recipient), IShareToken.RecipientNotSolventAfterTransfer());
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);

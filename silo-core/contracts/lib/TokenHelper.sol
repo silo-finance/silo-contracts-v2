@@ -58,7 +58,7 @@ library TokenHelper {
     /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
     function _tokenMetadataCall(address _token, bytes memory _data) private view returns (bool, bytes memory) {
         // We need to do this before the call, otherwise the call will succeed even for EOAs
-        if (!IsContract.isContract(_token)) revert TokenIsNotAContract();
+        require(IsContract.isContract(_token), TokenIsNotAContract());
 
         (bool success, bytes memory result) = _token.staticcall(_data);
 

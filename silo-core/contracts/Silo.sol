@@ -628,7 +628,7 @@ contract Silo is ISilo, ShareCollateralToken {
         external
         virtual
     {
-        if (msg.sender != address(ShareTokenLib.siloConfig())) revert OnlySiloConfig();
+        require(msg.sender == address(ShareTokenLib.siloConfig()), OnlySiloConfig());
 
         _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }

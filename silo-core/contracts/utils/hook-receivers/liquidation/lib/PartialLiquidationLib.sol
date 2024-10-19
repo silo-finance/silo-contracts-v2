@@ -141,7 +141,7 @@ library PartialLiquidationLib {
         pure
         returns (uint256 assets)
     {
-        if (_totalValue == 0) revert IPartialLiquidation.UnknownRatio();
+        require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
         assets = _value * _totalAssets;
         unchecked { assets /= _totalValue; }

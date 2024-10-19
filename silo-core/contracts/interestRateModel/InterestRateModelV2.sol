@@ -79,8 +79,8 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @inheritdoc IInterestRateModel
     function initialize(address _irmConfig) external virtual {
-        if (_irmConfig == address(0)) revert AddressZero();
-        if (address(irmConfig) != address(0)) revert AlreadyInitialized();
+        require(_irmConfig != address(0), AddressZero());
+        require(address(irmConfig) == address(0), AlreadyInitialized());
 
         irmConfig = IInterestRateModelV2Config(_irmConfig);
 
@@ -209,7 +209,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
     ) public pure virtual returns (uint256 rcur) {
-        if (_interestRateTimestamp > _blockTimestamp) revert InvalidTimestamps();
+        require(_interestRateTimestamp <= _blockTimestamp, InvalidTimestamps());
 
         LocalVarsRCur memory _l = LocalVarsRCur(0,0,0,0,0,0,false); // struct for local vars to avoid "Stack too deep"
 
@@ -295,7 +295,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         // struct for local vars to avoid "Stack too deep"
         LocalVarsRComp memory _l = LocalVarsRComp(0,0,0,0,0,0,0,0,0,0);
 
-        if (_interestRateTimestamp > _blockTimestamp) revert InvalidTimestamps();
+        require(_interestRateTimestamp <= _blockTimestamp, InvalidTimestamps());
 
         // There can't be an underflow in the subtraction because of the previous check
         unchecked {

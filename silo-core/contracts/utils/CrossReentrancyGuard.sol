@@ -13,7 +13,7 @@ abstract contract CrossReentrancyGuard is ICrossReentrancyGuard {
     function turnOnReentrancyProtection() external virtual {
         _onlySiloOrTokenOrHookReceiver();
         
-        if (_crossReentrantStatus == _ENTERED) revert CrossReentrantCall();
+        require(_crossReentrantStatus != _ENTERED, CrossReentrantCall());
 
         _crossReentrantStatus = _ENTERED;
     }
@@ -26,7 +26,7 @@ abstract contract CrossReentrancyGuard is ICrossReentrancyGuard {
         // as it can be used in the function without activating the protection before deactivating it.
         // Later on, these functions may be called to turn off the reentrancy protection.
         // To avoid this, we check if the protection is active before deactivating it.
-        if (_crossReentrantStatus == _NOT_ENTERED) revert CrossReentrancyNotActive();
+        require(_crossReentrantStatus != _NOT_ENTERED, CrossReentrancyNotActive());
 
         _crossReentrantStatus = _NOT_ENTERED;
     }
