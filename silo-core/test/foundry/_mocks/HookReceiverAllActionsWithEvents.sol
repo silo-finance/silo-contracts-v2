@@ -135,24 +135,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         bool isBefore
     );
 
-    event BeforeLeverageSameAssetHA(
-        address silo,
-        uint256 depositAssets,
-        uint256 borrowAssets,
-        address borrower,
-        ISilo.CollateralType collateralType
-    );
-
-    event AfterLeverageSameAssetHA(
-        address silo,
-        uint256 depositAssets,
-        uint256 borrowAssets,
-        address borrower,
-        ISilo.CollateralType collateralType,
-        uint256 depositedShares,
-        uint256 borrowedShares
-    );
-
     event SwitchCollateralBeforeHA(address user);
 
     event SwitchCollateralAfterHA(address user);
@@ -239,8 +221,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
             _processShareTokenTransfer(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.WITHDRAW)) {
             _processWithdraw(_silo, _action, _inputAndOutput, _isBefore);
-        } else if (_action.matchAction(Hook.LEVERAGE_SAME_ASSET)) {
-            _processLeverageSameAsset(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW)) {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW_SAME_ASSET)) {
@@ -462,32 +442,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         } else {
             Hook.AfterTransitionCollateralInput memory input = Hook.afterTransitionCollateralDecode(_inputAndOutput);
             emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
-        }
-    }
-
-    function _processLeverageSameAsset(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_isBefore) {
-            Hook.BeforeLeverageSameAssetInput memory input = Hook.beforeLeverageSameAssetDecode(_inputAndOutput);
-
-            emit BeforeLeverageSameAssetHA(
-                _silo,
-                input.depositAssets,
-                input.borrowAssets,
-                input.borrower,
-                input.collateralType
-            );
-        } else {
-            Hook.AfterLeverageSameAssetInput memory input = Hook.afterLeverageSameAssetDecode(_inputAndOutput);
-
-            emit AfterLeverageSameAssetHA(
-                _silo,
-                input.depositAssets,
-                input.borrowAssets,
-                input.borrower,
-                input.collateralType,
-                input.depositedShares,
-                input.borrowedShares
-            );
         }
     }
 }
