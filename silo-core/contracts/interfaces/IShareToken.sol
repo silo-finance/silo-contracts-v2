@@ -36,7 +36,6 @@ interface IShareToken is IERC20Metadata {
     /// @param success false if TX reverted on `notificationReceiver` side, otherwise true
     event NotificationSent(address indexed notificationReceiver, bool success);
 
-    error Forbidden();
     error OnlySilo();
     error OnlySiloConfig();
     error OwnerIsZero();
