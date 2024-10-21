@@ -41,10 +41,10 @@
 * return value of `convertToAssets()` == `previewMint()` == `mint()` should always be the same
 * `deposit()`/`mint()` always increase value on any sstore operation
 * collateral share token balance always increases after `deposit()`/`mint()` only for receiver
-* deposit/mint/withdraw/redeem/borrow/borrowShares/repay/repayShares/borrowSameAsset/leverageSameAsset should always call turnOnReentrancyProtection(), turnOffReentrancyProtection()
-* `deposit()`/`mint()`/`repay()`/`repayShares()`/`borrowSameAsset()`/`leverageSameAsset()` should always call `accrueInterest()` on one (called) Silo
+* deposit/mint/withdraw/redeem/borrow/borrowShares/repay/repayShares/borrowSameAsset should always call turnOnReentrancyProtection(), turnOffReentrancyProtection()
+* `deposit()`/`mint()`/`repay()`/`repayShares()`/`borrowSameAsset()` should always call `accrueInterest()` on one (called) Silo
 * `withdraw()`/`redeem()`/`borrow()`/`borrowShares()` should always call `accrueInterest()` on both Silos
-* `deposit()`/`mint()`/`withdraw()`/`redeem()`/`borrow()`/`borrowShares()`/`repay()`/`repayShares()`/`borrowSameAsset()`/`leverageSameAsset()` should call `hookBefore()`, `hookAfter()` - if configured
+* `deposit()`/`mint()`/`withdraw()`/`redeem()`/`borrow()`/`borrowShares()`/`repay()`/`repayShares()`/`borrowSameAsset()` should call `hookBefore()`, `hookAfter()` - if configured
 * result of `maxWithdraw()` should never be more than liquidity of the Silo
 * result of `maxWithdraw()` used as input to withdraw() should never revert
 * if user has no debt and liquidity is available, shareToken.balanceOf(user) used as input to redeem(), assets from redeem() should be equal to maxWithdraw()
@@ -56,9 +56,6 @@
 * return value of `previewBorrow()` should be always equal to `borrow()`
 * user must be solvent after `switchCollateralToThisSilo()`
 * `borrowerCollateralSilo[user]` should be set to "this" Silo address. No other state should be changed in either Silo. ?
-* if `leverageSameAsset()` should never decrease Silo asset balance
-* if `maxLtv < 100%` then `leverageSameAsset()` should always increase Silo asset balance
-* `leverageSameAsset(x, y)` should be always change state equivalent to `deposit(x)` and `borrow(y)`
 * apply all rules from `borrowShares()` to `borrow()`
 * `borrow()` should decrease Silo balance by exactly `_assets`
 * everybody can exit Silo meaning: calling `borrow()`, then `repay()`, all users should be able to `withdraw()` all funds and `withdrawFess()` withdraws all fees successfully
@@ -92,7 +89,7 @@
 * if `borrowerCollateralSilo[user]` is set from zero to non-zero value, it never goes back to zero
 * if `borrowerCollateralSilo[user]` is set from zero to non-zero value, user must have balance in one of debt share tokens - excluding `switchCollateralToThisSilo()` method
 * if `borrowerCollateralSilo[user]` is set from zero to non-zero value, one of the debt share token `totalSupply()` increases and `totalAssets[AssetType.Debt]` increases for one of the silos - excluding `switchCollateralToThisSilo()` method
-* `setThisSiloAsCollateralSilo()` should be called only by: `borrowSameAsset`, `leverageSameAsset`, `switchCollateralToThisSilo`
+* `setThisSiloAsCollateralSilo()` should be called only by: `borrowSameAsset`, `switchCollateralToThisSilo`
 * `setOtherSiloAsCollateralSilo()` should be called only by: `borrow`, `borrowShares`
 * user should never have balance of debt share token in both silos
 * calling `accrueInterestForSilo(_silo)` should be equal to calling `_silo.accrueInterest()`
