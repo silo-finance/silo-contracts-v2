@@ -529,37 +529,6 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function leverageSameAsset(
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        address _borrower,
-        CollateralType _collateralType
-    )
-        external
-        virtual
-        returns (uint256 depositedShares, uint256 borrowedShares)
-    {
-        (
-            depositedShares, borrowedShares
-        ) = Actions.leverageSameAsset(
-            ISilo.LeverageSameAssetArgs({
-                depositAssets: _depositAssets,
-                borrowAssets: _borrowAssets,
-                borrower: _borrower,
-                collateralType: _collateralType
-            })
-        );
-
-        emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);
-
-        if (_collateralType == CollateralType.Collateral) {
-            emit Deposit(msg.sender, _borrower, _depositAssets, depositedShares);
-        } else {
-            emit DepositProtected(msg.sender, _borrower, _depositAssets, depositedShares);
-        }
-    }
-
-    /// @inheritdoc ISilo
     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {
         assets = Views.maxRepay(_borrower);
     }

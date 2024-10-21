@@ -44,12 +44,10 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         token0.approve(address(silo0), COLLATERAL);
 
         vm.prank(BORROWER);
-        silo0.leverageSameAsset(
-            COLLATERAL,
-            DEBT,
-            BORROWER,
-            ISilo.CollateralType.Collateral
-        );
+        silo0.deposit(COLLATERAL, BORROWER);
+
+        vm.prank(BORROWER);
+        silo0.borrowSameAsset(DEBT, BORROWER, BORROWER);
 
         assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
         assertEq(token0.balanceOf(address(silo0)), COLLATERAL - DEBT, "silo0 has only 2.5 debt token (10 - 7.5)");

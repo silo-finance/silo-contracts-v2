@@ -141,17 +141,6 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         vault.switchCollateralToThisSilo();
     }
 
-    function leverageSameAsset(
-        bool _vaultZero,
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        address _borrower,
-        ISilo.CollateralType _collateralType
-    ) external returns (uint256 depositedShares, uint256 borrowedShares) {
-        Silo vault = _vaultZero ? vault0 : vault1;
-        return vault.leverageSameAsset(_depositAssets, _borrowAssets, _borrower, _collateralType);
-    }
-
     function flashLoan(bool _vaultZero, uint256 _amount)
         public
         returns (bool success)

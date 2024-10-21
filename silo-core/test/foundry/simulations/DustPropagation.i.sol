@@ -42,12 +42,10 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         token0.approve(address(silo0), COLLATERAL);
 
         vm.prank(BORROWER);
-        silo0.leverageSameAsset(
-            COLLATERAL,
-            DEBT,
-            BORROWER,
-            ISilo.CollateralType.Collateral
-        );
+        silo0.deposit(COLLATERAL, BORROWER);
+
+        vm.prank(BORROWER);
+        silo0.borrowSameAsset(DEBT, BORROWER, BORROWER);
 
         uint256 timeForward = 120 days;
         vm.warp(block.timestamp + timeForward);

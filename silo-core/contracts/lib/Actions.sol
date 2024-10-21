@@ -214,62 +214,6 @@ library Actions {
     }
 
     // solhint-disable-next-line function-max-lines
-    function leverageSameAsset(ISilo.LeverageSameAssetArgs memory _args)
-        external
-        returns (uint256 depositedShares, uint256 borrowedShares)
-    {
-        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
-
-        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
-        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
-
-        _hookCallBeforeLeverageSameAsset(_args);
-
-        siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForSilo(address(this));
-        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
-
-        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
-        ISiloConfig.ConfigData memory debtConfig = collateralConfig;
-
-        uint256 borrowedAssets;
-
-        (borrowedAssets, borrowedShares) = SiloLendingLib.borrow({
-            _debtShareToken: debtConfig.debtShareToken,
-            _token: address(0), // we are not transferring debt
-            _spender: msg.sender,
-            _args: ISilo.BorrowArgs({
-                assets: _args.borrowAssets,
-                shares: 0,
-                receiver: _args.borrower,
-                borrower: _args.borrower
-            })
-        });
-
-        (, depositedShares) = SiloERC4626Lib.deposit({
-            _token: address(0), // we are not transferring token
-            _depositor: msg.sender,
-            _assets: _args.depositAssets,
-            _shares: 0,
-            _receiver: _args.borrower,
-            _collateralShareToken: _args.collateralType == ISilo.CollateralType.Collateral
-                ? IShareToken(collateralConfig.collateralShareToken)
-                : IShareToken(collateralConfig.protectedShareToken),
-            _collateralType: _args.collateralType
-        });
-
-        // receive collateral
-        uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
-        IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
-
-        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);
-
-        siloConfig.turnOffReentrancyProtection();
-
-        _hookCallAfterLeverageSameAsset(_args, borrowedAssets, depositedShares, borrowedShares);
-    }
-
-    // solhint-disable-next-line function-max-lines
     function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
@@ -668,39 +612,5 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
-    }
-
-    function _hookCallBeforeLeverageSameAsset(ISilo.LeverageSameAssetArgs memory _args) private {
-        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
-
-        if (!_shareStorage.hookSetup.hooksBefore.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
-
-        bytes memory data = abi.encodePacked(
-            _args.depositAssets, _args.borrowAssets, _args.borrower, _args.collateralType
-        );
-
-        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
-    }
-
-    function _hookCallAfterLeverageSameAsset(
-        ISilo.LeverageSameAssetArgs memory _args,
-        uint256 _borrowedAssets,
-        uint256 _depositedShares,
-        uint256 _borrowedShares
-    ) private {
-        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
-
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
-
-        bytes memory data = abi.encodePacked(
-            _args.depositAssets,
-            _borrowedAssets,
-            _args.borrower,
-            _args.collateralType,
-            _depositedShares,
-            _borrowedShares
-        );
-
-        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
     }
 }

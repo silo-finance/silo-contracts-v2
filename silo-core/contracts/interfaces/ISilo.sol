@@ -80,17 +80,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         address borrower;
     }
 
-    /// @param depositAssets Amount of assets the user wishes to deposit.
-    /// @param borrowAssets Amount of assets the user wishes to borrow.
-    /// @param borrower Address of the borrower
-    /// @param collateralType Type of the asset being deposited (Collateral or Protected)
-    struct LeverageSameAssetArgs {
-        uint256 depositAssets;
-        uint256 borrowAssets;
-        address borrower;
-        ISilo.CollateralType collateralType;
-    }
-
     /// @param shares Amount of shares the user wishes to transit.
     /// @param owner owner of the shares after transition.
     /// @param transitionFrom type of collateral that will be transitioned.
@@ -429,19 +418,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Switches the collateral silo to this silo
     /// @dev Revert if the collateral silo is already set
     function switchCollateralToThisSilo() external;
-
-    /// @notice Allows an address to borrow a specified amount of same assets in efficient way
-    /// @dev In opposite to regular borrow, Silo will transfer necessary collateral (difference between collateral
-    /// and debt amount) FROM `_borrower`. Existing collateral is not taken into consideration.
-    /// @param _deposit Amount of deposit to leverage
-    /// @param _borrow Amount of assets to borrow
-    /// @param _borrower Address responsible for the borrowed assets
-    /// @param _collateralType asset type for collateral
-    /// @return depositShares Amount of shares equivalent to the collateral assets
-    /// @return borrowShares Amount of shares equivalent to the borrowed assets
-    function leverageSameAsset(uint256 _deposit, uint256 _borrow, address _borrower, CollateralType _collateralType)
-        external
-        returns (uint256 depositShares, uint256 borrowShares);
 
     /// @notice Accrues interest for the asset and returns the accrued interest amount
     /// @return accruedInterest The total interest accrued during this operation
