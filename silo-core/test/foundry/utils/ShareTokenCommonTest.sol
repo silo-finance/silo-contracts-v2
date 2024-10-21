@@ -387,7 +387,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPermissions
     */
     function test_forwardTransferFromNoChecksPermissions() public {
-        _executeForAllShareTokens(_synchronizeHooksPermissions);
+        _executeForAllShareTokens(_forwardTransferFromNoChecksPermissions);
     }
 
     function _forwardTransferFromNoChecksPermissions(IShareToken _shareToken) internal {
@@ -399,7 +399,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks
     */
     function test_forwardTransferFromNoChecks() public {
-        _executeForAllShareTokens(_synchronizeHooksPermissions);
+        _executeForAllShareTokens(_forwardTransferFromNoChecks);
     }
 
     function _forwardTransferFromNoChecks(IShareToken _shareToken) internal {
