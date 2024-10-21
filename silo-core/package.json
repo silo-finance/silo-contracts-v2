@@ -13,7 +13,7 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "solhint \"contracts/**/*.sol\" --max-warnings=0",
+    "lint:sol": "solhint \"contracts/**/*.sol\" --ignore-path .solhintignore --max-warnings=0",
     "foundry:qa": "FOUNDRY_PROFILE=core forge test -vvv"
   }
 }
