@@ -16,7 +16,6 @@
     "not-rely-on-time": "off",
     "no-global-import": "off",
     "var-name-mixedcase": "off",
-    "func-named-parameters": "off",
     "reason-string": [
       "warn",
       {
