@@ -398,13 +398,23 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPass
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo0
     */
-    function test_forwardTransferFromNoChecksPass() public {
-        _executeForAllShareTokens(_forwardTransferFromNoChecks);
+    function test_forwardTransferFromNoChecks_silo0() public {
+        _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo1
+    */
+    function test_forwardTransferFromNoChecks_silo1() public {
+        _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo1));
     }
 
     function _forwardTransferFromNoChecks(IShareToken _shareToken) internal {
+        uint24 tokenType = _shareToken.hookSetup().tokenType;
+        emit log_named_uint("[forwardTransferFromNoChecks] tokenType", tokenType);
+
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
@@ -413,8 +423,8 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 balance = _shareToken.balanceOf(user);
         assertEq(balance, mintAmount, "expect valid balance for a user");
 
-        if (_shareToken.hookSetup().tokenType == Hook.DEBT_TOKEN) {
-            emit log("share token type: debt");
+        if (tokenType == Hook.DEBT_TOKEN) {
+            emit log("debt token required additional approval");
             vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
             vm.prank(address(silo));
             _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
@@ -434,16 +444,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
-        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
-        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
+        _executeForAllShareTokens(func, address(silo0));
+        _executeForAllShareTokens(func, address(silo1));
+    }
+
+    function _executeForAllShareTokens(function(IShareToken) internal func, address _silo) internal {
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(_silo);
 
         func(IShareToken(protected0));
         func(IShareToken(collateral0));
         func(IShareToken(debt0));
-
-        func(IShareToken(protected1));
-        func(IShareToken(collateral1));
-        func(IShareToken(debt1));
     }
 
     function _executeForAllCollateralShareTokens(function(IShareToken) internal func) internal {
