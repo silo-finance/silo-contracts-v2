@@ -6,12 +6,14 @@ import {Vm} from "forge-std/Vm.sol";
 import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
+import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 // solhint-disable ordering
 
@@ -396,9 +398,9 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPass
     */
-    function test_forwardTransferFromNoChecks() public {
+    function test_forwardTransferFromNoChecksPass() public {
         _executeForAllShareTokens(_forwardTransferFromNoChecks);
     }
 
@@ -410,6 +412,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
 
         uint256 balance = _shareToken.balanceOf(user);
         assertEq(balance, mintAmount, "expect valid balance for a user");
+
+        if (_shareToken.hookSetup().tokenType == Hook.DEBT_TOKEN) {
+            emit log("share token type: debt");
+            vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
+            vm.prank(address(silo));
+            _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
+
+            vm.prank(otherUser);
+            IERC20R(address(_shareToken)).increaseReceiveAllowance(user, mintAmount);
+        }
 
         vm.prank(address(silo));
         _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
