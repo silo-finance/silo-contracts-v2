@@ -198,7 +198,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
-        require(_newMaxDeployerFee < MAX_FEE, MaxFeeExceeded());
+        require(_newMaxDeployerFee <= MAX_FEE, MaxFeeExceeded());
 
         maxDeployerFee = _newMaxDeployerFee;
 
