@@ -5,7 +5,6 @@ import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloHarness} from "../SiloHarness.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 contract Silo1 is SiloHarness {
     constructor(ISiloFactory _siloFactory) SiloHarness(_siloFactory) {}

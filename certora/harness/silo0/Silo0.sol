@@ -6,7 +6,6 @@ import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloHarness} from "../SiloHarness.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ShareTokenLib} from "silo-core/contracts//lib/ShareTokenLib.sol";
 import {SiloERC4626Lib} from "silo-core/contracts//lib/SiloERC4626Lib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
