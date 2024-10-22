@@ -190,7 +190,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        require(_newDaoFee < MAX_FEE, MaxFeeExceeded());
+        require(_newDaoFee <= MAX_FEE, MaxFeeExceeded());
 
         daoFee = _newDaoFee;
 
