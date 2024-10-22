@@ -258,12 +258,8 @@ library SiloMathLib {
         // safe because we checked `if (_sumOfCollateralsValue <= minimumCollateralValue)`
         unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }
 
-        unchecked {
-            // these are total assets (protected + collateral) that _owner can withdraw
-            // - is safe because we adding same asset (under same total supply)
-            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
+        maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
                 .mulDiv(spareCollateralValue, _sumOfCollateralsValue, Rounding.MAX_WITHDRAW_TO_ASSETS);
-        }
     }
 
     /// @notice Determines the maximum number of assets and corresponding shares a borrower can safely withdraw
