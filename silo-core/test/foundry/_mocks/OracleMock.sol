@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract OracleMock is Test {
     address public immutable ADDRESS;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
@@ -52,7 +52,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.assetTypeShareTokenTotalSupply = 1;
 
         allData[i].output.assets = 1;
-        allData[i].output.shares = 1;
+        allData[i].output.shares = 500;
 
         i = _init("[protected] maxAssets=10 but cap=1");
         _clone(allData[i-1], allData[i]);
@@ -66,7 +66,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.assetTypeShareTokenTotalSupply = 1e18;
 
         allData[i].output.assets = 0.1e18;
-        allData[i].output.shares = 0.1e18;
+        allData[i].output.shares = 100000000000000099;
 
         i = _init("[protected] when above borrowerProtectedAssets");
         allData[i].input.assetType = ISilo.CollateralType.Protected;
@@ -76,7 +76,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.assetTypeShareTokenTotalSupply = 1e18;
 
         allData[i].output.assets = 0.5e18;
-        allData[i].output.shares = 0.5e18;
+        allData[i].output.shares = 500000000000000499;
 
         // ==================================================
 
@@ -97,7 +97,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.liquidity = 1;
 
         allData[i].output.assets = 1;
-        allData[i].output.shares = 1;
+        allData[i].output.shares = 500;
 
         i = _init("[collateral] maxAssets=10 but cap=1");
         _clone(allData[i-1], allData[i]);
@@ -119,14 +119,14 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.liquidity = 100e18;
 
         allData[i].output.assets = 0.1e18;
-        allData[i].output.shares = 0.1e18;
+        allData[i].output.shares = 100000000000000099;
 
         i = _init("[collateral] when borrowerCollateralAssets < MAX < liquidity");
         _clone(allData[i-1], allData[i]);
         allData[i].input.maxAssets = 0.8e18;
 
         allData[i].output.assets = 0.5e18;
-        allData[i].output.shares = 0.5e18;
+        allData[i].output.shares = 500000000000000499;
 
         i = _init("[collateral] when liquidity < borrowerCollateralAssets < X");
         _clone(allData[i-1], allData[i]);
@@ -134,7 +134,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.borrowerCollateralAssets = 150e18;
 
         allData[i].output.assets = 100e18;
-        allData[i].output.shares = 100e18;
+        allData[i].output.shares = 100000000000000099899;
 
         return allData;
     }

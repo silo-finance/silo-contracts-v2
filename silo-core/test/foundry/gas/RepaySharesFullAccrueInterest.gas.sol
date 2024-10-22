@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol";
-
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Gas} from "./Gas.sol";
 
@@ -37,7 +35,7 @@ contract RepaySharesFullAccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS, BORROWER),
             "RepaySharesFullAccrueInterest full (shares) with accrue interest",
-            134701
+            131626
         );
     }
 }

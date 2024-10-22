@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
 library SiloStorageLib {
     // keccak256(abi.encode(uint256(keccak256("silo.storage.SiloVault")) - 1)) & ~bytes32(uint256(0xff));

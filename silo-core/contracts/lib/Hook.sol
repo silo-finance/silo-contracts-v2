@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {ISilo} from "../interfaces/ISilo.sol";
 
@@ -82,11 +82,13 @@ library Hook {
     /// @param shares The amount of shares to borrow
     /// @param receiver The receiver of the borrow
     /// @param borrower The borrower of the assets
+    /// @param _spender Address which initiates the borrowing action on behalf of the borrower
     struct BeforeBorrowInput {
         uint256 assets;
         uint256 shares;
         address receiver;
         address borrower;
+        address spender;
     }
 
     /// @notice The data structure for the after borrow hook
@@ -94,6 +96,7 @@ library Hook {
     /// @param shares The amount of shares borrowed
     /// @param receiver The receiver of the borrow
     /// @param borrower The borrower of the assets
+    /// @param spender Address which initiates the borrowing action on behalf of the borrower
     /// @param borrowedAssets The exact amount of assets being borrowed
     /// @param borrowedShares The exact amount of shares being borrowed
     struct AfterBorrowInput {
@@ -101,6 +104,7 @@ library Hook {
         uint256 shares;
         address receiver;
         address borrower;
+        address spender;
         uint256 borrowedAssets;
         uint256 borrowedShares;
     }
@@ -170,34 +174,6 @@ library Hook {
         uint256 assets;
     }
 
-    /// @notice The data structure for the before leverage same asset hook
-    /// @param depositAssets The amount of assets to deposit
-    /// @param borrowAssets The amount of assets to borrow
-    /// @param borrower The borrower of the assets
-    /// @param collateralType The collateral type
-    struct BeforeLeverageSameAssetInput {
-        uint256 depositAssets;
-        uint256 borrowAssets;
-        address borrower;
-        ISilo.CollateralType collateralType;
-    }
-
-    /// @notice The data structure for the after leverage same asset hook
-    /// @param depositAssets The amount of assets to deposit
-    /// @param borrowAssets The amount of assets to borrow
-    /// @param borrower The borrower of the assets
-    /// @param collateralType The collateral type
-    /// @param depositedShares The exact amount of assets being deposited
-    /// @param borrowedShares The exact amount of assets being borrowed
-    struct AfterLeverageSameAssetInput {
-        uint256 depositAssets;
-        uint256 borrowAssets;
-        address borrower;
-        ISilo.CollateralType collateralType;
-        uint256 depositedShares;
-        uint256 borrowedShares;
-    }
-
     /// @notice The data structure for the switch collateral hook
     /// @param user The user switching collateral
     struct SwitchCollateralInput {
@@ -212,15 +188,14 @@ library Hook {
     uint256 internal constant BORROW_SAME_ASSET = 2 ** 3;
     uint256 internal constant REPAY = 2 ** 4;
     uint256 internal constant WITHDRAW = 2 ** 5;
-    uint256 internal constant LEVERAGE_SAME_ASSET = 2 ** 6;
-    uint256 internal constant FLASH_LOAN = 2 ** 7;
-    uint256 internal constant TRANSITION_COLLATERAL = 2 ** 8;
-    uint256 internal constant SWITCH_COLLATERAL = 2 ** 9;
-    uint256 internal constant LIQUIDATION = 2 ** 10;
-    uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 11;
-    uint256 internal constant COLLATERAL_TOKEN = 2 ** 12;
-    uint256 internal constant PROTECTED_TOKEN = 2 ** 13;
-    uint256 internal constant DEBT_TOKEN = 2 ** 14;
+    uint256 internal constant FLASH_LOAN = 2 ** 6;
+    uint256 internal constant TRANSITION_COLLATERAL = 2 ** 7;
+    uint256 internal constant SWITCH_COLLATERAL = 2 ** 8;
+    uint256 internal constant LIQUIDATION = 2 ** 9;
+    uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 10;
+    uint256 internal constant COLLATERAL_TOKEN = 2 ** 11;
+    uint256 internal constant PROTECTED_TOKEN = 2 ** 12;
+    uint256 internal constant DEBT_TOKEN = 2 ** 13;
 
     // note: currently we can support hook value up to 2 ** 23,
     // because for optimisation purposes, we storing hooks as uint24
@@ -451,7 +426,7 @@ library Hook {
         uint256 shares;
         address receiver;
         address borrower;
-
+        address spender;
         assembly { // solhint-disable-line no-inline-assembly
             let pointer := PACKED_FULL_LENGTH
             assets := mload(add(packed, pointer))
@@ -461,9 +436,11 @@ library Hook {
             receiver := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
         }
 
-        input = BeforeBorrowInput(assets, shares, receiver, borrower);
+        input = BeforeBorrowInput(assets, shares, receiver, borrower, spender);
     }
 
     /// @dev Decodes packed data from the after borrow hook
@@ -478,6 +455,7 @@ library Hook {
         uint256 shares;
         address receiver;
         address borrower;
+        address spender;
         uint256 borrowedAssets;
         uint256 borrowedShares;
 
@@ -490,13 +468,15 @@ library Hook {
             receiver := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_ADDRESS_LENGTH)
             borrower := mload(add(packed, pointer))
+            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
+            spender := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
             borrowedAssets := mload(add(packed, pointer))
             pointer := add(pointer, PACKED_FULL_LENGTH)
             borrowedShares := mload(add(packed, pointer))
         }
 
-        input = AfterBorrowInput(assets, shares, receiver, borrower, borrowedAssets, borrowedShares);
+        input = AfterBorrowInput(assets, shares, receiver, borrower, spender, borrowedAssets, borrowedShares);
     }
 
     /// @dev Decodes packed data from the before repay hook
@@ -671,78 +651,6 @@ library Hook {
         }
 
         input = SwitchCollateralInput(user);
-    }
-
-    /// @dev Decodes packed data from the before leverage same asset hook
-    /// @param packed The packed data (via abi.encodePacked)
-    /// @return input decoded
-    function beforeLeverageSameAssetDecode(bytes memory packed)
-        internal
-        pure
-        returns (BeforeLeverageSameAssetInput memory input)
-    {
-        uint256 depositAssets;
-        uint256 borrowAssets;
-        address borrower;
-        uint8 collateralType;
-
-        assembly { // solhint-disable-line no-inline-assembly
-            let pointer := PACKED_FULL_LENGTH
-            depositAssets := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            borrowAssets := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            borrower := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ENUM_LENGTH)
-            collateralType := mload(add(packed, pointer))
-        }
-
-        input = BeforeLeverageSameAssetInput(
-            depositAssets,
-            borrowAssets,
-            borrower,
-            ISilo.CollateralType(collateralType)
-        );
-    }
-
-    /// @dev Decodes packed data from the after leverage same asset hook
-    /// @param packed The packed data (via abi.encodePacked)
-    /// @return input decoded
-    function afterLeverageSameAssetDecode(bytes memory packed)
-        internal
-        pure
-        returns (AfterLeverageSameAssetInput memory input)
-    {
-        uint256 depositAssets;
-        uint256 borrowAssets;
-        address borrower;
-        uint8 collateralType;
-        uint256 depositedShares;
-        uint256 borrowedShares;
-
-        assembly { // solhint-disable-line no-inline-assembly
-            let pointer := PACKED_FULL_LENGTH
-            depositAssets := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            borrowAssets := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ADDRESS_LENGTH)
-            borrower := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_ENUM_LENGTH)
-            collateralType := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            depositedShares := mload(add(packed, pointer))
-            pointer := add(pointer, PACKED_FULL_LENGTH)
-            borrowedShares := mload(add(packed, pointer))
-        }
-
-        input = AfterLeverageSameAssetInput(
-            depositAssets,
-            borrowAssets,
-            borrower,
-            ISilo.CollateralType(collateralType),
-            depositedShares,
-            borrowedShares
-        );
     }
 
     /// @dev Converts a uint8 to a boolean

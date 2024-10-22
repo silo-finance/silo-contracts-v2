@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -132,7 +132,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSiloStorageMutationWithSiloExtension
     function testSiloStorageMutationWithSiloExtension() public {
         uint256 amoutToSend = 0;
-        uint256 assetType = uint256(ISilo.AssetType.Collateral);
+        ISilo.AssetType assetType = ISilo.AssetType.Collateral;
         uint256 expectedTotalCollateralAssets = 1_9999_9999e18;
 
         address target = address(new SiloStorageExtension());
@@ -179,9 +179,9 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance on a hook receiver");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMissconfiguration
-    function testHooksMissconfiguration() public {
-        vm.expectRevert(ISiloDeployer.HookReceiverMissconfigured.selector);
-        _siloFixture.deploy_local(SiloConfigsNames.LOCAL_HOOKS_MISSCONFIGURATION);
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMisconfiguration
+    function testHooksMisconfiguration() public {
+        vm.expectRevert(ISiloDeployer.HookReceiverMisconfigured.selector);
+        _siloFixture.deploy_local(SiloConfigsNames.LOCAL_HOOKS_MISCONFIGURATION);
     }
 }

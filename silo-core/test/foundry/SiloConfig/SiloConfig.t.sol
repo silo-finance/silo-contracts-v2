@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 
@@ -887,6 +886,17 @@ contract SiloConfigTest is Test {
 
         hasDebt = _siloConfig.hasDebtInOtherSilo(address(_silo1Default), user);
         assertTrue(hasDebt, "user has debt in other silo");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_wrongSilo
+    */
+    function test_hasDebtInOtherSilo_wrongSilo() public {
+        address user = makeAddr("user");
+        address wrongSilo = makeAddr("wrongSilo");
+
+        vm.expectRevert(ISiloConfig.WrongSilo.selector);
+        _siloConfig.hasDebtInOtherSilo(wrongSilo, user);
     }
 
     /*

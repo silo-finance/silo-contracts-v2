@@ -1,4 +1,4 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
@@ -11,9 +11,7 @@ import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
@@ -277,21 +275,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         Actor actor = _selectActor(_actorIndex);
         actor.switchCollateralToThisSilo(_vaultZero);
-    }
-
-    function leverageSameAsset(
-        uint8 _actorIndex,
-        bool _vaultZero,
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        // address _borrower TODO, support this
-        ISilo.CollateralType _collateralType
-    ) public returns (uint256 depositedShares, uint256 borrowedShares) {
-        emit LogUint256("[leverageSameAsset] block.timestamp:", block.timestamp);
-
-        Actor actor = _selectActor(_actorIndex);
-
-        return actor.leverageSameAsset(_vaultZero, _depositAssets, _borrowAssets, address(actor), _collateralType);
     }
 
     // TODO transfers s tokens
@@ -774,41 +757,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             assert(ltvAfter > 0 && ltvAfter < lt);
         } else {
             assertEq(ltvAfter, 0, "when not partial, user should be completely liquidated");
-        }
-    }
-
-    // Property: A user self-liquidating cannot gain assets or shares
-    function selfLiquidationDoesNotResultInMoreSharesOrAssets(
-        uint8 _actorIndex,
-        uint256 debtToRepay,
-        bool receiveSToken
-    )
-        public
-    {
-        emit LogUint256("[selfLiquidationDoesNotResultInMoreSharesOrAssets] block.timestamp:", block.timestamp);
-
-        Actor actor = _selectActor(_actorIndex);
-        (, bool _vaultZeroWithDebt) = _invariant_insolventHasDebt(address(actor));
-
-        Silo vault = _vaultZeroWithDebt ? vault0 : vault1;
-        Silo otherVault = _vaultZeroWithDebt ? vault1 : vault0;
-
-        (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(otherVault));
-        (,, address debtShareToken ) = siloConfig.getShareTokens(address(vault));
-
-        { // to deep
-            uint256 procBalanceBefore = IShareToken(protectedShareToken).balanceOf(address(actor));
-            uint256 collBalanceBefore = IShareToken(collateralShareToken).balanceOf(address(actor));
-            uint256 debtBalanceBefore = IShareToken(debtShareToken).balanceOf(address(actor));
-            actor.liquidationCall(address(actor), debtToRepay, receiveSToken, siloConfig);
-
-            uint256 procBalanceAfter = IShareToken(protectedShareToken).balanceOf(address(actor));
-            uint256 collBalanceAfter = IShareToken(collateralShareToken).balanceOf(address(actor));
-            uint256 debtBalanceAfter = IShareToken(debtShareToken).balanceOf(address(actor));
-
-            assertLte(procBalanceAfter, procBalanceBefore, "Protected shares balance increased");
-            assertLte(collBalanceAfter, collBalanceBefore, "Collateral shares balance increased");
-            assertLte(debtBalanceAfter, debtBalanceBefore, "Debt shares balance increased");
         }
     }
 

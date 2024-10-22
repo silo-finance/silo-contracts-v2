@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 
@@ -15,7 +14,7 @@ import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
     using SiloLensLib for ISilo;
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -28,21 +27,21 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
             emit log_named_decimal_uint("[MaxLiquidationWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
-            (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            (uint256 collateralToLiquidate, uint256 maxDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
             bool isSolvent = silo0.isSolvent(borrower);
 
             // this conditions caught bug
-            if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
-            if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
+            if (isSolvent && maxDebtToCover != 0) revert("if we solvent there should be no liquidation");
+            if (!isSolvent && maxDebtToCover == 0) revert("if we NOT solvent there should be a liquidation");
 
             if (isSolvent) break;
 
-            uint256 testDebtToCover = _calculateChunk(debtToCover, i);
+            uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
 
             (
                 uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;

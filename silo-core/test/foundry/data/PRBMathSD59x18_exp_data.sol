@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 contract PRBMathSD59x18_exp_data {
     function expData() public pure returns(int256[] memory inputs, int256[] memory expected) {

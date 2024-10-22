@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {MintableToken} from "../../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
@@ -169,8 +166,13 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
             ? _borrowShares(_assetsOrShares, borrower)
             : _borrow(_assetsOrShares, borrower, _sameAsset());
 
+        uint256 conversionResults = _borrowShares()
+            ? silo1.convertToAssets(_assetsOrShares, ISilo.AssetType.Debt)
+            : silo1.convertToShares(_assetsOrShares, ISilo.AssetType.Debt);
+
         assertGt(results, 0, "expect any borrow amount > 0");
         assertEq(_preview, results, "preview should give us exact result");
+        assertEq(_preview, conversionResults, "preview == conversion");
     }
 
     function _getBorrowPreview(uint256 _assetsOrShares) internal view virtual returns (uint256 preview) {

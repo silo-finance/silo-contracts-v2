@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {IMethodsRegistry} from "../interfaces/IMethodsRegistry.sol";
@@ -40,7 +40,6 @@ import {HookReceiverTokenReentrancyTest} from "../methods/silo/HookReceiverToken
 import {HookSetupReentrancyTest} from "../methods/silo/HookSetupReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/silo/InitializeReentrancyTest.sol";
 import {IsSolventReentrancyTest} from "../methods/silo/IsSolventReentrancyTest.sol";
-import {LeverageSameAssetReentrancyTest} from "../methods/silo/LeverageSameAssetReentrancyTest.sol";
 import {MaxBorrowReentrancyTest} from "../methods/silo/MaxBorrowReentrancyTest.sol";
 import {MaxBorrowSameAssetReentrancyTest} from "../methods/silo/MaxBorrowSameAssetReentrancyTest.sol";
 import {MaxBorrowSharesReentrancyTest} from "../methods/silo/MaxBorrowSharesReentrancyTest.sol";
@@ -92,7 +91,7 @@ import {TransferReentrancyTest} from "../methods/silo/TransferReentrancyTest.sol
 import {TransferFromReentrancyTest} from "../methods/silo/TransferFromReentrancyTest.sol";
 import {TransitionCollateralReentrancyTest} from "../methods/silo/TransitionCollateralReentrancyTest.sol";
 import {UpdateHooksReentrancyTest} from "../methods/silo/UpdateHooksReentrancyTest.sol";
-import {UtilaztionDataReentrancyTest} from "../methods/silo/UtilaztionDataReentrancyTest.sol";
+import {UtilizationDataReentrancyTest} from "../methods/silo/UtilizationDataReentrancyTest.sol";
 import {WithdrawReentrancyTest} from "../methods/silo/WithdrawReentrancyTest.sol";
 import {WithdrawWithTypeReentrancyTest} from "../methods/silo/WithdrawWithTypeReentrancyTest.sol";
 import {WithdrawFeesReentrancyTest} from "../methods/silo/WithdrawFeesReentrancyTest.sol";
@@ -137,7 +136,6 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new HookSetupReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());
         _registerMethod(new IsSolventReentrancyTest());
-        _registerMethod(new LeverageSameAssetReentrancyTest());
         _registerMethod(new MaxBorrowReentrancyTest());
         _registerMethod(new MaxBorrowSameAssetReentrancyTest());
         _registerMethod(new MaxBorrowSharesReentrancyTest());
@@ -181,6 +179,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new SwitchCollateralToThisSiloReentrancyTest());
         _registerMethod(new SymbolReentrancyTest());
         _registerMethod(new SynchronizeHooksReentrancyTest());
+        _registerMethod(new SynchronizeHooksTokenReentrancyTest());
         _registerMethod(new GetTotalAssetsStorageReentrancyTest());
         _registerMethod(new TotalAssetsReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
@@ -188,7 +187,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new TransferFromReentrancyTest());
         _registerMethod(new TransitionCollateralReentrancyTest());
         _registerMethod(new UpdateHooksReentrancyTest());
-        _registerMethod(new UtilaztionDataReentrancyTest());
+        _registerMethod(new UtilizationDataReentrancyTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new WithdrawWithTypeReentrancyTest());
         _registerMethod(new WithdrawFeesReentrancyTest());

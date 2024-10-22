@@ -12,15 +12,7 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 library ShareCollateralTokenLib {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    /// @dev Check if sender is solvent after the transfer
-    function afterTokenTransfer(address _sender, address /* _recipient */, uint256 /* _amount */) external {
-        if (!_isSolventAfterCollateralTransfer(_sender)) revert IShareToken.SenderNotSolventAfterTransfer();
-
-        // note: make sure to call original/inherited method as well when you call this one for collateral
-        // ShareTokenLib.afterTokenTransfer(_sender, _recipient, _amount);
-    }
-
-    function _isSolventAfterCollateralTransfer(address _borrower) private returns (bool) {
+    function isSolventAfterCollateralTransfer(address _sender) external returns (bool isSolvent) {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
         ISiloConfig siloConfig = $.siloConfig;
 
@@ -28,13 +20,15 @@ library ShareCollateralTokenLib {
             ISiloConfig.DepositConfig memory deposit,
             ISiloConfig.ConfigData memory collateral,
             ISiloConfig.ConfigData memory debt
-        ) = siloConfig.getConfigsForWithdraw(address($.silo), _borrower);
+        ) = siloConfig.getConfigsForWithdraw(address($.silo), _sender);
 
         // when deposit silo is collateral silo, that means this sToken is collateral for debt
         if (collateral.silo != deposit.silo) return true;
 
-        ShareTokenLib.callOracleBeforeQuote(siloConfig, _borrower);
+        siloConfig.accrueInterestForBothSilos();
 
-        return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);
+        ShareTokenLib.callOracleBeforeQuote(siloConfig, _sender);
+
+        isSolvent = SiloSolvencyLib.isSolvent(collateral, debt, _sender, ISilo.AccrueInterestInMemory.No);
     }
 }

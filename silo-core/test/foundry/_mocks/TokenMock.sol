@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";

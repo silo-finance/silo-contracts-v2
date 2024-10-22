@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 // solhint-disable function-max-lines
 
@@ -31,9 +28,9 @@ library SiloERC4626LibWithReentrancyIssue {
     ) public returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalAssets = $.totalAssets[AssetTypes.COLLATERAL];
+        uint256 totalAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
             _shares,
             totalAssets,
@@ -50,7 +47,7 @@ library SiloERC4626LibWithReentrancyIssue {
 
         // `assets` and `totalAssets` can never be more than uint256 because totalSupply cannot be either
         unchecked {
-            $.totalAssets[AssetTypes.COLLATERAL] = totalAssets + assets;
+            $.totalAssets[ISilo.AssetType.Collateral] = totalAssets + assets;
         }
         
         // Hook receiver is called after `mint` and can reentry but state changes are completed already

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -113,7 +113,7 @@ contract SiloFactorySettersTest is Test {
     function test_setDaoFeeReceiver(address _newDaoFeeReceiver) public {
         vm.assume(_newDaoFeeReceiver != address(0));
 
-        vm.expectRevert(ISiloFactory.ZeroAddress.selector);
+        vm.expectRevert(ISiloFactory.HookIsZeroAddress.selector);
         siloFactory.setDaoFeeReceiver(address(0));
 
         vm.prank(hacker);

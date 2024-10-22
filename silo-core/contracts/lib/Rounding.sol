@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
@@ -7,8 +7,6 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 library Rounding {
     Math.Rounding internal constant UP = (Math.Rounding.Ceil);
     Math.Rounding internal constant DOWN = (Math.Rounding.Floor);
-    Math.Rounding internal constant DEFAULT_TO_ASSETS = (Math.Rounding.Floor);
-    Math.Rounding internal constant DEFAULT_TO_SHARES = (Math.Rounding.Floor);
     Math.Rounding internal constant DEBT_TO_ASSETS = (Math.Rounding.Ceil);
     // COLLATERAL_TO_ASSETS is used to calculate borrower collateral (so we want to round down)
     Math.Rounding internal constant COLLATERAL_TO_ASSETS = (Math.Rounding.Floor);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
@@ -10,11 +10,6 @@ import {IFeesManager} from "ve-silo/contracts/silo-tokens-minter/interfaces/IFee
 import {IGaugeController} from "ve-silo/contracts/gauges/interfaces/IGaugeController.sol";
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 import {CommonSiloIntegration} from "./CommonSiloIntegration.sol";
-
-import {
-    IBalancerVaultLike as Vault,
-    IAsset
-} from "ve-silo/contracts/fees-distribution/interfaces/IBalancerVaultLike.sol";
 
 contract VeSiloFeatures is CommonSiloIntegration {
     using stdStorage for StdStorage;
