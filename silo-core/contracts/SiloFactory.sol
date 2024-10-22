@@ -206,7 +206,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
-        require(_newMaxFlashloanFee < MAX_FEE, MaxFeeExceeded());
+        require(_newMaxFlashloanFee <= MAX_FEE, MaxFeeExceeded());
 
         maxFlashloanFee = _newMaxFlashloanFee;
 
