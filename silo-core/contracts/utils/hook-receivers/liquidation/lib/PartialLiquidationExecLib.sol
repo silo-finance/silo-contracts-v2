@@ -111,7 +111,10 @@ library PartialLiquidationExecLib {
         // then sTokenRequired will return false, but we can not withdraw (because we will be short by 2)
         // solution is to include this 2wei here
         // safe to unchecked, because we underestimated this value in a first place by -2
-        unchecked { sTokenRequired = collateralToLiquidate + 2 > ISilo(collateralConfig.silo).getLiquidity(); }
+        unchecked {
+            uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
+            sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
+        }
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay

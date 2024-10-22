@@ -22,6 +22,8 @@ library PartialLiquidationLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
+    uint256 internal constant _UNDERESTIMATION = 2;
+
     /// @dev when user is insolvent with some LT, we will allow to liquidate to some minimal level of ltv
     /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
     uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
@@ -68,7 +70,7 @@ library PartialLiquidationLib {
             // this two conversions are rounding down and can create 2 wai difference
 
             // we will not underflow on -2 because collateralToLiquidate is >= 2
-            unchecked { collateralToLiquidate -= 2; }
+            unchecked { collateralToLiquidate -= _UNDERESTIMATION; }
         } else {
             collateralToLiquidate = 0;
         }
