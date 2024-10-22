@@ -89,7 +89,7 @@ contract SiloRouter {
         if (msg.value != 0 && address(this).balance != 0) {
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = msg.sender.call{value: address(this).balance}("");
-            if (!success) revert EthTransferFailed();
+            require(success, EthTransferFailed());
         }
     }
 
@@ -138,9 +138,7 @@ contract SiloRouter {
             );
 
             // Support non-standard tokens that don't return bool
-            if (!success || !(data.length == 0 || abi.decode(data, (bool)))) {
-                revert ApprovalFailed();
-            }
+            require(success && (data.length == 0 || abi.decode(data, (bool))), ApprovalFailed());
         }
     }
 
@@ -177,7 +175,7 @@ contract SiloRouter {
             WRAPPED_NATIVE_TOKEN.withdraw(_amount);
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = msg.sender.call{value: _amount}("");
-            if (!success) revert ERC20TransferFailed();
+            require(success, ERC20TransferFailed());
         } else {
             _asset.safeTransfer(msg.sender, _amount);
         }

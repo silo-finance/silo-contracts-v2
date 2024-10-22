@@ -6,6 +6,6 @@ import {ICrossReentrancyGuard} from "../interfaces/ICrossReentrancyGuard.sol";
 
 library NonReentrantLib {
     function nonReentrant(ISiloConfig _config) internal view {
-        if (_config.reentrancyGuardEntered()) revert ICrossReentrancyGuard.CrossReentrantCall();
+        require(!_config.reentrancyGuardEntered(), ICrossReentrancyGuard.CrossReentrantCall());
     }
 }

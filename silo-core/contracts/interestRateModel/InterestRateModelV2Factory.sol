@@ -58,14 +58,14 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
     function verifyConfig(IInterestRateModelV2.Config calldata _config) public view virtual {
         int256 dp = int256(DP);
 
-        if (_config.uopt <= 0 || _config.uopt >= dp) revert IInterestRateModelV2.InvalidUopt();
-        if (_config.ucrit <= _config.uopt || _config.ucrit >= dp) revert IInterestRateModelV2.InvalidUcrit();
-        if (_config.ulow <= 0 || _config.ulow >= _config.uopt) revert IInterestRateModelV2.InvalidUlow();
-        if (_config.ki < 0) revert IInterestRateModelV2.InvalidKi();
-        if (_config.kcrit < 0) revert IInterestRateModelV2.InvalidKcrit();
-        if (_config.klow < 0) revert IInterestRateModelV2.InvalidKlow();
-        if (_config.klin < 0) revert IInterestRateModelV2.InvalidKlin();
-        if (_config.beta < 0) revert IInterestRateModelV2.InvalidBeta();
+        require(_config.uopt > 0 && _config.uopt < dp, IInterestRateModelV2.InvalidUopt());
+        require(_config.ucrit > _config.uopt && _config.ucrit < dp, IInterestRateModelV2.InvalidUcrit());
+        require(_config.ulow > 0 && _config.ulow < _config.uopt, IInterestRateModelV2.InvalidUlow());
+        require(_config.ki >= 0, IInterestRateModelV2.InvalidKi());
+        require(_config.kcrit >= 0, IInterestRateModelV2.InvalidKcrit());
+        require(_config.klow >= 0, IInterestRateModelV2.InvalidKlow());
+        require(_config.klin >= 0, IInterestRateModelV2.InvalidKlin());
+        require(_config.beta >= 0, IInterestRateModelV2.InvalidBeta());
     }
 
     /// @inheritdoc IInterestRateModelV2Factory

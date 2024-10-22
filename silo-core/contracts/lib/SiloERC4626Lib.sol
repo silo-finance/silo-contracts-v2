@@ -93,7 +93,7 @@ library SiloERC4626Lib {
         ISilo.WithdrawArgs memory _args
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
-        if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
+        require(shareTotalSupply != 0, ISilo.NothingToWithdraw());
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
@@ -115,7 +115,7 @@ library SiloERC4626Lib {
                 : $.totalAssets[ISilo.AssetType.Protected];
 
             // check liquidity
-            if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
+            require(assets <= liquidity, ISilo.NotEnoughLiquidity());
 
             $.totalAssets[ISilo.AssetType(uint256(_args.collateralType))] = totalAssets - assets;
         }

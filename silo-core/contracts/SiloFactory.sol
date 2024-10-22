@@ -65,14 +65,13 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         external
         virtual
     {
-        if (
-            _siloImpl == address(0) ||
-            _shareProtectedCollateralTokenImpl == address(0) ||
-            _shareDebtTokenImpl == address(0) ||
-            address(_siloConfig) == address(0)
-        ) {
-            revert ZeroAddress();
-        }
+        require(
+            _siloImpl != address(0) &&
+            _shareProtectedCollateralTokenImpl != address(0) &&
+            _shareDebtTokenImpl != address(0) &&
+            address(_siloConfig) != address(0),
+            ZeroAddress()
+        );
 
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
@@ -191,7 +190,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        if (_newDaoFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newDaoFee <= MAX_FEE, MaxFeeExceeded());
 
         daoFee = _newDaoFee;
 
@@ -199,7 +198,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
-        if (_newMaxDeployerFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newMaxDeployerFee <= MAX_FEE, MaxFeeExceeded());
 
         maxDeployerFee = _newMaxDeployerFee;
 
@@ -207,7 +206,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
-        if (_newMaxFlashloanFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newMaxFlashloanFee <= MAX_FEE, MaxFeeExceeded());
 
         maxFlashloanFee = _newMaxFlashloanFee;
 
@@ -215,7 +214,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        if (_newMaxLiquidationFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newMaxLiquidationFee <= MAX_FEE, MaxFeeExceeded());
 
         maxLiquidationFee = _newMaxLiquidationFee;
 
@@ -223,7 +222,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setDaoFeeReceiver(address _newDaoFeeReceiver) internal virtual {
-        if (_newDaoFeeReceiver == address(0)) revert HookIsZeroAddress();
+        require(_newDaoFeeReceiver != address(0), HookIsZeroAddress());
 
         daoFeeReceiver = _newDaoFeeReceiver;
 
