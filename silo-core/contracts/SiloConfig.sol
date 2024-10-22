@@ -361,7 +361,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
         uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
 
-        require(!(debtBal0 > 0 && debtBal1 > 0), DebtExistInOtherSilo());
+        require(debtBal0 == 0 || debtBal1 == 0, DebtExistInOtherSilo());
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
