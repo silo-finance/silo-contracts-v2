@@ -103,6 +103,9 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
             // If the `_recipient` has no collateral silo set yet, it will be copied from the sender.
             $.siloConfig.onDebtTransfer(_sender, _recipient);
 
+            // if we NOT doing checks, we early return and not checking/changing any allowance
+            if (!$.transferWithChecks) return;
+
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = _receiveAllowance(_sender, _recipient);
             if (currentAllowance < _amount) revert IShareToken.AmountExceedsAllowance();

@@ -423,16 +423,6 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 balance = _shareToken.balanceOf(user);
         assertEq(balance, mintAmount, "expect valid balance for a user");
 
-        if (tokenType == Hook.DEBT_TOKEN) {
-            emit log("debt token required additional approval");
-            vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
-            vm.prank(address(silo));
-            _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
-
-            vm.prank(otherUser);
-            IERC20R(address(_shareToken)).increaseReceiveAllowance(user, mintAmount);
-        }
-
         vm.prank(address(silo));
         _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
 
