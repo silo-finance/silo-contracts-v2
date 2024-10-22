@@ -106,12 +106,16 @@ library PartialLiquidationExecLib {
             collateralConfig.liquidationFee
         );
 
-        // maxLiquidation() can underestimate collateral by 2, when we do that and actual collateral that we will
+        // maxLiquidation() can underestimate collateral by `PartialLiquidationLib._UNDERESTIMATION`,
+        // when we do that, actual collateral that we will
         // transfer will match exactly liquidity, but we will liquidate higher value by 1 or 2,
         // then sTokenRequired will return false, but we can not withdraw (because we will be short by 2)
         // solution is to include this 2wei here
-        // safe to unchecked, because we underestimated this value in a first place by -2
-        unchecked { sTokenRequired = collateralToLiquidate + 2 > ISilo(collateralConfig.silo).getLiquidity(); }
+        unchecked {
+            // safe to uncheck, because we underestimated this value in a first place by _UNDERESTIMATION
+            uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
+            sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
+        }
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
