@@ -214,7 +214,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        require(_newMaxLiquidationFee < MAX_FEE, MaxFeeExceeded());
+        require(_newMaxLiquidationFee <= MAX_FEE, MaxFeeExceeded());
 
         maxLiquidationFee = _newMaxLiquidationFee;
 
