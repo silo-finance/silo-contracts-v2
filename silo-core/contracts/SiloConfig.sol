@@ -193,6 +193,22 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
+    function getConfigsForSolvency(address _borrower) public view virtual returns (
+        ConfigData memory collateralConfig,
+        ConfigData memory debtConfig
+    ) {
+        address debtSilo = getDebtSilo(_borrower);
+
+        if (debtSilo == address(0)) return (collateralConfig, debtConfig);
+
+        address collateralSilo = borrowerCollateralSilo[_borrower];
+
+        collateralConfig = getConfig(collateralSilo);
+        debtConfig = getConfig(debtSilo);
+    }
+
+    /// @inheritdoc ISiloConfig
+    // solhint-disable-next-line ordering
     function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
         DepositConfig memory depositConfig,
         ConfigData memory collateralConfig,
@@ -343,21 +359,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
-    }
-
-    /// @inheritdoc ISiloConfig
-    function getConfigsForSolvency(address _borrower) public view virtual returns (
-        ConfigData memory collateralConfig,
-        ConfigData memory debtConfig
-    ) {
-        address debtSilo = getDebtSilo(_borrower);
-
-        if (debtSilo == address(0)) return (collateralConfig, debtConfig);
-
-        address collateralSilo = borrowerCollateralSilo[_borrower];
-
-        collateralConfig = getConfig(collateralSilo);
-        debtConfig = getConfig(debtSilo);
     }
 
     function _silo0ConfigData() internal view virtual returns (ConfigData memory config) {
