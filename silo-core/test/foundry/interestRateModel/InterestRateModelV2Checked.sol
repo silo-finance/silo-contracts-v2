@@ -357,7 +357,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
         // if we got a limit for rcomp, we reset Tcrit and Ri model parameters to zeros
         // Resetting parameters will make IR drop from 10k%/year to 100% per year and it will start growing again.
-        // If we don’t reset, we will have to wait ~2 weeks to make IR drop (low utilisation ratio required).
+        // If we don’t reset, we will have to wait ~2 weeks to make IR drop (low utilization ratio required).
         // So zeroing parameters is a only hope for a market to get well again, otherwise it will be almost impossible.
         bool capApplied;
 
