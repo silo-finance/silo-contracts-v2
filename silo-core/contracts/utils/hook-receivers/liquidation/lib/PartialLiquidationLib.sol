@@ -67,10 +67,10 @@ library PartialLiquidationLib {
             _sumOfCollateralValue
         );
 
-        if (collateralToLiquidate >= _UNDERESTIMATION) {
+        if (collateralToLiquidate > _UNDERESTIMATION) {
             // -_UNDERESTIMATION here is to underestimate collateral that user gets on liquidation
             // liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
-            // this two conversions are rounding down and can create 2 wai difference
+            // this two conversions are rounding down and can create 2 wei difference
 
             // we will not underflow on -_UNDERESTIMATION because collateralToLiquidate is >= _UNDERESTIMATION
             unchecked { collateralToLiquidate -= _UNDERESTIMATION; }
@@ -148,8 +148,7 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        assets = _value * _totalAssets;
-        unchecked { assets /= _totalValue; }
+        assets = _value * _totalAssets / _totalValue;
     }
 
     /// @param _lt LT liquidation threshold for asset
@@ -212,8 +211,7 @@ library PartialLiquidationLib {
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _maxDebtToCover * _liquidityFee;
-        unchecked { fee /= _PRECISION_DECIMALS; }
+        uint256 fee = _maxDebtToCover * _liquidityFee / _PRECISION_DECIMALS;
 
         toLiquidate = _maxDebtToCover + fee;
 
@@ -297,7 +295,7 @@ library PartialLiquidationLib {
             (
                 withdrawAssetsFromCollateral, withdrawAssetsFromProtected
             ) = _collateralToLiquidate > _borrowerProtectedAssets
-                // safe to unchecked because of above condition
+                // safe to uncheck because of above condition
                 ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
                 : (0, _collateralToLiquidate);
         }
@@ -314,11 +312,11 @@ library PartialLiquidationLib {
         pure
         returns (uint256 ltvAfterLiquidation)
     {
-        if (_sumOfCollateralValue == _collateralValueToLiquidate || _totalDebtValue == _debtValueToCover) {
+        if (_sumOfCollateralValue <= _collateralValueToLiquidate || _totalDebtValue <= _debtValueToCover) {
             return 0;
         }
 
-        unchecked { // all subs are safe because this values are chunks of total, so we will not underflow
+        unchecked { // all subs are safe because these values are chunks of total, so we will not underflow
             ltvAfterLiquidation = _ltvAfter(
                 _sumOfCollateralValue - _collateralValueToLiquidate,
                 _totalDebtValue - _debtValueToCover
@@ -328,7 +326,6 @@ library PartialLiquidationLib {
 
     /// @notice must stay private because this is not for general LTV, only for ltv after
     function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
-        // there might be cases, where ltv will go up slightly, so we can not unchecked mul based on
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
         ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil
