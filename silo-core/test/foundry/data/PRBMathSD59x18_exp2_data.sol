@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 contract PRBMathSD59x18_exp2_data {
     function exp2IntegersData() public pure returns (int256[] memory inputs, int256[] memory expected) {
         unchecked {
-            inputs = new int256[](69);
-            expected = new int256[](69);
+            inputs = new int256[](70);
+            expected = new int256[](70);
             uint256 i;
 
             inputs[i] = 0e18; expected[i] = 1e18; i++;
@@ -77,6 +77,7 @@ contract PRBMathSD59x18_exp2_data {
             inputs[i] = 66e18; expected[i] = 73786976294838206464e18; i++;
             inputs[i] = 67e18; expected[i] = 147573952589676412928e18; i++;
             inputs[i] = 68e18; expected[i] = 295147905179352825856e18; i++;
+            inputs[i] = -59794705707972522262; expected[i] = 0; i++; // if (x < -59794705707972522261) return 0;
         }
     }
 

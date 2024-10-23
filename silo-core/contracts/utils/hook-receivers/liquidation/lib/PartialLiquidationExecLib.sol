@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
-
-import {Math} from "openzeppelin5/utils/math/Math.sol";
+pragma solidity 0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
-import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {PartialLiquidationLib} from "./PartialLiquidationLib.sol";
 
 library PartialLiquidationExecLib {
@@ -15,36 +13,39 @@ library PartialLiquidationExecLib {
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
-        uint256 _debtToCover,
-        uint256 _liquidationFee,
-        bool _selfLiquidation
+        uint256 _maxDebtToCover,
+        uint256 _liquidationFee
     )
         internal
         view
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected, uint256 repayDebtAssets)
+        returns (
+            uint256 withdrawAssetsFromCollateral,
+            uint256 withdrawAssetsFromProtected,
+            uint256 repayDebtAssets,
+            bytes4 customError
+        )
     {
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig,
-            _debtConfig,
-            _user,
-            ISilo.OracleType.Solvency,
-            ISilo.AccrueInterestInMemory.No,
-            0 /* no cached balance */
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations({
+            _collateralConfig: _collateralConfig,
+            _debtConfig: _debtConfig,
+            _borrower: _user,
+            _oracleType: ISilo.OracleType.Solvency,
+            _accrueInMemory: ISilo.AccrueInterestInMemory.No,
+            _debtShareBalanceCached:0 /* no cached balance */
+        });
 
         uint256 borrowerCollateralToLiquidate;
 
         (
-            borrowerCollateralToLiquidate, repayDebtAssets
+            borrowerCollateralToLiquidate, repayDebtAssets, customError
         ) = liquidationPreview(
             ltvData,
             PartialLiquidationLib.LiquidationPreviewParams({
                 collateralLt: _collateralConfig.lt,
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
-                debtToCover: _debtToCover,
-                liquidationFee: _liquidationFee,
-                selfLiquidation: _selfLiquidation
+                maxDebtToCover: _maxDebtToCover,
+                liquidationFee: _liquidationFee
             })
         );
 
@@ -87,9 +88,7 @@ library PartialLiquidationExecLib {
             uint256 sumOfCollateralValue, uint256 debtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        uint256 sumOfCollateralAssets;
-        // safe because we adding same token, so it is under same total supply
-        unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
+        uint256 sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets;
 
         if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets, false);
 
@@ -105,12 +104,15 @@ library PartialLiquidationExecLib {
             collateralConfig.liquidationFee
         );
 
-        // maxLiquidation() can underestimate collateral by 2, when we do that and actual collateral that we will
-        // transfer will match exactly liquidity, but we will liquidate higher value by 1 or 2,
-        // then sTokenRequired will return false, but we can not withdraw (because we will be short by 2)
-        // solution is to include this 2wei here
-        // safe to unchecked, because we underestimated this value in a first place by -2
-        unchecked { sTokenRequired = collateralToLiquidate + 2 > ISilo(collateralConfig.silo).getLiquidity(); }
+        // maxLiquidation() can underestimate collateral by `PartialLiquidationLib._UNDERESTIMATION`,
+        // when we do that, actual collateral that we will transfer will match exactly liquidity,
+        // but we will liquidate higher value by 1 or 2, then sTokenRequired will return false,
+        // but we can not withdraw (because we will be short by 2) solution is to include this 2wei here
+        unchecked {
+            // safe to uncheck, because we underestimated this value in a first place by _UNDERESTIMATION
+            uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
+            sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
+        }
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
@@ -122,18 +124,21 @@ library PartialLiquidationExecLib {
     )
         internal
         view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
+        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError)
     {
-        uint256 sumOfCollateralAssets;
-        // safe because same asset can not overflow
-        unchecked  { sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets; }
+        uint256 sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
 
-        if (_ltvData.borrowerDebtAssets == 0 || _params.debtToCover == 0) return (0, 0);
+        if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) {
+            return (0, 0, IPartialLiquidation.NoDebtToCover.selector);
+        }
 
         if (sumOfCollateralAssets == 0) {
             return (
                 0,
-                _params.debtToCover > _ltvData.borrowerDebtAssets ? _ltvData.borrowerDebtAssets : _params.debtToCover
+                _params.maxDebtToCover > _ltvData.borrowerDebtAssets
+                    ? _ltvData.borrowerDebtAssets
+                    : _params.maxDebtToCover,
+                bytes4(0) // no error
             );
         }
 
@@ -141,12 +146,7 @@ library PartialLiquidationExecLib {
             uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue, uint256 ltvBefore
         ) = SiloSolvencyLib.calculateLtv(_ltvData, _params.collateralConfigAsset, _params.debtConfigAsset);
 
-        if (_params.selfLiquidation) {
-            if (_params.debtToCover >= _ltvData.borrowerDebtAssets) {
-                // only because it is self liquidation, we return all collateral on repay all debt
-                return (sumOfCollateralAssets, _ltvData.borrowerDebtAssets);
-            }
-        } else if (_params.collateralLt >= ltvBefore) return (0, 0); // user is solvent
+        if (_params.collateralLt >= ltvBefore) return (0, 0, IPartialLiquidation.UserIsSolvent.selector);
 
         uint256 ltvAfter;
 
@@ -159,23 +159,8 @@ library PartialLiquidationExecLib {
             _params
         );
 
-        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) return (0, 0);
-
-        if (ltvAfter != 0) { // it can be 0 in case of full liquidation
-            if (_params.selfLiquidation) {
-                // There is dependency, based on which LTV will be going up and we need to allow for liquidation
-                // dependency is: (collateral value / debt value) - 1 > fee
-                // when above is true, LTV will go down, otherwise it will always go up.
-                // When it will be going up, we are close to bad debt. This "close" depends on how big fee is.
-                // Based on that, we can not check if (ltvAfter > ltvBefore), we need to allow for liquidation.
-                // In case of self liquidation:
-                // - if user is solvent after liquidation, LTV before does not matter
-                // - if user was solvent but after liquidation it is not, we need to revert
-                // - if user was not solvent, then we need to allow
-                if (ltvBefore <= _params.collateralLt && ltvAfter > _params.collateralLt) {
-                    revert ISilo.Insolvency();
-                }
-            }
+        if (receiveCollateralAssets == 0 || repayDebtAssets == 0) {
+            return (0, 0, IPartialLiquidation.NoRepayAssets.selector);
         }
     }
 }

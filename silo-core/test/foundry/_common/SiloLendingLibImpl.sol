@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
@@ -21,8 +19,8 @@ contract SiloLendingLibImpl {
     ) external returns (uint256 borrowedAssets, uint256 borrowedShares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        $.totalAssets[AssetTypes.DEBT] = _totalDebt;
-        $.totalAssets[AssetTypes.COLLATERAL] = _totalCollateralAssets;
+        $.totalAssets[ISilo.AssetType.Debt] = _totalDebt;
+        $.totalAssets[ISilo.AssetType.Collateral] = _totalCollateralAssets;
 
         (borrowedAssets, borrowedShares) = SiloLendingLib.borrow(
             _debtShareToken,

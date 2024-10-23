@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
@@ -100,9 +98,14 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         vm.prank(borrower);
         silo1.switchCollateralToThisSilo();
 
-        emit log("-- leverageSameAsset --");
         vm.prank(borrower);
-        silo1.leverageSameAsset(10, 1, borrower, ISilo.CollateralType.Protected);
+        silo1.deposit(10, borrower);
+
+        vm.prank(borrower);
+        silo1.deposit(10, borrower, ISilo.CollateralType.Protected);
+
+        vm.prank(borrower);
+        silo1.borrowSameAsset(1, borrower, borrower);
 
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
@@ -129,7 +132,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         silo1.withdraw(48e18, borrower, borrower);
 
         emit log("-- flashLoan --");
-        silo0.flashLoan(this, address(token0), token0.balanceOf(address(silo0)), "");
+        silo0.flashLoan(this, address(token0), silo0.maxFlashLoan(address(token0)), "");
         
         // liquidation
         emit log("-- liquidationCall --");
@@ -220,7 +223,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
 
     function _printAction(uint256 _action) internal {
         if (_action.matchAction(Hook.BORROW_SAME_ASSET)) emit log("BORROW_SAME_ASSET");
-        if (_action.matchAction(Hook.LEVERAGE_SAME_ASSET)) emit log("LEVERAGE_SAME_ASSET");
         if (_action.matchAction(Hook.DEPOSIT)) emit log("DEPOSIT");
         if (_action.matchAction(Hook.BORROW)) emit log("BORROW");
         if (_action.matchAction(Hook.REPAY)) emit log("REPAY");

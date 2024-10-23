@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import {ERC20Upgradeable} from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IHookReceiver} from "../interfaces/IHookReceiver.sol";
 import {IShareToken, ISilo} from "../interfaces/IShareToken.sol";
 import {ISiloConfig} from "../SiloConfig.sol";
-import {TokenHelper} from "../lib/TokenHelper.sol";
 import {Hook} from "../lib/Hook.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
@@ -63,10 +61,10 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
-    string private constant _NAME = "SiloShareToken";
+    string private constant _NAME = "SiloShareTokenEIP712Name";
 
     modifier onlySilo() {
-        if (msg.sender != address(_getSilo())) revert OnlySilo();
+        require(msg.sender == address(_getSilo()), OnlySilo());
 
         _;
     }
@@ -216,13 +214,13 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         initializer
     {
         __ERC20Permit_init(_NAME);
-        __ERC20_init(_NAME, _NAME);
+
         ShareTokenLib.__ShareToken_init(_silo, _hookReceiver, _tokenType);
     }
 
     /// @inheritdoc ERC20Upgradeable
     function _update(address from, address to, uint256 value) internal virtual override {
-        if (value == 0) revert ZeroTransfer();
+        require(value != 0, ZeroTransfer());
 
         _beforeTokenTransfer(from, to, value);
 
@@ -264,11 +262,11 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOnReentrancyProtection();
     }
 
-    function _getSiloConfig() internal view returns (ISiloConfig) {
+    function _getSiloConfig() internal view virtual returns (ISiloConfig) {
         return ShareTokenLib.getShareTokenStorage().siloConfig;
     }
     
-    function _getSilo() internal view returns (ISilo) {
+    function _getSilo() internal view virtual returns (ISilo) {
         return ShareTokenLib.getShareTokenStorage().silo;
     }
 }

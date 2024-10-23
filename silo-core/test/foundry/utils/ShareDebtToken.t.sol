@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -28,6 +29,17 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         siloConfig = _setUpLocalFixture();
         (,, address debtSToken) = siloConfig.getShareTokens(address(silo1));
         shareDebtToken = ShareDebtToken(debtSToken);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debt_decimals
+    */
+    function test_debt_decimals() public view {
+        assertEq(
+            IERC20Metadata(address(shareDebtToken)).decimals(),
+            IERC20Metadata(address(token1)).decimals(),
+            "expect valid debt decimals"
+        );
     }
 
     /*
@@ -404,7 +416,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         shareDebtToken.setReceiveApproval(user, otherAmount);
 
         allowance = shareDebtToken.receiveAllowance(user, otherUser);
-        assertEq(allowance, otherAmount, "allowance overriden");
+        assertEq(allowance, otherAmount, "allowance overridden");
     }
 
     /*

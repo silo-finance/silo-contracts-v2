@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
-import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -48,7 +47,8 @@ contract ShareTokenTest is Test {
 
         sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
 
-        assertEq(10 ** (sToken.decimals() - token.decimals()), SiloMathLib._DECIMALS_OFFSET_POW, "expect valid offset");
+        // offset for the debt token is 1
+        assertEq(sToken.decimals(), token.decimals(), "expect valid decimals");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_notRevertWhenNoHook
@@ -83,8 +83,8 @@ contract ShareTokenTest is Test {
         sToken.mint(owner, owner, amount);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_descreaseAllowance
-    function test_descreaseAllowance() public {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_decreaseAllowance
+    function test_decreaseAllowance() public {
         uint256 allowance = 100e18;
         address recipient = makeAddr("Recipient");
         address siloAddr = silo.ADDRESS();

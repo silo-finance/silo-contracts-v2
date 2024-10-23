@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
@@ -40,7 +39,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         _assertBorrowerIsNotSolvent(true);
 
         (
-            uint256 collateralToLiquidate2, uint256 debtToCover2, bool sTokenRequired2
+            uint256 collateralToLiquidate2, uint256 maxDebtToCover2, bool sTokenRequired2
         ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("            getLiquidity", silo1.getLiquidity());
@@ -48,7 +47,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
 
         assertTrue(sTokenRequired2, "sTokenRequired required because we in bad debt");
 
-        emit log_named_uint("debtToCover2", debtToCover2);
+        emit log_named_uint("maxDebtToCover2", maxDebtToCover2);
         emit log_named_uint("balance silo", token1.balanceOf(address(silo1)));
         emit log_named_uint("balance this", token1.balanceOf(address(this)));
 
@@ -57,7 +56,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
             address(token1),
             address(token1),
             borrower,
-            debtToCover2,
+            maxDebtToCover2,
             false // receiveStoken
         );
     }
@@ -72,7 +71,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         _assertBorrowerIsNotSolvent(false);
 
         (
-            uint256 collateralToLiquidate, uint256 debtToCover, bool sTokenRequired
+            uint256 collateralToLiquidate, uint256 maxDebtToCover, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("         getLiquidity #1", silo0.getLiquidity());
@@ -85,7 +84,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         vm.stopPrank();
         emit log_named_uint("getLiquidity after borrow", silo0.getLiquidity());
 
-        (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, maxDebtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
         assertTrue(sTokenRequired, "sTokenRequired IS required because we borrowed on silo0");
 
         vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
@@ -93,7 +92,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
             address(token0),
             address(token1),
             borrower,
-            debtToCover,
+            maxDebtToCover,
             false // receiveStoken
         );
 
@@ -104,7 +103,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
 
         _deposit(2, address(1));
 
-        (collateralToLiquidate, debtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
+        (collateralToLiquidate, maxDebtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
         assertTrue(!sTokenRequired, "sTokenRequired NOT required because we have 'collateralToLiquidate + 2' in silo0");
 
         emit log_named_uint("         getLiquidity #2", silo0.getLiquidity());
@@ -114,7 +113,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
             address(token0),
             address(token1),
             borrower,
-            debtToCover,
+            maxDebtToCover,
             false // receiveStoken
         );
     }
@@ -123,7 +122,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
         revert("not in use");
     }
 
-    function _executeLiquidation(bool, bool, bool) internal pure override
+    function _executeLiquidation(bool, bool) internal pure override
         returns (uint256, uint256)
     {
         revert("not in use");

@@ -1,19 +1,37 @@
 ## Silo Core
-Silo is the main component of the protocol. It implements lending logic, manages and isolates risk, acts as a vault for assets, and performs liquidations. Each Silo is composed of the two asset for which it was created and is immutable after being created. Creation of the Silo is permission less and can be done via [Silo Factory](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/SiloFactory.sol).
+Silo is the main component of the protocol. It implements lending logic, manages and isolates risk, and acts as a vault for assets. Each lending market is composed of the two Silos for which it was created and is immutable after being created. Creation of the Silo is permission less and can be done via [Silo Factory](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/SiloFactory.sol).
 
 |<img src="./docs/_images/silo_v2_core_architecture.jpeg" alt="Silo V2 core architecture" title="Silo V2 core architecture">|
 |:--:| 
 | Silo V2 core architecture |
 
+### Silo hooks system
+The Silo Protocol Hooks System provides an extensible mechanism for interacting with core actions like deposits, withdrawals, borrowing, repayments, leverage operations, collateral transitions, switching collateral, flash loans, and liquidations. Hooks allow external systems to execute custom logic **before** or **after** protocol actions, offering flexibility for validation, logging, or integration with external contracts. While the protocol is fully functional without hooks, they enhance its modularity and allow for seamless interaction with other decentralized systems. For more information see [Hooks.md](./docs/Hooks.md).
+
+### Liquidations
+Liquidations are a core part of the Silo Protocol. They allow users to liquidate undercollateralized positions, which helps maintain the stability of the protocol. Liquidations can be performed when a user's position crosses the liquidation threshold.
+Silo liquidation module key concepts:
+- Liquidation module is implemented utilizing silo hooks system and is presented as a silo hook. For more details on implementation see [PartialLiquidation.sol](./contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol).
+- Liquidation is permissionless and can be performed by any user. Liquidator receives a reward in form of a liquidation fee. The fee for a market is set by the market deployer and can't be updated. Developers can resolve a fee from the [SiloConfig contract](./contracts/SiloConfig.sol).
+- The silo liquidation module is designed to do partial liquidations. However, full liquidation can be forced if liquidation leaves some 'dust'.
+
+### Silo is ERC-4626 vault
+Each Silo is standardized yield-bearing vault as it implements [ERC-4626 interface](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/SiloERC4626.sol). For more information see [ERC-4626 tokenized vault standard](https://ethereum.org/en/developers/docs/standards/tokens/erc-4626/).
+
+### Two types of collateral
+When the user deposits into a Silo, they can decide if other users can borrow their deposit to earn interest or if they want their collateral to be protected from being borrowed and be available for withdrawal even if the silo has no available liquidity.
+
+The silo supports two types of collateral:
+- **Protected collateral**: This type of collateral cannot be borrowed by other users because of that it does not earn interest. Protected collateral is always available for withdrawal and does not taken into account when calculating available liquidity. The only exception is when the user has a debt, and withdrawing the protected collateral makes him insolvent.
+- **Collateral**: This type of collateral can be borrowed by other users, and it earns interest.
+
 ### Silo shares tokens
 For each asset in a Silo, there are two [ERC-20](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareToken.sol) tokens deployed and one [ERC20R](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareDebtToken.sol):
-- [Share collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareCollateralToken.sol) (ERC-20). This token represent a user deposited assets that can be borrowed.
-- [Share protected collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareCollateralToken.sol)(ERC-20). This token represent a user deposited assets that can't be borrowed.
-- [Share debt token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareDebtToken.sol)(ERC20R). This tokens will be minted to represent a debt.
+- [Vault shares](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareCollateralToken.sol) (ERC-20). As due to [EIP-4626 tokenized Vaults specification](https://eips.ethereum.org/EIPS/eip-4626) each Silo implements EIP-20 to represent shares. This token represent a user deposited assets that can be borrowed.
+- [Share protected collateral token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareProtectedCollateralToken.sol) (ERC-20). This token represent a user deposited assets that can't be borrowed (Protected collateral).
+- [Share debt token](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/ShareDebtToken.sol) (ERC20R). This tokens will be minted to represent a debt.
 
-When the user deposits into a Silo they can decide where their deposit can be borrowed by other users to earn interest. Protected deposits are also called "collateral only" and other users cannot borrow them.
-
-Silo uses the mint and burn functions to operate these underlying tokens. Meanwhile, the transfer is still available and can be used by any third-party application (MetaMask, DEX, etc...). Underlying tokens support hooks and can notify about transfer operation third party smart contract. This simple hook provides enough information to reverse engineer exact action that is happening in the core protocol. See [GaugeHookReceiver](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol) which notifies the [gauge](https://github.com/silo-finance/silo-contracts-v2/blob/develop/ve-silo/contracts/gauges/ethereum/SiloLiquidityGauge.vy#L396) whenever the balance is updated.
+Silo uses the mint and burn functions to operate these underlying tokens. Meanwhile, the transfer is still available and can be used by any third-party application (MetaMask, DEX, etc...). Underlying tokens support hooks and can notify about transfer operation third party smart contract. This simple hook provides enough information to reverse engineer exact action that is happening in the core protocol. See [Share token transfer hook](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/docs/Hooks.md#share-token-transfer-hook-afteraction) and [Share debt token transfer hook](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/docs/Hooks.md#share-debt-token-transfer-hook-afteraction) for more information. [GaugeHookReceiver](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol) which notifies the [gauge](https://github.com/silo-finance/silo-contracts-v2/blob/develop/ve-silo/contracts/gauges/ethereum/SiloLiquidityGauge.vy#L396) whenever the balance is updated is a good example of how to use share token transfer hook.
 
 ### Price oracle
 The role of an oracle is to provide Silo with the correct price of an asset. Each oracle to work with Silo should implement [ISiloOracle](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/interfaces/ISiloOracle.sol) interface. Price Oracle for each token is optional. Both tokens may have one or just one or none.
@@ -35,9 +53,6 @@ The interest rate model is a mathematical algorithm used by the protocol to auto
 |<img src="./docs/_images/silo_v2_interest_rate_model.jpeg" alt="Silo interest rate model visualization" title="Silo interest rate model visualization">|
 |:--:| 
 | Silo interest rate model visualization |
-
-### Silo ERC-4626
-Each Silo is standardized yield-bearing vault as it implements [ERC-4626 interface](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/utils/SiloERC4626.sol). For more information see [ERC-4626 tokenized vault standard](https://ethereum.org/en/developers/docs/standards/tokens/erc-4626/).
 
 ### Silo EIP-3156
 Silo provides standard interfaces and processes for single-asset flash loans([IERC3156FlashBorrower](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/interfaces/IERC3156FlashBorrower.sol), [IERC3156FlashLender](https://github.com/silo-finance/silo-contracts-v2/blob/develop/silo-core/contracts/interfaces/IERC3156FlashLender.sol)). For more information see [EIP-3156](https://eips.ethereum.org/EIPS/eip-3156)

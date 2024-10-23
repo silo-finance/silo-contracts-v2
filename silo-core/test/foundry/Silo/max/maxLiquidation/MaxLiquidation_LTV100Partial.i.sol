@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
@@ -42,7 +42,7 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
         // I did not found cases for this scenario
     }
 
-    function _executeLiquidation(bool, bool, bool) internal pure override returns (uint256, uint256) {
+    function _executeLiquidation(bool, bool) internal pure override returns (uint256, uint256) {
         // not in use
         return (0, 0);
     }

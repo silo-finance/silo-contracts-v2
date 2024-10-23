@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
@@ -7,8 +7,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
-import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
@@ -81,7 +79,12 @@ contract SiloDeployer is ISiloDeployer {
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
-        (configData0, configData1) = Views.copySiloConfig(_siloInitData);
+        (configData0, configData1) = Views.copySiloConfig(
+            _siloInitData,
+            SILO_FACTORY.maxDeployerFee(),
+            SILO_FACTORY.maxFlashloanFee(),
+            SILO_FACTORY.maxLiquidationFee()
+        );
 
         configData0.silo = CloneDeterministic.predictSilo0Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
         configData1.silo = CloneDeterministic.predictSilo1Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
@@ -168,7 +171,7 @@ contract SiloDeployer is ISiloDeployer {
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = factory.call(_txData.txInput);
 
-        if (!success || data.length != 32) revert FailedToCreateAnOracle(factory);
+        require(success && data.length == 32, FailedToCreateAnOracle(factory));
 
         _oracle = address(uint160(uint256(bytes32(data))));
     }
@@ -180,9 +183,10 @@ contract SiloDeployer is ISiloDeployer {
         ISiloConfig.InitData memory _siloInitData,
         address _hookReceiverImplementation
     ) internal {
-        if (_hookReceiverImplementation != address(0) && _siloInitData.hookReceiver != address(0)) {
-            revert HookReceiverMissconfigured();
-        }
+        require(
+            _hookReceiverImplementation == address(0) || _siloInitData.hookReceiver == address(0),
+            HookReceiverMisconfigured()
+        );
 
         if (_hookReceiverImplementation != address(0)) {
             _siloInitData.hookReceiver = Clones.clone(_hookReceiverImplementation);

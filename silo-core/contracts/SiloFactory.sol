@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
-import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
-import {ISiloOracle} from "./interfaces/ISiloOracle.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
@@ -23,6 +20,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
 
+    /// @dev fee in 18 decimals, 1e18 == 100%
     uint256 public daoFee;
     uint256 public maxDeployerFee;
     uint256 public maxFlashloanFee;
@@ -48,16 +46,12 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         baseURI = "https://v2.app.silo.finance/markets/";
 
-        uint256 _maxDeployerFee = 0.15e18; // 15% max deployer fee
-        uint256 _newMaxFlashloanFee = 0.15e18; // 15% max flashloan fee
-        uint256 _newMaxLiquidationFee = 0.30e18; // 30% max liquidation fee
-
         _setDaoFee(_daoFee);
         _setDaoFeeReceiver(_daoFeeReceiver);
 
-        _setMaxDeployerFee(_maxDeployerFee);
-        _setMaxFlashloanFee(_newMaxFlashloanFee);
-        _setMaxLiquidationFee(_newMaxLiquidationFee);
+        _setMaxDeployerFee({_newMaxDeployerFee: 0.15e18}); // 15% max deployer fee
+        _setMaxFlashloanFee({_newMaxFlashloanFee: 0.15e18}); // 15% max flashloan fee
+        _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
     }
 
     /// @inheritdoc ISiloFactory
@@ -71,21 +65,20 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         external
         virtual
     {
-        if (
-            _siloImpl == address(0) ||
-            _shareProtectedCollateralTokenImpl == address(0) ||
-            _shareDebtTokenImpl == address(0) ||
-            address(_siloConfig) == address(0)
-        ) {
-            revert ZeroAddress();
-        }
-
-        validateSiloInitData(_initData);
+        require(
+            _siloImpl != address(0) &&
+            _shareProtectedCollateralTokenImpl != address(0) &&
+            _shareDebtTokenImpl != address(0) &&
+            address(_siloConfig) != address(0),
+            ZeroAddress()
+        );
 
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
-        (configData0, configData1) = Views.copySiloConfig(_initData);
+        (
+            configData0, configData1
+        ) = Views.copySiloConfig(_initData, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
 
         uint256 nextSiloId = _siloId;
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
@@ -94,6 +87,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
+        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
+        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
+
         _cloneShareTokens(
             configData0,
             configData1,
@@ -101,9 +97,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _shareDebtTokenImpl,
             nextSiloId
         );
-
-        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
-        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
 
         ISilo(configData0.silo).initialize(_siloConfig);
         ISilo(configData1.silo).initialize(_siloConfig);
@@ -122,7 +115,14 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _mint(_initData.deployer, nextSiloId);
         }
 
-        emit NewSilo(configData0.token, configData1.token, configData0.silo, configData1.silo, address(_siloConfig));
+        emit NewSilo(
+            _siloImpl,
+            configData0.token,
+            configData1.token,
+            configData0.silo,
+            configData1.silo,
+            address(_siloConfig)
+        );
     }
 
     /// @inheritdoc ISiloFactory
@@ -158,6 +158,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @inheritdoc ISiloFactory
     function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
         baseURI = _newBaseURI;
+        emit BaseURI(_newBaseURI);
     }
 
     /// @inheritdoc ISiloFactory
@@ -172,45 +173,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
-    function validateSiloInitData(ISiloConfig.InitData memory _initData) public view virtual returns (bool) {
-        // solhint-disable-previous-line code-complexity
-        if (_initData.hookReceiver == address(0)) revert MissingHookReceiver();
-
-        if (_initData.token0 == address(0)) revert EmptyToken0();
-        if (_initData.token1 == address(0)) revert EmptyToken1();
-
-        if (_initData.token0 == _initData.token1) revert SameAsset();
-        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert InvalidMaxLtv();
-        if (_initData.maxLtv0 > _initData.lt0) revert InvalidMaxLtv();
-        if (_initData.maxLtv1 > _initData.lt1) revert InvalidMaxLtv();
-        if (_initData.lt0 > MAX_PERCENT || _initData.lt1 > MAX_PERCENT) revert InvalidLt();
-
-        if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
-            revert OracleMisconfiguration();
-        }
-
-        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) revert InvalidCallBeforeQuote();
-
-        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
-            revert OracleMisconfiguration();
-        }
-
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) revert InvalidCallBeforeQuote();
-
-        _verifyQuoteTokens(_initData);
-
-        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert InvalidDeployer();
-        if (_initData.deployerFee > maxDeployerFee) revert MaxDeployerFeeExceeded();
-        if (_initData.flashloanFee0 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
-        if (_initData.flashloanFee1 > maxFlashloanFee) revert MaxFlashloanFeeExceeded();
-        if (_initData.liquidationFee0 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
-        if (_initData.liquidationFee1 > maxLiquidationFee) revert MaxLiquidationFeeExceeded();
-
-        if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
-            revert InvalidIrm();
-        }
-
-        return true;
+    function validateSiloInitData(ISiloConfig.InitData memory _initData) external view virtual returns (bool) {
+        return Views.validateSiloInitData(_initData, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
     }
 
     /// @inheritdoc ERC721
@@ -226,7 +190,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        if (_newDaoFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newDaoFee <= MAX_FEE, MaxFeeExceeded());
 
         daoFee = _newDaoFee;
 
@@ -234,7 +198,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {
-        if (_newMaxDeployerFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newMaxDeployerFee <= MAX_FEE, MaxFeeExceeded());
 
         maxDeployerFee = _newMaxDeployerFee;
 
@@ -242,7 +206,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal virtual {
-        if (_newMaxFlashloanFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newMaxFlashloanFee <= MAX_FEE, MaxFeeExceeded());
 
         maxFlashloanFee = _newMaxFlashloanFee;
 
@@ -250,7 +214,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal virtual {
-        if (_newMaxLiquidationFee > MAX_FEE) revert MaxFeeExceeded();
+        require(_newMaxLiquidationFee <= MAX_FEE, MaxFeeExceeded());
 
         maxLiquidationFee = _newMaxLiquidationFee;
 
@@ -258,7 +222,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _setDaoFeeReceiver(address _newDaoFeeReceiver) internal virtual {
-        if (_newDaoFeeReceiver == address(0)) revert ZeroAddress();
+        require(_newDaoFeeReceiver != address(0), HookIsZeroAddress());
 
         daoFeeReceiver = _newDaoFeeReceiver;
 
@@ -307,32 +271,5 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         IShareTokenInitializable(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
         IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
-    }
-
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseURI;
-    }
-
-    function _verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal virtual view {
-        address expectedQuoteToken;
-
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);
-        expectedQuoteToken = _verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);
-    }
-
-    function _verifyQuoteToken(address _expectedQuoteToken, address _oracle)
-        internal
-        virtual
-        view
-        returns (address quoteToken)
-    {
-        if (_oracle == address(0)) return _expectedQuoteToken;
-
-        quoteToken = ISiloOracle(_oracle).quoteToken();
-
-        if (_expectedQuoteToken == address(0)) return quoteToken;
-        if (_expectedQuoteToken != quoteToken) revert InvalidQuoteToken();
     }
 }

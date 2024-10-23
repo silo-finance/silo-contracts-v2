@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
-import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
-
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
-import {SiloSolvencyLib} from "./lib/SiloSolvencyLib.sol";
 
 
 /// @title SiloLens has some helper methods that can be useful with integration
@@ -87,10 +84,7 @@ contract SiloLens is ISiloLens {
         }
 
         if (collateralShareBalance != 0) {
-            unchecked {
-                // if silo not reverting during calculation of sum of collateral, we will not either
-                borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
-            }
+            borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
         }
     }
 }

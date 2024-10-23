@@ -200,21 +200,21 @@ Share tokens transfer only has an **After Action Hook**.
       - **Explanation**: This code demonstrates how developers can decode the data sent to the `beforeAction` hook using the `Hook` library. The `beforeRepayDecode` function simplifies access to fields like `assets`, `shares`, `borrower`, and `repayer`, enabling developers to apply pre-repayment logic as needed.
 
   - **After Repay Data**:
-    - **Structure**: The data processed after the repayment is encoded as `abi.encodePacked(assets, shares, borrower, repayer, repayedAssets, repayedShares)`.
+    - **Structure**: The data processed after the repayment is encoded as `abi.encodePacked(assets, shares, borrower, repayer, repaidAssets, repaidShares)`.
     - **Fields**:
       - `assets`: The assets (tokens) repaid to the protocol.
       - `shares`: The shares representing the borrower’s debt or stake in the system.
       - `borrower`: The address of the borrower whose debt is being repaid.
       - `repayer`: The address of the entity making the repayment.
-      - `repayedAssets`: The actual assets repaid to the protocol.
-      - `repayedShares`: The shares representing the amount of debt repaid.
+      - `repaidAssets`: The actual assets repaid to the protocol.
+      - `repaidShares`: The shares representing the amount of debt repaid.
     - **Purpose**: The `afterAction` hook is called **after** all logic of the repayment action is completed. It allows external systems to perform follow-up tasks or adjustments after the repayment process has finished. For example, this hook could be used to update the borrower’s debt position or trigger notifications. The core repayment logic (e.g., debt reduction and share adjustments) is fully executed before this hook is invoked.
 
     - **Decoding Hook Input Example**:
       ```solidity
       Hook.AfterRepayInput memory input = Hook.afterRepayDecode(_inputAndOutput);
       ```
-      - **Explanation**: This code example shows how developers can decode the data sent to the `afterAction` hook using the `Hook` library. The `afterRepayDecode` function allows developers to easily access data such as `repayedAssets` and `repayedShares` for post-repayment logic.
+      - **Explanation**: This code example shows how developers can decode the data sent to the `afterAction` hook using the `Hook` library. The `afterRepayDecode` function allows developers to easily access data such as `repaidAssets` and `repaidShares` for post-repayment logic.
 
 ### Share Debt Token Transfer Hook (During Repay)
 

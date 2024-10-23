@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -58,8 +58,8 @@ contract SiloLendingLibBorrowTestData {
         uint256 i;
 
         _init(data[i], "#0 all zeros");
-        data[i].output.reverts = ISilo.ZeroAssets.selector;
-        data[i].mocks.debtSharesTotalSupplyMock = false;
+        data[i].output.reverts = ISilo.InputZeroAssetsOrShares.selector;
+        data[i].mocks.debtSharesTotalSupplyMock = true;
 
         i++;
         _init(data[i], "#1 NotEnoughLiquidity if no collateral");

@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-
-import {console} from "forge-std/console.sol";
+import {ShareTokenDecimalsPowLib} from "../../_common/ShareTokenDecimalsPowLib.sol";
 
 /*
     forge test -vv --ffi --mc DepositTest
 */
 contract DepositTest is SiloLittleHelper, Test {
+    using ShareTokenDecimalsPowLib for uint256;
+
     ISiloConfig siloConfig;
 
     MintableToken weth;
@@ -42,10 +41,10 @@ contract DepositTest is SiloLittleHelper, Test {
         ISilo.CollateralType _type;
         address depositor = makeAddr("Depositor");
 
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.deposit(_assets, depositor);
 
-        vm.expectRevert(ISilo.ZeroAssets.selector);
+        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
         silo0.deposit(_assets, depositor, _type);
     }
 
@@ -77,19 +76,37 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(address(silo0)), assets * 2);
         assertEq(silo0.getCollateralAssets(), assets);
-        assertEq(silo0.getTotalAssetsStorage(AssetTypes.PROTECTED), assets);
+        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), assets);
         assertEq(silo0.getDebtAssets(), 0);
 
-        assertEq(IShareToken(collateral.collateralShareToken).balanceOf(depositor), assets, "collateral shares");
-        assertEq(IShareToken(collateral.protectedShareToken).balanceOf(depositor), assets, "protected shares");
+        assertEq(
+            IShareToken(collateral.collateralShareToken).balanceOf(depositor),
+            assets.decimalsOffsetPow(),
+            "collateral shares"
+        );
+
+        assertEq(
+            IShareToken(collateral.protectedShareToken).balanceOf(depositor),
+            assets.decimalsOffsetPow(),
+            "protected shares"
+        );
 
         assertEq(token1.balanceOf(address(silo1)), assets * 2);
         assertEq(silo1.getCollateralAssets(), assets);
-        assertEq(silo1.getTotalAssetsStorage(AssetTypes.PROTECTED), assets);
+        assertEq(silo1.getTotalAssetsStorage(ISilo.AssetType.Protected), assets);
         assertEq(silo1.getDebtAssets(), 0);
 
-        assertEq(IShareToken(debt.collateralShareToken).balanceOf(depositor), assets, "collateral shares (on other silo)");
-        assertEq(IShareToken(debt.protectedShareToken).balanceOf(depositor), assets, "protected shares (on other silo)");
+        assertEq(
+            IShareToken(debt.collateralShareToken).balanceOf(depositor),
+            assets.decimalsOffsetPow(),
+            "collateral shares (on other silo)"
+        );
+
+        assertEq(
+            IShareToken(debt.protectedShareToken).balanceOf(depositor),
+            assets.decimalsOffsetPow(),
+            "protected shares (on other silo)"
+        );
     }
 
     /*
@@ -146,13 +163,13 @@ contract DepositTest is SiloLittleHelper, Test {
         token0.approve(address(silo0), assets * 2);
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(depositor, depositor, assets, assets);
+        emit Deposit(depositor, depositor, assets, assets.decimalsOffsetPow());
 
         vm.prank(depositor);
         silo0.deposit(assets, depositor, ISilo.CollateralType.Collateral);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositProtected(depositor, depositor, assets, assets);
+        emit DepositProtected(depositor, depositor, assets, assets.decimalsOffsetPow());
 
         vm.prank(depositor);
         silo0.deposit(assets, depositor, ISilo.CollateralType.Protected);
@@ -189,7 +206,7 @@ contract DepositTest is SiloLittleHelper, Test {
         uint8 collateralType = 1;
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(depositor, depositor, assets, assets);
+        emit Deposit(depositor, depositor, assets, assets.decimalsOffsetPow());
 
         vm.prank(depositor);
         
@@ -213,37 +230,5 @@ contract DepositTest is SiloLittleHelper, Test {
 
         assertEq(silo0.totalAssets(), 123, "totalAssets 0");
         assertEq(silo1.totalAssets(), 0, "totalAssets 1");
-    }
-
-    /*
-    forge test -vv --ffi --mt test_deposit_revert_zeroShares
-    */
-    function test_deposit_revert_zeroShares_1token() public {
-        _deposit_revert_zeroShares();
-    }
-
-    function _deposit_revert_zeroShares() private {
-        address borrower = makeAddr("borrower");
-
-        _deposit(2 ** 128, borrower);
-        _depositForBorrow(2 ** 128, address(2));
-
-        _borrow(2 ** 128 / 2, borrower);
-
-        address anyAddress = makeAddr("any");
-        // no interest, so shares are 1:1
-        _depositForBorrow(1, anyAddress);
-
-        vm.warp(block.timestamp + 365 days);
-
-        // with interest assets > shares, so we can get zero
-
-        _mintTokens(token1, 1, anyAddress);
-
-        vm.startPrank(anyAddress);
-        token1.approve(address(silo1), 1);
-        vm.expectRevert(ISilo.ZeroShares.selector);
-        silo1.deposit(1, anyAddress);
-        vm.stopPrank();
     }
 }

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
@@ -15,10 +14,8 @@ import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloStdLib} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
-import {Hook} from "./Hook.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
 
 library SiloLendingLib {
     using SafeERC20 for IERC20;
@@ -28,7 +25,7 @@ library SiloLendingLib {
 
     /// @notice Allows repaying borrowed assets either partially or in full
     /// @param _debtShareToken debt share token address
-    /// @param _debtAsset underlaying debt asset address
+    /// @param _debtAsset underlying debt asset address
     /// @param _assets The amount of assets to repay. Use 0 if shares are used.
     /// @param _shares The number of corresponding shares associated with the debt. Use 0 if assets are used.
     /// @param _borrower The account that has the debt
@@ -43,13 +40,11 @@ library SiloLendingLib {
         address _borrower,
         address _repayer
     ) internal returns (uint256 assets, uint256 shares) {
-        if (_assets == 0 && _shares == 0) revert ISilo.ZeroAssets();
-
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        (assets, shares) = SiloMathLib.convertToAssetsAndToShares(
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
             _shares,
             totalDebtAssets,
@@ -59,14 +54,12 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (shares == 0) revert ISilo.ZeroShares();
-        if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
+        require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
-        unchecked { $.totalAssets[AssetTypes.DEBT] = totalDebtAssets - assets; }
+        unchecked { $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets - assets; }
 
-        // Anyone can repay anyone's debt so no approval check is needed. If hook receiver reenters then
-        // no harm done because state changes are completed.
+        // Anyone can repay anyone's debt so no approval check is needed.
         _debtShareToken.burn(_borrower, _repayer, shares);
         // fee-on-transfer is ignored
         // Reentrancy is possible only for view methods (read-only reentrancy),
@@ -83,7 +76,8 @@ library SiloLendingLib {
     /// @param _deployerFee Deployer's fee in 18 decimals points
     /// @return accruedInterest The total amount of interest accrued
     function accrueInterestForAsset(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
-        internal returns (uint256 accruedInterest)
+        external
+        returns (uint256 accruedInterest)
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
@@ -101,8 +95,8 @@ library SiloLendingLib {
         }
 
         uint256 totalFees;
-        uint256 totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
-        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
         uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
             totalCollateralAssets,
@@ -111,7 +105,7 @@ library SiloLendingLib {
         );
 
         (
-            $.totalAssets[AssetTypes.COLLATERAL], $.totalAssets[AssetTypes.DEBT], totalFees, accruedInterest
+            $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
             totalCollateralAssets,
             totalDebtAssets,
@@ -124,7 +118,7 @@ library SiloLendingLib {
         $.interestRateTimestamp = uint64(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
-        // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
+        // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
         unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
     }
 
@@ -145,13 +139,11 @@ library SiloLendingLib {
         internal
         returns (uint256 borrowedAssets, uint256 borrowedShares)
     {
-        if (_args.assets == 0 && _args.shares == 0) revert ISilo.ZeroAssets();
-
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 totalDebtAssets = $.totalAssets[AssetTypes.DEBT];
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsAndToShares(
+        (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsOrToShares(
             _args.assets,
             _args.shares,
             totalDebtAssets,
@@ -161,24 +153,21 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (borrowedShares == 0) revert ISilo.ZeroShares();
-        if (borrowedAssets == 0) revert ISilo.ZeroAssets();
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
-        uint256 totalCollateralAssets = $.totalAssets[AssetTypes.COLLATERAL];
-
-        if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)) {
-            revert ISilo.NotEnoughLiquidity();
-        }
+        require(
+            _token == address(0) || borrowedAssets <= SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets),
+            ISilo.NotEnoughLiquidity()
+        );
 
         // add new debt
-        $.totalAssets[AssetTypes.DEBT] = totalDebtAssets + borrowedAssets;
+        $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets + borrowedAssets;
 
-        // `mint` checks if _spender is allowed to borrow on the account of _borrower. Hook receiver can
-        // potentially reenter but the state is correct.
+        // `mint` checks if _spender is allowed to borrow on the account of _borrower.
         IShareToken(_debtShareToken).mint(_args.borrower, _spender, borrowedShares);
 
         if (_token != address(0)) {
-            // fee-on-transfer is ignored. If token reenters, state is already finalized, no harm done.
+            // fee-on-transfer is ignored.
             IERC20(_token).safeTransfer(_args.receiver, borrowedAssets);
         }
     }
@@ -204,14 +193,14 @@ library SiloLendingLib {
         view
         returns (uint256 assets, uint256 shares)
     {
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
-            _collateralConfig,
-            _debtConfig,
-            _borrower,
-            ISilo.OracleType.MaxLtv,
-            ISilo.AccrueInterestInMemory.Yes,
-            0 /* no cache */
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations({
+            _collateralConfig: _collateralConfig,
+            _debtConfig: _debtConfig,
+            _borrower: _borrower,
+            _oracleType: ISilo.OracleType.MaxLtv,
+            _accrueInMemory: ISilo.AccrueInterestInMemory.Yes,
+            _debtShareBalanceCached: 0 /* no cache */
+        });
 
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
@@ -223,18 +212,15 @@ library SiloLendingLib {
             borrowerDebtValue
         );
 
-        (assets, shares) = maxBorrowValueToAssetsAndShares(
-            maxBorrowValue,
-            borrowerDebtValue,
-            _borrower,
-            _debtConfig.token,
-            _debtConfig.debtShareToken,
-            ltvData.debtOracle,
-            _totalDebtAssets,
-            _totalDebtShares
-        );
+        (assets, shares) = maxBorrowValueToAssetsAndShares({
+            _maxBorrowValue: maxBorrowValue,
+            _debtAsset: _debtConfig.token,
+            _debtOracle: ltvData.debtOracle,
+            _totalDebtAssets: _totalDebtAssets,
+            _totalDebtShares: _totalDebtShares
+        });
 
-        if (assets == 0) return (0, 0);
+        if (assets == 0 || shares == 0) return (0, 0);
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
@@ -315,10 +301,7 @@ library SiloLendingLib {
 
     /// @notice Calculates the maximum borrowable assets and shares
     /// @param _maxBorrowValue The maximum value that can be borrowed by the user
-    /// @param _borrowerDebtValue The current debt value of the borrower
-    /// @param _borrower The address of the borrower
-    /// @param _debtToken Address of the debt token
-    /// @param _debtShareToken Address of the debt share token
+    /// @param _debtAsset Address of the debt token
     /// @param _debtOracle Oracle used to get the value of the debt token
     /// @param _totalDebtAssets Total assets of the debt
     /// @param _totalDebtShares Total shares of the debt
@@ -326,10 +309,7 @@ library SiloLendingLib {
     /// @return shares Maximum borrowable shares
     function maxBorrowValueToAssetsAndShares(
         uint256 _maxBorrowValue,
-        uint256 _borrowerDebtValue,
-        address _borrower,
-        address _debtToken,
-        address _debtShareToken,
+        address _debtAsset,
         ISiloOracle _debtOracle,
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares
@@ -342,31 +322,19 @@ library SiloLendingLib {
             return (0, 0);
         }
 
-        if (_borrowerDebtValue == 0) {
-            uint256 oneDebtToken = 10 ** IERC20Metadata(_debtToken).decimals();
+        uint256 debtTokenSample = _PRECISION_DECIMALS;
 
-            uint256 oneDebtTokenValue = address(_debtOracle) == address(0)
-                ? oneDebtToken
-                : _debtOracle.quote(oneDebtToken, _debtToken);
+        uint256 debtSampleValue = address(_debtOracle) == address(0)
+            ? debtTokenSample
+            : _debtOracle.quote(debtTokenSample, _debtAsset);
 
-            assets = _maxBorrowValue.mulDiv(_PRECISION_DECIMALS, oneDebtTokenValue, Rounding.MAX_BORROW_TO_ASSETS);
+        assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
-            // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
-            // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
-            // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
-            shares = SiloMathLib.convertToShares(
-                assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
-            );
-        } else {
-            uint256 shareBalance = IShareToken(_debtShareToken).balanceOf(_borrower);
-
-            // on LTV calculation, we taking debt value, and we round UP when we calculating shares
-            // so here, when we want to calculate shares from value, we need to round down.
-            shares = _maxBorrowValue.mulDiv(shareBalance, _borrowerDebtValue, Rounding.MAX_BORROW_TO_SHARES);
-
-            assets = SiloMathLib.convertToAssets(
-                shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
-            );
-        }
+        // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
+        // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
+        // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
+        shares = SiloMathLib.convertToShares(
+            assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
+        );
     }
 }

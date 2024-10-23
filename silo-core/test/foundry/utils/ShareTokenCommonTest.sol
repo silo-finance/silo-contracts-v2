@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
+import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 // solhint-disable ordering
 
@@ -20,9 +23,9 @@ FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ShareTokenCommonTest
 contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable {
     address public user = makeAddr("someUser");
     address public otherUser = makeAddr("someOtherUser");
-    uint256 public mintAmout = 100e18;
+    uint256 public mintAmount = 100e18;
 
-    string private constant _NAME = "SiloShareToken";
+    string private constant _NAME = "SiloShareTokenEIP712Name";
     string private constant _VERSION = "1";
     bytes32 private constant _TYPE_HASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -70,18 +73,18 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         uint256 balance0 = _shareToken.balanceOf(user);
         uint256 totalSupply0 = _shareToken.totalSupply();
 
-        assertEq(balance0, mintAmout, "balance should be equal to mintAmout");
-        assertEq(totalSupply0, mintAmout, "totalSupply should be equal to mintAmout");
+        assertEq(balance0, mintAmount, "balance should be equal to mintAmount");
+        assertEq(totalSupply0, mintAmount, "totalSupply should be equal to mintAmount");
 
         (uint256 balance1, uint256 totalSupply1) = _shareToken.balanceOfAndTotalSupply(user);
 
-        assertEq(balance0, balance1, "balances mistmatch");
-        assertEq(totalSupply0, totalSupply1, "totalSupply mistmatch");
+        assertEq(balance0, balance1, "balances mismatch");
+        assertEq(totalSupply0, totalSupply1, "totalSupply mismatch");
     }
 
     /*
@@ -93,7 +96,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
 
     function _shareTokenMintPermissions(IShareToken _shareToken) internal {
         vm.expectRevert(IShareToken.OnlySilo.selector);
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
     }
 
     /*
@@ -107,10 +110,10 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.expectEmit(true, true, true, true, address(_shareToken));
-        emit Transfer(address(0), user, mintAmout);
+        emit Transfer(address(0), user, mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
     }
 
     /*
@@ -136,16 +139,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.expectEmit(true, true, true, true, address(_shareToken));
-        emit Transfer(address(0), user, mintAmout);
+        emit Transfer(address(0), user, mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         vm.expectEmit(true, true, true, true, address(_shareToken));
-        emit Transfer(user, address(0), mintAmout);
+        emit Transfer(user, address(0), mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.burn(user, user, mintAmout);
+        _shareToken.burn(user, user, mintAmount);
     }
 
     /*
@@ -159,16 +162,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         vm.prank(user);
-        _shareToken.approve(otherUser, mintAmout);
+        _shareToken.approve(otherUser, mintAmount);
 
         vm.expectEmit(true, true, true, false);
-        emit Transfer(user, address(0), mintAmout);
+        emit Transfer(user, address(0), mintAmount);
 
         vm.prank(address(silo));
-        _shareToken.burn(user, otherUser, mintAmout);
+        _shareToken.burn(user, otherUser, mintAmount);
     }
 
     /*
@@ -297,6 +300,27 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_collateralShareTokenDecimals
+    */
+    function test_collateralShareTokenDecimals() public view {
+        (address protected0, address collateral0,) = siloConfig.getShareTokens(address(silo0));
+        (address protected1, address collateral1,) = siloConfig.getShareTokens(address(silo1));
+
+        _collateralShareTokenDecimals(IShareToken(collateral0), address(token0));
+        _collateralShareTokenDecimals(IShareToken(protected0), address(token0));
+
+        _collateralShareTokenDecimals(IShareToken(collateral1), address(token1));
+        _collateralShareTokenDecimals(IShareToken(protected1), address(token1));
+    }
+
+    function _collateralShareTokenDecimals(IShareToken _collateralToken, address _siloAsset) internal view {
+        uint256 assetDecimals = IShareToken(_siloAsset).decimals();
+        uint256 collateralDecimals = _collateralToken.decimals();
+
+        assertEq(10 ** (collateralDecimals - assetDecimals), SiloMathLib._DECIMALS_OFFSET_POW, "invalid offset");
+    }
+
+    /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenName
     */
     function test_shareTokenName() public view {
@@ -365,7 +389,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPermissions
     */
     function test_forwardTransferFromNoChecksPermissions() public {
-        _executeForAllShareTokens(_synchronizeHooksPermissions);
+        _executeForAllShareTokens(_forwardTransferFromNoChecksPermissions);
     }
 
     function _forwardTransferFromNoChecksPermissions(IShareToken _shareToken) internal {
@@ -374,42 +398,52 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo0
     */
-    function test_forwardTransferFromNoChecks() public {
-        _executeForAllShareTokens(_synchronizeHooksPermissions);
+    function test_forwardTransferFromNoChecks_silo0() public {
+        _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo1
+    */
+    function test_forwardTransferFromNoChecks_silo1() public {
+        _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo1));
     }
 
     function _forwardTransferFromNoChecks(IShareToken _shareToken) internal {
+        uint24 tokenType = _shareToken.hookSetup().tokenType;
+        emit log_named_uint("[forwardTransferFromNoChecks] tokenType", tokenType);
+
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
-        _shareToken.mint(user, user, mintAmout);
+        _shareToken.mint(user, user, mintAmount);
 
         uint256 balance = _shareToken.balanceOf(user);
-        assertEq(balance, mintAmout, "expect valid balance for a user");
+        assertEq(balance, mintAmount, "expect valid balance for a user");
 
         vm.prank(address(silo));
-        _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmout);
+        _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
 
         balance = _shareToken.balanceOf(otherUser);
-        assertEq(balance, mintAmout, "expect valid balance for otherUser");
+        assertEq(balance, mintAmount, "expect valid balance for otherUser");
 
         balance = _shareToken.balanceOf(user);
         assertEq(balance, 0, "expect 0 balance for user");
     }
 
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
-        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
-        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
+        _executeForAllShareTokens(func, address(silo0));
+        _executeForAllShareTokens(func, address(silo1));
+    }
+
+    function _executeForAllShareTokens(function(IShareToken) internal func, address _silo) internal {
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(_silo);
 
         func(IShareToken(protected0));
         func(IShareToken(collateral0));
         func(IShareToken(debt0));
-
-        func(IShareToken(protected1));
-        func(IShareToken(collateral1));
-        func(IShareToken(debt1));
     }
 
     function _executeForAllCollateralShareTokens(function(IShareToken) internal func) internal {

@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloHookReceiver, IHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/SiloHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-
-import {console} from "forge-std/console.sol";
 
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
@@ -25,6 +23,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     uint24 internal immutable _SILO1_ACTIONS_AFTER;
 
     bool public revertAllActions;
+    bool public revertOnlyBeforeAction;
+    bool public revertOnlyAfterAction;
 
     // Events to be emitted by the hook receiver to see decoded inputs
     // HA - Hook Action
@@ -94,7 +94,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedAssets,
         uint256 borrowedShares,
         address borrower,
-        address receiver
+        address receiver,
+        address spender
     );
 
     event BorrowAfterHA(
@@ -103,6 +104,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         uint256 borrowedShares,
         address borrower,
         address receiver,
+        address spender,
         uint256 returnedAssets,
         uint256 returnedShares
     );
@@ -131,24 +133,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         address owner,
         uint256 assets,
         bool isBefore
-    );
-
-    event BeforeLeverageSameAssetHA(
-        address silo,
-        uint256 depositAssets,
-        uint256 borrowAssets,
-        address borrower,
-        ISilo.CollateralType collateralType
-    );
-
-    event AfterLeverageSameAssetHA(
-        address silo,
-        uint256 depositAssets,
-        uint256 borrowAssets,
-        address borrower,
-        ISilo.CollateralType collateralType,
-        uint256 depositedShares,
-        uint256 borrowedShares
     );
 
     event SwitchCollateralBeforeHA(address user);
@@ -204,12 +188,20 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         revertAllActions = true;
     }
 
+    function revertBeforeAction() external {
+        revertOnlyBeforeAction = true;
+    }
+
+    function revertAfterAction() external {
+        revertOnlyAfterAction = true;
+    }
+
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
         override (IHookReceiver, PartialLiquidation)
     {
-        if (revertAllActions) revert ActionsStopped();
+        if (revertAllActions || revertOnlyBeforeAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
     }
 
@@ -218,7 +210,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         external
         override (IHookReceiver, PartialLiquidation)
     {
-        if (revertAllActions) revert ActionsStopped();
+        if (revertAllActions || revertOnlyAfterAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
     }
 
@@ -229,8 +221,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
             _processShareTokenTransfer(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.WITHDRAW)) {
             _processWithdraw(_silo, _action, _inputAndOutput, _isBefore);
-        } else if (_action.matchAction(Hook.LEVERAGE_SAME_ASSET)) {
-            _processLeverageSameAsset(_silo, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW)) {
             _processBorrow(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.BORROW_SAME_ASSET)) {
@@ -375,7 +365,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.assets,
                 input.shares,
                 input.borrower,
-                input.receiver
+                input.receiver,
+                input.spender
             );
         } else {
             Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
@@ -386,6 +377,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
                 input.shares,
                 input.borrower,
                 input.receiver,
+                input.spender,
                 input.borrowedAssets,
                 input.borrowedShares
             );
@@ -450,32 +442,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         } else {
             Hook.AfterTransitionCollateralInput memory input = Hook.afterTransitionCollateralDecode(_inputAndOutput);
             emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
-        }
-    }
-
-    function _processLeverageSameAsset(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
-        if (_isBefore) {
-            Hook.BeforeLeverageSameAssetInput memory input = Hook.beforeLeverageSameAssetDecode(_inputAndOutput);
-
-            emit BeforeLeverageSameAssetHA(
-                _silo,
-                input.depositAssets,
-                input.borrowAssets,
-                input.borrower,
-                input.collateralType
-            );
-        } else {
-            Hook.AfterLeverageSameAssetInput memory input = Hook.afterLeverageSameAssetDecode(_inputAndOutput);
-
-            emit AfterLeverageSameAssetHA(
-                _silo,
-                input.depositAssets,
-                input.borrowAssets,
-                input.borrower,
-                input.collateralType,
-                input.depositedShares,
-                input.borrowedShares
-            );
         }
     }
 }

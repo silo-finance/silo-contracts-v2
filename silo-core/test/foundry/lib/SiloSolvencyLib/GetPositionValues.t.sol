@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {Test} from "forge-std/Test.sol";
 
+import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OraclesHelper} from "../../_common/OraclesHelper.sol";
 
 /*

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
-import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {PRBMathSD59x18} from "silo-core/contracts/lib/PRBMathSD59x18.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
@@ -358,7 +357,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
         // if we got a limit for rcomp, we reset Tcrit and Ri model parameters to zeros
         // Resetting parameters will make IR drop from 10k%/year to 100% per year and it will start growing again.
-        // If we don’t reset, we will have to wait ~2 weeks to make IR drop (low utilisation ratio required).
+        // If we don’t reset, we will have to wait ~2 weeks to make IR drop (low utilization ratio required).
         // So zeroing parameters is a only hope for a market to get well again, otherwise it will be almost impossible.
         bool capApplied;
 

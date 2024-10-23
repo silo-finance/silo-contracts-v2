@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 
@@ -12,7 +12,7 @@ import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
     bool private constant _BAD_DEBT = true;
 
-    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken, bool _self)
+    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken)
         internal
         virtual
         override
@@ -27,13 +27,13 @@ contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
 
-        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();
     }
 
-    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken, bool _self)
+    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken)
         internal
         virtual
         override
@@ -49,7 +49,7 @@ contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
 
-        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
         _ensureBorrowerHasNoDebt();

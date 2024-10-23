@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -8,7 +8,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
-import {ShareDebtTokenLib} from "silo-core/contracts/lib/ShareDebtTokenLib.sol";
+import {ERC20RStorageLib} from "silo-core/contracts/lib/ERC20RStorageLib.sol";
 
 interface ISomeSilo {
     function accrueInterest() external;
@@ -79,12 +79,12 @@ contract StorageUpdateTest is ISomeSilo, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_shareDebtTokenStoragePointer
+    forge test -vv --ffi --mt test_ERC20RStoragePointer
     */
-    function test_shareDebtTokenStoragePointer() public {
+    function test_ERC20RStoragePointer() public {
         string memory pointerSalt = "silo.storage.ERC20R";
 
-        IERC20R.Storage storage debtTokenStorage = ShareDebtTokenLib.getIERC20RStorage();
+        IERC20R.Storage storage debtTokenStorage = ERC20RStorageLib.getIERC20RStorage();
 
         bytes32 currentPointer;
 

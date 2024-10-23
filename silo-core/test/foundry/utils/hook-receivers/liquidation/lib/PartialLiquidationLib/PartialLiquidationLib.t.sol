@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
 import {PartialLiquidationLibChecked} from "./PartialLiquidationLibChecked.sol";
-import "../../../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
-import "../../../../../data-readers/LiquidationPreviewTestData.sol";
-import "../../../../../data-readers/MaxLiquidationPreviewTestData.sol";
-import "../../../../../data-readers/EstimateMaxRepayValueTestData.sol";
-import "./MaxRepayRawMath.sol";
+import {CalculateCollateralToLiquidateTestData} from "../../../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
+import {LiquidationPreviewTestData} from "../../../../../data-readers/LiquidationPreviewTestData.sol";
+import {MaxLiquidationPreviewTestData} from "../../../../../data-readers/MaxLiquidationPreviewTestData.sol";
+import {EstimateMaxRepayValueTestData} from "../../../../../data-readers/EstimateMaxRepayValueTestData.sol";
+import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
 
 
 // forge test -vv --mc PartialLiquidationLibTest
@@ -35,7 +36,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     forge test -vv --mt test_PartialLiquidationLib_collateralToLiquidate
     */
     function test_PartialLiquidationLib_collateralToLiquidate() public pure {
-        // uint256 _debtToCover, uint256 _totalCollateral, uint256 _liquidityFee
+        // uint256 _maxDebtToCover, uint256 _totalCollateral, uint256 _liquidityFee
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(0, 0, 0), 0);
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0), 1);
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0.0001e18), 1);
@@ -89,9 +90,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 collateralLt: data[i].input.lt,
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
-                debtToCover: data[i].input.debtToCover,
-                liquidationFee: data[i].input.liquidationFee,
-                selfLiquidation: false
+                maxDebtToCover: data[i].input.maxDebtToCover,
+                liquidationFee: data[i].input.liquidationFee
             });
 
             (
@@ -206,9 +206,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 collateralLt: data[i].input.lt,
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
-                debtToCover: _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
-                liquidationFee: data[i].input.liquidityFee,
-                selfLiquidation: false
+                maxDebtToCover: _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
+                liquidationFee: data[i].input.liquidityFee
             });
 
             (
@@ -255,14 +254,14 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_PartialLiquidationLib_calculateCollateralToLiquidate_math_fuzz(
-        uint256 _debtToCover,
+        uint256 _maxDebtToCover,
         uint128 _totalBorrowerDebtAssets,
         uint128 _totalBorrowerCollateralAssets,
         uint256 _liquidationFee,
         uint16 _quote
     ) public pure {
         vm.assume(_liquidationFee <= 0.1e18);
-        vm.assume(_debtToCover <= _totalBorrowerDebtAssets);
+        vm.assume(_maxDebtToCover <= _totalBorrowerDebtAssets);
         vm.assume(_totalBorrowerDebtAssets > 0);
         vm.assume(_totalBorrowerCollateralAssets > 0);
         vm.assume(_quote > 0);
@@ -286,9 +285,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             collateralLt: 0.8e18,
             collateralConfigAsset: address(0),
             debtConfigAsset: address(0),
-            debtToCover: _debtToCover,
-            liquidationFee: _liquidationFee,
-            selfLiquidation: false
+            maxDebtToCover: _maxDebtToCover,
+            liquidationFee: _liquidationFee
         });
 
         (
@@ -325,7 +323,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     function test_PartialLiquidationLib_liquidationPreview_not_reverts(
         uint128 _ltvBefore,
         uint128 _sumOfCollateralAssets,
-        uint128 _debtToCover
+        uint128 _maxDebtToCover
     ) public pure {
         // total assets/values must be != 0, if they are not, then revert possible
         uint256 borrowerDebtAssets = 1e18;
@@ -333,7 +331,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         uint256 sumOfCollateralValue = 1e18;
 
         PartialLiquidationLib.LiquidationPreviewParams memory params;
-        params.debtToCover = _debtToCover;
+        params.maxDebtToCover = _maxDebtToCover;
 
         PartialLiquidationLib.liquidationPreview(
             _ltvBefore, _sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, borrowerDebtValue, params
@@ -343,7 +341,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
     */
-    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public view {
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public pure {
         uint256 debtValueToCover = 2e18;
         uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
         uint256 totalBorrowerCollateralAssets = 10e18;
@@ -354,24 +352,39 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         );
 
         // counter example without zero
-        uint256 gasStart = gasleft();
         (
             uint256 collateralAssetsToLiquidate,
             uint256 collateralValueToLiquidate
         ) = PartialLiquidationLib.calculateCollateralsToLiquidate(
             debtValueToCover, totalBorrowerCollateralValue, totalBorrowerCollateralAssets, liquidationFee
         );
-        uint256 gasEnd = gasleft();
 
-        assertLe(gasStart - gasEnd, 575, "optimise calculateCollateralToLiquidate()");
         assertEq(collateralAssetsToLiquidate, 1010000000000000000);
         assertEq(collateralValueToLiquidate, 2020000000000000000);
     }
 
     /*
+    forge test -vv --mt test_gas_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
+    */
+    function test_gas_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public view {
+        uint256 debtValueToCover = 2e18;
+        uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
+        uint256 totalBorrowerCollateralAssets = 10e18;
+        uint256 liquidationFee = 0.01e18; // 1%
+
+        uint256 gasStart = gasleft();
+        PartialLiquidationLib.calculateCollateralsToLiquidate(
+            debtValueToCover, totalBorrowerCollateralValue, totalBorrowerCollateralAssets, liquidationFee
+        );
+        uint256 gasEnd = gasleft();
+
+        assertLe(gasStart - gasEnd, 675, "optimise calculateCollateralToLiquidate()");
+    }
+
+    /*
     forge test -vv --mt test_PartialLiquidationLib_splitReceiveCollateralToLiquidate
     */
-    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public view {
+    function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public pure {
         (uint256 fromCollateral, uint256 fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
         assertEq(fromCollateral, 0, "fromCollateral (0,0) => 0");
         assertEq(fromProtected, 0, "fromProtected (0,0) => 0");
@@ -388,15 +401,23 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertEq(fromCollateral, 8, "fromCollateral (10, 2) => 8");
         assertEq(fromProtected, 2, "fromProtected (10, 2) => 2");
 
-        uint256 gasStart = gasleft();
         (fromCollateral, fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
-        uint256 gasEnd = gasleft();
 
         assertEq(fromCollateral, 0, "fromCollateral (5, 15) => 0");
         assertEq(fromProtected, 5, "fromProtected (5, 15) => 5");
+    }
+
+    /*
+    forge test -vv --mt test_gas_PartialLiquidationLib_splitReceiveCollateralToLiquidate
+    */
+    function test_gas_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public view {
+        uint256 gasStart = gasleft();
+        PartialLiquidationLib.splitReceiveCollateralToLiquidate(5, 15);
+        uint256 gasEnd = gasleft();
+
         assertLe(gasStart - gasEnd, 149, "optimise splitReceiveCollateralToLiquidate");
     }
-    
+
     /*
      forge test -vv --mt test_PartialLiquidationLib_maxLiquidationPreview_unchecked_fuzz
     */

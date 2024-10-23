@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
@@ -12,7 +12,7 @@ contract PartialLiquidationExecLibImpl {
     )
         external
         view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets)
+        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError)
     {
         return PartialLiquidationExecLib.liquidationPreview(_ltvData, _params);
     }

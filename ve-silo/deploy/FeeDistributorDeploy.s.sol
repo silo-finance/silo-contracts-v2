@@ -13,7 +13,7 @@ FOUNDRY_PROFILE=ve-silo-test \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract FeeDistributorDeploy is CommonDeploy {
-    uint256 public startTime = 1706745600;
+    uint256 public startTime = 1729423963;
 
     function run() public returns (IFeeDistributor feeDistributor) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));

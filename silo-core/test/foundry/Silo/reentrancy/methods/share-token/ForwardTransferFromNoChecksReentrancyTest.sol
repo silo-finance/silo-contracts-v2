@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
@@ -28,9 +27,7 @@ contract ForwardTransferFromNoChecksReentrancyTest is ShareTokenMethodReentrancy
         (,, address debt0) = config.getShareTokens(address(TestStateLib.silo0()));
         (,, address debt1) = config.getShareTokens(address(TestStateLib.silo1()));
 
-        if (_token == debt0 || _token == debt1) vm.expectRevert(IShareToken.Forbidden.selector);
-        else vm.expectRevert(IShareToken.OnlySilo.selector);
-
+        vm.expectRevert(IShareToken.OnlySilo.selector);
         ShareToken(_token).forwardTransferFromNoChecks(address(0), address(0), 100);
     }
 }

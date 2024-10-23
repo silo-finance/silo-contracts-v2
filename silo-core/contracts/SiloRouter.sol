@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
@@ -49,7 +49,6 @@ contract SiloRouter {
     error ERC20TransferFailed();
     error EthTransferFailed();
     error InvalidSilo();
-    error UnsupportedAction();
 
     constructor(address _wrappedNativeToken) {
         TokenHelper.assertAndGetDecimals(_wrappedNativeToken);
@@ -90,7 +89,7 @@ contract SiloRouter {
         if (msg.value != 0 && address(this).balance != 0) {
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = msg.sender.call{value: address(this).balance}("");
-            if (!success) revert EthTransferFailed();
+            require(success, EthTransferFailed());
         }
     }
 
@@ -124,8 +123,6 @@ contract SiloRouter {
             _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
 
             _action.silo.repayShares(data.amount, msg.sender);
-        } else {
-            revert UnsupportedAction();
         }
     }
 
@@ -141,9 +138,7 @@ contract SiloRouter {
             );
 
             // Support non-standard tokens that don't return bool
-            if (!success || !(data.length == 0 || abi.decode(data, (bool)))) {
-                revert ApprovalFailed();
-            }
+            require(success && (data.length == 0 || abi.decode(data, (bool))), ApprovalFailed());
         }
     }
 
@@ -180,7 +175,7 @@ contract SiloRouter {
             WRAPPED_NATIVE_TOKEN.withdraw(_amount);
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = msg.sender.call{value: _amount}("");
-            if (!success) revert ERC20TransferFailed();
+            require(success, ERC20TransferFailed());
         } else {
             _asset.safeTransfer(msg.sender, _amount);
         }

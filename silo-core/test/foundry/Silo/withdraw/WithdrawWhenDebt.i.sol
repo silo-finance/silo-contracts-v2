@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -7,8 +7,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
@@ -74,8 +74,8 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(previewWithdraw, gotShares, "previewWithdraw");
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0.1e18, "debtShareToken");
-        assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), 1e18, "protectedShareToken stays the same");
-        assertLe(IShareToken(collateralShareToken).balanceOf(address(this)), 1, "collateral burned");
+        assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), 1e18 * SiloMathLib._DECIMALS_OFFSET_POW, "protectedShareToken stays the same");
+        assertLe(IShareToken(collateralShareToken).balanceOf(address(this)), 1 * SiloMathLib._DECIMALS_OFFSET_POW, "collateral burned");
 
         assertLe(
             collateralSilo.getCollateralAssets(),
@@ -103,7 +103,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         assertEq(
             IShareToken(protectedShareToken).balanceOf(address(this)),
-            expectedCollateralLeft,
+            expectedCollateralLeft * SiloMathLib._DECIMALS_OFFSET_POW,
             "protectedShareToken"
         );
 
