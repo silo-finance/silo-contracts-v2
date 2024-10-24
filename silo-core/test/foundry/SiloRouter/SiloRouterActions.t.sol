@@ -10,12 +10,15 @@ import {SiloDeployments, SiloConfigsNames} from "silo-core/deploy/silo/SiloDeplo
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
+import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol";
 
 // solhint-disable function-max-lines
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloRouterActionsTest
 contract SiloRouterActionsTest is IntegrationTest {
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 253050446;
+    using ShareTokenDecimalsPowLib for uint256;
+
+    uint256 internal constant _FORKING_BLOCK_NUMBER = 267182500;
     uint256 internal constant _ETH_BALANCE = 10e18;
 
     address public silo0;
@@ -133,8 +136,17 @@ contract SiloRouterActionsTest is IntegrationTest {
         uint256 collateralBalanceViaRouter = IERC20(collateralToken0).balanceOf(depositor);
         uint256 protectedBalanceViaRouter = IERC20(protectedToken1).balanceOf(depositor);
 
-        assertEq(collateralBalanceViaRouter, depositToken0, "Collateral share token balance mismatch");
-        assertEq(protectedBalanceViaRouter, depositToken1, "Protected share token balance mismatch");
+        assertEq(
+            collateralBalanceViaRouter,
+            depositToken0.decimalsOffsetPow(),
+            "Collateral share token balance mismatch"
+        );
+
+        assertEq(
+            protectedBalanceViaRouter,
+            depositToken1.decimalsOffsetPow(),
+            "Protected share token balance mismatch"
+        );
 
         // Reset to the original state to verify results with direct silo deposits.
         vm.revertTo(snapshotId);
