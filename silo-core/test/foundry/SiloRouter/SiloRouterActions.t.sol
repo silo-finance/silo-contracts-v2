@@ -20,6 +20,8 @@ contract SiloRouterActionsTest is IntegrationTest {
 
     uint256 internal constant _FORKING_BLOCK_NUMBER = 267182500;
     uint256 internal constant _ETH_BALANCE = 10e18;
+    uint256 internal constant _TOKEN0_AMOUNT = 100e18;
+    uint256 internal constant _TOKEN1_AMOUNT = 100e6;
 
     address public silo0;
     address public silo1;
@@ -67,10 +69,10 @@ contract SiloRouterActionsTest is IntegrationTest {
         (protectedToken1, collateralToken1, debtToken1) = ISiloConfig(siloConfig).getShareTokens(silo1);
 
         vm.prank(wethWhale);
-        IERC20(token0).transfer(depositor, 1000e18);
+        IERC20(token0).transfer(depositor, _TOKEN0_AMOUNT);
 
         vm.prank(usdcWhale);
-        IERC20(token1).transfer(depositor, 1000e6);
+        IERC20(token1).transfer(depositor, _TOKEN1_AMOUNT);
 
         vm.prank(depositor);
         IERC20(token0).approve(address(router), type(uint256).max);
@@ -99,8 +101,8 @@ contract SiloRouterActionsTest is IntegrationTest {
     function testDepositViaRouter() public {
         uint256 snapshotId = vm.snapshot();
 
-        uint256 depositToken0 = 100e18;
-        uint256 depositToken1 = 100e6;
+        uint256 depositToken0 = _TOKEN0_AMOUNT;
+        uint256 depositToken1 = _TOKEN1_AMOUNT;
 
         SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
             amount: depositToken0,
@@ -174,8 +176,8 @@ contract SiloRouterActionsTest is IntegrationTest {
     function testMintViaRouter() public {
         uint256 snapshotId = vm.snapshot();
 
-        uint256 depositToken0 = 100e18;
-        uint256 depositToken1 = 100e6;
+        uint256 depositToken0 = _TOKEN0_AMOUNT;
+        uint256 depositToken1 = _TOKEN1_AMOUNT;
 
         SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
             amount: depositToken0,
@@ -291,8 +293,8 @@ contract SiloRouterActionsTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSendAssetsBackFromTheRouter
     function testSendAssetsBackFromTheRouter() public {
-        uint256 depositToken0 = 100e18;
-        uint256 depositToken1 = 100e6;
+        uint256 depositToken0 = _TOKEN0_AMOUNT;
+        uint256 depositToken1 = _TOKEN1_AMOUNT;
 
         SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
             amount: depositToken0,
@@ -356,7 +358,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSendAssetsFailedTransfer
     function testSendAssetsFailedTransfer() public {
-        uint256 depositToken0 = 100e18;
+        uint256 depositToken0 = _TOKEN0_AMOUNT;
 
         SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
             amount: depositToken0,
@@ -389,7 +391,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testEthTransferFailed
     function testEthTransferFailed() public {
-        uint256 depositToken1 = 100e6;
+        uint256 depositToken1 = _TOKEN1_AMOUNT;
 
         SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
             amount: depositToken1,
@@ -411,7 +413,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         assertNotEq(balanceBefore, 0, "Expect to have balance before");
 
         vm.prank(usdcWhale);
-        IERC20(token1).transfer(address(this), 100e6);
+        IERC20(token1).transfer(address(this), _TOKEN1_AMOUNT);
 
         vm.prank(address(this));
         IERC20(token1).approve(address(router), type(uint256).max);
@@ -456,7 +458,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testEthTransferFailed
     function testApproveFailed() public {
-        uint256 depositToken1 = 100e6;
+        uint256 depositToken1 = _TOKEN1_AMOUNT;
 
         SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
             amount: depositToken1,
@@ -474,7 +476,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         actions[0] = action0;
 
         vm.prank(usdcWhale);
-        IERC20(token1).transfer(address(this), 100e6);
+        IERC20(token1).transfer(address(this), _TOKEN1_AMOUNT);
 
         vm.prank(address(this));
         IERC20(token1).approve(address(router), type(uint256).max);
@@ -490,7 +492,7 @@ contract SiloRouterActionsTest is IntegrationTest {
     }
 
     function _borrow() internal {
-        uint256 depositLiquidity = 100e18;
+        uint256 depositLiquidity = _TOKEN0_AMOUNT;
         uint256 depositCollateral = 100000e6;
 
         vm.prank(usdcWhale);
@@ -508,7 +510,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.prank(borrower);
         ISilo(silo1).deposit(depositCollateral, borrower, ISilo.CollateralType.Protected);
 
-        uint256 borrowAmount = 100e6;
+        uint256 borrowAmount = _TOKEN1_AMOUNT;
 
         vm.prank(borrower);
         ISilo(silo0).borrow(borrowAmount, borrower, borrower);
