@@ -29,8 +29,8 @@ contract SiloRouterActionsTest is IntegrationTest {
     address public depositor = makeAddr("Depositor");
     address public borrower = makeAddr("Borrower");
 
-    address wethWhale = 0x70d95587d40A2caf56bd97485aB3Eec10Bee6336;
-    address usdcWhale = 0xa0E9B6DA89BD0303A8163B81B8702388bE0Fde77;
+    address public wethWhale = 0x70d95587d40A2caf56bd97485aB3Eec10Bee6336;
+    address public usdcWhale = 0xa0E9B6DA89BD0303A8163B81B8702388bE0Fde77;
 
     address public collateralToken0;
     address public protectedToken0;
