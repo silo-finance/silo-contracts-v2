@@ -93,6 +93,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
         address interestRateModel;
         uint256 maxLtv;
         uint256 lt;
+        uint256 liquidationTargetLtv;
         uint256 liquidationFee;
         uint256 flashloanFee;
         address hookReceiver;
@@ -120,6 +121,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error CollateralTypeDidNotChanged();
     error InvalidConfigOrder();
     error FeeTooHigh();
+    error TargetLTVTooHigh();
     error InvalidDebtShareToken();
 
     /// @dev It should be called on debt transfer (debt share token transfer).

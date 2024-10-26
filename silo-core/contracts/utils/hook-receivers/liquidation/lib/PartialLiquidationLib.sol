@@ -15,6 +15,7 @@ library PartialLiquidationLib {
         address debtConfigAsset;
         uint256 maxDebtToCover;
         uint256 liquidationFee;
+        uint256 liquidationTargetLtv;
     }
 
     /// @dev this is basically LTV == 100%
@@ -26,10 +27,6 @@ library PartialLiquidationLib {
     /// liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
     /// this two conversions are rounding down and can create 2 wai difference
     uint256 internal constant _UNDERESTIMATION = 2;
-
-    /// @dev when user is insolvent with some LT, we will allow to liquidate to some minimal level of ltv
-    /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
-    uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
     /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the 
     /// _DEBT_DUST_LEVEL threshold, a full liquidation is triggered.
@@ -46,6 +43,7 @@ library PartialLiquidationLib {
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         uint256 _lt,
+        uint256 _liquidationTargetLTV,
         uint256 _liquidityFee
     )
         internal
@@ -57,7 +55,7 @@ library PartialLiquidationLib {
         ) = maxLiquidationPreview(
             _sumOfCollateralValue,
             _borrowerDebtValue,
-            minAcceptableLTV(_lt),
+            _liquidationTargetLTV,
             _liquidityFee
         );
 
@@ -107,7 +105,7 @@ library PartialLiquidationLib {
             uint256 maxRepayValue = estimateMaxRepayValue(
                 _borrowerDebtValue,
                 _sumOfCollateralValue,
-                minAcceptableLTV(_params.collateralLt),
+                _params.liquidationTargetLtv,
                 _params.liquidationFee
             );
 
@@ -149,12 +147,6 @@ library PartialLiquidationLib {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
         assets = _value * _totalAssets / _totalValue;
-    }
-
-    /// @param _lt LT liquidation threshold for asset
-    /// @return minimalAcceptableLTV min acceptable LTV after liquidation
-    function minAcceptableLTV(uint256 _lt) internal pure returns (uint256 minimalAcceptableLTV) {
-        minimalAcceptableLTV = _lt.mulDiv(_LT_LIQUIDATION_MARGIN, _PRECISION_DECIMALS, Rounding.LTV);
     }
 
     /// @notice this function never reverts

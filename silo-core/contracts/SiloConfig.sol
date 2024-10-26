@@ -40,6 +40,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     uint256 internal immutable _MAX_LTV0;
     uint256 internal immutable _LT0;
+    /// @dev target LTV after liquidation
+    uint256 internal immutable _LIQUIDATION_TARGET_LTV0;
     uint256 internal immutable _LIQUIDATION_FEE0;
     uint256 internal immutable _FLASHLOAN_FEE0;
 
@@ -65,6 +67,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     uint256 internal immutable _MAX_LTV1;
     uint256 internal immutable _LT1;
+    /// @dev target LTV after liquidation
+    uint256 internal immutable _LIQUIDATION_TARGET_LTV1;
     uint256 internal immutable _LIQUIDATION_FEE1;
     uint256 internal immutable _FLASHLOAN_FEE1;
 
@@ -91,6 +95,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _HOOK_RECEIVER = _configData0.hookReceiver;
 
         // TOKEN #0
+        require(_configData0.liquidationTargetLtv < _configData0.lt, TargetLTVTooHigh());
 
         _SILO0 = _configData0.silo;
         _TOKEN0 = _configData0.token;
@@ -106,12 +111,14 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         _MAX_LTV0 = _configData0.maxLtv;
         _LT0 = _configData0.lt;
+        _LIQUIDATION_TARGET_LTV0 = _configData0.liquidationTargetLtv;
         _LIQUIDATION_FEE0 = _configData0.liquidationFee;
         _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
         _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;
 
         // TOKEN #1
+        require(_configData1.liquidationTargetLtv < _configData1.lt, TargetLTVTooHigh());
 
         _SILO1 = _configData1.silo;
         _TOKEN1 = _configData1.token;
@@ -127,6 +134,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         _MAX_LTV1 = _configData1.maxLtv;
         _LT1 = _configData1.lt;
+        _LIQUIDATION_TARGET_LTV1 = _configData0.liquidationTargetLtv;
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
@@ -375,6 +383,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             interestRateModel: _INTEREST_RATE_MODEL0,
             maxLtv: _MAX_LTV0,
             lt: _LT0,
+            liquidationTargetLtv: _LIQUIDATION_TARGET_LTV0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             hookReceiver: _HOOK_RECEIVER,
@@ -396,6 +405,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             interestRateModel: _INTEREST_RATE_MODEL1,
             maxLtv: _MAX_LTV1,
             lt: _LT1,
+            liquidationTargetLtv: _LIQUIDATION_TARGET_LTV1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             hookReceiver: _HOOK_RECEIVER,
