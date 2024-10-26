@@ -51,7 +51,6 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
             _sumOfCollateralValue,
             _borrowerDebtAssets,
             borrowerDebtValue,
-            lt,
             _minExpectedLtv,
             _liquidityFee
         );

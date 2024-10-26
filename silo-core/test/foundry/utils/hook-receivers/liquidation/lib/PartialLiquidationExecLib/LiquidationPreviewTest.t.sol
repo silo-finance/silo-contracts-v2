@@ -105,7 +105,6 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerDebtAssets,
             ltvData.borrowerDebtAssets,
-            params.collateralLt,
             params.liquidationTargetLtv,
             params.liquidationFee
         );

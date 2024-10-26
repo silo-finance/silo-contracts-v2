@@ -101,7 +101,6 @@ library PartialLiquidationExecLib {
             sumOfCollateralValue,
             ltvData.borrowerDebtAssets,
             debtValue,
-            collateralConfig.lt,
             collateralConfig.liquidationTargetLtv,
             collateralConfig.liquidationFee
         );
