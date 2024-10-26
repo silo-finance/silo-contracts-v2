@@ -107,8 +107,11 @@ contract SiloRouter {
         } else if (_action.actionType == ActionType.Mint) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
 
-            _pullAssetIfNeeded(_action.asset, data.amount);
-            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+            ISilo.AssetType assetType = ISilo.AssetType(uint8(data.assetType));
+            uint256 assetsAmount = _action.silo.convertToAssets(data.amount, assetType);
+
+            _pullAssetIfNeeded(_action.asset, assetsAmount);
+            _approveIfNeeded(_action.asset, address(_action.silo), assetsAmount);
 
             _action.silo.mint(data.amount, msg.sender, data.assetType);
         } else if (_action.actionType == ActionType.Repay) {
@@ -119,8 +122,11 @@ contract SiloRouter {
             _action.silo.repay(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.RepayShares) {
             AnyAction memory data = abi.decode(_action.options, (AnyAction));
-            _pullAssetIfNeeded(_action.asset, data.amount);
-            _approveIfNeeded(_action.asset, address(_action.silo), data.amount);
+
+            uint256 assetsAmount = _action.silo.convertToAssets(data.amount, ISilo.AssetType.Debt);
+
+            _pullAssetIfNeeded(_action.asset, assetsAmount);
+            _approveIfNeeded(_action.asset, address(_action.silo), assetsAmount);
 
             _action.silo.repayShares(data.amount, msg.sender);
         }
