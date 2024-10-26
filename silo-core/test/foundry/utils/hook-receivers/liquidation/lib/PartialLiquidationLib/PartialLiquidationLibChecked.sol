@@ -1,36 +1,44 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 
 /// @dev exact copy of PartialLiquidationLib but without `/* unchecked */`
+
 library PartialLiquidationLibChecked {
     /// @dev this is basically LTV == 100%
     uint256 internal constant _BAD_DEBT = 1e18;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    /// @dev when user is insolvent with some LT, we will allow to liquidate to some minimal level of ltv
-    /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
-    uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
+    /// @dev underestimation for collateral that user gets on liquidation
+    /// liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
+    /// this two conversions are rounding down and can create 2 wai difference
+    uint256 internal constant _UNDERESTIMATION = 2;
 
-    /// @dev if repay value : total debt value during liquidation is higher than _DEBT_DUST_LEVEL_IN_BP
-    /// then we will force full liquidation,
-    /// eg total value = 51 and dust level = 98%, then when we can not liquidate 50, we have to liquidate 51.
+    /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the 
+    /// _DEBT_DUST_LEVEL threshold, a full liquidation is triggered.
+    /// For example, if the total debt value is 51 and the dust level is set at 98%, 
+    /// then we are unable to liquidate 50, we must proceed to liquidate the entire 51.
     uint256 internal constant _DEBT_DUST_LEVEL = 0.9e18; // 90%
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
+    /// @notice This method does not check, if user is solvent and it can return non zero result when user solvent
     function maxLiquidation(
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         uint256 _lt,
+        uint256 _liquidationTargetLTV,
         uint256 _liquidityFee
     )
-        external
+        internal
         pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
@@ -39,7 +47,7 @@ library PartialLiquidationLibChecked {
         ) = maxLiquidationPreview(
             _sumOfCollateralValue,
             _borrowerDebtValue,
-            minAcceptableLTV(_lt),
+            _liquidationTargetLTV,
             _liquidityFee
         );
 
@@ -49,17 +57,24 @@ library PartialLiquidationLibChecked {
             _sumOfCollateralValue
         );
 
+        if (collateralToLiquidate > _UNDERESTIMATION) {
+            // -_UNDERESTIMATION here is to underestimate collateral that user gets on liquidation
+            // liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
+            // this two conversions are rounding down and can create 2 wei difference
+
+            // we will not underflow on -_UNDERESTIMATION because collateralToLiquidate is >= _UNDERESTIMATION
+            /* unchecked */ { collateralToLiquidate -= _UNDERESTIMATION; }
+        } else {
+            collateralToLiquidate = 0;
+        }
+
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
     }
 
-    /// @dev in case of self liquidation or in case of bad debt, we do not apply any restrictions.
-    /// We do not have restriction how much user need to repay, so there is no point of having restrictions on self
-    /// liquidation, the only rule is - we do not apply fee, because in some cases it can lead to increasing LTV
-    /// In case of bad debt, liquidation without restriction will be possible only in case of receiving underlying
-    /// tokens, because sToken transfer fail when we leave user insolvent
+    /// @dev in case of bad debt, we do not apply any restrictions.
     /// @notice might revert when one of this values will be zero:
     /// `_sumOfCollateralValue`, `_borrowerDebtAssets`, `_borrowerDebtValue`
-    function liquidationPreview(
+    function liquidationPreview( // solhint-disable-line function-max-lines
         uint256 _ltvBefore,
         uint256 _sumOfCollateralAssets,
         uint256 _sumOfCollateralValue,
@@ -67,7 +82,7 @@ library PartialLiquidationLibChecked {
         uint256 _borrowerDebtValue,
         PartialLiquidationLib.LiquidationPreviewParams memory _params
     )
-        external
+        internal
         pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
@@ -80,7 +95,10 @@ library PartialLiquidationLibChecked {
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
             uint256 maxRepayValue = estimateMaxRepayValue(
-                _borrowerDebtValue, _sumOfCollateralValue, minAcceptableLTV(_params.collateralLt), _params.liquidationFee
+                _borrowerDebtValue,
+                _sumOfCollateralValue,
+                _params.liquidationTargetLtv,
+                _params.liquidationFee
             );
 
             if (maxRepayValue == _borrowerDebtValue) {
@@ -105,31 +123,9 @@ library PartialLiquidationLibChecked {
             _sumOfCollateralValue
         );
 
-        ltvAfter = calculateLtvAfter(
+        ltvAfter = _calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
         );
-    }
-
-    function calculateLtvAfter(
-        uint256 _sumOfCollateralValue,
-        uint256 _totalDebtValue,
-        uint256 _collateralValueToLiquidate,
-        uint256 _debtValueToCover
-    )
-        internal
-        pure
-        returns (uint256 ltvAfterLiquidation)
-    {
-        if (_sumOfCollateralValue == _collateralValueToLiquidate || _totalDebtValue == _debtValueToCover) {
-            return 0;
-        }
-
-        /* unchecked */ { // all subs are safe because this values are chunks of total, so we will not underflow
-            ltvAfterLiquidation = _ltvAfter(
-                _sumOfCollateralValue - _collateralValueToLiquidate,
-                _totalDebtValue - _debtValueToCover
-            );
-        }
     }
 
     /// @notice reverts on `_totalValue` == 0
@@ -140,15 +136,9 @@ library PartialLiquidationLibChecked {
         pure
         returns (uint256 assets)
     {
-        assets = _value * _totalAssets;
-        /* unchecked */ { assets /= _totalValue; }
-    }
+        require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-    /// @param _lt LT liquidation threshold for asset
-    /// @return minimalAcceptableLTV min acceptable LTV after liquidation
-    function minAcceptableLTV(uint256 _lt) internal pure returns (uint256 minimalAcceptableLTV) {
-        // safe to uncheck because all values are in BP
-        /* unchecked */ { minimalAcceptableLTV = _lt * _LT_LIQUIDATION_MARGIN / _PRECISION_DECIMALS; }
+        assets = _value * _totalAssets / _totalValue;
     }
 
     /// @notice this function never reverts
@@ -205,8 +195,7 @@ library PartialLiquidationLibChecked {
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _maxDebtToCover * _liquidityFee;
-        /* unchecked */ { fee /= _PRECISION_DECIMALS; }
+        uint256 fee = _maxDebtToCover * _liquidityFee / _PRECISION_DECIMALS;
 
         toLiquidate = _maxDebtToCover + fee;
 
@@ -225,7 +214,7 @@ library PartialLiquidationLibChecked {
     /// @param _ltvAfterLiquidation % of `repayValue` that liquidator will use as profit from liquidating
     /// @return repayValue max repay value that is allowed for partial liquidation. if this value equals
     /// `_totalBorrowerDebtValue`, that means dust threshold was triggered and result force to do full liquidation
-    function estimateMaxRepayValue(
+    function estimateMaxRepayValue( // solhint-disable-line code-complexity
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
@@ -235,13 +224,8 @@ library PartialLiquidationLibChecked {
         if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
-        if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) {
-            return _totalBorrowerDebtValue;
-        }
-
-        if (_ltvAfterLiquidation == 0) { // full liquidation
-            return _totalBorrowerDebtValue;
-        }
+        if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
+        if (_ltvAfterLiquidation == 0) return _totalBorrowerDebtValue; // full liquidation
 
         // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;
@@ -295,18 +279,40 @@ library PartialLiquidationLibChecked {
             (
                 withdrawAssetsFromCollateral, withdrawAssetsFromProtected
             ) = _collateralToLiquidate > _borrowerProtectedAssets
-                // safe to /* unchecked */ because of above condition
+                // safe to uncheck because of above condition
                 ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
                 : (0, _collateralToLiquidate);
         }
     }
 
+    /// @notice must stay private because this is not for general LTV, only for ltv after internally
+    function _calculateLtvAfter(
+        uint256 _sumOfCollateralValue,
+        uint256 _totalDebtValue,
+        uint256 _collateralValueToLiquidate,
+        uint256 _debtValueToCover
+    )
+        private
+        pure
+        returns (uint256 ltvAfterLiquidation)
+    {
+        if (_sumOfCollateralValue <= _collateralValueToLiquidate || _totalDebtValue <= _debtValueToCover) {
+            return 0;
+        }
+
+        /* unchecked */ { // all subs are safe because these values are chunks of total, so we will not underflow
+            ltvAfterLiquidation = _ltvAfter(
+                _sumOfCollateralValue - _collateralValueToLiquidate,
+                _totalDebtValue - _debtValueToCover
+            );
+        }
+    }
+
     /// @notice must stay private because this is not for general LTV, only for ltv after
     function _ltvAfter(uint256 _collateral, uint256 _debt) private pure returns (uint256 ltv) {
-        // there might be cases, where ltv will go up slightly, so we can not /* unchecked */ mul based on
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
-        /* unchecked */ { ltv /= _collateral; }
+        ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil
     }
 }
 

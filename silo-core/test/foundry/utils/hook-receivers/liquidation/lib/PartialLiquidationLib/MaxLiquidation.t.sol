@@ -23,7 +23,8 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 _sumOfCollateralAssets,
         uint128 _sumOfCollateralValue,
         uint128 _borrowerDebtAssets,
-        uint64 _liquidityFee
+        uint64 _liquidityFee,
+        uint64 _minExpectedLtv
     ) public {
         vm.assume(_liquidityFee < 0.40e18); // some reasonable fee
         vm.assume(_sumOfCollateralAssets > 0);
@@ -35,6 +36,8 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         vm.assume(uint256(_borrowerDebtAssets) * _liquidityFee < type(uint128).max);
 
         uint256 lt = 0.85e18;
+        vm.assume(_minExpectedLtv < lt);
+
         uint256 borrowerDebtValue = _borrowerDebtAssets; // assuming quote is debt token, so value is 1:1
         uint256 ltvBefore = borrowerDebtValue * 1e18 / _sumOfCollateralValue;
 
@@ -49,17 +52,17 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
             _borrowerDebtAssets,
             borrowerDebtValue,
             lt,
+            _minExpectedLtv,
             _liquidityFee
         );
 
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 18);
 
-        uint256 minExpectedLtv = PartialLiquidationLib.minAcceptableLTV(lt);
-        emit log_named_decimal_uint("minExpectedLtv", minExpectedLtv, 16);
+        emit log_named_decimal_uint("minExpectedLtv", _minExpectedLtv, 16);
         emit log_named_decimal_uint("ltvBefore", ltvBefore, 16);
 
-        uint256 raw = _estimateMaxRepayValueRaw(borrowerDebtValue, _sumOfCollateralValue, minExpectedLtv, _liquidityFee);
+        uint256 raw = _estimateMaxRepayValueRaw(borrowerDebtValue, _sumOfCollateralValue, _minExpectedLtv, _liquidityFee);
         emit log_named_decimal_uint("raw", raw, 18);
 
         uint256 deviation = raw > debtToRepay

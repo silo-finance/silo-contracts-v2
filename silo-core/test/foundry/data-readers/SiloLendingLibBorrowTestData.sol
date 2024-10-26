@@ -183,6 +183,7 @@ contract SiloLendingLibBorrowTestData {
                 interestRateModel: _src.input.configData.interestRateModel,
                 maxLtv: _src.input.configData.maxLtv,
                 lt: _src.input.configData.lt,
+                liquidationTargetLtv: _src.input.configData.liquidationTargetLtv,
                 liquidationFee: _src.input.configData.liquidationFee,
                 flashloanFee: _src.input.configData.flashloanFee,
                 hookReceiver: _src.input.configData.hookReceiver,

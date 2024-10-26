@@ -80,6 +80,7 @@ contract Deployers is VyperDeployer, Data {
             interestRateModel0: address(interestRateModelV2),
             maxLtv0: 0.7500e18,
             lt0: 0.8500e18,
+            liquidationTargetLtv0: 0.8500e18 * 0.9e19 / 1e18,
             liquidationFee0: 0.0500e18,
             flashloanFee0: 0.0100e18,
             callBeforeQuote0: true,
@@ -90,6 +91,7 @@ contract Deployers is VyperDeployer, Data {
             interestRateModel1: address(interestRateModelV2),
             maxLtv1: 0.8500e18,
             lt1: 0.9500e18,
+            liquidationTargetLtv1: 0.9500e18 * 0.9e18 / 1e18,
             liquidationFee1: 0.0250e18,
             flashloanFee1: 0.0100e18,
             callBeforeQuote1: true
