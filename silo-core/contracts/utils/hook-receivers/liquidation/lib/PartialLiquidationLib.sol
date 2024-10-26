@@ -42,7 +42,6 @@ library PartialLiquidationLib {
         uint256 _sumOfCollateralValue,
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
-        uint256 _lt,
         uint256 _liquidationTargetLTV,
         uint256 _liquidityFee
     )
