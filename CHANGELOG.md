@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.9.1] - 2024-10-25
+### Fixed
+- SiloRouter with convertToAssets
+
 ## [0.9.0] - 2024-10-23
 ### Changed
 - allow for forced transfer of debt
