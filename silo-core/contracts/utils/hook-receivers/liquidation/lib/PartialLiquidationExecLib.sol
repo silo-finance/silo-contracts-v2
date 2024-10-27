@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -88,9 +88,7 @@ library PartialLiquidationExecLib {
             uint256 sumOfCollateralValue, uint256 debtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        uint256 sumOfCollateralAssets;
-        // safe because we adding same token, so it is under same total supply
-        unchecked { sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets; }
+        uint256 sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets;
 
         if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets, false);
 
@@ -106,12 +104,15 @@ library PartialLiquidationExecLib {
             collateralConfig.liquidationFee
         );
 
-        // maxLiquidation() can underestimate collateral by 2, when we do that and actual collateral that we will
-        // transfer will match exactly liquidity, but we will liquidate higher value by 1 or 2,
-        // then sTokenRequired will return false, but we can not withdraw (because we will be short by 2)
-        // solution is to include this 2wei here
-        // safe to unchecked, because we underestimated this value in a first place by -2
-        unchecked { sTokenRequired = collateralToLiquidate + 2 > ISilo(collateralConfig.silo).getLiquidity(); }
+        // maxLiquidation() can underestimate collateral by `PartialLiquidationLib._UNDERESTIMATION`,
+        // when we do that, actual collateral that we will transfer will match exactly liquidity,
+        // but we will liquidate higher value by 1 or 2, then sTokenRequired will return false,
+        // but we can not withdraw (because we will be short by 2) solution is to include this 2wei here
+        unchecked {
+            // safe to uncheck, because we underestimated this value in a first place by _UNDERESTIMATION
+            uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
+            sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
+        }
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay

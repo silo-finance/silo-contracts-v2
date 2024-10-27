@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
@@ -64,7 +64,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     string private constant _NAME = "SiloShareTokenEIP712Name";
 
     modifier onlySilo() {
-        if (msg.sender != address(_getSilo())) revert OnlySilo();
+        require(msg.sender == address(_getSilo()), OnlySilo());
 
         _;
     }
@@ -220,7 +220,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
 
     /// @inheritdoc ERC20Upgradeable
     function _update(address from, address to, uint256 value) internal virtual override {
-        if (value == 0) revert ZeroTransfer();
+        require(value != 0, ZeroTransfer());
 
         _beforeTokenTransfer(from, to, value);
 

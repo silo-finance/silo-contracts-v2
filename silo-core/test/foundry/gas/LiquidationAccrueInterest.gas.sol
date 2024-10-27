@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -40,7 +40,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
                 (address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
-            445727
+            434765
         );
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
@@ -275,21 +275,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         Actor actor = _selectActor(_actorIndex);
         actor.switchCollateralToThisSilo(_vaultZero);
-    }
-
-    function leverageSameAsset(
-        uint8 _actorIndex,
-        bool _vaultZero,
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        // address _borrower TODO, support this
-        ISilo.CollateralType _collateralType
-    ) public returns (uint256 depositedShares, uint256 borrowedShares) {
-        emit LogUint256("[leverageSameAsset] block.timestamp:", block.timestamp);
-
-        Actor actor = _selectActor(_actorIndex);
-
-        return actor.leverageSameAsset(_vaultZero, _depositAssets, _borrowAssets, address(actor), _collateralType);
     }
 
     // TODO transfers s tokens

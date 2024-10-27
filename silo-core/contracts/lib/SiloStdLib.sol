@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -27,11 +27,10 @@ library SiloStdLib {
 
         // all user set fees are in 18 decimals points
         (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
-        if (_token != asset) revert ISilo.Unsupported();
+        require(_token == asset, ISilo.Unsupported());
         if (flashloanFee == 0) return 0;
 
-        fee = _amount * flashloanFee;
-        unchecked { fee /= _PRECISION_DECIMALS; }
+        fee = _amount * flashloanFee / _PRECISION_DECIMALS;
 
         // round up
         if (fee == 0) return 1;

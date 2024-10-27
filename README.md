@@ -71,7 +71,7 @@ example:
 # Remove the submodule entry from .git/config
 git submodule deinit -f gitmodules/silo-foundry-utils
 
-# Remove the submodule directory from the superproject's .git/modules directory
+# Remove the submodule directory from the super project's .git/modules directory
 rm -rf .git/modules/gitmodules/silo-foundry-utils
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
@@ -86,7 +86,7 @@ git submodule update --remote gitmodules/<submodule>
 If you want to update to specific commit:
 1. cd `gitmodules/<module>`
 2. `git checkout <commit>`
-3. commit changes (optinally update `branch` section in `.gitmodules`, however this make no difference)
+3. commit changes (optionally update `branch` section in `.gitmodules`, however this make no difference)
 
 ## Adding new working space
 

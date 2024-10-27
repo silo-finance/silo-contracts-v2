@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
+import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 // solhint-disable ordering
 
@@ -387,7 +389,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPermissions
     */
     function test_forwardTransferFromNoChecksPermissions() public {
-        _executeForAllShareTokens(_synchronizeHooksPermissions);
+        _executeForAllShareTokens(_forwardTransferFromNoChecksPermissions);
     }
 
     function _forwardTransferFromNoChecksPermissions(IShareToken _shareToken) internal {
@@ -396,13 +398,23 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo0
     */
-    function test_forwardTransferFromNoChecks() public {
-        _executeForAllShareTokens(_synchronizeHooksPermissions);
+    function test_forwardTransferFromNoChecks_silo0() public {
+        _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo1
+    */
+    function test_forwardTransferFromNoChecks_silo1() public {
+        _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo1));
     }
 
     function _forwardTransferFromNoChecks(IShareToken _shareToken) internal {
+        uint24 tokenType = _shareToken.hookSetup().tokenType;
+        emit log_named_uint("[forwardTransferFromNoChecks] tokenType", tokenType);
+
         ISilo silo = _shareToken.silo();
 
         vm.prank(address(silo));
@@ -422,16 +434,16 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     function _executeForAllShareTokens(function(IShareToken) internal func) internal {
-        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
-        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(silo1));
+        _executeForAllShareTokens(func, address(silo0));
+        _executeForAllShareTokens(func, address(silo1));
+    }
+
+    function _executeForAllShareTokens(function(IShareToken) internal func, address _silo) internal {
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(_silo);
 
         func(IShareToken(protected0));
         func(IShareToken(collateral0));
         func(IShareToken(debt0));
-
-        func(IShareToken(protected1));
-        func(IShareToken(collateral1));
-        func(IShareToken(debt1));
     }
 
     function _executeForAllCollateralShareTokens(function(IShareToken) internal func) internal {

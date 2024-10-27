@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -201,45 +201,50 @@ library Views {
         uint256 _maxFlashloanFee,
         uint256 _maxLiquidationFee
     ) internal view returns (bool) {
-        if (_initData.hookReceiver == address(0)) revert ISiloFactory.MissingHookReceiver();
+        require(_initData.hookReceiver != address(0), ISiloFactory.MissingHookReceiver());
 
-        if (_initData.token0 == address(0)) revert ISiloFactory.EmptyToken0();
-        if (_initData.token1 == address(0)) revert ISiloFactory.EmptyToken1();
+        require(_initData.token0 != address(0), ISiloFactory.EmptyToken0());
+        require(_initData.token1 != address(0), ISiloFactory.EmptyToken1());
 
-        if (_initData.token0 == _initData.token1) revert ISiloFactory.SameAsset();
-        if (_initData.maxLtv0 == 0 && _initData.maxLtv1 == 0) revert ISiloFactory.InvalidMaxLtv();
-        if (_initData.maxLtv0 > _initData.lt0) revert ISiloFactory.InvalidMaxLtv();
-        if (_initData.maxLtv1 > _initData.lt1) revert ISiloFactory.InvalidMaxLtv();
-        if (_initData.lt0 > _MAX_PERCENT || _initData.lt1 > _MAX_PERCENT) revert ISiloFactory.InvalidLt();
+        require(_initData.token0 != _initData.token1, ISiloFactory.SameAsset());
+        require(_initData.maxLtv0 != 0 || _initData.maxLtv1 != 0, ISiloFactory.InvalidMaxLtv());
+        require(_initData.maxLtv0 <= _initData.lt0, ISiloFactory.InvalidMaxLtv());
+        require(_initData.maxLtv1 <= _initData.lt1, ISiloFactory.InvalidMaxLtv());
+        require(_initData.lt0 <= _MAX_PERCENT && _initData.lt1 <= _MAX_PERCENT, ISiloFactory.InvalidLt());
 
-        if (_initData.maxLtvOracle0 != address(0) && _initData.solvencyOracle0 == address(0)) {
-            revert ISiloFactory.OracleMisconfiguration();
-        }
+        require(
+            _initData.maxLtvOracle0 == address(0) || _initData.solvencyOracle0 != address(0),
+            ISiloFactory.OracleMisconfiguration()
+        );
 
-        if (_initData.callBeforeQuote0 && _initData.solvencyOracle0 == address(0)) {
-            revert ISiloFactory.InvalidCallBeforeQuote();
-        }
+        require(
+            !_initData.callBeforeQuote0 || _initData.solvencyOracle0 != address(0),
+            ISiloFactory.InvalidCallBeforeQuote()
+        );
 
-        if (_initData.maxLtvOracle1 != address(0) && _initData.solvencyOracle1 == address(0)) {
-            revert ISiloFactory.OracleMisconfiguration();
-        }
+        require(
+            _initData.maxLtvOracle1 == address(0) || _initData.solvencyOracle1 != address(0),
+            ISiloFactory.OracleMisconfiguration()
+        );
 
-        if (_initData.callBeforeQuote1 && _initData.solvencyOracle1 == address(0)) {
-            revert ISiloFactory.InvalidCallBeforeQuote();
-        }
+        require(
+            !_initData.callBeforeQuote1 || _initData.solvencyOracle1 != address(0),
+            ISiloFactory.InvalidCallBeforeQuote()
+        );
 
         verifyQuoteTokens(_initData);
 
-        if (_initData.deployerFee > 0 && _initData.deployer == address(0)) revert ISiloFactory.InvalidDeployer();
-        if (_initData.deployerFee > _maxDeployerFee) revert ISiloFactory.MaxDeployerFeeExceeded();
-        if (_initData.flashloanFee0 > _maxFlashloanFee) revert ISiloFactory.MaxFlashloanFeeExceeded();
-        if (_initData.flashloanFee1 > _maxFlashloanFee) revert ISiloFactory.MaxFlashloanFeeExceeded();
-        if (_initData.liquidationFee0 > _maxLiquidationFee) revert ISiloFactory.MaxLiquidationFeeExceeded();
-        if (_initData.liquidationFee1 > _maxLiquidationFee) revert ISiloFactory.MaxLiquidationFeeExceeded();
+        require(_initData.deployerFee == 0 || _initData.deployer != address(0), ISiloFactory.InvalidDeployer());
+        require(_initData.deployerFee <= _maxDeployerFee, ISiloFactory.MaxDeployerFeeExceeded());
+        require(_initData.flashloanFee0 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
+        require(_initData.flashloanFee1 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
+        require(_initData.liquidationFee0 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
+        require(_initData.liquidationFee1 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
 
-        if (_initData.interestRateModel0 == address(0) || _initData.interestRateModel1 == address(0)) {
-            revert ISiloFactory.InvalidIrm();
-        }
+        require(
+            _initData.interestRateModel0 != address(0) && _initData.interestRateModel1 != address(0),
+            ISiloFactory.InvalidIrm()
+        );
 
         return true;
     }
@@ -263,6 +268,6 @@ library Views {
         quoteToken = ISiloOracle(_oracle).quoteToken();
 
         if (_expectedQuoteToken == address(0)) return quoteToken;
-        if (_expectedQuoteToken != quoteToken) revert ISiloFactory.InvalidQuoteToken();
+        require(_expectedQuoteToken == quoteToken, ISiloFactory.InvalidQuoteToken());
     }
 }

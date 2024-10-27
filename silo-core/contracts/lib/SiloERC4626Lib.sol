@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -93,7 +93,7 @@ library SiloERC4626Lib {
         ISilo.WithdrawArgs memory _args
     ) internal returns (uint256 assets, uint256 shares) {
         uint256 shareTotalSupply = IShareToken(_shareToken).totalSupply();
-        if (shareTotalSupply == 0) revert ISilo.NothingToWithdraw();
+        require(shareTotalSupply != 0, ISilo.NothingToWithdraw());
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
@@ -115,7 +115,7 @@ library SiloERC4626Lib {
                 : $.totalAssets[ISilo.AssetType.Protected];
 
             // check liquidity
-            if (assets > liquidity) revert ISilo.NotEnoughLiquidity();
+            require(assets <= liquidity, ISilo.NotEnoughLiquidity());
 
             $.totalAssets[ISilo.AssetType(uint256(_args.collateralType))] = totalAssets - assets;
         }

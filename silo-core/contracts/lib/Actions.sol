@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
@@ -35,7 +35,7 @@ library Actions {
     function initialize(ISiloConfig _siloConfig) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
-        if (address(_sharedStorage.siloConfig) != address(0)) revert ISilo.SiloInitialized();
+        require(address(_sharedStorage.siloConfig) == address(0), ISilo.SiloInitialized());
 
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
@@ -120,7 +120,7 @@ library Actions {
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
+        require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
 
         _hookCallBeforeBorrow(_args, Hook.BORROW);
 
@@ -153,7 +153,7 @@ library Actions {
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
+        require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
 
         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
@@ -211,62 +211,6 @@ library Actions {
             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);
         }
-    }
-
-    // solhint-disable-next-line function-max-lines
-    function leverageSameAsset(ISilo.LeverageSameAssetArgs memory _args)
-        external
-        returns (uint256 depositedShares, uint256 borrowedShares)
-    {
-        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
-
-        if (_args.depositAssets <= _args.borrowAssets) revert ISilo.LeverageTooHigh();
-        if (siloConfig.hasDebtInOtherSilo(address(this), _args.borrower)) revert ISilo.BorrowNotPossible();
-
-        _hookCallBeforeLeverageSameAsset(_args);
-
-        siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForSilo(address(this));
-        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
-
-        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
-        ISiloConfig.ConfigData memory debtConfig = collateralConfig;
-
-        uint256 borrowedAssets;
-
-        (borrowedAssets, borrowedShares) = SiloLendingLib.borrow({
-            _debtShareToken: debtConfig.debtShareToken,
-            _token: address(0), // we are not transferring debt
-            _spender: msg.sender,
-            _args: ISilo.BorrowArgs({
-                assets: _args.borrowAssets,
-                shares: 0,
-                receiver: _args.borrower,
-                borrower: _args.borrower
-            })
-        });
-
-        (, depositedShares) = SiloERC4626Lib.deposit({
-            _token: address(0), // we are not transferring token
-            _depositor: msg.sender,
-            _assets: _args.depositAssets,
-            _shares: 0,
-            _receiver: _args.borrower,
-            _collateralShareToken: _args.collateralType == ISilo.CollateralType.Collateral
-                ? IShareToken(collateralConfig.collateralShareToken)
-                : IShareToken(collateralConfig.protectedShareToken),
-            _collateralType: _args.collateralType
-        });
-
-        // receive collateral
-        uint256 transferDiff = _args.depositAssets - _args.borrowAssets;
-        IERC20(collateralConfig.token).safeTransferFrom(msg.sender, address(this), transferDiff);
-
-        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);
-
-        siloConfig.turnOffReentrancyProtection();
-
-        _hookCallAfterLeverageSameAsset(_args, borrowedAssets, depositedShares, borrowedShares);
     }
 
     // solhint-disable-next-line function-max-lines
@@ -337,7 +281,7 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        if (siloConfig.borrowerCollateralSilo(msg.sender) == address(this)) revert ISilo.CollateralSiloAlreadySet();
+        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
 
         uint256 action = Hook.SWITCH_COLLATERAL;
 
@@ -394,18 +338,19 @@ library Actions {
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
 
-        if (fee > type(uint192).max) revert FeeOverflow();
+        require(fee <= type(uint192).max, FeeOverflow());
         // this check also verify if token is correct
-        if (_amount > Views.maxFlashLoan(_token)) revert FlashLoanNotPossible();
+        require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
-        if (_receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) != _FLASHLOAN_CALLBACK) {
-            revert ISilo.FlashloanFailed();
-        }
+        require(
+            _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,
+            ISilo.FlashloanFailed()
+        );
 
         IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
@@ -425,7 +370,7 @@ library Actions {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 earnedFees = $.daoAndDeployerRevenue;
-        if (earnedFees == 0) revert ISilo.EarnedZero();
+        require(earnedFees != 0, ISilo.EarnedZero());
 
         (
             address daoFeeReceiver,
@@ -443,7 +388,7 @@ library Actions {
         // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
         unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
 
-        if (availableLiquidity == 0) revert ISilo.NoLiquidity();
+        require(availableLiquidity != 0, ISilo.NoLiquidity());
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
@@ -489,9 +434,10 @@ library Actions {
         internal
         returns (bool success, bytes memory result)
     {
-        if (msg.sender != address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver)) {
-            revert ISilo.OnlyHookReceiver();
-        }
+        require(
+            msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
+            ISilo.OnlyHookReceiver()
+        );
 
         // Silo will not send back any ether leftovers after the call.
         // The hook receiver should request the ether if needed in a separate call.
@@ -517,7 +463,7 @@ library Actions {
             collateralConfig, debtConfig, _user, ISilo.AccrueInterestInMemory.No
         );
 
-        if (!userIsSolvent) revert ISilo.NotSolvent();
+        require(userIsSolvent, ISilo.NotSolvent());
     }
 
     // this method expect interest to be already accrued
@@ -535,7 +481,7 @@ library Actions {
             _collateralConfig, _debtConfig, _borrower, ISilo.AccrueInterestInMemory.No
         );
 
-        if (!borrowerIsBelowMaxLtv) revert ISilo.AboveMaxLtv();
+        require(borrowerIsBelowMaxLtv, ISilo.AboveMaxLtv());
     }
 
     function _hookCallBeforeWithdraw(
@@ -668,39 +614,5 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
-    }
-
-    function _hookCallBeforeLeverageSameAsset(ISilo.LeverageSameAssetArgs memory _args) private {
-        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
-
-        if (!_shareStorage.hookSetup.hooksBefore.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
-
-        bytes memory data = abi.encodePacked(
-            _args.depositAssets, _args.borrowAssets, _args.borrower, _args.collateralType
-        );
-
-        IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
-    }
-
-    function _hookCallAfterLeverageSameAsset(
-        ISilo.LeverageSameAssetArgs memory _args,
-        uint256 _borrowedAssets,
-        uint256 _depositedShares,
-        uint256 _borrowedShares
-    ) private {
-        IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
-
-        if (!_shareStorage.hookSetup.hooksAfter.matchAction(Hook.LEVERAGE_SAME_ASSET)) return;
-
-        bytes memory data = abi.encodePacked(
-            _args.depositAssets,
-            _borrowedAssets,
-            _args.borrower,
-            _args.collateralType,
-            _depositedShares,
-            _borrowedShares
-        );
-
-        IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.LEVERAGE_SAME_ASSET, data);
     }
 }

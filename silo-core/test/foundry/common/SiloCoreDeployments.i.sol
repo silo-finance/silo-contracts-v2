@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
@@ -33,12 +33,12 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
 
     function test_get_exists_optimism() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.OPTIMISM_ALIAS);
-        assertEq(addr, 0x17B0FD3eB9CFbdA5B46A0C896e28b3F0c5a7F61d, "expect valid address Optimism");
+        assertEq(addr, 0x4D43E78E669eD90bb125eF161F530E173f03834b, "expect valid address Optimism");
     }
 
     function test_get_exists_arbitrum_one() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.ARBITRUM_ONE_ALIAS);
-        assertEq(addr, 0xCb6CcBd979aa167b81411e672050c01826d715EC, "expect valid address on Arbitrum");
+        assertEq(addr, 0xe376888fD6E5D5Afc12FEa0a8C18f283051c23aD, "expect valid address on Arbitrum");
     }
 
    function test_get_contractNotExists() public {

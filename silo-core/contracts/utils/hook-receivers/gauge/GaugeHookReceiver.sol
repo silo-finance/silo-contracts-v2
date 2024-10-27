@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
@@ -39,7 +39,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     {
         (address owner) = abi.decode(_data, (address));
 
-        if (owner == address(0)) revert OwnerIsZeroAddress();
+        require(owner != address(0), OwnerIsZeroAddress());
 
         _initialize(_siloConfig);
         _transferOwnership(owner);
@@ -47,12 +47,12 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
 
     /// @inheritdoc IGaugeHookReceiver
     function setGauge(IGauge _gauge, IShareToken _shareToken) external virtual onlyOwner {
-        if (address(_gauge) == address(0)) revert EmptyGaugeAddress();
-        if (_gauge.share_token() != address(_shareToken)) revert WrongGaugeShareToken();
+        require(address(_gauge) != address(0), EmptyGaugeAddress());
+        require(_gauge.share_token() == address(_shareToken), WrongGaugeShareToken());
 
         address configuredGauge = address(configuredGauges[_shareToken]);
 
-        if (configuredGauge != address(0)) revert GaugeAlreadyConfigured();
+        require(configuredGauge == address(0), GaugeAlreadyConfigured());
 
         address silo = address(_shareToken.silo());
 
@@ -73,8 +73,8 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     function removeGauge(IShareToken _shareToken) external virtual onlyOwner {
         IGauge configuredGauge = configuredGauges[_shareToken];
 
-        if (address(configuredGauge) == address(0)) revert GaugeIsNotConfigured();
-        if (!configuredGauge.is_killed()) revert CantRemoveActiveGauge();
+        require(address(configuredGauge) != address(0), GaugeIsNotConfigured());
+        require(configuredGauge.is_killed(), CantRemoveActiveGauge());
 
         address silo = address(_shareToken.silo());
         
@@ -108,7 +108,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     {
         IGauge theGauge = configuredGauges[IShareToken(msg.sender)];
 
-        if (theGauge == IGauge(address(0))) revert GaugeIsNotConfigured();
+        require(theGauge != IGauge(address(0)), GaugeIsNotConfigured());
 
         if (theGauge.is_killed()) return; // Do not revert if gauge is killed. Ignore the action.
         if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case

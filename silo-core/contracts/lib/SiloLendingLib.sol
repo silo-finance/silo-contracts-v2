@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -54,7 +54,7 @@ library SiloLendingLib {
             ISilo.AssetType.Debt
         );
 
-        if (totalDebtAssets < assets) revert ISilo.RepayTooHigh();
+        require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
 
         // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
         unchecked { $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets - assets; }
@@ -118,7 +118,7 @@ library SiloLendingLib {
         $.interestRateTimestamp = uint64(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
-        // fee is simply to small to overflow on cast to uint192, even if, we will get lower fee
+        // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
         unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
     }
 
@@ -155,9 +155,10 @@ library SiloLendingLib {
 
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
-        if (_token != address(0) && borrowedAssets > SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets)) {
-            revert ISilo.NotEnoughLiquidity();
-        }
+        require(
+            _token == address(0) || borrowedAssets <= SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets),
+            ISilo.NotEnoughLiquidity()
+        );
 
         // add new debt
         $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets + borrowedAssets;

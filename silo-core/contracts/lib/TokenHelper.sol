@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -46,19 +46,17 @@ library TokenHelper {
     function removeZeros(bytes memory _data) internal pure returns (bytes memory result) {
         uint256 n = _data.length;
 
-        unchecked {
-            for (uint256 i; i < n; i++) {
-                if (_data[i] == 0) continue;
+        for (uint256 i; i < n; i++) {
+            if (_data[i] == 0) continue;
 
-                result = abi.encodePacked(result, _data[i]);
-            }
+            result = abi.encodePacked(result, _data[i]);
         }
     }
 
     /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
     function _tokenMetadataCall(address _token, bytes memory _data) private view returns (bool, bytes memory) {
         // We need to do this before the call, otherwise the call will succeed even for EOAs
-        if (!IsContract.isContract(_token)) revert TokenIsNotAContract();
+        require(IsContract.isContract(_token), TokenIsNotAContract());
 
         (bool success, bytes memory result) = _token.staticcall(_data);
 

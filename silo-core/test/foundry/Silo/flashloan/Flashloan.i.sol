@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -149,7 +149,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
             address(silo0),
             abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
             "flashLoan gas",
-            35135,
+            33900,
             500
         );
 

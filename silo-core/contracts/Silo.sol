@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -529,37 +529,6 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function leverageSameAsset(
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        address _borrower,
-        CollateralType _collateralType
-    )
-        external
-        virtual
-        returns (uint256 depositedShares, uint256 borrowedShares)
-    {
-        (
-            depositedShares, borrowedShares
-        ) = Actions.leverageSameAsset(
-            ISilo.LeverageSameAssetArgs({
-                depositAssets: _depositAssets,
-                borrowAssets: _borrowAssets,
-                borrower: _borrower,
-                collateralType: _collateralType
-            })
-        );
-
-        emit Borrow(msg.sender, _borrower, _borrower, _borrowAssets, borrowedShares);
-
-        if (_collateralType == CollateralType.Collateral) {
-            emit Deposit(msg.sender, _borrower, _depositAssets, depositedShares);
-        } else {
-            emit DepositProtected(msg.sender, _borrower, _depositAssets, depositedShares);
-        }
-    }
-
-    /// @inheritdoc ISilo
     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {
         assets = Views.maxRepay(_borrower);
     }
@@ -659,7 +628,7 @@ contract Silo is ISilo, ShareCollateralToken {
         external
         virtual
     {
-        if (msg.sender != address(ShareTokenLib.siloConfig())) revert OnlySiloConfig();
+        require(msg.sender == address(ShareTokenLib.siloConfig()), OnlySiloConfig());
 
         _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
     }

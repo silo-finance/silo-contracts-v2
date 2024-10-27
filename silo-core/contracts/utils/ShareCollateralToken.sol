@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
@@ -37,7 +37,7 @@ abstract contract ShareCollateralToken is ShareToken {
         // for transfer make sure that _sender is solvent after transfer
         if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
             bool senderIsSolvent = ShareCollateralTokenLib.isSolventAfterCollateralTransfer(_sender);
-            if (!senderIsSolvent) revert IShareToken.SenderNotSolventAfterTransfer();
+            require(senderIsSolvent, IShareToken.SenderNotSolventAfterTransfer());
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);

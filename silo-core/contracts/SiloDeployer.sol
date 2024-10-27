@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
@@ -171,7 +171,7 @@ contract SiloDeployer is ISiloDeployer {
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = factory.call(_txData.txInput);
 
-        if (!success || data.length != 32) revert FailedToCreateAnOracle(factory);
+        require(success && data.length == 32, FailedToCreateAnOracle(factory));
 
         _oracle = address(uint160(uint256(bytes32(data))));
     }
@@ -183,9 +183,10 @@ contract SiloDeployer is ISiloDeployer {
         ISiloConfig.InitData memory _siloInitData,
         address _hookReceiverImplementation
     ) internal {
-        if (_hookReceiverImplementation != address(0) && _siloInitData.hookReceiver != address(0)) {
-            revert HookReceiverMisconfigured();
-        }
+        require(
+            _hookReceiverImplementation == address(0) || _siloInitData.hookReceiver == address(0),
+            HookReceiverMisconfigured()
+        );
 
         if (_hookReceiverImplementation != address(0)) {
             _siloInitData.hookReceiver = Clones.clone(_hookReceiverImplementation);

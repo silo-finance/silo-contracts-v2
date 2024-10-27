@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
@@ -110,7 +110,7 @@ library SiloMathLib {
     /// @param _collateralAssets current total deposits for assets
     /// @param _debtAssets current total borrows for assets
     /// @return utilization value, capped to 100%
-    /// Limiting utilisation ratio by 100% max will allows us to perform better interest rate computations
+    /// Limiting utilization ratio by 100% max will allows us to perform better interest rate computations
     /// and should not affect any other part of protocol. It is possible to go over 100% only when bad debt.
     function calculateUtilization(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)
         internal
@@ -119,21 +119,18 @@ library SiloMathLib {
     {
         if (_collateralAssets == 0 || _debtAssets == 0 || _dp == 0) return 0;
 
-        unchecked {
-            /*
-                how to prevent overflow on: _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST):
-                1. max > _debtAssets * _dp / _collateralAssets
-                2. max / _dp > _debtAssets / _collateralAssets
-            */
-            // save to unchecked because we only have division and `_collateralAssets` is not 0 based on above check
-            if (type(uint256).max / _dp > _debtAssets / _collateralAssets) {
-                utilization = _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST);
-                // cap at 100%
-                if (utilization > _dp) utilization = _dp;
-            } else {
-                // we have overflow
-                utilization = _dp;
-            }
+        /*
+            how to prevent overflow on: _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST):
+            1. max > _debtAssets * _dp / _collateralAssets
+            2. max / _dp > _debtAssets / _collateralAssets
+        */
+        if (type(uint256).max / _dp > _debtAssets / _collateralAssets) {
+            utilization = _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST);
+            // cap at 100%
+            if (utilization > _dp) utilization = _dp;
+        } else {
+            // we have overflow
+            utilization = _dp;
         }
     }
 
@@ -146,7 +143,7 @@ library SiloMathLib {
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
-        if (_assets == 0 && _shares == 0) revert ISilo.InputZeroAssetsOrShares();
+        require(_assets != 0 || _shares != 0, ISilo.InputZeroAssetsOrShares());
 
         if (_assets == 0) {
             shares = _shares;
@@ -158,7 +155,7 @@ library SiloMathLib {
             revert ISilo.InputCanBeAssetsOrShares();
         }
 
-        if (assets == 0 || shares == 0) revert ISilo.ReturnZeroAssetsOrShares();
+        require(assets != 0 && shares != 0, ISilo.ReturnZeroAssetsOrShares());
     }
 
     /// @dev Math for collateral is exact copy of
@@ -246,8 +243,7 @@ library SiloMathLib {
         // this 1 is a dust that we generating by rounding always in favor of protocol
         // potentially we could also do `maxAssets--` at the end, but adjusting value is "stronger", it will produce
         // lower assets, so it should be safer when we calculate solvency back from assets via it's value.
-        // +1 will not overflow because we just divided a number by `_lt`
-        unchecked { minimumCollateralValue++; }
+        minimumCollateralValue++;
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {
@@ -258,12 +254,8 @@ library SiloMathLib {
         // safe because we checked `if (_sumOfCollateralsValue <= minimumCollateralValue)`
         unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }
 
-        unchecked {
-            // these are total assets (protected + collateral) that _owner can withdraw
-            // - is safe because we adding same asset (under same total supply)
-            maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
+        maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
                 .mulDiv(spareCollateralValue, _sumOfCollateralsValue, Rounding.MAX_WITHDRAW_TO_ASSETS);
-        }
     }
 
     /// @notice Determines the maximum number of assets and corresponding shares a borrower can safely withdraw
