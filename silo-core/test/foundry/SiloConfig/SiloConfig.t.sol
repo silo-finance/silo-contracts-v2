@@ -31,6 +31,7 @@ contract SiloConfigTest is Test {
         _configDataDefault0.protectedShareToken = makeAddr("protectedShareToken0");
         _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
         _configDataDefault0.hookReceiver = _hookReceiverModuleDefault;
+        _configDataDefault0.lt = 1;
 
         _configDataDefault1.silo = _silo1Default;
         _configDataDefault1.token = makeAddr("token1");
@@ -38,6 +39,7 @@ contract SiloConfigTest is Test {
         _configDataDefault1.protectedShareToken = makeAddr("protectedShareToken1");
         _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
         _configDataDefault1.hookReceiver = _hookReceiverModuleDefault;
+        _configDataDefault1.lt = 1;
 
         _siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
 
