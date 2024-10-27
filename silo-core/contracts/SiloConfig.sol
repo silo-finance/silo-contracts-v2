@@ -96,6 +96,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         // TOKEN #0
         require(_configData0.liquidationTargetLtv < _configData0.lt, TargetLTVTooHigh());
+        // require(_configData0.liquidationTargetLtv == 0, "liquidationTargetLtv 0 == 0");
 
         _SILO0 = _configData0.silo;
         _TOKEN0 = _configData0.token;
@@ -119,6 +120,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         // TOKEN #1
         require(_configData1.liquidationTargetLtv < _configData1.lt, TargetLTVTooHigh());
+        // require(_configData1.liquidationTargetLtv != 0, "1 == 0");
 
         _SILO1 = _configData1.silo;
         _TOKEN1 = _configData1.token;
