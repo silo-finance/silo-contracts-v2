@@ -21,7 +21,7 @@ methods {
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _interestRateTimestamp
-    ) external => CVLGetCompoundInterestRate(
+    ) external =>  CVLGetCompoundInterestRate(
         _collateralAssets,
         _debtAssets,
         _interestRateTimestamp
@@ -31,7 +31,7 @@ methods {
     function _.getCompoundInterestRate(
         address _silo,
         uint256 _blockTimestamp
-    ) external => CONSTANT; // CVLGetCompoundInterestRateForSilo(_silo, _blockTimestamp) expect (uint256);
+    ) external => CVLGetCompoundInterestRateForSilo(_silo, _blockTimestamp) expect (uint256);
 
     // ---- `ISiloOracle` ------------------------------------------------------
     // NOTE: Since `beforeQuote` is not a view function, strictly speaking this is unsound.
@@ -134,6 +134,8 @@ rule RA_deposit_recipient_is_not_restricted(address user1, address user2, uint25
 
 /// @title The repay action of a borrower is not discriminated
 /// @property user-access
+/// This property is violated - probably because of the different rounding for debt
+/// token. I suspect the property might be wrong. Needs additional checking.
 rule RA_repay_borrower_is_not_restricted(
     address borrower1,
     address borrower2,
@@ -153,11 +155,42 @@ rule RA_repay_borrower_is_not_restricted(
 
     storage initState = lastStorage;
     repay(e, amount, borrower1);
+    uint256 borrower2_debt_post1 = silo0.convertToAssets(
+        e, shareDebtToken0.balanceOf(e, borrower2), ISilo.AssetType.Debt
+    );
     repay@withrevert(e, amount, borrower2) at initState;
+    bool reverted = lastReverted;
 
+    uint256 borrower2_debt_post2 = silo0.convertToAssets(
+        e, shareDebtToken0.balanceOf(e, borrower2), ISilo.AssetType.Debt
+    );
 
     // If the repaid amount is less than the borrower's debt then the operation
     // must succeed.
-    assert (amount <= borrower2_debt) => !lastReverted;
-    //assert (shares <= debt2_shares) => !lastReverted;
+    assert (amount <= borrower2_debt) => !reverted;
+}
+
+
+/// @title The repay action of a borrower is not discriminated (by shares)
+/// @property user-access
+rule RA_repay_borrower_is_not_restricted_by_shares(
+    address borrower1,
+    address borrower2,
+    uint256 amount
+) {
+    env e;
+    require borrower2 != 0;
+
+    // Get the borrowers debts
+    uint256 debt1 = shareDebtToken0.balanceOf(e, borrower1);
+    uint256 debt2 = shareDebtToken0.balanceOf(e, borrower2);
+    require debt2 >= debt1;
+
+    storage initState = lastStorage;
+    repay(e, amount, borrower1);
+    repay@withrevert(e, amount, borrower2) at initState;
+
+
+    // The repaid amount is less than the borrower's debt, hence the operation must succeed.
+    assert !lastReverted;
 }
