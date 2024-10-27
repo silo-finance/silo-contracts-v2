@@ -274,6 +274,9 @@ contract Deployers is VyperDeployer, Data {
             address(siloFactory)
         );
 
+        if (configData0.liquidationTargetLtv == 0) revert("liquuidateionTargetLtv0 zero...");
+        if (configData1.liquidationTargetLtv == 0) revert("liquuidateionTargetLtv1 zero...");
+
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
 }

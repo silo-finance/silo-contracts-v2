@@ -146,6 +146,8 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo1));
         ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo0));
+        emit log_named_decimal_uint("[test] liquidationTargetLtv", collateralConfig.liquidationTargetLtv, 18);
+        emit log_named_decimal_uint("[test] debtConfig", debtConfig.liquidationTargetLtv, 18);
 
         (, uint64 interestRateTimestamp0,,,) = silo0.getSiloStorage();
         (, uint64 interestRateTimestamp1,,,) = silo1.getSiloStorage();

@@ -121,6 +121,9 @@ contract SiloDeployer is ISiloDeployer {
         configData0.daoFee = daoFee;
         configData1.daoFee = daoFee;
 
+        if (configData0.liquidationTargetLtv == 0) revert("liquuidateionTargetLtv0 zero");
+        if (configData1.liquidationTargetLtv == 0) revert("liquuidateionTargetLtv1 zero");
+
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
 
