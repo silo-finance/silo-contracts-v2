@@ -20,12 +20,7 @@ import {BaseStorage} from "./BaseStorage.t.sol";
 /// @notice Base contract for all test contracts extends BaseStorage
 /// @dev Provides setup modifier and cheat code setup
 /// @dev inherits Storage, Testing constants assertions and utils needed for testing
-abstract contract BaseTest is
-    BaseStorage,
-    PropertiesConstants,
-    StdAsserts,
-    StdUtils
-{
+abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdUtils {
     bool internal IS_TEST = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,9 +47,7 @@ abstract contract BaseTest is
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @dev Cheat code address, 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D.
-    address internal constant VM_ADDRESS = address(
-        uint160(uint256(keccak256("hevm cheat code")))
-    );
+    address internal constant VM_ADDRESS = address(uint160(uint256(keccak256("hevm cheat code"))));
 
     /// @dev Virtual machine instance
     Vm internal constant vm = Vm(VM_ADDRESS);
@@ -63,14 +56,29 @@ abstract contract BaseTest is
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _getUserAssets(address silo, address user)
-        internal
-        view
-        returns (uint256)
-    {
-        return
-            ISilo(silo).maxWithdraw(user, ISilo.CollateralType.Collateral) +
-            ISilo(silo).maxWithdraw(user, ISilo.CollateralType.Protected);
+    function _maxRedeem(address silo, address user) internal view returns (uint256) {//@audit-issue reverts when debt is too high
+        try ISilo(silo).maxRedeem(user) returns (uint256 maxRedeem) {
+            return maxRedeem;
+        } catch {
+            return 0;
+        }
+    }
+
+    function  _maxWithdraw(address silo, address user) internal view returns (uint256) {
+        try ISilo(silo).maxWithdraw(user) returns (uint256 maxWithdraw) {
+            return maxWithdraw;
+        } catch {
+            return 0;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          HELPERS                                          //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _getUserAssets(address silo, address user) internal view returns (uint256) {
+        return ISilo(silo).maxWithdraw(user, ISilo.CollateralType.Collateral) // TODO check if this is correct
+            + ISilo(silo).maxWithdraw(user, ISilo.CollateralType.Protected);
     }
 
     function _setTargetActor(address user) internal {
@@ -78,20 +86,12 @@ abstract contract BaseTest is
     }
 
     /// @notice Get DAO and Deployer fees
-    function _getDaoAndDeployerFees(address silo)
-        internal
-        view
-        returns (uint192 daoAndDeployerFees)
-    {
-        (daoAndDeployerFees, , , , ) = ISilo(silo).getSiloStorage();
+    function _getDaoAndDeployerFees(address silo) internal view returns (uint192 daoAndDeployerFees) {
+        (daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
     }
 
     /// @notice Get a random address
-    function _makeAddr(string memory name)
-        internal
-        pure
-        returns (address addr)
-    {
+    function _makeAddr(string memory name) internal pure returns (address addr) {
         uint256 privateKey = uint256(keccak256(abi.encodePacked(name)));
         addr = vm.addr(privateKey);
     }

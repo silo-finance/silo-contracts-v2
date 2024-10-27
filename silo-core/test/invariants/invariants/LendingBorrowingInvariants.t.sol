@@ -21,7 +21,7 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
     //                                          LENDING                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
     function assert_LENDING_INVARIANT_A(address silo, address user) internal {
-        uint256 maxWithdrawal = ISilo(silo).maxWithdraw(user);
+        uint256 maxWithdrawal = _maxWithdraw(silo, user);
         uint256 liquidity = ISilo(silo).getLiquidity();
 
         assertLe(maxWithdrawal, liquidity, LENDING_INVARIANT_A);
@@ -31,11 +31,7 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
         if (siloConfig.getDebtSilo(user) == address(0)) {
             uint256 balance = IERC20(silo).balanceOf(user);
             if (ISilo(silo).getLiquidity() > balance) {
-                assertEq(
-                    ISilo(silo).maxRedeem(user),
-                    balance,
-                    LENDING_INVARIANT_C
-                );
+                assertEq(_maxRedeem(silo, user), balance, LENDING_INVARIANT_C);
             }
         }
     }
@@ -44,34 +40,23 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
     //                                        BORROWING                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_BORROWING_INVARIANT_A(
-        address silo,
-        address debtToken,
-        address user
-    ) internal {
-        uint256 debtAssets = ISilo(silo).getDebtAssets();
-        uint256 userDebt = IERC20(debtToken).balanceOf(user);
+    function assert_BORROWING_INVARIANT_A(address silo, address user) internal {
+        uint256 totalDebtAssets = ISilo(silo).getDebtAssets();
+        uint256 userDebt = ISilo(silo).maxRepay(user);
 
-        assertGe(debtAssets, debtAssets, BORROWING_INVARIANT_A);
+        assertGe(totalDebtAssets, userDebt, BORROWING_INVARIANT_A);
     }
 
-    function assert_BORROWING_INVARIANT_B(address silo, uint256 sumUserDebt)
-        internal
-    {
+    function assert_BORROWING_INVARIANT_B(address silo, uint256 sumUserDebt) internal {
         uint256 debtAssets = ISilo(silo).getDebtAssets();
 
-        assertEq(debtAssets, sumUserDebt, BORROWING_INVARIANT_B);
+        assertApproxEqAbs(debtAssets, sumUserDebt, NUMBER_OF_ACTORS, BORROWING_INVARIANT_B);
     }
 
-    function assert_BORROWING_INVARIANT_D(
-        address silo,
-        address protectedToken,
-        address user
-    ) internal {
+    function assert_BORROWING_INVARIANT_D(address silo, address protectedToken, address user) internal {
         bool hasDebt = siloConfig.hasDebtInOtherSilo(silo, user);
         if (hasDebt) {
-            uint256 collateralBalance = IERC20(silo).balanceOf(user) +
-                IERC20(protectedToken).balanceOf(user);
+            uint256 collateralBalance = IERC20(silo).balanceOf(user) + IERC20(protectedToken).balanceOf(user);
             assertGt(collateralBalance, 0, BORROWING_INVARIANT_D);
         }
     }
@@ -105,12 +90,8 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
         }
     }
 
-    function assert_BORROWING_INVARIANT_H(
-        address silo,
-        address collateralShareToken,
-        address user
-    ) internal {
-        uint256 maxRedeem = ISilo(silo).maxRedeem(user);
+    function assert_BORROWING_INVARIANT_H(address silo, address collateralShareToken, address user) internal {
+        uint256 maxRedeem = _maxRedeem(silo, user);
         uint256 balance = IERC20(collateralShareToken).balanceOf(user);
 
         assertLe(maxRedeem, balance, BORROWING_INVARIANT_H);

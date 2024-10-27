@@ -126,6 +126,8 @@ abstract contract PostconditionsSpec {
 
     string constant BORROWING_HSPOST_U2 = "BORROWING_HSPOST_U2: A flashloan fails if theres not enough balance (amount + fee) transferred back to the protocol";
 
+    string constant BORROWING_HSPOST_U3 = "BORROWING_HSPOST_U: The protocol should invoke the flash loan receiver, passing the actor as the initiator";
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          LIQUIDATION                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////

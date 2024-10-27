@@ -4,7 +4,10 @@ pragma solidity ^0.8.19;
 // Contracts
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-
+import {
+    IInterestRateModelV2Config,
+    InterestRateModelV2Config
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 
 // Mock Contracts
 import {
@@ -20,7 +23,11 @@ import {Actor} from "../utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
-import {IInterestRateModelV2ConfigFactory, InterestRateModelV2ConfigFactory} from "silo-core/contracts/interestRateModel/InterestRateModelV2ConfigFactory.sol";
+import {
+    IInterestRateModelV2Factory,
+    InterestRateModelV2Factory
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
+
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
@@ -41,6 +48,8 @@ abstract contract BaseStorage {
     uint256 internal constant NUMBER_OF_ACTORS = 3;
     uint256 internal constant INITIAL_ETH_BALANCE = 1e26;
     uint256 internal constant INITIAL_COLL_BALANCE = 1e21;
+
+    address internal constant QUOTE_TOKEN_ADDRESS = address(0xdead);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          ACTORS                                           //
@@ -76,7 +85,8 @@ abstract contract BaseStorage {
 	/// @notice Protocol factories
     ISiloFactory siloFactory;
     ISiloFactory siloFactoryInternal;
-    IInterestRateModelV2ConfigFactory interestRateModelV2ConfigFactory;
+    IInterestRateModelV2Factory interestRateModelV2ConfigFactory;
+    IInterestRateModelV2.Config[] presetIRMConfigs;
 
 	/// @notice The interest rate model for the market
     IInterestRateModelV2 interestRateModelV2;

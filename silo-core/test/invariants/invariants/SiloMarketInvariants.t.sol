@@ -34,7 +34,7 @@ abstract contract SiloMarketInvariants is HandlerAggregator {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigs(user);
+        ) = siloConfig.getConfigsForSolvency(user);
 
         if (debtConfig.silo != address(0)) {
             assertFalse(collateralConfig.silo == address(0), SILO_INVARIANT_E);
@@ -49,7 +49,7 @@ abstract contract SiloMarketInvariants is HandlerAggregator {
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig
-            ) = siloConfig.getConfigs(user);
+            ) = siloConfig.getConfigsForSolvency(user);
 
             assertEq(debtConfig.silo, address(0), SILO_INVARIANT_F);
             assertEq(collateralConfig.silo, address(0), SILO_INVARIANT_F);

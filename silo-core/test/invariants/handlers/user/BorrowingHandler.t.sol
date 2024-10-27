@@ -220,7 +220,7 @@ contract BorrowingHandler is BaseHandler {
         if (success) {
             _after();
 
-            if (_shares >= debtAmount) {
+            if (_shares >= debtAmount) {// TODO review this
                 assertEq(
                     IERC20(siloConfig.getDebtSilo(borrower)).balanceOf(
                         borrower

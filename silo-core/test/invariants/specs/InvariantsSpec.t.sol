@@ -32,12 +32,10 @@ abstract contract InvariantsSpec {
     string constant BASE_INVARIANT_D = "BASE_INVARIANT_D: user is solvent and shareDebtToken.balanceOf(user) != zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) == 0"; // TODO
 
     /// @notice related to silo property VS_Silo_balance_totalAssets
-    string constant BASE_INVARIANT_E = "BASE_INVARIANT_E: balanceOf(silo) >= silo.totalAssets";
+    string constant BASE_INVARIANT_E = "BASE_INVARIANT_E: balanceOf(silo) >= silo.totalAssets[Protected]";
 
     /// @notice related to silo property VS_silo_getLiquidity_less_equal_balance
     string constant BASE_INVARIANT_F = "BASE_INVARIANT_F: silo.getLiquidity() <= balanceOf(silo) - silo.totalAssets[Protected] - daoAndDeployerRevenue";
-
-    string constant BASE_INVARIANT_G = "BASE_INVARIANT_G: silo.totalAssets[Protected] <= balanceOf(silo)";
 
     string constant BASE_INVARIANT_H = "BASE_INVARIANT_H:  reentrancyGuardEntered == false";
 
@@ -73,11 +71,11 @@ abstract contract InvariantsSpec {
     //                                        BORROWING                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant BORROWING_INVARIANT_A = "BORROWING_INVARIANT_A: debtAssets >= any userDebt";
+    string constant BORROWING_INVARIANT_A = "BORROWING_INVARIANT_A: debtAssets >= any userDebtAssets";
 
-    string constant BORROWING_INVARIANT_B = "BORROWING_INVARIANT_B: totalBorrowed = sum of all user debt";
+    string constant BORROWING_INVARIANT_B = "BORROWING_INVARIANT_B: totalBorrowed = sum of all userDebtAssets";
 
-    string constant BORROWING_INVARIANT_C = "BORROWING_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0"; // Included in the previous invariant
+    string constant BORROWING_INVARIANT_C = "BORROWING_INVARIANT_C: sum of all userDebtAssets == 0 <=> totalBorrowed == 0"; // Included in the previous invariant
 
     string constant BORROWING_INVARIANT_D = "BORROWING_INVARIANT_D: If user has debt in one silo, his share token balance on the other silo should be != 0";
 
