@@ -149,8 +149,6 @@ contract SiloFixture is StdCheats, CommonBase {
 
         ISiloConfig.ConfigData memory siloConfig0 = siloConfig.getConfig(createdSilo0);
         ISiloConfig.ConfigData memory siloConfig1 = siloConfig.getConfig(createdSilo1);
-        console2.log("[SiloFixture] siloConfig0.liquidationTargetLtv0", siloConfig0.liquidationTargetLtv);
-        console2.log("[SiloFixture] siloConfig0.liquidationTargetLtv1", siloConfig1.liquidationTargetLtv);
 
         silo0 = ISilo(siloConfig0.silo);
         silo1 = ISilo(siloConfig1.silo);
