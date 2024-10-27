@@ -134,7 +134,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         _MAX_LTV1 = _configData1.maxLtv;
         _LT1 = _configData1.lt;
-        _LIQUIDATION_TARGET_LTV1 = _configData0.liquidationTargetLtv;
+        _LIQUIDATION_TARGET_LTV1 = _configData1.liquidationTargetLtv;
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
