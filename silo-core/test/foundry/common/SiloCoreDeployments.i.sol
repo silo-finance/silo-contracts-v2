@@ -38,7 +38,7 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
 
     function test_get_exists_arbitrum_one() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.ARBITRUM_ONE_ALIAS);
-        assertEq(addr, 0xe376888fD6E5D5Afc12FEa0a8C18f283051c23aD, "expect valid address on Arbitrum");
+        assertEq(addr, 0x51824653425e40Cd6253B71AcC8Def602A21427f, "expect valid address on Arbitrum");
     }
 
    function test_get_contractNotExists() public {
