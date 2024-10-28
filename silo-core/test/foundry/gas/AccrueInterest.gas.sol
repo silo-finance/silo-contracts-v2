@@ -31,7 +31,7 @@ contract AccrueInterestGasTest is Gas, Test {
             address(silo1),
             abi.encodeCall(ISilo.accrueInterest, ()),
             "AccrueInterest",
-            79712
+            79882
         );
     }
 }

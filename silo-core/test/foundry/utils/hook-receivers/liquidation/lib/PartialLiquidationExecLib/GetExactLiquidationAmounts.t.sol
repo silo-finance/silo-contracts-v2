@@ -243,7 +243,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             _collateralUserBalanceOf,
             _debtUserBalanceOf,
             _liquidationFee
-        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 customError) {
+        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 /* customError */) {
             collateralToLiquidate = fromCollateral + fromProtected;
             success = true;
 

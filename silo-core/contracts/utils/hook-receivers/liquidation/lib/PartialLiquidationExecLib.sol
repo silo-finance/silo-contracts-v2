@@ -45,6 +45,7 @@ library PartialLiquidationExecLib {
                 collateralConfigAsset: _collateralConfig.token,
                 debtConfigAsset: _debtConfig.token,
                 maxDebtToCover: _maxDebtToCover,
+                liquidationTargetLtv: _collateralConfig.liquidationTargetLtv,
                 liquidationFee: _liquidationFee
             })
         );
@@ -100,7 +101,7 @@ library PartialLiquidationExecLib {
             sumOfCollateralValue,
             ltvData.borrowerDebtAssets,
             debtValue,
-            collateralConfig.lt,
+            collateralConfig.liquidationTargetLtv,
             collateralConfig.liquidationFee
         );
 
