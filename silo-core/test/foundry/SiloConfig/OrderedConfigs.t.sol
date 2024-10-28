@@ -43,7 +43,6 @@ contract OrderedConfigsTest is Test {
         _configData0.protectedShareToken = makeAddr("protectedShareToken0");
         _configData0.debtShareToken = makeAddr("debtShareToken0");
         _configData0.hookReceiver = _hookReceiver;
-        _configData0.lt = 1;
 
         _configData1.silo = _silo1;
         _configData1.token = makeAddr("token1");
@@ -51,7 +50,6 @@ contract OrderedConfigsTest is Test {
         _configData1.protectedShareToken = makeAddr("protectedShareToken1");
         _configData1.debtShareToken = makeAddr("debtShareToken1");
         _configData1.hookReceiver = _hookReceiver;
-        _configData1.lt = 1;
 
         _siloConfig = siloConfigDeploy(1, _configData0, _configData1);
 

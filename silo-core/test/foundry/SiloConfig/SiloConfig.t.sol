@@ -31,7 +31,6 @@ contract SiloConfigTest is Test {
         _configDataDefault0.protectedShareToken = makeAddr("protectedShareToken0");
         _configDataDefault0.debtShareToken = makeAddr("debtShareToken0");
         _configDataDefault0.hookReceiver = _hookReceiverModuleDefault;
-        _configDataDefault0.lt = 1;
 
         _configDataDefault1.silo = _silo1Default;
         _configDataDefault1.token = makeAddr("token1");
@@ -39,7 +38,6 @@ contract SiloConfigTest is Test {
         _configDataDefault1.protectedShareToken = makeAddr("protectedShareToken1");
         _configDataDefault1.debtShareToken = makeAddr("debtShareToken1");
         _configDataDefault1.hookReceiver = _hookReceiverModuleDefault;
-        _configDataDefault1.lt = 1;
 
         _siloConfig = siloConfigDeploy(1, _configDataDefault0, _configDataDefault1);
 
@@ -72,8 +70,8 @@ contract SiloConfigTest is Test {
         vm.assume(_configData0.silo != _configData1.silo);
         vm.assume(_configData0.daoFee < 0.5e18);
         vm.assume(_configData0.deployerFee < 0.5e18);
-        vm.assume(_configData0.liquidationTargetLtv < _configData0.lt);
-        vm.assume(_configData1.liquidationTargetLtv < _configData1.lt);
+        vm.assume(_configData0.liquidationTargetLtv <= _configData0.lt);
+        vm.assume(_configData1.liquidationTargetLtv <= _configData1.lt);
 
         // when using assume, it reject too many inputs
         _configData0.hookReceiver = _configData1.hookReceiver;
@@ -95,7 +93,6 @@ contract SiloConfigTest is Test {
 
         _configData0.daoFee = 1e18;
         _configData0.deployerFee = 0;
-        _configData0.lt = 1;
 
         vm.expectRevert(ISiloConfig.FeeTooHigh.selector);
         new SiloConfig(1, _configData0, _configData1);
@@ -182,8 +179,8 @@ contract SiloConfigTest is Test {
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
-        vm.assume(_configData0.liquidationTargetLtv < _configData0.lt);
-        vm.assume(_configData1.liquidationTargetLtv < _configData1.lt);
+        vm.assume(_configData0.liquidationTargetLtv <= _configData0.lt);
+        vm.assume(_configData1.liquidationTargetLtv <= _configData1.lt);
 
         SiloConfig siloConfig = siloConfigDeploy(_siloId, _configData0, _configData1);
 

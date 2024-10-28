@@ -127,7 +127,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error CollateralTypeDidNotChanged();
     error InvalidConfigOrder();
     error FeeTooHigh();
-    error TargetLTVTooHigh();
     error InvalidDebtShareToken();
 
     /// @dev It should be called on debt transfer (debt share token transfer).
