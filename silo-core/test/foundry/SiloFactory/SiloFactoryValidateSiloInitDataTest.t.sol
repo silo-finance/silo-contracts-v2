@@ -33,9 +33,9 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     }
 
     /*
-    forge test -vv --mt test_validateSiloInitData
+    forge test -vv --mt test_validateSiloInitData_pass
     */
-    function test_validateSiloInitData() public {
+    function test_validateSiloInitData_pass() public {
         ISiloConfig.InitData memory initData;
 
         vm.expectRevert(ISiloFactory.MissingHookReceiver.selector);
@@ -70,7 +70,20 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidLt.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 0.85e18;
+        initData.lt0 = 0.950e18;
+        initData.liquidationFee0 = 0.10e18;
+
+        vm.expectRevert(ISiloFactory.InvalidLt.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.lt0 = 0.900e18;
+        initData.liquidationFee0 = 0.10e18;
+        initData.lt1 = 0.990e18;
+        initData.liquidationFee1 = 0.05e18;
+
+        vm.expectRevert(ISiloFactory.InvalidLt.selector);
+        siloFactory.validateSiloInitData(initData);
+
         initData.lt1 = 0.75e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrm.selector);

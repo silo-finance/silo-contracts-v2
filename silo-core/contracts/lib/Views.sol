@@ -212,6 +212,8 @@ library Views {
         require(_initData.maxLtv0 != 0 || _initData.maxLtv1 != 0, ISiloFactory.InvalidMaxLtv());
         require(_initData.maxLtv0 <= _initData.lt0, ISiloFactory.InvalidMaxLtv());
         require(_initData.maxLtv1 <= _initData.lt1, ISiloFactory.InvalidMaxLtv());
+        require(_initData.liquidationFee0 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
+        require(_initData.liquidationFee1 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
         require(_initData.lt0 + _initData.liquidationFee0 <= _MAX_PERCENT, ISiloFactory.InvalidLt());
         require(_initData.lt1 + _initData.liquidationFee1 <= _MAX_PERCENT, ISiloFactory.InvalidLt());
 
@@ -243,8 +245,6 @@ library Views {
         require(_initData.flashloanFee1 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
         require(_initData.liquidationTargetLtv0 <= _initData.lt0, ISiloFactory.LiquidationTargetLtvTooHigh());
         require(_initData.liquidationTargetLtv1 <= _initData.lt1, ISiloFactory.LiquidationTargetLtvTooHigh());
-        require(_initData.liquidationFee0 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
-        require(_initData.liquidationFee1 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
 
         require(
             _initData.interestRateModel0 != address(0) && _initData.interestRateModel1 != address(0),
