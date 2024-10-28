@@ -6,14 +6,17 @@ import {ICrossReentrancyGuard} from "./ICrossReentrancyGuard.sol";
 
 interface ISiloConfig is ICrossReentrancyGuard {
     struct InitData {
-        /// @notice The address of the deployer of the Silo
+        /// @notice Can be address zero if deployer fees are not to be collected. If deployer address is zero then
+        /// deployer fee must be zero as well. Deployer will be minted an NFT that gives the right to claim deployer
+        /// fees. NFT can be transferred with the right to claim.
         address deployer;
 
-        /// @notice Address of the hook receiver called on every before/after action on Silo
+        /// @notice Address of the hook receiver called on every before/after action on Silo. Hook contract also
+        /// implements liquidation logic and veSilo gauge connection.
         address hookReceiver;
 
-        /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned by
-        /// the Silo.
+        /// @notice Deployer's fee in 18 decimals points. Deployer will earn this fee based on the interest earned
+        /// by the Silo. Max deployer fee is set by the DAO. At deployment it is 15%.
         uint256 deployerFee;
 
         /// @notice Address of the first token
@@ -31,11 +34,12 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// @notice Address of the interest rate model
         address interestRateModel0;
 
-        /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine,
-        /// if borrower can borrow given amount of assets. MaxLtv is in 18 decimals points
+        /// @notice Maximum LTV for first token. maxLTV is in 18 decimals points and is used to determine, if borrower
+        /// can borrow given amount of assets. MaxLtv is in 18 decimals points. MaxLtv must be lower or equal to LT.
         uint256 maxLtv0;
 
-        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in 18 decimals points
+        /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in 18 decimals
+        /// points. LT must not be lower than maxLTV.
         uint256 lt0;
 
         /// @notice minimal acceptable LTV after liquidation, in 18 decimals points
