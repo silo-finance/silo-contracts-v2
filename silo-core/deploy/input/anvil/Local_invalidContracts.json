@@ -10,6 +10,7 @@
     "interestRateModelConfig0": "defaultAsset",
     "maxLtv0": 0,
     "lt0": 8500,
+    "liquidationTargetLtv0": 7650,
     "liquidationFee0": 500,
     "flashloanFee0": 100,
     "callBeforeQuote0": false,
@@ -20,6 +21,7 @@
     "interestRateModelConfig1": "defaultAsset",
     "maxLtv1": 8500,
     "lt1": 9500,
+    "liquidationTargetLtv1": 8550,
     "liquidationFee1": 250,
     "flashloanFee1": 100,
     "callBeforeQuote1": false

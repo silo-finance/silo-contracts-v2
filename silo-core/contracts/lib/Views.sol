@@ -21,8 +21,7 @@ import {SiloStorageLib} from "./SiloStorageLib.sol";
 // solhint-disable ordering
 
 library Views {
-    /// @dev max percent is 1e18 == 100%
-    uint256 internal constant _MAX_PERCENT = 1e18;
+    uint256 internal constant _100_PERCENT = 1e18;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -173,6 +172,7 @@ library Views {
         configData0.interestRateModel = _initData.interestRateModel0;
         configData0.maxLtv = _initData.maxLtv0;
         configData0.lt = _initData.lt0;
+        configData0.liquidationTargetLtv = _initData.liquidationTargetLtv0;
         configData0.deployerFee = _initData.deployerFee;
         configData0.liquidationFee = _initData.liquidationFee0;
         configData0.flashloanFee = _initData.flashloanFee0;
@@ -188,6 +188,7 @@ library Views {
         configData1.interestRateModel = _initData.interestRateModel1;
         configData1.maxLtv = _initData.maxLtv1;
         configData1.lt = _initData.lt1;
+        configData1.liquidationTargetLtv = _initData.liquidationTargetLtv1;
         configData1.deployerFee = _initData.deployerFee;
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
@@ -210,7 +211,10 @@ library Views {
         require(_initData.maxLtv0 != 0 || _initData.maxLtv1 != 0, ISiloFactory.InvalidMaxLtv());
         require(_initData.maxLtv0 <= _initData.lt0, ISiloFactory.InvalidMaxLtv());
         require(_initData.maxLtv1 <= _initData.lt1, ISiloFactory.InvalidMaxLtv());
-        require(_initData.lt0 <= _MAX_PERCENT && _initData.lt1 <= _MAX_PERCENT, ISiloFactory.InvalidLt());
+        require(_initData.liquidationFee0 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
+        require(_initData.liquidationFee1 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
+        require(_initData.lt0 + _initData.liquidationFee0 <= _100_PERCENT, ISiloFactory.InvalidLt());
+        require(_initData.lt1 + _initData.liquidationFee1 <= _100_PERCENT, ISiloFactory.InvalidLt());
 
         require(
             _initData.maxLtvOracle0 == address(0) || _initData.solvencyOracle0 != address(0),
@@ -238,8 +242,8 @@ library Views {
         require(_initData.deployerFee <= _maxDeployerFee, ISiloFactory.MaxDeployerFeeExceeded());
         require(_initData.flashloanFee0 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
         require(_initData.flashloanFee1 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
-        require(_initData.liquidationFee0 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
-        require(_initData.liquidationFee1 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
+        require(_initData.liquidationTargetLtv0 <= _initData.lt0, ISiloFactory.LiquidationTargetLtvTooHigh());
+        require(_initData.liquidationTargetLtv1 <= _initData.lt1, ISiloFactory.LiquidationTargetLtvTooHigh());
 
         require(
             _initData.interestRateModel0 != address(0) && _initData.interestRateModel1 != address(0),

@@ -61,6 +61,7 @@ interface ISiloFactory is IERC721 {
     error OracleMisconfiguration();
     error InvalidQuoteToken();
     error HookIsZeroAddress();
+    error LiquidationTargetLtvTooHigh();
 
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.

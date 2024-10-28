@@ -38,6 +38,9 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in 18 decimals points
         uint256 lt0;
 
+        /// @notice minimal acceptable LTV after liquidation, in 18 decimals points
+        uint256 liquidationTargetLtv0;
+
         /// @notice Liquidation fee for the first token in 18 decimals points. Liquidation fee is what liquidator earns
         /// for repaying insolvent loan.
         uint256 liquidationFee0;
@@ -70,6 +73,9 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// @notice Liquidation threshold for first token. LT is used to calculate solvency. LT is in 18 decimals points
         uint256 lt1;
 
+        /// @notice minimal acceptable LTV after liquidation, in 18 decimals points
+        uint256 liquidationTargetLtv1;
+
         /// @notice Liquidation fee is what liquidator earns for repaying insolvent loan.
         uint256 liquidationFee1;
 
@@ -93,6 +99,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
         address interestRateModel;
         uint256 maxLtv;
         uint256 lt;
+        uint256 liquidationTargetLtv;
         uint256 liquidationFee;
         uint256 flashloanFee;
         address hookReceiver;
