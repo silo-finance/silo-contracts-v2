@@ -21,8 +21,7 @@ import {SiloStorageLib} from "./SiloStorageLib.sol";
 // solhint-disable ordering
 
 library Views {
-    /// @dev max percent is 1e18 == 100%
-    uint256 internal constant _MAX_PERCENT = 1e18;
+    uint256 internal constant _100_PERCENT = 1e18;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -214,8 +213,8 @@ library Views {
         require(_initData.maxLtv1 <= _initData.lt1, ISiloFactory.InvalidMaxLtv());
         require(_initData.liquidationFee0 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
         require(_initData.liquidationFee1 <= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());
-        require(_initData.lt0 + _initData.liquidationFee0 <= _MAX_PERCENT, ISiloFactory.InvalidLt());
-        require(_initData.lt1 + _initData.liquidationFee1 <= _MAX_PERCENT, ISiloFactory.InvalidLt());
+        require(_initData.lt0 + _initData.liquidationFee0 <= _100_PERCENT, ISiloFactory.InvalidLt());
+        require(_initData.lt1 + _initData.liquidationFee1 <= _100_PERCENT, ISiloFactory.InvalidLt());
 
         require(
             _initData.maxLtvOracle0 == address(0) || _initData.solvencyOracle0 != address(0),
