@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.10.1] - 2024-10-29
+### Added
+- optimism deployment
+
 ## [0.10.0] - 2024-10-28
 ### Changed
 - make target LTV after liquidation configurable
