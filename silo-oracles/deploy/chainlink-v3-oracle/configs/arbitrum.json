@@ -1,0 +1,10 @@
+{
+    "CHAINLINK_wBTC_BTC": {
+        "baseToken": "wBTC",
+        "quoteToken": "wBTC",
+        "primaryAggregator": "CHAINLINK_wBTC_BTC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0
+    }
+}
