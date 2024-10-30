@@ -12,6 +12,8 @@ library ChainlinkV3OraclesConfigsParser {
     string constant public CONFIGS_DIR = "silo-oracles/deploy/chainlink-v3-oracle/configs/";
     string constant internal _EXTENSION = ".json";
 
+    bytes32 constant internal _EMPTY_STR_HASH = keccak256(abi.encodePacked("\"\""));
+
     function getConfig(
         string memory _network,
         string memory _name
@@ -33,7 +35,7 @@ library ChainlinkV3OraclesConfigsParser {
 
         AggregatorV3Interface secondaryAggregator = AggregatorV3Interface(address(0));
 
-        if (bytes(secondaryAggregatorKey).length != 0) {
+        if (keccak256(abi.encodePacked(secondaryAggregatorKey)) != _EMPTY_STR_HASH) {
             secondaryAggregator = AggregatorV3Interface(AddrLib.getAddressSafe(_network, secondaryAggregatorKey));
         }
 
