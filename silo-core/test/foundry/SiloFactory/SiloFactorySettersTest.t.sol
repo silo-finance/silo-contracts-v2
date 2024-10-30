@@ -18,33 +18,51 @@ contract SiloFactorySettersTest is Test {
     address siloImpl = address(100001);
     address shareCollateralTokenImpl = address(100002);
     address shareDebtTokenImpl = address(100003);
-    uint256 daoFee = 0.20e18;
     address daoFeeReceiver = address(100004);
 
     address hacker = makeAddr("Hacker");
 
     function setUp() public {
-        siloFactory = new SiloFactory(daoFee, daoFeeReceiver);
+        siloFactory = new SiloFactory(daoFeeReceiver);
     }
 
     /*
-    forge test -vv --mt test_setDaoFee
+    forge test -vvv --mt test_setDaoFee_reverts
     */
-    function test_setDaoFee(uint256 _newDaoFee) public {
-        uint256 maxFee = siloFactory.MAX_FEE();
+    function test_setDaoFee_reverts() public {
+        uint128 maxFee = uint128(siloFactory.MAX_FEE());
 
-        vm.assume(_newDaoFee <= maxFee);
+        ISiloFactory.Range memory range = siloFactory.daoFeeRange();
 
         vm.expectRevert(ISiloFactory.MaxFeeExceeded.selector);
-        siloFactory.setDaoFee(maxFee + 1);
+        siloFactory.setDaoFee(maxFee, maxFee + 1);
+
+        vm.expectRevert(ISiloFactory.InvalidFeeRange.selector);
+        siloFactory.setDaoFee(range.min + 1, range.min);
+
+        vm.expectRevert(ISiloFactory.SameRange.selector);
+        siloFactory.setDaoFee(range.min, range.max);
 
         vm.prank(hacker);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
-        siloFactory.setDaoFee(_newDaoFee);
+        siloFactory.setDaoFee(range.min, range.max);
 
-        siloFactory.setDaoFee(_newDaoFee);
+        // counter example
+        siloFactory.setDaoFee(0, maxFee);
+    }
 
-        assertEq(siloFactory.daoFee(), _newDaoFee);
+    function test_setDaoFee_pass(uint128 _newMinDaoFee, uint128 _newMaxDaoFee) public {
+        uint256 maxFee = siloFactory.MAX_FEE();
+
+        vm.assume(_newMaxDaoFee <= maxFee);
+        vm.assume(_newMinDaoFee <= _newMaxDaoFee);
+
+        siloFactory.setDaoFee(_newMinDaoFee, _newMaxDaoFee);
+
+        ISiloFactory.Range memory newRange = siloFactory.daoFeeRange();
+
+        assertEq(newRange.min, _newMinDaoFee, "_newMinDaoFee");
+        assertEq(newRange.max, _newMaxDaoFee, "_newMaxDaoFee");
     }
 
     /*
