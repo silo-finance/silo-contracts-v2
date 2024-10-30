@@ -1,7 +1,7 @@
 {
     "CHAINLINK_wBTC_BTC": {
         "baseToken": "wBTC",
-        "quoteToken": "wBTC",
+        "quoteToken": "solvBTC",
         "primaryAggregator": "CHAINLINK_wBTC_BTC_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
