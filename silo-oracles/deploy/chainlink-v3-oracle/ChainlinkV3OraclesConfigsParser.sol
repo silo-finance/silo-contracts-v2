@@ -31,12 +31,18 @@ library ChainlinkV3OraclesConfigsParser {
         require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
         require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
 
+        AggregatorV3Interface secondaryAggregator = AggregatorV3Interface(address(0));
+
+        if (bytes(secondaryAggregatorKey).length != 0) {
+            secondaryAggregator = AggregatorV3Interface(AddrLib.getAddressSafe(_network, secondaryAggregatorKey));
+        }
+
         config = IChainlinkV3Oracle.ChainlinkV3DeploymentConfig({
             baseToken: IERC20Metadata(AddrLib.getAddressSafe(_network, baseTokenKey)),
             quoteToken: IERC20Metadata(AddrLib.getAddressSafe(_network, quoteTokenKey)),
             primaryAggregator: AggregatorV3Interface(AddrLib.getAddressSafe(_network, primaryAggregatorKey)),
             primaryHeartbeat: uint32(primaryHeartbeat),
-            secondaryAggregator: AggregatorV3Interface(AddrLib.getAddressSafe(_network, secondaryAggregatorKey)),
+            secondaryAggregator: secondaryAggregator,
             secondaryHeartbeat: uint32(secondaryHeartbeat)
         });
     }
