@@ -50,7 +50,8 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
 
         (uint256 daoFee, uint256 deployerFee,, address asset) = siloConfig.getFeesWithAsset(silo0);
 
-        assertEq(daoFee, siloFactory.daoFee(), "daoFee");
+        assertGe(daoFee, siloFactory.daoFeeRange().min, "min.daoFee");
+        assertLe(daoFee, siloFactory.daoFeeRange().max, "max.daoFee");
         assertEq(deployerFee, initData.deployerFee, "deployerFee");
         assertEq(asset, address(token0), "asset");
 

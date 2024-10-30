@@ -86,6 +86,16 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.lt1 = 0.75e18;
 
+        vm.expectRevert(ISiloFactory.DaoMinRangeExceeded.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.daoFee = 1.15e18;
+
+        vm.expectRevert(ISiloFactory.DaoMaxRangeExceeded.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.daoFee = 0.15e18;
+
         vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
 
@@ -201,6 +211,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.deployer = address(100001);
         initData.deployerFee = 0.01e18;
+        initData.daoFee = 0.05e18;
 
         initData.flashloanFee0 = 0.01e18;
         initData.flashloanFee1 = 0.01e18;

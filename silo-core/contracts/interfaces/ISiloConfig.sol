@@ -19,6 +19,10 @@ interface ISiloConfig is ICrossReentrancyGuard {
         /// by the Silo. Max deployer fee is set by the DAO. At deployment it is 15%.
         uint256 deployerFee;
 
+        /// @notice DAO's fee in 18 decimals points. DAO will earn this fee based on the interest earned
+        /// by the Silo. Acceptable fee range fee is set by the DAO. Default at deployment is 5% - 50%.
+        uint256 daoFee;
+
         /// @notice Address of the first token
         address token0;
 

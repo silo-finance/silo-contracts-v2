@@ -81,6 +81,7 @@ contract SiloDeployer is ISiloDeployer {
 
         (configData0, configData1) = Views.copySiloConfig(
             _siloInitData,
+            SILO_FACTORY.daoFeeRange(),
             SILO_FACTORY.maxDeployerFee(),
             SILO_FACTORY.maxFlashloanFee(),
             SILO_FACTORY.maxLiquidationFee()
@@ -115,11 +116,6 @@ contract SiloDeployer is ISiloDeployer {
             nextSiloId,
             address(SILO_FACTORY)
         );
-
-        uint256 daoFee = SILO_FACTORY.daoFee();
-
-        configData0.daoFee = daoFee;
-        configData1.daoFee = daoFee;
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
