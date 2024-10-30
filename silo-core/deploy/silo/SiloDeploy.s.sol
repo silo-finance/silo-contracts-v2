@@ -101,28 +101,31 @@ contract SiloDeploy is CommonDeploy {
 
         SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
 
-        _saveOracles(siloConfig, config);
+        _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
         console2.log("[SiloCommonDeploy] run() finished.");
     }
 
     function _saveOracles(
         ISiloConfig _siloConfig,
-        SiloConfigData.ConfigData memory _config
+        SiloConfigData.ConfigData memory _config,
+        bytes32 _noOracleKey
     ) internal {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
 
-        _saveOracle(siloConfig0.solvencyOracle, _config.solvencyOracle0);
-        _saveOracle(siloConfig0.maxLtvOracle, _config.maxLtvOracle0);
-        _saveOracle(siloConfig1.solvencyOracle, _config.solvencyOracle1);
-        _saveOracle(siloConfig1.maxLtvOracle, _config.maxLtvOracle1);
+        _saveOracle(siloConfig0.solvencyOracle, _config.solvencyOracle0, _noOracleKey);
+        _saveOracle(siloConfig0.maxLtvOracle, _config.maxLtvOracle0, _noOracleKey);
+        _saveOracle(siloConfig1.solvencyOracle, _config.solvencyOracle1, _noOracleKey);
+        _saveOracle(siloConfig1.maxLtvOracle, _config.maxLtvOracle1, _noOracleKey);
     }
 
-    function _saveOracle(address _oracle, string memory _oracleConfigName) internal {
-        if (_oracle == address(0)) return;
+    function _saveOracle(address _oracle, string memory _oracleConfigName, bytes32 _noOracleKey) internal {
+        bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
+
+        if (_oracle == address(0) || configHashedKey == _noOracleKey) return;
 
         string memory chainAlias = ChainsLib.chainAlias();
         address oracleFromDeployments = OraclesDeployments.get(chainAlias, _oracleConfigName);
