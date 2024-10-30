@@ -14,7 +14,7 @@ import {Views} from "./lib/Views.sol";
 import {CloneDeterministic} from "./lib/CloneDeterministic.sol";
 
 contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
-    /// @dev max fee is 40%, 1e18 == 100%
+    /// @dev max fee is 50%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.5e18;
 
     /// @dev max percent is 1e18 == 100%
