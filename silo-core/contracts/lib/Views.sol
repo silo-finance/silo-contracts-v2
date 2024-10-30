@@ -152,6 +152,7 @@ library Views {
 
     function copySiloConfig(
         ISiloConfig.InitData memory _initData,
+        ISiloFactory.Range memory _daoFeeRange,
         uint256 _maxDeployerFee,
         uint256 _maxFlashloanFee,
         uint256 _maxLiquidationFee
@@ -160,7 +161,7 @@ library Views {
         view
         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)
     {
-        validateSiloInitData(_initData, _maxDeployerFee, _maxFlashloanFee, _maxLiquidationFee);
+        validateSiloInitData(_initData, _daoFeeRange, _maxDeployerFee, _maxFlashloanFee, _maxLiquidationFee);
 
         configData0.hookReceiver = _initData.hookReceiver;
         configData0.token = _initData.token0;
@@ -174,6 +175,7 @@ library Views {
         configData0.lt = _initData.lt0;
         configData0.liquidationTargetLtv = _initData.liquidationTargetLtv0;
         configData0.deployerFee = _initData.deployerFee;
+        configData0.daoFee = _initData.daoFee;
         configData0.liquidationFee = _initData.liquidationFee0;
         configData0.flashloanFee = _initData.flashloanFee0;
         configData0.callBeforeQuote = _initData.callBeforeQuote0;
@@ -190,6 +192,7 @@ library Views {
         configData1.lt = _initData.lt1;
         configData1.liquidationTargetLtv = _initData.liquidationTargetLtv1;
         configData1.deployerFee = _initData.deployerFee;
+        configData1.daoFee = _initData.daoFee;
         configData1.liquidationFee = _initData.liquidationFee1;
         configData1.flashloanFee = _initData.flashloanFee1;
         configData1.callBeforeQuote = _initData.callBeforeQuote1;
@@ -198,6 +201,7 @@ library Views {
     // solhint-disable-next-line code-complexity
     function validateSiloInitData(
         ISiloConfig.InitData memory _initData,
+        ISiloFactory.Range memory _daoFeeRange,
         uint256 _maxDeployerFee,
         uint256 _maxFlashloanFee,
         uint256 _maxLiquidationFee
@@ -240,6 +244,8 @@ library Views {
 
         require(_initData.deployerFee == 0 || _initData.deployer != address(0), ISiloFactory.InvalidDeployer());
         require(_initData.deployerFee <= _maxDeployerFee, ISiloFactory.MaxDeployerFeeExceeded());
+        require(_daoFeeRange.min <= _initData.daoFee, ISiloFactory.DaoMinRangeExceeded());
+        require(_initData.daoFee <= _daoFeeRange.max, ISiloFactory.DaoMaxRangeExceeded());
         require(_initData.flashloanFee0 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
         require(_initData.flashloanFee1 <= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());
         require(_initData.liquidationTargetLtv0 <= _initData.lt0, ISiloFactory.LiquidationTargetLtvTooHigh());

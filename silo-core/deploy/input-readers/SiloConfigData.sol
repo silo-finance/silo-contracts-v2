@@ -24,6 +24,7 @@ contract SiloConfigData {
     struct ConfigData {
         bool callBeforeQuote0;
         bool callBeforeQuote1;
+        uint64 daoFee;
         address deployer;
         uint256 deployerFee;
         uint64 flashloanFee0;
@@ -74,6 +75,7 @@ contract SiloConfigData {
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
             hookReceiver: _resolveHookReceiverImpl(config.hookReceiver),
+            daoFee: config.daoFee * BP2DP_NORMALIZATION,
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: AddrLib.getAddress(config.token0),
             solvencyOracle0: address(0),

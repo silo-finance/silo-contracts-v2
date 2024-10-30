@@ -2,6 +2,7 @@
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
     "hookReceiver": "NO_HOOK_RECEIVER",
     "hookReceiverImplementation": "InvalidHookReceiver",
+    "daoFee": 1500,
     "deployerFee": 1000,
     "token0": "PLACEHOLDER",
     "solvencyOracle0": "NO_ORACLE",

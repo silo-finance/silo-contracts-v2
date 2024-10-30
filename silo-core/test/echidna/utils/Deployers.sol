@@ -39,7 +39,6 @@ contract Deployers is VyperDeployer, Data {
 
     // silo-core
     ISiloFactory siloFactory;
-    ISiloFactory siloFactoryInternal;
     IInterestRateModelV2Factory interestRateModelV2ConfigFactory;
     IInterestRateModelV2 interestRateModelV2;
     IGaugeHookReceiver hookReceiver;
@@ -73,6 +72,7 @@ contract Deployers is VyperDeployer, Data {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: timelockAdmin,
+            daoFee: 0.15e18,
             deployerFee: 0.1000e18,
             token0: _tokens["WETH"],
             solvencyOracle0: oracles["DIA"],
@@ -181,17 +181,14 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloFactory(address feeReceiver) internal {
-        uint256 daoFee = 0.15e18;
         address daoFeeReceiver = feeReceiver == address(0)
             ? address(0)
             : feeReceiver;
 
-        siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
-        siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
+        siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
 
         address timelock = address(timelockController);
         Ownable(address(siloFactory)).transferOwnership(timelock);
-        Ownable(address(siloFactoryInternal)).transferOwnership(timelock);
     }
 
     function core_deployInterestRateConfigFactory() internal {
@@ -239,6 +236,7 @@ contract Deployers is VyperDeployer, Data {
 
         (configData0, configData1) = Views.copySiloConfig(
             _siloInitData,
+            siloFactory.daoFeeRange(),
             siloFactory.maxDeployerFee(),
             siloFactory.maxFlashloanFee(),
             siloFactory.maxLiquidationFee()
