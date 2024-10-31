@@ -1,7 +1,7 @@
 /* Requirement functions for a setup with the various tokens 
  *
  * NOTE: this spec assumes that `Silo0` and `Silo1` are the collateral share tokens.
- * NOTE: Requires `silo0()` and `siloConfig()` to be `envfree`.
+ * NOTE: Requires `silo0_R()` and `siloConfig()` to be `envfree`.
  */
 
 // To keep the contract aliases unique, we added the suffix `_R` (for requirements)
@@ -17,6 +17,7 @@ using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1_R;
 
 using Token0 as token0_R;
 using Token1 as token1_R;
+
 
 methods {
     // ---- `envfree` ----------------------------------------------------------
@@ -59,6 +60,8 @@ methods {
     function Silo1.siloConfig() external returns (address) envfree;
     function ShareDebtToken1.siloConfig() external returns (address) envfree;
     function ShareProtectedCollateralToken1.siloConfig() external returns (address) envfree;
+
+    function ShareProtectedCollateralToken1.hookReceiver() external returns (address) envfree;
 } 
 
 // ---- Functions --------------------------------------------------------------
@@ -83,30 +86,32 @@ function nonSceneAddressRequirements(address sender) {
 
     require sender != token0_R;
     require sender != token1_R;
+
 }
 
 
 /// @title Ensures the `siloConfig` is set up properly
-function configForEightTokensSetupRequiremments() {
+function configForEightTokensSetupRequirements() {
     require silo0_R.silo() == silo0_R;
     require silo0_R.config() == siloConfig_R;
 
     require silo1_R.silo() == silo1_R;
     require silo1_R.config() == siloConfig_R;
 
-    require shareDebtToken0_R.silo() == silo0;
-    require shareProtectedCollateralToken0_R.silo() == silo0;
+    require shareDebtToken0_R.silo() == silo0_R;
+    require shareProtectedCollateralToken0_R.silo() == silo0_R;
     
     require silo0_R.siloConfig() == siloConfig_R;
     require shareDebtToken0_R.siloConfig() == siloConfig_R;
     require shareDebtToken0_R.siloConfig() == siloConfig_R;
 
-    require shareDebtToken1_R.silo() == silo1;
-    require shareProtectedCollateralToken1_R.silo() == silo1;
+    require shareDebtToken1_R.silo() == silo1_R;
+    require shareProtectedCollateralToken1_R.silo() == silo1_R;
     
     require silo1_R.siloConfig() == siloConfig_R;
     require shareDebtToken1_R.siloConfig() == siloConfig_R;
     require shareDebtToken1_R.siloConfig() == siloConfig_R;
+    
 }
 
 
