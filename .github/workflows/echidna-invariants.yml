@@ -1,0 +1,106 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Echidna Enigmma Dark Invariants
+
+on:
+    push:
+        branches: [ master, develop ]
+        paths:
+            - silo-core/**/*.sol
+            - silo-core/**/*.ts
+            - silo-core/**/*.js
+            - silo-core/**/*.json
+            - package.json
+            - yarn.lock
+            - gitmodules/*
+            - .gitmodules
+            - .github/workflows/silo-core.yml
+
+    pull_request:
+        paths:
+            - silo-core/**/*.sol
+            - silo-core/**/*.ts
+            - silo-core/**/*.js
+            - silo-core/**/*.json
+            - package.json
+            - yarn.lock
+            - gitmodules/*
+            - .gitmodules
+            - .github/workflows/silo-core.yml
+
+jobs:
+    sechidna:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+              mode: [property, assertion] # Define the modes here
+
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+                with:
+                    submodules: recursive
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    restore-keys: |
+                        silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                        silo-core-contracts-cache-
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: Run single test to build cache for contracts
+                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
+
+            -   name: Run Forge build
+                run: |
+                    git submodule
+                    forge --version
+                    FOUNDRY_PROFILE=core forge build --sizes
+
+            -   name: Setup SSH
+                run: |
+                    mkdir -p ~/.ssh
+                    echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+                    chmod 600 ~/.ssh/id_rsa
+                    ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+        
+            -   name: Clone the private repo into corpus folder
+                run: |
+                    git clone git@github.com:Enigma-Dark/silo-core-v2-corpus.git corpus
+
+            -   name: Run Echidna ${{ matrix.mode == 'property' && 'Property' || 'Assertion' }} Mode
+                uses: crytic/echidna-action@v2
+                with:
+                    files: .
+                    contract: Tester
+                    config: silo-core/test/invariants/_config/echidna_config_ci.yaml
+                    crytic-args: --ignore-compile
+                    test-mode: ${{ matrix.mode == 'assertion' && 'assertion' || '' }}
+        

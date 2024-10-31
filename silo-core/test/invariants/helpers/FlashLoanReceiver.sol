@@ -9,6 +9,8 @@ import {TestERC20} from "../utils/mocks/TestERC20.sol";
 import {PropertiesAsserts} from "../utils/PropertiesAsserts.sol";
 import {PostconditionsSpec} from "../specs/PostconditionsSpec.t.sol";
 
+import "forge-std/console.sol";
+
 contract MockFlashLoanReceiver is IERC3156FlashBorrower, PropertiesAsserts, PostconditionsSpec {
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -20,8 +22,16 @@ contract MockFlashLoanReceiver is IERC3156FlashBorrower, PropertiesAsserts, Post
     {
         (uint256 amountToRepay, address sender) = abi.decode(_data, (uint256, address));
 
-        assertEq(_initiator, sender, BORROWING_HSPOST_U3); // TODO add this as a property
+        uint256 balance = TestERC20(_token).balanceOf(address(this));
+
+        if (balance > _amount + _fee) {
+            TestERC20(_token).burn(address(this), balance - _amount - _fee);
+        }
+
+        assertEq(_initiator, sender, BORROWING_HSPOST_U3);
         _setAmountBack(_token, amountToRepay, _amount + _fee);
+
+        TestERC20(_token).approve(msg.sender, type(uint256).max);
 
         return _FLASHLOAN_CALLBACK;
     }
@@ -30,7 +40,7 @@ contract MockFlashLoanReceiver is IERC3156FlashBorrower, PropertiesAsserts, Post
         if (_amountToRepay > _amountWithFee) {
             TestERC20(_token).mint(address(this), _amountToRepay - _amountWithFee);
         } else if (_amountToRepay < _amountWithFee) {
-            TestERC20(_token).burn(msg.sender, _amountWithFee - _amountToRepay);
+            TestERC20(_token).burn(address(this), _amountWithFee - _amountToRepay);
         }
     }
 }

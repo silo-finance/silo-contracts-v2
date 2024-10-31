@@ -3,9 +3,8 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {
-    IERC3156FlashLender
-} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
+import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
+import {ISilo} from "silo-core/contracts/Silo.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -30,18 +29,15 @@ contract FlashLoanHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function flashLoan(
-        uint256 _amount,
-        uint256 _amountToRepay,
-        uint8 i,
-        uint8 j
-    ) external setup {
+    function flashLoan(uint256 _amount, uint256 _amountToRepay, uint8 i, uint8 j) external setup {
         bool success;
         bytes memory returnData;
 
         address target = _getRandomSilo(i);
 
         address token = _getRandomBaseAsset(j);
+
+        uint256 maxFlashLoanAmount = ISilo(target).maxFlashLoan(token);
 
         _before();
         (success, returnData) = actor.proxy(
@@ -59,7 +55,7 @@ contract FlashLoanHandler is BaseHandler {
 
         // POST-CONDITIONS
 
-        if (_amountToRepay > _amount + flashFee) {
+        if (_amountToRepay > _amount + flashFee && maxFlashLoanAmount >= _amount) {
             assertTrue(success, BORROWING_HSPOST_U1);
         } else {
             assertFalse(success, BORROWING_HSPOST_U2);
@@ -69,9 +65,7 @@ contract FlashLoanHandler is BaseHandler {
             _after();
 
             assertEq(
-                defaultVarsAfter[target].balance,
-                defaultVarsBefore[target].balance + flashFee,
-                BORROWING_HSPOST_T
+                defaultVarsAfter[target].balance, defaultVarsBefore[target].balance + flashFee, BORROWING_HSPOST_T
             );
         }
     }

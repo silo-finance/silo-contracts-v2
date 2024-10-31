@@ -31,12 +31,4 @@ interface IBorrowingHandler {
         uint8 i,
         uint8 j
     ) external;
-
-    function leverageSameAsset(
-        uint256 _depositAssets,
-        uint256 _borrowAssets,
-        uint8 i,
-        uint8 j,
-        uint8 k
-    ) external;
 }

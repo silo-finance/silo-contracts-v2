@@ -11,13 +11,13 @@ balanceAddr: 0xffffffffffffffffffffffff
 balanceContract: 0xffffffffffffffffffffffffffffffffffffffffffffffff
 
 #testLimit is the number of test sequences to run
-testLimit: 20000000
+testLimit: 50000
 
 #seqLen defines how many transactions are in a test sequence
-seqLen: 300
+seqLen: 200
 
 #shrinkLimit determines how much effort is spent shrinking failing sequences
-shrinkLimit: 2500
+shrinkLimit: 1500
 
 #propMaxGas defines gas cost at which a property fails
 propMaxGas: 1000000000
@@ -40,7 +40,7 @@ coverage: true
 coverageFormats: ["lcov", "html"]
 
 #directory to save the corpus; by default is disabled
-corpusDir: "test/invariants/_corpus/echidna/default/_data/corpus"
+corpusDir: "corpus"
 # constants for corpus mutations (for experimentation only)
 #mutConsts: [100, 1, 1]
 

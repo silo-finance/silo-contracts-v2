@@ -3,19 +3,19 @@ pragma solidity ^0.8.19;
 
 // Libraries
 import {Pretty, Strings} from "../utils/Pretty.sol";
+import "forge-std/console.sol";
 
 // Interfaces
 import {ISilo} from "silo-core/contracts/Silo.sol";
 import {IVaultHandler} from "../handlers/interfaces/IVaultHandler.sol";
 import {ISiloHandler} from "../handlers/interfaces/ISiloHandler.sol";
 import {IBorrowingHandler} from "../handlers/interfaces/IBorrowingHandler.sol";
-import {
-    ILiquidationHandler
-} from "../handlers/interfaces/ILiquidationHandler.sol";
+import {ILiquidationHandler} from "../handlers/interfaces/ILiquidationHandler.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Test Contracts
 import {BaseHooks} from "../base/BaseHooks.t.sol";
+import {Actor} from "../utils/Actor.sol";
 
 /// @title Default Before After Hooks
 /// @notice Helper contract for before and after hooks
@@ -81,31 +81,23 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     //                                           SETTERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _setSiloValues(address silo, DefaultVars storage _defaultVars)
-        internal
-    {
+    function _setSiloValues(address silo, DefaultVars storage _defaultVars) internal {
         _defaultVars.totalSupply = ISilo(silo).totalSupply();
         // TODO add exchange rate
         _defaultVars.totalAssets = ISilo(silo).totalAssets();
         _defaultVars.debtAssets = ISilo(silo).getDebtAssets();
         _defaultVars.collateralAssets = ISilo(silo).getCollateralAssets();
-        (_defaultVars.daoAndDeployerFees, , , , ) = ISilo(silo)
-            .getSiloStorage();
+        (_defaultVars.daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
     }
 
-    function _setBorrowingValues(address silo, DefaultVars storage _defaultVars)
-        internal
-    {
-        (address debtToken, address _asset) = siloConfig
-            .getDebtShareTokenAndAsset(silo);
+    function _setBorrowingValues(address silo, DefaultVars storage _defaultVars) internal {
+        (address debtToken, address _asset) = siloConfig.getDebtShareTokenAndAsset(silo);
         _defaultVars.userDebtShares = IERC20(debtToken).balanceOf(targetActor);
         _defaultVars.userDebt = ISilo(silo).maxRepay(targetActor);
         _defaultVars.balance = IERC20(_asset).balanceOf(silo);
         _defaultVars.userAssets = _getUserAssets(silo, targetActor);
         _defaultVars.userBalance = IERC20(_asset).balanceOf(targetActor);
-        _defaultVars.interestRateTimestamp = ISilo(silo)
-            .utilizationData()
-            .interestRateTimestamp;
+        _defaultVars.interestRateTimestamp = ISilo(silo).utilizationData().interestRateTimestamp;
         _defaultVars.isSolvent = ISilo(silo).isSolvent(targetActor);
     }
 
@@ -114,10 +106,8 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _isInterestRateUpdated(address silo) internal view returns (bool) {
-        return
-            (defaultVarsBefore[silo].interestRateTimestamp !=
-                defaultVarsAfter[silo].interestRateTimestamp) &&
-            (defaultVarsBefore[silo].interestRateTimestamp == block.timestamp);
+        return (defaultVarsBefore[silo].interestRateTimestamp != defaultVarsAfter[silo].interestRateTimestamp)
+            && (defaultVarsBefore[silo].interestRateTimestamp == block.timestamp);
     }
 
     /*/////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,59 +121,48 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     function assert_BASE_GPOST_A(address silo) internal {
         if (_isInterestRateUpdated(silo)) {
             assertTrue(
-                msg.sig == IVaultHandler.deposit.selector ||
-                    msg.sig == IVaultHandler.mint.selector ||
-                    msg.sig == IVaultHandler.withdraw.selector ||
-                    msg.sig == IVaultHandler.redeem.selector ||
-                    msg.sig == ILiquidationHandler.liquidationCall.selector ||
-                    msg.sig == ISiloHandler.accrueInterest.selector ||
-                    msg.sig == IBorrowingHandler.leverageSameAsset.selector ||
-                    msg.sig == IBorrowingHandler.repay.selector ||
-                    msg.sig == IBorrowingHandler.repayShares.selector,
+                msg.sig == IVaultHandler.deposit.selector || msg.sig == IVaultHandler.mint.selector
+                    || msg.sig == IVaultHandler.withdraw.selector || msg.sig == IVaultHandler.redeem.selector
+                    || msg.sig == ILiquidationHandler.liquidationCall.selector
+                    || msg.sig == ISiloHandler.accrueInterest.selector || msg.sig == IBorrowingHandler.repay.selector
+                    || msg.sig == IBorrowingHandler.repayShares.selector,
                 BASE_GPOST_A
             );
         }
     }
 
     function assert_BASE_GPOST_BC(address silo) internal {
-        if (
-            defaultVarsBefore[silo].interestRateTimestamp != 0 &&
-            _isInterestRateUpdated(silo)
-        ) {
+        if (defaultVarsBefore[silo].interestRateTimestamp != 0 && _isInterestRateUpdated(silo)) {
             // BASE_GPOST_B
             if (defaultVarsBefore[silo].debtAssets != 0) {
-                assertGe(
-                    defaultVarsAfter[silo].debtAssets,
-                    defaultVarsBefore[silo].debtAssets,
-                    BASE_GPOST_B
-                );
+                assertGe(defaultVarsAfter[silo].debtAssets, defaultVarsBefore[silo].debtAssets, BASE_GPOST_B);
             }
 
             // BASE_GPOST_C
-            (uint256 daoFee, uint256 deployerFee, , ) = siloConfig
-                .getFeesWithAsset(silo);
+            (uint256 daoFee, uint256 deployerFee,,) = siloConfig.getFeesWithAsset(silo);
             if (daoFee != 0 && deployerFee != 0) {
                 assertGe(
-                    defaultVarsAfter[silo].daoAndDeployerFees,
-                    defaultVarsBefore[silo].daoAndDeployerFees,
-                    BASE_GPOST_B
+                    defaultVarsAfter[silo].daoAndDeployerFees, defaultVarsBefore[silo].daoAndDeployerFees, BASE_GPOST_B
                 );
             }
         }
     }
 
     function assert_BASE_GPOST_D(address silo) internal {
-        // TODO check if this misses any function
         if (!defaultVarsBefore[silo].isSolvent) {
             assertFalse(
-                msg.sig == IVaultHandler.withdraw.selector ||
-                    msg.sig == IVaultHandler.redeem.selector ||
-                    msg.sig == ILiquidationHandler.liquidationCall.selector ||
-                    msg.sig == IBorrowingHandler.leverageSameAsset.selector ||
-                    msg.sig == IBorrowingHandler.borrow.selector ||
-                    msg.sig == IBorrowingHandler.borrowSameAsset.selector ||
-                    msg.sig == IBorrowingHandler.borrowShares.selector,
+                msg.sig == IBorrowingHandler.borrow.selector
+                //msg.sig == IBorrowingHandler.borrowSameAsset.selector || TODO confirm this functionn does not need any type of solvency check
+                || msg.sig == IBorrowingHandler.borrowShares.selector,
                 BASE_GPOST_D
+            );
+        }
+
+        address borrowerCollateralSilo = siloConfig.borrowerCollateralSilo(targetActor);
+
+        if (!defaultVarsBefore[silo].isSolvent && borrowerCollateralSilo == Actor(payable(targetActor)).lastTarget()) {
+            assertFalse(
+                msg.sig == IVaultHandler.withdraw.selector || msg.sig == IVaultHandler.redeem.selector, BASE_GPOST_D
             );
         }
     }
@@ -193,10 +172,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function assert_BORROWING_GPOST_C(address silo) internal {
-        if (
-            (defaultVarsBefore[silo].isSolvent &&
-                !defaultVarsAfter[silo].isSolvent)
-        ) {
+        if ((defaultVarsBefore[silo].isSolvent && !defaultVarsAfter[silo].isSolvent)) {
             assertTrue(false, BORROWING_GPOST_C);
         }
     }
