@@ -48,7 +48,7 @@
         "secondaryHeartbeat": 0
     },
     "CHAINLINK_ETH_USD": {
-        "baseToken": "ETH",
+        "baseToken": "WETH",
         "quoteToken": "SILO_VIRTUAL_USD",
         "primaryAggregator": "CHAINLINK_ETH_USD_aggregator",
         "primaryHeartbeat": 87001,
