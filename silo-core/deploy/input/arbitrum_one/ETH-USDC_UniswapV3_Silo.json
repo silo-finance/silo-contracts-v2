@@ -15,7 +15,7 @@
     "liquidationFee0": 500,
     "flashloanFee0": 100,
     "callBeforeQuote0": false,
-    "token1": "USDC",
+    "token1": "USDC.e",
     "solvencyOracle1": "UniV3-ETH-USDC-0.3",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2.sol",

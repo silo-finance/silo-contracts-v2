@@ -12,7 +12,7 @@ contract MarketDeployDebugTest is IntegrationTest {
     function setUp() external {
         vm.createSelectFork(
             getChainRpcUrl(ARBITRUM_ONE_ALIAS), // change if needed
-            269194700
+            269494200
         );
 
         siloDeploy = new SiloDeployWithGaugeHookReceiver();
@@ -20,7 +20,7 @@ contract MarketDeployDebugTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_it
     function test_it() public {
-        siloDeploy.useConfig(""); // set market config name
-        siloDeploy.run();
+        // siloDeploy.useConfig("wUSDPlus_USDC_Silo"); // set market config name
+        // siloDeploy.run();
     }
 }
