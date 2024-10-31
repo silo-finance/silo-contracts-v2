@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {AssetTypes} from "./AssetTypes.sol";
-import {ShareTokenLib} from "./ShareTokenLib.sol";
 
 library SiloStdLib {
     using SafeERC20 for IERC20;
@@ -26,11 +23,11 @@ library SiloStdLib {
     /// @param _amount for which fee is calculated
     /// @return fee flash fee amount
     function flashFee(ISiloConfig _config, address _token, uint256 _amount) internal view returns (uint256 fee) {
-        if (_amount == 0) revert ZeroAmount();
+        if (_amount == 0) return 0;
 
         // all user set fees are in 18 decimals points
         (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
-        if (_token != asset) revert ISilo.Unsupported();
+        require(_token == asset, ISilo.Unsupported());
         if (flashloanFee == 0) return 0;
 
         fee = _amount * flashloanFee;
@@ -56,7 +53,7 @@ library SiloStdLib {
         returns (uint256 totalAssets, uint256 totalShares)
     {
         if (_assetType == ISilo.AssetType.Protected) {
-            totalAssets = ISilo(_configData.silo).getTotalAssetsStorage(AssetTypes.PROTECTED);
+            totalAssets = ISilo(_configData.silo).getTotalAssetsStorage(ISilo.AssetType.Protected);
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
@@ -71,21 +68,6 @@ library SiloStdLib {
             totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
         }
-    }
-
-    /// @notice overloaded version of:
-    /// `getTotalAssetsAndTotalSharesWithInterest`(ISiloConfig.ConfigData, ISilo.AssetType)
-    /// @dev This is useful for view functions that do not accrue interest before doing calculations. To work on
-    ///      updated numbers, interest should be added on the fly.
-    /// @param _assetType used to read proper storage data
-    /// @return totalAssets total assets in Silo with interest for given asset type
-    /// @return totalShares total shares in Silo for given asset type
-    function getTotalAssetsAndTotalSharesWithInterest(ISilo.AssetType _assetType)
-        internal
-        view
-        returns (uint256 totalAssets, uint256 totalShares)
-    {
-        return getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
     }
 
     /// @notice Retrieves fee amounts in 18 decimals points and their respective receivers along with the asset
@@ -159,6 +141,6 @@ library SiloStdLib {
 
         (
             totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(AssetTypes.DEBT), rcomp);
+        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
     }
 }

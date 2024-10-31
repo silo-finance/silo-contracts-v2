@@ -122,7 +122,9 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error FeeTooHigh();
     error InvalidDebtShareToken();
 
-    /// @dev It should be called on debt transfer. It sets collateral silo if the `_to` address doesn't have one
+    /// @dev It should be called on debt transfer (debt share token transfer).
+    /// In the case if the`_recipient` doesn't have configured a collateral silo,
+    /// it will be set to the collateral silo of the `_sender`.
     /// @param _sender sender address
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
@@ -146,6 +148,27 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
     function accrueInterestForBothSilos() external;
 
+    /// @notice Retrieves the collateral silo for a specific borrower.
+    /// @dev As a user can deposit into `Silo0` and `Silo1`, this property specifies which Silo
+    /// will be used as collateral for the debt. Later on, it will be used for max LTV and solvency checks.
+    /// After being set, the collateral silo is never set to `address(0)` again but such getters as
+    /// `getConfigsForSolvency`, `getConfigsForBorrow`, `getConfigsForWithdraw` will return empty
+    /// collateral silo config if borrower doesn't have debt.
+    ///
+    /// In the SiloConfig collateral silo is set by the following functions:
+    /// `onDebtTransfer` - only if the recipient doesn't have collateral silo set (inherits it from the sender)
+    /// This function is called on debt share token transfer (debt transfer).
+    /// `setThisSiloAsCollateralSilo` - sets the same silo as the one that calls the function.
+    /// `setOtherSiloAsCollateralSilo` - sets the opposite silo as collateral from the one that calls the function.
+    ///
+    /// In the Silo collateral silo is set by the following functions:
+    /// `borrow` - always sets opposite silo as collateral.
+    /// If Silo0 borrows, then Silo1 will be collateral and vice versa.
+    /// `borrowSameAsset` - always sets the same silo as collateral.
+    /// `leverageSameAsset` - always sets the same silo as collateral.
+    /// `switchCollateralToThisSilo` - always sets the same silo as collateral.
+    /// @param _borrower The address of the borrower for which the collateral silo is being retrieved
+    /// @return collateralSilo The address of the collateral silo for the specified borrower
     function borrowerCollateralSilo(address _borrower) external view returns (address collateralSilo);
 
     /// @notice Retrieves the silo ID
@@ -165,7 +188,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @return asset The address of the asset associated with the specified silo
     function getAssetForSilo(address _silo) external view returns (address asset);
 
-    /// @notice Verfies if the borrower has debt in other silo by checkeing the debt share token balance
+    /// @notice Verifies if the borrower has debt in other silo by checking the debt share token balance
     /// @param _thisSilo The address of the silo in respect of which the debt is checked
     /// @param _borrower The address of the borrower for which the debt is checked
     /// @return hasDebt true if the borrower has debt in other silo
@@ -173,7 +196,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
     /// @notice Retrieves the debt silo associated with a specific borrower
     /// @dev This function reverts if debt present in two silo (should not happen)
-    /// @param _borrower The address of the borrower for which the debt silo is being retrievedååå
+    /// @param _borrower The address of the borrower for which the debt silo is being retrieved
     function getDebtSilo(address _borrower) external view returns (address debtSilo);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
@@ -191,7 +214,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @return config The configuration data for the specified silo
     function getConfig(address _silo) external view returns (ConfigData memory config);
 
-    /// @notice Retrieves configuration data for a specific silo for withtdraw fn.
+    /// @notice Retrieves configuration data for a specific silo for withdraw fn.
     /// @dev This function reverts for incorrect silo address input.
     /// @param _silo The address of the silo for which configuration data is being retrieved
     /// @return depositConfig The configuration data for the specified silo (always config for `_silo`)

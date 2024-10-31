@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol";
-import "silo-core/contracts/lib/SiloStdLib.sol";
+import {Test} from "forge-std/Test.sol";
+import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {SiloMock} from "../../_mocks/SiloMock.sol";

@@ -440,7 +440,7 @@
     },
     {
       "inputs": [],
-      "name": "HookReceiverMissconfigured",
+      "name": "HookReceiverMisconfigured",
       "type": "error"
     },
     {

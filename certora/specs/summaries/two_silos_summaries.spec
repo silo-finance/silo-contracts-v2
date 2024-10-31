@@ -5,8 +5,8 @@ methods {
     function Silo0.config() external returns (address) envfree;
     function Silo1.config() external returns (address) envfree;
     
-    function Silo0.getTotalAssetsStorage(uint256) external returns(uint256) envfree;
-    function Silo1.getTotalAssetsStorage(uint256) external returns(uint256) envfree;
+    function Silo0.getTotalAssetsStorage(ISilo.AssetType) external returns(uint256) envfree;
+    function Silo1.getTotalAssetsStorage(ISilo.AssetType) external returns(uint256) envfree;
 
     // Harness
     function Silo0.getSiloDataInterestRateTimestamp() external returns(uint64) envfree;
@@ -17,7 +17,7 @@ methods {
 
     // ---- Dispatcher ---------------------------------------------------------
     function _.accrueInterest() external => DISPATCHER(true);
-    function _.getTotalAssetsStorage(uint256) external => DISPATCHER(true);
+    function _.getTotalAssetsStorage(ISilo.AssetType) external => DISPATCHER(true);
     function _.getCollateralAndProtectedTotalsStorage() external => DISPATCHER(true);
 
     // Accrue interest

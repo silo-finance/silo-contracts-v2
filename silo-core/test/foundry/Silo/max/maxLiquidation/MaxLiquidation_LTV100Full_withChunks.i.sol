@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -14,7 +14,7 @@ import {MaxLiquidationLTV100FullTest} from "./MaxLiquidation_LTV100Full.i.sol";
 contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest {
     using SiloLensLib for ISilo;
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -25,30 +25,35 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
 
         emit log_named_decimal_uint("[LTV100FullWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
-        for (uint256 i; i < 5; i++) {
+        for (uint256 i; i < 6; i++) {
             emit log_named_uint("[LTV100FullWithChunks] case ------------------------", i);
 
             emit log_named_string("isSolvent", silo0.isSolvent(borrower) ? "YES" : "NO");
 
-            (uint256 collateralToLiquidate, uint256 debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            (uint256 collateralToLiquidate, uint256 maxDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            emit log_named_uint("[LTV100FullWithChunks] collateralToLiquidate", collateralToLiquidate);
+            if (maxDebtToCover == 0) continue;
 
-            emit log_named_uint("[LTV100FullWithChunks] debtToCover", debtToCover);
+            if (collateralToLiquidate == 0) {
+                assertGe(silo0.getLtv(borrower), 1e18, "if we don't have collateral we expect bad debt");
+                continue;
+            }
 
             { // too deep
                 bool isSolvent = silo0.isSolvent(borrower);
 
-                if (isSolvent && debtToCover != 0) revert("if we solvent there should be no liquidation");
-                if (!isSolvent && debtToCover == 0) revert("if we NOT solvent there should be a liquidation");
+                if (isSolvent && maxDebtToCover != 0) revert("if we solvent there should be no liquidation");
+                if (!isSolvent && maxDebtToCover == 0) revert("if we NOT solvent there should be a liquidation");
 
                 if (isSolvent) break;
             }
 
-            uint256 testDebtToCover = _calculateChunk(debtToCover, i);
+            uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
             emit log_named_uint("[LTV100FullWithChunks] testDebtToCover", testDebtToCover);
 
             (
                 uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             _assertLeDiff(partialCollateral, collateralToLiquidate, "partialCollateral");
 

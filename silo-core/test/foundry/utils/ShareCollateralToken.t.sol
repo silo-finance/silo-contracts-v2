@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
 
@@ -39,6 +40,25 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
         (protectedShareToken, collateralShareToken, ) = siloConfig.getShareTokens(address(silo1));
         shareCollateralToken1 = ShareCollateralToken(collateralShareToken);
         shareProtectedToken1 = ShareCollateralToken(protectedShareToken);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_collateralShareToken_decimals
+    */
+    function test_collateralShareToken_decimals() public view {
+        _checkDecimals(shareCollateralToken0, token0);
+        _checkDecimals(shareProtectedToken0, token0);
+
+        _checkDecimals(shareCollateralToken1, token1);
+        _checkDecimals(shareProtectedToken1, token1);
+    }
+
+    function _checkDecimals(ShareCollateralToken _share, IERC20 _token) private view {
+        assertEq(
+            (10 ** IERC20Metadata(address(_share)).decimals()) / SiloMathLib._DECIMALS_OFFSET_POW,
+            10 ** IERC20Metadata(address(_token)).decimals(),
+            "expect valid collateral decimals"
+        );
     }
 
     /*

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Utils} from "silo-foundry-utils/lib/Utils.sol";
 import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
-contract ReentracyTestState {
+contract ReentrancyTestState {
     address public siloConfig;
     address public silo0;
     address public silo1;
@@ -51,49 +51,49 @@ library TestStateLib {
 
         if (code.length !=0) return;
 
-        ReentracyTestState state = new ReentracyTestState();
+        ReentrancyTestState state = new ReentrancyTestState();
 
         bytes memory deployedCode = Utils.getCodeAt(address(state));
 
         VmLib.vm().etch(_ADDRESS, deployedCode);
 
-        ReentracyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver);
-        ReentracyTestState(_ADDRESS).setReenter(true);
+        ReentrancyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver);
+        ReentrancyTestState(_ADDRESS).setReenter(true);
     }
 
     function silo0() internal view returns (ISilo) {
-        return ISilo(ReentracyTestState(_ADDRESS).silo0());
+        return ISilo(ReentrancyTestState(_ADDRESS).silo0());
     }
 
     function silo1() internal view returns (ISilo) {
-        return ISilo(ReentracyTestState(_ADDRESS).silo1());
+        return ISilo(ReentrancyTestState(_ADDRESS).silo1());
     }
 
     function token0() internal view returns (address) {
-        return ReentracyTestState(_ADDRESS).token0();
+        return ReentrancyTestState(_ADDRESS).token0();
     }
 
     function token1() internal view returns (address) {
-        return ReentracyTestState(_ADDRESS).token1();
+        return ReentrancyTestState(_ADDRESS).token1();
     }
 
     function siloConfig() internal view returns (ISiloConfig) {
-        return ISiloConfig(ReentracyTestState(_ADDRESS).siloConfig());
+        return ISiloConfig(ReentrancyTestState(_ADDRESS).siloConfig());
     }
 
     function hookReceiver() internal view returns (address) {
-        return ReentracyTestState(_ADDRESS).hookReceiver();
+        return ReentrancyTestState(_ADDRESS).hookReceiver();
     }
 
     function reenter() internal view returns (bool) {
-        return ReentracyTestState(_ADDRESS).reenter();
+        return ReentrancyTestState(_ADDRESS).reenter();
     }
 
     function disableReentrancy() internal {
-        ReentracyTestState(_ADDRESS).setReenter(false);
+        ReentrancyTestState(_ADDRESS).setReenter(false);
     }
 
     function enableReentrancy() internal {
-        ReentracyTestState(_ADDRESS).setReenter(true);
+        ReentrancyTestState(_ADDRESS).setReenter(true);
     }
 }

@@ -1,3 +1,5 @@
+/* Integrity of main methods */
+
 import "../summaries/two_silos_summaries.spec";
 import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";
@@ -31,7 +33,7 @@ methods {
 
 /// @title Integrity of borrow
 /// @property borrow-integrity
-/// @status Done
+/// @status Done: https://vaas-stg.certora.com/output/39601/a92223ffd54b428bbc75fbbf76deaa91?anonymousKey=f962f690a342ccff3b3843c47f2d310b98d355f6
 rule HLP_integrityOfBorrow(address receiver, uint256 assets) {
     env e;
 
@@ -62,7 +64,7 @@ rule HLP_integrityOfBorrow(address receiver, uint256 assets) {
 
 /// @title Integrity of `borrowSameAsset`
 /// @property borrow-integrity
-/// @status Done
+/// @status Done: https://vaas-stg.certora.com/output/39601/0c5fdd83985f4cff92e256770d4a2146?anonymousKey=3d525a9323f55a52a02015eef18222af0a30e531
 rule HLP_integrityOfBorrowSame(address receiver, uint256 assets) {
     env e;
 
@@ -93,7 +95,7 @@ rule HLP_integrityOfBorrowSame(address receiver, uint256 assets) {
 
 /// @title Integrity of `borrowShares`
 /// @property borrow-integrity
-/// @status Done
+/// @status Done: https://vaas-stg.certora.com/output/39601/ba5142728e9e4089a74f3a448e4df9fa?anonymousKey=c6c5cca56df4b25896022089b307da711046c6c8
 rule HLP_integrityOfBorrowShares(address receiver, uint256 shares) {
     env e;
 
@@ -124,6 +126,7 @@ rule HLP_integrityOfBorrowShares(address receiver, uint256 shares) {
 // ---- Deposit/Mint -----------------------------------------------------------
 
 /// @title Integrity of deposit
+/// @status Done: https://vaas-stg.certora.com/output/39601/6a9f19160e884c9991fc0e9adb51afac?anonymousKey=bffdda9bd17af80e1aa274b70bafa2fe2acfc1a6
 rule HLP_integrityOfDeposit(address receiver, uint256 assets) {
     env e;
 
@@ -156,6 +159,7 @@ rule HLP_integrityOfDeposit(address receiver, uint256 assets) {
 
 
 /// @title Integrity of mint
+/// @status: Done https://vaas-stg.certora.com/output/39601/cfafce63b506448bb331bde0ce2d4638?anonymousKey=8982d16e1772dc713a388095c653324a1095f0e7
 rule HLP_integrityOfMint(address receiver, uint256 shares) {
     env e;
 
@@ -188,6 +192,7 @@ rule HLP_integrityOfMint(address receiver, uint256 shares) {
 // ---- Redeem/Withdraw --------------------------------------------------------
 
 /// @title Integrity of redeem
+/// @status: Done https://vaas-stg.certora.com/output/39601/d6ba40df683a417582b99a4a07996c80?anonymousKey=a34896d77cf347614a5969668dd17843bf53b089
 rule HLP_integrityOfRedeem(address receiver, uint256 shares) {
     env e;
 
@@ -211,6 +216,7 @@ rule HLP_integrityOfRedeem(address receiver, uint256 shares) {
 
 
 /// @title Integrity of withdraw
+/// @status Done: https://vaas-stg.certora.com/output/39601/fe9d02f2d8c641329304f04e7b32c155?anonymousKey=6684f7a4cb199e09e5a579aaa3870094b3767cda
 rule HLP_integrityOfWithdraw(address receiver, uint256 assets) {
     env e;
 
@@ -236,6 +242,7 @@ rule HLP_integrityOfWithdraw(address receiver, uint256 assets) {
 
 /// @title Integrity of `repay`
 /// @property repay-integrity
+/// @status Done: https://vaas-stg.certora.com/output/39601/e06d1ce059bf4da89811b85e27222a09?anonymousKey=30d61e965cc82a02174cef508c00afab78442e3a
 rule HLP_integrityOfRepay(address receiver, uint256 assets) {
     env e;
 
@@ -261,6 +268,7 @@ rule HLP_integrityOfRepay(address receiver, uint256 assets) {
 
 /// @title Integrity of `repayShares`
 /// @property repay-integrity
+/// @status Done: https://vaas-stg.certora.com/output/39601/e7313b4bb45845aab4588d37aab94e8e?anonymousKey=7e146049c5620d5a31f23fb14995b94c756698ea
 rule HLP_integrityOfRepayShares(address receiver, uint256 shares) {
     env e;
 

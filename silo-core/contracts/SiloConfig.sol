@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -9,7 +9,7 @@ import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
 import {Hook} from "./lib/Hook.sol";
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
-/// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheapper
+/// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheaper
 /// data access using immutable variables.
 contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     using Hook for uint256;
@@ -69,7 +69,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     uint256 internal immutable _FLASHLOAN_FEE1;
 
     bool internal immutable _CALL_BEFORE_QUOTE1;
-
+    
+    /// @inheritdoc ISiloConfig
     mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
     
     /// @param _siloId ID of this pool assigned by factory
@@ -83,7 +84,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         SILO_ID = _siloId;
 
         // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
-        if (_configData0.daoFee + _configData0.deployerFee >= 1e18) revert FeeTooHigh();
+        require(_configData0.daoFee + _configData0.deployerFee < 1e18, FeeTooHigh());
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
@@ -146,11 +147,11 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     /// @inheritdoc ISiloConfig
     function onDebtTransfer(address _sender, address _recipient) external virtual {
-        if (msg.sender != _DEBT_SHARE_TOKEN0 && msg.sender != _DEBT_SHARE_TOKEN1) revert OnlyDebtShareToken();
+        require(msg.sender == _DEBT_SHARE_TOKEN0 || msg.sender == _DEBT_SHARE_TOKEN1, OnlyDebtShareToken());
 
         address thisSilo = msg.sender == _DEBT_SHARE_TOKEN0 ? _SILO0 : _SILO1;
 
-        if (hasDebtInOtherSilo(thisSilo, _recipient)) revert DebtExistInOtherSilo();
+        require(!hasDebtInOtherSilo(thisSilo, _recipient), DebtExistInOtherSilo());
 
         if (borrowerCollateralSilo[_recipient] == address(0)) {
             borrowerCollateralSilo[_recipient] = borrowerCollateralSilo[_sender];
@@ -360,7 +361,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
         uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
 
-        if (debtBal0 > 0 && debtBal1 > 0) revert DebtExistInOtherSilo();
+        require(debtBal0 == 0 || debtBal1 == 0, DebtExistInOtherSilo());
         if (debtBal0 == 0 && debtBal1 == 0) return address(0);
 
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
@@ -450,7 +451,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     function _onlySilo() internal view virtual {
-        if (msg.sender != _SILO0 && msg.sender != _SILO1) revert OnlySilo();
+        require(msg.sender == _SILO0 || msg.sender == _SILO1, OnlySilo());
     }
 
     function _balanceOf(address _token, address _user) internal view returns (uint256 balance) {

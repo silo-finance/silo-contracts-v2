@@ -6,12 +6,22 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface ISiloFactory is IERC721 {
     /// @notice Emitted on the creation of a Silo.
+    /// @param implementation Address of the Silo implementation.
     /// @param token0 Address of the first Silo token.
     /// @param token1 Address of the second Silo token.
     /// @param silo0 Address of the first Silo.
     /// @param silo1 Address of the second Silo.
     /// @param siloConfig Address of the SiloConfig.
-    event NewSilo(address indexed token0, address indexed token1, address silo0, address silo1, address siloConfig);
+    event NewSilo(
+        address indexed implementation,
+        address indexed token0,
+        address indexed token1,
+        address silo0,
+        address silo1,
+        address siloConfig
+    );
+
+    event BaseURI(string newBaseURI);
 
     /// @notice Emitted on the update of DAO fee.
     /// @param daoFee Value of the new DAO fee.
@@ -50,6 +60,7 @@ interface ISiloFactory is IERC721 {
     error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
     error InvalidQuoteToken();
+    error HookIsZeroAddress();
 
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.
@@ -117,7 +128,9 @@ interface ISiloFactory is IERC721 {
     /// @notice Get SiloConfig address by Silo id.
     function idToSiloConfig(uint256 _id) external view returns (address);
 
-    /// @notice True if the address is Silo, false otherwise.
+    /// @notice Do not use this method to check if silo is secure. Anyone can deploy silo with any configuration
+    /// and implementation. Most critical part of verification would be to check who deployed it.
+    /// @dev True if the address was deployed using SiloFactory.
     function isSilo(address _silo) external view returns (bool);
 
     /// @notice Id of a next Silo to be deployed. This is an ID of non-existing Silo outside of createSilo

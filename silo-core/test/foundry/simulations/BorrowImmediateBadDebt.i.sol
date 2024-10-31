@@ -26,7 +26,7 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
 
     any "fixes" for it?
     - any check for future LTV will not work
-    - minimal borrow? eg one token? this will definately increase cost of spamming and minimise cost of "cleanup liquidations"
+    - minimal borrow? eg one token? this will definitely increase cost of spamming and minimise cost of "cleanup liquidations"
       but at the same time it will add more complexity to eg withdraw, repay.
 
     I think we need to deal with it. Also this case can be created by almost full repay,

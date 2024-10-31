@@ -11,6 +11,8 @@
     "comprehensive-interface": "off",
     "not-rely-on-time": "off",
     "var-name-mixedcase": "off",
+    "func-named-parameters": "off",
+    "custom-errors": "off",
     "reason-string": [
       "warn",
       {

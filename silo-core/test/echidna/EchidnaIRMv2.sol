@@ -1,9 +1,8 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {InterestRateModelV2Config, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
@@ -157,7 +156,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         int256 expected = a * b / DP;
         int256 result = kcrit * (DP + Tcrit + beta * T) / DP * (u - ucrit) / DP;
 
-        assertEq(result, expected, "Incorrect operator precedance");
+        assertEq(result, expected, "Incorrect operator precedence");
     }
 
 }

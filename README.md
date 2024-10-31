@@ -71,7 +71,7 @@ example:
 # Remove the submodule entry from .git/config
 git submodule deinit -f gitmodules/silo-foundry-utils
 
-# Remove the submodule directory from the superproject's .git/modules directory
+# Remove the submodule directory from the super project's .git/modules directory
 rm -rf .git/modules/gitmodules/silo-foundry-utils
 
 # Remove the entry in .gitmodules and remove the submodule directory located at path/to/submodule
@@ -86,7 +86,7 @@ git submodule update --remote gitmodules/<submodule>
 If you want to update to specific commit:
 1. cd `gitmodules/<module>`
 2. `git checkout <commit>`
-3. commit changes (optinally update `branch` section in `.gitmodules`, however this make no difference)
+3. commit changes (optionally update `branch` section in `.gitmodules`, however this make no difference)
 
 ## Adding new working space
 
@@ -127,7 +127,7 @@ mkdir coverage
 
 FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log
 cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
-genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
+genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
 
 rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.log

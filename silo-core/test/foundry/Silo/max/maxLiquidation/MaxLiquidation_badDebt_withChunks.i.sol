@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {MaxLiquidationBadDebtTest} from "./MaxLiquidation_badDebt.i.sol";
 
@@ -23,10 +21,10 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
     */
     function test_maxLiquidation_partial_1token_sTokens_investigateCase() public {
         uint128 _collateral = 9222;
-        _maxLiquidation_partial_1token(_collateral, _RECEIVE_STOKENS, !_SELF);
+        _maxLiquidation_partial_1token(_collateral, _RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken, bool _self) internal override {
+    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken) internal override {
         bool sameAsset = true;
 
         _createDebtForBorrower(_collateral, sameAsset);
@@ -37,20 +35,14 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
 
-        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
 
         // with bad debt + chunks any final scenario is possible: user can have debt or not, be solvent or not.
-        // we can assert only to not have bad debt because liquidation here is not calculating profit
-        // we will liquidate till the end or until LTV <= 100%
-        uint256 ltv = silo1.getLtv(borrower);
-
-        // there might be a case, where we left with 0 collateral and some debt, in that case LTV == max
-        if (ltv != type(uint256).max) {
-            assertLe(silo1.getLtv(borrower), 1e18, "expect no bad debt anymore");
-        }
+        // when we add option that position will leave with dust shares, then final state can be anything
+        // so there is no more checks we can do
     }
 
-    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken, bool _self) internal override {
+    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken) internal override {
         bool sameAsset = false;
 
         _createDebtForBorrower(_collateral, sameAsset);
@@ -62,14 +54,14 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
 
-        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken, _self);
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
 
         // with bad debt for 2 tokens we can not assert anything after liquidations with chunks
         // it is possible to leave position with 0 collateral and 2 debt
         // because for bad debt there is no dust protection
     }
 
-    function _executeLiquidation(bool _sameToken, bool _receiveSToken, bool _self)
+    function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
@@ -95,22 +87,27 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
             emit log_named_uint("debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, borrower));
-            emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(AssetTypes.COLLATERAL));
+            emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral));
             emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
 
             uint256 collateralToLiquidate;
-            uint256 debtToCover;
-            (collateralToLiquidate, debtToCover,) = partialLiquidation.maxLiquidation(borrower);
+            uint256 maxDebtToCover;
+            (collateralToLiquidate, maxDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
 
             emit log_named_uint("[BadDebtWithChunks] collateralToLiquidate", collateralToLiquidate);
-            emit log_named_uint("[BadDebtWithChunks] debtToCover", debtToCover);
+            emit log_named_uint("[BadDebtWithChunks] maxDebtToCover", maxDebtToCover);
 
-            uint256 testDebtToCover = _calculateChunk(debtToCover, i);
+            if (collateralToLiquidate == 0) {
+                assertGt(silo0.getLtv(borrower), 1e18, "when no collateral we expect bad debt");
+                continue;
+            }
+
+            uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
 
             (
                 uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken, _self);
+            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             emit log_named_uint("[BadDebtWithChunks] partialCollateral", partialCollateral);
             emit log_named_uint("[BadDebtWithChunks] partialDebt", partialDebt);

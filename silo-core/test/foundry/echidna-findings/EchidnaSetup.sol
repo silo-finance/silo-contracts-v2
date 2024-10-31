@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
@@ -10,9 +10,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
-import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 
 // setup must match what was set for `EchidnaE2E`
 contract EchidnaSetup is SiloLittleHelper, Test {
@@ -134,7 +132,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         try IInterestRateModel(cfg.interestRateModel).getCompoundInterestRate(address(_silo), block.timestamp) {
             // we only accepting cased were we do not revert
         } catch {
-            // we dont want case, where IRM fail
+            // we don't want case, where IRM fail
             assertTrue(false, "IRM fail");
         }
     }

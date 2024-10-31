@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
-import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
@@ -47,7 +46,12 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         _registerDeployment(address(siloDeployer), SiloCoreContracts.SILO_DEPLOYER);
         _registerDeployment(address(siloImpl), SiloCoreContracts.SILO);
-        _registerDeployment(address(shareProtectedCollateralTokenImpl), SiloCoreContracts.SHARE_PORTECTED_COLLATERAL_TOKEN);
+
+        _registerDeployment(
+            address(shareProtectedCollateralTokenImpl),
+            SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN
+        );
+
         _registerDeployment(address(shareDebtTokenImpl), SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 }

@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
-import {PartialLiquidationExecLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+import {
+    PartialLiquidationLib
+} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
 
-import {OraclesHelper} from "../../../../../_common/OraclesHelper.sol";
-import {OracleMock} from "../../../../../_mocks/OracleMock.sol";
-import {PartialLiquidationExecLibImpl} from "../../../../../_common/PartialLiquidationExecLibImpl.sol";
-import "./MaxRepayRawMath.sol";
+import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
 
 // forge test -vv --mc MaxLiquidationTest
 contract MaxLiquidationTest is Test, MaxRepayRawMath {

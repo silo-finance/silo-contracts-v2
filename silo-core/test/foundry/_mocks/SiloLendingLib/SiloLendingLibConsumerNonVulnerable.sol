@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLendingLib} from "silo-core/contracts/lib/SiloLendingLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
 contract SiloLendingLibConsumerNonVulnerable {
     uint256 public constant INITIAL_TOTAL = 100;
 
     constructor() {
-        SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.DEBT] = INITIAL_TOTAL;
+        SiloStorageLib.getSiloStorage().totalAssets[ISilo.AssetType.Debt] = INITIAL_TOTAL;
     }
 
     function repay(
@@ -33,6 +32,6 @@ contract SiloLendingLibConsumerNonVulnerable {
     }
 
     function getTotalDebt() public view returns (uint256) {
-        return SiloStorageLib.getSiloStorage().totalAssets[AssetTypes.DEBT];
+        return SiloStorageLib.getSiloStorage().totalAssets[ISilo.AssetType.Debt];
     }
 }

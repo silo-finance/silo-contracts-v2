@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 // Utilities
 import {VyperDeployer} from "./VyperDeployer.sol";
@@ -187,14 +187,6 @@ contract Deployers is VyperDeployer, Data {
         siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
         siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
 
-        address siloImpl = address(new Silo(siloFactory));
-        address siloImplInternal = address(
-            new SiloInternal(siloFactoryInternal)
-        );
-
-        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
-        address shareDebtTokenImpl = address(new ShareDebtToken());
-
         address timelock = address(timelockController);
         Ownable(address(siloFactory)).transferOwnership(timelock);
         Ownable(address(siloFactoryInternal)).transferOwnership(timelock);
@@ -243,7 +235,12 @@ contract Deployers is VyperDeployer, Data {
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
-        (configData0, configData1) = Views.copySiloConfig(_siloInitData);
+        (configData0, configData1) = Views.copySiloConfig(
+            _siloInitData,
+            siloFactory.maxDeployerFee(),
+            siloFactory.maxFlashloanFee(),
+            siloFactory.maxLiquidationFee()
+        );
 
         configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
         configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, nextSiloId, address(siloFactory));

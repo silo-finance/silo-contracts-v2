@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -8,11 +8,9 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
-import {AssetTypes} from "silo-core/contracts/lib/AssetTypes.sol";
 
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
 import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
-import {TokenHelper} from "../TokenHelper.t.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 // forge test -vv --ffi --mc WithdrawFeesTest
@@ -21,7 +19,6 @@ contract WithdrawFeesTest is Test {
 
     ISiloConfig public config;
     ISiloFactory public factory;
-
 
     SiloConfigMock siloConfig;
     SiloFactoryMock siloFactory;
@@ -127,6 +124,7 @@ contract WithdrawFeesTest is Test {
         daoFee = 0.20e18;
         deployerFee = 0.01e18;
         daoFees = daoAndDeployerRevenue * 20/21;
+
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
     }
 
@@ -181,6 +179,7 @@ contract WithdrawFeesTest is Test {
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
 
         _setProtectedAssets(NO_PROTECTED_ASSETS);
+
         _withdrawFees(ISilo(address(this)));
         assertEq(_$().daoAndDeployerRevenue, 0, "fees cleared");
     }
@@ -190,7 +189,7 @@ contract WithdrawFeesTest is Test {
     }
 
     function _setProtectedAssets(uint256 _assets) internal {
-        _$().totalAssets[AssetTypes.PROTECTED] = _assets;
+        _$().totalAssets[ISilo.AssetType.Protected] = _assets;
     }
 
     function _reset() internal {
