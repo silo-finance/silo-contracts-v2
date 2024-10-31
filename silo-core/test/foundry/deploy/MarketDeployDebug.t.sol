@@ -7,7 +7,7 @@ import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployW
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MarketDeployDebugTest
 contract MarketDeployDebugTest is IntegrationTest {
-    SiloDeployWithGaugeHookReceiver siloDeploy;
+    SiloDeployWithGaugeHookReceiver internal _siloDeploy;
 
     function setUp() external {
         vm.createSelectFork(
@@ -20,7 +20,7 @@ contract MarketDeployDebugTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_deployMarket
     function test_deployMarket() public {
-        // siloDeploy.useConfig("GM_WETH_Silo"); // set market config name
-        // siloDeploy.run();
+        // _siloDeploy.useConfig("GM_WETH_Silo"); // set market config name
+        // _siloDeploy.run();
     }
 }
