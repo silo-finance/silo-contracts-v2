@@ -6,5 +6,45 @@
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0
-    }
+    },
+    "CHAINLINK_wUSDPlus_ETH": {
+        "baseToken": "wUSD+",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_wUSDPlus_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_ETH_USD_aggregator",
+        "secondaryHeartbeat": 87001
+    },
+    "CHAINLINK_USDC_ETH": {
+        "baseToken": "USDC",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_USDC_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_ETH_USD_aggregator",
+        "secondaryHeartbeat": 87001
+    },
+    "CHAINLINK_wstETH_ETH": {
+        "baseToken": "wstETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_wstETH_ETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0
+    },
+    "REDSTONE_ETHPlus_ETH": {
+        "baseToken": "ETH+",
+        "quoteToken": "WETH",
+        "primaryAggregator": "REDSTONE_ETHPlus_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0
+    },
+    "CHAINLINK_gmETH_ETH": {
+        "baseToken": "GM",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_gmETH_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_ETH_USD_aggregator",
+        "secondaryHeartbeat": 87001
+    },
 }

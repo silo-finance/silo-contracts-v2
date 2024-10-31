@@ -15,7 +15,7 @@ contract MarketDeployDebugTest is IntegrationTest {
             269494200
         );
 
-        siloDeploy = new SiloDeployWithGaugeHookReceiver();
+        _siloDeploy = new SiloDeployWithGaugeHookReceiver();
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_deployMarket

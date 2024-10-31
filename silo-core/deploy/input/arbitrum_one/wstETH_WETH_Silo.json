@@ -5,7 +5,7 @@
     "daoFee": 1000,
     "deployerFee": 500,
     "token0": "wstETH",
-    "solvencyOracle0": "NO_ORACLE",
+    "solvencyOracle0": "CHAINLINK_wstETH_ETH_aggregator",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2.sol",
     "interestRateModelConfig0": "bridgeETHv3",
