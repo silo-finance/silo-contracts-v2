@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {ISilo} from "silo-core/contracts/Silo.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Libraries
 import {Vm} from "forge-std/Base.sol";
@@ -56,7 +57,7 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _maxRedeem(address silo, address user) internal view returns (uint256) {//@audit-issue reverts when debt is too high
+    function _maxRedeem(address silo, address user) internal view returns (uint256) {
         try ISilo(silo).maxRedeem(user) returns (uint256 maxRedeem) {
             return maxRedeem;
         } catch {
@@ -64,7 +65,7 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
         }
     }
 
-    function  _maxWithdraw(address silo, address user) internal view returns (uint256) {
+    function _maxWithdraw(address silo, address user) internal view returns (uint256) {
         try ISilo(silo).maxWithdraw(user) returns (uint256 maxWithdraw) {
             return maxWithdraw;
         } catch {
@@ -77,8 +78,14 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _getUserAssets(address silo, address user) internal view returns (uint256) {
-        return ISilo(silo).maxWithdraw(user, ISilo.CollateralType.Collateral) // TODO check if this is correct
-            + ISilo(silo).maxWithdraw(user, ISilo.CollateralType.Protected);
+        (address protectedShareToken,) =
+            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Protected);
+        (address collateralShareToken,) =
+            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Collateral);
+        uint256 protectedShares = IERC20(protectedShareToken).balanceOf(user);
+        uint256 collateralShares = IERC20(collateralShareToken).balanceOf(user);
+        return ISilo(silo).convertToAssets(protectedShares, ISilo.AssetType.Protected)
+            + ISilo(silo).convertToAssets(collateralShares, ISilo.AssetType.Collateral);
     }
 
     function _setTargetActor(address user) internal {

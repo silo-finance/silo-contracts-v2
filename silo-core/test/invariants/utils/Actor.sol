@@ -6,6 +6,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 /// @notice Proxy contract for invariant suite actors to avoid aTester calling contracts
 contract Actor {
+    /// @notice last targetted contract
+    address public lastTarget;
     /// @notice list of tokens to approve
     address[] internal tokens;
     /// @notice list of contracts to approve tokens to
@@ -25,6 +27,8 @@ contract Actor {
     function proxy(address _target, bytes memory _calldata) public returns (bool success, bytes memory returnData) {
         (success, returnData) = address(_target).call(_calldata);
 
+        lastTarget = _target;
+
         handleAssertionError(success, returnData);
     }
 
@@ -34,6 +38,8 @@ contract Actor {
         returns (bool success, bytes memory returnData)
     {
         (success, returnData) = address(_target).call{value: value}(_calldata);
+
+        lastTarget = _target;
 
         handleAssertionError(success, returnData);
     }

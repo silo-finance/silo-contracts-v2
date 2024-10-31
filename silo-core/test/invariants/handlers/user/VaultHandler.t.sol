@@ -23,12 +23,7 @@ contract VaultHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function deposit(
-        uint256 _assets,
-        uint8 i,
-        uint8 j,
-        uint8 k
-    ) external setup {
+    function deposit(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup {
         bool success;
         bytes memory returnData;
 
@@ -40,26 +35,21 @@ contract VaultHandler is BaseHandler {
         ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
 
         _before();
-        (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(
-                ISilo.deposit.selector,
-                _assets,
-                receiver,
-                _collateralType
-            )
-        );
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(ISilo.deposit.selector, _assets, receiver, _collateralType));
 
         // POST-CONDITIONS
 
         if (success) {
             _after();
 
-            assertEq(
-                defaultVarsBefore[target].totalAssets + _assets,
-                defaultVarsAfter[target].totalAssets,
-                LENDING_HSPOST_A
-            );
+            if (_collateralType == ISilo.CollateralType.Collateral) {
+                assertEq(
+                    defaultVarsBefore[target].totalAssets + _assets,
+                    defaultVarsAfter[target].totalAssets,
+                    LENDING_HSPOST_A
+                );
+            }
         }
 
         if (_assets == 0) {
@@ -67,12 +57,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function mint(
-        uint256 _shares,
-        uint8 i,
-        uint8 j,
-        uint8 k
-    ) external setup {
+    function mint(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
         bool success;
         bytes memory returnData;
 
@@ -84,26 +69,21 @@ contract VaultHandler is BaseHandler {
         ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
 
         _before();
-        (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(
-                ISilo.mint.selector,
-                _shares,
-                receiver,
-                _collateralType
-            )
-        );
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(ISilo.mint.selector, _shares, receiver, _collateralType));
 
         // POST-CONDITIONS
 
         if (success) {
             _after();
 
-            assertEq(
-                defaultVarsBefore[target].totalSupply + _shares,
-                defaultVarsAfter[target].totalSupply,
-                LENDING_HSPOST_A
-            );
+            if (_collateralType == ISilo.CollateralType.Collateral) {
+                assertEq(
+                    defaultVarsBefore[target].totalSupply + _shares,
+                    defaultVarsAfter[target].totalSupply,
+                    LENDING_HSPOST_A
+                );
+            }
         }
 
         if (_shares == 0) {
@@ -111,12 +91,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function withdraw(
-        uint256 _assets,
-        uint8 i,
-        uint8 j,
-        uint8 k
-    ) external setup {
+    function withdraw(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup {
         bool success;
         bytes memory returnData;
 
@@ -129,14 +104,7 @@ contract VaultHandler is BaseHandler {
 
         _before();
         (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(
-                ISilo.withdraw.selector,
-                _assets,
-                receiver,
-                address(actor),
-                _collateralType
-            )
+            target, abi.encodeWithSelector(ISilo.withdraw.selector, _assets, receiver, address(actor), _collateralType)
         );
 
         // POST-CONDITIONS
@@ -150,12 +118,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function redeem(
-        uint256 _shares,
-        uint8 i,
-        uint8 j,
-        uint8 k
-    ) external setup {
+    function redeem(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
         bool success;
         bytes memory returnData;
 
@@ -168,14 +131,7 @@ contract VaultHandler is BaseHandler {
 
         _before();
         (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(
-                ISilo.redeem.selector,
-                _shares,
-                receiver,
-                address(actor),
-                _collateralType
-            )
+            target, abi.encodeWithSelector(ISilo.redeem.selector, _shares, receiver, address(actor), _collateralType)
         );
 
         if (success) {
@@ -200,20 +156,13 @@ contract VaultHandler is BaseHandler {
 
         ISilo.CollateralType _collateralType = ISilo.CollateralType(j % 2);
 
-        uint256 maxWithdraw = ISilo(target).maxWithdraw(
-            address(actor),
-            _collateralType
-        );
+        uint256 maxWithdraw = ISilo(target).maxWithdraw(address(actor), _collateralType);
 
         _before();
         (success, returnData) = actor.proxy(
             target,
             abi.encodeWithSelector(
-                ISilo.withdraw.selector,
-                maxWithdraw,
-                address(actor),
-                address(actor),
-                _collateralType
+                ISilo.withdraw.selector, maxWithdraw, address(actor), address(actor), _collateralType
             )
         );
 

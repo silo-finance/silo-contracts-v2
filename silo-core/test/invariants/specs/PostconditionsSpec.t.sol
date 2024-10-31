@@ -106,10 +106,6 @@ abstract contract PostconditionsSpec {
 
     string constant BORROWING_HSPOST_L = "BORROWING_HSPOST_L: If user is solvent transitionCollateral() for _transitionFrom == CollateralType.Protected should never revert";
 
-    string constant BORROWING_HSPOST_M = "BORROWING_HSPOST_M: leverageSameAsset() should never decrease Silo asset balance";
-
-    string constant BORROWING_HSPOST_N = "BORROWING_HSPOST_N: If maxLtv < 100% then leverageSameAsset() should always increase Silo asset balance"; // TODO
-
     string constant BORROWING_HSPOST_O = "BORROWING_HSPOST_O: borrow should decrease Silo balance by exactly _assets";
 
     string constant BORROWING_HSPOST_P = "BORROWING_HSPOST_P: User should always have ltv below maxLTV after successful call to borrow()"; // TODO
@@ -148,11 +144,4 @@ abstract contract PostconditionsSpec {
     string constant SILO_INVARIANT_J = "SILO_INVARIANT_J: _collateralShareToken balance MUST increase while depositing"; //custom
 
     string constant SILO_INVARIANT_K = "SILO_INVARIANT_K: _collateralShareToken balance MUST decrease while withdrawing"; //custom
-
-    /* 
-    string constant BORROWING_INVARIANT_H = "BORROWING_INVARIANT_H: If totalBorrows increases new totalBorrows must be less than or equal to borrow cap";//@audit are there borrow caps?
-
-    string constant BORROWING_INVARIANT_N1 = "BORROWING_INVARIANT_N1: borrow/deposit(x) => repay(x) users shouldn't gain any asset"; //NOT SURE RENAMED
-
- */
 }

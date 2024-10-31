@@ -16,8 +16,13 @@ import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
  * The objective is to go from random values to hardcoded values that can be analyzed more easily
  */
 contract CryticToFoundry is Invariants, Setup {
+    CryticToFoundry Tester = this;
+    uint256 constant DEFAULT_TIMESTAMP = 337812;
+
     modifier setup() override {
+        targetActor = address(actor);
         _;
+        targetActor = address(0);
     }
 
     function setUp() public {
@@ -32,6 +37,8 @@ contract CryticToFoundry is Invariants, Setup {
 
         /// @dev fixes the actor to the first user
         actor = actors[USER1];
+
+        vm.warp(DEFAULT_TIMESTAMP);
     }
 
     /// @dev Needed in order for foundry to recognise the contract as a test, faster debugging
@@ -41,28 +48,7 @@ contract CryticToFoundry is Invariants, Setup {
     //                                FAILING INVARIANTS REPLAY                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function test_echidna_BORROWING_INVARIANT() public {
-        _setUpActorAndDelay(USER2, 203047);
-        this.setOraclePrice(75638385906155076883289831498661502101511673487426594778361149796941034811732, 64);
-        _setUpActorAndDelay(USER1, 3032);
-        this.deposit(77844067395127635960841998878023, 20, 55, 57);
-        _setUpActorAndDelay(USER1, 86347);
-        this.deposit(774, 25, 0, 211);
-        _setUpActorAndDelay(USER2, 114541);
-        this.assertBORROWING_HSPOST_F(211, 8);
-        _setUpActorAndDelay(USER1, 487078);
-        this.setOraclePrice(115792089237316195423570985008687907853269984665640562830531764393283954933761, 0);
-        echidna_BORROWING_INVARIANT();
-    }
-
-    function test_echidna_BASE_INVARIANT1() public {
-        this.leverageSameAsset(2, 1, 0, 0, 0);
-        echidna_BASE_INVARIANT();
-    }
-
     function test_echidna_BASE_INVARIANT2() public {
-        this.leverageSameAsset(433, 318, 0, 0, 1);
-        _delay(425435);
         this.borrowShares(30200315428657041181692818570648842165065568767143529577951521503506330530609, 0, 62);
         _delay(297507);
         this.borrow(24676309369365446429188617450178, 153, 172);
@@ -107,12 +93,221 @@ contract CryticToFoundry is Invariants, Setup {
         this.assert_BORROWING_HSPOST_D(0, 0);
         _delay(348683);
         this.assert_LENDING_INVARIANT_C(0, 21);
-        echidna_BASE_INVARIANT();// @audit BASE_INVARIANT_A failing
+        echidna_BASE_INVARIANT(); // @audit-ok BASE_INVARIANT_A failing
+    }
+
+    function test_echidna_BORROWING_INVARIANT() public {
+        _setUpActorAndDelay(USER2, 203047);
+        this.setOraclePrice(75638385906155076883289831498661502101511673487426594778361149796941034811732, 64);
+        _setUpActorAndDelay(USER1, 3032);
+        this.deposit(77844067395127635960841998878023, 20, 55, 57);
+        _setUpActorAndDelay(USER1, 86347);
+        this.deposit(774, 25, 0, 211);
+        _setUpActorAndDelay(USER2, 114541);
+        this.assertBORROWING_HSPOST_F(211, 8);
+        _setUpActorAndDelay(USER1, 487078);
+        this.setOraclePrice(115792089237316195423570985008687907853269984665640562830531764393283954933761, 0);
+        echidna_BORROWING_INVARIANT();// @audit-ok
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                              FAILING POSTCONDITIONS REPLAY                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function test_borrowSameAssetEchidna() public {
+        this.mint(2006, 0, 0, 1);
+        this.borrowSameAsset(1, 0, 0);
+    }
+
+    function test_withdrawEchidna() public {
+        Tester.mint(261704911235117686095, 3, 22, 5);
+        Tester.setOraclePrice(5733904121326457137913237185177414188002932016538715575300939815758706, 1);
+        Tester.mint(315177161663537856181160994225, 0, 1, 3);
+        Tester.borrowShares(1, 0, 0);
+        Tester.setOraclePrice(5735839262457902375842327974553553747246352514262698977554375720302080, 0);
+        Tester.withdraw(1238665, 0, 0, 1);
+    }
+
+    function test_depositEchidna() public {
+        Tester.deposit(1, 0, 0, 0);
+    }
+
+    function test_flashLoanEchidna() public {
+        Tester.flashLoan(1, 76996216303583, 0, 0);
+    }
+
+    function test_transitionCollateralEchidna() public {
+        Tester.transitionCollateral(0, 0, 0, 0);
+    }
+
+    function test_liquidationCallEchidna() public {
+        Tester.mint(10402685166958480039898380057, 0, 0, 1);
+        Tester.deposit(1, 0, 1, 1);
+        Tester.setOraclePrice(32922152482718336970808482575712338131227045040770117410308, 1);
+        Tester.borrowShares(1, 0, 0);
+        Tester.setOraclePrice(1, 1);
+        Tester.liquidationCall(
+            1179245955276247436741786656479833618730492640882500598892, false, RandomGenerator(0, 0, 1)
+        );
+    }
+
+    function test_replayBorrowSameAsset() public {
+        //@audit borrowSameAsset does not require any kind of solvency check
+        Tester.mint(146189612359507306544594, 0, 0, 1);
+        Tester.borrowSameAsset(1, 0, 0);
+        Tester.mint(2912, 0, 1, 0);
+        Tester.setOraclePrice(259397900503974518365051033297974490300799102382829890910371, 1);
+        Tester.switchCollateralToThisSilo(1);
+        Tester.setOraclePrice(0, 1);
+        Tester.borrowSameAsset(1, 0, 0);
+    }
+
+    function test_replayBorrow() public {
+        // @audit BASE_GPOST_D
+        Tester.mint(3757407288159739, 0, 0, 0);
+        Tester.mint(90935896182375204709, 1, 0, 1);
+        Tester.borrowSameAsset(1567226244662, 0, 0);
+        Tester.assert_LENDING_INVARIANT_C(0, 0);
+        Tester.setOraclePrice(0, 0);
+        _delay(30);
+        Tester.borrowShares(1, 0, 0);
+    }
+
+    function test_replayassertBORROWING_HSPOST_F() public {
+        // @audit BORROWING_HSPOST_F failing
+        Tester.mint(1000, 0, 0, 0);
+        Tester.setOraclePrice(1496599498391866130453551051869098196856115, 1);
+        Tester.setOraclePrice(886721281625011804659337445, 0);
+        Tester.deposit(20, 0, 1, 1);
+        Tester.assertBORROWING_HSPOST_F(0, 1);
+    }
+
+    function test_replayflashLoan() public {
+        // @audit 0 amount flashloan should fail the transaction like the other actions
+        Tester.flashLoan(0, 0, 0, 0);
+    }
+
+    function test_replaytransitionCollateral() public {
+        Tester.mint(1023, 0, 0, 0);
+        Tester.transitionCollateral(679, 0, 0, 0);
+    }
+
+    function test_replayredeem() public {
+        //TODO review with silo team to make sure is desired behavior
+        // Mint on silo 0 protected collateral
+        Tester.mint(1025, 0, 0, 0);
+        Tester.setOraclePrice(282879448546642360938617676663071922922812, 0);
+
+        // Mint on silo 1 collateral
+        Tester.mint(36366106112624882, 0, 1, 1);
+
+        // Borrow shares on silo 1 using silo 0 protected collateral as collateral
+        Tester.borrowShares(315, 0, 1);
+
+        console.log("########");
+        console.log(
+            "siloConfig.borrowerCollateralSilo(msg.sender): ", siloConfig.borrowerCollateralSilo(address(actor))
+        );
+
+        // Switch collateral from 0 silo 1
+        Tester.switchCollateralToThisSilo(1);
+        console.log("assert_LENDING_INVARIANT_C");
+        // Max Withdraw from silo 1
+        Tester.assert_LENDING_INVARIANT_C(1, 1);
+        _delay(345519);
+        console.log("########");
+        console.log("solvent: ", vault0.isSolvent(address(actor)));
+        console.log("solvent: ", vault1.isSolvent(address(actor)));
+        Tester.redeem(694, 0, 0, 0);
+    }
+
+    function test_replaywithdraw0() public {
+        // TODO check why echidna is not failing SILO_HSPOST_B
+        Tester.withdraw(0, 0, 0, 0);
+    }
+
+    function test_replayRedeem0() public {
+        // TODO check why echidna is not failing SILO_HSPOST_B
+        Tester.redeem(0, 0, 0, 0);
+    }
+
+    function test_replayassert_BORROWING_HSPOST_D() public {
+        // TODO check why foundry is not failing
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(326792);
+        Tester.mint(340282423155723237052512385577070742059, 30, 112, 137);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(452188);
+        Tester.deposit(2835717307, 103, 167, 147);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(322275);
+        Tester.setOraclePrice(55280569312692373490196013056808227806891853791735344918874142698213660412305, 23);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(32767);
+        Tester.assertBORROWING_HSPOST_F(64, 78);
+        _delay(509126);
+        Tester.borrowShares(47, 3, 32);
+        _delay(502419);
+        _delay(436472);
+        Tester.mint(924, 68, 130, 120);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(322342);
+        Tester.approve(115792089237316195423570985008687907853269984665640564039456634007913129639936, 253, 40);
+        _delay(272130);
+        Tester.assert_LENDING_INVARIANT_C(24, 117);
+        _delay(336899);
+        Tester.switchCollateralToThisSilo(17);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(267435);
+        Tester.liquidationCall(
+            55274039173466044573085824002369434721392944367468590368902904918998252794001,
+            true,
+            RandomGenerator(227, 8, 87)
+        );
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(309983);
+        Tester.accrueInterestForSilo(57);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(290782);
+        Tester.transfer(100000000000000001, 8, 67);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(322328);
+        Tester.repayShares(174197950, 4, 244);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(253699);
+        Tester.approve(115792089237316195423570985008687907853269984665640564039456634007913129639936, 253, 40);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(322328);
+        Tester.increaseReceiveAllowance(
+            79938786390973806961901524534113156724645984534916293209236827952587128622943, 111, 10
+        );
+        _delay(242555);
+        Tester.liquidationCall(388, false, RandomGenerator(247, 126, 89));
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(577105);
+        Tester.decreaseReceiveAllowance(
+            45963211144775969831521803001089376361106655514834038343524209057669939837309, 1, 164
+        );
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(448251);
+        Tester.repayShares(174197950, 4, 244);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(322326);
+        Tester.approve(40, 4, 8);
+        _delay(144223);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(225906);
+        Tester.assert_BORROWING_HSPOST_D(193, 42);
+    }
+
+    function test_replaytransitionCollateral2() public {
+        Tester.mint(4003, 0, 0, 0);
+        Tester.mint(4142174, 0, 1, 1);
+        Tester.setOraclePrice(5167899937944767889217962943343171205019348763, 0);
+        Tester.assertBORROWING_HSPOST_F(0, 1);
+        Tester.setOraclePrice(2070693789985146455311434266782705402030751026, 1);
+        Tester.transitionCollateral(2194, 0, 0, 0);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
