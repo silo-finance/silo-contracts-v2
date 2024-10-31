@@ -18,9 +18,9 @@ contract MarketDeployDebugTest is IntegrationTest {
         siloDeploy = new SiloDeployWithGaugeHookReceiver();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_it
-    function test_it() public {
-        // siloDeploy.useConfig("wUSDPlus_USDC_Silo"); // set market config name
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_deployMarket
+    function test_deployMarket() public {
+        // siloDeploy.useConfig("GM_WETH_Silo"); // set market config name
         // siloDeploy.run();
     }
 }

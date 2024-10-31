@@ -3,7 +3,7 @@
     "hookReceiver": "NO_HOOK_RECEIVER",
     "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "daoFee": 1000,
-    "deployerFee": 1000,
+    "deployerFee": 500,
     "token0": "solvBTC",
     "solvencyOracle0": "CHAINLINK_wBTC_BTC",
     "maxLtvOracle0": "NO_ORACLE",
