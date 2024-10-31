@@ -123,6 +123,9 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function _saveOracle(address _oracle, string memory _oracleConfigName, bytes32 _noOracleKey) internal {
+        console2.log("[_saveOracle] _oracle", _oracle);
+        console2.log("[_saveOracle] _oracleConfigName", _oracleConfigName);
+
         bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
 
         if (_oracle == address(0) || configHashedKey == _noOracleKey) return;
@@ -171,6 +174,8 @@ contract SiloDeploy is CommonDeploy {
         if (_isDiaOracle(_oracleConfigName)) {
             return _diaTxData(_oracleConfigName);
         }
+
+        revert("[_getOracleTxData] unknown oracle type");
     }
 
     function _uniswapV3TxData(string memory _oracleConfigName)
