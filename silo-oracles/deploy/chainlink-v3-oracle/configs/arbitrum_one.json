@@ -32,7 +32,7 @@
         "secondaryHeartbeat": 0
     },
     "CHAINLINK_gmETH_USD": {
-        "baseToken": "GM",
+        "baseToken": "gmETH",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_gmETH_USD_aggregator",
         "primaryHeartbeat": 87001,
