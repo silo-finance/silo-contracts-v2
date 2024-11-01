@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -30,6 +31,7 @@ import {
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
@@ -37,6 +39,8 @@ FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloDeploy is CommonDeploy {
+    uint256 private constant _BYTES32_SIZE = 32;
+
     string public configName;
 
     string[] public verificationIssues;
@@ -400,8 +404,8 @@ contract SiloDeploy is CommonDeploy {
         ISiloOracle oracle = ISiloOracle(_oracle);
 
         address quoteToken = oracle.quoteToken();
-        string memory quoteTokenSymbol = TokenHelper.symbol(quoteToken);
-        uint256 quoteTokenDecimals = TokenHelper.assertAndGetDecimals(quoteToken);
+        string memory quoteTokenSymbol = _symbol(quoteToken);
+        uint256 quoteTokenDecimals = _assertAndGetDecimals(quoteToken);
 
         console2.log(
             "\t\tquoteToken",
@@ -415,9 +419,12 @@ contract SiloDeploy is CommonDeploy {
             )
         );
 
-        uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
-        uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
-        console2.log("\t\tquote", quoteTokenPrice);
+        uint256 assetDecimals = _assertAndGetDecimals(_asset);
+
+        if (assetDecimals != 0) {
+            uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
+            console2.log("\t\tquote", quoteTokenPrice);
+        }
     }
 
     function _representAsPercent(uint256 _fee) internal pure returns (string memory percent) {
@@ -450,5 +457,45 @@ contract SiloDeploy is CommonDeploy {
         }
 
         percent = string.concat(percent, "%");
+    }
+
+    function _assertAndGetDecimals(address _token) internal view returns (uint256) {
+        (bool hasMetadata, bytes memory data) =
+            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.decimals, ()));
+
+        // decimals() is optional in the ERC20 standard, so if metadata is not accessible
+        // we assume there are no decimals and use 0.
+        if (!hasMetadata) {
+            return 0;
+        }
+
+        return abi.decode(data, (uint8));
+    }
+
+    /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
+    function _tokenMetadataCall(address _token, bytes memory _data) private view returns (bool, bytes memory) {
+        if (!IsContract.isContract(_token)) return (false, "");
+
+        (bool success, bytes memory result) = _token.staticcall(_data);
+
+        // If the call reverted we assume the token doesn't follow the metadata extension
+        if (!success) {
+            return (false, "");
+        }
+
+        return (true, result);
+    }
+
+    function _symbol(address _token) internal view returns (string memory assetSymbol) {
+        (bool hasMetadata, bytes memory data) =
+            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
+
+        if (!hasMetadata || data.length == 0) {
+            return "?";
+        } else if (data.length == _BYTES32_SIZE) {
+            return string(TokenHelper.removeZeros(data));
+        } else {
+            return abi.decode(data, (string));
+        }
     }
 }
