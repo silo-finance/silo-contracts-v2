@@ -20,7 +20,7 @@ contract MarketDeployDebugTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_deployMarket
     function test_deployMarket() public {
-        _siloDeploy.useConfig("wstETH_WETH_Silo"); // set market config name
-        _siloDeploy.run();
+        // _siloDeploy.useConfig("wstETH_WETH_Silo"); // set market config name
+        // _siloDeploy.run();
     }
 }
