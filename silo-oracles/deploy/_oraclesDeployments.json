@@ -1,5 +1,6 @@
 {
   "arbitrum_one": {
+    "CHAINLINK_wstETH_ETH": "0x6f260F87379D42b29058ECbfbE50638f96071f07",
     "UniV3-ETH-USDC-0.3": "0x31C60c7913ee5940Ddf6B8CA0F2988c7A932aC19"
   },
   "optimism": {

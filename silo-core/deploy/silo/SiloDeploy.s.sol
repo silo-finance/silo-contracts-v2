@@ -28,6 +28,8 @@ import {
     SiloOraclesFactoriesDeployments
 } from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
@@ -35,10 +37,10 @@ FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloDeploy is CommonDeploy {
-    string internal _configName;
+    string public configName;
 
     function useConfig(string memory _config) external returns (SiloDeploy) {
-        _configName = _config;
+        configName = _config;
         return this;
     }
 
@@ -48,7 +50,7 @@ contract SiloDeploy is CommonDeploy {
         SiloConfigData siloData = new SiloConfigData();
         console2.log("[SiloCommonDeploy] SiloConfigData deployed");
 
-        string memory configName = bytes(_configName).length == 0 ? vm.envString("CONFIG") : _configName;
+        configName = bytes(configName).length == 0 ? vm.envString("CONFIG") : configName;
 
         console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
@@ -81,11 +83,11 @@ contract SiloDeploy is CommonDeploy {
 
         ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         console2.log("[SiloCommonDeploy] siloInitData.token0", siloInitData.token0);
         console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         siloConfig = siloDeployer.deploy(
             oracles,
@@ -104,6 +106,8 @@ contract SiloDeploy is CommonDeploy {
         _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
         console2.log("[SiloCommonDeploy] run() finished.");
+
+        _printDetails(siloConfig);
     }
 
     function _saveOracles(
@@ -281,5 +285,128 @@ contract SiloDeploy is CommonDeploy {
         internal
         virtual
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
+    }
+
+    function _printDetails(ISiloConfig _siloConfig) internal view {
+        (address silo0, address silo1) = _siloConfig.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
+
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        console2.log(string.concat("\nDeployed market details [", chainAlias, "]"));
+        console2.log("SiloConfig", address(_siloConfig));
+        console2.log("\n");
+        console2.log("silo0");
+        _printSiloDetails(silo0, siloConfig0);
+        console2.log("\n");
+        console2.log("silo1");
+        _printSiloDetails(silo1, siloConfig1);
+    }
+
+    function _printSiloDetails(address _silo, ISiloConfig.ConfigData memory _siloConfig) internal view {
+        string memory tokenSymbol = TokenHelper.symbol(_siloConfig.token);
+
+        string memory tokenStr = vm.toString(_siloConfig.token);
+
+        uint256 tokenDecimals = TokenHelper.assertAndGetDecimals(_siloConfig.token);
+
+        console2.log(_silo);
+        console2.log("\n");
+
+        console2.log(
+            "\tasset",
+            string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
+        );
+
+        console2.log("\n");
+        console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee));
+        console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee));
+        console2.log("\tliquidationFee", _representAsPercent(_siloConfig.liquidationFee));
+        console2.log("\tflashloanFee  ", _representAsPercent(_siloConfig.flashloanFee));
+        console2.log("\n");
+        console2.log("\tmaxLtv", _representAsPercent(_siloConfig.maxLtv));
+        console2.log("\tlt    ", _representAsPercent(_siloConfig.lt));
+
+        string memory warning = "";
+
+        if (_siloConfig.liquidationTargetLtv == _siloConfig.lt) {
+            warning = ", !!! WARNING: liquidationTargetLtv == lt !!!";
+        }
+
+        console2.log(
+            "\tliquidationTargetLtv",
+            string.concat(_representAsPercent(_siloConfig.liquidationTargetLtv), warning)
+        );
+
+        console2.log("\n");
+        console2.log("\tsolvencyOracle", _siloConfig.solvencyOracle);
+
+        if (_siloConfig.solvencyOracle != address(0)) {
+            _printOracleInfo(_siloConfig.solvencyOracle, _siloConfig.token);
+        }
+
+        console2.log("\tmaxLtvOracle", _siloConfig.maxLtvOracle);
+
+        if (_siloConfig.maxLtvOracle != address(0)) {
+            _printOracleInfo(_siloConfig.maxLtvOracle, _siloConfig.token);
+        }
+    }
+
+    function _printOracleInfo(address _oracle, address _asset) internal view {
+        ISiloOracle oracle = ISiloOracle(_oracle);
+
+        address quoteToken = oracle.quoteToken();
+        string memory quoteTokenSymbol = TokenHelper.symbol(quoteToken);
+        uint256 quoteTokenDecimals = TokenHelper.assertAndGetDecimals(quoteToken);
+
+        console2.log(
+            "\t\tquoteToken",
+            string.concat(
+                vm.toString(quoteToken),
+                " (",
+                quoteTokenSymbol,
+                ", ",
+                vm.toString(quoteTokenDecimals),
+                " decimals)"
+            )
+        );
+
+        uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
+        uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
+        console2.log("\t\tquote", quoteTokenPrice);
+    }
+
+    function _representAsPercent(uint256 _fee) internal pure returns (string memory percent) {
+        if (_fee == 0) return "0%";
+
+        uint256 biasPoints = _fee * 1e4 / 1e18;
+
+        if (biasPoints == 0) return "0%";
+
+        if (biasPoints < 10) {
+            percent = string.concat("0.0", vm.toString(biasPoints));
+        } else if (biasPoints < 100) {
+            uint256 biasPointsInTenths = biasPoints / 10;
+            uint256 reminder = biasPoints - biasPointsInTenths * 10;
+
+            percent = string.concat("0.", vm.toString(biasPointsInTenths));
+
+            if (reminder != 0) {
+                percent = string.concat(percent, vm.toString(reminder));
+            }
+        } else {
+            uint256 biasPointsInHundredths = biasPoints / 100;
+            uint256 reminder = biasPoints - biasPointsInHundredths * 100;
+
+            percent = vm.toString(biasPointsInHundredths);
+
+            if (reminder != 0) {
+                percent = string.concat(percent, ".", vm.toString(reminder));
+            }
+        }
+
+        percent = string.concat(percent, "%");
     }
 }
