@@ -16,7 +16,7 @@ contract SiloConfigData {
 
     bytes32 public constant NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
     bytes32 public constant PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
-    bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
+    bytes32 public constant CLONE_IMPLEMENTATION_KEY = keccak256(bytes("CLONE_IMPLEMENTATION"));
 
     error DeployedContractNotFound(string contractName);
 
@@ -101,7 +101,7 @@ contract SiloConfigData {
     }
 
     function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
-        if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
+        if (keccak256(bytes(_requiredHookReceiver)) != CLONE_IMPLEMENTATION_KEY) {
             hookReceiver = _resolveDeployedContract(_requiredHookReceiver);
         }
     }

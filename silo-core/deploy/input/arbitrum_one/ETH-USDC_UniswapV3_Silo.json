@@ -1,6 +1,6 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
-    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "PartialLiquidation.sol",
     "daoFee": 1500,
     "deployerFee": 1000,

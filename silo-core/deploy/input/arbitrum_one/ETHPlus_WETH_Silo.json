@@ -1,6 +1,6 @@
 {
     "deployer": "",
-    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "daoFee": 1000,
     "deployerFee": 0,
