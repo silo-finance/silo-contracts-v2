@@ -358,20 +358,8 @@ contract SiloDeploy is CommonDeploy {
         ISiloOracle oracle = ISiloOracle(_oracle);
 
         address quoteToken = oracle.quoteToken();
-        string memory quoteTokenSymbol = TokenHelper.symbol(quoteToken);
-        uint256 quoteTokenDecimals = TokenHelper.assertAndGetDecimals(quoteToken);
 
-        console2.log(
-            "\t\tquoteToken",
-            string.concat(
-                vm.toString(quoteToken),
-                " (",
-                quoteTokenSymbol,
-                ", ",
-                vm.toString(quoteTokenDecimals),
-                " decimals)"
-            )
-        );
+        console2.log("\t\tquoteToken", quoteToken);
 
         uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
         uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
