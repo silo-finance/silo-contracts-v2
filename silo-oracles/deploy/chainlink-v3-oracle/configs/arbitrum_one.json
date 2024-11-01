@@ -7,14 +7,6 @@
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0
     },
-    "CHAINLINK_wUSDPlus_USD": {
-        "baseToken": "wUSD+",
-        "quoteToken": "SILO_VIRTUAL_USD_8",
-        "primaryAggregator": "CHAINLINK_USDPlus_USD_aggregator",
-        "primaryHeartbeat": 87001,
-        "secondaryAggregator": "",
-        "secondaryHeartbeat": 0
-    },
     "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
