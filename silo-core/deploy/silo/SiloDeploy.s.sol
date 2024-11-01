@@ -89,9 +89,6 @@ contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
-        uint256 original = siloInitData.liquidationTargetLtv0;
-        siloInitData.liquidationTargetLtv0 = 1;
-
         ISiloDeployer.ClonableHookReceiver memory hookReceiver;
         hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
 
@@ -107,8 +104,6 @@ contract SiloDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        siloInitData.liquidationTargetLtv0 = original;
-
         console2.log("[SiloCommonDeploy] deploy done");
 
         SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
@@ -117,8 +112,7 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] run() finished.");
 
-        _printDetails(siloConfig);
-        _validateCreatedSilo(siloConfig, siloInitData);
+        _printAndValidateDetails(siloConfig, siloInitData);
     }
 
     function _saveOracles(
@@ -298,69 +292,10 @@ contract SiloDeploy is CommonDeploy {
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
     }
 
-    function _validateCreatedSilo(ISiloConfig _siloConfig, ISiloConfig.InitData memory _siloInitData) internal virtual {
-        console2.log("\nConfig validation:");
-
-        (address silo0, address silo1) = _siloConfig.getSilos();
-
-        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
-        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
-
-        if (siloConfig0.daoFee != _siloInitData.daoFee || siloConfig1.daoFee != _siloInitData.daoFee) {
-            verificationIssues.push("daoFee mismatch");
-        }
-
-        if (
-            siloConfig0.flashloanFee != _siloInitData.flashloanFee0 ||
-            siloConfig1.flashloanFee != _siloInitData.flashloanFee1
-        ) {
-            verificationIssues.push("flashloanFee mismatch");
-        }
-
-        if (
-            siloConfig0.liquidationFee != _siloInitData.liquidationFee0 ||
-            siloConfig1.liquidationFee != _siloInitData.liquidationFee1
-        ) {
-            verificationIssues.push("liquidationFee mismatch");
-        }
-
-        if (siloConfig0.maxLtv != _siloInitData.maxLtv0 || siloConfig1.maxLtv != _siloInitData.maxLtv1) {
-            verificationIssues.push("maxLtv mismatch");
-        }
-
-        if (
-            siloConfig0.liquidationTargetLtv != _siloInitData.liquidationTargetLtv0 ||
-            siloConfig1.liquidationTargetLtv != _siloInitData.liquidationTargetLtv1
-        ) {
-            verificationIssues.push("liquidationTargetLtv mismatch");
-        }
-
-        if (
-            siloConfig0.liquidationTargetLtv == siloConfig0.lt ||
-            siloConfig1.liquidationTargetLtv == siloConfig1.lt
-        ) {
-            verificationIssues.push("liquidationTargetLtv == lt");
-        }
-
-        if (siloConfig0.lt != _siloInitData.lt0 || siloConfig1.lt != _siloInitData.lt1) {
-            verificationIssues.push("lt mismatch");
-        }
-
-        if (siloConfig0.token != _siloInitData.token0 || siloConfig1.token != _siloInitData.token1) {
-            verificationIssues.push("token mismatch");
-        }
-
-        if (verificationIssues.length == 0) {
-            console2.log(unicode"✅", "Done!");
-        } else {
-            console2.log(unicode"❌", "Done with issues:");
-            for (uint256 i = 0; i < verificationIssues.length; i++) {
-                console2.log(verificationIssues[i]);
-            }
-        }
-    }
-
-    function _printDetails(ISiloConfig _siloConfig) internal view {
+    function _printAndValidateDetails(
+        ISiloConfig _siloConfig,
+        ISiloConfig.InitData memory siloInitData
+    ) internal view {
         string memory chainAlias = ChainsLib.chainAlias();
 
         if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) return;
@@ -374,13 +309,18 @@ contract SiloDeploy is CommonDeploy {
         console2.log("SiloConfig", address(_siloConfig));
         console2.log("\n");
         console2.log("silo0");
-        _printSiloDetails(silo0, siloConfig0);
+        _printSiloDetails(silo0, siloConfig0, siloInitData, true);
         console2.log("\n");
         console2.log("silo1");
-        _printSiloDetails(silo1, siloConfig1);
+        _printSiloDetails(silo1, siloConfig1, siloInitData, false);
     }
 
-    function _printSiloDetails(address _silo, ISiloConfig.ConfigData memory _siloConfig) internal view {
+    function _printSiloDetails(
+        address _silo,
+        ISiloConfig.ConfigData memory _siloConfig,
+        ISiloConfig.InitData memory _siloInitData,
+        bool _isSilo0
+    ) internal view {
         string memory tokenSymbol = TokenHelper.symbol(_siloConfig.token);
 
         string memory tokenStr = vm.toString(_siloConfig.token);
@@ -396,23 +336,50 @@ contract SiloDeploy is CommonDeploy {
         );
 
         console2.log("\n");
-        console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee));
-        console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee));
-        console2.log("\tliquidationFee", _representAsPercent(_siloConfig.liquidationFee));
-        console2.log("\tflashloanFee  ", _representAsPercent(_siloConfig.flashloanFee));
-        console2.log("\n");
-        console2.log("\tmaxLtv", _representAsPercent(_siloConfig.maxLtv));
-        console2.log("\tlt    ", _representAsPercent(_siloConfig.lt));
 
-        string memory warning = "";
+        string memory icon;
+        uint256 configValueUint256 = _siloInitData.daoFee;
+        icon = _siloConfig.daoFee != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee), icon);
+
+        configValueUint256 = _siloInitData.deployerFee;
+        icon = _siloConfig.deployerFee != configValueUint256 ? unicode"❌" : unicode"✅";   
+
+        console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.liquidationFee0 : _siloInitData.liquidationFee1;
+        icon = _siloConfig.liquidationFee != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tliquidationFee", _representAsPercent(_siloConfig.liquidationFee), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.flashloanFee0 : _siloInitData.flashloanFee1;
+        icon = _siloConfig.flashloanFee != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tflashloanFee  ", _representAsPercent(_siloConfig.flashloanFee), icon);
+        console2.log("\n");
+
+        configValueUint256 = _isSilo0 ? _siloInitData.maxLtv0 : _siloInitData.maxLtv1;
+        icon = _siloConfig.maxLtv != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tmaxLtv              ", _representAsPercent(_siloConfig.maxLtv), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.lt0 : _siloInitData.lt1;
+        icon = _siloConfig.lt != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tlt                  ", _representAsPercent(_siloConfig.lt), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.liquidationTargetLtv0 : _siloInitData.liquidationTargetLtv1;
+        icon = _siloConfig.liquidationTargetLtv != configValueUint256 ? unicode"❌" : unicode"✅";
 
         if (_siloConfig.liquidationTargetLtv == _siloConfig.lt) {
-            warning = ", !!! WARNING: liquidationTargetLtv == lt !!!";
+            icon = string.concat(unicode"🚸", "!!! WARNING !!!");
         }
 
         console2.log(
             "\tliquidationTargetLtv",
-            string.concat(_representAsPercent(_siloConfig.liquidationTargetLtv), warning)
+            _representAsPercent(_siloConfig.liquidationTargetLtv),
+            icon
         );
 
         console2.log("\n");
