@@ -108,6 +108,7 @@ contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] run() finished.");
 
         _printDetails(siloConfig);
+        _validateCreatedSilo(siloConfig, siloInitData);
     }
 
     function _saveOracles(
@@ -285,6 +286,61 @@ contract SiloDeploy is CommonDeploy {
         internal
         virtual
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
+    }
+
+    function _validateCreatedSilo(ISiloConfig _siloConfig, ISiloConfig.InitData memory _siloInitData) internal virtual {
+        console2.log("\nConfig validation:");
+
+        (address silo0, address silo1) = _siloConfig.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
+
+        if (siloConfig0.daoFee != _siloInitData.daoFee || siloConfig1.daoFee != _siloInitData.daoFee) {
+            console2.log("daoFee mismatch");
+        }
+
+        if (
+            siloConfig0.flashloanFee != _siloInitData.flashloanFee0 ||
+            siloConfig1.flashloanFee != _siloInitData.flashloanFee1
+        ) {
+            console2.log("flashloanFee mismatch");
+        }
+
+        if (
+            siloConfig0.liquidationFee != _siloInitData.liquidationFee0 ||
+            siloConfig1.liquidationFee != _siloInitData.liquidationFee1
+        ) {
+            console2.log("liquidationFee mismatch");
+        }
+
+        if (siloConfig0.maxLtv != _siloInitData.maxLtv0 || siloConfig1.maxLtv != _siloInitData.maxLtv1) {
+            console2.log("maxLtv mismatch");
+        }
+
+        if (
+            siloConfig0.liquidationTargetLtv != _siloInitData.liquidationTargetLtv0 ||
+            siloConfig1.liquidationTargetLtv != _siloInitData.liquidationTargetLtv1
+        ) {
+            console2.log("liquidationTargetLtv mismatch");
+        }
+
+        if (
+            siloConfig0.liquidationTargetLtv == siloConfig0.lt ||
+            siloConfig1.liquidationTargetLtv == siloConfig1.lt
+        ) {
+            console2.log("liquidationTargetLtv == lt");
+        }
+
+        if (siloConfig0.lt != _siloInitData.lt0 || siloConfig1.lt != _siloInitData.lt1) {
+            console2.log("lt mismatch");
+        }
+
+        if (siloConfig0.token != _siloInitData.token0 || siloConfig1.token != _siloInitData.token1) {
+            console2.log("token mismatch");
+        }
+
+        console2.log("Done!");
     }
 
     function _printDetails(ISiloConfig _siloConfig) internal view {
