@@ -92,7 +92,8 @@ contract SiloDeploy is CommonDeploy {
         uint256 original = siloInitData.liquidationTargetLtv0;
         siloInitData.liquidationTargetLtv0 = 1;
 
-        ISiloDeployer.ClonableHookReceiver memory hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
+        ISiloDeployer.ClonableHookReceiver memory hookReceiver;
+        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
 
         vm.startBroadcast(deployerPrivateKey);
 
