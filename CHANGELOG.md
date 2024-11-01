@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.12.0] - 2024-11-01
+### Added
+- solvBTC/wBTC market Arbitrum
+- gmETH/WETH market Arbitrum
+- wstETH/WETH market Arbitrum
+- ETH+/WETH market Arbitrum
+- SiloRouter with preview methods instead of convertToAssets
+
 ## [0.11.0] - 2024-10-30
 ### Changed
 - dao fee can be set based on range
