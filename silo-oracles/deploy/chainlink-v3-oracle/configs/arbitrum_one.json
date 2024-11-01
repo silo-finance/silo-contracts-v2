@@ -1,8 +1,8 @@
 {
-    "CHAINLINK_wBTC_BTC": {
-        "baseToken": "wBTC",
+    "CHAINLINK_WBTC_BTC": {
+        "baseToken": "WBTC",
         "quoteToken": "SILO_VIRTUAL_BTC_8",
-        "primaryAggregator": "CHAINLINK_wBTC_BTC_aggregator",
+        "primaryAggregator": "CHAINLINK_WBTC_BTC_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0
