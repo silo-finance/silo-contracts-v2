@@ -39,6 +39,8 @@ FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
 contract SiloDeploy is CommonDeploy {
     string public configName;
 
+    string[] public verificationIssues;
+
     function useConfig(string memory _config) external returns (SiloDeploy) {
         configName = _config;
         return this;
@@ -87,6 +89,9 @@ contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
+        uint256 original = siloInitData.liquidationTargetLtv0;
+        siloInitData.liquidationTargetLtv0 = 1;
+
         vm.startBroadcast(deployerPrivateKey);
 
         siloConfig = siloDeployer.deploy(
@@ -98,6 +103,8 @@ contract SiloDeploy is CommonDeploy {
         );
 
         vm.stopBroadcast();
+
+        siloInitData.liquidationTargetLtv0 = original;
 
         console2.log("[SiloCommonDeploy] deploy done");
 
@@ -297,50 +304,57 @@ contract SiloDeploy is CommonDeploy {
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
 
         if (siloConfig0.daoFee != _siloInitData.daoFee || siloConfig1.daoFee != _siloInitData.daoFee) {
-            console2.log("daoFee mismatch");
+            verificationIssues.push("daoFee mismatch");
         }
 
         if (
             siloConfig0.flashloanFee != _siloInitData.flashloanFee0 ||
             siloConfig1.flashloanFee != _siloInitData.flashloanFee1
         ) {
-            console2.log("flashloanFee mismatch");
+            verificationIssues.push("flashloanFee mismatch");
         }
 
         if (
             siloConfig0.liquidationFee != _siloInitData.liquidationFee0 ||
             siloConfig1.liquidationFee != _siloInitData.liquidationFee1
         ) {
-            console2.log("liquidationFee mismatch");
+            verificationIssues.push("liquidationFee mismatch");
         }
 
         if (siloConfig0.maxLtv != _siloInitData.maxLtv0 || siloConfig1.maxLtv != _siloInitData.maxLtv1) {
-            console2.log("maxLtv mismatch");
+            verificationIssues.push("maxLtv mismatch");
         }
 
         if (
             siloConfig0.liquidationTargetLtv != _siloInitData.liquidationTargetLtv0 ||
             siloConfig1.liquidationTargetLtv != _siloInitData.liquidationTargetLtv1
         ) {
-            console2.log("liquidationTargetLtv mismatch");
+            verificationIssues.push("liquidationTargetLtv mismatch");
         }
 
         if (
             siloConfig0.liquidationTargetLtv == siloConfig0.lt ||
             siloConfig1.liquidationTargetLtv == siloConfig1.lt
         ) {
-            console2.log("liquidationTargetLtv == lt");
+            verificationIssues.push("liquidationTargetLtv == lt");
         }
 
         if (siloConfig0.lt != _siloInitData.lt0 || siloConfig1.lt != _siloInitData.lt1) {
-            console2.log("lt mismatch");
+            verificationIssues.push("lt mismatch");
         }
 
         if (siloConfig0.token != _siloInitData.token0 || siloConfig1.token != _siloInitData.token1) {
-            console2.log("token mismatch");
+            verificationIssues.push("token mismatch");
         }
 
-        console2.log("Done!");
+        if (verificationIssues.length == 0) {
+            console2.log(unicode"✅", "Done!");
+        } else {
+            console2.log(unicode"❌", "Done with issues:");
+            for (uint256 i = 0; i < verificationIssues.length; i++) {
+                console2.log(verificationIssues[i]);
+            }
+        }
     }
 
     function _printDetails(ISiloConfig _siloConfig) internal view {
