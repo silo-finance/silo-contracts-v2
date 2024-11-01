@@ -10,7 +10,7 @@
     "CHAINLINK_wUSDPlus_USD": {
         "baseToken": "wUSD+",
         "quoteToken": "SILO_VIRTUAL_USD_8",
-        "primaryAggregator": "CHAINLINK_wUSDPlus_USD_aggregator",
+        "primaryAggregator": "CHAINLINK_USDPlus_USD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0
