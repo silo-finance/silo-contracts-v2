@@ -1,7 +1,7 @@
 {
     "CHAINLINK_wBTC_BTC": {
         "baseToken": "wBTC",
-        "quoteToken": "SILO_VIRTUAL_BTC",
+        "quoteToken": "SILO_VIRTUAL_BTC_8",
         "primaryAggregator": "CHAINLINK_wBTC_BTC_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
@@ -9,7 +9,7 @@
     },
     "CHAINLINK_wUSDPlus_USD": {
         "baseToken": "wUSD+",
-        "quoteToken": "SILO_VIRTUAL_USD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_wUSDPlus_USD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
@@ -17,7 +17,7 @@
     },
     "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
-        "quoteToken": "SILO_VIRTUAL_USD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_USDC_USD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
@@ -41,7 +41,7 @@
     },
     "CHAINLINK_gmETH_USD": {
         "baseToken": "GM",
-        "quoteToken": "SILO_VIRTUAL_USD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_gmETH_USD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
@@ -49,7 +49,7 @@
     },
     "CHAINLINK_ETH_USD": {
         "baseToken": "WETH",
-        "quoteToken": "SILO_VIRTUAL_USD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_ETH_USD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",

@@ -4,7 +4,7 @@
     "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "daoFee": 1000,
     "deployerFee": 0,
-    "token0": "GM",
+    "token0": "gmETH",
     "solvencyOracle0": "CHAINLINK_gmETH_USD",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2.sol",

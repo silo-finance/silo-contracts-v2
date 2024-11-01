@@ -21,7 +21,7 @@
     "interestRateModel1": "InterestRateModelV2.sol",
     "interestRateModelConfig1": "bridgeETHv3",
     "maxLtv1": 9200,
-    "lt1": 9500,
+    "lt1": 9600,
     "liquidationTargetLtv1": 9500,
     "liquidationFee1": 150,
     "flashloanFee1": 10,
