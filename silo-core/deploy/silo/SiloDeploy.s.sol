@@ -288,12 +288,14 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function _printDetails(ISiloConfig _siloConfig) internal view {
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) return;
+
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
-
-        string memory chainAlias = ChainsLib.chainAlias();
 
         console2.log(string.concat("\nDeployed market details [", chainAlias, "]"));
         console2.log("SiloConfig", address(_siloConfig));
