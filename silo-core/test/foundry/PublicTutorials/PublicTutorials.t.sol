@@ -48,6 +48,7 @@ contract PublicTutorials is Test {
 
     // Get borrow APR. 10**18 current interest rate is equal to 100%/year. 
     function test_getBorrowAPR() public {
+        // todo move to lens
         // get WETH Silo
         (address silo0,) = SILO_CONFIG.getSilos();
 
@@ -66,6 +67,7 @@ contract PublicTutorials is Test {
 
     // Get deposit APR. 10**18 current interest rate is equal to 100%/year. 
     function test_getDepositAPR() public {
+        // todo move to lens
         (address silo0,) = SILO_CONFIG.getSilos();
         ISiloConfig.ConfigData memory configData = SILO_CONFIG.getConfig(silo0);
         address interestRateModel0 = configData.interestRateModel;
