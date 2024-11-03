@@ -3,7 +3,6 @@
  */
 
 import "../summaries/silo0_summaries.spec";
-import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";
 import "../summaries/safe-approximations.spec";
 
@@ -15,6 +14,42 @@ using ShareDebtToken0 as shareDebtToken0;
 
 
 methods {
+    // ---- `SiloConfig` -------------------------------------------------------
+    // Early summarization
+    function _.getDebtShareTokenAndAsset(
+        address _silo
+    ) external => CVLGetDebtShareTokenAndAsset() expect (address, address);
+
+    // `envfree`
+    function SiloConfig.accrueInterestForSilo(address) external envfree;
+    function SiloConfig.getCollateralShareTokenAndAsset(
+        address,
+        ISilo.CollateralType
+    ) external returns (address, address) envfree;
+
+    // Dispatcher
+    function _.accrueInterestForSilo(address) external => DISPATCHER(true);
+    function _.accrueInterestForBothSilos() external => DISPATCHER(true);
+    function _.getConfigsForWithdraw(address,address) external => DISPATCHER(true);
+    function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
+    function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
+    function _.getCollateralShareTokenAndAsset(
+        address,
+        ISilo.CollateralType
+    ) external => DISPATCHER(true);
+
+    function _.hasDebtInOtherSilo(address,address) external  => DISPATCHER(true);
+    function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
+    function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
+    function _.getConfig(address) external  => DISPATCHER(true);
+    function _.getFeesWithAsset(address) external  => DISPATCHER(true);
+    function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
+    function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
+
+    // `CrossReentrancyGuard`
+    function _.turnOnReentrancyProtection() external => DISPATCHER(true);
+    function _.turnOffReentrancyProtection() external => DISPATCHER(true);
+
     // ---- `IInterestRateModel` -----------------------------------------------
     // Since `getCompoundInterestRateAndUpdate` is not *pure*, this is not strictly sound.
     function _.getCompoundInterestRateAndUpdate(
@@ -39,6 +74,12 @@ methods {
 }
 
 // ---- Functions and ghosts ---------------------------------------------------
+
+/// @title Early summarization - for speed up
+/// @notice In this setup we assume that `silo0` was the input to this function
+function CVLGetDebtShareTokenAndAsset() returns (address, address) {
+    return (shareDebtToken0, token0);
+}
 
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) interestGhost;
 
