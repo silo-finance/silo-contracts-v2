@@ -178,3 +178,15 @@ forge script silo-core/deploy/MainnetDeploy.s.sol \
 
 In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeployWithGaugeHookReceiver` and set
 `daoFeeReceiver` and `timelock` addresses manually to eg. deployer address.
+
+
+## LICENSE
+
+The primary license for Silo V2 Core is the Business Source License 1.1 (`BUSL-1.1`), see [LICENSE](https://github.com/silo-finance/silo-contracts-v2/blob/master/LICENSE). Minus the following exceptions:
+
+- Some libraries have a GPL license
+- Hook.sol library and some of its tests have a GPL License
+- Hook files in `utils/hook-receivers` have a GPL License
+- Interfaces have an MIT license
+
+Each of these files states their license type.
