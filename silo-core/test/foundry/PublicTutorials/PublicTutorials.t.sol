@@ -18,12 +18,12 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 contract PublicTutorials is Test {
     // wstETH/WETH market config.
     ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB); 
-    ISiloLens public constant SILO_LENS = ISiloLens(0xB14F20982F2d1E5933362f5A796736D9ffa220E4); 
+    ISiloLens public constant SILO_LENS = ISiloLens(0x89E3Cf1c67C0c0701EF7926A79f65EeEb52904eF); 
     address public constant EXAMPLE_USER = 0x6d228Fa4daD2163056A48Fc2186d716f5c65E89A;
 
     // Fork Arbitrum at specific block.
     function setUp() public {
-        uint256 blockToFork = 270679564;
+        uint256 blockToFork = 270931754;
         vm.createSelectFork(vm.envString("RPC_ARBITRUM"), blockToFork);
     }
 
@@ -62,7 +62,7 @@ contract PublicTutorials is Test {
         uint256 currentBorrowInterestRate = 
             IInterestRateModel(interestRateModel0).getCurrentInterestRate(silo0, block.timestamp);
 
-        assertEq(currentBorrowInterestRate, 72152346037824000, "Current debt interest rate is ~7.22% / year");
+        assertEq(currentBorrowInterestRate, 141827957285328000, "Current debt interest rate is ~14.18% / year");
     }
 
     // Get deposit APR. 10**18 current interest rate is equal to 100%/year. 
@@ -85,7 +85,7 @@ contract PublicTutorials is Test {
                 (10**18 - configData.daoFee - configData.deployerFee) / 10**18;
         }
 
-        assertEq(currentDepositInterestRate, 61019721466934077, "Current deposit interest rate is ~6.10% / year");
+        assertEq(currentDepositInterestRate, 119948832360394647, "Current deposit interest rate is ~11.99% / year");
     }
 
     // Any lending protocol does not guarantee the ability to withdraw the borrowable deposit at any time, because
@@ -123,7 +123,7 @@ contract PublicTutorials is Test {
 
         uint256 userBorrowedAmount = SILO_LENS.debtBalanceOfUnderlying(ISilo(silo0), EXAMPLE_USER);
 
-        assertEq(userBorrowedAmount, 10400188355193975, "User have to repay ~0.0104 wstETH including interest");
+        assertEq(userBorrowedAmount, 10402425735829051, "User have to repay ~0.0104 wstETH including interest");
         assertEq(userBorrowedAmount, ISilo(silo0).maxRepay(EXAMPLE_USER), "Same way to read the debt amount");
     }
 
@@ -133,7 +133,7 @@ contract PublicTutorials is Test {
         (address silo0,) = SILO_CONFIG.getSilos();
         uint256 userLTV = SILO_LENS.getLtv(ISilo(silo0), EXAMPLE_USER);
 
-        assertEq(userLTV, 0);
+        assertEq(userLTV, 579636700972035697);
     }
     function test_getMarketLT() public {}
     function test_estimateMyLiquidationTime() public {}
