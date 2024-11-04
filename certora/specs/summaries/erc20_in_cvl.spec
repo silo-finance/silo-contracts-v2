@@ -6,7 +6,8 @@
 
    Downsides to be aware of:
    - The code here cannot model reverts!
-   - Soundness of the code yet to be checked.
+   - Soundness of the code yet to be checked. Particularly with regards to Debt Token and
+     transfer.
 */
 
 methods {
