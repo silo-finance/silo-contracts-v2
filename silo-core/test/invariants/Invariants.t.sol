@@ -23,14 +23,21 @@ abstract contract Invariants is BaseInvariants, SiloMarketInvariants, LendingBor
 
     function echidna_BASE_INVARIANT() public returns (bool) {
         for (uint256 i = 0; i < silos.length; i++) {
-            assert_BASE_INVARIANT_A(silos[i]);
             assert_BASE_INVARIANT_B(silos[i], debtTokens[i]);
             assert_BASE_INVARIANT_C(silos[i]);
-            //assert_BASE_INVARIANT_E(silos[i], baseAssets[i]); @audit -issue I-2 invariant not correct -> test_echidna_BASE_INVARIANT
+            assert_BASE_INVARIANT_E(silos[i], baseAssets[i]);
             assert_BASE_INVARIANT_F(silos[i], baseAssets[i]);
             assert_BASE_INVARIANT_H();
             for (uint256 j = 0; j < actorAddresses.length; j++) {
-                assert_BASE_INVARIANT_D(silos[i], debtTokens[i], protectedTokens[i], actorAddresses[j]);
+                address collateralSilo = siloConfig.borrowerCollateralSilo(actorAddresses[j]);
+
+                if (collateralSilo != address(0)) {
+                    (address protectedShareToken,,) = siloConfig.getShareTokens(collateralSilo);
+
+                    assert_BASE_INVARIANT_D(
+                        silos[i], debtTokens[i], collateralSilo, protectedShareToken, actorAddresses[j]
+                    );
+                }
             }
         }
         return true;

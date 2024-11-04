@@ -32,8 +32,6 @@ abstract contract PostconditionsSpec {
     /// @notice related to silo property UT_Silo_accrueInterest
     string constant BASE_GPOST_A = "BASE_GPOST_A: accrueInterest can only be executed on deposit, mint, withdraw, redeem, liquidationCall, accrueInterest, leverage, repay, repayShares.";
 
-    // TODO add Variable Changes invariants
-
     /// @notice related to silo property ST_Silo_interestRateTimestamp_totalBorrowAmount_dependency
     string constant BASE_GPOST_B = "BASE_GPOST_B: interestRateTimestampBefore != 0 and changed and Silo.totalAssets[ISilo.AssetType.Debt] != 0 => Silo.totalAssets[ISilo.AssetType.Debt] increased";
 

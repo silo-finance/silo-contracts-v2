@@ -188,8 +188,6 @@ contract BorrowingHandler is BaseHandler {
 
         (uint256 collateralAssets,) = ISilo(target).getCollateralAndDebtTotalsStorage();
 
-        console.log("collateralAssets: %d", collateralAssets);
-
         uint256 _assets = ISilo(target).convertToAssets(
             _shares,
             (_collateralType == ISilo.CollateralType.Protected)
@@ -205,7 +203,9 @@ contract BorrowingHandler is BaseHandler {
         // POST-CONDITIONS
 
         if (defaultVarsBefore[target].isSolvent && _collateralType == ISilo.CollateralType.Protected) {
-            // assertTrue(success, BORROWING_HSPOST_L); // @audit-issue fails when amount is 0
+            if (_shares > 0) {
+                assertTrue(success, BORROWING_HSPOST_L);
+            }
         }
 
         if (success) {
@@ -239,8 +239,8 @@ contract BorrowingHandler is BaseHandler {
 
         (, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(target);
 
-        if (debtAmount > IERC20(debtAsset).balanceOf(borrower)) {
-            TestERC20(debtAsset).mint(address(actor), IERC20(debtAsset).balanceOf(borrower));
+        if (debtAmount > IERC20(debtAsset).balanceOf(address(actor))) {
+            TestERC20(debtAsset).mint(address(actor), debtAmount - IERC20(debtAsset).balanceOf(address(actor)));
         }
 
         _before();
@@ -265,14 +265,14 @@ contract BorrowingHandler is BaseHandler {
 
         address target = _getRandomSilo(j);
 
-        uint256 maxBorrow = ISilo(target).maxBorrow(receiver);
+        uint256 maxBorrow = ISilo(target).maxBorrow(address(actor));
 
         _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(ISilo.borrow.selector, maxBorrow, receiver, address(actor)));
 
         if (maxBorrow > 0) {
-            //assertTrue(success, BORROWING_HSPOST_F); TODO remove comment when test_replayassertBORROWING_HSPOST_F is fixed
+            assertTrue(success, BORROWING_HSPOST_F);
         }
 
         if (success) {

@@ -11,6 +11,8 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 // Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 
+import "forge-std/console.sol";
+
 /// @title LendingBorrowingInvariants
 /// @notice Implements Invariants for the protocol
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
@@ -29,9 +31,10 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
 
     function assert_LENDING_INVARIANT_C(address silo, address user) internal {
         if (siloConfig.getDebtSilo(user) == address(0)) {
-            uint256 balance = IERC20(silo).balanceOf(user);
-            if (ISilo(silo).getLiquidity() > balance) {
-                assertEq(_maxRedeem(silo, user), balance, LENDING_INVARIANT_C);
+            uint256 shares = IERC20(silo).balanceOf(user);
+            uint256 balance = ISilo(silo).convertToAssets(shares);
+            if (ISilo(silo).getLiquidity() >= balance) {
+                assertEq(_maxRedeem(silo, user), shares, LENDING_INVARIANT_C);
             }
         }
     }
@@ -73,10 +76,10 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
     }
 
     function assert_BORROWING_INVARIANT_F(address silo) internal {
-        uint256 totalAssets = ISilo(silo).totalAssets();
+        uint256 totalSupply = IERC20(silo).totalSupply();
 
-        if (totalAssets != 0) {
-            assertGt(IERC20(silo).totalSupply(), 0, BORROWING_INVARIANT_F);
+        if (totalSupply != 0) {
+            assertGt(ISilo(silo).totalAssets(), 0, BORROWING_INVARIANT_F);
         }
     }
 

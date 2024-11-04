@@ -80,8 +80,6 @@ contract Setup is BaseTest {
             siloData["MOCK"], siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
         );
 
-        console.log("configData0.debtShareToken");
-
         (_vault0, _vault1) = siloConfig.getSilos();
         vault0 = Silo(payable(_vault0));
         vault1 = Silo(payable(_vault1));
@@ -279,8 +277,8 @@ contract Setup is BaseTest {
     }
 
     function _deployOracles() internal {
-        oracle0 = address(new MockSiloOracle(1 ether, QUOTE_TOKEN_ADDRESS));
-        oracle1 = address(new MockSiloOracle(1 ether, QUOTE_TOKEN_ADDRESS));
+        oracle0 = address(new MockSiloOracle(address(_asset0), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
+        oracle1 = address(new MockSiloOracle(address(_asset1), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
     }
 
     function _initData(address mock0, address mock1) internal {

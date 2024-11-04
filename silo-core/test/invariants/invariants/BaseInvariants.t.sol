@@ -33,14 +33,17 @@ abstract contract BaseInvariants is HandlerAggregator {
         }
     }
 
-    function assert_BASE_INVARIANT_D(address silo, address debtToken, address protectedToken, address user) internal {
+    function assert_BASE_INVARIANT_D(
+        address silo,
+        address debtToken,
+        address collateralToken,
+        address protectedToken,
+        address user
+    ) internal {
         if (ISilo(silo).isSolvent(user) && IERC20(debtToken).balanceOf(user) > 0) {
-            /*             assertEq(IERC20(silo).balanceOf(user), 0, BASE_INVARIANT_D);//@audit-issue I-2 invariant not correct
-            assertEq(
-                IERC20(protectedToken).balanceOf(user),
-                0,
-                BASE_INVARIANT_D
-            ); */
+            assertGt(
+                IERC20(collateralToken).balanceOf(user) + IERC20(protectedToken).balanceOf(user), 0, BASE_INVARIANT_D
+            );
         }
     }
 

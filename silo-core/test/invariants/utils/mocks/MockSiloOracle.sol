@@ -3,17 +3,24 @@ pragma solidity ^0.8.20;
 
 // Interfaces
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract MockSiloOracle is ISiloOracle {
     uint256 internal price;
     address public quoteToken;
+    uint256 public quoteTokenDecimals;
+    address public baseToken;
+    uint256 public baseTokenDecimals;
 
     bool _expectBeforeQuote;
     bool _oracleBroken;
 
-    constructor(uint256 _price, address _quoteToken) {
+    constructor(address _baseToken, uint256 _price, address _quoteToken, uint256 _quoteTokenDecimals) {
         price = _price;
         quoteToken = _quoteToken;
+        quoteTokenDecimals = _quoteTokenDecimals;
+        baseToken = _baseToken;
+        baseTokenDecimals = IERC20Metadata(_baseToken).decimals();
     }
 
     function beforeQuote(address _baseToken) external view {
@@ -30,7 +37,7 @@ contract MockSiloOracle is ISiloOracle {
         if (_baseToken == quoteToken) revert("quote: wrong base token");
         if (_oracleBroken) revert("quote: oracle is broken");
 
-        quoteAmount = price;
+        return _baseAmount * price / baseTokenDecimals;
     }
 
     function setPrice(uint256 _price) external {

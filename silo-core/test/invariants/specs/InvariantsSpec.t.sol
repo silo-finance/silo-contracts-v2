@@ -81,7 +81,7 @@ abstract contract InvariantsSpec {
 
     string constant BORROWING_INVARIANT_E = "BORROWING_INVARIANT_E: A user cannot have debt in two silos at the same moment";
 
-    string constant BORROWING_INVARIANT_F = "BORROWING_INVARIANT_F: totalAssets != 0 => totalShares > 0";
+    string constant BORROWING_INVARIANT_F = "BORROWING_INVARIANT_F: totalShares != 0 => totalAssets > 0";
 
     string constant BORROWING_INVARIANT_G = "BORROWING_INVARIANT_G: if user has no debt, should always be solvent and ltv == 0";
 

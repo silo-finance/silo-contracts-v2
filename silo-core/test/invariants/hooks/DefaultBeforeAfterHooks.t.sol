@@ -46,6 +46,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         uint256 userAssets;
         uint256 userBalance;
         uint256 interestRateTimestamp;
+        address borrowerCollateralSilo;
         bool isSolvent;
     }
 
@@ -98,6 +99,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         _defaultVars.userAssets = _getUserAssets(silo, targetActor);
         _defaultVars.userBalance = IERC20(_asset).balanceOf(targetActor);
         _defaultVars.interestRateTimestamp = ISilo(silo).utilizationData().interestRateTimestamp;
+        _defaultVars.borrowerCollateralSilo = siloConfig.borrowerCollateralSilo(targetActor);
         _defaultVars.isSolvent = ISilo(silo).isSolvent(targetActor);
     }
 
@@ -150,12 +152,19 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
     function assert_BASE_GPOST_D(address silo) internal {
         if (!defaultVarsBefore[silo].isSolvent) {
-            assertFalse(
-                msg.sig == IBorrowingHandler.borrow.selector
-                //msg.sig == IBorrowingHandler.borrowSameAsset.selector || TODO confirm this functionn does not need any type of solvency check
-                || msg.sig == IBorrowingHandler.borrowShares.selector,
-                BASE_GPOST_D
-            );
+            if (defaultVarsBefore[silo].borrowerCollateralSilo == defaultVarsAfter[silo].borrowerCollateralSilo) {
+                assertFalse(
+                    msg.sig == IBorrowingHandler.borrow.selector
+                        || msg.sig == IBorrowingHandler.borrowSameAsset.selector
+                        || msg.sig == IBorrowingHandler.borrowShares.selector,
+                    BASE_GPOST_D
+                );
+            } else if (
+                msg.sig == IBorrowingHandler.borrow.selector || msg.sig == IBorrowingHandler.borrowSameAsset.selector
+                    || msg.sig == IBorrowingHandler.borrowShares.selector
+            ) {
+                assertTrue(defaultVarsAfter[silo].isSolvent, BASE_GPOST_D);
+            }
         }
 
         address borrowerCollateralSilo = siloConfig.borrowerCollateralSilo(targetActor);

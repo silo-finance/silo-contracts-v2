@@ -148,7 +148,7 @@ contract VaultHandler is BaseHandler {
     //                                          PROPERTIES                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_LENDING_INVARIANT_C(uint8 i, uint8 j) public setup {
+    function assert_LENDING_INVARIANT_B(uint8 i, uint8 j) public setup {
         bool success;
         bytes memory returnData;
 
@@ -168,9 +168,9 @@ contract VaultHandler is BaseHandler {
 
         if (success) {
             _after();
-
-            // POST-CONDITIONS
         }
+
+        // POST-CONDITIONS
 
         if (maxWithdraw != 0) {
             assertTrue(success, LENDING_INVARIANT_B);

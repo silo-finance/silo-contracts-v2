@@ -39,6 +39,8 @@ contract FlashLoanHandler is BaseHandler {
 
         uint256 maxFlashLoanAmount = ISilo(target).maxFlashLoan(token);
 
+        _amountToRepay = clampBetween(_amountToRepay, 0, type(uint256).max - IERC20(token).totalSupply());
+
         _before();
         (success, returnData) = actor.proxy(
             target,
