@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 contract LiquidationPreviewTestData {
     struct Input {
         uint256 lt;
+        uint256 liquidationTargetLtv;
         uint256 maxDebtToCover;
         uint256 totalBorrowerDebtValue;
         uint256 totalBorrowerDebtAssets;
@@ -30,6 +31,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #0
             input: Input({
                 lt: 1,
+                liquidationTargetLtv: 0,
                 maxDebtToCover: 0,
                 totalBorrowerDebtValue: 1,
                 totalBorrowerDebtAssets: 1,
@@ -47,6 +49,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #1
             input: Input({
                 lt: 1,
+                liquidationTargetLtv: 0,
                 maxDebtToCover: 0,
                 totalBorrowerDebtValue: 1,
                 totalBorrowerDebtAssets: 1,
@@ -64,6 +67,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #2
             input: Input({
                 lt: 0.79e18,
+                liquidationTargetLtv: 0.79e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 0,
                 totalBorrowerDebtValue: 1e18,
                 totalBorrowerDebtAssets: 1e18,
@@ -81,6 +85,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #3
             input: Input({
                 lt: 0.0099e18,
+                liquidationTargetLtv: 0.0099e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 1,
                 totalBorrowerDebtValue: 1e18,
                 totalBorrowerDebtAssets: 1e18,
@@ -98,6 +103,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #4
             input: Input({
                 lt: 0.01e18,
+                liquidationTargetLtv: 0.01e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 100,
                 totalBorrowerDebtValue: 1e18,
                 totalBorrowerDebtAssets: 1e18,
@@ -116,6 +122,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #5
             input: Input({
                 lt: 0.80e18,
+                liquidationTargetLtv: 0.80e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 0.5e18, // the value is 40e18 + fee => 44e18 in value
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 1e18,
@@ -135,6 +142,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #6
             input: Input({
                 lt: 0.001e18,
+                liquidationTargetLtv: 0.001e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 0.90e18, // the value is 72e18 + fee => 79.2e18 in value
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 1e18,
@@ -155,6 +163,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #7
             input: Input({
                 lt: 0.0088e18,
+                liquidationTargetLtv: 0.0088e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 0.91e18, // the value is 72.8e18, but this is too much anyway, it will be lowered by math
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 1e18, // 1debt token == 80 in value
@@ -174,6 +183,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #8
             input: Input({
                 lt: 0.08e18,
+                liquidationTargetLtv: 0.08e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 0.91e18, // the value is 72.8e18, but this is over "dust" margin, so it will be full
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 1e18, // 1debt token == 80 in value
@@ -192,6 +202,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #9
             input: Input({
                 lt: 0.08e18,
+                liquidationTargetLtv: 0.08e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 160e18,
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 160e18,
@@ -209,6 +220,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #10
             input: Input({
                 lt: 0.08e18,
+                liquidationTargetLtv: 0.08e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 10e18,
                 totalBorrowerDebtValue: 180e18,
                 totalBorrowerDebtAssets: 180e18,
@@ -227,6 +239,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #11
             input: Input({
                 lt: 0.99e18,
+                liquidationTargetLtv: 0.99e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 100e18,
                 totalBorrowerDebtValue: 12e18,
                 totalBorrowerDebtAssets: 12e18,
@@ -245,6 +258,7 @@ contract LiquidationPreviewTestData {
         data[i++] = CELAData({ // #12
             input: Input({
                 lt: 0.99e18,
+                liquidationTargetLtv: 0.99e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 1000000e18,
                 totalBorrowerDebtValue: 12e18,
                 totalBorrowerDebtAssets: 18e18,

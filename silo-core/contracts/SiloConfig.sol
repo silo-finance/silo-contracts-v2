@@ -40,6 +40,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     uint256 internal immutable _MAX_LTV0;
     uint256 internal immutable _LT0;
+    /// @dev target LTV after liquidation
+    uint256 internal immutable _LIQUIDATION_TARGET_LTV0;
     uint256 internal immutable _LIQUIDATION_FEE0;
     uint256 internal immutable _FLASHLOAN_FEE0;
 
@@ -65,6 +67,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     uint256 internal immutable _MAX_LTV1;
     uint256 internal immutable _LT1;
+    /// @dev target LTV after liquidation
+    uint256 internal immutable _LIQUIDATION_TARGET_LTV1;
     uint256 internal immutable _LIQUIDATION_FEE1;
     uint256 internal immutable _FLASHLOAN_FEE1;
 
@@ -106,6 +110,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         _MAX_LTV0 = _configData0.maxLtv;
         _LT0 = _configData0.lt;
+        _LIQUIDATION_TARGET_LTV0 = _configData0.liquidationTargetLtv;
         _LIQUIDATION_FEE0 = _configData0.liquidationFee;
         _FLASHLOAN_FEE0 = _configData0.flashloanFee;
 
@@ -127,6 +132,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         _MAX_LTV1 = _configData1.maxLtv;
         _LT1 = _configData1.lt;
+        _LIQUIDATION_TARGET_LTV1 = _configData1.liquidationTargetLtv;
         _LIQUIDATION_FEE1 = _configData1.liquidationFee;
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
@@ -193,7 +199,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getConfigsForSolvency(address _borrower) external view virtual returns (
+    function getConfigsForSolvency(address _borrower) public view virtual returns (
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
@@ -208,20 +214,14 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
+    // solhint-disable-next-line ordering
     function getConfigsForWithdraw(address _silo, address _depositOwner) external view virtual returns (
         DepositConfig memory depositConfig,
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
         depositConfig = _getDepositConfig(_silo);
-        address debtSilo = getDebtSilo(_depositOwner);
-
-        if (debtSilo != address(0)) {
-            address collateralSilo = borrowerCollateralSilo[_depositOwner];
-
-            collateralConfig = getConfig(collateralSilo);
-            debtConfig = getConfig(debtSilo);
-        }
+        (collateralConfig, debtConfig) = getConfigsForSolvency(_depositOwner);
     }
 
     /// @inheritdoc ISiloConfig
@@ -346,7 +346,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function hasDebtInOtherSilo(address _thisSilo, address _borrower) public view returns (bool hasDebt) {
+    function hasDebtInOtherSilo(address _thisSilo, address _borrower) public view virtual returns (bool hasDebt) {
         if (_thisSilo == _SILO0) {
             hasDebt = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower) != 0;
         } else if (_thisSilo == _SILO1) {
@@ -367,7 +367,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
     }
 
-    function _silo0ConfigData() internal view returns (ConfigData memory config) {
+    function _silo0ConfigData() internal view virtual returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
@@ -381,6 +381,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             interestRateModel: _INTEREST_RATE_MODEL0,
             maxLtv: _MAX_LTV0,
             lt: _LT0,
+            liquidationTargetLtv: _LIQUIDATION_TARGET_LTV0,
             liquidationFee: _LIQUIDATION_FEE0,
             flashloanFee: _FLASHLOAN_FEE0,
             hookReceiver: _HOOK_RECEIVER,
@@ -388,7 +389,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         });
     }
 
-    function _silo1ConfigData() internal view returns (ConfigData memory config) {
+    function _silo1ConfigData() internal view virtual returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
@@ -402,6 +403,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             interestRateModel: _INTEREST_RATE_MODEL1,
             maxLtv: _MAX_LTV1,
             lt: _LT1,
+            liquidationTargetLtv: _LIQUIDATION_TARGET_LTV1,
             liquidationFee: _LIQUIDATION_FEE1,
             flashloanFee: _FLASHLOAN_FEE1,
             hookReceiver: _HOOK_RECEIVER,
@@ -454,7 +456,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         require(msg.sender == _SILO0 || msg.sender == _SILO1, OnlySilo());
     }
 
-    function _balanceOf(address _token, address _user) internal view returns (uint256 balance) {
+    function _balanceOf(address _token, address _user) internal view virtual returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(_user);
     }
 }

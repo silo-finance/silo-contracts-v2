@@ -16,7 +16,7 @@ contract SiloConfigData {
 
     bytes32 public constant NO_ORACLE_KEY = keccak256(bytes("NO_ORACLE"));
     bytes32 public constant PLACEHOLDER_KEY = keccak256(bytes("PLACEHOLDER"));
-    bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
+    bytes32 public constant CLONE_IMPLEMENTATION_KEY = keccak256(bytes("CLONE_IMPLEMENTATION"));
 
     error DeployedContractNotFound(string contractName);
 
@@ -24,6 +24,7 @@ contract SiloConfigData {
     struct ConfigData {
         bool callBeforeQuote0;
         bool callBeforeQuote1;
+        uint64 daoFee;
         address deployer;
         uint256 deployerFee;
         uint64 flashloanFee0;
@@ -36,6 +37,8 @@ contract SiloConfigData {
         string interestRateModelConfig1;
         uint64 liquidationFee0;
         uint64 liquidationFee1;
+        uint64 liquidationTargetLtv0;
+        uint64 liquidationTargetLtv1;
         uint64 lt0;
         uint64 lt1;
         uint64 maxLtv0;
@@ -72,6 +75,7 @@ contract SiloConfigData {
         initData = ISiloConfig.InitData({
             deployer: config.deployer,
             hookReceiver: _resolveHookReceiverImpl(config.hookReceiver),
+            daoFee: config.daoFee * BP2DP_NORMALIZATION,
             deployerFee: config.deployerFee * BP2DP_NORMALIZATION,
             token0: AddrLib.getAddress(config.token0),
             solvencyOracle0: address(0),
@@ -79,6 +83,7 @@ contract SiloConfigData {
             interestRateModel0: _resolveDeployedContract(config.interestRateModel0),
             maxLtv0: config.maxLtv0 * BP2DP_NORMALIZATION,
             lt0: config.lt0 * BP2DP_NORMALIZATION,
+            liquidationTargetLtv0: config.liquidationTargetLtv0 * BP2DP_NORMALIZATION,
             liquidationFee0: config.liquidationFee0 * BP2DP_NORMALIZATION,
             flashloanFee0: config.flashloanFee0 * BP2DP_NORMALIZATION,
             callBeforeQuote0: config.callBeforeQuote0,
@@ -88,6 +93,7 @@ contract SiloConfigData {
             interestRateModel1: _resolveDeployedContract(config.interestRateModel1),
             maxLtv1: config.maxLtv1 * BP2DP_NORMALIZATION,
             lt1: config.lt1 * BP2DP_NORMALIZATION,
+            liquidationTargetLtv1: config.liquidationTargetLtv1 * BP2DP_NORMALIZATION,
             liquidationFee1: config.liquidationFee1 * BP2DP_NORMALIZATION,
             flashloanFee1: config.flashloanFee1 * BP2DP_NORMALIZATION,
             callBeforeQuote1: config.callBeforeQuote1
@@ -95,7 +101,7 @@ contract SiloConfigData {
     }
 
     function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
-        if (keccak256(bytes(_requiredHookReceiver)) != NO_HOOK_RECEIVER_KEY) {
+        if (keccak256(bytes(_requiredHookReceiver)) != CLONE_IMPLEMENTATION_KEY) {
             hookReceiver = _resolveDeployedContract(_requiredHookReceiver);
         }
     }

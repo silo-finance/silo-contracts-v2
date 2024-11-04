@@ -30,7 +30,7 @@ contract Oracle is ISiloOracle {
         priceOfOneBaseToken = _priceOfOne;
     }
 
-    function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address /* _baseToken */) external view returns (uint256 quoteAmount) {
         return _baseAmount * priceOfOneBaseToken / (10 ** baseDecimals);
     }
 }

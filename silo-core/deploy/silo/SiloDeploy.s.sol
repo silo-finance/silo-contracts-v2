@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -28,6 +29,9 @@ import {
     SiloOraclesFactoriesDeployments
 } from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
@@ -35,10 +39,14 @@ FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloDeploy is CommonDeploy {
-    string internal _configName;
+    uint256 private constant _BYTES32_SIZE = 32;
+
+    string public configName;
+
+    string[] public verificationIssues;
 
     function useConfig(string memory _config) external returns (SiloDeploy) {
-        _configName = _config;
+        configName = _config;
         return this;
     }
 
@@ -48,7 +56,7 @@ contract SiloDeploy is CommonDeploy {
         SiloConfigData siloData = new SiloConfigData();
         console2.log("[SiloCommonDeploy] SiloConfigData deployed");
 
-        string memory configName = bytes(_configName).length == 0 ? vm.envString("CONFIG") : _configName;
+        configName = bytes(configName).length == 0 ? vm.envString("CONFIG") : configName;
 
         console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
@@ -81,17 +89,20 @@ contract SiloDeploy is CommonDeploy {
 
         ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         console2.log("[SiloCommonDeploy] siloInitData.token0", siloInitData.token0);
         console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
+
+        ISiloDeployer.ClonableHookReceiver memory hookReceiver;
+        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         siloConfig = siloDeployer.deploy(
             oracles,
             irmConfigData0,
             irmConfigData1,
-            _getClonableHookReceiverConfig(hookReceiverImplementation),
+            hookReceiver,
             siloInitData
         );
 
@@ -101,28 +112,36 @@ contract SiloDeploy is CommonDeploy {
 
         SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
 
-        _saveOracles(siloConfig, config);
+        _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
         console2.log("[SiloCommonDeploy] run() finished.");
+
+        _printAndValidateDetails(siloConfig, siloInitData);
     }
 
     function _saveOracles(
         ISiloConfig _siloConfig,
-        SiloConfigData.ConfigData memory _config
+        SiloConfigData.ConfigData memory _config,
+        bytes32 _noOracleKey
     ) internal {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
 
-        _saveOracle(siloConfig0.solvencyOracle, _config.solvencyOracle0);
-        _saveOracle(siloConfig0.maxLtvOracle, _config.maxLtvOracle0);
-        _saveOracle(siloConfig1.solvencyOracle, _config.solvencyOracle1);
-        _saveOracle(siloConfig1.maxLtvOracle, _config.maxLtvOracle1);
+        _saveOracle(siloConfig0.solvencyOracle, _config.solvencyOracle0, _noOracleKey);
+        _saveOracle(siloConfig0.maxLtvOracle, _config.maxLtvOracle0, _noOracleKey);
+        _saveOracle(siloConfig1.solvencyOracle, _config.solvencyOracle1, _noOracleKey);
+        _saveOracle(siloConfig1.maxLtvOracle, _config.maxLtvOracle1, _noOracleKey);
     }
 
-    function _saveOracle(address _oracle, string memory _oracleConfigName) internal {
-        if (_oracle == address(0)) return;
+    function _saveOracle(address _oracle, string memory _oracleConfigName, bytes32 _noOracleKey) internal {
+        console2.log("[_saveOracle] _oracle", _oracle);
+        console2.log("[_saveOracle] _oracleConfigName", _oracleConfigName);
+
+        bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
+
+        if (_oracle == address(0) || configHashedKey == _noOracleKey) return;
 
         string memory chainAlias = ChainsLib.chainAlias();
         address oracleFromDeployments = OraclesDeployments.get(chainAlias, _oracleConfigName);
@@ -168,6 +187,8 @@ contract SiloDeploy is CommonDeploy {
         if (_isDiaOracle(_oracleConfigName)) {
             return _diaTxData(_oracleConfigName);
         }
+
+        revert("[_getOracleTxData] unknown oracle type");
     }
 
     function _uniswapV3TxData(string memory _oracleConfigName)
@@ -273,5 +294,208 @@ contract SiloDeploy is CommonDeploy {
         internal
         virtual
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
+    }
+
+    function _printAndValidateDetails(
+        ISiloConfig _siloConfig,
+        ISiloConfig.InitData memory siloInitData
+    ) internal view {
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) return;
+
+        (address silo0, address silo1) = _siloConfig.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
+
+        console2.log(string.concat("\nDeployed market details [", chainAlias, "]"));
+        console2.log("SiloConfig", address(_siloConfig));
+        console2.log("\n");
+        console2.log("silo0");
+        _printSiloDetails(silo0, siloConfig0, siloInitData, true);
+        console2.log("\n");
+        console2.log("silo1");
+        _printSiloDetails(silo1, siloConfig1, siloInitData, false);
+    }
+
+    function _printSiloDetails(
+        address _silo,
+        ISiloConfig.ConfigData memory _siloConfig,
+        ISiloConfig.InitData memory _siloInitData,
+        bool _isSilo0
+    ) internal view {
+        string memory tokenSymbol = TokenHelper.symbol(_siloConfig.token);
+
+        string memory tokenStr = vm.toString(_siloConfig.token);
+
+        uint256 tokenDecimals = TokenHelper.assertAndGetDecimals(_siloConfig.token);
+
+        console2.log(_silo);
+        console2.log("\n");
+
+        console2.log(
+            "\tasset",
+            string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
+        );
+
+        console2.log("\n");
+
+        string memory icon;
+        uint256 configValueUint256 = _siloInitData.daoFee;
+        icon = _siloConfig.daoFee != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee), icon);
+
+        configValueUint256 = _siloInitData.deployerFee;
+        icon = _siloConfig.deployerFee != configValueUint256 ? unicode"❌" : unicode"✅";   
+
+        console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.liquidationFee0 : _siloInitData.liquidationFee1;
+        icon = _siloConfig.liquidationFee != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tliquidationFee", _representAsPercent(_siloConfig.liquidationFee), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.flashloanFee0 : _siloInitData.flashloanFee1;
+        icon = _siloConfig.flashloanFee != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tflashloanFee  ", _representAsPercent(_siloConfig.flashloanFee), icon);
+        console2.log("\n");
+
+        configValueUint256 = _isSilo0 ? _siloInitData.maxLtv0 : _siloInitData.maxLtv1;
+        icon = _siloConfig.maxLtv != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tmaxLtv              ", _representAsPercent(_siloConfig.maxLtv), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.lt0 : _siloInitData.lt1;
+        icon = _siloConfig.lt != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        console2.log("\tlt                  ", _representAsPercent(_siloConfig.lt), icon);
+
+        configValueUint256 = _isSilo0 ? _siloInitData.liquidationTargetLtv0 : _siloInitData.liquidationTargetLtv1;
+        icon = _siloConfig.liquidationTargetLtv != configValueUint256 ? unicode"❌" : unicode"✅";
+
+        if (_siloConfig.liquidationTargetLtv == _siloConfig.lt) {
+            icon = string.concat(unicode"🚸", "!!! WARNING !!!");
+        }
+
+        console2.log(
+            "\tliquidationTargetLtv",
+            _representAsPercent(_siloConfig.liquidationTargetLtv),
+            icon
+        );
+
+        console2.log("\n");
+        console2.log("\tsolvencyOracle", _siloConfig.solvencyOracle);
+
+        if (_siloConfig.solvencyOracle != address(0)) {
+            _printOracleInfo(_siloConfig.solvencyOracle, _siloConfig.token);
+        }
+
+        console2.log("\tmaxLtvOracle", _siloConfig.maxLtvOracle);
+
+        if (_siloConfig.maxLtvOracle != address(0)) {
+            _printOracleInfo(_siloConfig.maxLtvOracle, _siloConfig.token);
+        }
+    }
+
+    function _printOracleInfo(address _oracle, address _asset) internal view {
+        ISiloOracle oracle = ISiloOracle(_oracle);
+
+        address quoteToken = oracle.quoteToken();
+        string memory quoteTokenSymbol = _symbol(quoteToken);
+        uint256 quoteTokenDecimals = _assertAndGetDecimals(quoteToken);
+
+        console2.log(
+            "\t\tquoteToken",
+            string.concat(
+                vm.toString(quoteToken),
+                " (",
+                quoteTokenSymbol,
+                ", ",
+                vm.toString(quoteTokenDecimals),
+                " decimals)"
+            )
+        );
+
+        uint256 assetDecimals = _assertAndGetDecimals(_asset);
+
+        if (assetDecimals != 0) {
+            uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
+            console2.log("\t\tquote", quoteTokenPrice);
+        }
+    }
+
+    function _representAsPercent(uint256 _fee) internal pure returns (string memory percent) {
+        if (_fee == 0) return "0%";
+
+        uint256 biasPoints = _fee * 1e4 / 1e18;
+
+        if (biasPoints == 0) return "0%";
+
+        if (biasPoints < 10) {
+            percent = string.concat("0.0", vm.toString(biasPoints));
+        } else if (biasPoints < 100) {
+            uint256 biasPointsInTenths = biasPoints / 10;
+            uint256 reminder = biasPoints - biasPointsInTenths * 10;
+
+            percent = string.concat("0.", vm.toString(biasPointsInTenths));
+
+            if (reminder != 0) {
+                percent = string.concat(percent, vm.toString(reminder));
+            }
+        } else {
+            uint256 biasPointsInHundredths = biasPoints / 100;
+            uint256 reminder = biasPoints - biasPointsInHundredths * 100;
+
+            percent = vm.toString(biasPointsInHundredths);
+
+            if (reminder != 0) {
+                percent = string.concat(percent, ".", vm.toString(reminder));
+            }
+        }
+
+        percent = string.concat(percent, "%");
+    }
+
+    function _assertAndGetDecimals(address _token) internal view returns (uint256) {
+        (bool hasMetadata, bytes memory data) =
+            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.decimals, ()));
+
+        // decimals() is optional in the ERC20 standard, so if metadata is not accessible
+        // we assume there are no decimals and use 0.
+        if (!hasMetadata) {
+            return 0;
+        }
+
+        return abi.decode(data, (uint8));
+    }
+
+    /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
+    function _tokenMetadataCall(address _token, bytes memory _data) private view returns (bool, bytes memory) {
+        if (!IsContract.isContract(_token)) return (false, "");
+
+        (bool success, bytes memory result) = _token.staticcall(_data);
+
+        // If the call reverted we assume the token doesn't follow the metadata extension
+        if (!success) {
+            return (false, "");
+        }
+
+        return (true, result);
+    }
+
+    function _symbol(address _token) internal view returns (string memory assetSymbol) {
+        (bool hasMetadata, bytes memory data) =
+            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
+
+        if (!hasMetadata || data.length == 0) {
+            return "?";
+        } else if (data.length == _BYTES32_SIZE) {
+            return string(TokenHelper.removeZeros(data));
+        } else {
+            return abi.decode(data, (string));
+        }
     }
 }

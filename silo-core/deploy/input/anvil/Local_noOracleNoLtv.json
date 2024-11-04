@@ -1,7 +1,8 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
-    "hookReceiver": "NO_HOOK_RECEIVER",
+    "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "PartialLiquidation.sol",
+    "daoFee": 1500,
     "deployerFee": 1000,
     "token0": "PLACEHOLDER",
     "solvencyOracle0": "NO_ORACLE",
@@ -10,7 +11,8 @@
     "interestRateModelConfig0": "defaultAsset",
     "maxLtv0": 9999,
     "lt0": 10000,
-    "liquidationFee0": 500,
+    "liquidationTargetLtv0": 9000,
+    "liquidationFee0": 0,
     "flashloanFee0": 100,
     "callBeforeQuote0": false,
     "token1": "PLACEHOLDER",
@@ -20,7 +22,8 @@
     "interestRateModelConfig1": "defaultAsset",
     "maxLtv1": 9999,
     "lt1": 10000,
-    "liquidationFee1": 250,
+    "liquidationTargetLtv1": 9000,
+    "liquidationFee1": 0,
     "flashloanFee1": 100,
     "callBeforeQuote1": false
 }

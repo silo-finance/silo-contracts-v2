@@ -14,14 +14,14 @@ import {Views} from "./lib/Views.sol";
 import {CloneDeterministic} from "./lib/CloneDeterministic.sol";
 
 contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
-    /// @dev max fee is 40%, 1e18 == 100%
-    uint256 public constant MAX_FEE = 0.4e18;
+    /// @dev max fee is 50%, 1e18 == 100%
+    uint256 public constant MAX_FEE = 0.5e18;
 
     /// @dev max percent is 1e18 == 100%
     uint256 public constant MAX_PERCENT = 1e18;
 
-    /// @dev fee in 18 decimals, 1e18 == 100%
-    uint256 public daoFee;
+    /// @dev dao fee range (min, max) in 18 decimals, 1e18 == 100%
+    Range private _daoFeeRange;
     uint256 public maxDeployerFee;
     uint256 public maxFlashloanFee;
     uint256 public maxLiquidationFee;
@@ -34,10 +34,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     uint256 internal _siloId;
 
-    constructor(
-        uint256 _daoFee,
-        address _daoFeeReceiver
-    )
+    constructor(address _daoFeeReceiver)
         ERC721("Silo Finance Fee Receiver", "feeSILO")
         Ownable(msg.sender)
     {
@@ -46,12 +43,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         baseURI = "https://v2.app.silo.finance/markets/";
 
-        _setDaoFee(_daoFee);
+        _setDaoFee({_minFee: 0.05e18, _maxFee: 0.5e18});
         _setDaoFeeReceiver(_daoFeeReceiver);
 
         _setMaxDeployerFee({_newMaxDeployerFee: 0.15e18}); // 15% max deployer fee
         _setMaxFlashloanFee({_newMaxFlashloanFee: 0.15e18}); // 15% max flashloan fee
         _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
+    }
+
+    function daoFeeRange() external view returns (Range memory) {
+        return _daoFeeRange;
     }
 
     /// @inheritdoc ISiloFactory
@@ -78,14 +79,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
         (
             configData0, configData1
-        ) = Views.copySiloConfig(_initData, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
+        ) = Views.copySiloConfig(_initData, _daoFeeRange, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
 
         uint256 nextSiloId = _siloId;
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
-
-        configData0.daoFee = daoFee;
-        configData1.daoFee = daoFee;
 
         configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
         configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
@@ -131,8 +129,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
-    function setDaoFee(uint256 _newDaoFee) external virtual onlyOwner {
-        _setDaoFee(_newDaoFee);
+    function setDaoFee(uint128 _minFee, uint128 _maxFee) external virtual onlyOwner {
+        _setDaoFee(_minFee, _maxFee);
     }
 
     /// @inheritdoc ISiloFactory
@@ -174,7 +172,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @inheritdoc ISiloFactory
     function validateSiloInitData(ISiloConfig.InitData memory _initData) external view virtual returns (bool) {
-        return Views.validateSiloInitData(_initData, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
+        return Views.validateSiloInitData(_initData, _daoFeeRange, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
     }
 
     /// @inheritdoc ERC721
@@ -189,12 +187,15 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         );
     }
 
-    function _setDaoFee(uint256 _newDaoFee) internal virtual {
-        require(_newDaoFee <= MAX_FEE, MaxFeeExceeded());
+    function _setDaoFee(uint128 _minFee, uint128 _maxFee) internal virtual {
+        require(_maxFee <= MAX_FEE, MaxFeeExceeded());
+        require(_minFee <= _maxFee, InvalidFeeRange());
+        require(_daoFeeRange.min != _minFee || _daoFeeRange.max != _maxFee, SameRange());
 
-        daoFee = _newDaoFee;
+        _daoFeeRange.min = _minFee;
+        _daoFeeRange.max = _maxFee;
 
-        emit DaoFeeChanged(_newDaoFee);
+        emit DaoFeeChanged(_minFee, _maxFee);
     }
 
     function _setMaxDeployerFee(uint256 _newMaxDeployerFee) internal virtual {

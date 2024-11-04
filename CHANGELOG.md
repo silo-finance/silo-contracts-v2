@@ -6,6 +6,55 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.12.0] - 2024-11-01
+### Added
+- solvBTC/wBTC market Arbitrum
+- gmETH/WETH market Arbitrum
+- wstETH/WETH market Arbitrum
+- ETH+/WETH market Arbitrum
+- SiloRouter with preview methods instead of convertToAssets
+
+## [0.11.0] - 2024-10-30
+### Changed
+- dao fee can be set based on range
+
+## [0.10.1] - 2024-10-29
+### Added
+- optimism deployment
+
+## [0.10.0] - 2024-10-28
+### Changed
+- make target LTV after liquidation configurable
+
+## [0.9.1] - 2024-10-25
+### Fixed
+- SiloRouter with convertToAssets
+
+## [0.9.0] - 2024-10-23
+### Changed
+- allow for forced transfer of debt
+- use transient storage for reentrancy flag
+
+### Fixed
+- remove unchecked math from some places
+- exclude protected assets from flashloan
+
+### Removed
+- remove `leverageSameAsset`
+- remove self liquidation
+- remove decimals from value calculations
+
+## [0.8.0] - 2024-09-13
+
+Design changes:
+
+- The liquidation module was transformed into a hook receiver.
+- Silo is now a share collateral token and implements share token functionality. So, now we have collateral share token (silo), protected share token (customized ERC-20), debt share token (customized ERC-20).
+- Removed ‘bool sameAsset’ from the silo and introduced separate methods for work with the same asset.
+- Removed ordered configs from the SiloConfig and introduced a collateral silo concept.
+- Removed ‘leverage’ functionality from the Silo.borrow fn.
+- Removed InterestRateModelV2.connect and added InterestRateModelV2.initialize. Now each silo has a different irm that is a minimal proxy and is cloned during the silo deployment like other components
+
 ## [0.7.0] - 2024-06-03
 ### Added
  - Refactoring of the hooks' actions and hooks inputs

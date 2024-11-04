@@ -46,12 +46,10 @@ library TokenHelper {
     function removeZeros(bytes memory _data) internal pure returns (bytes memory result) {
         uint256 n = _data.length;
 
-        unchecked {
-            for (uint256 i; i < n; i++) {
-                if (_data[i] == 0) continue;
+        for (uint256 i; i < n; i++) {
+            if (_data[i] == 0) continue;
 
-                result = abi.encodePacked(result, _data[i]);
-            }
+            result = abi.encodePacked(result, _data[i]);
         }
     }
 

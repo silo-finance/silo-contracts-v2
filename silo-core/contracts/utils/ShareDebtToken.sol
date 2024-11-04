@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IERC20R} from "../interfaces/IERC20R.sol";
-import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
@@ -19,8 +18,6 @@ import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.s
 /// take someone else's debt without asking.
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
-    using SiloLensLib for ISilo;
-
     /// @inheritdoc IShareTokenInitializable
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);
@@ -42,10 +39,6 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
 
         _setReceiveApproval(owner, _msgSender(), _amount);
-    }
-
-    function forwardTransferFromNoChecks(address, address, uint256) external pure virtual override {
-        revert Forbidden();
     }
 
     /// @inheritdoc IERC20R
@@ -107,6 +100,9 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
             // If the `_recipient` has no collateral silo set yet, it will be copied from the sender.
             $.siloConfig.onDebtTransfer(_sender, _recipient);
 
+            // if we NOT doing checks, we early return and not checking/changing any allowance
+            if (!$.transferWithChecks) return;
+
             // _recipient must approve debt transfer, _sender does not have to
             uint256 currentAllowance = _receiveAllowance(_sender, _recipient);
             require(currentAllowance >= _amount, IShareToken.AmountExceedsAllowance());
@@ -125,11 +121,13 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
 
     /// @dev Check if recipient is solvent after debt transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+
         // if we are minting or burning, Silo is responsible to check all necessary conditions
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
-        if (ShareTokenLib.isTransfer(_sender, _recipient)) {
-            IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
+            $.siloConfig.accrueInterestForBothSilos();
             ShareTokenLib.callOracleBeforeQuote($.siloConfig, _recipient);
             require($.silo.isSolvent(_recipient), IShareToken.RecipientNotSolventAfterTransfer());
         }

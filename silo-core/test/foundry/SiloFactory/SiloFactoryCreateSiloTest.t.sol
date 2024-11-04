@@ -66,7 +66,8 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         ISiloConfig.ConfigData memory configData0 = silo0.config().getConfig(address(silo0));
         ISiloConfig.ConfigData memory configData1 = silo0.config().getConfig(address(silo1));
 
-        assertEq(configData0.daoFee, siloFactory.daoFee(), "configData0.daoFee");
+        assertGe(configData0.daoFee, siloFactory.daoFeeRange().min, "configData0.daoFee.min");
+        assertLe(configData0.daoFee, siloFactory.daoFeeRange().max, "configData0.daoFee.max");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
         // TODO check for both tokens
         // assertEq(configData0.token, initData.token0, "configData0.token");
@@ -83,7 +84,8 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertEq(configData0.flashloanFee, initData.flashloanFee0, "configData0.flashloanFee");
         assertEq(configData0.callBeforeQuote, initData.callBeforeQuote0, "configData0.callBeforeQuote");
 
-        assertEq(configData1.daoFee, siloFactory.daoFee(), "configData1.daoFee");
+        assertGe(configData1.daoFee, siloFactory.daoFeeRange().min, "configData1.daoFee.min");
+        assertLe(configData1.daoFee, siloFactory.daoFeeRange().max, "configData1.daoFee.max");
         assertEq(configData1.deployerFee, initData.deployerFee, "configData1.deployerFee");
         assertTrue(configData1.silo != address(0), "configData1.silo");
         assertTrue(configData1.protectedShareToken != address(0), "configData1.protectedShareToken");
