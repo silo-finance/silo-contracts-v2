@@ -112,4 +112,3 @@
 * if user is insolvent, it must have debt shares
 * `silo0.isSolvent()` <=> `silo1.isSolvent()`
 * Every external call on Silo interface calls hook contract
-* Create a property to verify view functions that can call accrueInterest fn
