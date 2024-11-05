@@ -130,13 +130,30 @@ contract PublicTutorials is Test {
     // Get user's loan-to-value ratio. For example, 0.5 * 10**18 LTV is for a position with 10$ collateral and
     // 5$ borrowed assets.
     function test_getMyLTV() public {
-        (address silo0,) = SILO_CONFIG.getSilos();
-        uint256 userLTV = SILO_LENS.getLtv(ISilo(silo0), EXAMPLE_USER);
+        (address silo0, address silo1) = SILO_CONFIG.getSilos();
+        uint256 userLTVSilo0 = SILO_LENS.getLtv(ISilo(silo0), EXAMPLE_USER);
+        uint256 userLTVSilo1 = SILO_LENS.getLtv(ISilo(silo1), EXAMPLE_USER);
 
-        assertEq(userLTV, 579636700972035697);
+        assertEq(userLTVSilo0, 579636700972035697, "User loan-to-value ratio is ~58%");
+        assertEq(userLTVSilo0, userLTVSilo1, "User loan-to-value ratio is consistent for both silos in SiloConfig");
     }
-    function test_getMarketLT() public {}
-    function test_estimateMyLiquidationTime() public {}
-    function test_getMarketLiquidity() public {}
-    function test_getMarketParams() public {}
+
+    // Check if the user is solvent. If the user is insolvent, borrow position can be liquidated.
+    function test_getMySolvency() public {
+        (address silo0, address silo1) = SILO_CONFIG.getSilos();
+        bool isSolventSilo0 = ISilo(silo0).isSolvent(EXAMPLE_USER);
+        bool isSolventSilo1 = ISilo(silo1).isSolvent(EXAMPLE_USER);
+
+        assertTrue(isSolventSilo0, "User is solvent");
+        assertEq(isSolventSilo0, isSolventSilo1, "Solvency is consistent for both sukis in SiloConfig");
+    }
+
+    // Resolve liquidation threshold
+    function test_getMarketParams() public {
+        (address silo0,) = SILO_CONFIG.getSilos();
+
+        uint256 borrowableLiquidity = ISilo(silo0).getLiquidity();
+
+        assertEq(borrowableLiquidity, 52461980112442, "This amount of WETH can be borrowed");
+    }
 }
