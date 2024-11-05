@@ -14,9 +14,9 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
     The following tutorial will help you to read any borrow/deposit position data from Silo protocol. 
     Deposited assets, borrowed assets, interest rates and more.
 
-    $ forge test -vv --ffi --mc TutorialTrackPosition
+    $ forge test -vv --ffi --mc TutorialCheckPosition
 */
-contract TutorialTrackPosition is Test {
+contract TutorialCheckPosition is Test {
     // wstETH Silo
     ISilo public constant SILO0 = ISilo(0x0f3E42679f6Cf6Ee00b7eAC7b1676CA044615402);
     // WETH Silo
