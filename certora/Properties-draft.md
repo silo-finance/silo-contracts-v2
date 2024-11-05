@@ -109,3 +109,7 @@
 * `forwardTransferFromNoChecks()` before and after execution of any function `transferWithChecks` must be always true
 * `forwardTransferFromNoChecks()` during execution of any function other than `forwardTransferFromNoChecks`, `transferWithChecks` must be always true
 * `forwardTransferFromNoChecks()` is called from `PartialLiquidation.liquidationCall()` only
+* if user is insolvent, it must have debt shares
+* `silo0.isSolvent()` <=> `silo1.isSolvent()`
+* Every external call on Silo interface calls hook contract
+* Create a property to verify view functions that can call accrueInterest fn
