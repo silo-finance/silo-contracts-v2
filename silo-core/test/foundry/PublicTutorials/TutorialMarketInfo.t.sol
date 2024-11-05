@@ -82,7 +82,7 @@ contract TutorialMarketInfo is Test {
         assertTrue(silo0Setup.solvencyOracle != address(0), "SolvencyOracle is not zero address");
 
         assertTrue(
-            ISiloOracle(silo0Setup.solvencyOracle).quote(10**18, 0x5979D7b546E38E414F7E9822514be443A4800529) != 0,
+            ISiloOracle(silo0Setup.solvencyOracle).quote(10**18, 0x5979D7b546E38E414F7E9822514be443A4800529) > 0,
             "solvencyOracle can provide a price for wstETH"
         );
 

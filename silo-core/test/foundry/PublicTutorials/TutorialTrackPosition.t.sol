@@ -68,9 +68,7 @@ contract TutorialTrackPosition is Test {
 
     // SiloLens contracts can be used to get the total of regular + protected deposits per user.
     function test_getMyAllDepositsAmount() public {
-        (, address silo1) = SILO_CONFIG.getSilos();
-        
-        uint256 userRegularAndProtectedAssets = SILO_LENS.collateralBalanceOfUnderlying(ISilo(silo1), EXAMPLE_USER);
+        uint256 userRegularAndProtectedAssets = SILO_LENS.collateralBalanceOfUnderlying(SILO1, EXAMPLE_USER);
 
         assertEq(
             userRegularAndProtectedAssets,
@@ -79,15 +77,13 @@ contract TutorialTrackPosition is Test {
         );
     }
 
-    // Example user deposits ETH collateral in silo1 and borrows wstETH in silo1. User's debt grows continuously by
+    // Example user deposits ETH collateral in silo1 and borrows wstETH in silo0. User's debt grows continuously by
     // interest rate. In the example we will calculate user's borrowed amount as an amount the user have to repay.
     function test_getMyBorrowedAmount() public {
-        (address silo0,) = SILO_CONFIG.getSilos();
-
-        uint256 userBorrowedAmount = SILO_LENS.debtBalanceOfUnderlying(ISilo(silo0), EXAMPLE_USER);
+        uint256 userBorrowedAmount = SILO_LENS.debtBalanceOfUnderlying(SILO0, EXAMPLE_USER);
 
         assertEq(userBorrowedAmount, 10402425735829051, "User have to repay ~0.0104 wstETH including interest");
-        assertEq(userBorrowedAmount, ISilo(silo0).maxRepay(EXAMPLE_USER), "Same way to read the debt amount");
+        assertEq(userBorrowedAmount, SILO0.maxRepay(EXAMPLE_USER), "Same way to read the debt amount");
     }
 
     // Get borrow APR. 10**18 current interest rate is equal to 100%/year. 
@@ -100,9 +96,8 @@ contract TutorialTrackPosition is Test {
     // Get user's loan-to-value ratio. For example, 0.5 * 10**18 LTV is for a position with 10$ collateral and
     // 5$ borrowed assets.
     function test_getMyLTV() public {
-        (address silo0, address silo1) = SILO_CONFIG.getSilos();
-        uint256 userLTVSilo0 = SILO_LENS.getLtv(ISilo(silo0), EXAMPLE_USER);
-        uint256 userLTVSilo1 = SILO_LENS.getLtv(ISilo(silo1), EXAMPLE_USER);
+        uint256 userLTVSilo0 = SILO_LENS.getLtv(SILO0, EXAMPLE_USER);
+        uint256 userLTVSilo1 = SILO_LENS.getLtv(SILO1, EXAMPLE_USER);
 
         assertEq(userLTVSilo0, 579636700972035697, "User loan-to-value ratio is ~58%");
         assertEq(userLTVSilo0, userLTVSilo1, "User loan-to-value ratio is consistent for both silos in SiloConfig");
@@ -110,9 +105,8 @@ contract TutorialTrackPosition is Test {
 
     // Check if the user is solvent. If the user is insolvent, borrow position can be liquidated.
     function test_getMySolvency() public {
-        (address silo0, address silo1) = SILO_CONFIG.getSilos();
-        bool isSolventSilo0 = ISilo(silo0).isSolvent(EXAMPLE_USER);
-        bool isSolventSilo1 = ISilo(silo1).isSolvent(EXAMPLE_USER);
+        bool isSolventSilo0 = SILO0.isSolvent(EXAMPLE_USER);
+        bool isSolventSilo1 = SILO1.isSolvent(EXAMPLE_USER);
 
         assertTrue(isSolventSilo0, "User is solvent");
         assertEq(isSolventSilo0, isSolventSilo1, "Solvency is consistent for both silos in SiloConfig");
