@@ -3,7 +3,6 @@
 import "../summaries/two_silos_summaries.spec";
 import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";
-import "../summaries/erc20_in_cvl.spec";
 import "../summaries/safe-approximations.spec";
 
 import "../requirements/tokens_requirements.spec";
