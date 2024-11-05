@@ -126,16 +126,10 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
     error OnlySilo();
     error OnlySiloOrTokenOrHookReceiver();
-    error OnlyShareToken();
-    error OnlySiloOrDebtShareToken();
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
-    error NoDebt();
-    error CollateralTypeDidNotChanged();
-    error InvalidConfigOrder();
     error FeeTooHigh();
-    error InvalidDebtShareToken();
 
     /// @dev It should be called on debt transfer (debt share token transfer).
     /// In the case if the`_recipient` doesn't have configured a collateral silo,

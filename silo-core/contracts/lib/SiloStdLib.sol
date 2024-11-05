@@ -15,8 +15,6 @@ library SiloStdLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    error ZeroAmount();
-
     /// @notice Returns flash fee amount
     /// @param _config address of config contract for Silo
     /// @param _token for which fee is calculated
