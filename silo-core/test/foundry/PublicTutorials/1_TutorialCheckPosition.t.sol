@@ -11,7 +11,7 @@ import {SiloLens, ISiloLens} from "silo-core/contracts/SiloLens.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 
 /*
-    The following tutorial will help you to read any borrow/deposit position data from Silo protocol. 
+    This tutorial will help you to read any borrow/deposit position data from Silo protocol. 
     Deposited assets, borrowed assets, interest rates and more.
 
     $ forge test -vv --ffi --mc TutorialCheckPosition

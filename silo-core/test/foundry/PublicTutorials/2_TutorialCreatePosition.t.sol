@@ -10,7 +10,7 @@ import {SiloLens, ISiloLens} from "silo-core/contracts/SiloLens.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 
 /*
-    The following tutorial will help you to borrow, deposit, repay and withdraw from Silo protocol. 
+    This tutorial will help you to borrow, deposit, repay and withdraw from Silo protocol. 
 
     $ forge test -vv --ffi --mc TutorialCreatePosition
 */
