@@ -16,7 +16,7 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
     $ forge test -vv --ffi --mc TutorialMarketInfo
 */
 contract TutorialMarketInfo is Test {
-    // wstETH Silo
+    // wstETH Silo. There are multiple wstETH Silos exist. This and following addresses are examples.
     ISilo public constant SILO0 = ISilo(0x0f3E42679f6Cf6Ee00b7eAC7b1676CA044615402);
     // WETH Silo
     ISilo public constant SILO1 = ISilo(0x58A31D1f2Be10Bf2b48C6eCfFbb27D1f3194e547);
