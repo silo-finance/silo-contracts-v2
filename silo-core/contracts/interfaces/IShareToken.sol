@@ -40,7 +40,6 @@ interface IShareToken is IERC20Metadata {
     error OnlySiloConfig();
     error OwnerIsZero();
     error RecipientIsZero();
-    error ShareTransferNotAllowed();
     error AmountExceedsAllowance();
     error RecipientNotSolventAfterTransfer();
     error SenderNotSolventAfterTransfer();
