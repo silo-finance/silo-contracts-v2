@@ -2,12 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {ISilo, IERC4626, IERC20} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo, IERC20} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLens, ISiloLens} from "silo-core/contracts/SiloLens.sol";
-import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 
 /*
     This tutorial will help you to borrow, deposit, repay and withdraw from Silo protocol. 
