@@ -172,13 +172,11 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error WrongToken();
     error EarnedZero();
     error FlashloanFailed();
-    error LeverageFailed();
     error AboveMaxLtv();
     error Insolvency();
     error ThereIsDebtInOtherSilo();
     error NoDebt();
     error TwoAssetsDebt();
-    error LeverageTooHigh();
     error SiloInitialized();
     error OnlyHookReceiver();
     error NoLiquidity();
