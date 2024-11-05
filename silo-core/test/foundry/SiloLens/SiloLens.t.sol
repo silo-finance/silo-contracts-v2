@@ -6,6 +6,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 
@@ -39,6 +40,53 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         vm.prank(_borrower);
         silo1.borrow(_AMOUNT_BORROW, _borrower, _borrower);
+    }
+
+    /*
+        forge test -vvv --ffi --mt test_SiloLens_getInterestRateModel
+    */
+    function test_SiloLens_getInterestRateModel() public view {
+        assertEq(siloLens.getInterestRateModel(silo0), _siloConfig.getConfig(address(silo0)).interestRateModel);
+        assertEq(siloLens.getInterestRateModel(silo1), _siloConfig.getConfig(address(silo1)).interestRateModel);
+    }
+
+    /*
+        forge test -vvv --ffi --mt test_SiloLens_getDepositAPR
+    */
+    function test_SiloLens_getDepositAPR() public view {
+        assertEq(siloLens.getDepositAPR(silo0), 0, "Deposit APR in silo0 equal to 0 because there is no debt");
+
+        (,, uint256 daoFee, uint256 deployerFee) = 
+            siloLens.getFeesAndFeeReceivers(silo1);
+        
+        assertTrue(daoFee > 0, "daoFee > 0");
+        assertTrue(deployerFee > 0, "deployerFee > 0");
+        
+        uint256 depositAPR = siloLens.getDepositAPR(silo1);
+        uint256 borrowAPR = siloLens.getBorrowAPR(silo1);
+        assertTrue(depositAPR < borrowAPR, "depositAPR < borrowAPR because of fees");
+
+        uint256 collateralAssets = silo1.getCollateralAssets();
+        uint256 debtAssets = silo1.getDebtAssets();
+
+        assertEq(
+            depositAPR,
+            (borrowAPR * debtAssets / collateralAssets) * (10**18 - daoFee - deployerFee) / 10**18,
+            "Deposit APR is borrow APR multiplied by debt/deposits minus fees"
+        );
+    }
+
+    /*
+        forge test -vvv --ffi --mt test_SiloLens_getBorrowAPR
+    */
+    function test_SiloLens_getBorrowAPR() public view {
+        assertEq(siloLens.getBorrowAPR(silo0), 0, "Borrow APR in silo0 equal to 0 because there is no debt");
+
+        uint256 borrowAPR = siloLens.getBorrowAPR(silo1);
+        assertEq(borrowAPR, 70000000004304000, "Borrow APR in silo1 ~7% because of debt");
+
+        IInterestRateModel irm = IInterestRateModel(siloLens.getInterestRateModel(silo1));
+        assertEq(borrowAPR, irm.getCurrentInterestRate(address(silo1), block.timestamp), "APR equal to IRM rate");
     }
 
     /*

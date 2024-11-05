@@ -3,87 +3,52 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {ISilo, IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IERC20Metadata} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
+import {SiloLens, ISiloLens} from "silo-core/contracts/SiloLens.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 
 /*
-    The following tutorial will help you to read any data from Silo protocol. Deposits, borrowed assets, liquidity,
-    market setup and many more.
+    The following tutorial will help you to read any borrow/deposit position data from Silo protocol. 
+    Deposited assets, borrowed assets, interest rates and more.
 
-    $ forge test -vv --ffi --mc PublicTutorials
+    $ forge test -vv --ffi --mc TutorialTrackPosition
 */
-contract PublicTutorials is Test {
-    // wstETH/WETH market config.
+contract TutorialTrackPosition is Test {
+    // wstETH Silo
+    ISilo public constant SILO0 = ISilo(0x0f3E42679f6Cf6Ee00b7eAC7b1676CA044615402);
+    // WETH Silo
+    ISilo public constant SILO1 = ISilo(0x58A31D1f2Be10Bf2b48C6eCfFbb27D1f3194e547);
+    // wstETH/WETH market config for both Silos
     ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB); 
-    ISiloLens public constant SILO_LENS = ISiloLens(0x89E3Cf1c67C0c0701EF7926A79f65EeEb52904eF); 
+    // helper to read the data from Silo protocol
+    ISiloLens public SILO_LENS;
+    // example user address
     address public constant EXAMPLE_USER = 0x6d228Fa4daD2163056A48Fc2186d716f5c65E89A;
 
     // Fork Arbitrum at specific block.
     function setUp() public {
         uint256 blockToFork = 270931754;
         vm.createSelectFork(vm.envString("RPC_ARBITRUM"), blockToFork);
-    }
 
-    // Every market consists of two ERC4626 vaults unified by one setup represented by SiloConfig. In the following
-    // example there are two vaults: wstETH vault and WETH vault.
-    function test_getVaultAddresses() public {
-        (address silo0, address silo1) = SILO_CONFIG.getSilos();
-
-        assertEq(IERC4626(silo0).asset(), 0x5979D7b546E38E414F7E9822514be443A4800529, "Silo0 is a vault for wstETH");
-        assertEq(IERC4626(silo1).asset(), 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1, "Silo1 is a vault for WETH");
+        // you can get the latest address from V2 protocol deployments
+        SILO_LENS = new SiloLens();
     }
 
     // Get an amount of user's deposited assets. ERC4626 shares represent regular deposits, which can be borrowed by
     // other users and generate interest. 
     function test_getMyRegularDepositAmount() public {
-        (, address silo1) = SILO_CONFIG.getSilos();
-        uint256 userShares = IERC4626(silo1).balanceOf(EXAMPLE_USER);
-        uint256 userAssets = IERC4626(silo1).previewRedeem(userShares);
+        uint256 userShares = SILO1.balanceOf(EXAMPLE_USER);
+        uint256 userAssets = SILO1.previewRedeem(userShares);
 
         assertEq(userAssets, 2 * 10**16, "User has 0.02 WETH deposited in the lending market");
     }
 
-    // Get borrow APR. 10**18 current interest rate is equal to 100%/year. 
-    function test_getBorrowAPR() public {
-        // todo move to lens
-        // get WETH Silo
-        (address silo0,) = SILO_CONFIG.getSilos();
-
-        // get config for WETH Silo
-        ISiloConfig.ConfigData memory configData = SILO_CONFIG.getConfig(silo0);
-
-        // get WETH interest rate model
-        address interestRateModel0 = configData.interestRateModel;
-
-        // get current interest rate for WETH Silo and current block timestamp
-        uint256 currentBorrowInterestRate = 
-            IInterestRateModel(interestRateModel0).getCurrentInterestRate(silo0, block.timestamp);
-
-        assertEq(currentBorrowInterestRate, 141827957285328000, "Current debt interest rate is ~14.18% / year");
-    }
-
     // Get deposit APR. 10**18 current interest rate is equal to 100%/year. 
     function test_getDepositAPR() public {
-        // todo move to lens
-        (address silo0,) = SILO_CONFIG.getSilos();
-        ISiloConfig.ConfigData memory configData = SILO_CONFIG.getConfig(silo0);
-        address interestRateModel0 = configData.interestRateModel;
-    
-        uint256 currentBorrowInterestRate = 
-            IInterestRateModel(interestRateModel0).getCurrentInterestRate(silo0, block.timestamp);
-
-        uint256 debtAssets = ISilo(silo0).getDebtAssets();
-        uint256 collateralAssets = ISilo(silo0).getCollateralAssets();
-
-        uint256 currentDepositInterestRate;
-
-        if (collateralAssets != 0) {
-            currentDepositInterestRate = (currentBorrowInterestRate * debtAssets / collateralAssets) * 
-                (10**18 - configData.daoFee - configData.deployerFee) / 10**18;
-        }
+        uint256 currentDepositInterestRate = SILO_LENS.getDepositAPR(SILO0);
 
         assertEq(currentDepositInterestRate, 119948832360394647, "Current deposit interest rate is ~11.99% / year");
     }
@@ -94,11 +59,9 @@ contract PublicTutorials is Test {
     // only as collateral and not generate any interest. The advantage of protected deposit is an opportunity to
     // withdraw it any time.
     function test_getMyProtectedDepositsAmount() public {
-        (, address silo1) = SILO_CONFIG.getSilos();
-        
-        (address protectedShareToken,,) = SILO_CONFIG.getShareTokens(silo1);
+        (address protectedShareToken,,) = SILO_CONFIG.getShareTokens(address(SILO1));
         uint256 userProtectedShares = IShareToken(protectedShareToken).balanceOf(EXAMPLE_USER);
-        uint256 userProtectedAssets = ISilo(silo1).previewRedeem(userProtectedShares, ISilo.CollateralType.Protected);
+        uint256 userProtectedAssets = SILO1.previewRedeem(userProtectedShares, ISilo.CollateralType.Protected);
 
         assertEq(userProtectedAssets, 12345 * 10**11, "User has 0.0012345 WETH protected deposit");
     }
@@ -112,7 +75,7 @@ contract PublicTutorials is Test {
         assertEq(
             userRegularAndProtectedAssets,
             212345 * 10**11,
-            "User has ~0.0212345 wstETH in regular and protected deposits"
+            "User has ~0.0212345 WETH in regular and protected deposits"
         );
     }
 
@@ -125,6 +88,13 @@ contract PublicTutorials is Test {
 
         assertEq(userBorrowedAmount, 10402425735829051, "User have to repay ~0.0104 wstETH including interest");
         assertEq(userBorrowedAmount, ISilo(silo0).maxRepay(EXAMPLE_USER), "Same way to read the debt amount");
+    }
+
+    // Get borrow APR. 10**18 current interest rate is equal to 100%/year. 
+    function test_getBorrowAPR() public {
+        uint256 currentBorrowInterestRate = SILO_LENS.getBorrowAPR(SILO0);
+
+        assertEq(currentBorrowInterestRate, 141827957285328000, "Current debt interest rate is ~14.18% / year");
     }
 
     // Get user's loan-to-value ratio. For example, 0.5 * 10**18 LTV is for a position with 10$ collateral and
@@ -145,15 +115,6 @@ contract PublicTutorials is Test {
         bool isSolventSilo1 = ISilo(silo1).isSolvent(EXAMPLE_USER);
 
         assertTrue(isSolventSilo0, "User is solvent");
-        assertEq(isSolventSilo0, isSolventSilo1, "Solvency is consistent for both sukis in SiloConfig");
-    }
-
-    // Resolve liquidation threshold
-    function test_getMarketParams() public {
-        (address silo0,) = SILO_CONFIG.getSilos();
-
-        uint256 borrowableLiquidity = ISilo(silo0).getLiquidity();
-
-        assertEq(borrowableLiquidity, 52461980112442, "This amount of WETH can be borrowed");
+        assertEq(isSolventSilo0, isSolventSilo1, "Solvency is consistent for both silos in SiloConfig");
     }
 }
