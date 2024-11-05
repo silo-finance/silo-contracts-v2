@@ -39,7 +39,7 @@ contract TutorialCheckPosition is Test {
 
     // Get an amount of user's deposited assets. ERC4626 shares represent regular deposits, which can be borrowed by
     // other users and generate interest. 
-    function test_getMyRegularDepositAmount() public {
+    function test_getMyRegularDepositAmount() public view {
         uint256 userShares = SILO1.balanceOf(EXAMPLE_USER);
         uint256 userAssets = SILO1.previewRedeem(userShares);
 
@@ -47,7 +47,7 @@ contract TutorialCheckPosition is Test {
     }
 
     // Get deposit APR. 10**18 current interest rate is equal to 100%/year. 
-    function test_getDepositAPR() public {
+    function test_getDepositAPR() public view {
         uint256 currentDepositInterestRate = SILO_LENS.getDepositAPR(SILO0);
 
         assertEq(currentDepositInterestRate, 119948832360394647, "Current deposit interest rate is ~11.99% / year");
@@ -58,7 +58,7 @@ contract TutorialCheckPosition is Test {
     // deposit in protected mode to make the deposit unborrowable by other users. Deposited funds will be used
     // only as collateral and not generate any interest. The advantage of protected deposit is an opportunity to
     // withdraw it any time.
-    function test_getMyProtectedDepositsAmount() public {
+    function test_getMyProtectedDepositsAmount() public view {
         (address protectedShareToken,,) = SILO_CONFIG.getShareTokens(address(SILO1));
         uint256 userProtectedShares = IShareToken(protectedShareToken).balanceOf(EXAMPLE_USER);
         uint256 userProtectedAssets = SILO1.previewRedeem(userProtectedShares, ISilo.CollateralType.Protected);
@@ -67,7 +67,7 @@ contract TutorialCheckPosition is Test {
     }
 
     // SiloLens contracts can be used to get the total of regular + protected deposits per user.
-    function test_getMyAllDepositsAmount() public {
+    function test_getMyAllDepositsAmount() public view {
         uint256 userRegularAndProtectedAssets = SILO_LENS.collateralBalanceOfUnderlying(SILO1, EXAMPLE_USER);
 
         assertEq(
@@ -79,7 +79,7 @@ contract TutorialCheckPosition is Test {
 
     // Example user deposits ETH collateral in silo1 and borrows wstETH in silo0. User's debt grows continuously by
     // interest rate. In the example we will calculate user's borrowed amount as an amount the user have to repay.
-    function test_getMyBorrowedAmount() public {
+    function test_getMyBorrowedAmount() public view {
         uint256 userBorrowedAmount = SILO_LENS.debtBalanceOfUnderlying(SILO0, EXAMPLE_USER);
 
         assertEq(userBorrowedAmount, 10402425735829051, "User have to repay ~0.0104 wstETH including interest");
@@ -87,7 +87,7 @@ contract TutorialCheckPosition is Test {
     }
 
     // Get borrow APR. 10**18 current interest rate is equal to 100%/year. 
-    function test_getBorrowAPR() public {
+    function test_getBorrowAPR() public view {
         uint256 currentBorrowInterestRate = SILO_LENS.getBorrowAPR(SILO0);
 
         assertEq(currentBorrowInterestRate, 141827957285328000, "Current debt interest rate is ~14.18% / year");
@@ -95,7 +95,7 @@ contract TutorialCheckPosition is Test {
 
     // Get user's loan-to-value ratio. For example, 0.5 * 10**18 LTV is for a position with 10$ collateral and
     // 5$ borrowed assets.
-    function test_getMyLTV() public {
+    function test_getMyLTV() public view {
         uint256 userLTVSilo0 = SILO_LENS.getLtv(SILO0, EXAMPLE_USER);
         uint256 userLTVSilo1 = SILO_LENS.getLtv(SILO1, EXAMPLE_USER);
 
@@ -104,7 +104,7 @@ contract TutorialCheckPosition is Test {
     }
 
     // Check if the user is solvent. If the user is insolvent, borrow position can be liquidated.
-    function test_getMySolvency() public {
+    function test_getMySolvency() public view {
         bool isSolventSilo0 = SILO0.isSolvent(EXAMPLE_USER);
         bool isSolventSilo1 = SILO1.isSolvent(EXAMPLE_USER);
 

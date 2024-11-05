@@ -55,7 +55,7 @@ contract TutorialCreatePosition is Test {
     function test_withdrawAll() public {
         // create deposit position to withdraw funds from it
         uint256 depositAssets = 10**18;
-        _createDeposit(depositAssets);
+        _createDepositPosition(depositAssets);
         uint256 balanceBeforeWithdraw = IERC20(WSTETH).balanceOf(address(this));
 
         uint256 maxWithdraw = SILO0.maxWithdraw(address(this), ISilo.CollateralType.Collateral);
@@ -73,7 +73,7 @@ contract TutorialCreatePosition is Test {
     // Borrow WETH with wstETH as collateral.
     function test_borrow() public {
         // create deposit position in wstETH Silo to use it as collateral for borrowing in WETH Silo
-        _createDeposit(10**18);
+        _createDepositPosition(10**18);
         assertTrue(SILO0.balanceOf(address(this)) > 0, "Collateral exist in Silo0");
 
         uint256 borrowAssets = 10**17;
@@ -96,13 +96,13 @@ contract TutorialCreatePosition is Test {
         assertEq(SILO_LENS.getLtv(SILO1, address(this)), 0, "Repay is successful, LTV==0");
     }
 
-    function _createDeposit(uint256 _depositAssets) internal {
+    function _createDepositPosition(uint256 _depositAssets) internal {
         IERC20(WSTETH).approve(address(SILO0), _depositAssets);
         SILO0.deposit(_depositAssets, address(this));
     }
 
     function _createBorrowPosition(uint256 _depositAssets, uint256 _borrowAssets) internal {
-        _createDeposit(_depositAssets);
+        _createDepositPosition(_depositAssets);
         SILO1.borrow(_borrowAssets, address(this), address(this));
     }
 }

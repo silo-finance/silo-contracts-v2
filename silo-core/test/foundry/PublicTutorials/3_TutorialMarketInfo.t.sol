@@ -38,7 +38,7 @@ contract TutorialMarketInfo is Test {
     // Every market consists of two ERC4626 vaults unified by one setup represented by SiloConfig. In the following
     // example there are two vaults: wstETH vault and WETH vault. This test will show the relation between SiloConfig
     // and vaults (Silos) addresses. 
-    function test_getVaultAddresses() public {
+    function test_getVaultAddresses() public view {
         (address silo0, address silo1) = SILO_CONFIG.getSilos();
 
         assertEq(silo0, address(SILO0), "Silo0 is the first Silo for wstETH/WETH market");
@@ -56,7 +56,7 @@ contract TutorialMarketInfo is Test {
     // wstETH/WETH market is represented by wstETH and WETH Silos. wstETH Silo can have kinked interest rate 
     // model, WETH can have dynamic interest rate model. You can set 80% as LT for wstETH Silo on deployment and
     // 99% as LT for WETH Silo. Silo V2 is permissionless, anyone can deploy Silos with any market parameters.
-    function test_getMarketParams() public {
+    function test_getMarketParams() public view {
         ISiloConfig.ConfigData memory silo0Setup = SILO0.config().getConfig(address(SILO0));
         ISiloConfig.ConfigData memory silo1Setup = SILO0.config().getConfig(address(SILO1));
 
