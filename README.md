@@ -165,3 +165,16 @@ FOUNDRY_PROFILE=core-test forge snapshot --desc --check --no-match-test "_skip_"
 # better view, with % change
 FOUNDRY_PROFILE=core-test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```
+
+## Deployment
+
+set env variable `PRIVATE_KEY` then run
+
+```bash
+FOUNDRY_PROFILE=core \
+forge script silo-core/deploy/MainnetDeploy.s.sol \
+--ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<key>
+```
+
+In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeployWithGaugeHookReceiver` and set
+`daoFeeReceiver` and `timelock` addresses manually to eg. deployer address.

@@ -30,8 +30,7 @@ library SiloStdLib {
         require(_token == asset, ISilo.Unsupported());
         if (flashloanFee == 0) return 0;
 
-        fee = _amount * flashloanFee;
-        unchecked { fee /= _PRECISION_DECIMALS; }
+        fee = _amount * flashloanFee / _PRECISION_DECIMALS;
 
         // round up
         if (fee == 0) return 1;

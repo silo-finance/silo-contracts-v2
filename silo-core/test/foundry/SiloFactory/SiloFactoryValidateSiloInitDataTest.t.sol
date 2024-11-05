@@ -33,9 +33,9 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     }
 
     /*
-    forge test -vv --mt test_validateSiloInitData
+    forge test -vv --mt test_validateSiloInitData_pass
     */
-    function test_validateSiloInitData() public {
+    function test_validateSiloInitData_pass() public {
         ISiloConfig.InitData memory initData;
 
         vm.expectRevert(ISiloFactory.MissingHookReceiver.selector);
@@ -70,8 +70,31 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidLt.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 0.85e18;
+        initData.lt0 = 0.950e18;
+        initData.liquidationFee0 = 0.10e18;
+
+        vm.expectRevert(ISiloFactory.InvalidLt.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.lt0 = 0.900e18;
+        initData.liquidationFee0 = 0.10e18;
+        initData.lt1 = 0.990e18;
+        initData.liquidationFee1 = 0.05e18;
+
+        vm.expectRevert(ISiloFactory.InvalidLt.selector);
+        siloFactory.validateSiloInitData(initData);
+
         initData.lt1 = 0.75e18;
+
+        vm.expectRevert(ISiloFactory.DaoMinRangeExceeded.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.daoFee = 1.15e18;
+
+        vm.expectRevert(ISiloFactory.DaoMaxRangeExceeded.selector);
+        siloFactory.validateSiloInitData(initData);
+
+        initData.daoFee = 0.15e18;
 
         vm.expectRevert(ISiloFactory.InvalidIrm.selector);
         siloFactory.validateSiloInitData(initData);
@@ -188,6 +211,7 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         initData.deployer = address(100001);
         initData.deployerFee = 0.01e18;
+        initData.daoFee = 0.05e18;
 
         initData.flashloanFee0 = 0.01e18;
         initData.flashloanFee1 = 0.01e18;

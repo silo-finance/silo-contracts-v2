@@ -8,6 +8,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
 
 import {GetAssetsDataForLtvCalculationsTestData} from
@@ -56,6 +57,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             initData.maxLtv1 = 1;
             initData.lt0 = 1;
             initData.lt1 = 1;
+            initData.daoFee = 0.1e18;
 
             if (address(uint160(scenario.input.debtConfig.maxLtvOracle)) != address(0)) {
                 OracleMock om = new OracleMock(address(uint160(scenario.input.debtConfig.maxLtvOracle)));
@@ -88,6 +90,7 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
             (collateralConfig, debtConfig) = Views.copySiloConfig({
                 _initData: initData,
+                _daoFeeRange: ISiloFactory.Range(0.05e18, 0.50e18),
                 _maxDeployerFee: 0.15e18,
                 _maxFlashloanFee: 0.15e18,
                 _maxLiquidationFee: 0.30e18

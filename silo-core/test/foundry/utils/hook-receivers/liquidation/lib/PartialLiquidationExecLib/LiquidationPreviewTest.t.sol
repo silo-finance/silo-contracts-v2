@@ -98,13 +98,14 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
         params.collateralLt = 0.8000e18 - 1; // must be below LTV that is present in `ltvData`
+        params.liquidationTargetLtv = params.collateralLt * 0.9e18 / 1e18;
 
         (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover) = PartialLiquidationLib.maxLiquidation(
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerCollateralAssets,
             ltvData.borrowerDebtAssets,
             ltvData.borrowerDebtAssets,
-            params.collateralLt,
+            params.liquidationTargetLtv,
             params.liquidationFee
         );
 

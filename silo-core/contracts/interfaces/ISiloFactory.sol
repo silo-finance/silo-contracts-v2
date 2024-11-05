@@ -5,6 +5,11 @@ import {IERC721} from "openzeppelin5/interfaces/IERC721.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 
 interface ISiloFactory is IERC721 {
+    struct Range {
+        uint128 min;
+        uint128 max;
+    }
+
     /// @notice Emitted on the creation of a Silo.
     /// @param implementation Address of the Silo implementation.
     /// @param token0 Address of the first Silo token.
@@ -24,8 +29,9 @@ interface ISiloFactory is IERC721 {
     event BaseURI(string newBaseURI);
 
     /// @notice Emitted on the update of DAO fee.
-    /// @param daoFee Value of the new DAO fee.
-    event DaoFeeChanged(uint256 daoFee);
+    /// @param minDaoFee Value of the new minimal DAO fee.
+    /// @param maxDaoFee Value of the new maximal DAO fee.
+    event DaoFeeChanged(uint128 minDaoFee, uint128 maxDaoFee);
 
     /// @notice Emitted on the update of max deployer fee.
     /// @param maxDeployerFee Value of the new max deployer fee.
@@ -48,11 +54,15 @@ interface ISiloFactory is IERC721 {
     error EmptyToken0();
     error EmptyToken1();
     error MaxFeeExceeded();
+    error InvalidFeeRange();
     error SameAsset();
+    error SameRange();
     error InvalidIrm();
     error InvalidMaxLtv();
     error InvalidLt();
     error InvalidDeployer();
+    error DaoMinRangeExceeded();
+    error DaoMaxRangeExceeded();
     error MaxDeployerFeeExceeded();
     error MaxFlashloanFeeExceeded();
     error MaxLiquidationFeeExceeded();
@@ -61,6 +71,7 @@ interface ISiloFactory is IERC721 {
     error OracleMisconfiguration();
     error InvalidQuoteToken();
     error HookIsZeroAddress();
+    error LiquidationTargetLtvTooHigh();
 
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.
@@ -84,8 +95,9 @@ interface ISiloFactory is IERC721 {
 
     /// @notice Update the value of DAO fee. Updated value will be used only for a new Silos.
     /// Previously deployed SiloConfigs are immutable.
-    /// @param _newDaoFee Value of the new DAO fee.
-    function setDaoFee(uint256 _newDaoFee) external;
+    /// @param _minFee Value of the new DAO minimal fee.
+    /// @param _maxFee Value of the new DAO maximal fee.
+    function setDaoFee(uint128 _minFee, uint128 _maxFee) external;
 
     /// @notice Set the new DAO fee receiver.
     /// @param _newDaoFeeReceiver Address of the new DAO fee receiver.
@@ -110,8 +122,8 @@ interface ISiloFactory is IERC721 {
     /// @param _newBaseURI Value of the new base URI.
     function setBaseURI(string calldata _newBaseURI) external;
 
-    /// @notice DAO fee. Denominated in 18 decimals points. 1e18 == 100%.
-    function daoFee() external view returns (uint256);
+    /// @notice Acceptable DAO fee range for new Silos. Denominated in 18 decimals points. 1e18 == 100%.
+    function daoFeeRange() external view returns (Range memory);
 
     /// @notice Max deployer fee for a new Silos. Denominated in 18 decimals points. 1e18 == 100%.
     function maxDeployerFee() external view returns (uint256);
