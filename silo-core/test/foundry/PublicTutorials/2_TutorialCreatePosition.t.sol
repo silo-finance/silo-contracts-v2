@@ -55,8 +55,12 @@ contract TutorialCreatePosition is Test {
         _createDepositPosition(depositAssets);
         uint256 balanceBeforeWithdraw = IERC20(WSTETH).balanceOf(address(this));
 
-        uint256 maxWithdraw = SILO0.maxWithdraw(address(this), ISilo.CollateralType.Collateral);
-        SILO0.withdraw(maxWithdraw, address(this), address(this));
+        // It is better to redeem(shares) instead of withdraw(assets) to withdraw full deposit. Interest rate
+        // changes the deposit assets continuously. In the next block the assets will be greater, but the shares
+        // will not change. This is critical for UI integrations, but on SC level the assets amount will not change
+        // during one transaction.
+        uint256 sharesToWithdraw = SILO0.balanceOf(address(this));
+        SILO0.redeem(sharesToWithdraw, address(this), address(this));
 
         uint256 balanceAfterWithdraw = IERC20(WSTETH).balanceOf(address(this));
 
@@ -87,8 +91,14 @@ contract TutorialCreatePosition is Test {
         uint256 borrowAssets = 10**17;
         _createBorrowPosition(borrowAssets * 10, borrowAssets);
 
-        IERC20(WETH).approve(address(SILO1), borrowAssets);
-        SILO1.repay(borrowAssets, address(this));
+        // It is better to repayShares(shares) instead of repay(assets) to repay full amount of debt. Interest rate
+        // changes the repay assets continuously. In the next block the assets will be greater, but the shares
+        // will not change. This is critical for UI integrations, but on SC level the assets amount will not change
+        // during one transaction.
+        uint256 sharesToRepay = SILO1.maxRepayShares(address(this));
+        uint256 assetsToApprove = SILO1.previewRepayShares(sharesToRepay);
+        IERC20(WETH).approve(address(SILO1), assetsToApprove);
+        SILO1.repayShares(sharesToRepay, address(this));
 
         assertEq(SILO_LENS.getLtv(SILO1, address(this)), 0, "Repay is successful, LTV==0");
     }
