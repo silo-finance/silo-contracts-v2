@@ -50,7 +50,7 @@ contract TutorialMarketInfo is Test {
     }
 
     // SiloConfig is a setup for silo0 and silo1. SiloConfig stores ConfigData, which is an individual setup of
-    // each silo. Interest rate models, LTs and oracles can be different for Silos in one market. For example, 
+    // each Silo. Interest rate models, LTs and oracles can be different for Silos in one market. For example, 
     // wstETH/WETH market is represented by wstETH and WETH Silos. wstETH Silo can have kinked interest rate 
     // model, WETH can have dynamic interest rate model. You can set 80% as LT for wstETH Silo on deployment and
     // 99% as LT for WETH Silo. Silo V2 is permissionless, anyone can deploy Silos with any market parameters.
