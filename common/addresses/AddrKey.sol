@@ -14,4 +14,6 @@ library AddrKey {
     string constant public CHAINLINK_CCIP_ROUTER = "CHAINLINK_CCIP_ROUTER";
     string constant public SILO_TOKEN = "SILO";
     string constant public L2_MULTISIG = "L2_MULTISIG";
+    string constant public WUSD_PLUS = "wUSD+";
+    string constant public CHAINLINK_USDPlus_USD_aggregator = "CHAINLINK_USDPlus_USD_aggregator";
 }
