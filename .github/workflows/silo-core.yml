@@ -79,6 +79,9 @@ jobs:
                 with:
                     version: nightly
 
+            -   name: Run submodule update
+                run: git submodule update --init --recursive
+
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
                 run: |
