@@ -4,11 +4,11 @@
 name: The Silo protocol integration
 
 env:
-  RPC_MAINNET: ${{ vars.RPC_MAINNET }}
-  RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
-  RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
-  RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
-  PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
+  RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+  RPC_SEPOLIA: ${{ secrets.RPC_SEPOLIA }}
+  RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+  PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
   ANVIL_PORT: 8586
   ANVIL_FORK_BLOCK_NUMBER: 20977800
   SILO_DEPLOYMENT_NODE: "http://127.0.0.1:8586"
