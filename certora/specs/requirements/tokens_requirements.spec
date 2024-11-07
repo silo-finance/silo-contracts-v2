@@ -59,6 +59,9 @@ methods {
     function Silo1.siloConfig() external returns (address) envfree;
     function ShareDebtToken1.siloConfig() external returns (address) envfree;
     function ShareProtectedCollateralToken1.siloConfig() external returns (address) envfree;
+
+    function Silo0.config() external returns (address) envfree;
+    function Silo1.config() external returns (address) envfree;
 } 
 
 // ---- Functions --------------------------------------------------------------
