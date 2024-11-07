@@ -94,7 +94,7 @@ rule HLP_integrityOfBorrowSame(address receiver, uint256 assets) {
 
 
 /// @title Integrity of `borrowShares`
-/// @property borrow-integrity
+/// @property borrowShares-integrity
 /// @status Done: https://vaas-stg.certora.com/output/39601/ba5142728e9e4089a74f3a448e4df9fa?anonymousKey=c6c5cca56df4b25896022089b307da711046c6c8
 rule HLP_integrityOfBorrowShares(address receiver, uint256 shares) {
     env e;

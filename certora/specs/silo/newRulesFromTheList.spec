@@ -6,6 +6,7 @@ import "../summaries/tokens_dispatchers.spec";
 import "../summaries/safe-approximations.spec";
 
 import "../requirements/tokens_requirements.spec";
+import "../previousAudits/CompleteSiloSetup.spec";
 
 using Silo0 as silo0;
 using Silo1 as silo1;
@@ -62,4 +63,54 @@ rule accrueInterest_idempotent(env e)
     _ = accrueInterest(e);
     storage after2 = lastStorage;
     assert after1 == after2;
+}
+
+// withdrawFees() always reverts in a second call in the same block
+rule withdrawFees_revertsSecondTime(env e)
+{
+    silosTimestampSetupRequirements(e);
+    withdrawFees(e);
+    withdrawFees@withrevert(e);
+    assert lastReverted;
+}
+
+// withdrawFees() is ghost function - it should not influence result of 
+// any other function in the system (including view functions results)
+rule withdrawFees_noAdditionalEffect(env e, method f)
+{
+    silosTimestampSetupRequirements(e);
+    storage init = lastStorage;
+    calldataarg args;
+    f(e, args);
+    storage afterF = lastStorage;
+
+    withdrawFees(e) at init;
+    f(e, args);
+    storage afterWF = lastStorage;
+
+    assert afterF == afterWF;
+}
+
+// maxRepay() should never return more than totalAssets[AssetType.Debt]
+rule maxRepay_neverGreaterThanTotalDebt(env e)
+{
+    silosTimestampSetupRequirements(e);
+    address user;
+    uint res = maxRepay(e, user);
+    uint max = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);
+    assert res <= max;
+}
+
+// if borrowerCollateralSilo[user] is set from zero to non-zero value,
+// it never goes back to zero
+rule borrowerCollateralSilo_neverSetToZero(env e, method f) // TODO exclude view
+{
+    silosTimestampSetupRequirements(e);
+    address user;
+    colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+    
+    calldataarg args;
+    f(e, args);
+    colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    assert colSiloBefore != 0 => colSiloAfter != 0;
 }
