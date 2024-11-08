@@ -30,27 +30,28 @@ $ cd ./gitmodules/silo-foundry-utils && cargo build --release && cp target/relea
 
 ### Test new Silo deployment locally
 ```shell
-# 1. Create a JSON with market setup, for example silo-core/deploy/input/arbitrum_one/wstETH_WETH_Silo.json
+# 1. Create a JSON with market setup, for example silo-core/deploy/input/arbitrum_one/wstETH_WETH_Silo.json.
+# Any number in a config is a one hundredth of a percent. For example, `"lt0": 9600` -> lt0 == 96%.  
 
-# 2. Run Anvil node in a separate terminal 
-$ source ./.env && anvil --fork-url $RPC_ARBITRUM --fork-block-number 272012902 --port 8586
+# 2. Execute the script to test the Silo deployment in a local fork of blockchain. Replace 'wstETH_WETH_Silo'
+# with your config name.
 
-# 3. Execute the script to deploy a Silo in a local node.
-
-$ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME \
+$ FOUNDRY_PROFILE=core CONFIG=wstETH_WETH_Silo \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
---ffi --broadcast --rpc-url http://127.0.0.1:8586
+--ffi --rpc-url $YOUR_RPC_URL
 
-# 4. Silo is deployed to a local blockchain fork. Check logs to verify market parameters
+# 3. Silo is deployed to a local blockchain fork. Check logs to verify market parameters. Green check marks
+# represent basic verification of the on-chain parameters to be equal to the config parameters. 
 ```
 
 ### Deploy a Silo
 ```shell
 # 1. Test your config by deploying the Silo in the local fork as described above.
 
-# 2. Execute the script to deploy a Silo.
+# 2. Execute the script to deploy a Silo. The only difference with the command to test deployment is a `--broadcast`
+# flag. This script will sign and send real on-chain transaction.
 
-$ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME \
+$ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME_WITHOUT_JSON_EXTENSION \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 --ffi --broadcast --rpc-url $YOUR_RPC_URL
 
