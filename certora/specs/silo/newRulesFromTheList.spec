@@ -54,6 +54,12 @@ rule accrueInterest_neverReverts(env e)
     assert !lastReverted;
 }
 
+// if user has no debt, should always be solvent and ltv == 0
+invariant noDebt_thenSolventAndNoLTV(env e, address user)
+    silo0.isSolvent(e, user) => (
+        shareDebtToken0.balanceOf(user) == 0 &&
+        getLTV(e, user) == 0);
+
 // accrueInterest() calling twice is the same as calling once (in a single block)
 rule accrueInterest_idempotent(env e)
 {
@@ -72,6 +78,18 @@ rule withdrawFees_revertsSecondTime(env e)
     withdrawFees(e);
     withdrawFees@withrevert(e);
     assert lastReverted;
+}
+
+// withdrawFees() always increases dao and/or deployer (can be empty address) balances
+// another rule: withdrawFees() never increases daoAndDeployerRevenue in the same block
+// ???
+rule withdrawFees_increasesDaoDeploerFees(env e)
+{
+    silosTimestampSetupRequirements(e);
+    uint daoFeesBefore = getSiloDataDaoAndDeployerRevenue(e);
+    withdrawFees(e);
+    uint daoFeesAfter = getSiloDataDaoAndDeployerRevenue(e);
+    assert daoFeesAfter > daoFeesBefore;
 }
 
 // withdrawFees() is ghost function - it should not influence result of 
@@ -120,7 +138,7 @@ rule accrueInterestForSilo_equivalent(env e)
 {
     silosTimestampSetupRequirements(e);
     storage init = lastStorage;
-    silo0.config(e).accrueInterestForSilo(e, silo0);
+    _ = config(e).accrueInterestForSilo(e, silo0);
     storage after1 = lastStorage;
 
     silo0.accrueInterest(e) at init;
@@ -133,16 +151,59 @@ rule accrueInterestForSilo_equivalent(env e)
 
 // if user is insolvent, it must have debt shares
 invariant insolventHaveDebtShares(env e, address user)
-    !silo0.isSolvent(e, user) => ShareDebtToken0.balanceOf(user) > 0
+    !silo0.isSolvent(e, user) => shareDebtToken0.balanceOf(user) > 0;
 
 //////////////////////////
 //// Rules bellow require setup for both silos
 /////////////////////////
 
 invariant isSolvent_inEitherSilo(env e, address user)
-    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
+    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user);
 
 // user should never have balance of debt share token in both silos
 invariant cannotHaveDebtInBothSilos(env e, address user)
-    !(ShareDebtToken0.balanceOf(user) > 0 &&
-        ShareDebtToken1.balanceOf(user) > 0)
+    !(shareDebtToken0.balanceOf(user) > 0 &&
+        shareDebtToken1.balanceOf(user) > 0);
+
+
+// if borrowerCollateralSilo[user] is set from zero to non-zero value, 
+// one of the debt share token totalSupply() increases 
+rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f) // TODO exclude view
+{
+    silosTimestampSetupRequirements(e);
+    address user;
+    address colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+    uint totalShare0Before = shareDebtToken0.totalSupply();
+    uint totalShare1Before = shareDebtToken1.totalSupply();
+
+    calldataarg args;
+    f(e, args);
+
+    address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    uint totalShare0After = shareDebtToken0.totalSupply();
+    uint totalShare1After = shareDebtToken1.totalSupply();
+
+    assert (colSiloBefore == 0 && colSiloAfter != 0) 
+        => (totalShare0After > totalShare0Before
+            || totalShare1After > totalShare1Before);
+}
+
+// if borrowerCollateralSilo[user] is set from zero to non-zero value,
+// user must have balance in one of debt share tokens
+// excluding switchCollateralToThisSilo() method
+rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO exclude view and switchCollateralToThisSilo
+{
+    silosTimestampSetupRequirements(e);
+    address user;
+    address colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+
+    calldataarg args;
+    f(e, args);
+
+    address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    uint debt0 = shareDebtToken0.balanceOf(e, user);
+    uint debt1 = shareDebtToken1.balanceOf(e, user);
+
+    assert (colSiloBefore == 0 && colSiloAfter != 0) 
+        => (debt0 > 0 || debt1 > 0);
+}

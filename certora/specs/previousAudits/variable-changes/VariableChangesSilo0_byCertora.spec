@@ -10,6 +10,11 @@
 // import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 
+//////////////////////
+// we need to update this to new version !!!
+////////////////////// 
+
+
 // collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets 
 //      should increase only on deposit, mint, and transitionCollateral. 
 //      should decrease only on withdraw, redeem, liquidationCall.
