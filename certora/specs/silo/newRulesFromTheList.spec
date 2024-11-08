@@ -107,10 +107,10 @@ rule borrowerCollateralSilo_neverSetToZero(env e, method f) // TODO exclude view
 {
     silosTimestampSetupRequirements(e);
     address user;
-    colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+    address colSiloBefore = config(e).borrowerCollateralSilo(e, user);
     
     calldataarg args;
     f(e, args);
-    colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
     assert colSiloBefore != 0 => colSiloAfter != 0;
 }
