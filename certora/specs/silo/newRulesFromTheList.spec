@@ -114,3 +114,35 @@ rule borrowerCollateralSilo_neverSetToZero(env e, method f) // TODO exclude view
     address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
     assert colSiloBefore != 0 => colSiloAfter != 0;
 }
+
+// calling accrueInterestForSilo(_silo) should be equal to calling _silo.accrueInterest()
+rule accrueInterestForSilo_equivalent(env e)
+{
+    silosTimestampSetupRequirements(e);
+    storage init = lastStorage;
+    silo0.config(e).accrueInterestForSilo(e, silo0);
+    storage after1 = lastStorage;
+
+    silo0.accrueInterest(e) at init;
+    storage after2 = lastStorage;
+
+    assert after1 == after2;
+}
+
+
+
+// if user is insolvent, it must have debt shares
+invariant insolventHaveDebtShares(env e, address user)
+    !silo0.isSolvent(e, user) => ShareDebtToken0.balanceOf(user) > 0
+
+//////////////////////////
+//// Rules bellow require setup for both silos
+/////////////////////////
+
+invariant isSolvent_inEitherSilo(env e, address user)
+    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
+
+// user should never have balance of debt share token in both silos
+invariant cannotHaveDebtInBothSilos(env e, address user)
+    !(ShareDebtToken0.balanceOf(user) > 0 &&
+        ShareDebtToken1.balanceOf(user) > 0)
