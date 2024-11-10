@@ -45,11 +45,10 @@ contract Silo0 is SiloHarness {
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }
 
-    //This is reduandant, there is a config() in silo.sol
-/*    function getSiloConfig() external view returns (ISiloConfig) {
+    function getSiloConfig() external view returns (ISiloConfig) {
         return ShareTokenLib.siloConfig();
     }
-*/
+
     function ERC4626Deposit(
         address _token,
         address _depositor,

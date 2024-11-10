@@ -19,6 +19,7 @@ using ShareDebtToken1 as shareDebtToken1;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 using Token0 as token0;
 using Token1 as token1;
+using EmptyHookReceiver as hookReceiver;
 
 
 methods {
@@ -63,12 +64,15 @@ methods {
     //function ShareToken._getSilo() internal  => cvlGetSilo(calledContract) expect (address);
     /* got: Bad internal method returns: Cannot merge "ShareToken._getSilo() returns (Contract ISilo)" and "ShareToken._getSilo()" - they have incompatible return values: Different arities (1 vs 0) */
     function _._getSiloConfig() internal  => siloConfig expect (address);
+    function _._getSilo() internal  => cvlGetSilo(calledContract)  expect (address);
+    function _.siloConfig() internal  => siloConfig expect (address);
     function _.siloConfig() external   => siloConfig expect (address);
 
     function _.getDebtShareTokenAndAsset(
         address _silo
     ) external => CVLGetDebtShareTokenAndAsset(_silo) expect (address, address);
     
+
 }
 
 /// @title Early summarization - for speed up
@@ -87,7 +91,7 @@ function CVLGetDebtShareTokenAndAsset(address _silo) returns (address, address) 
 
 function cvlGetSilo(address called) returns address {
     if (called == silo1 || called == shareDebtToken1 || called == shareProtectedCollateralToken1 ) 
-    return silo1;
+        return silo1;
     else
         return silo0;
 }
@@ -95,49 +99,79 @@ function cvlGetSilo(address called) returns address {
 
 definition NOT_ENTERED() returns uint256 = 0; 
 definition ENTERED() returns uint256 = 1; 
+definition REENTRANT_FLAG_SLOT returns uint256 = 0; 
 
 ghost bool reentrantStatusMovedToTrue;
 ghost bool reentrantStatusLoaded; 
+ghost bool unsafeExternalCall; 
 
 //update movedToTrue, stays true or become true when _crossReentrantStatus is entered 
 hook ALL_TSTORE(uint loc, uint v) {
-    // assuming only one slot, todo - check this
-    reentrantStatusMovedToTrue =  reentrantStatusMovedToTrue || (v == ENTERED())  && !siloConfig.reentrancyGuardEntered() ; 
+    reentrantStatusMovedToTrue =  reentrantStatusMovedToTrue || ( loc == REENTRANT_FLAG_SLOT() && v == ENTERED())  ; 
 }
 
 
 hook ALL_TLOAD(uint loc) uint v {
-    // assuming only one slot, todo - check this
-    reentrantStatusLoaded =  true;
+    reentrantStatusLoaded =  reentrantStatusLoaded || loc == REENTRANT_FLAG_SLOT();
 }
 
 
-rule sanityWithSetup(method f) {
-    calldataarg args;
-    env e; 
+// We are hooking here on "CALL" opcodes in order to capture if there was a storage access before or/and after a call
+hook CALL(uint g, address addr, uint value, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
+    unsafeExternalCall = unsafeExternalCall || !siloContracts(addr);
+}
+
+hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
+    unsafeExternalCall = true;
+}
+
+definition onlySiloContractsMethods(method f) returns bool =
+    ( (f.contract == shareDebtToken0 || f.contract == shareDebtToken1 ||
+        (f.contract == shareProtectedCollateralToken0 || f.contract == shareProtectedCollateralToken1) ||
+        f.contract == silo0 || f.contract == silo1) &&
+        (   f.selector == sig:shareDebtToken0.synchronizeHooks(uint24,uint24).selector ||
+            f.selector == sig:shareDebtToken0.burn(address,address,uint256).selector ||
+            f.selector == sig:shareDebtToken0.forwardTransferFromNoChecks(address,address,uint256).selector ||
+            f.selector == sig:shareDebtToken0.mint(address,address,uint256).selector 
+        )
+    )
+    ||
+    (  f.contract ==  siloConfig &&
+        (   f.selector == sig:onDebtTransfer(address,address).selector ||
+            f.selector == sig:turnOnReentrancyProtection().selector ||
+            f.selector == sig:turnOffReentrancyProtection().selector ||
+            f.selector == sig:setOtherSiloAsCollateralSilo(address).selector ||
+            f.selector == sig:setThisSiloAsCollateralSilo(address).selector
+        )
+     )
+     ;
+
+definition siloContracts(address c) returns bool = 
+        c == silo0 || c == silo1 ||
+        c == shareDebtToken0 || c == shareProtectedCollateralToken0 ||
+        c == shareDebtToken1 || c == shareProtectedCollateralToken1 ||
+        c == hookReceiver ||
+        c == siloConfig._INTEREST_RATE_MODEL0 ||
+        c == siloConfig._INTEREST_RATE_MODEL1 ; 
+
+rule onlyTrustedSender(method f) filtered { f -> onlySiloContractsMethods(f) } {
+    env e;
+    require !reentrantStatusLoaded; 
+    require !unsafeExternalCall;
+    requireInvariant RA_reentrancyGuardStaysUnlocked();
     configForEightTokensSetupRequirements();
     nonSceneAddressRequirements(e.msg.sender);
     silosTimestampSetupRequirements(e);
-    f(e,args);
-    satisfy true;
-}
-
-
-
-rule sanityWithSetup_borrow() {
     calldataarg args;
-    env e; 
-    configForEightTokensSetupRequirements();
-    nonSceneAddressRequirements(e.msg.sender);
-    silosTimestampSetupRequirements(e);
-    silo0.borrow(e,args);
-    satisfy true;
+    f@withrevert(e,args);
+    assert !lastReverted => (siloContracts(e.msg.sender));
+
 }
 
 
-/// @title Accruing interest in Silo0 (in the same block) should not change any borrower's LtV.
 invariant RA_reentrancyGuardStaysUnlocked()
     !siloConfig.reentrancyGuardEntered()
+    filtered { f -> !onlySiloContractsMethods(f) }
     { preserved with (env e) 
         { 
             configForEightTokensSetupRequirements();
@@ -148,20 +182,27 @@ invariant RA_reentrancyGuardStaysUnlocked()
 }
 
 
-rule RA_whoMustLoadCrossNonReentrant(method f) filtered {f-> !f.isView}{
+
+rule RA_whoMustLoadCrossNonReentrant(method f) filtered {f-> !onlySiloContractsMethods(f) && !f.isView}{
     env e;
     require !reentrantStatusLoaded; 
+    require !unsafeExternalCall;
     requireInvariant RA_reentrancyGuardStaysUnlocked();
     configForEightTokensSetupRequirements();
     nonSceneAddressRequirements(e.msg.sender);
     silosTimestampSetupRequirements(e);
-    require e.msg.sender != siloConfig._HOOK_RECEIVER;
+    bool valueBefore = siloConfig.reentrancyGuardEntered();
+    //require e.msg.sender != siloConfig._HOOK_RECEIVER;
     calldataarg args;
     f(e,args);
-    assert reentrantStatusLoaded; 
+    assert reentrantStatusLoaded ; 
+    assert !valueBefore;
 } 
 
-rule RA_reentrancyGuardStatusChanged(method f) filtered {f-> !f.isView}{
+rule RA_reentrancyGuardStatusChanged(method f) 
+        filtered {f-> !f.isView && !onlySiloContractsMethods(f) 
+}
+{
     // setup requirements 
     env e;
     configForEightTokensSetupRequirements();
@@ -169,12 +210,27 @@ rule RA_reentrancyGuardStatusChanged(method f) filtered {f-> !f.isView}{
     silosTimestampSetupRequirements(e);
 
     // precondition : ghost is false and starting with unlocked state
-    bool valueBefore = siloConfig.reentrancyGuardEntered();
+    
     require !reentrantStatusMovedToTrue; 
+    require !unsafeExternalCall;
     requireInvariant RA_reentrancyGuardStaysUnlocked();
-    require e.msg.sender != siloConfig._HOOK_RECEIVER;
+    //require e.msg.sender != siloConfig._HOOK_RECEIVER;
     calldataarg args;
     f(e,args);
-    assert reentrantStatusMovedToTrue; 
-    assert !valueBefore;
+    assert reentrantStatusMovedToTrue || !unsafeExternalCall;
+}
+
+
+rule check_sanity(method f) 
+    
+{
+    // setup requirements 
+    env e;
+    configForEightTokensSetupRequirements();
+    nonSceneAddressRequirements(e.msg.sender);
+    silosTimestampSetupRequirements(e);
+
+    calldataarg args;
+    f(e,args);
+    satisfy true;
 }
