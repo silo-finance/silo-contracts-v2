@@ -18,7 +18,6 @@ methods {
     function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
     function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
 
-    function _.hasDebtInOtherSilo(address,address) external  => DISPATCHER(true);
     function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
     function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
     function _.getConfig(address) external  => DISPATCHER(true);

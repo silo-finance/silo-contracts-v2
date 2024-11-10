@@ -71,3 +71,10 @@ function CVLGetDebtShareTokenAndAsset(address _silo) returns (address, address) 
     require _silo == silo0_CC;  // TODO: change to assert?
     return (shareDebtToken0_CC, token0_CC);
 }
+
+
+/// @title Implements `SiloConfig.hasDebtInOtherSilo` in CVL for single Silo setup
+function CVLHasDebtInOtherSilo(address _thisSilo, address _borrower) returns bool {
+    require _thisSilo == silo0_CC;  // TODO: change to assert?
+    return silo0_CC.balanceOf(_borrower) != 0;
+}

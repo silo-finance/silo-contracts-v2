@@ -29,7 +29,6 @@ methods {
     function _.getConfigsForWithdraw(address,address) external => DISPATCHER(true);
     function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
     function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
-    function _.hasDebtInOtherSilo(address,address) external  => DISPATCHER(true);
     function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
     function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
     function _.getConfig(address) external  => DISPATCHER(true);
@@ -100,6 +99,17 @@ function requireSecondEnvAtLeastAsFirst(env e1, env e2) {
 }
 
 // ---- Rules ------------------------------------------------------------------
+
+/// @title For testing the setup
+rule sanityWithSetup_borrow() {
+    calldataarg args;
+    env e; 
+    configForEightTokensSetupRequiremments();
+    nonSceneAddressRequirements(e.msg.sender);
+    silosTimestampSetupRequirements(e);
+    silo0.borrow(e, args);
+    satisfy true;
+}
 
 /// @title If a user may deposit some amount, any other user also may
 /// @property user-access
