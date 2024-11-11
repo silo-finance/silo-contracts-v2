@@ -24,7 +24,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     forge test -vv --mt test_PartialLiquidationLib_collateralToLiquidate
     */
     function test_PartialLiquidationLib_collateralToLiquidate() public pure {
-        // uint256 _maxDebtToCover, uint256 _totalCollateral, uint256 _liquidityFee
+        // uint256 _maxDebtToCover, uint256 _totalCollateral, uint256 _liquidationFee
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(0, 0, 0), 0);
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0), 1);
         assertEq(PartialLiquidationLib.calculateCollateralToLiquidate(1, 1, 0.0001e18), 1);
@@ -123,7 +123,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.ltvAfterLiquidation,
-                data[i].input.liquidityFee
+                data[i].input.liquidationFee
             );
 
             console.log("repayValue %s", repayValue);
@@ -173,7 +173,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.ltvAfterLiquidation,
-                data[i].input.liquidityFee
+                data[i].input.liquidationFee
             );
 
             assertEq(
@@ -196,7 +196,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
                 maxDebtToCover: _assetsChunk(data[i].input.totalBorrowerDebtValue, totalBorrowerDebtAssets, repayValue),
-                liquidationFee: data[i].input.liquidityFee,
+                liquidationFee: data[i].input.liquidationFee,
                 liquidationTargetLtv: data[i].input.ltvAfterLiquidation
             });
 
@@ -418,10 +418,10 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         uint128 _debtAmount,
         uint128 _collateralAmount,
         uint16 _targetLT,
-        uint16 _liquidityFee
+        uint16 _liquidationFee
     ) public {
         vm.assume(_targetLT <= 1e18);
-        vm.assume(_liquidityFee <= 1e18);
+        vm.assume(_liquidationFee <= 1e18);
 
         // prices here are arbitrary
         uint256 debtValue = uint256(_debtAmount) * 50_000;
@@ -431,7 +431,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             collateralValue,
             debtValue,
             uint256(_targetLT),
-            uint256(_liquidityFee)
+            uint256(_liquidationFee)
         );
 
         emit log_string("PartialLiquidationLib.calculateLiquidationValues PASS");
@@ -439,7 +439,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         (
             uint256 repayValue2, uint256 receiveCollateral2
         ) = PartialLiquidationLibChecked.maxLiquidationPreview(
-            collateralValue, debtValue, _targetLT, _liquidityFee
+            collateralValue, debtValue, _targetLT, _liquidationFee
         );
 
         assertEq(repayValue, repayValue2, "repay must match value with safe math");

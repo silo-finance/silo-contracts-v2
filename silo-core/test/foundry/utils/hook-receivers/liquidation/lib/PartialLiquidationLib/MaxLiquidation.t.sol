@@ -22,11 +22,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 _sumOfCollateralAssets,
         uint128 _sumOfCollateralValue,
         uint128 _borrowerDebtAssets,
-        uint64 _liquidityFee,
+        uint64 _liquidationFee,
         uint64 _liquidationTargetLtv
     ) public {
         _test_maxLiquidation(
-            _sumOfCollateralAssets, _sumOfCollateralValue, _borrowerDebtAssets, _liquidityFee, _liquidationTargetLtv
+            _sumOfCollateralAssets, _sumOfCollateralValue, _borrowerDebtAssets, _liquidationFee, _liquidationTargetLtv
         );
     }
 
@@ -37,11 +37,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1000;
         uint128 sumOfCollateralValue = 1000;
         uint128 borrowerDebtAssets = 900;
-        uint64 liquidityFee;
+        uint64 liquidationFee;
         uint64 liquidationTargetLtv = 0.5e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 798, "collateralToLiquidate");
@@ -58,11 +58,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1000;
         uint128 sumOfCollateralValue = 1000;
         uint128 borrowerDebtAssets = 900;
-        uint64 liquidityFee = 0.01e18;
+        uint64 liquidationFee = 0.01e18;
         uint64 liquidationTargetLtv = 0.5e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 814, "collateralToLiquidate");
@@ -79,11 +79,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1e18;
         uint128 sumOfCollateralValue = 1e18;
         uint128 borrowerDebtAssets = 0.9e18;
-        uint64 liquidityFee;
+        uint64 liquidationFee;
         uint64 liquidationTargetLtv = 0.5e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 799999999999999998, "collateralToLiquidate");
@@ -100,11 +100,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1e18;
         uint128 sumOfCollateralValue = 1e18;
         uint128 borrowerDebtAssets = 0.9e18;
-        uint64 liquidityFee = 0.01e18;
+        uint64 liquidationFee = 0.01e18;
         uint64 liquidationTargetLtv = 0.5e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 816161616161616158, "collateralToLiquidate");
@@ -121,11 +121,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1e18;
         uint128 sumOfCollateralValue = 1e18;
         uint128 borrowerDebtAssets = 0.9e18;
-        uint64 liquidityFee;
+        uint64 liquidationFee;
         uint64 liquidationTargetLtv = 0.7e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 666666666666666664, "collateralToLiquidate");
@@ -142,11 +142,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1e18;
         uint128 sumOfCollateralValue = 1e18;
         uint128 borrowerDebtAssets = 0.9e18;
-        uint64 liquidityFee = 0.05e18;
+        uint64 liquidationFee = 0.05e18;
         uint64 liquidationTargetLtv = 0.7e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 792452830188679242, "collateralToLiquidate");
@@ -163,11 +163,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1e18;
         uint128 sumOfCollateralValue = 1e18;
         uint128 borrowerDebtAssets = 0.9e18;
-        uint64 liquidityFee;
+        uint64 liquidationFee;
         uint64 liquidationTargetLtv = 0.1e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 899999999999999998, "collateralToLiquidate");
@@ -184,11 +184,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 sumOfCollateralAssets = 1e18;
         uint128 sumOfCollateralValue = 1e18;
         uint128 borrowerDebtAssets = 0.9e18;
-        uint64 liquidityFee = 0.3e18;
+        uint64 liquidationFee = 0.3e18;
         uint64 liquidationTargetLtv = 0.1e18;
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
-            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidityFee, liquidationTargetLtv
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
         );
 
         assertEq(collateralToLiquidate, 999999999999999998, "collateralToLiquidate");
@@ -205,17 +205,17 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint128 _sumOfCollateralAssets,
         uint128 _sumOfCollateralValue,
         uint128 _borrowerDebtAssets,
-        uint64 _liquidityFee,
+        uint64 _liquidationFee,
         uint64 _liquidationTargetLtv
     ) internal returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) {
-        vm.assume(_liquidityFee < 0.40e18); // some reasonable fee
+        vm.assume(_liquidationFee < 0.40e18); // some reasonable fee
         vm.assume(_sumOfCollateralAssets > 0);
         // for tiny assets we doing full liquidation because it is to small to get down to expected minimal LTV
         vm.assume(_sumOfCollateralValue > 1);
         vm.assume(_borrowerDebtAssets > 1);
 
         // prevent overflow revert in test
-        vm.assume(uint256(_borrowerDebtAssets) * _liquidityFee < type(uint128).max);
+        vm.assume(uint256(_borrowerDebtAssets) * _liquidationFee < type(uint128).max);
 
         vm.assume(_liquidationTargetLtv < _LT);
 
@@ -233,7 +233,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
             _borrowerDebtAssets,
             borrowerDebtValue,
             _liquidationTargetLtv,
-            _liquidityFee
+            _liquidationFee
         );
 
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
@@ -242,7 +242,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         emit log_named_decimal_uint("minExpectedLtv", _liquidationTargetLtv, 16);
         emit log_named_decimal_uint("ltvBefore", ltvBefore, 16);
 
-        uint256 raw = _estimateMaxRepayValueRaw(borrowerDebtValue, _sumOfCollateralValue, _liquidationTargetLtv, _liquidityFee);
+        uint256 raw = _estimateMaxRepayValueRaw(borrowerDebtValue, _sumOfCollateralValue, _liquidationTargetLtv, _liquidationFee);
         emit log_named_decimal_uint("raw", raw, 18);
 
         uint256 deviation = raw > debtToRepay
