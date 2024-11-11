@@ -93,14 +93,14 @@ library PartialLiquidationLibChecked {
             debtToRepay = _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
-            uint256 maxRepayValue = estimateMaxRepayValue(
+            (uint256 maxRepayValue, bool fullLiquidation) = estimateMaxRepayValue(
                 _borrowerDebtValue,
                 _sumOfCollateralValue,
                 _params.liquidationTargetLtv,
                 _params.liquidationFee
             );
 
-            if (maxRepayValue == _borrowerDebtValue) {
+            if (fullLiquidation) {
                 // forced full liquidation
                 debtToRepay = _borrowerDebtAssets;
                 debtValueToRepay = _borrowerDebtValue;
@@ -177,7 +177,7 @@ library PartialLiquidationLibChecked {
         uint256 _ltvAfterLiquidation,
         uint256 _liquidationFee
     ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
-        repayValue = estimateMaxRepayValue(
+        (repayValue, ) = estimateMaxRepayValue(
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidationFee
         );
 
@@ -212,19 +212,20 @@ library PartialLiquidationLibChecked {
     /// @param _totalBorrowerCollateralValue regular and protected
     /// @param _ltvAfterLiquidation % of `repayValue` that liquidator will use as profit from liquidating
     /// @return repayValue max repay value that is allowed for partial liquidation. if this value equals
+    /// @return fullLiquidation TRUE when we have to do full liquidation
     /// `_totalBorrowerDebtValue`, that means dust threshold was triggered and result force to do full liquidation
     function estimateMaxRepayValue( // solhint-disable-line code-complexity
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidationFee
-    ) internal pure returns (uint256 repayValue) {
-        if (_totalBorrowerDebtValue == 0) return 0;
-        if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
+    ) internal pure returns (uint256 repayValue, bool fullLiquidation) {
+        if (_totalBorrowerDebtValue == 0) return (0, false);
+        if (_liquidationFee >= _PRECISION_DECIMALS) return (0, false);
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
-        if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
-        if (_ltvAfterLiquidation == 0) return _totalBorrowerDebtValue; // full liquidation
+        if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return (_totalBorrowerDebtValue, true);
+        if (_ltvAfterLiquidation == 0) return (_totalBorrowerDebtValue, true); // full liquidation
 
         // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;
@@ -232,15 +233,15 @@ library PartialLiquidationLibChecked {
         _totalBorrowerDebtValue *= _PRECISION_DECIMALS;
 
         // negative value means our current LT is lower than _ltvAfterLiquidation
-        if (ltCv >= _totalBorrowerDebtValue) return 0;
+        if (ltCv >= _totalBorrowerDebtValue) return (0, false);
 
         uint256 dividerR; // LT + LT * f
 
         /* unchecked */ {
-            // safe because of above `LTCv >= _totalBorrowerDebtValue`
+        // safe because of above `LTCv >= _totalBorrowerDebtValue`
             repayValue = _totalBorrowerDebtValue - ltCv;
-            // we checked at begin `_liquidationFee >= _PRECISION_DECIMALS`
-            // mul on DP will not overflow on uint256, div is safe
+        // we checked at begin `_liquidationFee >= _PRECISION_DECIMALS`
+        // mul on DP will not overflow on uint256, div is safe
             dividerR = _ltvAfterLiquidation + _ltvAfterLiquidation * _liquidationFee / _PRECISION_DECIMALS;
         }
 
@@ -249,20 +250,20 @@ library PartialLiquidationLibChecked {
 
         // if dividerR is more than 100%, means it is impossible to go down to _ltvAfterLiquidation, return all
         if (dividerR >= _PRECISION_DECIMALS) {
-            return _totalBorrowerDebtValue;
+            return (_totalBorrowerDebtValue, true);
         }
 
         /* unchecked */ { repayValue /= (_PRECISION_DECIMALS - dividerR); }
 
         // early return so we do not have to check for dust
-        if (repayValue > _totalBorrowerDebtValue) return _totalBorrowerDebtValue;
+        if (repayValue > _totalBorrowerDebtValue) return (_totalBorrowerDebtValue, true);
 
         // here is weird case, sometimes it is impossible to go down to target LTV, however math can calculate it
         // eg with negative numerator and denominator and result will be positive, that's why we simply return all
         // we also cover dust case here
         return repayValue * _PRECISION_DECIMALS / _totalBorrowerDebtValue > _DEBT_DUST_LEVEL
-            ? _totalBorrowerDebtValue
-            : repayValue;
+            ? (_totalBorrowerDebtValue, true)
+            : (repayValue, false);
     }
 
     /// @dev protected collateral is prioritized

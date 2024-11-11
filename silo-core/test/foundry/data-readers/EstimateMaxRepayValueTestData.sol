@@ -12,6 +12,7 @@ contract EstimateMaxRepayValueTestData {
     struct EMRVData {
         Input input;
         uint256 repayValue;
+        bool fullLiquidation;
     }
 
     function readDataFromJson() external pure returns (EMRVData[] memory data) {
@@ -26,7 +27,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.7e18,
                 liquidationFee: 0.05e18
             }),
-            repayValue: 0
+            repayValue: 0,
+            fullLiquidation: false
         });
 
         // when target LTV higher than current
@@ -37,7 +39,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.5001e18,
                 liquidationFee: 0.05e18
             }),
-            repayValue: 0
+            repayValue: 0,
+            fullLiquidation: false
         });
 
         // if BP - LT - LT * f -> negative
@@ -48,7 +51,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.79e18,
                 liquidationFee: 0.2659e18
             }),
-            repayValue: 80e18 // we repay all because we never get as low as 79%
+            repayValue: 80e18, // we repay all because we never get as low as 79%
+            fullLiquidation: true
         });
 
         // if BP - LT - LT * f -> negative - COUNTER EXAMPLE
@@ -59,7 +63,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.79e18, // impossible to get here with such high fee
                 liquidationFee: 0.2658e18
             }),
-            repayValue: 80e18
+            repayValue: 80e18,
+            fullLiquidation: true
         });
 
         // when bad debt
@@ -70,7 +75,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.7e18,
                 liquidationFee: 0.0001e18
             }),
-            repayValue: 180e18
+            repayValue: 180e18,
+            fullLiquidation: true
         });
 
         // if we expect ltv to be 0, we need full liquidation
@@ -81,7 +87,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0,
                 liquidationFee: 0.05e18
             }),
-            repayValue: 80e18
+            repayValue: 80e18,
+            fullLiquidation: true
         });
 
         // example from exec simulation
@@ -92,7 +99,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.7e18,
                 liquidationFee: 0.05e18
             }),
-            repayValue: 37735849056603773584
+            repayValue: 37735849056603773584,
+            fullLiquidation: false
         });
 
         // example from exec simulation
@@ -103,7 +111,8 @@ contract EstimateMaxRepayValueTestData {
                 ltvAfterLiquidation: 0.7e18,
                 liquidationFee: 0.05e18
             }),
-            repayValue: 6037735849056603773
+            repayValue: 6037735849056603773,
+            fullLiquidation: false
         });
     }
 }

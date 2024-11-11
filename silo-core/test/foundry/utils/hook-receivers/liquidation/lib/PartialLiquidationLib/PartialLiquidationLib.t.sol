@@ -119,7 +119,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertGe(data.length, 1, "expect to have tests");
 
         for (uint256 i; i < data.length; i++) {
-            uint256 repayValue = PartialLiquidationLib.estimateMaxRepayValue(
+            (uint256 repayValue, bool fullLiquidation) = PartialLiquidationLib.estimateMaxRepayValue(
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.ltvAfterLiquidation,
@@ -128,6 +128,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
 
             console.log("repayValue %s", repayValue);
             assertEq(repayValue, data[i].repayValue, _concatMsg(i, "expect repayValue"));
+            assertEq(fullLiquidation, data[i].fullLiquidation, _concatMsg(i, "expect fullLiquidation"));
         }
     }
 
@@ -136,22 +137,25 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     */
     function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public pure {
         // debtValue, CollateralValue, ltv, fee
+        (uint256 repayValue, ) = PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18);
         assertEq(
-            PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18),
+            repayValue,
             _estimateMaxRepayValueRaw(1e18, 1e18, 0.0080e18, 0.0010e18),
             "expect raw == estimateMaxRepayValue (1)"
         );
 
         // simulation values
+        (repayValue,) = PartialLiquidationLib.estimateMaxRepayValue(85e18, 1e18, 0.79e18, 0.03e18);
         assertEq(
-            PartialLiquidationLib.estimateMaxRepayValue(85e18, 1e18, 0.79e18, 0.03e18),
+            repayValue,
             _estimateMaxRepayValueRaw(85e18, 1e18, 0.79e18, 0.03e18),
             "expect raw == estimateMaxRepayValue (2)"
         );
 
         // simulation values
+        (repayValue,) = PartialLiquidationLib.estimateMaxRepayValue(85e18, 111e18, 0.5e18, 0.1e18);
         assertEq(
-            PartialLiquidationLib.estimateMaxRepayValue(85e18, 111e18, 0.5e18, 0.1e18),
+            repayValue,
             _estimateMaxRepayValueRaw(85e18, 111e18, 0.5e18, 0.1e18),
             "expect raw == estimateMaxRepayValue (3)"
         );
