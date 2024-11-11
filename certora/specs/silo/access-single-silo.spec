@@ -4,6 +4,7 @@
 
 import "../summaries/silo0_summaries.spec";
 import "../summaries/tokens_dispatchers.spec";
+import "../summaries/config_for_one_in_cvl.spec";
 import "../summaries/safe-approximations.spec";
 
 import "../requirements/single_silo_tokens_requirements.spec";
@@ -15,11 +16,6 @@ using ShareDebtToken0 as shareDebtToken0;
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------
-    // Early summarization
-    function _.getDebtShareTokenAndAsset(
-        address _silo
-    ) external => CVLGetDebtShareTokenAndAsset() expect (address, address);
-
     // `envfree`
     function SiloConfig.accrueInterestForSilo(address) external envfree;
     function SiloConfig.getCollateralShareTokenAndAsset(
@@ -33,16 +29,9 @@ methods {
     function _.getConfigsForWithdraw(address,address) external => DISPATCHER(true);
     function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
     function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
-    function _.getCollateralShareTokenAndAsset(
-        address,
-        ISilo.CollateralType
-    ) external => DISPATCHER(true);
-
-    function _.hasDebtInOtherSilo(address,address) external  => DISPATCHER(true);
     function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
     function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
     function _.getConfig(address) external  => DISPATCHER(true);
-    function _.getFeesWithAsset(address) external  => DISPATCHER(true);
     function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
     function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
 
@@ -74,12 +63,6 @@ methods {
 }
 
 // ---- Functions and ghosts ---------------------------------------------------
-
-/// @title Early summarization - for speed up
-/// @notice In this setup we assume that `silo0` was the input to this function
-function CVLGetDebtShareTokenAndAsset() returns (address, address) {
-    return (shareDebtToken0, token0);
-}
 
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) interestGhost;
 
@@ -116,6 +99,17 @@ function requireSecondEnvAtLeastAsFirst(env e1, env e2) {
 }
 
 // ---- Rules ------------------------------------------------------------------
+
+/// @title For testing the setup
+rule sanityWithSetup_borrow() {
+    calldataarg args;
+    env e; 
+    configForEightTokensSetupRequiremments();
+    nonSceneAddressRequirements(e.msg.sender);
+    silosTimestampSetupRequirements(e);
+    silo0.borrow(e, args);
+    satisfy true;
+}
 
 /// @title If a user may deposit some amount, any other user also may
 /// @property user-access
