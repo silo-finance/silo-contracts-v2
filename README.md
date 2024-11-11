@@ -31,7 +31,7 @@ $ cd ./gitmodules/silo-foundry-utils && cargo build --release && cp target/relea
 ### Test new Silo deployment locally
 ```shell
 # 1. Create a JSON with market setup, for example silo-core/deploy/input/arbitrum_one/wstETH_WETH_Silo.json.
-# Any number in a config is a one hundredth of a percent. For example, `"lt0": 9600` -> lt0 == 96%.  
+# Any number in a config is basis points (a one hundredth of a percent). For example, `"lt0": 9600` -> lt0 == 96%.  
 
 # 2. Execute the script to test the Silo deployment in a local fork of blockchain. Replace 'wstETH_WETH_Silo'
 # with your config name.
@@ -48,12 +48,13 @@ forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 ```shell
 # 1. Test your config by deploying the Silo in the local fork as described above.
 
-# 2. Execute the script to deploy a Silo. The only difference with the command to test deployment is a `--broadcast`
-# flag. This script will sign and send real on-chain transaction.
+# 2. Execute the script to deploy a Silo. This script will sign and send real on-chain transaction. Smart
+# contract will be verified on Etherscan. Standard Foundry --verifier-url parameter can be provided for other
+# verification providers, including Arbiscan. 
 
 $ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME_WITHOUT_JSON_EXTENSION \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
---ffi --broadcast --rpc-url $YOUR_RPC_URL
+--ffi --verify --broadcast --rpc-url $YOUR_RPC_URL
 
 # 3. Silo is deployed on-chain. Address is saved to silo-core/deploy/silo/_siloDeployments.json. 
 # You can create a PR to merge config and deployed address to develop branch.
