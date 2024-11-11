@@ -56,9 +56,9 @@ rule accrueInterest_neverReverts(env e)
 
 // if user has no debt, should always be solvent and ltv == 0
 invariant noDebt_thenSolventAndNoLTV(env e, address user)
-    silo0.isSolvent(e, user) => (
-        shareDebtToken0.balanceOf(user) == 0 &&
-        getLTV(e, user) == 0);
+    shareDebtToken0.balanceOf(user) == 0
+     => (silo0.isSolvent(e, user) &&
+         getLTV(e, user) == 0);
 
 // accrueInterest() calling twice is the same as calling once (in a single block)
 rule accrueInterest_idempotent(env e)
