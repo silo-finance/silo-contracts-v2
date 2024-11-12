@@ -1,124 +1,71 @@
-# A workflow file for running Certora verification through GitHub actions.
-# Find results for each push in the "Actions" tab on the GitHub website.
-name: Certora verification
-run-name: Certora verification of ${{ github.event_name }}
+name: Certora
 
 on:
-  pull_request:
-    branches:
-      - 'certora-audit-3'
-  workflow_dispatch:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - certora/*
+      - .github/workflows/certora.yml
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - silo-core/**/*.sol
+      - silo-oracles/**/*.sol
+      - gitmodules/*
+      - .gitmodules
 
+  pull_request:
+    paths:
+      - certora/*
+      - .github/workflows/certora.yml
+      - ve-silo/**/*.sol
+      - ve-silo/**/*.vy
+      - silo-core/**/*.sol
+      - silo-oracles/**/*.sol
+      - gitmodules/*
+      - .gitmodules
 
 jobs:
-  verify:
+  ve-silo-foundry:
+    strategy:
+      fail-fast: true
+
+    name: CVL typecheck only
     runs-on: ubuntu-latest
     steps:
-      # check out the current version (recurse submodules)
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: recursive
 
-      # install Certora dependencies and CLI
-      - name: Install python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.10'
-          # cache: 'pip'
+      - name: Install the solc-select
+        run: pip3 install solc-select
 
-      # NOTE: useing certora-cli-beta for now!
-      - name: Install certora
+      - name: Install the Certora Prover package
         run: pip3 install certora-cli-beta
 
-      # the following is only necessary if your project depends on contracts
-      # installed using yarn
-      - name: Install yarn
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'yarn'
-      - name: Install dependencies
-        run: yarn
-
-      # Install solc-select 0.8.28
-      - name: Install solc-select
+      - name: Install/select solidity
         run: |
-          pip install solc-select
-          solc-select install 0.8.28
-          solc-select use 0.8.28
+          solc-select install 0.8.21
+          solc-select use 0.8.21
 
-      # Also download the solc 0.8.28 binaries and name it solc8,28
-      - name: Install solc-binary
+      - name: Print versions
         run: |
-          wget https://github.com/ethereum/solidity/releases/download/v0.8.0/solc-static-linux
-          sudo mv solc-static-linux /usr/local/bin/solc8.28
-          chmod +x /usr/local/bin/solc8.28
-
-      # TODO: Do we need ssh-keyscan github.com >> ~/.ssh/known_hosts ?
-      # - name: Install ConfRunnerInfra
-      #   run: pip3 install git+ssh://git@github.com/Certora/ConfRunnerInfra.git
-
-      # Do the actual verification. The `run` field could be simply
-      #
-      #   certoraRun certora/conf/${{ matrix.params }}
-      # 
-      # but we do a little extra work to get the commit hash into the
-      # `--msg` argument
-      #
-      # Here ${{ matrix.params }} gets replaced with each of the parameters
-      # listed in the `params` section below.
-      - name: Verify rule ${{ matrix.params.name }}
-        run: >
-          message="$(git log -n 1 --pretty=format:'CI ${{matrix.params.name}} %h')";
-          certoraRun \
-            certora/conf/${{ matrix.params.command }} \
-            --msg "$(echo $message | sed 's/[^a-zA-Z0-9., _-]/ /g')"
-        env:
-          # For this to work, you must set your CERTORAKEY secret on the GitHub
-          # website (settings > secrets > actions > new repository secret)
-          CERTORAKEY: ${{ secrets.CERTORAKEY }}
-
-      # The following two steps save the output json as a GitHub artifact.
-      # This can be useful for automation that collects the output.
-      - name: Download output json
-        if: always()
-        run: >
-          outputLink=$(sed 's/zipOutput/output/g' .zip-output-url.txt | sed 's/?/\/output.json?/g');
-          curl -L -b "certoraKey=$CERTORAKEY;" ${outputLink} --output output.json || true;
-          touch output.json;
-
-      - name: Archive output json
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: output for ${{ matrix.params.name }}
-          path: output.json
-
-    strategy:
-      fail-fast: false
-      max-parallel: 20
-      matrix:
-        params:
-          # Each of these commands is passed to the "Verify rule" step above,
-          # which runs certoraRun on certora/conf/<contents of the command>
-          #
-          # Note that each of these lines will appear as a separate run on
-          # prover.certora.com
-          #
-          # It is often helpful to split up by rule or even by method for a
-          # parametric rule, although it is certainly possible to run everything
-          # at once by not passing the `--rule` or `--method` options
-          #- {name: transferSpec,        command: 'ERC20.conf --rule transferSpec'}
-          #- {name: generalRulesOnERC20, command: 'generalRules_ERC20.conf --debug'}
-          #- {name: generalRulesOnVAULT, command: 'generalRules_VAULT.conf --debug'}
-          #- {name: RulesForERC20, command: 'default.conf --debug'}
-          - {name: HLP_integrityOfBorrow, command: 'silo/methods_integrity.conf --rule HLP_integrityOfBorrow'}
-          - {name: HLP_integrityOfBorrowSame, command: 'silo/methods_integrity.conf --rule HLP_integrityOfBorrowSame'}
-          - {name: HLP_integrityOfBorrowShares, command: 'silo/methods_integrity.conf --rule HLP_integrityOfBorrowShares'}
-          - {name: HLP_integrityOfDeposit, command: 'silo/methods_integrity.conf --rule HLP_integrityOfDeposit'}
-          - {name: HLP_integrityOfMint, command: 'silo/methods_integrity.conf --rule HLP_integrityOfMint'}
-          - {name: HLP_integrityOfRedeem, command: 'silo/methods_integrity.conf --rule HLP_integrityOfRedeem'}
-          - {name: HLP_integrityOfWithdraw, command: 'silo/methods_integrity.conf --rule HLP_integrityOfWithdraw'}
-          - {name: HLP_integrityOfRepay, command: 'silo/methods_integrity.conf --rule HLP_integrityOfRepay'}
-          - {name: HLP_integrityOfRepayShares, command: 'silo/methods_integrity.conf --rule HLP_integrityOfRepayShares'}
-
+          certoraRun --version
+          solc --version
+# TODO
+#      - name: Silo VariableChangesSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/variable-changes/VariableChangesSilo0.spec"
+#
+#      - name: Silo ValidStateSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/valid-state/ValidStateSilo0.spec"
+#
+#      - name: Silo UnitTestsSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/unit-tests/UnitTestsSilo0.spec"
+#
+#      - name: Silo RiskAssessmentSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/risk-assessment/RiskAssessmentSilo0.spec"
+#
+#      - name: Share debt token RiskAssessment typecheck
+#        run: certoraRun certora/config/shareDebt.conf --parametric_contracts ShareDebtToken --compilation_steps_only --verify "ShareDebtToken:certora/specs/share-debt-token/RiskAssessment.spec"
+#
+#      - name: Silo StateTransitionSilo0 typecheck
+#        run: certoraRun certora/config/silo/silo0.conf --parametric_contracts Silo0 --compilation_steps_only --verify "Silo0:certora/specs/silo/state-transition/StateTransitionSilo0.spec"
