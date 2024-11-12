@@ -9,23 +9,5 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 contract Silo1 is SiloHarness {
     constructor(ISiloFactory _siloFactory) SiloHarness(_siloFactory) {}
 
-    function _callAccrueInterestForAsset_orig(
-        address _interestRateModel,
-        uint256 _daoFee,
-        uint256 _deployerFee,
-        address _otherSilo
-    ) external virtual returns (uint256 accruedInterest) {
-        if (_otherSilo != address(0) && _otherSilo != address(this)) {
-            ISilo(_otherSilo).accrueInterest();
-        }
-
-        accruedInterest = SiloLendingLib.accrueInterestForAsset(
-            _interestRateModel,
-            _daoFee,
-            _deployerFee
-        );
-
-        if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
 
 }

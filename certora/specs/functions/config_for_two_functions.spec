@@ -51,6 +51,12 @@ function CVLGetAssetForSilo(address _silo) returns address {
     }
 }
 
+function CVLGetSilo(address called) returns address {
+    if (called == silo1 || called == shareDebtToken1 || called == shareProtectedCollateralToken1 ) 
+        return silo1;
+    else
+        return silo0;
+}
 
 /// @title Implements `SiloConfig.getFeesWithAsset` in CVL
 function CVLGetFeesWithAsset(address _silo) returns (uint256, uint256, uint256, address) {
