@@ -1,6 +1,7 @@
 /* Integrity of main methods */
 
 import "../summaries/two_silos_summaries.spec";
+import "../summaries/config_for_two_in_cvl.spec";
 import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";
 import "../summaries/safe-approximations.spec";

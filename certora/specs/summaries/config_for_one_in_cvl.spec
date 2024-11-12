@@ -36,9 +36,4 @@ methods {
     function _.getDebtShareTokenAndAsset(
         address _silo
     ) external => CVLGetDebtShareTokenAndAsset(_silo) expect (address, address);
-
-    function _.hasDebtInOtherSilo(
-        address _thisSilo,
-        address _borrower
-    ) external => CVLHasDebtInOtherSilo(_thisSilo, _borrower) expect (bool);
 }
