@@ -7,6 +7,9 @@ on:
   pull_request:
     branches:
       - 'certora-audit-3'
+  push:
+    branches:
+      - 'certora-audit-3'
   workflow_dispatch:
 
 
