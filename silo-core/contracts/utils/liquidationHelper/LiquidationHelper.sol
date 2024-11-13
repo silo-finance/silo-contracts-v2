@@ -6,38 +6,44 @@ import {Address} from "openzeppelin5/contracts/utils/Address.sol";
 import {IERC20} from "openzeppelin5/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {ISilo} from "../../interfaces/ISilo.sol";
-import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 import {IERC3156FlashBorrower} from "../../interfaces/IERC3156FlashBorrower.sol";
-import {ISiloFactory} from "../../interfaces/ISiloFactory.sol";
+import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 
-//import "../interfaces/IPriceProviderV2.sol";
-//import "../interfaces/ISwapper.sol";
-//import "../interfaces/ISiloRepository.sol";
-//import "../interfaces/IPriceProvidersRepository.sol";
-//import "../interfaces/IWrappedNativeToken.sol";
+import "./magicians/interfaces/IMagician.sol";
+import "../SiloLens.sol";
+import "../interfaces/ISiloFactory.sol";
+import "../interfaces/IPriceProviderV2.sol";
+import "../interfaces/ISwapper.sol";
+import "../interfaces/ISiloRepository.sol";
+import "../interfaces/IPriceProvidersRepository.sol";
+import "../interfaces/IWrappedNativeToken.sol";
+import "../priceProviders/chainlinkV3/ChainlinkV3PriceProvider.sol";
 
-//import "../lib/Ping.sol";
-//import "../lib/RevertBytes.sol";
-//import "./ZeroExSwap.sol";
-//import "./lib/LiquidationScenarioDetector.sol";
-//import "./LiquidationRepay.sol";
+import "../../lib/RevertLib.sol";
+
+import "./DexSwap.sol";
+import "./lib/LiquidationScenarioDetector.sol";
+import "./LiquidationRepay.sol";
 
 /// @notice LiquidationHelper IS NOT PART OF THE PROTOCOL. SILO CREATED THIS TOOL, MOSTLY AS AN EXAMPLE.
 /// see https://github.com/silo-finance/liquidation#readme for details how liquidation process should look like
-contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
-    using RevertBytes for bytes;
+contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap, LiquidationRepay, Ownable {
+    using RevertLib for bytes;
     using SafeERC20 for IERC20;
     using Address for address payable;
+
+    bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     uint256 immutable private _BASE_TX_COST; // solhint-disable-line var-name-mixedcase
 
     /// @dev token receiver will get all rewards from liquidation, does not matter who will execute tx
     address payable public immutable TOKENS_RECEIVER; // solhint-disable-line var-name-mixedcase
 
+    bool public immutable CHECK_PROFITABILITY; // solhint-disable-line var-name-mixedcase
+
     bool private _liquidationWasExecuted = true;
 
-    error UserSolvent();
+    error NoDebtToCover();
     error InvalidSiloLens();
     error InvalidSiloRepository();
     error LiquidationNotProfitable(uint256 inTheRed);
@@ -70,46 +76,110 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
     event LiquidationExecuted(address indexed silo, address indexed user, uint256 earned, bool estimatedEarnings);
 
     constructor (
-        uint256 _baseCost,
-        address payable _tokensReceiver
-    ) {
+        address _exchangeProxy,
+         uint256 _baseCost,
+        address payable _tokensReceiver,
+        bool _checkProfitability
+    ) DexSwap(_exchangeProxy) {
+        EXCHANGE_PROXY = _exchangeProxy;
         _BASE_TX_COST = _baseCost;
         TOKENS_RECEIVER = _tokensReceiver;
+        CHECK_PROFITABILITY = _checkProfitability;
     }
 
     receive() external payable {}
 
-    function executeFlashLiquidation(
-        IPartialLiquidation _hook,
+    function executeLiquidation(
+        ISilo _collateralSilo,
         address _user,
-        ISilo _silo,
-        ISilo[] calldata _flashLoanSilos
+        IPartialLiquidation _liquidationHook,
+        address _debtAsset,
+        address _collateralAsset,
+        uint256 _maxDebtToCover,
+        bool sTokenRequired,
+        ISilo _flashLoanFrom,
+        SwapInput0x[] calldata _swapsInputs0x
     ) external {
-        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) = _hook.maxLiquidation(_user);
-        require(debtToRepay != 0, UserSolvent());
+//        (
+//            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
+//        ) = _liquidationHook.maxLiquidation(_user);
 
-        // get repay assets
+        require(_maxDebtToCover != 0, NoDebtToCover());
 
+        // (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
-        if (_swapsInputs0x.length > 2) revert Max0xSwapsIs2();
+//        _flashLoanFrom.flashFee(_debtAsset, _maxDebtToCover);
 
-        uint256 gasStart = CHECK_PROFITABILITY ? gasleft() : 0;
-        address[] memory users = new address[](1);
-        users[0] = _user;
+        _flashLoanFrom.flashLoan(
+            address(this),
+            _debtAsset,
+            _maxDebtToCover,
+            abi.encode(_collateralSilo, _user, _collateralAsset, _liquidationHook, sTokenRequired, _swapsInputs0x)
+        );
 
-        _liquidationWasExecuted = false;
-
-        _silo.flashLiquidate(users, abi.encode(gasStart, _scenario, _swapsInputs0x));
-
-        if (!_liquidationWasExecuted) revert LiquidationNotExecuted();
+//        uint256 gasStart = CHECK_PROFITABILITY ? gasleft() : 0;
+//        address[] memory users = new address[](1);
+//        users[0] = _user;
+//
+//        _liquidationWasExecuted = false;
+//
+//        _silo.flashLiquidate(users, abi.encode(gasStart, _scenario, _swapsInputs0x));
+//
+//        if (!_liquidationWasExecuted) revert LiquidationNotExecuted();
     }
 
-    function setSwappers(SwapperConfig[] calldata _swappers) external onlyOwner {
-        _configureSwappers(_swappers);
-    }
+    function onFlashLoan(
+        address _initiator,
+        address _debtAsset,
+        uint256 _debtToRepay,
+        uint256 _fee,
+        bytes calldata _data
+    )
+        external
+        returns (bytes32)
+    {
+        (
+            ISilo _collateralSilo,
+            address user,
+            address collateralAsset,
+            IPartialLiquidation liquidationHook,
+            bool _receiveSToken,
+            SwapInput0x[] memory _swapsInputs0x
+        ) = abi.encode(_data, (address, address, IPartialLiquidation, bool, SwapInput0x[]));
 
-    function setMagicians(MagicianConfig[] calldata _magicians) external onlyOwner {
-        _configureMagicians(_magicians);
+        unchecked {
+            // if we overflow on +fee, we can not transfer it anyway
+            IERC20(_debtAsset).approve(address(liquidationHook), _debtToRepay + _fee);
+        }
+
+        (
+            uint256 withdrawCollateral, uint256 repayDebtAssets
+        ) = liquidationHook.liquidationCall(collateralAsset, _debtAsset, user, _debtToRepay, _receiveSToken);
+
+        // we need to swap collateral to repay flashloan fee
+        _execute0x(_swapsInputs0x);
+
+        if (repayDebtAssets < _debtToRepay) {
+            // revert? transfer change?
+        }
+
+        if (withdrawCollateral != 0) {
+            if (_receiveSToken) {
+                (
+                    address protectedShareToken, address collateralShareToken,
+                ) = liquidationHook.siloConfig().getShareTokens(_collateralSilo);
+
+                uint256 balance = IERC20(collateralShareToken).balanceOf(address(this));
+                if (balance != 0) IERC20(collateralShareToken).transfer(TOKENS_RECEIVER, balance);
+
+                balance = IERC20(protectedShareToken).balanceOf(address(this));
+                if (balance != 0) IERC20(protectedShareToken).transfer(TOKENS_RECEIVER, balance);
+            } else {
+                IERC20(collateralAsset).transfer(TOKENS_RECEIVER, withdrawCollateral);
+            }
+        }
+
+        return _FLASHLOAN_CALLBACK;
     }
 
     /// @notice this is working example of how to perform liquidation, this method will be called by Silo
@@ -212,8 +282,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
 
     function ensureTxIsProfitable(uint256 _gasStart, uint256 _earnedEth) public view returns (uint256 txFee) {
         unchecked {
-            // gas calculation will not overflow because values are never that high
-            // `gasStart` is external value, but it value that we initiating and Silo contract passing it to us
+        // gas calculation will not overflow because values are never that high
+        // `gasStart` is external value, but it value that we initiating and Silo contract passing it to us
             uint256 gasSpent = _gasStart - gasleft() + _BASE_TX_COST;
             txFee = tx.gasprice * gasSpent;
 
@@ -224,32 +294,35 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
         }
     }
 
-    function findPriceProvider(address _asset) public view returns (IPriceProvider priceProvider) {
-        priceProvider = PRICE_PROVIDERS_REPOSITORY.priceProviders(_asset);
+    function liquidationCall(
+        address _collateralAsset,
+        address _debtAsset,
+        address _user,
+        uint256 _maxDebtToCover,
+        bool _receiveSToken
+    )
+        external
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
+    {
 
-        if (address(priceProvider) == address(0)) revert PriceProviderNotFound();
+    }
 
-        // check for backwards compatibility with chainlink provider
-        if (priceProvider == CHAINLINK_PRICE_PROVIDER) {
-            priceProvider = CHAINLINK_PRICE_PROVIDER.getFallbackProvider(_asset);
-            if (address(priceProvider) == address(0)) revert FallbackPriceProviderNotSet();
-            return priceProvider;
-        }
+    /// @dev debt is keep growing over time, so when dApp use this view to calculate max, tx should never revert
+    /// because actual max can be only higher
+    /// @return collateralToLiquidate underestimated amount of collateral liquidator will get
+    /// @return debtToRepay debt amount needed to be repay to get `collateralToLiquidate`
+    /// @return sTokenRequired TRUE, when liquidation with underlying asset is not possible because of not enough
+    /// liquidity
+    function maxLiquidation(address _borrower)
+    external
+    view
+    returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) {
 
-        // only IPriceProviderV2 has `IPriceProviderV2()`
-        try IPriceProviderV2(address(priceProvider)).offChainProvider() returns (bool isOffChainProvider) {
-            if (isOffChainProvider) {
-                priceProvider = IPriceProviderV2(address(priceProvider)).getFallbackProvider(_asset);
-                if (address(priceProvider) == address(0)) revert FallbackPriceProviderNotSet();
-            }
-        } catch (bytes memory) {}
     }
 
     function _execute0x(SwapInput0x[] memory _swapInputs) internal {
-        for (uint256 i; i < _swapInputs.length;) {
+        for (uint256 i; i < _swapInputs.length; i++) {
             fillQuote(_swapInputs[i].sellToken, _swapInputs[i].allowanceTarget, _swapInputs[i].swapCallData);
-            // we can not have that much data in array to overflow
-            unchecked { i++; }
         }
     }
 
@@ -354,7 +427,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
         // swap all for quote token
 
         unchecked {
-            // we will not overflow with `i` in a lifetime
+        // we will not overflow with `i` in a lifetime
             for (uint256 i = 0; i < _assets.length; i++) {
                 // if silo was able to handle solvency calculations, then we can handle quoteAmount without safe math
                 quoteAmount += _swapForQuote(_assets[i], _receivedCollaterals[i]);
@@ -384,7 +457,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
         IWrappedNativeToken(address(QUOTE_TOKEN)).withdraw(_amount);
         _to.sendValue(_amount);
     }
-    
+
     /// @dev it swaps asset token for quote
     /// @param _asset address
     /// @param _amount exact amount of asset to swap
@@ -491,8 +564,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower {
         bytes memory _callData,
         string memory _mgs
     )
-        internal
-        returns (bytes memory data)
+    internal
+    returns (bytes memory data)
     {
         bool success;
         // solhint-disable-next-line avoid-low-level-calls
