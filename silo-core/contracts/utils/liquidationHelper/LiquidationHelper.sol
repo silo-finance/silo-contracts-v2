@@ -27,23 +27,25 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
     /// @dev token receiver will get all rewards from liquidation, does not matter who will execute tx
     address payable public immutable TOKENS_RECEIVER;
-    
+
+    error NoDebtToCover();
+
     constructor (
         address _exchangeProxy,
-        address payable _tokensReceiver,
-        bool _checkProfitability
+        address payable _tokensReceiver
     ) DexSwap(_exchangeProxy) {
         EXCHANGE_PROXY = _exchangeProxy;
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
-    receive() external payable {}
-
+    /// @param _liquidationHook partial liquidation hook address
+    /// @param _user silo borrower address
     /// @param _collateralSilo silo address where `_user` has collateral
     function executeLiquidation(
-        ISilo _collateralSilo,
-        address _user,
         IPartialLiquidation _liquidationHook,
+        address _user,
+        IERC20 _protectedShareToken,
+        IERC20 _collateralShareToken,
         address _debtAsset,
         address _collateralAsset,
         uint256 _maxDebtToCover,
@@ -94,6 +96,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         if (repayDebtAssets < _debtToRepay) {
             // revert? transfer change?
+            // if we repay less, then for sure user was insolvent, but maybe price slighty changed?
+            
         }
 
         if (withdrawCollateral != 0) {
