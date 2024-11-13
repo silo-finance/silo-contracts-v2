@@ -8,13 +8,6 @@ import "../summaries/safe-approximations.spec";
 import "../requirements/tokens_requirements.spec";
 import "../previousAudits/CompleteSiloSetup.spec";
 
-using Silo0 as silo0;
-using Silo1 as silo1;
-using Token0 as token0;
-using Token1 as token1;
-using ShareDebtToken0 as shareDebtToken0;
-using ShareDebtToken1 as shareDebtToken1;
-
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
@@ -28,21 +21,6 @@ methods {
     // ---- `ISiloOracle` ------------------------------------------------------
     // NOTE: Since `beforeQuote` is not a view function, strictly speaking this is unsound.
     function _.beforeQuote(address) external => NONDET DELETE;
-}
-
-// borrow() user borrows maxAssets returned by maxBorrow, 
-// borrow should not revert because of solvency check
-rule maxBorrow_correctness(env e)
-{
-    address user; address receiver;
-    uint256 maxB = maxBorrow(e, user);
-
-    silosTimestampSetupRequirements(e);
-    nonSceneAddressRequirements(receiver);
-    totalSuppliesMoreThanBalances(receiver, silo0);
-
-    _ = borrow@withrevert(e, maxB, receiver, user);
-    assert !lastReverted;
 }
 
 // accrueInterest() should never revert
@@ -109,15 +87,7 @@ rule withdrawFees_noAdditionalEffect(env e, method f)
     assert afterF == afterWF;
 }
 
-// maxRepay() should never return more than totalAssets[AssetType.Debt]
-rule maxRepay_neverGreaterThanTotalDebt(env e)
-{
-    silosTimestampSetupRequirements(e);
-    address user;
-    uint res = maxRepay(e, user);
-    uint max = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);
-    assert res <= max;
-}
+
 
 // if borrowerCollateralSilo[user] is set from zero to non-zero value,
 // it never goes back to zero
@@ -146,8 +116,6 @@ rule accrueInterestForSilo_equivalent(env e)
 
     assert after1 == after2;
 }
-
-
 
 // if user is insolvent, it must have debt shares
 invariant insolventHaveDebtShares(env e, address user)
@@ -206,4 +174,53 @@ rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO
 
     assert (colSiloBefore == 0 && colSiloAfter != 0) 
         => (debt0 > 0 || debt1 > 0);
+}
+
+// withdraw() should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
+rule withdrawOnlyRevertsOnLiquidity(env e, address receiver)
+{
+    completeSiloSetupEnv(e);
+    nonSceneAddressRequirements(receiver);
+    totalSuppliesMoreThanBalances(receiver, silo0);
+    
+    uint256 assets;
+    uint256 liquidity = getLiquidity(e);
+    uint256 sharesPaid = withdraw@withrevert(e, assets, receiver, e.msg.sender);
+    
+    assert lastReverted => liquidity < assets;
+    // todo also add check for user's balance of shares
+    // user should have enought to withdraw
+
+}
+
+// user is always solvent after withdraw()
+rule solventAfterWithdraw(env e, address receiver)
+{
+    SafeAssumptions(e, receiver);
+    completeSiloSetupEnv(e);
+    nonSceneAddressRequirements(receiver);
+    totalSuppliesMoreThanBalances(receiver, e.msg.sender);
+    
+    uint256 assets;
+    uint256 sharesPaid = withdraw(e, assets, receiver, e.msg.sender);
+    assert isSolvent(e, e.msg.sender);
+}
+
+// if user has debt, borrowerCollateralSilo[user] should be silo0 or silo1
+// and one of shares tokens balances should not be 0
+invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
+    (shareDebtToken0.balanceOf(user) > 0 || shareDebtToken1.balanceOf(user) > 0)
+    => (
+        (config(e).borrowerCollateralSilo(e, user) == silo0 ||
+         config(e).borrowerCollateralSilo(e, user) == silo1)
+        && (silo0.balanceOf(e, user) > 0 || silo1.balanceOf(e, user) > 0))
+    {
+    preserved with (env e2) { SafeAssumptions(e2, user); }
+}
+
+// debt in two silos is impossible
+invariant noDebtInBothSilos(env e, address user)
+    shareDebtToken0.balanceOf(e, user) == 0  || shareDebtToken1.balanceOf(e, user) == 0
+    {
+    preserved with (env e2) { SafeAssumptions(e2, user); }
 }

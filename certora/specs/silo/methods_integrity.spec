@@ -34,6 +34,7 @@ methods {
 /// @title Integrity of borrow
 /// @property borrow-integrity
 /// @status Done: https://vaas-stg.certora.com/output/39601/a92223ffd54b428bbc75fbbf76deaa91?anonymousKey=f962f690a342ccff3b3843c47f2d310b98d355f6
+// TODO add check for decrease of silo's balance
 rule HLP_integrityOfBorrow(address receiver, uint256 assets) {
     env e;
 

@@ -10,41 +10,7 @@ import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 use rule assetsToSharesAndBackAxiom;
 use rule mulDiv_axioms_test;
 
-function SafeAssumptions(env e) {
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    require silo0.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
-    require silo1.getSiloDataInterestRateTimestamp() > 0;
-    require silo1.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
-    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
-    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
-}
 
-function SafeAssumptions(env e) {
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    requireProtectedToken0TotalAndBalancesIntegrity();
-    requireCollateralToken0TotalAndBalancesIntegrity();
-    requireDebtToken0TotalAndBalancesIntegrity();
-    requireProtectedToken1TotalAndBalancesIntegrity();
-    requireCollateralToken1TotalAndBalancesIntegrity();
-    requireDebtToken1TotalAndBalancesIntegrity();
-    requireInvariant RA_more_assets_than_shares();
-    require silo0.getSiloDataInterestRateTimestamp() > 0;
-    require silo0.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
-    require silo1.getSiloDataInterestRateTimestamp() > 0;
-    require silo1.getSiloDataInterestRateTimestamp() <= e.block.timestamp;
-    require silo0.total(ISilo.AssetType.Protected) + silo0.total(ISilo.AssetType.Collateral) <= max_uint256;
-    require silo1.total(ISilo.AssetType.Protected) + silo1.total(ISilo.AssetType.Collateral) <= max_uint256;
-}
 
 // A user cannot redeem anything after redeeming whole balance.
 // holds

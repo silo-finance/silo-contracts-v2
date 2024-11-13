@@ -8,32 +8,23 @@
 // import "./Silo0ShareTokensMethods.spec";
 // import "./Silo1ShareTokensMethods.spec";
 
+using Silo0 as silo0;
+using Silo1 as silo1;
+using Token0 as token0;
+using Token1 as token1;
+using ShareDebtToken0 as shareDebtToken0;
+using ShareDebtToken1 as shareDebtToken1;
 using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 
 function completeSiloSetupEnv(env e) {
-    
     completeSiloSetupAddress(e.msg.sender);
+    
     // we can not have block.timestamp less than interestRateTimestamp
     require e.block.timestamp < (1 << 64);
     require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp(e);
     require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp(e);
-}
 
-function completeSiloSetupAddress(address sender)
-{
-    //require sender != silo0;  // replaced by silo0
-    require sender != shareDebtToken0;
-    require sender != shareProtectedCollateralToken0;
-    require sender != shareProtectedCollateralToken1;
-    require sender != shareDebtToken1;
-    //require sender != silo1;  // replaced by silo1
-    //require sender != siloConfig;
-    require sender != currentContract;  /// Silo0
-    require sender != token0;
-    require sender != token1;
-    doesntHaveCollateralAsWellAsDebt(sender);
-    
     //there are shares if and only if there are tokens
     //otherwise there are CEXs where borrow(a lot); repay(a little); removes all debt from the user, etc.
     require shareDebtToken0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Debt) == 0;  
@@ -43,7 +34,36 @@ function completeSiloSetupAddress(address sender)
     require shareDebtToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Debt) == 0;
     require shareProtectedCollateralToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
     require silo1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
+}
 
+// TODO
+// make two methods, one for e.msg.sender, other for receiver (can be set by user)
+function completeSiloSetupAddress(address sender)
+{
+    //require sender != silo0;  // replaced by silo0
+    require sender != shareDebtToken0;
+    require sender != shareDebtToken1;
+    require sender != shareProtectedCollateralToken0;
+    require sender != shareProtectedCollateralToken1;
+    //require sender != silo1;  // replaced by silo1
+    //require sender != siloConfig;
+    //require sender != currentContract;  /// Silo0
+    require sender != token0;
+    require sender != token1;
+    // doesntHaveCollateralAsWellAsDebt(sender);
+}
+
+function SafeAssumptions(env e, address user) 
+{
+    completeSiloSetupEnv(e);
+    completeSiloSetupAddress(user);
+    totalSupplyMoreThanBalance(e.msg.sender);
+    totalSupplyMoreThanBalance(user);
+    
+    //requireInvariant RA_more_assets_than_shares();
+
+    require silo0.getTotalAssetsStorage(ISilo.AssetType.Protected) + silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral) < max_uint256;
+    require silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) + silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) < max_uint256;
 }
 
 function totalSupplyMoreThanBalance(address receiver)
@@ -293,6 +313,13 @@ definition canIncreaseTotalDebt(method f) returns bool =
     //f.selector == sig:leverage(uint256,address,address,bytes).selector;
 
 definition canDecreaseTotalDebt(method f) returns bool =
-    //// f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||    
+    f.selector == sig:repay(uint256,address).selector ||
+    f.selector == sig:repayShares(uint256,address).selector;
+
+definition canIncreaseDebt(method f) returns bool =
+    f.selector == sig:borrow(uint256,address,address).selector ||
+    f.selector == sig:borrowShares(uint256,address,address).selector;
+
+definition canDecreaseDebt(method f) returns bool =
     f.selector == sig:repay(uint256,address).selector ||
     f.selector == sig:repayShares(uint256,address).selector;

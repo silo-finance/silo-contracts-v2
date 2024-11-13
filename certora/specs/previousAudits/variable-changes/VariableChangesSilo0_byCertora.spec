@@ -11,7 +11,9 @@
 
 
 //////////////////////
+// TODO
 // we need to update this to new version !!!
+// and there are still some rules unfinished
 ////////////////////// 
 
 
@@ -224,6 +226,22 @@ rule whoCanChangeProtectedAssets(env e, method f) filtered { f -> !f.isView }
     assert protectedAssetsAfter < protectedAssetsBefore => canDecreaseProtectedAssets(f);
 }
 
+// TODO!
+rule whoCanChangeCollateral(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    requireCollateralToken0TotalAndBalancesIntegrity();
+    address receiver;
+
+    mathint assetsBefore = silo0.total(ISilo.AssetType.Collateral);
+    calldataarg args;
+    f(e, args);
+    mathint assetsAfter = silo0.total(ISilo.AssetType.Collateral);
+    
+    assert assetsAfter > assetsBefore => canIncreaseCollateralAssets(f);
+    assert assetsAfter < assetsBefore => canDecreaseCollateralAssets(f);
+}
+
 rule protectedSharesBalance(env e, method f, address receiver) 
     filtered { f -> !f.isView} 
 {
@@ -244,4 +262,18 @@ rule protectedSharesBalance(env e, method f, address receiver)
 
     assert balanceSharesBefore > balanceSharesAfter => protectedtAssetsBefore > protectedAssetsAfter,
         "The balance of share tokens should decrease only if protected assets decreased";
+}
+
+rule whoCanChangeDebt(env e, method f) filtered { f -> !f.isView } 
+{
+    completeSiloSetupEnv(e);
+    requireCollateralToken0TotalAndBalancesIntegrity();
+
+    mathint debtBefore = silo0.total(ISilo.AssetType.Debt);
+    calldataarg args;
+    f(e, args);
+    mathint debtAfter = silo0.total(ISilo.AssetType.Debt);
+    
+    assert debtAfter > debtBefore => canIncreaseDebt(f);
+    assert debtAfter < debtBefore => canDecreaseDebt(f);
 }
