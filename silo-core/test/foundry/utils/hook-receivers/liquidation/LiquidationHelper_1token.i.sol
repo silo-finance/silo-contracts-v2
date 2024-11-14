@@ -13,7 +13,6 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {ILiquidationHelper} from "silo-core/contracts/interfaces/ILiquidationHelper.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {DexSwapMock} from "../../../_mocks/DexSwapMock.sol";
@@ -24,66 +23,47 @@ import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 */
 contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     address payable public constant TOKENS_RECEIVER = payable(address(123));
-
-    DexSwapMock immutable DEXSWAP;
-    LiquidationHelper immutable LIQUIDATION_HELPER;
-
-    using SiloLensLib for ISilo;
-
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
-    uint256 constant COLLATERAL_SHARES = COLLATERAL * SiloMathLib._DECIMALS_OFFSET_POW;
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = true;
 
+    LiquidationHelper immutable LIQUIDATION_HELPER;
+
     ISiloConfig siloConfig;
 
-    event LiquidationCall(address indexed liquidator, bool receiveSToken);
-    error SenderNotSolventAfterTransfer();
-
     ILiquidationHelper.LiquidationData liquidationData;
+    // TODO write at least one tests with swap
     LiquidationHelper.DexSwapInput[] dexSwapInput;
 
     ISilo _flashLoanFrom;
     address _debtAsset;
 
     constructor() {
-        DEXSWAP = new DexSwapMock();
-        LIQUIDATION_HELPER = new LiquidationHelper(makeAddr("nativeToken"), address(DEXSWAP), TOKENS_RECEIVER);
+        LIQUIDATION_HELPER = new LiquidationHelper(makeAddr("nativeToken"), makeAddr("DEXSWAP"), TOKENS_RECEIVER);
     }
 
     function setUp() public {
+        vm.label(BORROWER, "BORROWER");
         siloConfig = _setUpLocalFixture();
 
-        vm.prank(BORROWER);
-        token0.mint(BORROWER, COLLATERAL);
+        _depositCollateral(COLLATERAL, BORROWER, SAME_ASSET);
+        _borrow(DEBT, BORROWER, SAME_ASSET);
 
-        vm.prank(BORROWER);
-        token0.approve(address(silo0), COLLATERAL);
+        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
 
-        vm.prank(BORROWER);
-        silo0.deposit(COLLATERAL, BORROWER);
-
-        vm.prank(BORROWER);
-        silo0.borrowSameAsset(DEBT, BORROWER, BORROWER);
-
-        assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
-        assertEq(token0.balanceOf(address(silo0)), COLLATERAL - DEBT, "silo0 has only 2.5 debt token (10 - 7.5)");
-
-        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
-
-        assertEq(silo0Config.liquidationFee, 0.05e18, "liquidationFee1");
+        assertEq(silo1Config.liquidationFee, 0.025e18, "liquidationFee1");
 
         liquidationData.user = BORROWER;
         liquidationData.hook = partialLiquidation;
-        liquidationData.collateralAsset = address(token0);
+        liquidationData.collateralAsset = address(token1);
 
         (
             liquidationData.protectedShareToken, liquidationData.collateralShareToken,
-        ) = siloConfig.getShareTokens(address(silo0));
+        ) = siloConfig.getShareTokens(address(silo1));
 
-        _flashLoanFrom = silo0;
-        _debtAsset = address(token0);
+        _flashLoanFrom = silo1;
+        _debtAsset = address(token1);
     }
 
     /*
@@ -98,10 +78,10 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
 
         vm.assume(debtToRepay != 0);
         // for flashloan, so we do not change the silo state
-        token0.mint(address(silo0), debtToRepay);
+        token1.mint(address(silo1), debtToRepay);
 
         // this is to mock swap
-        token0.mint(address(LIQUIDATION_HELPER), debtToRepay + silo0.flashFee(address(token0), debtToRepay));
+        token1.mint(address(LIQUIDATION_HELPER), debtToRepay + silo1.flashFee(address(token1), debtToRepay));
 
         _executeLiquidation(debtToRepay);
 
@@ -123,10 +103,10 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         liquidationData.receiveSToken = true;
 
         // for flashloan, so we do not change the silo state
-        token0.mint(address(silo0), debtToRepay);
+        token1.mint(address(silo1), debtToRepay);
 
         // this is to mock swap
-        token0.mint(address(LIQUIDATION_HELPER), debtToRepay + silo0.flashFee(address(token0), debtToRepay));
+        token1.mint(address(LIQUIDATION_HELPER), debtToRepay + silo1.flashFee(address(token1), debtToRepay));
 
         _executeLiquidation(debtToRepay);
 
@@ -141,10 +121,10 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     }
 
     function _assertContractDoNotHaveTokens(address _contract) internal view {
-        assertEq(token0.balanceOf(_contract), 0);
+        assertEq(token1.balanceOf(_contract), 0);
         assertEq(token1.balanceOf(_contract), 0);
 
-        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo1));
         ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
 
         assertEq(IShareToken(silo0Config.collateralShareToken).balanceOf(_contract), 0);
@@ -157,7 +137,7 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     }
 
     function _assertReceiverHasSTokens() internal view {
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo1));
 
         uint256 pBalance = IERC20(protectedShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
         uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
@@ -166,7 +146,7 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     }
 
     function _assertReceiverNotHaveSTokens() internal view {
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo1));
 
         uint256 pBalance = IERC20(protectedShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
         uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
