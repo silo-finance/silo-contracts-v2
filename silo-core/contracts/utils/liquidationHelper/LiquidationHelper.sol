@@ -33,6 +33,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     address public immutable NATIVE_TOKEN;
 
     bool private transient _transferDebt;
+    uint256 private transient _withdrawCollateral;
+    uint256 private transient _repayDebtAssets;
 
     error NoDebtToCover();
 
@@ -52,12 +54,15 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         uint256 _maxDebtToCover,
         LiquidationData calldata _liquidation,
         DexSwapInput[] calldata _swapsInputs0x
-    ) external {
+    ) external returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
         require(_maxDebtToCover != 0, NoDebtToCover());
 
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
 
         if (_transferDebt) _transfer(_debtAsset, IERC20(_debtAsset).balanceOf(address(this)));
+
+        withdrawCollateral = _withdrawCollateral;
+        repayDebtAssets = _repayDebtAssets;
     }
 
     function onFlashLoan(
@@ -82,12 +87,12 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         }
 
         (
-            uint256 withdrawCollateral, uint256 repayDebtAssets
+            _withdrawCollateral, _repayDebtAssets
         ) = _liquidation.hook.liquidationCall(
             _liquidation.collateralAsset, _debtAsset, _liquidation.user, _debtToRepay, _liquidation.receiveSToken
         );
 
-        if (repayDebtAssets < _debtToRepay) {
+        if (_repayDebtAssets < _debtToRepay) {
             // if we repay less, then for sure user was insolvent, but maybe price changed?
             _transferDebt = true;
         }
@@ -95,7 +100,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         // swap collateral to repay flashloan fee
         _execute0x(_swapsInputs0x);
 
-        if (withdrawCollateral != 0) {
+        if (_withdrawCollateral != 0) {
             if (_liquidation.receiveSToken) {
                 uint256 balance = IERC20(_liquidation.collateralShareToken).balanceOf(address(this));
                 _transfer(_liquidation.collateralShareToken, balance);
@@ -103,7 +108,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                 balance = IERC20(_liquidation.protectedShareToken).balanceOf(address(this));
                 _transfer(_liquidation.protectedShareToken, balance);
             } else {
-                _transfer(_liquidation.collateralAsset, withdrawCollateral);
+                _transfer(_liquidation.collateralAsset, _withdrawCollateral);
             }
         }
 

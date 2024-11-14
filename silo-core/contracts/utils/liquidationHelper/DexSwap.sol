@@ -1,19 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "openzeppelin5/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
+import {ILiquidationHelper} from "../../interfaces/ILiquidationHelper.sol";
 
 import "../../lib/RevertLib.sol";
-
-/// @param sellToken The `sellTokenAddress` field from the API response.
-/// @param buyToken The `buyTokenAddress` field from the API response.
-/// @param allowanceTarget The `allowanceTarget` field from the API response.
-/// @param swapCallData The `data` field from the API response.
-struct DexSwapInput {
-    address sellToken;
-    address allowanceTarget;
-    bytes swapCallData;
-}
 
 /// @dev Based on demo contract that swaps its ERC20 balance for another ERC20.
 /// demo source: https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
