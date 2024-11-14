@@ -46,7 +46,6 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
 
     ISilo _flashLoanFrom;
     address _debtAsset;
-    uint256 _maxDebtToCover;
 
     constructor() {
         DEXSWAP = new DexSwapMock();
@@ -79,27 +78,58 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         liquidationData.hook = partialLiquidation;
         liquidationData.collateralAsset = address(token0);
 
+        (
+            liquidationData.protectedShareToken, liquidationData.collateralShareToken,
+        ) = siloConfig.getShareTokens(address(silo0));
+
         _flashLoanFrom = silo0;
         _debtAsset = address(token0);
     }
 
     /*
-    forge test -vv --ffi --mt test_executeLiquidation_1token
+    forge test --ffi --mt test_executeLiquidation_1_token -vvv
     */
-    function test_executeLiquidation_1token() public {
-        vm.warp(100 days);
+    function test_executeLiquidation_1_token(uint32 _addTimestamp) public {
+        vm.assume(_addTimestamp < 365 days);
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
-        ) = partialLiquidation.maxLiquidation(BORROWER);
+        vm.warp(block.timestamp + _addTimestamp);
+
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         vm.assume(debtToRepay != 0);
-        token0.mint(address(silo0), debtToRepay); // for flashloan, so we do not change the silo state
+        // for flashloan, so we do not change the silo state
+        token0.mint(address(silo0), debtToRepay);
 
         // this is to mock swap
         token0.mint(address(LIQUIDATION_HELPER), debtToRepay + silo0.flashFee(address(token0), debtToRepay));
 
         _executeLiquidation(debtToRepay);
+
+        _afterEach();
+    }
+
+    /*
+    forge test --ffi --mt test_executeLiquidation_1_sToken -vvv
+    */
+    function test_executeLiquidation_1_sToken(uint32 _addTimestamp) public {
+        vm.assume(_addTimestamp < 365 days);
+
+        vm.warp(block.timestamp + _addTimestamp);
+
+        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
+
+        vm.assume(debtToRepay != 0);
+        liquidationData.receiveSToken = true;
+
+        // for flashloan, so we do not change the silo state
+        token0.mint(address(silo0), debtToRepay);
+
+        // this is to mock swap
+        token0.mint(address(LIQUIDATION_HELPER), debtToRepay + silo0.flashFee(address(token0), debtToRepay));
+
+        _executeLiquidation(debtToRepay);
+
+        _assertReceiverHasSTokens();
 
         _afterEach();
     }
@@ -128,5 +158,14 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         assertEq(IShareToken(silo1Config.collateralShareToken).balanceOf(_contract), 0);
         assertEq(IShareToken(silo1Config.protectedShareToken).balanceOf(_contract), 0);
         assertEq(IShareToken(silo1Config.debtShareToken).balanceOf(_contract), 0);
+    }
+
+    function _assertReceiverHasSTokens() internal view {
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
+
+        uint256 pBalance = IERC20(protectedShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
+        uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
+
+        assertGt(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has sTokens");
     }
 }
