@@ -165,26 +165,26 @@ jobs:
           }
           - {
             name: Authorized_functions_silo,
-            command: 'certora/config/silo/authorized_functions.conf --parametric_contracts silo0 '
+            command: 'silo/authorized_functions.conf --parametric_contracts silo0 --prover_args" : "-destructiveOptimizations enable -maxConcurrentTransforms INLINED_HOOKS:1,OPTIMIZE_OVERFLOW:1 -maxDecompiledCommandCount 1350000"'
           }
           - {
             name: Authorized_functions_without_silo,
-            command: 'certora/config/silo/authorized_functions.conf --parametric_contracts ShareDebtToken0 ShareProtectedCollateralToken0 SiloConfig'
+            command: 'silo/authorized_functions.conf --parametric_contracts ShareDebtToken0 ShareProtectedCollateralToken0 SiloConfig'
           }
           - {
             name: RA_reentrancy_without_silo,
-            command: 'certora/config/silo/risk_assessment_silo.conf'
+            command: 'silo/risk_assessment_silo.conf'
           }
           # - { #this one is still failing 
           #  name: RA_reentrancy_silo_StatusChanged,
-          #  command: 'certora/config/silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStatusChanged'
+          #  command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStatusChanged'
           #}
           - {
             name: RA_reentrancy_silo_StatusLoaded,
-            command: 'certora/config/silo/risk_assessment_silo.conf --rule RA_whoMustLoadCrossNonReentrant'
+            command: 'silo/risk_assessment_silo.conf --rule RA_whoMustLoadCrossNonReentrant'
           }
           - {
             name: RA_reentrancy_silo_unlock,
-            command: 'certora/config/silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStaysUnlocked'
+            command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStaysUnlocked'
           }
           # NOTE: RA_repay_borrower_is_not_restricted is violated!
