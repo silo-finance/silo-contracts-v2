@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
@@ -15,11 +19,22 @@ contract SiloDeployWithGaugeHookReceiver is SiloDeploy {
         override
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
     {
-        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
+        address timelock = _getTimelock();
 
         hookReceiver = ISiloDeployer.ClonableHookReceiver({
             implementation: _implementation,
             initializationData: abi.encode(timelock)
         }); 
+    }
+
+    function _getTimelock() internal returns (address timelock) {
+        uint256 chainId = ChainsLib.getChainId();
+
+        if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID || chainId == ChainsLib.ANVIL_CHAIN_ID) {
+            timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, ChainsLib.ARBITRUM_ONE_ALIAS);
+        } else {
+            AddrLib.init();
+            timelock = AddrLib.getAddress(AddrKey.L2_MULTISIG);
+        }
     }
 }

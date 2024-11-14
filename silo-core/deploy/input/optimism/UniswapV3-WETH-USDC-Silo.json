@@ -1,7 +1,7 @@
 {
     "deployer": "0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE",
     "hookReceiver": "CLONE_IMPLEMENTATION",
-    "hookReceiverImplementation": "PartialLiquidation.sol",
+    "hookReceiverImplementation": "GaugeHookReceiver.sol",
     "daoFee": 1500,
     "deployerFee": 1000,
     "token0": "WETH",

@@ -1,4 +1,4 @@
-# @version 0.3.7
+# @version 0.4.0
 """
 @title Boost Delegation V2
 @author CurveFi
@@ -76,10 +76,10 @@ received_slope_changes: public(HashMap[address, HashMap[uint256, uint256]])
 migrated: public(HashMap[uint256, bool])
 
 
-@external
+@deploy
 def __init__(_boost_v1: address, _ve: address):
     BOOST_V1 = _boost_v1
-    DOMAIN_SEPARATOR = keccak256(_abi_encode(EIP712_TYPEHASH, keccak256(NAME), keccak256(VERSION), chain.id, self))
+    DOMAIN_SEPARATOR = keccak256(abi_encode(EIP712_TYPEHASH, keccak256(NAME), keccak256(VERSION), chain.id, self))
     VE = _ve
 
     log Transfer(empty(address), msg.sender, 0)
@@ -101,8 +101,8 @@ def _checkpoint_read(_user: address, _delegated: bool) -> Point:
     if point.ts == block.timestamp:
         return point
 
-    ts: uint256 = (point.ts / WEEK) * WEEK
-    for _ in range(255):
+    ts: uint256 = (point.ts // WEEK) * WEEK
+    for _: uint256 in range(255):
         ts += WEEK
 
         dslope: uint256 = 0
@@ -140,8 +140,8 @@ def _checkpoint_write(_user: address, _delegated: bool) -> Point:
         return point
 
     dbias: uint256 = 0
-    ts: uint256 = (point.ts / WEEK) * WEEK
-    for _ in range(255):
+    ts: uint256 = (point.ts // WEEK) * WEEK
+    for _: uint256 in range(255):
         ts += WEEK
 
         dslope: uint256 = 0
@@ -172,7 +172,7 @@ def _checkpoint_write(_user: address, _delegated: bool) -> Point:
 @view
 @internal
 def _balance_of(_user: address) -> uint256:
-    amount: uint256 = VotingEscrow(VE).balanceOf(_user)
+    amount: uint256 = staticcall VotingEscrow(VE).balanceOf(_user)
 
     point: Point = self._checkpoint_read(_user, True)
     amount -= (point.bias - point.slope * (block.timestamp - point.ts))
@@ -188,14 +188,14 @@ def _boost(_from: address, _to: address, _amount: uint256, _endtime: uint256):
     assert _amount != 0
     assert _endtime > block.timestamp
     assert _endtime % WEEK == 0
-    assert _endtime <= VotingEscrow(VE).locked__end(_from)
+    assert _endtime <= staticcall VotingEscrow(VE).locked__end(_from)
 
     # checkpoint delegated point
     point: Point = self._checkpoint_write(_from, True)
-    assert _amount <= VotingEscrow(VE).balanceOf(_from) - (point.bias - point.slope * (block.timestamp - point.ts))
+    assert _amount <= staticcall VotingEscrow(VE).balanceOf(_from) - (point.bias - point.slope * (block.timestamp - point.ts))
 
     # calculate slope and bias being added
-    slope: uint256 = _amount / (_endtime - block.timestamp)
+    slope: uint256 = _amount // (_endtime - block.timestamp)
     bias: uint256 = slope * (_endtime - block.timestamp)
 
     # update delegated point
@@ -239,10 +239,10 @@ def _migrate(_token_id: uint256):
     assert not self.migrated[_token_id]
 
     self._boost(
-        convert(shift(_token_id, -96), address),  # from
-        BoostV1(BOOST_V1).ownerOf(_token_id),  # to
-        convert(BoostV1(BOOST_V1).token_boost(_token_id), uint256),  # amount
-        BoostV1(BOOST_V1).token_expiry(_token_id),  # expiry
+        convert(_token_id >> 96, address),  # from
+        staticcall BoostV1(BOOST_V1).ownerOf(_token_id),  # to
+        convert(staticcall BoostV1(BOOST_V1).token_boost(_token_id), uint256),  # amount
+        staticcall BoostV1(BOOST_V1).token_expiry(_token_id),  # expiry
     )
 
     self.migrated[_token_id] = True
@@ -254,7 +254,7 @@ def migrate(_token_id: uint256):
 
 @external
 def migrate_many(_token_ids: uint256[16]):
-    for i in range(16):
+    for i: uint256 in range(16):
         if _token_ids[i] == 0:
             break
         self._migrate(_token_ids[i])
@@ -282,14 +282,14 @@ def permit(_owner: address, _spender: address, _value: uint256, _deadline: uint2
         concat(
             b"\x19\x01",
             DOMAIN_SEPARATOR,
-            keccak256(_abi_encode(PERMIT_TYPEHASH, _owner, _spender, _value, nonce, _deadline))
+            keccak256(abi_encode(PERMIT_TYPEHASH, _owner, _spender, _value, nonce, _deadline))
         )
     )
 
     if _owner.is_contract:
-        sig: Bytes[65] = concat(_abi_encode(_r, _s), slice(convert(_v, bytes32), 31, 1))
+        sig: Bytes[65] = concat(abi_encode(_r, _s), slice(convert(_v, bytes32), 31, 1))
         # reentrancy not a concern since this is a staticcall
-        assert ERC1271(_owner).isValidSignature(digest, sig) == ERC1271_MAGIC_VAL, 'INVALID_SIGNATURE'
+        assert staticcall ERC1271(_owner).isValidSignature(digest, sig) == ERC1271_MAGIC_VAL, 'INVALID_SIGNATURE'
     else:
         assert ecrecover(digest, convert(_v, uint256), convert(_r, uint256), convert(_s, uint256)) == _owner and _owner != empty(address), 'INVALID_SIGNATURE'
 
@@ -333,7 +333,7 @@ def adjusted_balance_of(_user: address) -> uint256:
 @view
 @external
 def totalSupply() -> uint256:
-    return VotingEscrow(VE).totalSupply()
+    return staticcall VotingEscrow(VE).totalSupply()
 
 
 @view
@@ -354,16 +354,16 @@ def received_balance(_user: address) -> uint256:
 @external
 def delegable_balance(_user: address) -> uint256:
     point: Point = self._checkpoint_read(_user, True)
-    return VotingEscrow(VE).balanceOf(_user) - (point.bias - point.slope * (block.timestamp - point.ts))
+    return staticcall VotingEscrow(VE).balanceOf(_user) - (point.bias - point.slope * (block.timestamp - point.ts))
 
 
-@pure
+@view
 @external
 def name() -> String[32]:
     return NAME
 
 
-@pure
+@view
 @external
 def symbol() -> String[8]:
     return SYMBOL
@@ -375,23 +375,23 @@ def decimals() -> uint8:
     return 18
 
 
-@pure
+@view
 @external
-def BOOST_V1() -> address:
+def BOOST_V1_ADDRESS() -> address:
     return BOOST_V1
 
-@pure
+@view
 @external
 def version() -> String[8]:
     return VERSION
 
-@pure
+@view
 @external
-def DOMAIN_SEPARATOR() -> bytes32:
+def DOMAIN_SEPARATOR_VALUE() -> bytes32:
     return DOMAIN_SEPARATOR
 
 
-@pure
+@view
 @external
-def VE() -> address:
+def VE_ADDRESS() -> address:
     return VE

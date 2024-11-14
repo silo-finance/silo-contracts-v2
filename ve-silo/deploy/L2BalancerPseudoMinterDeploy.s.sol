@@ -19,11 +19,13 @@ contract L2BalancerPseudoMinterDeploy is CommonDeploy {
     function run() public returns (IL2BalancerPseudoMinter minter) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address siloToken = 0xe22fe63E20c3D817121022316B2430b5A516a6CE; // getAddress(SILO_TOKEN)
+
         vm.startBroadcast(deployerPrivateKey);
 
         minter = IL2BalancerPseudoMinter(
             address(
-                new L2BalancerPseudoMinter(IERC20(getAddress(SILO_TOKEN)))
+                new L2BalancerPseudoMinter(IERC20(siloToken))
             )
         );
 

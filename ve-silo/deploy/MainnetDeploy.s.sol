@@ -15,6 +15,9 @@ import {SmartWalletCheckerDeploy} from "./SmartWalletCheckerDeploy.s.sol";
 import {VeSiloDelegatorViaCCIPDeploy} from "ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol";
 import {CCIPGaugeCheckpointerDeploy} from "ve-silo/deploy/CCIPGaugeCheckpointerDeploy.s.sol";
 import {VotingEscrowDelegationProxyDeploy} from "ve-silo/deploy/VotingEscrowDelegationProxyDeploy.s.sol";
+import {CCIPGaugeArbitrumDeploy} from "ve-silo/deploy/CCIPGaugeArbitrumDeploy.sol";
+import {CCIPGaugeFactoryArbitrumDeploy} from "ve-silo/deploy/CCIPGaugeFactoryArbitrumDeploy.sol";
+import {CCIPGaugeArbitrumUpgradeableBeaconDeploy} from "ve-silo/deploy/CCIPGaugeArbitrumUpgradeableBeaconDeploy.sol";
 
 import {IExtendedOwnable} from "ve-silo/contracts/access/IExtendedOwnable.sol";
 
@@ -76,11 +79,19 @@ contract MainnetDeploy is CommonDeploy {
         VeSiloDelegatorViaCCIPDeploy veSiloDelegatorDeploy = new VeSiloDelegatorViaCCIPDeploy();
         CCIPGaugeCheckpointerDeploy ccipGaugeCheckpointerDeploy = new CCIPGaugeCheckpointerDeploy();
         VotingEscrowDelegationProxyDeploy delegationProxyDeploy = new VotingEscrowDelegationProxyDeploy();
+        CCIPGaugeFactoryArbitrumDeploy ccipGaugeFactoryDeploy = new CCIPGaugeFactoryArbitrumDeploy();
+        CCIPGaugeArbitrumDeploy ccipGaugeDeploy = new CCIPGaugeArbitrumDeploy();
+
+        CCIPGaugeArbitrumUpgradeableBeaconDeploy gaugeUpgradableBeaconDeploy =
+            new CCIPGaugeArbitrumUpgradeableBeaconDeploy();
 
         adaptorDeploy.run();
         remapperDeploy.run();
         veSiloDelegatorDeploy.run();
         ccipGaugeCheckpointerDeploy.run();
         delegationProxyDeploy.run();
+        ccipGaugeDeploy.run();
+        gaugeUpgradableBeaconDeploy.run();
+        ccipGaugeFactoryDeploy.run();
     }
 }

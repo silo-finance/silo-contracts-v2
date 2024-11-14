@@ -23,7 +23,7 @@ contract FeeDistributorDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         feeDistributor = IFeeDistributor(address(
-            new FeeDistributor(IVotingEscrow(votingEscrow), startTime)
+            new FeeDistributor(IVotingEscrow(votingEscrow), block.timestamp + 7 days)
         ));
         
         vm.stopBroadcast();
