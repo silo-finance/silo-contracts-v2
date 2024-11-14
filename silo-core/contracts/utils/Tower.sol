@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.13;
+pragma solidity 0.8.28;
 
-import "openzeppelin5/contracts/access/Ownable.sol";
+import "openzeppelin5/access/Ownable.sol";
 
 /// @title Tower
 /// @notice Utility contract that stores addresses of any contracts
@@ -15,6 +15,8 @@ contract Tower is Ownable {
     event NewCoordinates(string key, address indexed newContract);
     event UpdateCoordinates(string key, address indexed newContract);
     event RemovedCoordinates(string key);
+
+    constructor() Ownable(msg.sender) {}
 
     /// @param _key string key
     /// @return address coordinates for the `_key`
