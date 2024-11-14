@@ -51,7 +51,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         address _debtAsset,
         uint256 _maxDebtToCover,
         LiquidationData calldata _liquidation,
-        SwapInput0x[] calldata _swapsInputs0x
+        DexSwapInput[] calldata _swapsInputs0x
     ) external {
         require(_maxDebtToCover != 0, NoDebtToCover());
 
@@ -61,7 +61,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     }
 
     function onFlashLoan(
-        address _initiator,
+        address /* _initiator */,
         address _debtAsset,
         uint256 _debtToRepay,
         uint256 _fee,
@@ -70,10 +70,11 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         external
         returns (bytes32)
     {
+        // TODO verify input OR use transient? if we got tokens, then nothing to worry about?
         (
             LiquidationData memory _liquidation,
-            SwapInput0x[] memory _swapsInputs0x
-        ) = abi.decode(_data, (LiquidationData, SwapInput0x[]));
+            DexSwapInput[] memory _swapsInputs0x
+        ) = abi.decode(_data, (LiquidationData, DexSwapInput[]));
 
         unchecked {
             // if we overflow on +fee, we can not transfer it anyway
@@ -109,7 +110,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         return _FLASHLOAN_CALLBACK;
     }
 
-    function _execute0x(SwapInput0x[] memory _swapInputs) internal {
+    function _execute0x(DexSwapInput[] memory _swapInputs) internal {
         for (uint256 i; i < _swapInputs.length; i++) {
             fillQuote(_swapInputs[i].sellToken, _swapInputs[i].allowanceTarget, _swapInputs[i].swapCallData);
         }

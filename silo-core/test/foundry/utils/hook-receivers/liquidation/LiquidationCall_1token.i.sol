@@ -5,21 +5,31 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
+import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
+import {DexSwapInput} from "silo-core/contracts/utils/liquidationHelper/DexSwap.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {ILiquidationHelper} from "silo-core/contracts/interfaces/ILiquidationHelper.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {DexSwapMock} from "../../../_mocks/DexSwapMock.sol";
 
 /*
-    forge test -vv --ffi --mc LiquidationCall1TokenTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationCall1TokenTest
 */
 contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
+
+    address payable public constant TOKENS_RECEIVER = payable(address(123));
+
+    DexSwapMock immutable DEXSWAP;
+    LiquidationHelper immutable LIQUIDATION_HELPER;
 
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
@@ -33,6 +43,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     error SenderNotSolventAfterTransfer();
 
     event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
+
+    constructor() {
+        DEXSWAP = new DexSwapMock();
+        LIQUIDATION_HELPER = new LiquidationHelper(makeAddr("nativeToken"), address(DEXSWAP), TOKENS_RECEIVER);
+    }
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -66,6 +81,14 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
         vm.expectRevert(IPartialLiquidation.UnexpectedDebtToken.selector);
         partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, maxDebtToCover, receiveSToken);
+
+        ILiquidationHelper.LiquidationData memory liquidation;
+        liquidation.user = BORROWER;
+        liquidation.hook = partialLiquidation;
+        DexSwapInput[] memory dexSwapInput;
+
+        vm.expectRevert(IPartialLiquidation.UnexpectedDebtToken.selector);
+        LIQUIDATION_HELPER.executeLiquidation(silo0, address(token0), maxDebtToCover, liquidation, dexSwapInput);
     }
 
     /*

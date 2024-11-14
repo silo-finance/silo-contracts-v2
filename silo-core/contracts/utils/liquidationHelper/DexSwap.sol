@@ -5,20 +5,20 @@ import "openzeppelin5/token/ERC20/IERC20.sol";
 
 import "../../lib/RevertLib.sol";
 
+/// @param sellToken The `sellTokenAddress` field from the API response.
+/// @param buyToken The `buyTokenAddress` field from the API response.
+/// @param allowanceTarget The `allowanceTarget` field from the API response.
+/// @param swapCallData The `data` field from the API response.
+struct DexSwapInput {
+    address sellToken;
+    address allowanceTarget;
+    bytes swapCallData;
+}
+
 /// @dev Based on demo contract that swaps its ERC20 balance for another ERC20.
 /// demo source: https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
 contract DexSwap {
     using RevertLib for bytes;
-
-    /// @param sellToken The `sellTokenAddress` field from the API response.
-    /// @param buyToken The `buyTokenAddress` field from the API response.
-    /// @param allowanceTarget The `allowanceTarget` field from the API response.
-    /// @param swapCallData The `data` field from the API response.
-    struct SwapInput0x {
-        address sellToken;
-        address allowanceTarget;
-        bytes swapCallData;
-    }
 
     /// @dev 0x ExchangeProxy address.
     /// See https://docs.0x.org/developer-resources/contract-addresses
