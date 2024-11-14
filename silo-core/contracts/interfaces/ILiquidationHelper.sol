@@ -28,11 +28,17 @@ interface ILiquidationHelper {
         address collateralShareToken;
     }
 
+    /// @param _flashLoanFrom silo from where we can flashloan `_maxDebtToCover` amount to repay debt
+    /// @param _debtAsset address of debt token
+    /// @param _maxDebtToCover maximum amount we want to repay, check `IPartialLiquidation.maxLiquidation()`
+    /// @param _liquidation see desc for `LiquidationData`
+    /// @param _dexSwapInput swap that allow us to go from collateral asse to debt asset, and amount out must be equal
+    /// to fee for flashloan
     function executeLiquidation(
         ISilo _flashLoanFrom,
         address _debtAsset,
         uint256 _maxDebtToCover,
         LiquidationData calldata _liquidation,
-        DexSwapInput[] calldata _swapsInputs0x
+        DexSwapInput[] calldata _dexSwapInput
     ) external returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
 }
