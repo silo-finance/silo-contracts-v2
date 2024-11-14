@@ -46,37 +46,16 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
-    /// @param _liquidationHook partial liquidation hook address
-    /// @param _user silo borrower address
-    /// @param _protectedShareToken address of protected share token of silo with `_user` collateral
     function executeLiquidation(
-        IPartialLiquidation _liquidationHook,
-        address _user,
-        IERC20 _protectedShareToken,
-        IERC20 _collateralShareToken,
-        address _debtAsset,
-        address _collateralAsset,
-        uint256 _maxDebtToCover,
-        bool sTokenRequired,
         ISilo _flashLoanFrom,
+        address _debtAsset,
+        uint256 _maxDebtToCover,
+        LiquidationData calldata _liquidation,
         SwapInput0x[] calldata _swapsInputs0x
     ) external {
         require(_maxDebtToCover != 0, NoDebtToCover());
 
-        _flashLoanFrom.flashLoan(
-            this,
-            _debtAsset,
-            _maxDebtToCover,
-            abi.encode(
-                _liquidationHook,
-                _user,
-                _protectedShareToken,
-                _collateralShareToken,
-                _collateralAsset,
-                sTokenRequired,
-                _swapsInputs0x
-            )
-        );
+        _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
 
         if (_transferDebt) _transfer(_debtAsset, IERC20(_debtAsset).balanceOf(address(this)));
     }
@@ -92,23 +71,20 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         returns (bytes32)
     {
         (
-            IPartialLiquidation liquidationHook,
-            address user,
-            address protectedShareToken,
-            address collateralShareToken,
-            address collateralAsset,
-            bool receiveSToken,
+            LiquidationData memory _liquidation,
             SwapInput0x[] memory _swapsInputs0x
-        ) = abi.decode(_data, (IPartialLiquidation, address, address, address, address, bool, SwapInput0x[]));
+        ) = abi.decode(_data, (LiquidationData, SwapInput0x[]));
 
         unchecked {
             // if we overflow on +fee, we can not transfer it anyway
-            IERC20(_debtAsset).approve(address(liquidationHook), _debtToRepay + _fee);
+            IERC20(_debtAsset).approve(address(_liquidation.hook), _debtToRepay + _fee);
         }
 
         (
             uint256 withdrawCollateral, uint256 repayDebtAssets
-        ) = liquidationHook.liquidationCall(collateralAsset, _debtAsset, user, _debtToRepay, receiveSToken);
+        ) = _liquidation.hook.liquidationCall(
+            _liquidation.collateralAsset, _debtAsset, _liquidation.user, _debtToRepay, _liquidation.receiveSToken
+        );
 
         if (repayDebtAssets < _debtToRepay) {
             // if we repay less, then for sure user was insolvent, but maybe price changed?
@@ -119,14 +95,14 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         _execute0x(_swapsInputs0x);
 
         if (withdrawCollateral != 0) {
-            if (receiveSToken) {
-                uint256 balance = IERC20(collateralShareToken).balanceOf(address(this));
-                _transfer(collateralShareToken, balance);
+            if (_liquidation.receiveSToken) {
+                uint256 balance = IERC20(_liquidation.collateralShareToken).balanceOf(address(this));
+                _transfer(_liquidation.collateralShareToken, balance);
 
-                balance = IERC20(protectedShareToken).balanceOf(address(this));
-                _transfer(protectedShareToken, balance);
+                balance = IERC20(_liquidation.protectedShareToken).balanceOf(address(this));
+                _transfer(_liquidation.protectedShareToken, balance);
             } else {
-                _transfer(collateralAsset, withdrawCollateral);
+                _transfer(_liquidation.collateralAsset, withdrawCollateral);
             }
         }
 
