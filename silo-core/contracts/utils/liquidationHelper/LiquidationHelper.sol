@@ -81,10 +81,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             DexSwapInput[] memory _swapsInputs0x
         ) = abi.decode(_data, (LiquidationData, DexSwapInput[]));
 
-        unchecked {
-            // if we overflow on +fee, we can not transfer it anyway
-            IERC20(_debtAsset).approve(address(_liquidation.hook), _debtToRepay + _fee);
-        }
+        IERC20(_debtAsset).approve(address(_liquidation.hook), _debtToRepay);
 
         (
             _withdrawCollateral, _repayDebtAssets
@@ -97,7 +94,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _transferDebt = true;
         }
 
-        // swap collateral to repay flashloan fee
+        // swap collateral to repay flashloan + fee
         _execute0x(_swapsInputs0x);
 
         if (_withdrawCollateral != 0) {
@@ -111,6 +108,11 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                 _transfer(_liquidation.collateralAsset, _withdrawCollateral);
             }
         }
+
+        // we approve msg.sender and this is open method, but this contract do not have its own tokens
+        // so we first need to get tokens to do repay, then we get collaterals and profit is transfer to tokens receiver
+        // so there should be no way to abuse this approval TODO, right?
+        IERC20(_debtAsset).approve(msg.sender, _debtToRepay + _fee);
 
         return _FLASHLOAN_CALLBACK;
     }

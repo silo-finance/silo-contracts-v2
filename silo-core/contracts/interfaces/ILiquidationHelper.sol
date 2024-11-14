@@ -33,7 +33,7 @@ interface ILiquidationHelper {
     /// @param _maxDebtToCover maximum amount we want to repay, check `IPartialLiquidation.maxLiquidation()`
     /// @param _liquidation see desc for `LiquidationData`
     /// @param _dexSwapInput swap that allow us to go from collateral asse to debt asset, and amount out must be equal
-    /// to fee for flashloan
+    /// to `_maxDebtToCover` + fee for flashloan
     function executeLiquidation(
         ISilo _flashLoanFrom,
         address _debtAsset,

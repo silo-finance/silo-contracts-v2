@@ -17,59 +17,116 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {DexSwapMock} from "../../../_mocks/DexSwapMock.sol";
-import {LiquidationCall1TokenTest} from "./LiquidationCall_1token.i.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
     FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper1TokenTest
 */
-contract LiquidationHelper1TokenTest is LiquidationCall1TokenTest {
+contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     address payable public constant TOKENS_RECEIVER = payable(address(123));
 
     DexSwapMock immutable DEXSWAP;
     LiquidationHelper immutable LIQUIDATION_HELPER;
 
+    using SiloLensLib for ISilo;
+
+    address constant BORROWER = address(0x123);
+    uint256 constant COLLATERAL = 10e18;
+    uint256 constant COLLATERAL_SHARES = COLLATERAL * SiloMathLib._DECIMALS_OFFSET_POW;
+    uint256 constant DEBT = 7.5e18;
+    bool constant SAME_TOKEN = true;
+
+    ISiloConfig siloConfig;
+
+    event LiquidationCall(address indexed liquidator, bool receiveSToken);
+    error SenderNotSolventAfterTransfer();
+
     ILiquidationHelper.LiquidationData liquidationData;
     LiquidationHelper.DexSwapInput[] dexSwapInput;
+
+    ISilo _flashLoanFrom;
+    address _debtAsset;
+    uint256 _maxDebtToCover;
 
     constructor() {
         DEXSWAP = new DexSwapMock();
         LIQUIDATION_HELPER = new LiquidationHelper(makeAddr("nativeToken"), address(DEXSWAP), TOKENS_RECEIVER);
     }
 
-    function setUp() public override {
-        super.setUp();
+    function setUp() public {
+        siloConfig = _setUpLocalFixture();
+
+        vm.prank(BORROWER);
+        token0.mint(BORROWER, COLLATERAL);
+
+        vm.prank(BORROWER);
+        token0.approve(address(silo0), COLLATERAL);
+
+        vm.prank(BORROWER);
+        silo0.deposit(COLLATERAL, BORROWER);
+
+        vm.prank(BORROWER);
+        silo0.borrowSameAsset(DEBT, BORROWER, BORROWER);
+
+        assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
+        assertEq(token0.balanceOf(address(silo0)), COLLATERAL - DEBT, "silo0 has only 2.5 debt token (10 - 7.5)");
+
+        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
+
+        assertEq(silo0Config.liquidationFee, 0.05e18, "liquidationFee1");
 
         liquidationData.user = BORROWER;
         liquidationData.hook = partialLiquidation;
         liquidationData.collateralAsset = address(token0);
+
+        _flashLoanFrom = silo0;
+        _debtAsset = address(token0);
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_UnexpectedDebtToken
+    forge test -vv --ffi --mt test_executeLiquidation_1token
     */
-    function test_liquidationCall_UnexpectedDebtToken_1token() public override {
-        uint256 maxDebtToCover = 1;
-        bool receiveSToken;
+    function test_executeLiquidation_1token() public {
+        vm.warp(100 days);
 
-        vm.expectRevert(ISilo.Unsupported.selector);
-        _executeLiquidation(address(token0), address(token1), BORROWER, maxDebtToCover, receiveSToken);
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
+        ) = partialLiquidation.maxLiquidation(BORROWER);
+
+        vm.assume(debtToRepay != 0);
+        token0.mint(address(silo0), debtToRepay); // for flashloan, so we do not change the silo state
+
+        // this is to mock swap
+        token0.mint(address(LIQUIDATION_HELPER), debtToRepay + silo0.flashFee(address(token0), debtToRepay));
+
+        _executeLiquidation(debtToRepay);
 
         _afterEach();
     }
 
     function _executeLiquidation(
-        address _collateralAsset,
-        address _debtAsset,
-        address /* _user */,
-        uint256 _maxDebtToCover,
-        bool _receiveSToken
-    ) internal override returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
-        return LIQUIDATION_HELPER.executeLiquidation(silo0, _debtAsset, _maxDebtToCover, liquidationData, dexSwapInput);
+        uint256 _maxDebtToCover
+    ) internal returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
+        return LIQUIDATION_HELPER.executeLiquidation(_flashLoanFrom, _debtAsset, _maxDebtToCover, liquidationData, dexSwapInput);
     }
 
-    function _afterEach() internal view override {
-        super._afterEach();
-
+    function _afterEach() internal view {
         _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
+    }
+
+    function _assertContractDoNotHaveTokens(address _contract) internal view {
+        assertEq(token0.balanceOf(_contract), 0);
+        assertEq(token1.balanceOf(_contract), 0);
+
+        ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
+
+        assertEq(IShareToken(silo0Config.collateralShareToken).balanceOf(_contract), 0);
+        assertEq(IShareToken(silo0Config.protectedShareToken).balanceOf(_contract), 0);
+        assertEq(IShareToken(silo0Config.debtShareToken).balanceOf(_contract), 0);
+
+        assertEq(IShareToken(silo1Config.collateralShareToken).balanceOf(_contract), 0);
+        assertEq(IShareToken(silo1Config.protectedShareToken).balanceOf(_contract), 0);
+        assertEq(IShareToken(silo1Config.debtShareToken).balanceOf(_contract), 0);
     }
 }
