@@ -105,7 +105,8 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
 
         _executeLiquidation(debtToRepay);
 
-        _afterEach();
+        _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
+        _assertReceiverNotHaveSTokens();
     }
 
     /*
@@ -130,18 +131,13 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         _executeLiquidation(debtToRepay);
 
         _assertReceiverHasSTokens();
-
-        _afterEach();
+        _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
     }
 
     function _executeLiquidation(
         uint256 _maxDebtToCover
     ) internal returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
         return LIQUIDATION_HELPER.executeLiquidation(_flashLoanFrom, _debtAsset, _maxDebtToCover, liquidationData, dexSwapInput);
-    }
-
-    function _afterEach() internal view {
-        _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
     }
 
     function _assertContractDoNotHaveTokens(address _contract) internal view {
@@ -167,5 +163,14 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
 
         assertGt(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has sTokens");
+    }
+
+    function _assertReceiverNotHaveSTokens() internal view {
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
+
+        uint256 pBalance = IERC20(protectedShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
+        uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
+
+        assertEq(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has NO sTokens");
     }
 }
