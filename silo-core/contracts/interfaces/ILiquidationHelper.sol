@@ -10,10 +10,10 @@ interface ILiquidationHelper {
     /// @param _protectedShareToken address of protected share token of silo with `_user` collateral
     struct LiquidationData {
         IPartialLiquidation hook;
+        address collateralAsset;
         address user;
+        bool receiveSToken;
         address protectedShareToken;
         address collateralShareToken;
-        address collateralAsset;
-        bool receiveSToken;
     }
 }

@@ -39,6 +39,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
+    ILiquidationHelper.LiquidationData liquidationData;
+    DexSwapInput[] dexSwapInput;
+
     event LiquidationCall(address indexed liquidator, bool receiveSToken);
     error SenderNotSolventAfterTransfer();
 
@@ -70,6 +73,10 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(address(silo0));
 
         assertEq(silo0Config.liquidationFee, 0.05e18, "liquidationFee1");
+
+        liquidationData.user = BORROWER;
+        liquidationData.hook = partialLiquidation;
+        liquidationData.collateralAsset = address(token0);
     }
 
     /*
@@ -78,17 +85,13 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     function test_liquidationCall_UnexpectedDebtToken_1token() public {
         uint256 maxDebtToCover = 1;
         bool receiveSToken;
+        address debtAsset = address(token1);
 
         vm.expectRevert(IPartialLiquidation.UnexpectedDebtToken.selector);
-        partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, maxDebtToCover, receiveSToken);
+        partialLiquidation.liquidationCall(address(token0), debtAsset, BORROWER, maxDebtToCover, receiveSToken);
 
-        ILiquidationHelper.LiquidationData memory liquidation;
-        liquidation.user = BORROWER;
-        liquidation.hook = partialLiquidation;
-        DexSwapInput[] memory dexSwapInput;
-
-        vm.expectRevert(IPartialLiquidation.UnexpectedDebtToken.selector);
-        LIQUIDATION_HELPER.executeLiquidation(silo0, address(token0), maxDebtToCover, liquidation, dexSwapInput);
+        vm.expectRevert(ISilo.Unsupported.selector);
+        LIQUIDATION_HELPER.executeLiquidation(silo0, debtAsset, maxDebtToCover, liquidationData, dexSwapInput);
     }
 
     /*
