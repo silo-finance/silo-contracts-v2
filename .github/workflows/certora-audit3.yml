@@ -7,11 +7,7 @@ on:
   pull_request:
     branches:
       - 'certora-audit-3'
-  push:
-    branches:
-      - 'certora-audit-3'
   workflow_dispatch:
-
 
 jobs:
   verify:
@@ -81,22 +77,6 @@ jobs:
           # For this to work, you must set your CERTORAKEY secret on the GitHub
           # website (settings > secrets > actions > new repository secret)
           CERTORAKEY: ${{ secrets.CERTORAKEY }}
-
-      # The following two steps save the output json as a GitHub artifact.
-      # This can be useful for automation that collects the output.
-      - name: Download output json
-        if: always()
-        run: >
-          outputLink=$(sed 's/zipOutput/output/g' .zip-output-url.txt | sed 's/?/\/output.json?/g');
-          curl -L -b "certoraKey=$CERTORAKEY;" ${outputLink} --output output.json || true;
-          touch output.json;
-
-      - name: Archive output json
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: output for ${{ matrix.params.name }}
-          path: output.json
 
     strategy:
       fail-fast: false
