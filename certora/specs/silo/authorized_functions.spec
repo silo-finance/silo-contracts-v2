@@ -1,6 +1,6 @@
 
 /**
-@title Authorized function:
+@title Authorized functions:
 list and verify functions that can be executed only by other silo contracts 
 */
 
