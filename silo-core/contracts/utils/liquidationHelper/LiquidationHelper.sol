@@ -19,8 +19,7 @@ interface ISiloConfigHelper {
     function siloConfig() external view returns (ISiloConfig);
 }
 
-/// @notice LiquidationHelper IS NOT PART OF THE PROTOCOL. SILO CREATED THIS TOOL, MOSTLY AS AN EXAMPLE.
-/// see https://github.com/silo-finance/liquidation#readme for details how liquidation process should look like
+/// @notice LiquidationHelper IS NOT PART OF THE PROTOCOL.
 contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap {
     using Address for address payable;
 
@@ -38,6 +37,9 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     error NoDebtToCover();
     error STokenNotSupported();
 
+    /// @param _nativeToken address of wrapped native blockchain token eg. WETH on Ethereum
+    /// @param _exchangeProxy exchange address, where to send swap data on liquidation
+    /// @param _tokensReceiver all leftover tokens (debt and collateral) will be send to this address after liquidation
     constructor (
         address _nativeToken,
         address _exchangeProxy,
@@ -60,6 +62,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         require(_maxDebtToCover != 0, NoDebtToCover());
 
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
+        IERC20(_debtAsset).approve(address(_flashLoanFrom), 0);
 
         withdrawCollateral = _withdrawCollateral;
         repayDebtAssets = _repayDebtAssets;
@@ -68,7 +71,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     function onFlashLoan(
         address /* _initiator */,
         address _debtAsset,
-        uint256 _debtToRepay,
+        uint256 _maxDebtToCover,
         uint256 _fee,
         bytes calldata _data
     )
@@ -77,26 +80,28 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     {
         (
             LiquidationData memory _liquidation,
-            DexSwapInput[] memory _swapsInputs0x
+            DexSwapInput[] memory _swapInputs
         ) = abi.decode(_data, (LiquidationData, DexSwapInput[]));
 
-        IERC20(_debtAsset).approve(address(_liquidation.hook), _debtToRepay);
+        IERC20(_debtAsset).approve(address(_liquidation.hook), _maxDebtToCover);
 
         bool receiveSToken;
 
         (
             _withdrawCollateral, _repayDebtAssets
         ) = _liquidation.hook.liquidationCall(
-            _liquidation.collateralAsset, _debtAsset, _liquidation.user, _debtToRepay, receiveSToken
+            _liquidation.collateralAsset, _debtAsset, _liquidation.user, _maxDebtToCover, receiveSToken
         );
 
         IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
 
-        bool sameAsset = _liquidation.collateralAsset == _debtAsset;
-
-        if (!sameAsset) {
+        if (_liquidation.collateralAsset == _debtAsset) {
+            uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
+            // bad debt is not supported, we will get underflow on bad debt
+            _transferToReceiver(_liquidation.collateralAsset, balance - (_maxDebtToCover + _fee));
+        } else {
             uint256 debtBalance = IERC20(_debtAsset).balanceOf(address(this));
-            uint256 loanWithFee = _debtToRepay + _fee;
+            uint256 loanWithFee = _maxDebtToCover + _fee;
 
             if (loanWithFee < debtBalance) {
                 unchecked {
@@ -104,33 +109,23 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                     _transferToReceiver(_debtAsset, debtBalance - loanWithFee);
                 }
             }
-        }
 
-        uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
-
-        if (sameAsset) {
-            // bad debt is not supported, we will get underflow on bad debt
-            _transferToReceiver(_liquidation.collateralAsset, balance - (_debtToRepay + _fee));
-        } else {
-            _execute0x(_swapsInputs0x);
+            _executeSwap(_swapInputs); // part of collateral => _maxDebtToCover + _fee
+            uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
             _transferToReceiver(_liquidation.collateralAsset, balance);
         }
 
-        // we approve msg.sender and this is open method, but this contract do not have its own tokens
-        // so we first need to get tokens to do repay, then we get collaterals and profit is transfer to tokens receiver
-        // so there should be no way to abuse this approval TODO, right?
-        IERC20(_debtAsset).approve(msg.sender, _debtToRepay + _fee);
+        IERC20(_debtAsset).approve(msg.sender, _maxDebtToCover + _fee);
 
         return _FLASHLOAN_CALLBACK;
     }
 
-    function _execute0x(DexSwapInput[] memory _swapInputs) internal {
+    function _executeSwap(DexSwapInput[] memory _swapInputs) internal {
         for (uint256 i; i < _swapInputs.length; i++) {
             fillQuote(_swapInputs[i].sellToken, _swapInputs[i].allowanceTarget, _swapInputs[i].swapCallData);
         }
     }
 
-    /// @notice We assume that quoteToken is wrapped native token
     function _transferToReceiver(address _asset, uint256 _amount) internal {
         if (_amount == 0) return;
 
