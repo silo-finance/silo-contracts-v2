@@ -22,7 +22,6 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
     uint256 constant DEBT = 7.5e18;
-    bool constant SAME_TOKEN = true;
 
     LiquidationHelper immutable LIQUIDATION_HELPER;
 
@@ -39,20 +38,26 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         LIQUIDATION_HELPER = new LiquidationHelper(makeAddr("nativeToken"), makeAddr("DEXSWAP"), TOKENS_RECEIVER);
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         vm.label(BORROWER, "BORROWER");
+        vm.label(TOKENS_RECEIVER, "TOKENS_RECEIVER");
+
         siloConfig = _setUpLocalFixture();
 
-        _depositCollateral(COLLATERAL, BORROWER, SAME_ASSET);
-        _borrow(DEBT, BORROWER, SAME_ASSET);
+        _depositCollateral(COLLATERAL, BORROWER, _sameAsset());
+        _borrow(DEBT, BORROWER, _sameAsset());
 
-        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
+        if (!_sameAsset()) {
+            _depositForBorrow(DEBT * 2, makeAddr("depositor"));
+        }
 
-        assertEq(silo1Config.liquidationFee, 0.025e18, "liquidationFee1");
+        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(_sameAsset() ? silo1 : silo0));
+
+        assertGt(silo1Config.liquidationFee, 0, "liquidationFee");
 
         liquidationData.user = BORROWER;
         liquidationData.hook = partialLiquidation;
-        liquidationData.collateralAsset = address(token1);
+        liquidationData.collateralAsset = _sameAsset() ? address(token1) : address(token0);
 
         (
             liquidationData.protectedShareToken, liquidationData.collateralShareToken,
@@ -63,9 +68,9 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     }
 
     /*
-    forge test --ffi --mt test_executeLiquidation_1_token -vvv
+    forge test --ffi --mt test_executeLiquidation_token -vvv
     */
-    function test_executeLiquidation_1_token(uint32 _addTimestamp) public {
+    function test_executeLiquidation_token(uint32 _addTimestamp) public {
         vm.assume(_addTimestamp < 365 days);
 
         vm.warp(block.timestamp + _addTimestamp);
@@ -86,9 +91,9 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
     }
 
     /*
-    forge test --ffi --mt test_executeLiquidation_1_sToken -vvv
+    forge test --ffi --mt test_executeLiquidation_sToken -vvv
     */
-    function test_executeLiquidation_1_sToken(uint32 _addTimestamp) public {
+    function test_executeLiquidation_sToken(uint32 _addTimestamp) public {
         vm.assume(_addTimestamp < 365 days);
 
         vm.warp(block.timestamp + _addTimestamp);
@@ -155,5 +160,9 @@ contract LiquidationHelper1TokenTest is SiloLittleHelper, Test  {
         uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
 
         assertEq(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has NO sTokens");
+    }
+
+    function _sameAsset() internal pure virtual returns (bool) {
+        return true;
     }
 }
