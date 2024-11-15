@@ -69,7 +69,7 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
 
         _executeLiquidation(debtToRepay);
 
-        assertGe(
+        assertEq(
             token1.balanceOf(TOKENS_RECEIVER),
             collateralToLiquidate - (debtToRepay + flashFee),
             "expect full collateral after liquidation, because we mock swap"
@@ -79,31 +79,5 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
         _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
         _assertReceiverNotHaveSTokens(silo0);
         _assertReceiverNotHaveSTokens(silo1);
-    }
-
-    /*
-    forge test --ffi --mt test_executeLiquidation_1_sToken -vvv
-    */
-    function test_executeLiquidation_1_sToken(uint32 _addTimestamp) public {
-        vm.assume(_addTimestamp < 365 days);
-
-        vm.warp(block.timestamp + _addTimestamp);
-
-        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
-
-        vm.assume(debtToRepay != 0);
-        liquidationData.receiveSToken = true;
-
-        // for flashloan, so we do not change the silo state
-        token1.mint(address(silo1), debtToRepay);
-
-        // this is to mock swap
-        token1.mint(address(LIQUIDATION_HELPER), debtToRepay + silo1.flashFee(address(token1), debtToRepay));
-
-        _executeLiquidation(debtToRepay);
-
-        _assertReceiverNotHaveSTokens(silo0);
-        _assertReceiverHasSTokens(silo1);
-        _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
     }
 }

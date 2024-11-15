@@ -48,6 +48,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
+    /// @dev for now we does not support liquidation with sTokens
+    /// @dev for non profitable liquidation we will revert
     function executeLiquidation(
         ISilo _flashLoanFrom,
         address _debtAsset,
@@ -73,7 +75,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         external
         returns (bytes32)
     {
-        // TODO verify input OR use transient? if we got tokens, then nothing to worry about?
         (
             LiquidationData memory _liquidation,
             DexSwapInput[] memory _swapsInputs0x
@@ -81,10 +82,12 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         IERC20(_debtAsset).approve(address(_liquidation.hook), _debtToRepay);
 
+        bool receiveSToken;
+
         (
             _withdrawCollateral, _repayDebtAssets
         ) = _liquidation.hook.liquidationCall(
-            _liquidation.collateralAsset, _debtAsset, _liquidation.user, _debtToRepay, _liquidation.receiveSToken
+            _liquidation.collateralAsset, _debtAsset, _liquidation.user, _debtToRepay, receiveSToken
         );
 
         IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
@@ -103,20 +106,14 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             }
         }
 
-        if (_withdrawCollateral != 0) {
-            if (_liquidation.receiveSToken) {
-                revert STokenNotSupported();
-            } else {
-                uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
+        uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
 
-                if (sameAsset) {
-                    // bad debt is not supported, we will get underflow on bad debt
-                    _transferToReceiver(_liquidation.collateralAsset, balance - (_debtToRepay + _fee));
-                } else {
-                    _execute0x(_swapsInputs0x);
-                    _transferToReceiver(_liquidation.collateralAsset, balance);
-                }
-            }
+        if (sameAsset) {
+            // bad debt is not supported, we will get underflow on bad debt
+            _transferToReceiver(_liquidation.collateralAsset, balance - (_debtToRepay + _fee));
+        } else {
+            _execute0x(_swapsInputs0x);
+            _transferToReceiver(_liquidation.collateralAsset, balance);
         }
 
         // we approve msg.sender and this is open method, but this contract do not have its own tokens

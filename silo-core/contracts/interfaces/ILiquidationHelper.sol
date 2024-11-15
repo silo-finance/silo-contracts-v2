@@ -23,7 +23,6 @@ interface ILiquidationHelper {
         IPartialLiquidation hook;
         address collateralAsset;
         address user;
-        bool receiveSToken;
         address protectedShareToken;
         address collateralShareToken;
     }
