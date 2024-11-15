@@ -18,9 +18,9 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
         _depositCollateral(COLLATERAL, BORROWER, SAME_ASSET);
         _borrow(DEBT, BORROWER, SAME_ASSET);
 
-        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo1));
 
-        assertEq(silo1Config.liquidationFee, 0.025e18, "liquidationFee1");
+        assertEq(collateralConfig.liquidationFee, 0.025e18, "liquidationFee");
 
         liquidationData.user = BORROWER;
         liquidationData.hook = partialLiquidation;
@@ -45,7 +45,6 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         vm.assume(debtToRepay != 0);
-        vm.assume(collateralToLiquidate >= debtToRepay); // no bad debt
 
         // for flashloan, so we do not change the silo state and be able to provide tokens for repay
         token1.mint(address(silo1), debtToRepay);
@@ -63,12 +62,12 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
         // "swap mock", so we can repay flashloan
         token1.mint(address(LIQUIDATION_HELPER), debtToRepay + flashFee);
 
-        assertEq(token1.balanceOf(address(this)), 0, "no token1 before liquidation");
+        assertEq(token1.balanceOf(TOKENS_RECEIVER), 0, "no token1 before liquidation");
 
         _executeLiquidation(debtToRepay);
 
         assertEq(
-            token1.balanceOf(TOKENS_RECEIVER) - 1,
+            token1.balanceOf(TOKENS_RECEIVER) - 1, // liquidation underestimate
             collateralToLiquidate,
             "expect full collateral after liquidation, because we mock swap"
             // TODO why this is not eq, but we got 1wei diff?

@@ -8,20 +8,20 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {LiquidationHelperCommon} from "./LiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper2TokensTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper1TokenTest
 */
 contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     function setUp() public {
         vm.label(BORROWER, "BORROWER");
         siloConfig = _setUpLocalFixture();
 
-        _depositForBorrow(DEBT, makeAddr("depositor"));
+        _depositForBorrow(DEBT + COLLATERAL, makeAddr("depositor"));
         _depositCollateral(COLLATERAL, BORROWER, TWO_ASSETS);
         _borrow(DEBT, BORROWER, TWO_ASSETS);
 
-        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(address(silo1));
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
 
-        assertEq(silo1Config.liquidationFee, 0.025e18, "liquidationFee1");
+        assertEq(collateralConfig.liquidationFee, 0.05e18, "liquidationFee");
 
         liquidationData.user = BORROWER;
         liquidationData.hook = partialLiquidation;
@@ -29,7 +29,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
 
         (
             liquidationData.protectedShareToken, liquidationData.collateralShareToken,
-        ) = siloConfig.getShareTokens(address(silo1));
+        ) = siloConfig.getShareTokens(address(silo0));
 
         _flashLoanFrom = silo1;
         _debtAsset = address(token1);
@@ -38,21 +38,35 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     /*
     forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
-    function test_executeLiquidation_2_tokens(uint32 _addTimestamp) public {
-        vm.assume(_addTimestamp < 365 days);
-
+    function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
         vm.warp(block.timestamp + _addTimestamp);
 
-        (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
+        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint("          debtToRepay", debtToRepay, 18);
         vm.assume(debtToRepay != 0);
-        // for flashloan, so we do not change the silo state
-        token1.mint(address(silo1), debtToRepay);
 
-        // this is to mock swap
-        token1.mint(address(LIQUIDATION_HELPER), debtToRepay + silo1.flashFee(address(token1), debtToRepay));
+        // mock the swap behaviour by providing tokens to cover fee, collateral is the same token, and we have price 1:1
+        // so we should miss only fee
+        uint256 flashFee = silo1.flashFee(address(token1), debtToRepay);
+        emit log_named_decimal_uint("             flashFee", flashFee, 18);
+
+        // we reject cases with invalid config or not profitable
+        vm.assume(collateralToLiquidate >= debtToRepay + flashFee);
+
+        // "swap mock", so we can repay flashloan
+        token1.mint(address(LIQUIDATION_HELPER), debtToRepay + flashFee);
+
+        assertEq(token0.balanceOf(TOKENS_RECEIVER), 0, "no collateral before liquidation");
 
         _executeLiquidation(debtToRepay);
+
+        assertEq(
+            token0.balanceOf(TOKENS_RECEIVER) - 2, // liquidation underestimate
+            collateralToLiquidate,
+            "expect full collateral after liquidation, because we mock swap"
+        );
 
         _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
         _assertReceiverNotHaveSTokens(silo0);
