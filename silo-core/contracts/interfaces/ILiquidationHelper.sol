@@ -23,8 +23,6 @@ interface ILiquidationHelper {
         IPartialLiquidation hook;
         address collateralAsset;
         address user;
-        address protectedShareToken;
-        address collateralShareToken;
     }
 
     /// @param _flashLoanFrom silo from where we can flashloan `_maxDebtToCover` amount to repay debt

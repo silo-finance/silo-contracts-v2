@@ -29,10 +29,6 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
         liquidationData.hook = partialLiquidation;
         liquidationData.collateralAsset = address(token0);
 
-        (
-            liquidationData.protectedShareToken, liquidationData.collateralShareToken,
-        ) = siloConfig.getShareTokens(address(silo0));
-
         _flashLoanFrom = silo1;
         _debtAsset = address(token1);
     }
