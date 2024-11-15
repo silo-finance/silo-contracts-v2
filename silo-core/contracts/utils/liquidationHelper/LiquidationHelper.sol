@@ -32,11 +32,11 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
     address public immutable NATIVE_TOKEN;
 
-    bool private transient _transferDebt;
     uint256 private transient _withdrawCollateral;
     uint256 private transient _repayDebtAssets;
 
     error NoDebtToCover();
+    error STokenNotSupported();
 
     constructor (
         address _nativeToken,
@@ -58,8 +58,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         require(_maxDebtToCover != 0, NoDebtToCover());
 
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
-
-        if (_transferDebt) _transfer(_debtAsset, IERC20(_debtAsset).balanceOf(address(this)));
 
         withdrawCollateral = _withdrawCollateral;
         repayDebtAssets = _repayDebtAssets;
@@ -89,23 +87,35 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _liquidation.collateralAsset, _debtAsset, _liquidation.user, _debtToRepay, _liquidation.receiveSToken
         );
 
-        if (_repayDebtAssets < _debtToRepay) {
-            // if we repay less, then for sure user was insolvent, but maybe price changed?
-            _transferDebt = true;
-        }
+        IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
 
-        // swap collateral to repay flashloan + fee
-        _execute0x(_swapsInputs0x);
+        bool sameAsset = _liquidation.collateralAsset == _debtAsset;
+
+        if (!sameAsset) {
+            uint256 debtBalance = IERC20(_debtAsset).balanceOf(address(this));
+            uint256 loanWithFee = _debtToRepay + _fee;
+
+            if (loanWithFee < debtBalance) {
+                unchecked {
+                    // safe because of `if (loanWithFee < debtBalance)`
+                    _transferToReceiver(_debtAsset, debtBalance - loanWithFee);
+                }
+            }
+        }
 
         if (_withdrawCollateral != 0) {
             if (_liquidation.receiveSToken) {
-                uint256 balance = IERC20(_liquidation.collateralShareToken).balanceOf(address(this));
-                _transfer(_liquidation.collateralShareToken, balance);
-
-                balance = IERC20(_liquidation.protectedShareToken).balanceOf(address(this));
-                _transfer(_liquidation.protectedShareToken, balance);
+                revert STokenNotSupported();
             } else {
-                _transfer(_liquidation.collateralAsset, _withdrawCollateral);
+                uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
+
+                if (sameAsset) {
+                    // bad debt is not supported, we will get underflow on bad debt
+                    _transferToReceiver(_liquidation.collateralAsset, balance - (_debtToRepay + _fee));
+                } else {
+                    _execute0x(_swapsInputs0x);
+                    _transferToReceiver(_liquidation.collateralAsset, balance);
+                }
             }
         }
 
@@ -124,7 +134,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     }
 
     /// @notice We assume that quoteToken is wrapped native token
-    function _transfer(address _asset, uint256 _amount) internal {
+    function _transferToReceiver(address _asset, uint256 _amount) internal {
         if (_amount == 0) return;
 
         if (_asset == NATIVE_TOKEN) _transferNative(_amount);
