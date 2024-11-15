@@ -11,6 +11,8 @@ import {LiquidationHelperCommon} from "./LiquidationHelperCommon.sol";
     FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper1TokenTest
 */
 contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
+    uint256 constant LIQUIDATION_UNDERESTIMATION = 2;
+
     function setUp() public {
         vm.label(BORROWER, "BORROWER");
         siloConfig = _setUpLocalFixture();
@@ -47,8 +49,6 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
         emit log_named_decimal_uint("          debtToRepay", debtToRepay, 18);
         vm.assume(debtToRepay != 0);
 
-        // mock the swap behaviour by providing tokens to cover fee, collateral is the same token, and we have price 1:1
-        // so we should miss only fee
         uint256 flashFee = silo1.flashFee(address(token1), debtToRepay);
         emit log_named_decimal_uint("             flashFee", flashFee, 18);
 
@@ -60,10 +60,18 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
 
         assertEq(token0.balanceOf(TOKENS_RECEIVER), 0, "no collateral before liquidation");
 
-        _executeLiquidation(debtToRepay);
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(debtToRepay);
 
         assertEq(
-            token0.balanceOf(TOKENS_RECEIVER) - 2, // liquidation underestimate
+            collateralToLiquidate,
+            withdrawCollateral - LIQUIDATION_UNDERESTIMATION,
+            "collateralToLiquidate == withdrawCollateral"
+        );
+
+        assertEq(debtToRepay, repayDebtAssets, "debtToRepay == repayDebtAssets");
+
+        assertEq(
+            token0.balanceOf(TOKENS_RECEIVER) - LIQUIDATION_UNDERESTIMATION,
             collateralToLiquidate,
             "expect full collateral after liquidation, because we mock swap"
         );

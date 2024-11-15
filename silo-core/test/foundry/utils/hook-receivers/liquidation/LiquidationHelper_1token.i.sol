@@ -11,6 +11,8 @@ import {LiquidationHelperCommon} from "./LiquidationHelperCommon.sol";
     FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper1TokenTest
 */
 contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
+    uint256 constant LIQUIDATION_UNDERESTIMATION = 1;
+
     function setUp() public {
         vm.label(BORROWER, "BORROWER");
         siloConfig = _setUpLocalFixture();
@@ -49,8 +51,6 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
         // for flashloan, so we do not change the silo state and be able to provide tokens for repay
         token1.mint(address(silo1), debtToRepay);
 
-        // mock the swap behaviour by providing tokens to cover fee, collateral is the same token, and we have price 1:1
-        // so we should miss only fee
         uint256 flashFee = silo1.flashFee(address(token1), debtToRepay);
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("          debtToRepay", debtToRepay, 18);
@@ -64,13 +64,20 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
 
         assertEq(token1.balanceOf(TOKENS_RECEIVER), 0, "no token1 before liquidation");
 
-        _executeLiquidation(debtToRepay);
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = _executeLiquidation(debtToRepay);
 
         assertEq(
-            token1.balanceOf(TOKENS_RECEIVER) - 1, // liquidation underestimate
+            collateralToLiquidate,
+            withdrawCollateral - LIQUIDATION_UNDERESTIMATION,
+            "collateralToLiquidate == withdrawCollateral"
+        );
+
+        assertEq(debtToRepay, repayDebtAssets, "debtToRepay == repayDebtAssets");
+
+        assertEq(
+            token1.balanceOf(TOKENS_RECEIVER) - LIQUIDATION_UNDERESTIMATION,
             collateralToLiquidate,
             "expect full collateral after liquidation, because we mock swap"
-            // TODO why this is not eq, but we got 1wei diff?
         );
 
         _assertContractDoNotHaveTokens(address(LIQUIDATION_HELPER));
