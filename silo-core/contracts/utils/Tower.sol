@@ -8,27 +8,15 @@ import "openzeppelin5/access/Ownable.sol";
 contract Tower is Ownable {
     mapping(bytes32 => address) private _coordinates;
 
-    error AddressZero();
-    error KeyIsTaken();
-    error EmptyCoordinates();
-
     event NewCoordinates(string key, address indexed newContract);
     event UpdateCoordinates(string key, address indexed newContract);
     event RemovedCoordinates(string key);
 
+    error AddressZero();
+    error KeyIsTaken();
+    error EmptyCoordinates();
+
     constructor() Ownable(msg.sender) {}
-
-    /// @param _key string key
-    /// @return address coordinates for the `_key`
-    function coordinates(string calldata _key) external view virtual returns (address) {
-        return _coordinates[makeKey(_key)];
-    }
-
-    /// @param _key raw bytes32 key
-    /// @return address coordinates for the raw `_key`
-    function rawCoordinates(bytes32 _key) external view virtual returns (address) {
-        return _coordinates[_key];
-    }
 
     /// @dev Registering new contract
     /// @param _key key under which contract will be stored
@@ -62,6 +50,18 @@ contract Tower is Ownable {
 
         _coordinates[key] = _contract;
         emit UpdateCoordinates(_key, _contract);
+    }
+
+    /// @param _key string key
+    /// @return address coordinates for the `_key`
+    function coordinates(string calldata _key) external view virtual returns (address) {
+        return _coordinates[makeKey(_key)];
+    }
+
+    /// @param _key raw bytes32 key
+    /// @return address coordinates for the raw `_key`
+    function rawCoordinates(bytes32 _key) external view virtual returns (address) {
+        return _coordinates[_key];
     }
 
     /// @dev generating mapping key based on string
