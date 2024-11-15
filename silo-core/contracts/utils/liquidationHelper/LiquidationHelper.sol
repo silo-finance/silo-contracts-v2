@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IERC3156FlashBorrower} from "../../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";

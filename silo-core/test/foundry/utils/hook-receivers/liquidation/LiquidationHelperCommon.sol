@@ -11,7 +11,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILiquidationHelper} from "silo-core/contracts/interfaces/ILiquidationHelper.sol";
 
-import {DexSwapMock} from "../../../_mocks/DexSwapMock.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
@@ -45,42 +44,34 @@ abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
         );
     }
 
-    function _assertContractDoNotHaveTokens(address _contract) internal view {
-        assertEq(token0.balanceOf(_contract), 0, "token0.balanceOf");
-        assertEq(token1.balanceOf(_contract), 0, "token1.balanceOf");
+    function _assertAddressDoNotHaveTokens(address _address) internal view {
+        assertEq(token0.balanceOf(_address), 0, "token0.balanceOf");
+        assertEq(token1.balanceOf(_address), 0, "token1.balanceOf");
 
-        (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo0));
-
-        assertEq(IERC20(collateralShareToken).balanceOf(_contract), 0, "collateralShareToken0");
-        assertEq(IERC20(protectedShareToken).balanceOf(_contract), 0, "protectedShareToken0");
-        assertEq(IERC20(debtShareToken).balanceOf(_contract), 0, "debtShareToken");
-
-        (
-            protectedShareToken, collateralShareToken, debtShareToken
-        ) = siloConfig.getShareTokens(address(silo1));
-
-        assertEq(IERC20(collateralShareToken).balanceOf(_contract), 0, "collateralShareToken1");
-        assertEq(IERC20(protectedShareToken).balanceOf(_contract), 0, "protectedShareToken1");
-        assertEq(IERC20(debtShareToken).balanceOf(_contract), 0, "debtShareToken1");
+        _assertAddressNasNoSTokens(silo0, _address);
+        _assertAddressNasNoSTokens(silo1, _address);
     }
 
-    function _assertReceiverHasSTokens(ISilo _silo) internal view {
+    function _assertAddressHasSTokens(ISilo _silo, address _address) internal view {
         (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(_silo));
 
-        uint256 pBalance = IERC20(protectedShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
-        uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
+        uint256 pBalance = IERC20(protectedShareToken).balanceOf(_address);
+        uint256 cBalance = IERC20(collateralShareToken).balanceOf(_address);
 
         assertGt(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has sTokens");
     }
 
-    function _assertReceiverNotHaveSTokens(ISilo _silo) internal view {
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(_silo));
+    function _assertAddressNasNoSTokens(ISilo _silo, address _address) internal view {
+        (
+            address protectedShareToken, address collateralShareToken, address debtShareToken
+        ) = siloConfig.getShareTokens(address(_silo));
 
-        uint256 pBalance = IERC20(protectedShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
-        uint256 cBalance = IERC20(collateralShareToken).balanceOf(LIQUIDATION_HELPER.TOKENS_RECEIVER());
+        uint256 pBalance = IERC20(protectedShareToken).balanceOf(_address);
+        uint256 cBalance = IERC20(collateralShareToken).balanceOf(_address);
+        uint256 dBalance = IERC20(debtShareToken).balanceOf(_address);
 
-        assertEq(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has NO sTokens");
+        assertEq(pBalance, 0, "expect `_address` has NO collateral sTokens");
+        assertEq(cBalance, 0, "expect `_address` has NO protected sTokens");
+        assertEq(dBalance, 0, "expect `_address` has NO debt sTokens");
     }
 }
