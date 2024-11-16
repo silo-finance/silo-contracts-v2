@@ -28,6 +28,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     /// @dev token receiver will get all rewards from liquidation, does not matter who will execute tx
     address payable public immutable TOKENS_RECEIVER;
 
+    /// @dev address of wrapped native blockchain token eg. WETH on Ethereum
     address public immutable NATIVE_TOKEN;
 
     uint256 private transient _withdrawCollateral;
@@ -49,8 +50,10 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
-    /// @dev for now we does not support liquidation with sTokens
-    /// @dev for non profitable liquidation we will revert
+    /// @inheritdoc ILiquidationHelper
+    /// @dev entry point for liquidation
+    /// @notice for now we does not support liquidation with sTokens
+    /// on profitable liquidation we will revert because we will not be able to repay flashloan with fee
     function executeLiquidation(
         ISilo _flashLoanFrom,
         address _debtAsset,
@@ -67,6 +70,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         repayDebtAssets = _repayDebtAssets;
     }
 
+    /// @inheritdoc IERC3156FlashBorrower
     function onFlashLoan(
         address /* _initiator */,
         address _debtAsset,
