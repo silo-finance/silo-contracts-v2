@@ -130,7 +130,7 @@ jobs:
           FOUNDRY_PROFILE=ve-silo forge build
 
       - name: Start Anvil (mainnet fork)
-        run: anvil --fork-url $RPC_MAINNET --fork-block-number $ANVIL_FORK_BLOCK_NUMBER --port $ANVIL_PORT
+        run: anvil --fork-url $RPC_MAINNET --fork-block-number $ANVIL_FORK_BLOCK_NUMBER --port $ANVIL_PORT &
 
       - name: Deploy Silo protocol
         run: ./silo-core/test/scripts/mainnet-deployments.sh
