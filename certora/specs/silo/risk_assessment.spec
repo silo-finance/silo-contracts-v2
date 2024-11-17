@@ -65,12 +65,15 @@ hook ALL_TLOAD(uint loc) uint v {
 }
 
 
-// checking if a call/delegate-call is a "safe" one 
+// checking if a call/delegate-call is a "safe" one or while reentrant is entred
 hook CALL(uint g, address addr, uint value, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
-    unsafeExternalCall = unsafeExternalCall || !siloContracts(addr);
+
+    unsafeExternalCall = unsafeExternalCall || 
+                        (!siloContracts(addr) && !reentrantStatusMovedToTrue);
 }
 hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
-    unsafeExternalCall = unsafeExternalCall || !siloContracts(addr);
+    unsafeExternalCall = unsafeExternalCall || 
+                        (!siloContracts(addr) && !reentrantStatusMovedToTrue);
 }
 
 
@@ -123,15 +126,13 @@ rule RA_reentrancyGuardStatusChanged(method f)
     nonSceneAddressRequirements(e.msg.sender);
     silosTimestampSetupRequirements(e);
 
-    // precondition : ghost is false and starting with unlocked state
-    
+    // precondition : ghost is false and starting with unlocked state    
     require !reentrantStatusMovedToTrue; 
     require !unsafeExternalCall;
     requireInvariant RA_reentrancyGuardStaysUnlocked();
-    //require e.msg.sender != siloConfig._HOOK_RECEIVER;
     calldataarg args;
     f(e,args);
-    assert reentrantStatusMovedToTrue || !unsafeExternalCall;
+    assert !unsafeExternalCall;
 }
 
 

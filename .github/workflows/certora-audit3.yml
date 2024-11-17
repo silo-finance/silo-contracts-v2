@@ -165,7 +165,7 @@ jobs:
           }
           - {
             name: Authorized_functions_silo,
-            command: 'silo/authorized_functions.conf --parametric_contracts Silo0'
+            command: 'silo/authorized_functions.conf --parametric_contracts silo0 --prover_args "-destructiveOptimizations enable -maxConcurrentTransforms INLINED_HOOKS:1,OPTIMIZE_OVERFLOW:1 -maxDecompiledCommandCount 1350000"'
           }
           - {
             name: Authorized_functions_without_silo,
@@ -181,7 +181,7 @@ jobs:
           #}
           - {
             name: RA_reentrancy_silo_StatusLoaded,
-            command: 'silo/risk_assessment_silo.conf --rule RA_whoMustLoadCrossNonReentrant'
+            command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardChecked'
           }
           - {
             name: RA_reentrancy_silo_unlock,
