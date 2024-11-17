@@ -1,7 +1,7 @@
-/**
-@title Reentrancy properties:
+/*
+Reentrancy properties:
 Reentrancy protection is shared among the different Silo contracts that interacts, the following are properties of this unique reentrancy guard:
-1. Gurad must be set to false after every public call. A public call is a call that can be made by a non-silo-contract 
+1. Guard must be set to false after every public call. A public call is a call that can be made by a non-silo-contract 
 2. Guard must be turned on for functions that have untrusted external call. An untrusted external call is to call to a non-silo-contract
 3. Guard must be checked on all public functions 
 */
@@ -65,7 +65,7 @@ hook ALL_TLOAD(uint loc) uint v {
 }
 
 
-// checking if a call/delegate-call is a "safe" one or while reentrant is entred
+// checking if a call/delegate-call is a "safe" one or while reentrant is entered
 hook CALL(uint g, address addr, uint value, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
 
     unsafeExternalCall = unsafeExternalCall || 
