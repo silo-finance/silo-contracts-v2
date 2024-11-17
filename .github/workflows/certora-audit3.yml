@@ -7,11 +7,7 @@ on:
   pull_request:
     branches:
       - 'certora-audit-3'
-  push:
-    branches:
-      - 'certora-audit-3'
   workflow_dispatch:
-
 
 jobs:
   verify:
@@ -82,22 +78,6 @@ jobs:
           # website (settings > secrets > actions > new repository secret)
           CERTORAKEY: ${{ secrets.CERTORAKEY }}
 
-      # The following two steps save the output json as a GitHub artifact.
-      # This can be useful for automation that collects the output.
-      - name: Download output json
-        if: always()
-        run: >
-          outputLink=$(sed 's/zipOutput/output/g' .zip-output-url.txt | sed 's/?/\/output.json?/g');
-          curl -L -b "certoraKey=$CERTORAKEY;" ${outputLink} --output output.json || true;
-          touch output.json;
-
-      - name: Archive output json
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: output for ${{ matrix.params.name }}
-          path: output.json
-
     strategy:
       fail-fast: false
       max-parallel: 20
@@ -116,7 +96,7 @@ jobs:
           #- {name: generalRulesOnERC20, command: 'generalRules_ERC20.conf --debug'}
           #- {name: generalRulesOnVAULT, command: 'generalRules_VAULT.conf --debug'}
           #
-          # methods_integrity
+          # ==== methods_integrity =============================================
           - {
             name: HLP_integrityOfBorrow,
             command: 'silo/methods_integrity.conf --rule HLP_integrityOfBorrow'
@@ -152,7 +132,7 @@ jobs:
             name: HLP_integrityOfRepayShares,
             command: 'silo/methods_integrity.conf --rule HLP_integrityOfRepayShares'
           }
-          # access-single-silo
+          # ==== access-single-silo ============================================
           - {
             name: RA_anyone_deposit_repay,
             command: 'silo/access-single-silo.conf --rule RA_anyone_may_deposit --rule RA_anyone_may_repay'
@@ -188,3 +168,12 @@ jobs:
             command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStaysUnlocked'
           }
           # NOTE: RA_repay_borrower_is_not_restricted is violated!
+          # ==== meta rules ====================================================
+          - {
+            name: meta_config_single_silo,
+            command: 'meta/config_for_one_equivalence.conf --exclude_rule sanityWithSetup_borrow'
+          }
+          - {
+            name: meta_config_two_silos,
+            command: 'meta/config_for_two_equivalence.conf --exclude_rule sanityWithSetup_borrow'
+          }
