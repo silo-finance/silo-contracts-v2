@@ -44,12 +44,12 @@ abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
         );
     }
 
-    function _assertAddressDoNotHaveTokens(address _address) internal view {
+    function _assertAddressDoesNotHaveTokens(address _address) internal view {
         assertEq(token0.balanceOf(_address), 0, "token0.balanceOf");
         assertEq(token1.balanceOf(_address), 0, "token1.balanceOf");
 
-        _assertAddressNasNoSTokens(silo0, _address);
-        _assertAddressNasNoSTokens(silo1, _address);
+        _assertAddressHasNoSTokens(silo0, _address);
+        _assertAddressHasNoSTokens(silo1, _address);
     }
 
     function _assertAddressHasSTokens(ISilo _silo, address _address) internal view {
@@ -61,7 +61,7 @@ abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
         assertGt(pBalance + cBalance, 0, "expect TOKENS_RECEIVER has sTokens");
     }
 
-    function _assertAddressNasNoSTokens(ISilo _silo, address _address) internal view {
+    function _assertAddressHasNoSTokens(ISilo _silo, address _address) internal view {
         (
             address protectedShareToken, address collateralShareToken, address debtShareToken
         ) = siloConfig.getShareTokens(address(_silo));

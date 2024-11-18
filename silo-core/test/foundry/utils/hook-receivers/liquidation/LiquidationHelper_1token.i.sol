@@ -76,8 +76,8 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
             "expect full collateral after liquidation, because we mock swap"
         );
 
-        _assertAddressDoNotHaveTokens(address(LIQUIDATION_HELPER));
-        _assertAddressNasNoSTokens(silo0, TOKENS_RECEIVER);
-        _assertAddressNasNoSTokens(silo1, TOKENS_RECEIVER);
+        _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
+        _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);
+        _assertAddressHasNoSTokens(silo1, TOKENS_RECEIVER);
     }
 }

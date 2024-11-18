@@ -103,6 +103,10 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             // bad debt is not supported, we will get underflow on bad debt
             _transferToReceiver(_liquidation.collateralAsset, balance - flashLoanWithFee);
         } else {
+            // swap all collateral for debt
+            // most likely there will be dust left in collateral tokens, this dust will be "recovered"
+            // once we will liquidate "oposite" position
+            _executeSwap(_swapInputs);
             uint256 debtBalance = IERC20(_debtAsset).balanceOf(address(this));
 
             if (flashLoanWithFee < debtBalance) {
@@ -111,14 +115,9 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                     _transferToReceiver(_debtAsset, debtBalance - flashLoanWithFee);
                 }
             }
-
-            _executeSwap(_swapInputs); // part of collateral will be swap for (_maxDebtToCover + _fee)
-            uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
-            _transferToReceiver(_liquidation.collateralAsset, balance);
         }
 
         IERC20(_debtAsset).approve(msg.sender, flashLoanWithFee);
-
         return _FLASHLOAN_CALLBACK;
     }
 
