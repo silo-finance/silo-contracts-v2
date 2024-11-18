@@ -12,11 +12,7 @@ import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {IWrappedNativeToken} from "../../interfaces/IWrappedNativeToken.sol";
 
-import "./DexSwap.sol";
-
-interface ISiloConfigHelper {
-    function siloConfig() external view returns (ISiloConfig);
-}
+import {DexSwap} from "./DexSwap.sol";
 
 /// @notice LiquidationHelper IS NOT PART OF THE PROTOCOL.
 contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap {
