@@ -19,11 +19,7 @@ contract DexSwap {
     // solhint-disable-next-line var-name-mixedcase
     address public immutable EXCHANGE_PROXY;
 
-    event BoughtTokens(address sellToken, address buyToken, uint256 boughtAmount);
-
     error AddressZero();
-    error TargetNotExchangeProxy();
-    error ApprovalFailed();
 
     constructor(address _exchangeProxy) {
         if (_exchangeProxy == address(0)) revert AddressZero();
