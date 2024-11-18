@@ -133,8 +133,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         if (_asset == NATIVE_TOKEN) {
             _transferNative(_amount);
-        }
-        else {
+        } else {
             IERC20(_asset).transfer(TOKENS_RECEIVER, _amount);
         }
     }
