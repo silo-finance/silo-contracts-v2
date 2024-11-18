@@ -36,7 +36,8 @@ definition onlySiloContractsMethods(method f) returns bool =
         (   f.selector == sig:shareDebtToken0_AF.synchronizeHooks(uint24,uint24).selector ||
             f.selector == sig:shareDebtToken0_AF.burn(address,address,uint256).selector ||
             f.selector == sig:shareDebtToken0_AF.forwardTransferFromNoChecks(address,address,uint256).selector ||
-            f.selector == sig:shareDebtToken0_AF.mint(address,address,uint256).selector 
+            f.selector == sig:shareDebtToken0_AF.mint(address,address,uint256).selector ||
+            f.selector == sig:Silo0_AF.accrueInterestForConfig(address,uint256,uint256).selector
         )
     )
     ||
