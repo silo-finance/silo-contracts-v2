@@ -4,6 +4,8 @@ pragma solidity 0.8.28;
 import {console2} from "forge-std/console2.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -43,9 +45,9 @@ contract LiquidationHelperDeploy is CommonDeploy {
     function nativeToken() private returns (address) {
         uint256 chainId = getChainId();
 
-        if (chainId == 31337) return address(1); // anvil
-        if (chainId == 1) return AddrLib.getAddress(AddrKey.WETH);
-        // if (chainId == arbitrum) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(1);
+        if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
 
         revert(string.concat("can not find native token for", getChainAlias()));
     }
