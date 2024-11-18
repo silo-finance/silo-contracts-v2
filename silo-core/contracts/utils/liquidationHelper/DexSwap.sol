@@ -5,7 +5,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ILiquidationHelper} from "../../interfaces/ILiquidationHelper.sol";
 
-import "../../lib/RevertLib.sol";
+import {RevertLib} from "../../lib/RevertLib.sol";
 
 /// @dev Based on demo contract that swaps its ERC20 balance for another ERC20.
 /// demo source: https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
