@@ -48,8 +48,9 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
     /// @inheritdoc ILiquidationHelper
     /// @dev entry point for liquidation
-    /// @notice for now we does not support liquidation with sTokens
-    /// on profitable liquidation we will revert because we will not be able to repay flashloan with fee
+    /// @notice for now we does not support liquidation with sTokens.
+    /// On not profitable liquidation we will revert, because we will not be able to repay flashloan with fee
+    /// (collateral will not be enough to cover loan + fee)
     function executeLiquidation(
         ISilo _flashLoanFrom,
         address _debtAsset,
@@ -89,7 +90,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         ) = _liquidation.hook.liquidationCall({
             _collateralAsset: _liquidation.collateralAsset,
             _debtAsset: _debtAsset,
-            _borrower: _liquidation.user,
+            _user: _liquidation.user,
             _maxDebtToCover: _maxDebtToCover,
             _receiveSToken: false
         });
