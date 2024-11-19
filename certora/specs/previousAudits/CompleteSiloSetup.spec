@@ -36,6 +36,10 @@ function completeSiloSetupEnv(env e) {
     require silo1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
 }
 
+function requireInvariants(env e) {
+    
+}
+
 // TODO
 // make two methods, one for e.msg.sender, other for receiver (can be set by user)
 function completeSiloSetupAddress(address sender)
