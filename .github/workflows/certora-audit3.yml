@@ -182,128 +182,128 @@ jobs:
             name: accrueInterest_neverReverts,
             command: 'silo/newRulesFromTheList.conf --rule accrueInterest_neverReverts'
           }
-           - {
+          - {
             name: noDebt_thenSolventAndNoLTV,
             command: 'silo/newRulesFromTheList.conf --rule noDebt_thenSolventAndNoLTV'
           }
-           - {
+          - {
             name: accrueInterest_idempotent,
             command: 'silo/newRulesFromTheList.conf --rule accrueInterest_idempotent'
           }
-           - {
+          - {
             name: withdrawFees_revertsSecondTime,
             command: 'silo/newRulesFromTheList.conf --rule withdrawFees_revertsSecondTime'
           }
-           - {
+          - {
             name: withdrawFees_increasesDaoDeploerFees,
             command: 'silo/newRulesFromTheList.conf --rule withdrawFees_increasesDaoDeploerFees'
           }
-           - {
+          - {
             name: withdrawFees_noAdditionalEffect,
             command: 'silo/newRulesFromTheList.conf --rule withdrawFees_noAdditionalEffect'
           }
-           - {
+          - {
             name: borrowerCollateralSilo_neverSetToZero,
             command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_neverSetToZero'
           }
-           - {
+          - {
             name: accrueInterestForSilo_equivalent,
             command: 'silo/newRulesFromTheList.conf --rule accrueInterestForSilo_equivalent'
           }
-           - {
+          - {
             name: insolventHaveDebtShares,
             command: 'silo/newRulesFromTheList.conf --rule insolventHaveDebtShares'
           }
-           - {
+          - {
             name: cannotHaveDebtInBothSilos,
             command: 'silo/newRulesFromTheList.conf --rule cannotHaveDebtInBothSilos'
           }
-           - {
+          - {
             name: borrowerCollateralSilo_setNonzeroIncreasesDebt,
             command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_setNonzeroIncreasesDebt'
           }
-           - {
+          - {
             name: borrowerCollateralSilo_setNonzeroIncreasesBalance,
             command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_setNonzeroIncreasesBalance'
           }
-           - {
+          - {
             name: withdrawOnlyRevertsOnLiquidity,
             command: 'silo/newRulesFromTheList.conf --rule withdrawOnlyRevertsOnLiquidity'
           }
-           - {
+          - {
             name: solventAfterWithdraw,
             command: 'silo/newRulesFromTheList.conf --rule solventAfterWithdraw'
           }
-           - {
+          - {
             name: debt_thenBorrowerCollateralSiloSetAndHasShares,
             command: 'silo/newRulesFromTheList.conf --rule debt_thenBorrowerCollateralSiloSetAndHasShares'
           }
-           - {
+          - {
             name: noDebtInBothSilos,
             command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos'
           }
-           - {
+          - {
             name: flashFee_nonZero,
             command: 'silo/newRulesFromTheList.conf --rule flashFee_nonZero'
           }
           # ==== max- correctness ============================================
-           - {
+          - {
             name: HLP_MaxMint_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxMint_reverts'
           }
-           - {
+          - {
             name: HLP_MaxRedeem_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_reverts'
           }
-           - {
+          - {
             name: HLP_MaxDeposit_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxDeposit_reverts'
           }
-           - {
+          - {
             name: HLP_MaxWithdraw_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxWithdraw_reverts'
           }
-           - {
+          - {
             name: HLP_MaxBorrow_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxBorrow_reverts'
           }
-           - {
+          - {
             name: HLP_MaxRepay_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxRepay_reverts'
           }
-           - {
+          - {
             name: HLP_MaxRepayShares_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxRepayShares_reverts'
           }
-           - {
+          - {
             name: HLP_MaxBorrowSameAsset_reverts,
             command: 'silo/maxCorectness.conf --rule HLP_MaxBorrowSameAsset_reverts'
           }
-           - {
+          - {
             name: maxBorrow_noRevert,
             command: 'silo/maxCorectness.conf --rule maxBorrow_noRevert'
           }
-           - {
+          - {
             name: maxRepay_neverGreaterThanTotalDebt,
             command: 'silo/maxCorectness.conf --rule maxRepay_neverGreaterThanTotalDebt'
           }
-           - {
+          - {
             name: HLP_MaxRedeem_noRevert,
             command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_noRevert'
           }
-           - {
+          - {
             name: HLP_MaxRedeem_noGreaterThanBalance,
             command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_noGreaterThanBalance'
           }
-           - {
+          - {
             name: maxRepay_burnsAllDebt,
             command: 'silo/maxCorectness.conf --rule maxRepay_burnsAllDebt'
           }
-           - {
+          - {
             name: maxWithdraw_noRevert,
             command: 'silo/maxCorectness.conf --rule maxWithdraw_noRevert'
           }
-           - {
+          - {
             name: maxWithdraw_noGreaterThanLiquidity,
             command: 'silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity'
           }
