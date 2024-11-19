@@ -179,10 +179,8 @@ rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO
 // withdraw() should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
 rule withdrawOnlyRevertsOnLiquidity(env e, address receiver)
 {
-    completeSiloSetupEnv(e);
-    nonSceneAddressRequirements(receiver);
-    totalSuppliesMoreThanBalances(receiver, silo0);
-    
+    SafeAssumptions(e, receiver);
+
     uint256 assets;
     uint256 liquidity = getLiquidity(e);
     uint256 sharesPaid = withdraw@withrevert(e, assets, receiver, e.msg.sender);
@@ -197,10 +195,7 @@ rule withdrawOnlyRevertsOnLiquidity(env e, address receiver)
 rule solventAfterWithdraw(env e, address receiver)
 {
     SafeAssumptions(e, receiver);
-    completeSiloSetupEnv(e);
-    nonSceneAddressRequirements(receiver);
-    totalSuppliesMoreThanBalances(receiver, e.msg.sender);
-    
+        
     uint256 assets;
     uint256 sharesPaid = withdraw(e, assets, receiver, e.msg.sender);
     assert isSolvent(e, e.msg.sender);
@@ -228,12 +223,12 @@ invariant noDebtInBothSilos(env e, address user)
 // flashFee() returns non-zero value if fee is set to non-zero value
 rule flashFee_nonZero(env e)
 {
-    completeSiloSetupEnv(e);
+    completeSiloSetupForEnv(e);
     address token;
     uint amount; uint res;
     require amount > 0;
     uint256 daoFee; uint256 deployerFee; uint256 flashloanFee; address asset;
-    daoFee, deployerFee, flashloanFee, asset = config(e).getFeesWithAsset(silo0);
+    daoFee, deployerFee, flashloanFee, asset = config(e).getFeesWithAsset(e, silo0);
     res = flashFee(e, token, amount);
     assert flashloanFee > 0 => res > 0;
 }

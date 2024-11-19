@@ -1,13 +1,3 @@
-// import "./IsSiloFunction.spec";
-// import "./Helpers.spec";
-// import "./CommonSummarizations.spec";
-// import "./SiloConfigSummarizations.spec";
-// import "./ERC20MethodsDispatch.spec";
-// import "./Token0Methods.spec";
-// import "./Token1Methods.spec";
-// import "./Silo0ShareTokensMethods.spec";
-// import "./Silo1ShareTokensMethods.spec";
-
 using Silo0 as silo0;
 using Silo1 as silo1;
 using Token0 as token0;
@@ -17,109 +7,149 @@ using ShareDebtToken1 as shareDebtToken1;
 using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 
-function completeSiloSetupEnv(env e) {
-    completeSiloSetupAddress(e.msg.sender);
+function SafeAssumptions(env e, address user) 
+{
+    completeSiloSetupForEnv(e);
+    requireAllInvariants(e, user);
+}
+
+function completeSiloSetupForEnv(env e) {
+    require e.msg.sender != shareDebtToken0;
+    require e.msg.sender != shareDebtToken1;
+    require e.msg.sender != shareProtectedCollateralToken0;
+    require e.msg.sender != shareProtectedCollateralToken1;
+    require e.msg.sender != token0;
+    require e.msg.sender != token1;
     
     // we can not have block.timestamp less than interestRateTimestamp
     require e.block.timestamp < (1 << 64);
     require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp(e);
     require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp(e);
-
-    //there are shares if and only if there are tokens
-    //otherwise there are CEXs where borrow(a lot); repay(a little); removes all debt from the user, etc.
-    require shareDebtToken0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Debt) == 0;  
-    require shareProtectedCollateralToken0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
-    require silo0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
-
-    require shareDebtToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Debt) == 0;
-    require shareProtectedCollateralToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
-    require silo1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
 }
 
-function requireInvariants(env e) {
-    
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////
+/////  basic invariants
+////////////////////////////
 
-// TODO
-// make two methods, one for e.msg.sender, other for receiver (can be set by user)
-function completeSiloSetupAddress(address sender)
+// requires all the invariants defined bellow.
+// !!  if you add more, also require it here    !!
+function requireAllInvariants(env e, address user)
 {
-    //require sender != silo0;  // replaced by silo0
-    require sender != shareDebtToken0;
-    require sender != shareDebtToken1;
-    require sender != shareProtectedCollateralToken0;
-    require sender != shareProtectedCollateralToken1;
-    //require sender != silo1;  // replaced by silo1
-    //require sender != siloConfig;
-    //require sender != currentContract;  /// Silo0
-    require sender != token0;
-    require sender != token1;
-    // doesntHaveCollateralAsWellAsDebt(sender);
+    requireInvariant shareDebtToken0_tracked();
+    requireInvariant shareProtectedToken0_tracked();    
+    requireInvariant siloToken0_tracked();              
+    requireInvariant shareDebtToken1_tracked();
+    requireInvariant shareProtectedToken1_tracked();
+    requireInvariant siloToken1_tracked();
+
+    requireInvariant totalSupplyMoreThanBalance_token0(user);           
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(user);
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(user);      
+    requireInvariant totalSupplyMoreThanBalance_siloToken0(user);           
+    requireInvariant totalSupplyMoreThanBalance_token1(user);               
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(user); 
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(user);     
+    requireInvariant totalSupplyMoreThanBalance_siloToken1(user);        
+
+    requireInvariant totalSupplyMoreThanBalance_token0(e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(e.msg.sender);
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(e.msg.sender);      
+    requireInvariant totalSupplyMoreThanBalance_siloToken0(e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance_token1(e.msg.sender);               
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(e.msg.sender); 
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(e.msg.sender);     
+    requireInvariant totalSupplyMoreThanBalance_siloToken1(e.msg.sender);      
+
+    requireInvariant totalSupplyMoreThanBalance2_token0(user, e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken0(user, e.msg.sender);
+    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken0(user, e.msg.sender);      
+    requireInvariant totalSupplyMoreThanBalance2_siloToken0(user, e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance2_token1(user, e.msg.sender);               
+    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken1(user, e.msg.sender); 
+    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken1(user, e.msg.sender);     
+    requireInvariant totalSupplyMoreThanBalance2_siloToken1(user, e.msg.sender);    
+
+    requireInvariant token0Distribution(user);
+    requireInvariant token1Distribution(user);
+    requireInvariant debt0ThenHasCollateral(user);
+    requireInvariant debt1ThenHasCollateral(user);
+
+    requireInvariant token0Distribution(e.msg.sender);
+    requireInvariant token1Distribution(e.msg.sender);
+    requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    requireInvariant debt1ThenHasCollateral(e.msg.sender);
+
+    requireInvariant noMoreSharesThanAssets_0();
+    requireInvariant noMoreSharesThanAssets_1();
 }
 
-function SafeAssumptions(env e, address user) 
-{
-    completeSiloSetupEnv(e);
-    completeSiloSetupAddress(user);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    totalSupplyMoreThanBalance(user);
-    
-    //requireInvariant RA_more_assets_than_shares();
+//there are shares if and only if there are tokens
+//  otherwise there are CEXs where borrow(a lot); repay(a little); removes all debt from the user, etc.
+invariant shareDebtToken0_tracked()         shareDebtToken0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Debt) == 0;
+invariant shareProtectedToken0_tracked()    shareProtectedCollateralToken0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
+invariant siloToken0_tracked()              silo0.totalSupply() == 0 <=> silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
+invariant shareDebtToken1_tracked()         shareDebtToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Debt) == 0;
+invariant shareProtectedToken1_tracked()    shareProtectedCollateralToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
+invariant siloToken1_tracked()              silo1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
 
-    require silo0.getTotalAssetsStorage(ISilo.AssetType.Protected) + silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral) < max_uint256;
-    require silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) + silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) < max_uint256;
-}
+// total supply is more than balance - 1 user
+invariant totalSupplyMoreThanBalance_token0(address user)               token0.totalSupply() >= token0.balanceOf(user);
+invariant totalSupplyMoreThanBalance_shareProtectedToken0(address user) shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(user);
+invariant totalSupplyMoreThanBalance_shareDebtToken0(address user)      shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(user);
+invariant totalSupplyMoreThanBalance_siloToken0(address user)           silo0.totalSupply() >= silo0.balanceOf(user);
+invariant totalSupplyMoreThanBalance_token1(address user)               token1.totalSupply() >= token1.balanceOf(user);
+invariant totalSupplyMoreThanBalance_shareProtectedToken1(address user) shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(user);
+invariant totalSupplyMoreThanBalance_shareDebtToken1(address user)      shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(user);
+invariant totalSupplyMoreThanBalance_siloToken1(address user)           silo1.totalSupply() >= silo1.balanceOf(user);
 
-function totalSupplyMoreThanBalance(address receiver)
-{
-    require receiver != currentContract;
-    require token0.totalSupply() >= require_uint256(token0.balanceOf(receiver) + token0.balanceOf(currentContract));
-    require shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(receiver) + shareProtectedCollateralToken0.balanceOf(currentContract));
-    require shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(receiver) + shareDebtToken0.balanceOf(currentContract));
-    require silo0.totalSupply() >= require_uint256(silo0.balanceOf(receiver) + silo0.balanceOf(currentContract));
-    require token1.totalSupply() >= require_uint256(token1.balanceOf(receiver) + token1.balanceOf(currentContract));
-    require shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(receiver) + shareProtectedCollateralToken1.balanceOf(currentContract));
-    require shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(receiver) + shareDebtToken1.balanceOf(currentContract));
-    require silo1.totalSupply() >= require_uint256(silo1.balanceOf(receiver) + silo1.balanceOf(currentContract));
+// total supply is more than balance - 2 users
+invariant totalSupplyMoreThanBalance2_token0(address user0, address user1)
+    user0 != user1 => token0.totalSupply() >= require_uint256(token0.balanceOf(user0) + token0.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_shareProtectedToken0(address user0, address user1)
+    user0 != user1 => shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(user0) + shareProtectedCollateralToken0.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_shareDebtToken0(address user0, address user1)
+    user0 != user1 => shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(user0) + shareDebtToken0.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_siloToken0(address user0, address user1)
+    user0 != user1 => silo0.totalSupply() >= require_uint256(silo0.balanceOf(user0) + silo0.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_token1(address user0, address user1)
+    user0 != user1 => token1.totalSupply() >= require_uint256(token1.balanceOf(user0) + token1.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_shareProtectedToken1(address user0, address user1)
+    user0 != user1 => shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(user0) + shareProtectedCollateralToken1.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_shareDebtToken1(address user0, address user1)
+    user0 != user1 => shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(user0) + shareDebtToken1.balanceOf(user1));
+invariant totalSupplyMoreThanBalance2_siloToken1(address user0, address user1)
+    user0 != user1 => silo1.totalSupply() >= require_uint256(silo1.balanceOf(user0) + silo1.balanceOf(user1));
 
-    // otherwise there's an overflow in "unchecked" in SiloSolvencyLib.getPositionValues 
-    require token0.totalSupply() >= require_uint256(
-        silo0.getTotalAssetsStorage(ISilo.AssetType.Protected) + silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral) + token0.balanceOf(receiver));
-    require token1.totalSupply() >= require_uint256(
-        silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) + silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) + token1.balanceOf(receiver));
+// sum of [(normal)shares + protected shares + balance of any user] is no more than totalSupply of the token
+// otherwise there's an overflow in "unchecked" in SiloSolvencyLib.getPositionValues 
+invariant token0Distribution(address user)
+    token0.totalSupply() >= require_uint256(
+        silo0.getTotalAssetsStorage(ISilo.AssetType.Protected) + 
+        silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral) + 
+        token0.balanceOf(user));
 
-    // if user has debt he must have collateral in the other silo
-    require shareDebtToken0.balanceOf(receiver) > 0 => (
-        silo1.balanceOf(receiver) > 0 ||
-        shareProtectedCollateralToken1.balanceOf(receiver) > 0);
-    require shareDebtToken1.balanceOf(receiver) > 0 => (
-        silo0.balanceOf(receiver) > 0 ||
-        shareProtectedCollateralToken0.balanceOf(receiver) > 0);
-}
+invariant token1Distribution(address user) 
+    token1.totalSupply() >= require_uint256(
+        silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) + 
+        silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) + 
+        token1.balanceOf(user));
 
-// another idea:
-// prove that accrueInterest; f(); has the same effect as f()
-// afterwards add require that accrueInterest was already called before.
-// It will simplify some methods, safe runtime
+// if user has debt then they must have collateral
+invariant debt0ThenHasCollateral(address user)
+    shareDebtToken0.balanceOf(user) > 0 => (silo1.balanceOf(user) > 0 || shareProtectedCollateralToken1.balanceOf(user) > 0);
 
-// getExactLiquidationAmount can be simplified
-// just assume that the resulting TLV is above the liquidation treshold (solvent LTV)
+invariant debt1ThenHasCollateral(address user) 
+    shareDebtToken1.balanceOf(user) > 0 => (silo0.balanceOf(user) > 0 || shareProtectedCollateralToken0.balanceOf(user) > 0);
 
+// no more shares than assets
+invariant noMoreSharesThanAssets_0() silo0.totalSupply() <= silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+invariant noMoreSharesThanAssets_1() silo1.totalSupply() <= silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral);
 
-// no longer holds!!
-// don't use this any more
-function doesntHaveCollateralAsWellAsDebt(address user)
-{
-    require !(  //cannot have collateral AND debt on silo0
-        (silo0.balanceOf(user) > 0 || 
-        shareProtectedCollateralToken0.balanceOf(user) > 0) &&
-        shareDebtToken0.balanceOf(user) > 0);
-    
-    require !(  //cannot have collateral AND debt on silo1
-        (silo1.balanceOf(user) > 0 || 
-        shareProtectedCollateralToken1.balanceOf(user) > 0) &&
-        shareDebtToken1.balanceOf(user) > 0);
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////
+/// unsafe assumptions. use with caution
+////////////////////////////
 
 // initial state is treated differently. (When there's 0 collateral and debt shares)
 function requireNotInitialState()
@@ -134,82 +164,23 @@ function requireNotInitialState()
     require silo1.totalSupply() > 0;
 }
 
-// function requireTokensTotalAndBalanceIntegrity()
-// {
-//     requireProtectedToken0TotalAndBalancesIntegrity();
-//     requireDebtToken0TotalAndBalancesIntegrity();
-//     requireCollateralToken0TotalAndBalancesIntegrity();
-//     requireProtectedToken1TotalAndBalancesIntegrity();
-//     requireDebtToken1TotalAndBalancesIntegrity();
-//     requireCollateralToken1TotalAndBalancesIntegrity();
-// }
-
-// function sharesToAssetsNotTooHigh(env e, mathint max)
-// {
-//     mathint totalCollateralAssets; mathint totalProtectedAssets;
-//     totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedAssets(e);  
-//     mathint totalShares = silo0.totalSupply();
-//     mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
-//     require totalCollateralAssets <= totalShares * max;
-//     require totalShares <= totalCollateralAssets * max;
-//     require totalProtectedAssets <= totalProtectedShares * max;
-//     require totalProtectedShares <= totalProtectedAssets * max;
-// }
-
-// // limits token.totalSupply() and silo.total[] to reasonable values
-// function totalsNotTooHigh(env e, mathint max)
-// {
-//     mathint totalCollateralAssets0; mathint totalProtectedAssets0; mathint totalDebtAssets0;
-//     totalCollateralAssets0, totalProtectedAssets0 = silo0.getCollateralAndProtectedAssets(e);  
-//     _, totalDebtAssets0 = silo0.getCollateralAndDebtAssets();
-//     mathint totalCollateralShares0 = silo0.totalSupply();
-//     mathint totalProtectedShares0 = shareProtectedCollateralToken0.totalSupply();
-//     mathint totalDebtShares0 = shareDebtToken0.totalSupply();
-    
-//     require totalCollateralAssets0 <= max;
-//     require totalProtectedAssets0 <= max;
-//     require totalDebtAssets0 <= max;
-//     require totalCollateralShares0 <= max;
-//     require totalProtectedShares0 <= max;
-//     require totalDebtShares0 <= max;
-
-//     mathint totalCollateralAssets1; mathint totalProtectedAssets1; mathint totalDebtAssets1;
-//     totalCollateralAssets1, totalProtectedAssets1 = silo1.getCollateralAndProtectedAssets(e);  
-//     _, totalDebtAssets1 = silo1.getCollateralAndDebtAssets();
-//     mathint totalCollateralShares1 = silo1.totalSupply();
-//     mathint totalProtectedShares1 = shareProtectedCollateralToken1.totalSupply();
-//     mathint totalDebtShares1 = shareDebtToken1.totalSupply();
-    
-//     require totalCollateralAssets1 <= max;
-//     require totalProtectedAssets1 <= max;
-//     require totalDebtAssets1 <= max;
-//     require totalCollateralShares1 <= max;
-//     require totalProtectedShares1 <= max;
-//     require totalDebtShares1 <= max;
-// }
-
-// // three allowed ratios: 1:1, 3:5
-// function sharesToAssetsFixedRatio(env e)
-// {
-//     mathint totalCollateralAssets; mathint totalProtectedAssets;
-//     totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedAssets(e);  
-//     mathint totalShares = silo0.totalSupply();
-//     mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
-//     require totalCollateralAssets * 3 == totalShares * 5 ||
-//         //totalCollateralAssets * 5 == totalShares * 3 ||
-//         totalCollateralAssets == totalShares;
-    
-//     require totalProtectedAssets * 3 == totalProtectedShares * 5 ||
-//         //totalProtectedAssets * 5 == totalProtectedShares * 3 ||
-//         totalProtectedAssets == totalProtectedShares;
-// }
-
-function differsAtMost(mathint x, mathint y, mathint diff) returns bool
+// limits the [assets / shares] to reasonable values
+function sharesToAssetsNotTooHigh(env e, mathint max)
 {
-    if (x == y) return true;
-    if (x < y) return y - x <= diff;
-    return x - y <= diff;
+    mathint totalCollateralAssets; mathint totalProtectedAssets;
+    totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedTotalsStorage(e);  
+    mathint totalShares = silo0.totalSupply();
+    mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
+    require totalCollateralAssets <= totalShares * max;
+    require totalShares <= totalCollateralAssets * max;
+    require totalProtectedAssets <= totalProtectedShares * max;
+    require totalProtectedShares <= totalProtectedAssets * max;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////
+/////  definitions, methods' privileges 
+////////////////////////////
 
 definition canIncreaseAccrueInterest(method f) returns bool =
     f.selector == sig:accrueInterest().selector ||
@@ -338,3 +309,76 @@ definition canIncreaseDebt(method f) returns bool =
 definition canDecreaseDebt(method f) returns bool =
     f.selector == sig:repay(uint256,address).selector ||
     f.selector == sig:repayShares(uint256,address).selector;
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////
+/// ideas, left over pices of code
+//////////////////////////////
+
+
+// prove that (accrueInterest; f();) has the same effect as f()
+// afterwards add require that accrueInterest was already called before.
+// It will simplify some methods, save runtime
+
+// getExactLiquidationAmount can be simplified
+// just assume that the resulting LTV is above the liquidation treshold (solvent LTV)
+
+
+function differsAtMost(mathint x, mathint y, mathint diff) returns bool
+{
+    if (x == y) return true;
+    if (x < y) return y - x <= diff;
+    return x - y <= diff;
+}
+
+
+
+
+// // limits token.totalSupply() and silo.total[] to reasonable values
+// function totalsNotTooHigh(env e, mathint max)
+// {
+//     mathint totalCollateralAssets0; mathint totalProtectedAssets0; mathint totalDebtAssets0;
+//     totalCollateralAssets0, totalProtectedAssets0 = silo0.getCollateralAndProtectedTotalsStorage(e);  
+//     _, totalDebtAssets0 = silo0.getCollateralAndDebtAssets();
+//     mathint totalCollateralShares0 = silo0.totalSupply();
+//     mathint totalProtectedShares0 = shareProtectedCollateralToken0.totalSupply();
+//     mathint totalDebtShares0 = shareDebtToken0.totalSupply();
+    
+//     require totalCollateralAssets0 <= max;
+//     require totalProtectedAssets0 <= max;
+//     require totalDebtAssets0 <= max;
+//     require totalCollateralShares0 <= max;
+//     require totalProtectedShares0 <= max;
+//     require totalDebtShares0 <= max;
+
+//     mathint totalCollateralAssets1; mathint totalProtectedAssets1; mathint totalDebtAssets1;
+//     totalCollateralAssets1, totalProtectedAssets1 = silo1.getCollateralAndProtectedTotalsStorage(e);  
+//     _, totalDebtAssets1 = silo1.getCollateralAndDebtAssets();
+//     mathint totalCollateralShares1 = silo1.totalSupply();
+//     mathint totalProtectedShares1 = shareProtectedCollateralToken1.totalSupply();
+//     mathint totalDebtShares1 = shareDebtToken1.totalSupply();
+    
+//     require totalCollateralAssets1 <= max;
+//     require totalProtectedAssets1 <= max;
+//     require totalDebtAssets1 <= max;
+//     require totalCollateralShares1 <= max;
+//     require totalProtectedShares1 <= max;
+//     require totalDebtShares1 <= max;
+// }
+
+// // two allowed ratios: 1:1, 3:5
+// function sharesToAssetsFixedRatio(env e)
+// {
+//     mathint totalCollateralAssets; mathint totalProtectedAssets;
+//     totalCollateralAssets, totalProtectedAssets = getCollateralAndProtectedTotalsStorage(e);  
+//     mathint totalShares = silo0.totalSupply();
+//     mathint totalProtectedShares = shareProtectedCollateralToken0.totalSupply();
+//     require totalCollateralAssets * 3 == totalShares * 5 ||
+//         //totalCollateralAssets * 5 == totalShares * 3 ||
+//         totalCollateralAssets == totalShares;
+    
+//     require totalProtectedAssets * 3 == totalProtectedShares * 5 ||
+//         //totalProtectedAssets * 5 == totalProtectedShares * 3 ||
+//         totalProtectedAssets == totalProtectedShares;
+// }
