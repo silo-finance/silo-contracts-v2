@@ -90,7 +90,7 @@ function nonSceneAddressRequirements(address sender) {
 
 
 /// @title Ensures the `siloConfig` is set up properly
-function configForEightTokensSetupRequiremments() {
+function configForEightTokensSetupRequirements() {
     require silo0_R.silo() == silo0_R;
     require silo0_R.config() == siloConfig_R;
 

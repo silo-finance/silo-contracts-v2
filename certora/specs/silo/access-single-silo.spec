@@ -104,7 +104,7 @@ function requireSecondEnvAtLeastAsFirst(env e1, env e2) {
 rule sanityWithSetup_borrow() {
     calldataarg args;
     env e; 
-    configForEightTokensSetupRequiremments();
+    configForEightTokensSetupRequirements();
     nonSceneAddressRequirements(e.msg.sender);
     silosTimestampSetupRequirements(e);
     silo0.borrow(e, args);
