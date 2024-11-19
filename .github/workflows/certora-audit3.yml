@@ -218,6 +218,10 @@ jobs:
             name: noDebtInBothSilos,
             command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos'
           }
+           - {
+            name: flashFee_nonZero,
+            command: 'silo/newRulesFromTheList.conf --rule flashFee_nonZero'
+          }
           # ==== max- correctness ============================================
            - {
             name: HLP_MaxMint_reverts,

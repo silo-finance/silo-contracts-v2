@@ -224,3 +224,16 @@ invariant noDebtInBothSilos(env e, address user)
     {
     preserved with (env e2) { SafeAssumptions(e2, user); }
 }
+
+// flashFee() returns non-zero value if fee is set to non-zero value
+rule flashFee_nonZero(env e)
+{
+    completeSiloSetupEnv(e);
+    address token;
+    uint amount; uint res;
+    require amount > 0;
+    uint256 daoFee; uint256 deployerFee; uint256 flashloanFee; address asset;
+    daoFee, deployerFee, flashloanFee, asset = config(e).getFeesWithAsset(silo0);
+    res = flashFee(e, token, amount);
+    assert flashloanFee > 0 => res > 0;
+}
