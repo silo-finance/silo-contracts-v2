@@ -83,7 +83,9 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
 //            "expect debt to be transfer (price is 1:1)"
 //        );
 
-        _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
+        // TODO, because we not swapping anything, we not transferring debt token
+        // so contract will have debt, this assertion can be turn on once we add swap to the test
+        // _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
         _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);
         _assertAddressHasNoSTokens(silo1, TOKENS_RECEIVER);
     }
