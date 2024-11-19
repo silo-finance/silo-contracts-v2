@@ -93,6 +93,17 @@ function totalSupplyMoreThanBalance(address receiver)
         shareProtectedCollateralToken0.balanceOf(receiver) > 0);
 }
 
+// another idea:
+// prove that accrueInterest; f(); has the same effect as f()
+// afterwards add require that accrueInterest was already called before.
+// It will simplify some methods, safe runtime
+
+// getExactLiquidationAmount can be simplified
+// just assume that the resulting TLV is above the liquidation treshold (solvent LTV)
+
+
+// no longer holds!!
+// don't use this any more
 function doesntHaveCollateralAsWellAsDebt(address user)
 {
     require !(  //cannot have collateral AND debt on silo0
