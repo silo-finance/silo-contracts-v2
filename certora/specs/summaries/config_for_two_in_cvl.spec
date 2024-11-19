@@ -36,4 +36,7 @@ methods {
     function _.getDebtShareTokenAndAsset(
         address _silo
     ) external => CVLGetDebtShareTokenAndAsset(_silo) expect (address, address);
+
+    // 
+    function ShareToken._getSilo() internal returns (address) => CVLGetSilo(calledContract) ; 
 }

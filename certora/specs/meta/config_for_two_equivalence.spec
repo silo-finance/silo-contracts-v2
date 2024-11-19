@@ -29,7 +29,7 @@ methods {
 rule sanityWithSetup_borrow() {
     calldataarg args;
     env e; 
-    configForEightTokensSetupRequiremments();
+    configForEightTokensSetupRequirements();
     nonSceneAddressRequirements(e.msg.sender);
     silosTimestampSetupRequirements(e);
     silo0_R.borrow(e, args);

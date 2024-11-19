@@ -143,6 +143,30 @@ jobs:
               --rule RA_deposit_recipient_is_not_restricted
               --rule RA_repay_borrower_is_not_restricted_by_shares"
           }
+          - {
+            name: Authorized_functions_silo,
+            command: 'silo/authorized_functions.conf --parametric_contracts Silo0 --rule onlyTrustedSender --prover_args "-destructiveOptimizations enable -maxConcurrentTransforms INLINED_HOOKS:1,OPTIMIZE_OVERFLOW:1 -maxDecompiledCommandCount 1350000"'
+          }
+          - {
+            name: Authorized_functions_without_silo,
+            command: 'silo/authorized_functions.conf --parametric_contracts ShareDebtToken0 ShareProtectedCollateralToken0 SiloConfig --rule_sanity basic'
+          }
+          - {
+            name: RA_reentrancy_without_silo,
+            command: 'silo/risk_assessment.conf --rule_sanity basic'
+          }
+          # - { #this one is still failing 
+          #  name: RA_reentrancy_silo_StatusChanged,
+          #  command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStatusChanged'
+          #}
+          - {
+            name: RA_reentrancy_silo_StatusLoaded,
+            command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardChecked'
+          }
+          - {
+            name: RA_reentrancy_silo_unlock,
+            command: 'silo/risk_assessment_silo.conf --rule RA_reentrancyGuardStaysUnlocked'
+          }
           # NOTE: RA_repay_borrower_is_not_restricted is violated!
           # ==== meta rules ====================================================
           - {
