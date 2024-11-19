@@ -34,7 +34,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     }
 
     /*
-    forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
     function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
         vm.warp(block.timestamp + _addTimestamp);
@@ -66,11 +66,22 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
 
         assertEq(debtToRepay, repayDebtAssets, "debtToRepay == repayDebtAssets");
 
-        assertEq(
-            token0.balanceOf(TOKENS_RECEIVER) - LIQUIDATION_UNDERESTIMATION,
-            collateralToLiquidate,
-            "expect full collateral after liquidation, because we mock swap"
+        emit log_named_decimal_uint("token0.balanceOf(TOKENS_RECEIVER)", token0.balanceOf(TOKENS_RECEIVER), 18);
+        emit log_named_decimal_uint("token1.balanceOf(TOKENS_RECEIVER)", token1.balanceOf(TOKENS_RECEIVER), 18);
+
+        assertLe(
+            token0.balanceOf(TOKENS_RECEIVER),
+            LIQUIDATION_UNDERESTIMATION,
+            "expect full collateral to be swapped"
         );
+
+        // TODO, because we not swapping anything, we not transferring debt token
+        // this assertion can be turn on once we add swap to it
+//        assertEq(
+//            token1.balanceOf(TOKENS_RECEIVER),
+//            withdrawCollateral - repayDebtAssets - flashFee + LIQUIDATION_UNDERESTIMATION,
+//            "expect debt to be transfer (price is 1:1)"
+//        );
 
         _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
         _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);

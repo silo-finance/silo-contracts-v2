@@ -107,6 +107,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             // most likely there will be dust left in collateral tokens, this dust will be "recovered"
             // once we will liquidate "oposite" position
             _executeSwap(_swapInputs);
+
             uint256 debtBalance = IERC20(_debtAsset).balanceOf(address(this));
 
             if (flashLoanWithFee < debtBalance) {
