@@ -145,15 +145,15 @@ jobs:
           }
           - {
             name: Authorized_functions_silo,
-            command: 'silo/authorized_functions.conf --parametric_contracts Silo0 --prover_args --rule onlyTrustedSender" -destructiveOptimizations enable -maxConcurrentTransforms INLINED_HOOKS:1,OPTIMIZE_OVERFLOW:1 -maxDecompiledCommandCount 1350000"'
+            command: 'silo/authorized_functions.conf --parametric_contracts Silo0 --rule onlyTrustedSender --prover_args "-destructiveOptimizations enable -maxConcurrentTransforms INLINED_HOOKS:1,OPTIMIZE_OVERFLOW:1 -maxDecompiledCommandCount 1350000"'
           }
           - {
             name: Authorized_functions_without_silo,
-            command: 'silo/authorized_functions.conf --parametric_contracts ShareDebtToken0 ShareProtectedCollateralToken0 SiloConfig'
+            command: 'silo/authorized_functions.conf --parametric_contracts ShareDebtToken0 ShareProtectedCollateralToken0 SiloConfig --rule_sanity basic'
           }
           - {
             name: RA_reentrancy_without_silo,
-            command: 'silo/risk_assessment.conf'
+            command: 'silo/risk_assessment.conf --rule_sanity basic'
           }
           # - { #this one is still failing 
           #  name: RA_reentrancy_silo_StatusChanged,

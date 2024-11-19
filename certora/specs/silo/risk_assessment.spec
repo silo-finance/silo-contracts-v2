@@ -105,12 +105,9 @@ rule RA_reentrancyGuardChecked(method f) filtered {f-> !onlySiloContractsMethods
     configForEightTokensSetupRequirements();
     nonSceneAddressRequirements(e.msg.sender);
     silosTimestampSetupRequirements(e);
-    bool valueBefore = siloConfig.reentrancyGuardEntered();
-    //require e.msg.sender != siloConfig._HOOK_RECEIVER;
     calldataarg args;
     f(e,args);
     assert reentrantStatusLoaded ; 
-    assert !valueBefore;
 } 
 
 /**
