@@ -23,6 +23,7 @@ methods {
     function _.getConfig(address) external  => DISPATCHER(true);
     function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
     function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
+    function _.hasDebtInOtherSilo(address,address) external => DISPATCHER(true);
 
     // `CrossReentrancyGuard`
     function _.turnOnReentrancyProtection() external => DISPATCHER(true);
