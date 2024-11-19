@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.13.0] - 2024-11-19
+### Added
+- `LiquidationHelper` and `Tower`
+
 ## [0.12.1] - 2024-11-04
 ### Added
 - LICENSE
