@@ -114,7 +114,7 @@ rule maxBorrow_noRevert(env e, address user)
 // maxRepay() should never return more than totalAssets[AssetType.Debt]
 rule maxRepay_neverGreaterThanTotalDebt(env e)
 {
-    SafeAssumptions(e);
+    SafeAssumptionsEnv(e);
     address user;
     uint res = maxRepay(e, user);
     uint max = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);
@@ -167,7 +167,7 @@ rule maxWithdraw_noRevert(env e, address receiver)
 // result of maxWithdraw() should never be more than liquidity of the Silo
 rule maxWithdraw_noGreaterThanLiquidity(env e)
 {
-    SafeAssumptions(e);
+    SafeAssumptionsEnv(e);
     
     uint totalCollateral = silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     uint totalDebt = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);
