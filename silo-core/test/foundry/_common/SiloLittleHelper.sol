@@ -268,6 +268,12 @@ abstract contract SiloLittleHelper is CommonBase {
         (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
+
+        vm.label(address(silo0), "Silo0");
+        vm.label(address(silo1), "Silo1");
+        vm.label(address(token0), "Token0");
+        vm.label(address(token1), "Token1");
+        vm.label(address(partialLiquidation), "PartialLiquidation");
     }
 
     function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage _sharedStorage) {

@@ -26,15 +26,9 @@ interface IPartialLiquidation {
     error AlreadyConfigured();
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();
-    error LiquidityFeeToHi();
-    error EmptyDebtToCover();
     error NoDebtToCover();
     error FullLiquidationRequired();
-    error OnlyDelegateCall();
-    error InvalidSiloForCollateral();
     error UserIsSolvent();
-    error InsufficientLiquidation();
-    error LiquidationTooBig();
     error UnknownRatio();
     error NoRepayAssets();
 

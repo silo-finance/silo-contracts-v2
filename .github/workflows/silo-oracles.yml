@@ -5,10 +5,11 @@ name: Oracles Quality Test
 
 env:
   FOUNDRY_PROFILE: oracles
-  RPC_MAINNET: ${{ vars.RPC_MAINNET }}
-  RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
-  RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
-  RPC_ANVIL: ${{ vars.RPC_ANVIL }}
+  RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+  RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+  RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+  PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
 
 on:
   push:

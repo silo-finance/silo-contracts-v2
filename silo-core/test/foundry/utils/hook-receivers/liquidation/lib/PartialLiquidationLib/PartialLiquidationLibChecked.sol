@@ -35,7 +35,7 @@ library PartialLiquidationLibChecked {
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         uint256 _liquidationTargetLTV,
-        uint256 _liquidityFee
+        uint256 _liquidationFee
     )
         internal
         pure
@@ -47,7 +47,7 @@ library PartialLiquidationLibChecked {
             _sumOfCollateralValue,
             _borrowerDebtValue,
             _liquidationTargetLTV,
-            _liquidityFee
+            _liquidationFee
         );
 
         collateralToLiquidate = valueToAssetsByRatio(
@@ -175,26 +175,26 @@ library PartialLiquidationLibChecked {
         uint256 _totalBorrowerCollateralValue,
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidityFee
+        uint256 _liquidationFee
     ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
-            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidityFee
+            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidationFee
         );
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
-            repayValue, _totalBorrowerCollateralValue, _liquidityFee
+            repayValue, _totalBorrowerCollateralValue, _liquidationFee
         );
     }
 
     /// @param _maxDebtToCover assets or value, but must be in sync with `_totalCollateral`
     /// @param _sumOfCollateral assets or value, but must be in sync with `_maxDebtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidityFee)
+    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidationFee)
         internal
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _maxDebtToCover * _liquidityFee / _PRECISION_DECIMALS;
+        uint256 fee = _maxDebtToCover * _liquidationFee / _PRECISION_DECIMALS;
 
         toLiquidate = _maxDebtToCover + fee;
 
@@ -217,10 +217,10 @@ library PartialLiquidationLibChecked {
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidityFee
+        uint256 _liquidationFee
     ) internal pure returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
-        if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
+        if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
@@ -239,9 +239,9 @@ library PartialLiquidationLibChecked {
         /* unchecked */ {
             // safe because of above `LTCv >= _totalBorrowerDebtValue`
             repayValue = _totalBorrowerDebtValue - ltCv;
-            // we checked at begin `_liquidityFee >= _PRECISION_DECIMALS`
+            // we checked at begin `_liquidationFee >= _PRECISION_DECIMALS`
             // mul on DP will not overflow on uint256, div is safe
-            dividerR = _ltvAfterLiquidation + _ltvAfterLiquidation * _liquidityFee / _PRECISION_DECIMALS;
+            dividerR = _ltvAfterLiquidation + _ltvAfterLiquidation * _liquidationFee / _PRECISION_DECIMALS;
         }
 
         // now we can go back to proper precision

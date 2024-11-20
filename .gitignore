@@ -23,9 +23,6 @@ deployments/31337
 **/deployments/anvil
 **/deployments/31337
 
-# forge broadcast
-broadcast
-**/broadcast
 **/build/
 **/artifacts/
 

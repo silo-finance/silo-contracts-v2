@@ -66,7 +66,6 @@ interface ISiloFactory is IERC721 {
     error MaxDeployerFeeExceeded();
     error MaxFlashloanFeeExceeded();
     error MaxLiquidationFeeExceeded();
-    error InvalidIrmConfig();
     error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
     error InvalidQuoteToken();
