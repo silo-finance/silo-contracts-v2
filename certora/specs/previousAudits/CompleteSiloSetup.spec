@@ -7,82 +7,54 @@ using ShareDebtToken1 as shareDebtToken1;
 using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 
-function SafeAssumptions(env e, address user) 
+// from Shoham
+// we probably not need both of these
+// I'd prefer to have these usings in a single file only and import it where needed
+using Silo0 as silo0_R;
+using Silo1 as silo1_R;
+using Token0 as token0_R;
+using Token1 as token1_R;
+using ShareDebtToken0 as shareDebtToken0_R;
+using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0_R;
+using ShareDebtToken1 as shareDebtToken1_R;
+using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1_R;
+using SiloConfig as siloConfig_R;
+
+function SafeAssumptions(env e) 
 {
     completeSiloSetupForEnv(e);
-    requireAllInvariants(e, user);
+    requireEnvFreeInvariants();
+    requireEnvInvariants(e);
+}
+
+function SafeAssumptions(env e, address user) 
+{
+    SafeAssumptions(e);
+    requireEnvAndUserInvariants(e, user);
 }
 
 function completeSiloSetupForEnv(env e) {
-    require e.msg.sender != shareDebtToken0;
-    require e.msg.sender != shareDebtToken1;
-    require e.msg.sender != shareProtectedCollateralToken0;
-    require e.msg.sender != shareProtectedCollateralToken1;
-    require e.msg.sender != token0;
-    require e.msg.sender != token1;
+    configForEightTokensSetupRequirements();
+
+    nonSceneAddressRequirements(e.msg.sender);
+    // require e.msg.sender != shareDebtToken0;
+    // require e.msg.sender != shareDebtToken1;
+    // require e.msg.sender != shareProtectedCollateralToken0;
+    // require e.msg.sender != shareProtectedCollateralToken1;
+    // require e.msg.sender != token0;
+    // require e.msg.sender != token1;
     
+    silosTimestampSetupRequirements(e);
     // we can not have block.timestamp less than interestRateTimestamp
-    require e.block.timestamp < (1 << 64);
-    require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp(e);
-    require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp(e);
+    // require e.block.timestamp < (1 << 64);
+    // require e.block.timestamp >= silo0.getSiloDataInterestRateTimestamp(e);
+    // require e.block.timestamp >= silo1.getSiloDataInterestRateTimestamp(e);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////
 /////  basic invariants
 ////////////////////////////
-
-// requires all the invariants defined bellow.
-// !!  if you add more, also require it here    !!
-function requireAllInvariants(env e, address user)
-{
-    requireInvariant shareDebtToken0_tracked();
-    requireInvariant shareProtectedToken0_tracked();    
-    requireInvariant siloToken0_tracked();              
-    requireInvariant shareDebtToken1_tracked();
-    requireInvariant shareProtectedToken1_tracked();
-    requireInvariant siloToken1_tracked();
-
-    requireInvariant totalSupplyMoreThanBalance_token0(user);           
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(user);
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(user);      
-    requireInvariant totalSupplyMoreThanBalance_siloToken0(user);           
-    requireInvariant totalSupplyMoreThanBalance_token1(user);               
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(user); 
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(user);     
-    requireInvariant totalSupplyMoreThanBalance_siloToken1(user);        
-
-    requireInvariant totalSupplyMoreThanBalance_token0(e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(e.msg.sender);
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(e.msg.sender);      
-    requireInvariant totalSupplyMoreThanBalance_siloToken0(e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance_token1(e.msg.sender);               
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(e.msg.sender); 
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(e.msg.sender);     
-    requireInvariant totalSupplyMoreThanBalance_siloToken1(e.msg.sender);      
-
-    requireInvariant totalSupplyMoreThanBalance2_token0(user, e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken0(user, e.msg.sender);
-    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken0(user, e.msg.sender);      
-    requireInvariant totalSupplyMoreThanBalance2_siloToken0(user, e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance2_token1(user, e.msg.sender);               
-    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken1(user, e.msg.sender); 
-    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken1(user, e.msg.sender);     
-    requireInvariant totalSupplyMoreThanBalance2_siloToken1(user, e.msg.sender);    
-
-    requireInvariant token0Distribution(user);
-    requireInvariant token1Distribution(user);
-    requireInvariant debt0ThenHasCollateral(user);
-    requireInvariant debt1ThenHasCollateral(user);
-
-    requireInvariant token0Distribution(e.msg.sender);
-    requireInvariant token1Distribution(e.msg.sender);
-    requireInvariant debt0ThenHasCollateral(e.msg.sender);
-    requireInvariant debt1ThenHasCollateral(e.msg.sender);
-
-    requireInvariant noMoreSharesThanAssets_0();
-    requireInvariant noMoreSharesThanAssets_1();
-}
 
 //there are shares if and only if there are tokens
 //  otherwise there are CEXs where borrow(a lot); repay(a little); removes all debt from the user, etc.
@@ -145,6 +117,80 @@ invariant debt1ThenHasCollateral(address user)
 // no more shares than assets
 invariant noMoreSharesThanAssets_0() silo0.totalSupply() <= silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral);
 invariant noMoreSharesThanAssets_1() silo1.totalSupply() <= silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////
+/////  functions for requiring the invariants
+////////////////////////////
+
+function requireAllInvariants(env e, address user)
+{
+    requireEnvFreeInvariants();
+    requireEnvInvariants(e);
+    requireEnvAndUserInvariants(e, user);
+}
+
+// requires all the non-parametric invariants defined bellow.
+// !!  if you add more, also require them here    !!
+function requireEnvFreeInvariants()
+{
+    requireInvariant shareDebtToken0_tracked();
+    requireInvariant shareProtectedToken0_tracked();    
+    requireInvariant siloToken0_tracked();              
+    requireInvariant shareDebtToken1_tracked();
+    requireInvariant shareProtectedToken1_tracked();
+    requireInvariant siloToken1_tracked();
+    requireInvariant noMoreSharesThanAssets_0();
+    requireInvariant noMoreSharesThanAssets_1();
+}
+
+// requires all the invariants with env defined bellow.
+// !!  if you add more, also require them here    !!
+function requireEnvInvariants(env e)
+{       
+    requireInvariant totalSupplyMoreThanBalance_token0(e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(e.msg.sender);
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(e.msg.sender);      
+    requireInvariant totalSupplyMoreThanBalance_siloToken0(e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance_token1(e.msg.sender);               
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(e.msg.sender); 
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(e.msg.sender);     
+    requireInvariant totalSupplyMoreThanBalance_siloToken1(e.msg.sender);      
+
+    requireInvariant token0Distribution(e.msg.sender);
+    requireInvariant token1Distribution(e.msg.sender);
+    requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    requireInvariant debt1ThenHasCollateral(e.msg.sender);
+}
+
+// requires all the invariants with env and user defined bellow.
+// !!  if you add more, also require them here    !!
+function requireEnvAndUserInvariants(env e, address user)
+{
+    requireInvariant totalSupplyMoreThanBalance_token0(user);           
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(user);
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(user);      
+    requireInvariant totalSupplyMoreThanBalance_siloToken0(user);           
+    requireInvariant totalSupplyMoreThanBalance_token1(user);               
+    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(user); 
+    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(user);     
+    requireInvariant totalSupplyMoreThanBalance_siloToken1(user);        
+
+    requireInvariant totalSupplyMoreThanBalance2_token0(user, e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken0(user, e.msg.sender);
+    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken0(user, e.msg.sender);      
+    requireInvariant totalSupplyMoreThanBalance2_siloToken0(user, e.msg.sender);           
+    requireInvariant totalSupplyMoreThanBalance2_token1(user, e.msg.sender);               
+    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken1(user, e.msg.sender); 
+    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken1(user, e.msg.sender);     
+    requireInvariant totalSupplyMoreThanBalance2_siloToken1(user, e.msg.sender);    
+
+    requireInvariant token0Distribution(user);
+    requireInvariant token1Distribution(user);
+    requireInvariant debt0ThenHasCollateral(user);
+    requireInvariant debt1ThenHasCollateral(user);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////
@@ -332,7 +378,11 @@ function differsAtMost(mathint x, mathint y, mathint diff) returns bool
     return x - y <= diff;
 }
 
-
+function max(mathint a, mathint b) returns mathint
+{
+    if (a < b) return b;
+    return a;
+}
 
 
 // // limits token.totalSupply() and silo.total[] to reasonable values
@@ -382,3 +432,137 @@ function differsAtMost(mathint x, mathint y, mathint diff) returns bool
 //         //totalProtectedAssets * 5 == totalProtectedShares * 3 ||
 //         totalProtectedAssets == totalProtectedShares;
 // }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////
+/// from Shoham
+//////////////////////////////
+
+/// Prevents having block timestamp less than interest rate timestamp
+function silosTimestampSetupRequirements(env e) {
+    require require_uint64(e.block.timestamp) >= silo0_R.getSiloDataInterestRateTimestamp(e);
+    require require_uint64(e.block.timestamp) >= silo1_R.getSiloDataInterestRateTimestamp(e);
+}
+
+/// Given address is not one of the tokens, silos or config
+function nonSceneAddressRequirements(address sender) {
+    require sender != silo0_R;
+    require sender != silo1_R;
+    require sender != siloConfig_R;
+
+    require sender != shareDebtToken0_R;
+    require sender != shareProtectedCollateralToken0_R;
+    require sender != shareDebtToken1_R;
+    require sender != shareProtectedCollateralToken1_R;
+
+    require sender != token0_R;
+    require sender != token1_R;
+}
+
+/// Ensures the `siloConfig` is set up properly
+function configForEightTokensSetupRequirements() {
+    require silo0_R.silo() == silo0_R;
+    require silo0_R.config() == siloConfig_R;
+
+    require silo1_R.silo() == silo1_R;
+    require silo1_R.config() == siloConfig_R;
+
+    require shareDebtToken0_R.silo() == silo0_R;
+    require shareProtectedCollateralToken0_R.silo() == silo0_R;
+    
+    require silo0_R.siloConfig() == siloConfig_R;
+    require shareDebtToken0_R.siloConfig() == siloConfig_R;
+    require shareDebtToken0_R.siloConfig() == siloConfig_R;
+
+    require shareDebtToken1_R.silo() == silo1_R;
+    require shareProtectedCollateralToken1_R.silo() == silo1_R;
+    
+    require silo1_R.siloConfig() == siloConfig_R;
+    require shareDebtToken1_R.siloConfig() == siloConfig_R;
+    require shareDebtToken1_R.siloConfig() == siloConfig_R;
+}
+
+function totalSuppliesMoreThanBalances(address user1, address user2) {
+    require user1 != user2;
+    require (
+        to_mathint(silo0_R.totalSupply()) >=
+        silo0_R.balanceOf(user1) + silo0_R.balanceOf(user2)
+    );
+    require (
+        to_mathint(shareDebtToken0_R.totalSupply()) >=
+        shareDebtToken0_R.balanceOf(user1) + shareDebtToken0_R.balanceOf(user2)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken0_R.totalSupply()) >=
+        shareProtectedCollateralToken0_R.balanceOf(user1) +
+        shareProtectedCollateralToken0_R.balanceOf(user2)
+    );
+    require (
+        to_mathint(token0_R.totalSupply()) >=
+        token0_R.balanceOf(user1) + token0_R.balanceOf(user2)
+    );
+
+    require (
+        to_mathint(silo1_R.totalSupply()) >=
+        silo1_R.balanceOf(user1) + silo1_R.balanceOf(user2)
+    );
+    require (
+        to_mathint(shareDebtToken1_R.totalSupply()) >=
+        shareDebtToken1_R.balanceOf(user1) + shareDebtToken1_R.balanceOf(user2)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken1_R.totalSupply()) >=
+        shareProtectedCollateralToken1_R.balanceOf(user1) +
+        shareProtectedCollateralToken1_R.balanceOf(user2)
+    );
+    require (
+        to_mathint(token1_R.totalSupply()) >=
+        token1_R.balanceOf(user1) + token1_R.balanceOf(user2)
+    );
+}
+
+function totalSuppliesMoreThanThreeBalances(address user1, address user2, address user3) {
+    require user1 != user2 && user1 != user3 && user2 != user3;
+    require (
+        to_mathint(silo0_R.totalSupply()) >=
+        silo0_R.balanceOf(user1) + silo0_R.balanceOf(user2) + silo0_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareDebtToken0_R.totalSupply()) >=
+        shareDebtToken0_R.balanceOf(user1) +
+        shareDebtToken0_R.balanceOf(user2) +
+        shareDebtToken0_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken0_R.totalSupply()) >=
+        shareProtectedCollateralToken0_R.balanceOf(user1) +
+        shareProtectedCollateralToken0_R.balanceOf(user2) +
+        shareProtectedCollateralToken0_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(token0_R.totalSupply()) >=
+        token0_R.balanceOf(user1) + token0_R.balanceOf(user2) + token0_R.balanceOf(user3)
+    );
+
+    require (
+        to_mathint(silo1_R.totalSupply()) >=
+        silo1_R.balanceOf(user1) + silo1_R.balanceOf(user2) + silo1_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareDebtToken1_R.totalSupply()) >=
+        shareDebtToken1_R.balanceOf(user1) +
+        shareDebtToken1_R.balanceOf(user2) +
+        shareDebtToken1_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken1_R.totalSupply()) >=
+        shareProtectedCollateralToken1_R.balanceOf(user1) +
+        shareProtectedCollateralToken1_R.balanceOf(user2) +
+        shareProtectedCollateralToken1_R.balanceOf(user3)
+    );
+    require (
+        to_mathint(token1_R.totalSupply()) >=
+        token1_R.balanceOf(user1) + token1_R.balanceOf(user2) + token1_R.balanceOf(user3)
+    );
+}
