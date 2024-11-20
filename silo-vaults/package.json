@@ -1,0 +1,12 @@
+{
+  "name": "silo-vaults",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:silo-finance/silo-contracts.git"
+  },
+  "license": "BUSL-1.1"
+}
