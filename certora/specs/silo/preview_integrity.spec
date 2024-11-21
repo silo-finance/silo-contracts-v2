@@ -107,24 +107,6 @@ rule HLP_PreviewBorrowCorrectness_strict(address receiver)
     assert debtSharesReported == debtSharesReceived;
 }
 
-// https://vaas-stg.certora.com/output/39601/d13f10506992458e8de11024121f3e00?anonymousKey=3e989e17fe3507c6721cf3b3222fb37fd3a04515
-rule HLP_PreviewBorrowCorrectness(address receiver)
-{
-    env e;
-
-    // Block time-stamp >= interest rate time-stamp
-    silosTimestampSetupRequirements(e);
-    // receiver is not one of the contracts in the scene
-    nonSceneAddressRequirements(receiver);
-    totalSuppliesMoreThanBalances(receiver, silo0);
-    
-    // bool sameAsset;
-    uint256 assets;
-    uint256 debtSharesReported = previewBorrow(e, assets);
-    uint256 debtSharesReceived = borrow(e, assets, receiver, e.msg.sender); // , sameAsset);
-    assert debtSharesReported >= debtSharesReceived;
-}
-
 // https://vaas-stg.certora.com/output/39601/c718dc9eb5344cd490fe2964e9823fc4?anonymousKey=64eb2c318bf859e745eb11321eae6665d6abca68
 rule HLP_PreviewRepayCorrectness_strict(address receiver)
 {
