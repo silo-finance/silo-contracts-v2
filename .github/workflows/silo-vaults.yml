@@ -69,11 +69,11 @@ jobs:
             -   name: Run tests
                 run: FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi
 
-#            -   name: Sizes
-#                run: |
-#                    git submodule
-#                    forge --version
-#                    FOUNDRY_PROFILE=vaults-tests forge build --sizes
+            -   name: Sizes
+                run: |
+                    git submodule
+                    forge --version
+                    FOUNDRY_PROFILE=vaults forge build --sizes
 
     linters:
         runs-on: ubuntu-latest

@@ -83,12 +83,6 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
-[profile.vaults-with-tests]
-src = 'silo-vaults/contracts'
-test = 'silo-vaults/test/foundry'
-out = 'cache/foundry/out/silo-vaults'
-broadcast = 'silo-vaults/broadcast'
-
 [profile.vaults-tests]
 src = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'
