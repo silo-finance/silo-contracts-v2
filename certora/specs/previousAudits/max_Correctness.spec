@@ -3,7 +3,7 @@ import "../summaries/siloconfig_dispatchers.spec";
 import "../summaries/tokens_dispatchers.spec";
 import "../summaries/safe-approximations.spec";
 
-import "../requirements/tokens_requirements.spec";
+//import "../requirements/tokens_requirements.spec";
 import "../previousAudits/CompleteSiloSetup.spec";
 
 // The ERC4626 spec doesn't require that max{method} is as close as possible to the real bound.
