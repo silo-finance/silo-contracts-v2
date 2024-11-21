@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.13;
+pragma solidity 0.8.28;
 
-import {IAaveDistributionManager} from "../interfaces/IAaveDistributionManager.sol";
+import {IAaveDistributionManager} from "./IAaveDistributionManager.sol";
 
 interface IAaveIncentivesController is IAaveDistributionManager {
     event RewardsAccrued(address indexed user, uint256 amount);
