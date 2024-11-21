@@ -1,25 +1,45 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./BaseTest.sol";
-import {MetaMorpho} from "../../../src/MetaMorpho.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
+import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
+
+import {BaseTest} from "./BaseTest.sol";
+import {MetaMorpho, ConstantsLib} from "../../../contracts/MetaMorpho.sol";
 
 contract InternalTest is BaseTest, MetaMorpho {
+
     constructor()
-        MetaMorpho(OWNER, address(morpho), ConstantsLib.MIN_TIMELOCK, address(loanToken), "MetaMorpho Vault", "MM")
-    {}
+        MetaMorpho(OWNER, ConstantsLib.MIN_TIMELOCK, address(loanToken), "MetaMorpho Vault", "MM")
+    {
+
+    }
 
     function setUp() public virtual override {
-        super.setUp();
+        _createNewMarkets();
 
         vm.startPrank(OWNER);
         this.setCurator(CURATOR);
         this.setIsAllocator(ALLOCATOR, true);
         vm.stopPrank();
 
+        emit log_named_address("loanToken", address(loanToken));
+        emit log_named_address("collateralToken", address(collateralToken));
+
         vm.startPrank(SUPPLIER);
         loanToken.approve(address(this), type(uint256).max);
         collateralToken.approve(address(this), type(uint256).max);
         vm.stopPrank();
+    }
+
+    function _expectedSupplyAssets(IERC4626 _market, address _user)
+        internal
+        view
+        override(BaseTest, MetaMorpho)
+        returns (uint256 assets)
+    {
+        assets = BaseTest._expectedSupplyAssets(_market, _user);
     }
 }

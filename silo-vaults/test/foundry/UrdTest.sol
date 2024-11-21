@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import {UtilsLib} from "../../lib/morpho-blue/src/libraries/UtilsLib.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
-import "./helpers/IntegrationTest.sol";
+import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
+import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+
+/*
+FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc UrdTest -vvv
+*/
 contract UrdTest is IntegrationTest {
-    using UtilsLib for uint256;
-
     function testSetSkimRecipient(address newSkimRecipient) public {
         vm.assume(newSkimRecipient != SKIM_RECIPIENT);
 
@@ -31,8 +37,11 @@ contract UrdTest is IntegrationTest {
         vault.setSkimRecipient(address(0));
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSkimNotLoanToken -vvv
+    */
     function testSkimNotLoanToken(uint256 amount) public {
-        collateralToken.setBalance(address(vault), amount);
+        collateralToken.mint(address(vault), amount);
 
         vm.expectEmit(address(vault));
         emit EventsLib.Skim(address(this), address(collateralToken), amount);

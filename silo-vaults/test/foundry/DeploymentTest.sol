@@ -1,42 +1,44 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {MetaMorpho} from "../../contracts/MetaMorpho.sol";
 
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc DeploymentTest -vvv
+*/
 contract DeploymentTest is IntegrationTest {
-    function testDeployMetaMorphoAddresssZero() public {
-        vm.expectRevert(ErrorsLib.ZeroAddress.selector);
-        createMetaMorpho(OWNER, address(0), ConstantsLib.MIN_TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV");
-    }
-
-    function testDeployMetaMorphoNotToken(address notToken) public {
-        vm.assume(address(notToken) != address(loanToken));
-        vm.assume(address(notToken) != address(collateralToken));
-        vm.assume(address(notToken) != address(vault));
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaMorphoNotToken -vvv
+    */
+    function testDeployMetaMorphoNotToken() public {
+        address notToken = makeAddr("address notToken");
 
         vm.expectRevert();
-        createMetaMorpho(OWNER, address(morpho), ConstantsLib.MIN_TIMELOCK, notToken, "MetaMorpho Vault", "MMV");
+        createMetaMorpho(OWNER, ConstantsLib.MIN_TIMELOCK, notToken, "MetaMorpho Vault", "MMV");
     }
 
-    function testDeployMetaMorpho(
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaMorphoPass -vvv
+    */
+    function testDeployMetaMorphoPass(
         address owner,
-        address morpho,
         uint256 initialTimelock,
         string memory name,
         string memory symbol
     ) public {
         assumeNotZeroAddress(owner);
-        assumeNotZeroAddress(morpho);
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        IMetaMorpho newVault = createMetaMorpho(owner, morpho, initialTimelock, address(loanToken), name, symbol);
+        IMetaMorpho newVault = createMetaMorpho(owner, initialTimelock, address(loanToken), name, symbol);
 
         assertEq(newVault.owner(), owner, "owner");
-        assertEq(address(newVault.MORPHO()), morpho, "morpho");
         assertEq(newVault.timelock(), initialTimelock, "timelock");
         assertEq(newVault.asset(), address(loanToken), "asset");
         assertEq(newVault.name(), name, "name");
         assertEq(newVault.symbol(), symbol, "symbol");
-        assertEq(loanToken.allowance(address(newVault), address(morpho)), type(uint256).max, "loanToken allowance");
     }
 }

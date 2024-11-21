@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {IMetaMorphoBase} from "../../contracts/interfaces/IMetaMorpho.sol";
 
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MulticallTest -vvv
+*/
 contract MulticallTest is IntegrationTest {
     bytes[] internal data;
 

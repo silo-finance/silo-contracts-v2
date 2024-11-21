@@ -1,15 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import {IERC20Errors} from "../../lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
-import {IMorphoFlashLoanCallback} from "../../lib/morpho-blue/src/interfaces/IMorphoCallbacks.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
-import "./helpers/IntegrationTest.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 
-contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
-    using MorphoBalancesLib for IMorpho;
-    using MarketParamsLib for MarketParams;
+import {IMorphoFlashLoanCallback} from "morpho-blue/interfaces/IMorphoCallbacks.sol";
 
+import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
+
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ERC4626Test -vvv
+*/
+contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     function setUp() public override {
         super.setUp();
 
@@ -17,20 +27,24 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         _sortSupplyQueueIdleLast();
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDecimals -vvv
+    */
     function testDecimals(uint8 decimals) public {
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
-        vault = createMetaMorpho(OWNER, address(morpho), TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV");
+        vault = createMetaMorpho(OWNER, TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV");
 
         assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMint -vvv
+    */
     function testMint(uint256 assets) public {
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         uint256 shares = vault.convertToShares(assets);
-
-        loanToken.setBalance(SUPPLIER, assets);
 
         vm.expectEmit();
         emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
@@ -38,15 +52,16 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         uint256 deposited = vault.mint(shares, ONBEHALF);
 
         assertGt(deposited, 0, "deposited");
-        assertEq(loanToken.balanceOf(address(vault)), 0, "balanceOf(vault)");
+        assertEq(loanToken.balanceOf(address(vault)), 0, "balanceOf(vault) 0, it was deposited to market");
         assertEq(vault.balanceOf(ONBEHALF), shares, "balanceOf(ONBEHALF)");
-        assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), assets, "expectedSupplyAssets(vault)");
+        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), assets, "expectedSupplyAssets(vault)");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeposit -vvv
+    */
     function testDeposit(uint256 assets) public {
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, assets);
 
         vm.expectEmit();
         emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() + assets);
@@ -56,13 +71,14 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertGt(shares, 0, "shares");
         assertEq(loanToken.balanceOf(address(vault)), 0, "balanceOf(vault)");
         assertEq(vault.balanceOf(ONBEHALF), shares, "balanceOf(ONBEHALF)");
-        assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), assets, "expectedSupplyAssets(vault)");
+        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), assets, "expectedSupplyAssets(vault)");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeem -vvv
+    */
     function testRedeem(uint256 deposited, uint256 redeemed) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -78,11 +94,12 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, "balanceOf(ONBEHALF)");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdraw -vvv
+    */
     function testWithdraw(uint256 deposited, uint256 withdrawn) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -96,13 +113,14 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, "balanceOf(ONBEHALF)");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawIdle -vvv
+    */
     function testWithdrawIdle(uint256 deposited, uint256 withdrawn) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
 
         _setCap(allMarkets[0], 0);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -117,10 +135,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(_idle(), deposited - withdrawn, "idle");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemTooMuch -vvv
+    */
     function testRedeemTooMuch(uint256 deposited) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited * 2);
 
         vm.startPrank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, SUPPLIER);
@@ -134,10 +153,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.redeem(shares + 1, RECEIVER, SUPPLIER);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawAll -vvv
+    */
     function testWithdrawAll(uint256 assets) public {
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, assets);
 
         vm.prank(SUPPLIER);
         uint256 minted = vault.deposit(assets, ONBEHALF);
@@ -150,13 +170,14 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(shares, minted, "shares");
         assertEq(vault.balanceOf(ONBEHALF), 0, "balanceOf(ONBEHALF)");
         assertEq(loanToken.balanceOf(RECEIVER), assets, "loanToken.balanceOf(RECEIVER)");
-        assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), 0, "expectedSupplyAssets(vault)");
+        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 0, "expectedSupplyAssets(vault)");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemAll -vvv
+    */
     function testRedeemAll(uint256 deposited) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 minted = vault.deposit(deposited, ONBEHALF);
@@ -169,13 +190,14 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(assets, deposited, "assets");
         assertEq(vault.balanceOf(ONBEHALF), 0, "balanceOf(ONBEHALF)");
         assertEq(loanToken.balanceOf(RECEIVER), deposited, "loanToken.balanceOf(RECEIVER)");
-        assertEq(morpho.expectedSupplyAssets(allMarkets[0], address(vault)), 0, "expectedSupplyAssets(vault)");
+        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 0, "expectedSupplyAssets(vault)");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemNotDeposited -vvv
+    */
     function testRedeemNotDeposited(uint256 deposited) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -185,10 +207,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.redeem(shares, SUPPLIER, SUPPLIER);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemNotApproved -vvv
+    */
     function testRedeemNotApproved(uint256 deposited) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -198,10 +221,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.redeem(shares, RECEIVER, ONBEHALF);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawNotApproved -vvv
+    */
     function testWithdrawNotApproved(uint256 assets) public {
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, assets);
 
         vm.prank(SUPPLIER);
         vault.deposit(assets, ONBEHALF);
@@ -212,10 +236,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.withdraw(assets, RECEIVER, ONBEHALF);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testTransferFrom -vvv
+    */
     function testTransferFrom(uint256 deposited, uint256 toTransfer) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -233,10 +258,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(vault.balanceOf(SUPPLIER), 0, "balanceOf(SUPPLIER)");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testTransferFromNotApproved -vvv
+    */
     function testTransferFromNotApproved(uint256 deposited, uint256 amount) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
@@ -248,10 +274,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.transferFrom(ONBEHALF, RECEIVER, shares);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMoreThanBalanceButLessThanTotalAssets -vvv
+    */
     function testWithdrawMoreThanBalanceButLessThanTotalAssets(uint256 deposited, uint256 assets) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.startPrank(SUPPLIER);
         uint256 shares = vault.deposit(deposited / 2, ONBEHALF);
@@ -268,10 +295,11 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.withdraw(assets, RECEIVER, ONBEHALF);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMoreThanTotalAssets -vvv
+    */
     function testWithdrawMoreThanTotalAssets(uint256 deposited, uint256 assets) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         vault.deposit(deposited, ONBEHALF);
@@ -283,32 +311,32 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         vault.withdraw(assets, RECEIVER, ONBEHALF);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMoreThanBalanceAndLiquidity -vvv
+    */
     function testWithdrawMoreThanBalanceAndLiquidity(uint256 deposited, uint256 assets) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         vault.deposit(deposited, ONBEHALF);
 
         assets = bound(assets, deposited + 1, type(uint256).max / (deposited + 1));
 
-        collateralToken.setBalance(BORROWER, type(uint128).max);
-
         // Borrow liquidity.
         vm.startPrank(BORROWER);
-        morpho.supplyCollateral(allMarkets[0], type(uint128).max, BORROWER, hex"");
-        morpho.borrow(allMarkets[0], 1, 0, BORROWER, BORROWER);
+        silo0.deposit(type(uint128).max, BORROWER);
+        silo1.borrow(1, BORROWER, BORROWER);
 
         vm.startPrank(ONBEHALF);
         vm.expectRevert(ErrorsLib.NotEnoughLiquidity.selector);
         vault.withdraw(assets, RECEIVER, ONBEHALF);
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testTransfer -vvv
+    */
     function testTransfer(uint256 deposited, uint256 toTransfer) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-
-        loanToken.setBalance(SUPPLIER, deposited);
 
         vm.prank(SUPPLIER);
         uint256 minted = vault.deposit(deposited, ONBEHALF);
@@ -323,75 +351,75 @@ contract ERC4626Test is IntegrationTest, IMorphoFlashLoanCallback {
         assertEq(vault.balanceOf(RECEIVER), toTransfer, "balanceOf(RECEIVER)");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMaxWithdraw -vvv
+    */
     function testMaxWithdraw(uint256 depositedAssets, uint256 borrowedAssets) public {
         depositedAssets = bound(depositedAssets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         borrowedAssets = bound(borrowedAssets, MIN_TEST_ASSETS, depositedAssets);
 
-        loanToken.setBalance(SUPPLIER, depositedAssets);
-
         vm.prank(SUPPLIER);
         vault.deposit(depositedAssets, ONBEHALF);
 
-        collateralToken.setBalance(BORROWER, type(uint128).max);
-
         vm.startPrank(BORROWER);
-        morpho.supplyCollateral(allMarkets[0], type(uint128).max, BORROWER, hex"");
-        morpho.borrow(allMarkets[0], borrowedAssets, 0, BORROWER, BORROWER);
+        silo0.deposit(type(uint128).max, BORROWER);
+        silo1.borrow(borrowedAssets, BORROWER, BORROWER);
 
         assertEq(vault.maxWithdraw(ONBEHALF), depositedAssets - borrowedAssets, "maxWithdraw(ONBEHALF)");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMaxWithdrawFlashLoan -vvv
+    */
     function testMaxWithdrawFlashLoan(uint256 supplied, uint256 deposited) public {
         supplied = bound(supplied, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
-        loanToken.setBalance(SUPPLIER, supplied);
-
         vm.prank(SUPPLIER);
-        morpho.supply(allMarkets[0], supplied, 0, ONBEHALF, hex"");
-
-        loanToken.setBalance(SUPPLIER, deposited);
+        silo1.deposit(supplied, ONBEHALF);
 
         vm.prank(SUPPLIER);
         vault.deposit(deposited, ONBEHALF);
 
-        assertGt(vault.maxWithdraw(ONBEHALF), 0);
+        assertEq(vault.maxWithdraw(ONBEHALF), deposited, "maxWithdraw");
+        assertEq(loanToken.balanceOf(address(silo1)), supplied + deposited, "balanceOf");
 
-        loanToken.approve(address(morpho), type(uint256).max);
-        morpho.flashLoan(address(loanToken), loanToken.balanceOf(address(morpho)), hex"");
+        silo1.flashLoan(
+            IERC3156FlashBorrower(address(this)), address(loanToken), loanToken.balanceOf(address(silo1)), ""
+        );
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMaxDeposit -vvv
+    */
     function testMaxDeposit() public {
         _setCap(allMarkets[0], 1 ether);
 
-        Id[] memory supplyQueue = new Id[](1);
-        supplyQueue[0] = allMarkets[0].id();
+        IERC4626[] memory supplyQueue = new IERC4626[](1);
+        supplyQueue[0] = allMarkets[0];
 
         vm.prank(ALLOCATOR);
         vault.setSupplyQueue(supplyQueue);
 
-        loanToken.setBalance(SUPPLIER, 1 ether);
-        collateralToken.setBalance(BORROWER, 2 ether);
-
         vm.prank(SUPPLIER);
-        morpho.supply(allMarkets[0], 1 ether, 0, SUPPLIER, hex"");
+        allMarkets[0].deposit(1 ether, SUPPLIER);
 
         vm.startPrank(BORROWER);
-        morpho.supplyCollateral(allMarkets[0], 2 ether, BORROWER, hex"");
-        morpho.borrow(allMarkets[0], 1 ether, 0, BORROWER, BORROWER);
+        silo0.deposit(2 ether, BORROWER);
+        silo1.borrow(1 ether, BORROWER, BORROWER);
         vm.stopPrank();
 
         _forward(1_000);
 
-        loanToken.setBalance(SUPPLIER, 1 ether);
-
         vm.prank(SUPPLIER);
         vault.deposit(1 ether, ONBEHALF);
 
-        assertEq(vault.maxDeposit(SUPPLIER), 0);
+        assertEq(vault.maxDeposit(SUPPLIER), 0, "maxDeposit should be 0");
     }
 
-    function onMorphoFlashLoan(uint256, bytes memory) external {
-        assertEq(vault.maxWithdraw(ONBEHALF), 0);
+    function onFlashLoan(address, address, uint256, uint256, bytes calldata) external pure returns (bytes32) {
+        // TODO this is where silo implementation differs, on silo flashloan does not change state of silo
+        // assertEq(vault.maxWithdraw(ONBEHALF), 0, "onFlashLoan assertion");
+        return keccak256("ERC3156FlashBorrower.onFlashLoan");
     }
 }
