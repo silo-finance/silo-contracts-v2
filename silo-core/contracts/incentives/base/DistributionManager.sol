@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.13;
+pragma solidity 0.8.28;
 
-import {IAaveDistributionManager} from "../../interfaces/IAaveDistributionManager.sol";
-import {DistributionTypes} from "../../lib/DistributionTypes.sol";
+import {IAaveDistributionManager} from "../interfaces/IAaveDistributionManager.sol";
+import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
 /**
  * @title DistributionManager

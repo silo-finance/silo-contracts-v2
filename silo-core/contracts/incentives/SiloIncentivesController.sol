@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.13;
+pragma solidity 0.8.28;
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {BaseIncentivesController} from "../external/aave/incentives/base/BaseIncentivesController.sol";
-import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
 
 
 /**
@@ -14,7 +13,7 @@ import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
  * The reference staked token implementation is at https://github.com/aave/aave-stake-v2
  * @author Aave
  */
-contract SiloIncentivesController is BaseIncentivesController, INotificationReceiver {
+contract SiloIncentivesController is BaseIncentivesController {
     using SafeERC20 for IERC20;
 
     constructor(IERC20 rewardToken, address emissionManager) BaseIncentivesController(rewardToken, emissionManager) {}

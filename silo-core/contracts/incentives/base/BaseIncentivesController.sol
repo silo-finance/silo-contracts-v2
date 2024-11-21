@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.13;
+pragma solidity 0.8.28;
 
-import {DistributionTypes} from "../../lib/DistributionTypes.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
+import {DistributionTypes} from "../lib/DistributionTypes.sol";
 import {DistributionManager} from "./DistributionManager.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IAaveIncentivesController} from "../../interfaces/IAaveIncentivesController.sol";
+import {IAaveIncentivesController} from "../interfaces/IAaveIncentivesController.sol";
 
 /**
  * @title BaseIncentivesController
