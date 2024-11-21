@@ -51,7 +51,6 @@ interface ISiloFactory is IERC721 {
 
     error MissingHookReceiver();
     error ZeroAddress();
-    error DaoFeeReceiverZeroAddress();
     error EmptyToken0();
     error EmptyToken1();
     error MaxFeeExceeded();

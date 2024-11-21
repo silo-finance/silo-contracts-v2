@@ -23,6 +23,7 @@ forge test -vv --ffi --mc SiloFactoryCreateSiloTest
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
 
+    ISiloFactory siloFactory;
     ISiloConfig siloConfig;
     SiloConfigData siloData;
     InterestRateModelConfigData modelData;

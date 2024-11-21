@@ -19,6 +19,7 @@ forge test -vv --ffi --mc GetFeesAndFeeReceiversWithAssetTest
 contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTest {
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.LOCAL_DEPLOYER;
 
+    ISiloFactory siloFactory;
     ISiloConfig siloConfig;
     SiloConfigData siloData;
 

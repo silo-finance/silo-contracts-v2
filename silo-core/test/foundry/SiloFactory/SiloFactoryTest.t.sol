@@ -24,6 +24,7 @@ forge test -vv --ffi --mc SiloFactoryTest
 contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
 
+    ISiloFactory siloFactory;
     ISiloConfig siloConfig;
     SiloConfigData siloData;
     InterestRateModelConfigData modelData;
