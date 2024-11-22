@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import {Id} from "../../lib/morpho-blue/src/interfaces/IMorpho.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {PendingAddress} from "./PendingLib.sol";
 
@@ -31,17 +31,17 @@ library EventsLib {
     /// @notice Emitted when `guardian` is set to `newGuardian`.
     event SetGuardian(address indexed caller, address indexed guardian);
 
-    /// @notice Emitted when a pending `cap` is submitted for market identified by `id`.
-    event SubmitCap(address indexed caller, Id indexed id, uint256 cap);
+    /// @notice Emitted when a pending `cap` is submitted for `market`.
+    event SubmitCap(address indexed caller, IERC4626 indexed market, uint256 cap);
 
-    /// @notice Emitted when a new `cap` is set for market identified by `id`.
-    event SetCap(address indexed caller, Id indexed id, uint256 cap);
+    /// @notice Emitted when a new `cap` is set for `market`.
+    event SetCap(address indexed caller, IERC4626 indexed market, uint256 cap);
 
-    /// @notice Emitted when the vault's last total assets is updated to `updatedTotalAssets`.
+    /// @notice Emitted when the market's last total assets is updated to `updatedTotalAssets`.
     event UpdateLastTotalAssets(uint256 updatedTotalAssets);
 
-    /// @notice Emitted when the market identified by `id` is submitted for removal.
-    event SubmitMarketRemoval(address indexed caller, Id indexed id);
+    /// @notice Emitted when the `market` is submitted for removal.
+    event SubmitMarketRemoval(address indexed caller, IERC4626 indexed market);
 
     /// @notice Emitted when `curator` is set to `newCurator`.
     event SetCurator(address indexed newCurator);
@@ -52,50 +52,54 @@ library EventsLib {
     /// @notice Emitted when a `pendingTimelock` is revoked.
     event RevokePendingTimelock(address indexed caller);
 
-    /// @notice Emitted when a `pendingCap` for the market identified by `id` is revoked.
-    event RevokePendingCap(address indexed caller, Id indexed id);
+    /// @notice Emitted when a `pendingCap` for the `market` is revoked.
+    event RevokePendingCap(address indexed caller, IERC4626 indexed market);
 
     /// @notice Emitted when a `pendingGuardian` is revoked.
     event RevokePendingGuardian(address indexed caller);
 
     /// @notice Emitted when a pending market removal is revoked.
-    event RevokePendingMarketRemoval(address indexed caller, Id indexed id);
+    event RevokePendingMarketRemoval(address indexed caller, IERC4626 indexed market);
 
     /// @notice Emitted when the `supplyQueue` is set to `newSupplyQueue`.
-    event SetSupplyQueue(address indexed caller, Id[] newSupplyQueue);
+    event SetSupplyQueue(address indexed caller, IERC4626[] newSupplyQueue);
 
     /// @notice Emitted when the `withdrawQueue` is set to `newWithdrawQueue`.
-    event SetWithdrawQueue(address indexed caller, Id[] newWithdrawQueue);
+    event SetWithdrawQueue(address indexed caller, IERC4626[] newWithdrawQueue);
 
-    /// @notice Emitted when a reallocation supplies assets to the market identified by `id`.
-    /// @param id The id of the market.
+    /// @notice Emitted when a reallocation supplies assets to the `market`.
+    /// @param market The market address.
     /// @param suppliedAssets The amount of assets supplied to the market.
     /// @param suppliedShares The amount of shares minted.
-    event ReallocateSupply(address indexed caller, Id indexed id, uint256 suppliedAssets, uint256 suppliedShares);
+    event ReallocateSupply(
+        address indexed caller, IERC4626 indexed market, uint256 suppliedAssets, uint256 suppliedShares
+    );
 
-    /// @notice Emitted when a reallocation withdraws assets from the market identified by `id`.
-    /// @param id The id of the market.
+    /// @notice Emitted when a reallocation withdraws assets from the `market`.
+    /// @param market The market address.
     /// @param withdrawnAssets The amount of assets withdrawn from the market.
     /// @param withdrawnShares The amount of shares burned.
-    event ReallocateWithdraw(address indexed caller, Id indexed id, uint256 withdrawnAssets, uint256 withdrawnShares);
+    event ReallocateWithdraw(
+        address indexed caller, IERC4626 indexed market, uint256 withdrawnAssets, uint256 withdrawnShares
+    );
 
     /// @notice Emitted when interest are accrued.
-    /// @param newTotalAssets The assets of the vault after accruing the interest but before the interaction.
+    /// @param newTotalAssets The assets of the market after accruing the interest but before the interaction.
     /// @param feeShares The shares minted to the fee recipient.
     event AccrueInterest(uint256 newTotalAssets, uint256 feeShares);
 
     /// @notice Emitted when an `amount` of `token` is transferred to the skim recipient by `caller`.
     event Skim(address indexed caller, address indexed token, uint256 amount);
 
-    /// @notice Emitted when a new MetaMorpho vault is created.
-    /// @param metaMorpho The address of the MetaMorpho vault.
+    /// @notice Emitted when a new MetaMorpho market is created.
+    /// @param metaMorpho The address of the MetaMorpho market.
     /// @param caller The caller of the function.
-    /// @param initialOwner The initial owner of the MetaMorpho vault.
-    /// @param initialTimelock The initial timelock of the MetaMorpho vault.
+    /// @param initialOwner The initial owner of the MetaMorpho market.
+    /// @param initialTimelock The initial timelock of the MetaMorpho market.
     /// @param asset The address of the underlying asset.
-    /// @param name The name of the MetaMorpho vault.
-    /// @param symbol The symbol of the MetaMorpho vault.
-    /// @param salt The salt used for the MetaMorpho vault's CREATE2 address.
+    /// @param name The name of the MetaMorpho market.
+    /// @param symbol The symbol of the MetaMorpho market.
+    /// @param salt The salt used for the MetaMorpho market's CREATE2 address.
     event CreateMetaMorpho(
         address indexed metaMorpho,
         address indexed caller,

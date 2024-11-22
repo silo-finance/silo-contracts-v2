@@ -1,13 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+
+import {PendingUint192, MarketConfig, PendingAddress} from "../../contracts/libraries/PendingLib.sol";
+import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {TIMELOCK, CAP} from "./helpers/BaseTest.sol";
 
 uint256 constant FEE = 0.1 ether; // 10%
 
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc TimelockTest -vvv
+*/
 contract TimelockTest is IntegrationTest {
-    using MarketParamsLib for MarketParams;
-
     function setUp() public override {
         super.setUp();
 
@@ -69,14 +79,14 @@ contract TimelockTest is IntegrationTest {
         timelock = bound(timelock, ConstantsLib.MAX_TIMELOCK + 1, type(uint256).max);
 
         vm.expectRevert(ErrorsLib.AboveMaxTimelock.selector);
-        createMetaMorpho(OWNER, address(morpho), timelock, address(loanToken), "MetaMorpho Vault", "MMV");
+        createMetaMorpho(OWNER,timelock, address(loanToken), "MetaMorpho Vault", "MMV");
     }
 
     function testDeployMetaMorphoBelowMinTimelock(uint256 timelock) public {
         timelock = bound(timelock, 0, ConstantsLib.MIN_TIMELOCK - 1);
 
         vm.expectRevert(ErrorsLib.BelowMinTimelock.selector);
-        createMetaMorpho(OWNER, address(morpho), timelock, address(loanToken), "MetaMorpho Vault", "MMV");
+        createMetaMorpho(OWNER, timelock, address(loanToken), "MetaMorpho Vault", "MMV");
     }
 
     function testSubmitTimelockAboveMaxTimelock(uint256 timelock) public {
@@ -285,16 +295,15 @@ contract TimelockTest is IntegrationTest {
     function testSubmitCapDecreased(uint256 cap) public {
         cap = bound(cap, 0, CAP - 1);
 
-        MarketParams memory marketParams = allMarkets[0];
-        Id id = marketParams.id();
+        IERC4626 market = allMarkets[0];
 
         vm.expectEmit(address(vault));
-        emit EventsLib.SetCap(CURATOR, id, cap);
+        emit EventsLib.SetCap(CURATOR, market, cap);
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, cap, "marketConfig.cap");
         assertEq(marketConfig.enabled, true, "marketConfig.enabled");
@@ -306,16 +315,15 @@ contract TimelockTest is IntegrationTest {
     function testSubmitCapIncreased(uint256 cap) public {
         cap = bound(cap, 1, type(uint184).max);
 
-        MarketParams memory marketParams = allMarkets[1];
-        Id id = marketParams.id();
+        IERC4626 market = allMarkets[1];
 
         vm.expectEmit(address(vault));
-        emit EventsLib.SubmitCap(CURATOR, id, cap);
+        emit EventsLib.SubmitCap(CURATOR, market, cap);
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, 0, "marketConfig.cap");
         assertEq(marketConfig.enabled, false, "marketConfig.enabled");
@@ -329,41 +337,40 @@ contract TimelockTest is IntegrationTest {
     function testSubmitCapAlreadyPending(uint256 cap) public {
         cap = bound(cap, 1, type(uint184).max);
 
-        MarketParams memory marketParams = allMarkets[1];
+        IERC4626 market = allMarkets[1];
 
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         vm.expectRevert(ErrorsLib.AlreadyPending.selector);
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
     }
 
     function testAcceptCapIncreased(uint256 cap) public {
         cap = bound(cap, CAP + 1, type(uint184).max);
 
-        MarketParams memory marketParams = allMarkets[0];
-        Id id = marketParams.id();
+        IERC4626 market = allMarkets[0];
 
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         vm.warp(block.timestamp + TIMELOCK);
 
         vm.expectEmit(address(vault));
-        emit EventsLib.SetCap(address(this), id, cap);
-        vault.acceptCap(marketParams);
+        emit EventsLib.SetCap(address(this), market, cap);
+        vault.acceptCap(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, cap, "marketConfig.cap");
         assertEq(marketConfig.enabled, true, "marketConfig.enabled");
         assertEq(marketConfig.removableAt, 0, "marketConfig.removableAt");
         assertEq(pendingCap.value, 0, "pendingCap.value");
         assertEq(pendingCap.validAt, 0, "pendingCap.validAt");
-        assertEq(Id.unwrap(vault.supplyQueue(1)), Id.unwrap(id), "supplyQueue");
-        assertEq(Id.unwrap(vault.withdrawQueue(1)), Id.unwrap(id), "withdrawQueue");
+        assertEq(address(vault.supplyQueue(1)), address(market), "supplyQueue");
+        assertEq(address(vault.withdrawQueue(1)), address(market), "withdrawQueue");
     }
 
     function testAcceptCapIncreasedTimelockIncreased(uint256 cap, uint256 timelock, uint256 elapsed) public {
@@ -371,30 +378,29 @@ contract TimelockTest is IntegrationTest {
         timelock = bound(timelock, TIMELOCK + 1, ConstantsLib.MAX_TIMELOCK);
         elapsed = bound(elapsed, TIMELOCK + 1, timelock);
 
-        MarketParams memory marketParams = allMarkets[0];
-        Id id = marketParams.id();
+        IERC4626 market = allMarkets[0];
 
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         _setTimelock(timelock);
 
         vm.warp(block.timestamp + elapsed);
 
         vm.expectEmit();
-        emit EventsLib.SetCap(address(this), id, cap);
-        vault.acceptCap(marketParams);
+        emit EventsLib.SetCap(address(this), market, cap);
+        vault.acceptCap(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, cap, "marketConfig.cap");
         assertEq(marketConfig.enabled, true, "marketConfig.enabled");
         assertEq(marketConfig.removableAt, 0, "marketConfig.removableAt");
         assertEq(pendingCap.value, 0, "pendingCap.value");
         assertEq(pendingCap.validAt, 0, "pendingCap.validAt");
-        assertEq(Id.unwrap(vault.supplyQueue(1)), Id.unwrap(id), "supplyQueue");
-        assertEq(Id.unwrap(vault.withdrawQueue(1)), Id.unwrap(id), "withdrawQueue");
+        assertEq(address(vault.supplyQueue(1)), address(market), "supplyQueue");
+        assertEq(address(vault.withdrawQueue(1)), address(market), "withdrawQueue");
     }
 
     function testAcceptCapIncreasedTimelockDecreased(uint256 cap, uint256 timelock, uint256 elapsed) public {
@@ -407,17 +413,17 @@ contract TimelockTest is IntegrationTest {
 
         vm.warp(block.timestamp + elapsed);
 
-        MarketParams memory marketParams = allMarkets[0];
+        IERC4626 market = allMarkets[0];
 
         vm.prank(CURATOR);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         vm.warp(block.timestamp + TIMELOCK - elapsed);
 
         vault.acceptTimelock();
 
         vm.expectRevert(ErrorsLib.TimelockNotElapsed.selector);
-        vault.acceptCap(marketParams);
+        vault.acceptCap(market);
     }
 
     function testAcceptCapNoPendingValue() public {
@@ -438,15 +444,14 @@ contract TimelockTest is IntegrationTest {
     }
 
     function testSubmitMarketRemoval() public {
-        MarketParams memory marketParams = allMarkets[0];
-        Id id = marketParams.id();
+        IERC4626 market = allMarkets[0];
 
-        _setCap(marketParams, 0);
+        _setCap(market, 0);
 
         vm.prank(CURATOR);
-        vault.submitMarketRemoval(marketParams);
+        vault.submitMarketRemoval(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
+        MarketConfig memory marketConfig = vault.config(market);
 
         assertEq(marketConfig.cap, 0, "marketConfig.cap");
         assertEq(marketConfig.enabled, true, "marketConfig.enabled");
@@ -454,7 +459,7 @@ contract TimelockTest is IntegrationTest {
     }
 
     function testSubmitMarketRemovalMarketNotEnabled() public {
-        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.MarketNotEnabled.selector, allMarkets[1].id()));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.MarketNotEnabled.selector, allMarkets[1]));
         vm.prank(CURATOR);
         vault.submitMarketRemoval(allMarkets[1]);
     }

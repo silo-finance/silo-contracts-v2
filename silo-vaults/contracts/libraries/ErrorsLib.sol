@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import {Id} from "../../lib/morpho-blue/src/interfaces/IMorpho.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 /// @title ErrorsLib
 /// @author Morpho Labs
@@ -23,15 +23,15 @@ library ErrorsLib {
     /// @notice Thrown when the caller doesn't have the curator nor the guardian role.
     error NotCuratorNorGuardianRole();
 
-    /// @notice Thrown when the market `id` cannot be set in the supply queue.
-    error UnauthorizedMarket(Id id);
+    /// @notice Thrown when the `market` cannot be set in the supply queue.
+    error UnauthorizedMarket(IERC4626 market);
 
-    /// @notice Thrown when submitting a cap for a market `id` whose loan token does not correspond to the underlying.
+    /// @notice Thrown when submitting a cap for a `market` whose loan token does not correspond to the underlying.
     /// asset.
-    error InconsistentAsset(Id id);
+    error InconsistentAsset(IERC4626 market);
 
-    /// @notice Thrown when the supply cap has been exceeded on market `id` during a reallocation of funds.
-    error SupplyCapExceeded(Id id);
+    /// @notice Thrown when the supply cap has been exceeded on `market` during a reallocation of funds.
+    error SupplyCapExceeded(IERC4626 market);
 
     /// @notice Thrown when the fee to set exceeds the maximum fee.
     error MaxFeeExceeded();
@@ -43,7 +43,7 @@ library ErrorsLib {
     error AlreadyPending();
 
     /// @notice Thrown when submitting the removal of a market when there is a cap already pending on that market.
-    error PendingCap(Id id);
+    error PendingCap(IERC4626 market);
 
     /// @notice Thrown when submitting a cap for a market with a pending removal.
     error PendingRemoval();
@@ -51,17 +51,17 @@ library ErrorsLib {
     /// @notice Thrown when submitting a market removal for a market with a non zero cap.
     error NonZeroCap();
 
-    /// @notice Thrown when market `id` is a duplicate in the new withdraw queue to set.
-    error DuplicateMarket(Id id);
+    /// @notice Thrown when `market` is a duplicate in the new withdraw queue to set.
+    error DuplicateMarket(IERC4626 market);
 
-    /// @notice Thrown when market `id` is missing in the updated withdraw queue and the market has a non-zero cap set.
-    error InvalidMarketRemovalNonZeroCap(Id id);
+    /// @notice Thrown when `market` is missing in the updated withdraw queue and the market has a non-zero cap set.
+    error InvalidMarketRemovalNonZeroCap(IERC4626 market);
 
-    /// @notice Thrown when market `id` is missing in the updated withdraw queue and the market has a non-zero supply.
-    error InvalidMarketRemovalNonZeroSupply(Id id);
+    /// @notice Thrown when `market` is missing in the updated withdraw queue and the market has a non-zero supply.
+    error InvalidMarketRemovalNonZeroSupply(IERC4626 market);
 
-    /// @notice Thrown when market `id` is missing in the updated withdraw queue and the market is not yet disabled.
-    error InvalidMarketRemovalTimelockNotElapsed(Id id);
+    /// @notice Thrown when `market` is missing in the updated withdraw queue and the market is not yet disabled.
+    error InvalidMarketRemovalTimelockNotElapsed(IERC4626 market);
 
     /// @notice Thrown when there's no pending value to set.
     error NoPendingValue();
@@ -69,11 +69,8 @@ library ErrorsLib {
     /// @notice Thrown when the requested liquidity cannot be withdrawn from Morpho.
     error NotEnoughLiquidity();
 
-    /// @notice Thrown when submitting a cap for a market which does not exist.
-    error MarketNotCreated();
-
-    /// @notice Thrown when interacting with a non previously enabled market `id`.
-    error MarketNotEnabled(Id id);
+    /// @notice Thrown when interacting with a non previously enabled `market`.
+    error MarketNotEnabled(IERC4626 market);
 
     /// @notice Thrown when the submitted timelock is above the max timelock.
     error AboveMaxTimelock();

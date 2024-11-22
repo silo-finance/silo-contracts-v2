@@ -4,9 +4,7 @@
 libs = [
     'gitmodules',
     'node_modules',
-    'silo-amm/node_modules',
-    'silo-core/node_modules',
-    'silo-vaults/node_modules'
+    'silo-amm/node_modules'
 ]
 out = 'cache/foundry/out'
 evm_version = 'cancun'
@@ -77,15 +75,24 @@ evm_version = 'paris'
 [profile.vaults]
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
-test = 'silo-vaults/test/foundry'
-broadcast = 'silo-vaults/broadcast'
-fs_permissions = [{ access = "read", path = "./silo-vaults/test/foundry/data/"}]
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
 
 [profile.vaults-tests]
 src = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-vaults/broadcast'
-fs_permissions = [{ access = "read", path = "./silo-vaults/test/foundry/data/"}]
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
 
 [profile.oracles]
 src = 'silo-oracles/contracts'

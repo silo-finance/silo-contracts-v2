@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./BaseTest.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-uint256 constant TIMELOCK = 1 weeks;
+import {PendingUint192, PendingAddress} from "../../../contracts/libraries/PendingLib.sol";
+
+import {BaseTest} from "./BaseTest.sol";
 
 contract IntegrationTest is BaseTest {
-    using MathLib for uint256;
-    using MorphoBalancesLib for IMorpho;
-    using MarketParamsLib for MarketParams;
-
-    IMetaMorpho internal vault;
-
     function setUp() public virtual override {
         super.setUp();
-
-        vault = createMetaMorpho(OWNER, address(morpho), TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV");
 
         vm.startPrank(OWNER);
         vault.setCurator(CURATOR);
@@ -24,39 +18,11 @@ contract IntegrationTest is BaseTest {
         vault.setSkimRecipient(SKIM_RECIPIENT);
         vm.stopPrank();
 
-        _setCap(idleParams, type(uint184).max);
-
-        loanToken.approve(address(vault), type(uint256).max);
-        collateralToken.approve(address(vault), type(uint256).max);
-
-        vm.startPrank(SUPPLIER);
-        loanToken.approve(address(vault), type(uint256).max);
-        collateralToken.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
-
-        vm.startPrank(ONBEHALF);
-        loanToken.approve(address(vault), type(uint256).max);
-        collateralToken.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
-    }
-
-    // Deploy MetaMorpho from artifacts
-    // Replaces using `new MetaMorpho` which would force 0.8.21 on all tests
-    // (since MetaMorpho has pragma solidity 0.8.21)
-    function createMetaMorpho(
-        address owner,
-        address morpho,
-        uint256 initialTimelock,
-        address asset,
-        string memory name,
-        string memory symbol
-    ) public returns (IMetaMorpho) {
-        return
-            IMetaMorpho(deployCode("MetaMorpho.sol", abi.encode(owner, morpho, initialTimelock, asset, name, symbol)));
+        _setCap(idleMarket, type(uint184).max);
     }
 
     function _idle() internal view returns (uint256) {
-        return morpho.expectedSupplyAssets(idleParams, address(vault));
+        return _expectedSupplyAssets(idleMarket, address(vault));
     }
 
     function _setTimelock(uint256 newTimelock) internal {
@@ -110,33 +76,32 @@ contract IntegrationTest is BaseTest {
         assertEq(vault.fee(), newFee, "_setFee");
     }
 
-    function _setCap(MarketParams memory marketParams, uint256 newCap) internal {
-        Id id = marketParams.id();
-        uint256 cap = vault.config(id).cap;
-        bool isEnabled = vault.config(id).enabled;
+    function _setCap(IERC4626 market, uint256 newCap) internal {
+        uint256 cap = vault.config(market).cap;
+        bool isEnabled = vault.config(market).enabled;
         if (newCap == cap) return;
 
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
         if (pendingCap.validAt == 0 || newCap != pendingCap.value) {
             vm.prank(CURATOR);
-            vault.submitCap(marketParams, newCap);
+            vault.submitCap(market, newCap);
         }
 
         if (newCap < cap) return;
 
         vm.warp(block.timestamp + vault.timelock());
 
-        vault.acceptCap(marketParams);
+        vault.acceptCap(market);
 
-        assertEq(vault.config(id).cap, newCap, "_setCap");
+        assertEq(vault.config(market).cap, newCap, "_setCap");
 
         if (newCap > 0) {
             if (!isEnabled) {
-                Id[] memory newSupplyQueue = new Id[](vault.supplyQueueLength() + 1);
+                IERC4626[] memory newSupplyQueue = new IERC4626[](vault.supplyQueueLength() + 1);
                 for (uint256 k; k < vault.supplyQueueLength(); k++) {
                     newSupplyQueue[k] = vault.supplyQueue(k);
                 }
-                newSupplyQueue[vault.supplyQueueLength()] = id;
+                newSupplyQueue[vault.supplyQueueLength()] = market;
                 vm.prank(ALLOCATOR);
                 vault.setSupplyQueue(newSupplyQueue);
             }
@@ -144,18 +109,18 @@ contract IntegrationTest is BaseTest {
     }
 
     function _sortSupplyQueueIdleLast() internal {
-        Id[] memory supplyQueue = new Id[](vault.supplyQueueLength());
+        IERC4626[] memory supplyQueue = new IERC4626[](vault.supplyQueueLength());
 
         uint256 supplyIndex;
         for (uint256 i; i < supplyQueue.length; ++i) {
-            Id id = vault.supplyQueue(i);
-            if (Id.unwrap(id) == Id.unwrap(idleParams.id())) continue;
+            IERC4626 market = vault.supplyQueue(i);
+            if (address(market) == address(idleMarket)) continue;
 
-            supplyQueue[supplyIndex] = id;
+            supplyQueue[supplyIndex] = market;
             ++supplyIndex;
         }
 
-        supplyQueue[supplyIndex] = idleParams.id();
+        supplyQueue[supplyIndex] = idleMarket;
         ++supplyIndex;
 
         assembly {

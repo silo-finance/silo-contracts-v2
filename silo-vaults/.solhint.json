@@ -1,0 +1,30 @@
+{
+  "extends": "solhint:all",
+  "rules": {
+    "func-visibility": [
+      "error",
+      {
+        "ignoreConstructors": true
+      }
+    ],
+    "no-console": [
+      "error"
+    ],
+    "comprehensive-interface": "off",
+    "no-empty-blocks": "off",
+    "contract-name-camelcase": "off",
+    "not-rely-on-time": "off",
+    "no-global-import": "off",
+    "var-name-mixedcase": "off",
+    "reason-string": [
+      "warn",
+      {
+        "maxLength": 64
+      }
+    ],
+    "compiler-version": [
+      "error",
+      ">=0.5.0"
+    ]
+  }
+}

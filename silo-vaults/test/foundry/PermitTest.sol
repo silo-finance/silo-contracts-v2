@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/SigUtils.sol";
+import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 
-import {ERC20Permit} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "./helpers/IntegrationTest.sol";
+import {SigUtils, Permit} from "./helpers/SigUtils.sol";
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc PermitTest -vvv
+*/
 contract PermitTest is IntegrationTest {
     uint256 internal constant OWNER_PK = 0xA11CE;
     uint256 internal constant SPENDER_PK = 0xB0B;

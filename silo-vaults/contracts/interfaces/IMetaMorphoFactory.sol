@@ -8,9 +8,6 @@ import {IMetaMorpho} from "./IMetaMorpho.sol";
 /// @custom:contact security@morpho.org
 /// @notice Interface of MetaMorpho's factory.
 interface IMetaMorphoFactory {
-    /// @notice The address of the Morpho contract.
-    function MORPHO() external view returns (address);
-
     /// @notice Whether a MetaMorpho vault was created with the factory.
     function isMetaMorpho(address target) external view returns (bool);
 

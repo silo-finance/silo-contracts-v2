@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {PendingUint192, MarketConfig, PendingAddress} from "../../contracts/libraries/PendingLib.sol";
+import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {TIMELOCK, CAP} from "./helpers/BaseTest.sol";
+
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc GuardianTest -vvv
+*/
 contract GuardianTest is IntegrationTest {
-    using Math for uint256;
-    using MathLib for uint256;
-    using MarketParamsLib for MarketParams;
-
     function setUp() public override {
         super.setUp();
 
@@ -70,24 +78,22 @@ contract GuardianTest is IntegrationTest {
     }
 
     function testGuardianRevokePendingCapIncreased(uint256 seed, uint256 cap, uint256 elapsed) public {
-        MarketParams memory marketParams = _randomMarketParams(seed);
+        IERC4626 market = _randomMarket(seed);
         elapsed = bound(elapsed, 0, TIMELOCK - 1);
         cap = bound(cap, 1, type(uint184).max);
 
         vm.prank(OWNER);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         vm.warp(block.timestamp + elapsed);
 
-        Id id = marketParams.id();
-
         vm.expectEmit(address(vault));
-        emit EventsLib.RevokePendingCap(GUARDIAN, id);
+        emit EventsLib.RevokePendingCap(GUARDIAN, market);
         vm.prank(GUARDIAN);
-        vault.revokePendingCap(id);
+        vault.revokePendingCap(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, 0, "marketConfig.cap");
         assertEq(marketConfig.enabled, false, "marketConfig.enabled");
@@ -122,11 +128,10 @@ contract GuardianTest is IntegrationTest {
     function testRevokePendingMarketRemoval(uint256 elapsed) public {
         elapsed = bound(elapsed, 0, TIMELOCK - 1);
 
-        MarketParams memory marketParams = allMarkets[0];
-        Id id = marketParams.id();
+        IERC4626 market = allMarkets[0];
 
-        _setCap(marketParams, CAP);
-        _setCap(marketParams, 0);
+        _setCap(market, CAP);
+        _setCap(market, 0);
 
         vm.prank(CURATOR);
         vault.submitMarketRemoval(allMarkets[0]);
@@ -134,11 +139,11 @@ contract GuardianTest is IntegrationTest {
         vm.warp(block.timestamp + elapsed);
 
         vm.expectEmit(address(vault));
-        emit EventsLib.RevokePendingMarketRemoval(GUARDIAN, id);
+        emit EventsLib.RevokePendingMarketRemoval(GUARDIAN, market);
         vm.prank(GUARDIAN);
-        vault.revokePendingMarketRemoval(id);
+        vault.revokePendingMarketRemoval(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
+        MarketConfig memory marketConfig = vault.config(market);
 
         assertEq(marketConfig.cap, 0, "marketConfig.cap");
         assertEq(marketConfig.enabled, true, "marketConfig.enabled");

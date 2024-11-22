@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-pragma solidity ^0.8.0;
-
-import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC777.sol";
-import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC777Recipient.sol";
-import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC777Sender.sol";
-import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC20.sol";
-import "../../lib/openzeppelin-contracts/contracts/utils/Address.sol";
-import "../../lib/openzeppelin-contracts/contracts/utils/Context.sol";
-import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC1820Registry.sol";
+import "openzeppelin5/interfaces/IERC777.sol";
+import "openzeppelin5/interfaces/IERC777Recipient.sol";
+import "openzeppelin5/interfaces/IERC777Sender.sol";
+import "openzeppelin5/interfaces/IERC20.sol";
+import "openzeppelin5/utils/Address.sol";
+import "openzeppelin5/utils/Context.sol";
+import "openzeppelin5/interfaces/IERC1820Registry.sol";
 
 /**
  * @dev Implementation of the {IERC777} interface.

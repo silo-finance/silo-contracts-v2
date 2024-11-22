@@ -30,3 +30,6 @@
 [submodule "openzeppelin-contracts-upgradeable-5"]
 	path = gitmodules/openzeppelin-contracts-upgradeable-5
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "morpho-blue"]
+	path = gitmodules/morpho-blue
+	url = https://github.com/morpho-org/morpho-blue/

@@ -1,44 +1,34 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "../../../lib/morpho-blue/src/interfaces/IMorpho.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {WAD, MathLib} from "../../../lib/morpho-blue/src/libraries/MathLib.sol";
-import {Math} from "../../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
-import {MarketParamsLib} from "../../../lib/morpho-blue/src/libraries/MarketParamsLib.sol";
-import {MorphoLib} from "../../../lib/morpho-blue/src/libraries/periphery/MorphoLib.sol";
-import {MorphoBalancesLib} from "../../../lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import "../../../src/interfaces/IMetaMorpho.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-import "../../../src/libraries/ConstantsLib.sol";
-import {ErrorsLib} from "../../../src/libraries/ErrorsLib.sol";
-import {EventsLib} from "../../../src/libraries/EventsLib.sol";
-import {ORACLE_PRICE_SCALE} from "../../../lib/morpho-blue/src/libraries/ConstantsLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
+import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-import {IrmMock} from "../../../src/mocks/IrmMock.sol";
-import {ERC20Mock} from "../../../src/mocks/ERC20Mock.sol";
-import {OracleMock} from "../../../src/mocks/OracleMock.sol";
+import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
-import {Ownable} from "../../../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import {MetaMorpho} from "../../../contracts/MetaMorpho.sol";
+import {IdleVault} from "../../../contracts/IdleVault.sol";
 
-import {IERC20, ERC20} from "../../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol";
-
-import "../../../lib/forge-std/src/Test.sol";
-import "../../../lib/forge-std/src/console2.sol";
+import {IMetaMorpho} from "../../../contracts/interfaces/IMetaMorpho.sol";
+import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
 
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
 uint256 constant MAX_TEST_ASSETS = 1e28;
 uint184 constant CAP = type(uint128).max;
 uint256 constant NB_MARKETS = ConstantsLib.MAX_QUEUE_LENGTH + 1;
+uint256 constant TIMELOCK = 1 weeks;
 
-contract BaseTest is Test {
-    using MathLib for uint256;
-    using MorphoLib for IMorpho;
-    using MorphoBalancesLib for IMorpho;
-    using MarketParamsLib for MarketParams;
-
+contract BaseTest is SiloLittleHelper, Test {
     address internal OWNER = makeAddr("Owner");
     address internal SUPPLIER = makeAddr("Supplier");
     address internal BORROWER = makeAddr("Borrower");
@@ -53,74 +43,76 @@ contract BaseTest is Test {
     address internal MORPHO_OWNER = makeAddr("MorphoOwner");
     address internal MORPHO_FEE_RECIPIENT = makeAddr("MorphoFeeRecipient");
 
-    IMorpho internal morpho = IMorpho(deployCode("Morpho.sol", abi.encode(MORPHO_OWNER)));
-    ERC20Mock internal loanToken = new ERC20Mock("loan", "B");
-    ERC20Mock internal collateralToken = new ERC20Mock("collateral", "C");
-    OracleMock internal oracle = new OracleMock();
-    IrmMock internal irm = new IrmMock();
+    MintableToken internal loanToken = new MintableToken(18);
+    MintableToken internal collateralToken = new MintableToken(18);
 
-    MarketParams[] internal allMarkets;
-    MarketParams internal idleParams;
+    IERC4626[] internal allMarkets;
+    mapping (IERC4626 collateral => IERC4626) internal collateralMarkets;
+
+    IERC4626 internal idleMarket;
+
+    IMetaMorpho internal vault;
 
     function setUp() public virtual {
-        vm.label(address(morpho), "Morpho");
-        vm.label(address(loanToken), "Loan");
-        vm.label(address(collateralToken), "Collateral");
-        vm.label(address(oracle), "Oracle");
-        vm.label(address(irm), "Irm");
+        _createNewMarkets();
 
-        oracle.setPrice(ORACLE_PRICE_SCALE);
+        collateralToken.setOnDemand(true);
+        loanToken.setOnDemand(true);
 
-        irm.setApr(0.5 ether); // 50%.
+        emit log_named_address("loanToken", address(loanToken));
 
-        idleParams = MarketParams({
-            loanToken: address(loanToken),
-            collateralToken: address(0),
-            oracle: address(0),
-            irm: address(irm),
-            lltv: 0
-        });
+        vault = IMetaMorpho(address(new MetaMorpho(OWNER, TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV")));
 
-        vm.startPrank(MORPHO_OWNER);
-        morpho.enableIrm(address(irm));
-        morpho.setFeeRecipient(MORPHO_FEE_RECIPIENT);
+        idleMarket = new IdleVault(address(vault), address(loanToken), "idle vault", "idle");
+    }
 
-        morpho.enableLltv(0);
-        vm.stopPrank();
+    function createMetaMorpho(
+        address owner,
+        uint256 initialTimelock,
+        address asset,
+        string memory name,
+        string memory symbol
+    ) public returns (IMetaMorpho) {
+        return IMetaMorpho(address(new MetaMorpho(owner, initialTimelock, asset, name, symbol)));
+    }
 
-        morpho.createMarket(idleParams);
+    function _createNewMarkets() public virtual {
+        // TODO each market will have separate full deployment, we can spend some time to create fixture
+        // for deploying just new silo.
+        SiloFixture siloFixture = new SiloFixtureWithVeSilo();
+        SiloConfigOverride memory _override;
+
+        _override.token0 = address(collateralToken);
+        _override.token1 = address(loanToken);
+        _override.configName = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
 
         for (uint256 i; i < NB_MARKETS; ++i) {
-            uint256 lltv = 0.8 ether / (i + 1);
+            (, ISilo silo0_, ISilo silo1_,,,) = siloFixture.deploy_local(_override);
+            vm.label(address(silo0_), string.concat("Market#", Strings.toString(i)));
 
-            MarketParams memory marketParams = MarketParams({
-                loanToken: address(loanToken),
-                collateralToken: address(collateralToken),
-                oracle: address(oracle),
-                irm: address(irm),
-                lltv: lltv
-            });
+            allMarkets.push(silo1_);
+            collateralMarkets[silo1_] = silo0_;
 
-            vm.prank(MORPHO_OWNER);
-            morpho.enableLltv(lltv);
-
-            morpho.createMarket(marketParams);
-
-            allMarkets.push(marketParams);
+            if (i == 0) {
+                // setup default values for silo fixture
+                silo0 = silo0_;
+                silo1 = silo1_;
+            }
         }
 
-        allMarkets.push(idleParams); // Must be pushed last.
+        allMarkets.push(idleMarket); // Must be pushed last.
+    }
 
-        vm.startPrank(SUPPLIER);
-        loanToken.approve(address(morpho), type(uint256).max);
-        collateralToken.approve(address(morpho), type(uint256).max);
-        vm.stopPrank();
+    function _createNewMarket(address _collateralToken, address _loanToken) public virtual returns (IERC4626) {
+        SiloFixture siloFixture = new SiloFixtureWithVeSilo();
+        SiloConfigOverride memory _override;
 
-        vm.prank(BORROWER);
-        collateralToken.approve(address(morpho), type(uint256).max);
+        _override.token0 = _collateralToken;
+        _override.token1 = _loanToken;
+        _override.configName = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
 
-        vm.prank(REPAYER);
-        loanToken.approve(address(morpho), type(uint256).max);
+        (,, ISilo silo1_,,,) = siloFixture.deploy_local(_override);
+        return silo1_;
     }
 
     /// @dev Rolls & warps the given number of blocks forward the blockchain.
@@ -130,8 +122,9 @@ contract BaseTest is Test {
     }
 
     /// @dev Bounds the fuzzing input to a realistic number of blocks.
-    function _boundBlocks(uint256 blocks) internal view returns (uint256) {
-        return bound(blocks, 2, type(uint24).max);
+    function _boundBlocks(uint256 blocks) internal pure returns (uint256) {
+        // on silo we have much higher interest than on morpho, so we need to limit blocks more
+        return bound(blocks, 2, 1e6);
     }
 
     /// @dev Bounds the fuzzing input to a non-zero address.
@@ -141,14 +134,12 @@ contract BaseTest is Test {
         return address(uint160(bound(uint256(uint160(input)), 1, type(uint160).max)));
     }
 
-    function _accrueInterest(MarketParams memory market) internal {
-        collateralToken.setBalance(address(this), 1);
-        morpho.supplyCollateral(market, 1, address(this), hex"");
-        morpho.withdrawCollateral(market, 1, address(this), address(10));
+    function _accrueInterest(IERC4626 _market) internal {
+        ISilo(address(_market)).accrueInterest();
     }
 
     /// @dev Returns a random market params from the list of markets enabled on Blue (except the idle market).
-    function _randomMarketParams(uint256 seed) internal view returns (MarketParams memory) {
+    function _randomMarket(uint256 seed) internal view returns (IERC4626) {
         return allMarkets[seed % (allMarkets.length - 1)];
     }
 
@@ -180,5 +171,14 @@ contract BaseTest is Test {
         users = _removeAll(users, address(0));
 
         return _randomCandidate(users, seed);
+    }
+
+    /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
+    function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
+        assets = _market.convertToAssets(_market.balanceOf(_user));
+    }
+
+    function _lastUpdate(IERC4626 _market) internal view returns (uint256 lastUpdate) {
+        lastUpdate = ISilo(address(_market)).utilizationData().interestRateTimestamp;
     }
 }

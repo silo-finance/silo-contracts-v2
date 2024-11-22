@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import {IMetaMorpho} from "../../src/interfaces/IMetaMorpho.sol";
+import {console2} from "forge-std/console2.sol";
 
-import {ERC1820Registry} from "../../src/mocks/ERC1820Registry.sol";
-import {ERC777Mock, IERC1820Registry} from "../../src/mocks/ERC777Mock.sol";
-import {IERC1820Implementer} from "../../lib/openzeppelin-contracts/contracts/interfaces/IERC1820Implementer.sol";
+import {IERC1820Implementer} from "openzeppelin5/interfaces/IERC1820Implementer.sol";
 
-import "../../src/MetaMorphoFactory.sol";
-import "./helpers/IntegrationTest.sol";
+import {MetaMorpho} from "../../contracts/MetaMorpho.sol";
+import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {ERC1820Registry} from "../../contracts/mocks/ERC1820Registry.sol";
+import {ERC777Mock, IERC1820Registry} from "../../contracts/mocks/ERC777Mock.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {TIMELOCK} from "./helpers/BaseTest.sol";
 
 uint256 constant FEE = 0.1 ether; // 50%
 bytes32 constant TOKENS_SENDER_INTERFACE_HASH = keccak256("ERC777TokensSender");
 bytes32 constant TOKENS_RECIPIENT_INTERFACE_HASH = keccak256("ERC777TokensRecipient");
 
+/*
+FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReentrancyTest -vvv
+*/
 contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
     address internal attacker = makeAddr("attacker");
 
@@ -30,19 +36,11 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
 
         reentrantToken = new ERC777Mock(100_000, new address[](0), IERC1820Registry(address(registry)));
 
-        idleParams = MarketParams({
-            loanToken: address(reentrantToken),
-            collateralToken: address(0),
-            oracle: address(0),
-            irm: address(irm),
-            lltv: 0
-        });
-
-        morpho.createMarket(idleParams);
+        idleMarket = _createNewMarket(address(collateralToken), address(reentrantToken));
 
         vault = IMetaMorpho(
             address(
-                new MetaMorpho(OWNER, address(morpho), TIMELOCK, address(reentrantToken), "MetaMorpho Vault", "MMV")
+                new MetaMorpho(OWNER, TIMELOCK, address(reentrantToken), "MetaMorpho Vault", "MMV")
             )
         );
 
@@ -52,7 +50,7 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
         vault.setFeeRecipient(FEE_RECIPIENT);
         vm.stopPrank();
 
-        _setCap(idleParams, type(uint184).max);
+        _setCap(idleMarket, type(uint184).max);
         _setFee(FEE);
 
         reentrantToken.approve(address(vault), type(uint256).max);
