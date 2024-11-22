@@ -10,7 +10,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 /**
     FOUNDRY_PROFILE=core \
     forge script silo-core/deploy/TowerDeploy.s.sol:TowerDeploy \
-    --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/f1e6e6a94ddf4c138f1bd8e210d091df \
+    --ffi --broadcast --rpc-url $RPC_ARBITRUM \
     --verify
 
     in case verification fail, set `ETHERSCAN_API_KEY` in env and run:
