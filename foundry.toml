@@ -81,6 +81,12 @@ test = 'silo-vaults/test/foundry'
 broadcast = 'silo-vaults/broadcast'
 fs_permissions = [{ access = "read", path = "./silo-vaults/test/foundry/data/"}]
 
+[profile.vaults-tests]
+src = 'silo-vaults/test/foundry'
+out = 'cache/foundry/out/silo-vaults'
+broadcast = 'silo-vaults/broadcast'
+fs_permissions = [{ access = "read", path = "./silo-vaults/test/foundry/data/"}]
+
 [profile.oracles]
 src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'
