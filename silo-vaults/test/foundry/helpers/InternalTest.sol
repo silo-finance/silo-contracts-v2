@@ -3,9 +3,6 @@ pragma solidity ^0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
-
 import {BaseTest} from "./BaseTest.sol";
 import {MetaMorpho, ConstantsLib} from "../../../contracts/MetaMorpho.sol";
 

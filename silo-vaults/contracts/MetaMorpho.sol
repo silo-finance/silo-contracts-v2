@@ -10,7 +10,6 @@ import {Multicall} from "openzeppelin5/utils/Multicall.sol";
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
-import {SharesMathLib} from "morpho-blue/libraries/SharesMathLib.sol";
 
 import {
     MarketConfig,
@@ -18,8 +17,7 @@ import {
     PendingAddress,
     MarketAllocation,
     IMetaMorphoBase,
-    IMetaMorphoStaticTyping,
-    IMetaMorpho
+    IMetaMorphoStaticTyping
 } from "./interfaces/IMetaMorpho.sol";
 
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";

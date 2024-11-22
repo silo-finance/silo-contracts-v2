@@ -5,7 +5,6 @@ import {IMetaMorpho} from "./interfaces/IMetaMorpho.sol";
 import {IMetaMorphoFactory} from "./interfaces/IMetaMorphoFactory.sol";
 
 import {EventsLib} from "./libraries/EventsLib.sol";
-import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 
 import {MetaMorpho} from "./MetaMorpho.sol";
 

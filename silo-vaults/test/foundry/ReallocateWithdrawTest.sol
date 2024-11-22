@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-
-import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 

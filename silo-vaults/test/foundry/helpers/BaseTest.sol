@@ -2,17 +2,12 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-import {console2} from "forge-std/console2.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
-import {IERC20, ERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
-import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -20,20 +15,11 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
-import {IMorpho} from "morpho-blue/interfaces/IMorpho.sol";
-import {WAD, MathLib} from "morpho-blue/libraries/MathLib.sol";
-import {MarketParamsLib} from "morpho-blue/libraries/MarketParamsLib.sol";
-import {MorphoLib} from "morpho-blue/libraries/periphery/MorphoLib.sol";
-import {MorphoBalancesLib} from "morpho-blue/libraries/periphery/MorphoBalancesLib.sol";
-import {ORACLE_PRICE_SCALE} from "morpho-blue/libraries/ConstantsLib.sol";
-
 import {MetaMorpho} from "../../../contracts/MetaMorpho.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
 
 import {IMetaMorpho} from "../../../contracts/interfaces/IMetaMorpho.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
-import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
-import {EventsLib} from "../../../contracts/libraries/EventsLib.sol";
 
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;

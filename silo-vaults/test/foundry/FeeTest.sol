@@ -5,7 +5,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
-import {WAD, MathLib} from "morpho-blue/libraries/MathLib.sol";
+import {WAD} from "morpho-blue/libraries/MathLib.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 

@@ -2,9 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
-import {SharesMathLib} from "morpho-blue/libraries/SharesMathLib.sol";
-
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {InternalTest} from "./helpers/InternalTest.sol";

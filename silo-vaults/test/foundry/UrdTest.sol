@@ -3,8 +3,6 @@ pragma solidity ^0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
-import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
-
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 

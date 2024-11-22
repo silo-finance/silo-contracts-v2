@@ -5,7 +5,6 @@ import {stdError} from "forge-std/StdError.sol";
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-import {Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 

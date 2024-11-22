@@ -10,7 +10,6 @@ import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
 import {ERC1820Registry} from "../../contracts/mocks/ERC1820Registry.sol";
 import {ERC777Mock, IERC1820Registry} from "../../contracts/mocks/ERC777Mock.sol";
 
-import {MetaMorphoFactory} from "../../contracts/MetaMorphoFactory.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {TIMELOCK} from "./helpers/BaseTest.sol";
 

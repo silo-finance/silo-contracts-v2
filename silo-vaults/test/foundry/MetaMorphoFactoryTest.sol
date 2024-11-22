@@ -6,7 +6,6 @@ import {MetaMorphoFactory} from "../../contracts/MetaMorphoFactory.sol";
 import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
-import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
