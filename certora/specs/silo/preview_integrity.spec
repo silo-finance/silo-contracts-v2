@@ -16,9 +16,18 @@ using Token1 as token1;
 using ShareDebtToken0 as shareDebtToken0;
 using ShareDebtToken1 as shareDebtToken1;
 
+// ---- Invariants -------------------------------------------------------------
+
+// This invariant is required for some of the rules above,
+// and should be proved elsewhere (TODO indicate where)
+invariant assetsZeroInterestRateTimestampZero(env e)
+    silo0.getCollateralAssets(e) > 0 || silo0.getDebtAssets(e) > 0 =>
+    silo0.getSiloDataInterestRateTimestamp(e) > 0 ;
+
+
 // ---- Rules ------------------------------------------------------------------
 
-// https://vaas-stg.certora.com/output/39601/279d56c263dd40aa9a7aa35d7584207f?anonymousKey=e8ccf0ac47d0313b312ea7aefd6505c52a42b4a9
+/// @status Done: https://vaas-stg.certora.com/output/39601/c718bcc6d805415f83255bf440b1ef17?anonymousKey=52ff03ee66ee85abf5370119b82433e9d94c4e18
 rule HLP_PreviewMintCorrectness_strict(address receiver)
 {
     env e;
@@ -28,6 +37,8 @@ rule HLP_PreviewMintCorrectness_strict(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     uint256 shares;
     uint256 assetsReported = previewMint(e, shares);
@@ -36,7 +47,7 @@ rule HLP_PreviewMintCorrectness_strict(address receiver)
     assert assetsReported == assetsPaid;
 }
 
-// https://vaas-stg.certora.com/output/39601/8467dce7a10046f39282f283f9ac09de?anonymousKey=3089ebc0a4b14db2e0a3294e9813dc5c3f46fe73
+/// @status Done: https://vaas-stg.certora.com/output/39601/d718e23421274125bc9e540a1e890577?anonymousKey=7bf294a459b0560234f3f13ea85704e93e934eac
 rule HLP_PreviewRedeemCorrectness(address receiver)
 {
     env e;
@@ -46,6 +57,8 @@ rule HLP_PreviewRedeemCorrectness(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     uint256 shares;
     uint256 assetsReported = previewRedeem(e, shares);
@@ -54,7 +67,7 @@ rule HLP_PreviewRedeemCorrectness(address receiver)
     assert assetsReported <= assetsReceived;
 }
 
-// https://vaas-stg.certora.com/output/39601/4cd9004431c04ec29b0f1253ab2d4b9d?anonymousKey=51b1bb99004a4e1431153084ae66ee103898041c
+/// @status Done: https://vaas-stg.certora.com/output/39601/f55ff4263cbd40a58b28d3601234c99e?anonymousKey=796a8296609848e1822ba7680ad2fabca71ad9e2
 rule HLP_PreviewDepositCorrectness(address receiver)
 {
     env e;
@@ -64,6 +77,8 @@ rule HLP_PreviewDepositCorrectness(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     uint256 assets;
     uint256 sharesReported = previewDeposit(e, assets);
@@ -72,7 +87,7 @@ rule HLP_PreviewDepositCorrectness(address receiver)
     assert sharesReported <= sharesReceived;
 }
 
-// https://vaas-stg.certora.com/output/39601/07221c6c9de743c3b08c01cb3a8377b9?anonymousKey=786b99ae7a9307008c8dee20fec2c7ff17ea37ad
+/// @status Done: https://vaas-stg.certora.com/output/39601/dac3f20517bd46158890ed2e082112f8?anonymousKey=6f5deb062eb061faeadd94476742891ad43e66a8
 rule HLP_PreviewWithdrawCorrectness_strict(address receiver)
 {
     env e;
@@ -82,6 +97,8 @@ rule HLP_PreviewWithdrawCorrectness_strict(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     uint256 assets;
     uint256 sharesReported = previewWithdraw(e, assets);
@@ -89,7 +106,7 @@ rule HLP_PreviewWithdrawCorrectness_strict(address receiver)
     assert sharesPaid == sharesReported;
 }
 
-// https://vaas-stg.certora.com/output/39601/810dd36b243d45a3a6abd7ea33955d53?anonymousKey=a85bd2bb742cfddc8e6a8022efd2d73d0a2bf449
+/// @status Done: https://vaas-stg.certora.com/output/39601/5f54a319b0a14f4eb7fcaf11e8b5f526?anonymousKey=98bc6736865b9a5b08b8467a11030c5b2f53975b
 rule HLP_PreviewBorrowCorrectness_strict(address receiver)
 {
     env e;
@@ -99,6 +116,8 @@ rule HLP_PreviewBorrowCorrectness_strict(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     // bool sameAsset;
     uint256 assets;
@@ -107,7 +126,7 @@ rule HLP_PreviewBorrowCorrectness_strict(address receiver)
     assert debtSharesReported == debtSharesReceived;
 }
 
-// https://vaas-stg.certora.com/output/39601/c718dc9eb5344cd490fe2964e9823fc4?anonymousKey=64eb2c318bf859e745eb11321eae6665d6abca68
+/// @status Done: https://vaas-stg.certora.com/output/39601/9cd5865d6bb54f348227a21f66d059e3?anonymousKey=3fa36708608ed5fe351e95752dec70babf80bbae
 rule HLP_PreviewRepayCorrectness_strict(address receiver)
 {
     env e;
@@ -117,6 +136,8 @@ rule HLP_PreviewRepayCorrectness_strict(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     uint256 assets;
     uint256 debtSharesReported = previewRepay(e, assets);
@@ -124,7 +145,7 @@ rule HLP_PreviewRepayCorrectness_strict(address receiver)
     assert debtSharesReported == debtSharesRepaid;
 }
 
-// https://vaas-stg.certora.com/output/39601/ae8e0698ba9a4460a4835f191c72c56d?anonymousKey=1cad83d63ba20cd95b2a970bf152d7db4e5f35e8
+/// @status Done: https://vaas-stg.certora.com/output/39601/fa2c85488a5b43bc903f5f6955fe33a6?anonymousKey=5e67aec259990ed6dd07acc6e7ee7b3aa92b5d63
 rule HLP_PreviewBorrowSharesCorrectness(address receiver)
 {
     env e;
@@ -134,6 +155,8 @@ rule HLP_PreviewBorrowSharesCorrectness(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     // bool sameAsset;
     uint256 shares;
@@ -142,7 +165,7 @@ rule HLP_PreviewBorrowSharesCorrectness(address receiver)
     assert assetsReported <= assetsReceived;
 }
 
-// https://vaas-stg.certora.com/output/39601/c89c20d3d90245fe8aee0956feb713a6?anonymousKey=63b4e03f2782e5689917bf767b5ec220d14f4287
+/// @status Done: https://vaas-stg.certora.com/output/39601/b62ea4cd47b24d7b9a2d40d14000ff7d?anonymousKey=1f67cd9ccc9f2ce3a1e5a509c801b9bfbb29f3e2
 rule HLP_PreviewRepaySharesCorrectness(address receiver)
 {
     env e;
@@ -152,6 +175,8 @@ rule HLP_PreviewRepaySharesCorrectness(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
+
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
     uint256 shares;
     uint256 assetsReported = previewRepayShares(e, shares);

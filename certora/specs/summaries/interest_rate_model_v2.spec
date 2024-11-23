@@ -59,10 +59,6 @@ function CVLGetCompoundInterestRate(
     uint256 _debtAssets ;
     (_,_interestRateTimestamp,_,_collateralAssets,_debtAssets) = getSiloStorage();
     
-    if (_interestRateTimestamp == 0) {
-        return 0;
-    }
-
     if (_interestRateTimestamp == _blockTimestamp) {
         return 0;
     }
