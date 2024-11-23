@@ -14,20 +14,21 @@ using ShareDebtToken1 as shareDebtToken1;
 using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
 using ShareProtectedCollateralToken1 as shareProtectedCollateralToken1;
 
-function SafeAssumptionsEnv_sinple(env e) 
+function SafeAssumptionsEnv_simple(env e) 
 {
     completeSiloSetupForEnv(e);
 }
 
 function SafeAssumptionsEnv_withInvariants(env e) 
 {
-    SafeAssumptionsEnv_sinple(e);
+    SafeAssumptionsEnv_simple(e);
     requireEnvFreeInvariants();
     requireEnvInvariants(e);
 }
 
 function SafeAssumptions_withInvariants(env e, address user) 
 {
+    require user != 0;
     SafeAssumptionsEnv_withInvariants(e);
     requireEnvAndUserInvariants(e, user);
 }
@@ -355,6 +356,9 @@ definition canDecreaseDebt(method f) returns bool =
 
 // getExactLiquidationAmount can be simplified
 // just assume that the resulting LTV is above the liquidation treshold (solvent LTV)
+
+// SiloStdLib.getTotalCollateralAssetsWithInterest should return 
+// the same value for a given total collateral and block. !!!
 
 function differsAtMost(mathint x, mathint y, mathint diff) returns bool
 {
