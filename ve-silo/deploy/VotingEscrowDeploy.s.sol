@@ -20,7 +20,7 @@ contract VotingEscrowDeploy is CommonDeploy {
     function run() public returns (IVeSilo votingEscrow) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address siloToken = AddrLib.getAddress(AddrKey.SILO_TOKEN);
+        address siloToken = 0x8FfC46A1b7a3b12F4A11Db8877d302876DCA7Ab1; //AddrLib.getAddress(AddrKey.SILO_TOKEN);
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);

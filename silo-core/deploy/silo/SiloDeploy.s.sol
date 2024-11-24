@@ -334,6 +334,8 @@ contract SiloDeploy is CommonDeploy {
         console2.log(_silo);
         console2.log("\n");
 
+        console2.log("\thook receiver", _siloConfig.hookReceiver);
+
         console2.log(
             "\tasset",
             string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
@@ -398,6 +400,11 @@ contract SiloDeploy is CommonDeploy {
         if (_siloConfig.maxLtvOracle != address(0)) {
             _printOracleInfo(_siloConfig.maxLtvOracle, _siloConfig.token);
         }
+
+        console2.log("\n\tSilo share tokens:");
+        console2.log("\t\tcollateralToken", _siloConfig.collateralShareToken);
+        console2.log("\t\tprotectedToken", _siloConfig.protectedShareToken);
+        console2.log("\t\tdebtToken", _siloConfig.debtShareToken);
     }
 
     function _printOracleInfo(address _oracle, address _asset) internal view {

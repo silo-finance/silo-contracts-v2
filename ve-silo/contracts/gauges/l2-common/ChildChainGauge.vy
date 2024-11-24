@@ -1,10 +1,10 @@
-# @version 0.3.7
+# @version 0.4.0
 """
 @title Child Liquidity Gauge
 @license MIT
 @author Curve Finance
 """
-from vyper.interfaces import ERC20
+from ethereum.ercs import IERC20
 
 
 interface ShareToken:
@@ -47,6 +47,11 @@ event UpdateLiquidityLimit:
     _original_supply: uint256
     _working_balance: uint256
     _working_supply: uint256
+
+event ValuesDebug:
+    _period: int128
+    _period_timestamp: uint256
+    _integrate_inv_supply: uint256
 
 
 struct Reward:
@@ -101,7 +106,7 @@ is_killed: public(bool)
 inflation_rate: public(HashMap[uint256, uint256])
 
 
-@external
+@deploy
 def __init__(
     _voting_escrow_delegation_proxy: address,
     _bal_pseudo_minter: address,
@@ -112,7 +117,7 @@ def __init__(
 
     VE_DELEGATION_PROXY = _voting_escrow_delegation_proxy
     BAL_PSEUDO_MINTER = _bal_pseudo_minter
-    BAL = Minter(_bal_pseudo_minter).getBalancerToken()
+    BAL = staticcall Minter(_bal_pseudo_minter).getBalancerToken()
     AUTHORIZER_ADAPTOR = _authorizer_adaptor
 
     # Set the hook_receiver variable to a non-zero value
@@ -130,21 +135,23 @@ def _checkpoint(_user: address):
     period_time: uint256 = self.period_timestamp[period]
     integrate_inv_supply: uint256 = self.integrate_inv_supply[period]
 
+    log ValuesDebug(period, period_time, integrate_inv_supply)
+
     # If killed, we skip accumulating inflation in `integrate_inv_supply`
     if block.timestamp > period_time and not self.is_killed:
 
         working_supply: uint256 = self.working_supply
         prev_week_time: uint256 = period_time
-        week_time: uint256 = min((period_time + WEEK) / WEEK * WEEK, block.timestamp)
+        week_time: uint256 = min((period_time + WEEK) // WEEK * WEEK, block.timestamp)
 
-        for i in range(256):
+        for i: uint256 in range(256):
             dt: uint256 = week_time - prev_week_time
 
             if working_supply != 0:
                 # we don't have to worry about crossing inflation epochs
                 # and if we miss any weeks, those weeks inflation rates will be 0 for sure
                 # but that means no one interacted with the gauge for that long
-                integrate_inv_supply += self.inflation_rate[prev_week_time / WEEK] * 10 ** 18 * dt / working_supply
+                integrate_inv_supply += self.inflation_rate[prev_week_time // WEEK] * 10 ** 18 * dt // working_supply
 
             if week_time == block.timestamp:
                 break
@@ -152,11 +159,11 @@ def _checkpoint(_user: address):
             week_time = min(week_time + WEEK, block.timestamp)
 
     # check BAL balance and increase weekly inflation rate by delta for the rest of the week
-    bal_balance: uint256 = ERC20(BAL).balanceOf(self)
+    bal_balance: uint256 = staticcall IERC20(BAL).balanceOf(self)
     if bal_balance != 0:
-        current_week: uint256 = block.timestamp / WEEK
-        self.inflation_rate[current_week] += bal_balance / ((current_week + 1) * WEEK - block.timestamp)
-        ERC20(BAL).transfer(BAL_PSEUDO_MINTER, bal_balance)
+        current_week: uint256 = block.timestamp // WEEK
+        self.inflation_rate[current_week] += bal_balance // ((current_week + 1) * WEEK - block.timestamp)
+        extcall IERC20(BAL).transfer(BAL_PSEUDO_MINTER, bal_balance)
 
     period += 1
     self.period = period
@@ -164,7 +171,7 @@ def _checkpoint(_user: address):
     self.integrate_inv_supply[period] = integrate_inv_supply
 
     working_balance: uint256 = self.working_balances[_user]
-    self.integrate_fraction[_user] += working_balance * (integrate_inv_supply - self.integrate_inv_supply_of[_user]) / 10 ** 18
+    self.integrate_fraction[_user] += working_balance * (integrate_inv_supply - self.integrate_inv_supply_of[_user]) // 10 ** 18
     self.integrate_inv_supply_of[_user] = integrate_inv_supply
     self.integrate_checkpoint_of[_user] = block.timestamp
 
@@ -177,14 +184,14 @@ def _update_liquidity_limit(_user: address, _user_balance: uint256, _total_suppl
     @param _user_balance User's amount of liquidity (LP tokens)
     @param _total_supply Total amount of liquidity (LP tokens)
     """
-    working_balance: uint256 = _user_balance * TOKENLESS_PRODUCTION / 100
+    working_balance: uint256 = _user_balance * TOKENLESS_PRODUCTION // 100
 
     ve: address = VE_DELEGATION_PROXY
     if ve != empty(address):
-        ve_ts: uint256 = VotingEscrowDelegationProxy(ve).totalSupply()
+        ve_ts: uint256 = staticcall VotingEscrowDelegationProxy(ve).totalSupply()
         if ve_ts != 0:
-            ve_user_balance: uint256 = VotingEscrowDelegationProxy(ve).adjustedBalanceOf(_user)
-            working_balance += _total_supply * ve_user_balance / ve_ts * (100 - TOKENLESS_PRODUCTION) / 100
+            ve_user_balance: uint256 = staticcall VotingEscrowDelegationProxy(ve).adjustedBalanceOf(_user)
+            working_balance += _total_supply * ve_user_balance // ve_ts * (100 - TOKENLESS_PRODUCTION) // 100
             working_balance = min(_user_balance, working_balance)
 
     old_working_balance: uint256 = self.working_balances[_user]
@@ -200,7 +207,7 @@ def _update_liquidity_limit(_user: address, _user_balance: uint256, _total_suppl
 @internal
 def _all_indexes() -> DynArray[uint256, MAX_REWARDS]:
     indexes: DynArray[uint256, MAX_REWARDS] = []
-    for i in range(MAX_REWARDS):
+    for i: uint256 in range(MAX_REWARDS):
         if i >= self.reward_count:
             break
         indexes.append(i)
@@ -222,7 +229,7 @@ def _checkpoint_rewards(
     user_balance: uint256 = 0
     receiver: address = _receiver
     if _user != empty(address):
-        user_balance = ShareToken(self.share_token).balanceOf(_user)
+        user_balance = staticcall ShareToken(self.share_token).balanceOf(_user)
         if _claim and _receiver == empty(address):
             # if receiver is not explicitly declared, check if a default receiver is set
             receiver = self.rewards_receiver[_user]
@@ -237,7 +244,7 @@ def _checkpoint_rewards(
     else:
         reward_indexes = _input_reward_indexes
 
-    for i in reward_indexes:
+    for i: uint256 in reward_indexes:
         assert i < reward_count, "INVALID_REWARD_INDEX"
 
         token: address = self.reward_tokens[i]
@@ -248,7 +255,7 @@ def _checkpoint_rewards(
         if duration != 0:
             self.reward_data[token].last_update = last_update
             if _total_supply != 0:
-                integral += duration * self.reward_data[token].rate * 10**18 / _total_supply
+                integral += duration * self.reward_data[token].rate * 10**18 // _total_supply
                 self.reward_data[token].integral = integral
 
         if _user != empty(address):
@@ -257,19 +264,19 @@ def _checkpoint_rewards(
 
             if integral_for < integral:
                 self.reward_integral_for[token][_user] = integral
-                new_claimable = user_balance * (integral - integral_for) / 10**18
+                new_claimable = user_balance * (integral - integral_for) // 10**18
 
             claim_data: uint256 = self.claim_data[_user][token]
-            total_claimable: uint256 = shift(claim_data, -128) + new_claimable
+            total_claimable: uint256 = claim_data >> 128 + new_claimable
             if total_claimable > 0:
                 total_claimed: uint256 = claim_data % 2**128
                 if _claim:
                     response: Bytes[32] = raw_call(
                         token,
-                        _abi_encode(
-                            receiver,
-                            total_claimable,
-                            method_id=method_id("transfer(address,uint256)")
+                        concat(
+                            convert(_receiver, bytes32),
+                            convert(total_claimable, bytes32),
+                            method_id("transfer(address,uint256)")
                         ),
                         max_outsize=32,
                     )
@@ -277,7 +284,7 @@ def _checkpoint_rewards(
                         assert convert(response, bool), "TRANSFER_FAILURE"
                     self.claim_data[_user][token] = total_claimed + total_claimable
                 elif new_claimable > 0:
-                    self.claim_data[_user][token] = total_claimed + shift(total_claimable, 128)
+                    self.claim_data[_user][token] = total_claimed + total_claimable << 128
 
 
 @internal
@@ -317,9 +324,9 @@ def _dao_and_deployer_fee(_amount: uint256) -> (uint256, uint256):
     (
         dao_fee_receiver,
         deployer_fee_receiver
-    ) = SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+    ) = staticcall SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
 
-    (dao_fee, deployer_fee) = Minter(BAL_PSEUDO_MINTER).getFees()
+    (dao_fee, deployer_fee) = staticcall Minter(BAL_PSEUDO_MINTER).getFees()
 
     if dao_fee_receiver != empty(address):
         fee_to_dao = self._calculate_fee(_amount, dao_fee)
@@ -341,7 +348,7 @@ def _get_dao_and_deployer_fee_from_rewards(_amount: uint256, _token: address) ->
     fee_to_dao: uint256 = 0
     fee_to_deployer: uint256 = 0
 
-    (dao_fee, deployer_fee) = FeesManager(self.factory).getFees()
+    (dao_fee, deployer_fee) = staticcall FeesManager(self.factory).getFees()
 
     if _amount == 0:
         return _amount
@@ -352,7 +359,7 @@ def _get_dao_and_deployer_fee_from_rewards(_amount: uint256, _token: address) ->
     (
         dao_fee_receiver,
         deployer_fee_receiver
-    ) = SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+    ) = staticcall SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
 
     if dao_fee_receiver != empty(address) and dao_fee != 0:
         fee_to_dao = self._calculate_fee(_amount, dao_fee)
@@ -374,8 +381,10 @@ def _transfer_token(_receiver: address, _reward_token: address, _amount: uint256
     """
     response: Bytes[32] = raw_call(
         _reward_token,
-        _abi_encode(
-            _receiver, _amount, method_id=method_id("transfer(address,uint256)")
+        concat(
+            convert(_receiver, bytes32),
+            convert(_amount, bytes32),
+            method_id("transfer(address,uint256)")
         ),
         max_outsize=32,
     )
@@ -389,11 +398,11 @@ def _calculate_fee(_amount: uint256, _bps: uint256) -> uint256:
     if _amount == 0 or _bps == 0:
         return 0
 
-    return _amount * _bps / BPS_BASE
+    return _amount * _bps // BPS_BASE
 
 
 @external
-@nonreentrant('lock')
+@nonreentrant
 def afterTokenTransfer(
     _user1: address,
     _user1_new_balance: uint256,
@@ -424,7 +433,7 @@ def user_checkpoint(addr: address) -> bool:
     user_balance: uint256 = 0
     total_supply: uint256 = 0
 
-    (user_balance, total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(addr)
+    (user_balance, total_supply) = staticcall ShareToken(self.share_token).balanceOfAndTotalSupply(addr)
 
     self._update_liquidity_limit(addr, user_balance, total_supply)
     return True
@@ -438,7 +447,7 @@ def claimable_tokens(addr: address) -> uint256:
     @return uint256 number of claimable tokens per user
     """
     self._checkpoint(addr)
-    return self.integrate_fraction[addr] - Minter(BAL_PSEUDO_MINTER).minted(addr, self)
+    return self.integrate_fraction[addr] - staticcall Minter(BAL_PSEUDO_MINTER).minted(addr, self)
 
 
 @external
@@ -450,7 +459,7 @@ def claimable_tokens_with_fees(addr: address) -> (uint256, uint256, uint256):
     """
     self._checkpoint(addr)
 
-    claimable_tokens: uint256 = self.integrate_fraction[addr] - Minter(BAL_PSEUDO_MINTER).minted(addr, self)
+    claimable_tokens: uint256 = self.integrate_fraction[addr] - staticcall Minter(BAL_PSEUDO_MINTER).minted(addr, self)
 
     fee_dao: uint256 = 0
     fee_deployer: uint256 = 0
@@ -488,17 +497,17 @@ def claimable_reward(_user: address, _reward_token: address) -> uint256:
     user_balance: uint256 = 0
     total_supply: uint256 = 0
 
-    (user_balance, total_supply) = ShareToken(self.share_token).balanceOfAndTotalSupply(_user)
+    (user_balance, total_supply) = staticcall ShareToken(self.share_token).balanceOfAndTotalSupply(_user)
 
     if total_supply != 0:
         last_update: uint256 = min(block.timestamp, self.reward_data[_reward_token].period_finish)
         duration: uint256 = last_update - self.reward_data[_reward_token].last_update
-        integral += (duration * self.reward_data[_reward_token].rate * 10**18 / total_supply)
+        integral += (duration * self.reward_data[_reward_token].rate * 10**18 // total_supply)
 
     integral_for: uint256 = self.reward_integral_for[_reward_token][_user]
-    new_claimable: uint256 = user_balance * (integral - integral_for) / 10**18
+    new_claimable: uint256 = user_balance * (integral - integral_for) // 10**18
 
-    return shift(self.claim_data[_user][_reward_token], -128) + new_claimable
+    return self.claim_data[_user][_reward_token] >> 128 + new_claimable
 
 
 @external
@@ -512,7 +521,7 @@ def set_rewards_receiver(_receiver: address):
 
 
 @external
-@nonreentrant('lock')
+@nonreentrant
 def claim_rewards(
     _addr: address = msg.sender,
     _receiver: address = empty(address),
@@ -529,7 +538,7 @@ def claim_rewards(
     if _receiver != empty(address):
         assert _addr == msg.sender, "CANNOT_REDIRECT_CLAIM"  # dev: cannot redirect when claiming for another user
 
-    total_supply: uint256 = ShareToken(self.share_token).totalSupply()
+    total_supply: uint256 = staticcall ShareToken(self.share_token).totalSupply()
 
     self._checkpoint_rewards(_addr, total_supply, True, _receiver, _reward_indexes)
 
@@ -564,22 +573,22 @@ def set_reward_distributor(_reward_token: address, _distributor: address):
 
 
 @external
-@nonreentrant("lock")
+@nonreentrant
 def deposit_reward_token(_reward_token: address, _amount: uint256):
     assert msg.sender == self.reward_data[_reward_token].distributor, "SENDER_NOT_ALLOWED"
 
-    total_supply: uint256 = ShareToken(self.share_token).totalSupply()
+    total_supply: uint256 = staticcall ShareToken(self.share_token).totalSupply()
 
     # It is safe to checkpoint all the existing rewards as long as `_claim` is set to false (i.e. no external calls).
     self._checkpoint_rewards(empty(address), total_supply, False, empty(address), [])
 
     response: Bytes[32] = raw_call(
         _reward_token,
-        _abi_encode(
-            msg.sender,
-            self,
-            _amount,
-            method_id=method_id("transferFrom(address,address,uint256)")
+        concat(
+            convert(msg.sender, bytes32),
+            convert(self, bytes32),
+            convert(_amount, bytes32),
+            method_id("transferFrom(address,address,uint256)")
         ),
         max_outsize=32,
     )
@@ -590,11 +599,11 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
 
     period_finish: uint256 = self.reward_data[_reward_token].period_finish
     if block.timestamp >= period_finish:
-        self.reward_data[_reward_token].rate = _amountWithoutFee / WEEK
+        self.reward_data[_reward_token].rate = _amountWithoutFee // WEEK
     else:
         remaining: uint256 = period_finish - block.timestamp
         leftover: uint256 = remaining * self.reward_data[_reward_token].rate
-        self.reward_data[_reward_token].rate = (_amountWithoutFee + leftover) / WEEK
+        self.reward_data[_reward_token].rate = (_amountWithoutFee + leftover) // WEEK
 
     self.reward_data[_reward_token].last_update = block.timestamp
     self.reward_data[_reward_token].period_finish = block.timestamp + WEEK
@@ -623,7 +632,7 @@ def unkillGauge():
 @view
 @external
 def getFeeReceivers() -> (address, address):
-    return SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
+    return staticcall SiloFactory(self.silo_factory).getFeeReceivers(self.silo)
 
 
 @view
@@ -666,12 +675,12 @@ def initialize(silo_share_token: address, _version: String[128]):
 
     self.version = _version
     self.factory = msg.sender
-    self.hook_receiver = ShareToken(silo_share_token).hookReceiver()
+    self.hook_receiver = staticcall ShareToken(silo_share_token).hookReceiver()
     self.share_token = silo_share_token
     
-    silo: address = ShareToken(self.share_token).silo()
+    silo: address = staticcall ShareToken(self.share_token).silo()
 
     self.silo = silo
-    self.silo_factory = Silo(silo).factory()
+    self.silo_factory = staticcall Silo(silo).factory()
 
     self.period_timestamp[0] = block.timestamp

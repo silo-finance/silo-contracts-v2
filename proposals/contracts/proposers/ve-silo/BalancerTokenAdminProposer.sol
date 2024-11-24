@@ -31,6 +31,12 @@ contract BalancerTokenAdminProposer is TwoStepOwnableProposer {
         _addAction(input);
     }
 
+    /// @notice Stops the Balancer Token Admin
+    function stopMining() external {
+        bytes memory input = abi.encodeWithSelector(IBalancerTokenAdmin.stopMining.selector);
+        _addAction(input);
+    }
+
     function _addAction(bytes memory _input) internal override {
         _addAction({_target: BALANCER_TOKEN_ADMIN, _value: 0, _input: _input});
     }

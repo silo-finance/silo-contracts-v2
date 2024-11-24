@@ -13,6 +13,12 @@ contract SIPV2Init is Proposal {
     string constant public PROPOSAL_DESCRIPTION = "Silo V2 initialization";
 
     function run() public override returns (uint256 proposalId) {
+        initializeActions();
+
+        proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
+    }
+
+    function initializeActions() public {
         string memory chainAlias = ChainsLib.chainAlias();
 
         address gaugeFactoryAddr = VeSiloDeployments.get(VeSiloContracts.LIQUIDITY_GAUGE_FACTORY, chainAlias);
@@ -20,7 +26,7 @@ contract SIPV2Init is Proposal {
         address ccipCheckpointerAddr = VeSiloDeployments.get(VeSiloContracts.CCIP_GAUGE_CHECKPOINTER, chainAlias);
 
         address ccipGaugeFactoryAddr = VeSiloDeployments.get(
-            VeSiloMocksContracts.CCIP_GAUGE_FACTORY_ANY_CHAIN,
+            VeSiloContracts.CCIP_GAUGE_FACTORY_ARBITRUM,
             chainAlias
         );
 
@@ -28,15 +34,16 @@ contract SIPV2Init is Proposal {
 
         // ownership acceptance
         ccipGaugeCheckpointer.acceptOwnership();
-        feeDistributor.acceptOwnership();
+        // feeDistributor.acceptOwnership();
         gaugeAdder.acceptOwnership();
         siloFactory.acceptOwnership();
         smartWalletChecker.acceptOwnership();
         stakelessGaugeCheckpointerAdaptor.acceptOwnership();
-        uniswapSwapper.acceptOwnership();
+        // uniswapSwapper.acceptOwnership();
         votingEscrowCCIPRemapper.acceptOwnership();
         votingEscrowDelegationProxy.acceptOwnership();
         liquidityGaugeFactory.acceptOwnership();
+        balancerTokenAdmin.acceptOwnership();
 
         // gauge related configuration
         gaugeController.add_type(Constants._GAUGE_TYPE_ETHEREUM);
@@ -49,9 +56,5 @@ contract SIPV2Init is Proposal {
         gaugeAdder.setGaugeFactory(ccipGaugeFactoryAddr, Constants._GAUGE_TYPE_CHILD);
 
         stakelessGaugeCheckpointerAdaptor.setStakelessGaugeCheckpointer(ccipCheckpointerAddr);
-
-        /* PROPOSAL END */
-
-        proposalId = proposeProposal(PROPOSAL_DESCRIPTION);
     }
 }

@@ -34,7 +34,7 @@ contract SiloGovernor is
         Governor("SiloGovernor")
         GovernorSettings(
             1 /* initial voting deplay - 1 block */,
-            1 weeks /* initial voting period - 1 week */,
+            10 minutes /* initial voting period - 10 minutes */,
             100_000e18 /* initial proposal threshold - 100k voting power */
         )
         GovernorVotesQuorumFraction(1 /* quorum numerator value */)

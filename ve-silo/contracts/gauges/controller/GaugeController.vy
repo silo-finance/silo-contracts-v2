@@ -1,4 +1,4 @@
-# @version 0.3.7
+# @version 0.4.0
 """
 @title Gauge Controller
 @author Curve Finance
@@ -103,7 +103,7 @@ time_type_weight: public(uint256[1000000000])  # type_id -> last scheduled time 
 
 gauge_adder: public(address) # An address that can add gauges
 
-@external
+@deploy
 def __init__(_voting_escrow: address, _authorizer_adaptor: address):
     """
     @notice Contract constructor
@@ -113,10 +113,10 @@ def __init__(_voting_escrow: address, _authorizer_adaptor: address):
     assert _voting_escrow != empty(address)
     assert _authorizer_adaptor != empty(address)
 
-    TOKEN = VotingEscrow(_voting_escrow).token()
+    TOKEN = staticcall VotingEscrow(_voting_escrow).token()
     VOTING_ESCROW = _voting_escrow
     AUTHORIZER_ADAPTOR = _authorizer_adaptor
-    self.time_total = block.timestamp / WEEK * WEEK
+    self.time_total = block.timestamp // WEEK * WEEK
 
 @external
 @view
@@ -169,7 +169,7 @@ def _get_type_weight(gauge_type: int128) -> uint256:
     t: uint256 = self.time_type_weight[gauge_type]
     if t > 0:
         w: uint256 = self.points_type_weight[gauge_type][t]
-        for i in range(500):
+        for i: uint256 in range(500):
             if t > block.timestamp:
                 break
             t += WEEK
@@ -192,7 +192,7 @@ def _get_sum(gauge_type: int128) -> uint256:
     t: uint256 = self.time_sum[gauge_type]
     if t > 0:
         pt: Point = self.points_sum[gauge_type][t]
-        for i in range(500):
+        for i: uint256 in range(500):
             if t > block.timestamp:
                 break
             t += WEEK
@@ -226,19 +226,19 @@ def _get_total() -> uint256:
         t -= WEEK
     pt: uint256 = self.points_total[t]
 
-    for gauge_type in range(100):
+    for gauge_type: int128 in range(100):
         if gauge_type == _n_gauge_types:
             break
         self._get_sum(gauge_type)
         self._get_type_weight(gauge_type)
 
-    for i in range(500):
+    for i: uint256 in range(500):
         if t > block.timestamp:
             break
         t += WEEK
         pt = 0
         # Scales as n_types * n_unchecked_weeks (hopefully 1 at most)
-        for gauge_type in range(100):
+        for gauge_type: int128 in range(100):
             if gauge_type == _n_gauge_types:
                 break
             type_sum: uint256 = self.points_sum[gauge_type][t].bias
@@ -262,7 +262,7 @@ def _get_weight(gauge_addr: address) -> uint256:
     t: uint256 = self.time_weight[gauge_addr]
     if t > 0:
         pt: Point = self.points_weight[gauge_addr][t]
-        for i in range(500):
+        for i: uint256 in range(500):
             if t > block.timestamp:
                 break
             t += WEEK
@@ -299,7 +299,7 @@ def add_gauge(addr: address, gauge_type: int128, weight: uint256 = 0):
     self.gauges[n] = addr
 
     self.gauge_types_[addr] = gauge_type + 1
-    next_time: uint256 = (block.timestamp + WEEK) / WEEK * WEEK
+    next_time: uint256 = (block.timestamp + WEEK) // WEEK * WEEK
 
     if weight > 0:
         _type_weight: uint256 = self._get_type_weight(gauge_type)
@@ -363,14 +363,14 @@ def _gauge_relative_weight(addr: address, time: uint256) -> uint256:
     @param time Relative weight at the specified timestamp in the past or present
     @return Value of relative weight normalized to 1e18
     """
-    t: uint256 = time / WEEK * WEEK
+    t: uint256 = time // WEEK * WEEK
     _total_weight: uint256 = self.points_total[t]
 
     if _total_weight > 0:
         gauge_type: int128 = self.gauge_types_[addr] - 1
         _type_weight: uint256 = self.points_type_weight[gauge_type][t]
         _gauge_weight: uint256 = self.points_weight[addr][t].bias
-        return MULTIPLIER * _type_weight * _gauge_weight / _total_weight
+        return MULTIPLIER * _type_weight * _gauge_weight // _total_weight
 
     else:
         return 0
@@ -417,7 +417,7 @@ def _change_type_weight(type_id: int128, weight: uint256):
     old_weight: uint256 = self._get_type_weight(type_id)
     old_sum: uint256 = self._get_sum(type_id)
     _total_weight: uint256 = self._get_total()
-    next_time: uint256 = (block.timestamp + WEEK) / WEEK * WEEK
+    next_time: uint256 = (block.timestamp + WEEK) // WEEK * WEEK
 
     _total_weight = _total_weight + old_sum * weight - old_sum * old_weight
     self.points_total[next_time] = _total_weight
@@ -464,7 +464,7 @@ def _change_gauge_weight(addr: address, weight: uint256):
     type_weight: uint256 = self._get_type_weight(gauge_type)
     old_sum: uint256 = self._get_sum(gauge_type)
     _total_weight: uint256 = self._get_total()
-    next_time: uint256 = (block.timestamp + WEEK) / WEEK * WEEK
+    next_time: uint256 = (block.timestamp + WEEK) // WEEK * WEEK
 
     self.points_weight[addr][next_time].bias = weight
     self.time_weight[addr] = next_time
@@ -498,10 +498,10 @@ def _vote_for_gauge_weights(_user: address, _gauge_addr: address, _user_weight: 
     @param _gauge_addr Gauge which _user votes for
     @param _user_weight Weight for a gauge in bps (units of 0.01%). Minimal is 0.01%. Ignored if 0
     """
-    slope: uint256 = convert(VotingEscrow(VOTING_ESCROW).get_last_user_slope(_user), uint256)
-    lock_end: uint256 = VotingEscrow(VOTING_ESCROW).locked__end(_user)
+    slope: uint256 = convert(staticcall VotingEscrow(VOTING_ESCROW).get_last_user_slope(_user), uint256)
+    lock_end: uint256 = staticcall VotingEscrow(VOTING_ESCROW).locked__end(_user)
     _n_gauges: int128 = self.n_gauges
-    next_time: uint256 = (block.timestamp + WEEK) / WEEK * WEEK
+    next_time: uint256 = (block.timestamp + WEEK) // WEEK * WEEK
     assert lock_end > next_time, "Your token lock expires too soon"
     assert (_user_weight >= 0) and (_user_weight <= 10000), "You used all your voting power"
     assert block.timestamp >= self.last_user_vote[_user][_gauge_addr] + WEIGHT_VOTE_DELAY, "Cannot vote so often"
@@ -514,11 +514,11 @@ def _vote_for_gauge_weights(_user: address, _gauge_addr: address, _user_weight: 
     if old_slope.end > next_time:
         old_dt = old_slope.end - next_time
     old_bias: uint256 = old_slope.slope * old_dt
-    new_slope: VotedSlope = VotedSlope({
-        slope: slope * _user_weight / 10000,
-        power: _user_weight,
-        end: lock_end
-    })
+    new_slope: VotedSlope = VotedSlope(
+        slope = slope * _user_weight // 10000,
+        power = _user_weight,
+        end = lock_end
+    )
     new_dt: uint256 = lock_end - next_time  # dev: raises when expired
     new_bias: uint256 = new_slope.slope * new_dt
 
@@ -562,9 +562,9 @@ def _vote_for_gauge_weights(_user: address, _gauge_addr: address, _user_weight: 
     log VoteForGauge(block.timestamp, _user, _gauge_addr, _user_weight)
 
 @external
-@nonreentrant('lock')
+@nonreentrant
 def vote_for_many_gauge_weights(_gauge_addrs: address[8], _user_weight: uint256[8]):
-    for i in range(8):
+    for i: uint256 in range(8):
         if _gauge_addrs[i] == empty(address):
             break
         self._vote_for_gauge_weights(msg.sender, _gauge_addrs[i], _user_weight[i])

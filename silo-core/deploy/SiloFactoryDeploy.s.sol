@@ -2,6 +2,9 @@
 pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -16,8 +19,9 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 contract SiloFactoryDeploy is CommonDeploy {
     function run() public returns (ISiloFactory siloFactory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address devAddr = vm.addr(deployerPrivateKey);
 
-        address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
+        address daoFeeReceiver = devAddr; //VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -34,5 +38,14 @@ contract SiloFactoryDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(siloFactory), SiloCoreContracts.SILO_FACTORY);
+    }
+
+    function _getTimelock() internal returns (address timelock) {
+        if (ChainsLib.getChainId() == ChainsLib.ARBITRUM_ONE_CHAIN_ID) {
+            timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, ChainsLib.ARBITRUM_ONE_ALIAS);
+        } else {
+            AddrLib.init();
+            timelock = AddrLib.getAddress(AddrKey.L2_MULTISIG);
+        }
     }
 }

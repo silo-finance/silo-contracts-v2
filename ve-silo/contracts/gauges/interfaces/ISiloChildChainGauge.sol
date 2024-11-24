@@ -61,7 +61,7 @@ interface ISiloChildChainGauge {
     function factory() external view returns (ILiquidityGaugeFactory);
     function authorizer_adaptor() external view returns (address);
     function integrate_checkpoint_of(address _user) external view returns (uint256);
-    function lp_token() external view returns (address);
+    function bal_token() external view returns (address);
     function bal_pseudo_minter() external view returns (address);
     function voting_escrow_delegation_proxy() external view returns (address);
 
