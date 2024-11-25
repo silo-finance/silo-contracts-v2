@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import {SharesMathLib} from "../../lib/morpho-blue/src/libraries/SharesMathLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import "./helpers/IntegrationTest.sol";
+import {MarketAllocation} from "../../contracts/interfaces/IMetaMorpho.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 uint256 constant CAP2 = 100e18;
 uint256 constant INITIAL_DEPOSIT = 4 * CAP2;
 
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReallocateIdleTest -vvv
+*/
 contract ReallocateIdleTest is IntegrationTest {
-    using MarketParamsLib for MarketParams;
-    using MorphoLib for IMorpho;
-
     MarketAllocation[] internal allocations;
 
     function setUp() public override {
         super.setUp();
-
-        loanToken.setBalance(SUPPLIER, INITIAL_DEPOSIT);
 
         vm.prank(SUPPLIER);
         vault.deposit(INITIAL_DEPOSIT, ONBEHALF);
@@ -34,11 +34,11 @@ contract ReallocateIdleTest is IntegrationTest {
         suppliedAssets[1] = bound(suppliedAssets[1], 1, CAP2);
         suppliedAssets[2] = bound(suppliedAssets[2], 1, CAP2);
 
-        allocations.push(MarketAllocation(idleParams, 0));
+        allocations.push(MarketAllocation(idleMarket, 0));
         allocations.push(MarketAllocation(allMarkets[0], suppliedAssets[0]));
         allocations.push(MarketAllocation(allMarkets[1], suppliedAssets[1]));
         allocations.push(MarketAllocation(allMarkets[2], suppliedAssets[2]));
-        allocations.push(MarketAllocation(idleParams, type(uint256).max));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
 
         uint256 idleBefore = _idle();
 
@@ -46,18 +46,18 @@ contract ReallocateIdleTest is IntegrationTest {
         vault.reallocate(allocations);
 
         assertEq(
-            morpho.supplyShares(allMarkets[0].id(), address(vault)),
-            suppliedAssets[0] * SharesMathLib.VIRTUAL_SHARES,
+            allMarkets[0].balanceOf(address(vault)),
+            suppliedAssets[0] * SiloMathLib._DECIMALS_OFFSET_POW,
             "morpho.supplyShares(0)"
         );
         assertEq(
-            morpho.supplyShares(allMarkets[1].id(), address(vault)),
-            suppliedAssets[1] * SharesMathLib.VIRTUAL_SHARES,
+            allMarkets[1].balanceOf(address(vault)),
+            suppliedAssets[1] * SiloMathLib._DECIMALS_OFFSET_POW,
             "morpho.supplyShares(1)"
         );
         assertEq(
-            morpho.supplyShares(allMarkets[2].id(), address(vault)),
-            suppliedAssets[2] * SharesMathLib.VIRTUAL_SHARES,
+            allMarkets[2].balanceOf(address(vault)),
+            suppliedAssets[2] * SiloMathLib._DECIMALS_OFFSET_POW,
             "morpho.supplyShares(2)"
         );
 

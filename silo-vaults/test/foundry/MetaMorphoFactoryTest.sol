@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {MetaMorpho} from "../../contracts/MetaMorpho.sol";
+import {MetaMorphoFactory} from "../../contracts/MetaMorphoFactory.sol";
+import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
 
-import "../../src/MetaMorphoFactory.sol";
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
+/*
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaMorphoFactoryTest -vvv
+*/
 contract MetaMorphoFactoryTest is IntegrationTest {
     MetaMorphoFactory factory;
 
     function setUp() public override {
         super.setUp();
 
-        factory = new MetaMorphoFactory(address(morpho));
-    }
-
-    function testFactoryAddressZero() public {
-        vm.expectRevert(ErrorsLib.ZeroAddress.selector);
-        new MetaMorphoFactory(address(0));
+        factory = new MetaMorphoFactory();
     }
 
     function testCreateMetaMorpho(
@@ -31,7 +33,7 @@ contract MetaMorphoFactoryTest is IntegrationTest {
 
         bytes32 initCodeHash = hashInitCode(
             type(MetaMorpho).creationCode,
-            abi.encode(initialOwner, address(morpho), initialTimelock, address(loanToken), name, symbol)
+            abi.encode(initialOwner, initialTimelock, address(loanToken), name, symbol)
         );
         address expectedAddress = computeCreate2Address(salt, initCodeHash, address(factory));
 
@@ -48,7 +50,6 @@ contract MetaMorphoFactoryTest is IntegrationTest {
         assertTrue(factory.isMetaMorpho(address(metaMorpho)), "isMetaMorpho");
 
         assertEq(metaMorpho.owner(), initialOwner, "owner");
-        assertEq(address(metaMorpho.MORPHO()), address(morpho), "morpho");
         assertEq(metaMorpho.timelock(), initialTimelock, "timelock");
         assertEq(metaMorpho.asset(), address(loanToken), "asset");
         assertEq(metaMorpho.name(), name, "name");

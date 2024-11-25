@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
+import {MarketAllocation} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {CAP} from "./helpers/BaseTest.sol";
+
+/*
+FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc RoleTest -vvv
+*/
 contract RoleTest is IntegrationTest {
-    using MarketParamsLib for MarketParams;
-
     function testSetCurator() public {
         address newCurator = makeAddr("Curator2");
 
@@ -86,16 +95,16 @@ contract RoleTest is IntegrationTest {
         vm.stopPrank();
     }
 
-    function testCuratorOrGuardianFunctionsShouldRevertWhenNotCuratorOrGuardianRole(address caller, Id id) public {
+    function testCuratorOrGuardianFunctionsShouldRevertWhenNotCuratorOrGuardianRole(address caller, IERC4626 market) public {
         vm.assume(caller != vault.owner() && caller != vault.curator() && caller != vault.guardian());
 
         vm.startPrank(caller);
 
         vm.expectRevert(ErrorsLib.NotCuratorNorGuardianRole.selector);
-        vault.revokePendingCap(id);
+        vault.revokePendingCap(market);
 
         vm.expectRevert(ErrorsLib.NotCuratorNorGuardianRole.selector);
-        vault.revokePendingMarketRemoval(id);
+        vault.revokePendingMarketRemoval(market);
 
         vm.stopPrank();
     }
@@ -119,7 +128,7 @@ contract RoleTest is IntegrationTest {
 
         vm.startPrank(caller);
 
-        Id[] memory supplyQueue;
+        IERC4626[] memory supplyQueue;
         MarketAllocation[] memory allocation;
         uint256[] memory withdrawQueueFromRanks;
 
@@ -144,8 +153,8 @@ contract RoleTest is IntegrationTest {
     }
 
     function testAllocatorOrCuratorOrOwnerShouldTriggerAllocatorFunctions() public {
-        Id[] memory supplyQueue = new Id[](1);
-        supplyQueue[0] = idleParams.id();
+        IERC4626[] memory supplyQueue = new IERC4626[](1);
+        supplyQueue[0] = idleMarket;
 
         uint256[] memory withdrawQueueFromRanks = new uint256[](1);
         withdrawQueueFromRanks[0] = 0;

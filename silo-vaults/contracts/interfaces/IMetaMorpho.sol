@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-import {IMorpho, Id, MarketParams} from "../../lib/morpho-blue/src/interfaces/IMorpho.sol";
-import {IERC4626} from "../../lib/openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
-import {IERC20Permit} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {MarketConfig, PendingUint192, PendingAddress} from "../libraries/PendingLib.sol";
 
 struct MarketAllocation {
     /// @notice The market to allocate.
-    MarketParams marketParams;
+    IERC4626 market;
     /// @notice The amount of assets to allocate.
     uint256 assets;
 }
@@ -29,8 +28,6 @@ interface IOwnable {
 /// @dev This interface is used for factorizing IMetaMorphoStaticTyping and IMetaMorpho.
 /// @dev Consider using the IMetaMorpho interface instead of this one.
 interface IMetaMorphoBase {
-    /// @notice The address of the Morpho contract.
-    function MORPHO() external view returns (IMorpho);
     function DECIMALS_OFFSET() external view returns (uint8);
 
     /// @notice The address of the curator.
@@ -56,7 +53,7 @@ interface IMetaMorphoBase {
 
     /// @dev Stores the order of markets on which liquidity is supplied upon deposit.
     /// @dev Can contain any market. A market is skipped as soon as its supply cap is reached.
-    function supplyQueue(uint256) external view returns (Id);
+    function supplyQueue(uint256) external view returns (IERC4626);
 
     /// @notice Returns the length of the supply queue.
     function supplyQueueLength() external view returns (uint256);
@@ -64,7 +61,7 @@ interface IMetaMorphoBase {
     /// @dev Stores the order of markets from which liquidity is withdrawn upon withdrawal.
     /// @dev Always contain all non-zero cap markets as well as all markets on which the vault supplies liquidity,
     /// without duplicate.
-    function withdrawQueue(uint256) external view returns (Id);
+    function withdrawQueue(uint256) external view returns (IERC4626);
 
     /// @notice Returns the length of the withdraw queue.
     function withdrawQueueLength() external view returns (uint256);
@@ -91,14 +88,14 @@ interface IMetaMorphoBase {
     /// @dev Warning: Reverts if a cap is already pending. Revoke the pending cap to overwrite it.
     /// @dev Warning: Reverts if a market removal is pending.
     /// @dev In case the new cap is lower than the current one, the cap is set immediately.
-    function submitCap(MarketParams memory marketParams, uint256 newSupplyCap) external;
+    function submitCap(IERC4626 market, uint256 newSupplyCap) external;
 
     /// @notice Accepts the pending cap of the market defined by `marketParams`.
-    function acceptCap(MarketParams memory marketParams) external;
+    function acceptCap(IERC4626 market) external;
 
-    /// @notice Revokes the pending cap of the market defined by `id`.
+    /// @notice Revokes the pending cap of the market defined by `market`.
     /// @dev Does not revert if there is no pending cap.
-    function revokePendingCap(Id id) external;
+    function revokePendingCap(IERC4626 market) external;
 
     /// @notice Submits a forced market removal from the vault, eventually losing all funds supplied to the market.
     /// @notice Funds can be recovered by enabling this market again and withdrawing from it (using `reallocate`),
@@ -109,11 +106,11 @@ interface IMetaMorphoBase {
     /// @dev Warning: Removing a market with non-zero supply will instantly impact the vault's price per share.
     /// @dev Warning: Reverts for non-zero cap or if there is a pending cap. Successfully submitting a zero cap will
     /// prevent such reverts.
-    function submitMarketRemoval(MarketParams memory marketParams) external;
+    function submitMarketRemoval(IERC4626 market) external;
 
-    /// @notice Revokes the pending removal of the market defined by `id`.
+    /// @notice Revokes the pending removal of the market defined by `market`.
     /// @dev Does not revert if there is no pending market removal.
-    function revokePendingMarketRemoval(Id id) external;
+    function revokePendingMarketRemoval(IERC4626 market) external;
 
     /// @notice Submits a `newGuardian`.
     /// @notice Warning: a malicious guardian could disrupt the vault's operation, and would have the power to revoke
@@ -149,7 +146,7 @@ interface IMetaMorphoBase {
     /// @notice Sets `supplyQueue` to `newSupplyQueue`.
     /// @param newSupplyQueue is an array of enabled markets, and can contain duplicate markets, but it would only
     /// increase the cost of depositing to the vault.
-    function setSupplyQueue(Id[] calldata newSupplyQueue) external;
+    function setSupplyQueue(IERC4626[] calldata newSupplyQueue) external;
 
     /// @notice Updates the withdraw queue. Some markets can be removed, but no market can be added.
     /// @notice Removing a market requires the vault to have 0 supply on it, or to have previously submitted a removal
@@ -181,13 +178,13 @@ interface IMetaMorphoBase {
 /// @dev Consider using the IMetaMorpho interface instead of this one.
 interface IMetaMorphoStaticTyping is IMetaMorphoBase {
     /// @notice Returns the current configuration of each market.
-    function config(Id) external view returns (uint184 cap, bool enabled, uint64 removableAt);
+    function config(IERC4626) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 
     /// @notice Returns the pending guardian.
     function pendingGuardian() external view returns (address guardian, uint64 validAt);
 
     /// @notice Returns the pending cap for each market.
-    function pendingCap(Id) external view returns (uint192 value, uint64 validAt);
+    function pendingCap(IERC4626) external view returns (uint192 value, uint64 validAt);
 
     /// @notice Returns the pending timelock.
     function pendingTimelock() external view returns (uint192 value, uint64 validAt);
@@ -199,13 +196,13 @@ interface IMetaMorphoStaticTyping is IMetaMorphoBase {
 /// @dev Use this interface for MetaMorpho to have access to all the functions with the appropriate function signatures.
 interface IMetaMorpho is IMetaMorphoBase, IERC4626, IERC20Permit, IOwnable, IMulticall {
     /// @notice Returns the current configuration of each market.
-    function config(Id) external view returns (MarketConfig memory);
+    function config(IERC4626) external view returns (MarketConfig memory);
 
     /// @notice Returns the pending guardian.
     function pendingGuardian() external view returns (PendingAddress memory);
 
     /// @notice Returns the pending cap for each market.
-    function pendingCap(Id) external view returns (PendingUint192 memory);
+    function pendingCap(IERC4626) external view returns (PendingUint192 memory);
 
     /// @notice Returns the pending timelock.
     function pendingTimelock() external view returns (PendingUint192 memory);
