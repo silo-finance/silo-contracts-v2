@@ -15,9 +15,9 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=F5EJXBECGA6SKE3R3UQVYXFJFE4SUXXZ7S FOUNDRY_PROFILE=core \
+    FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/28c85ec0f1bc46b0bc5cfd06cfdee3b1 \
+        --ffi --broadcast --rpc-url $RPC_ARBITRUM \
         --verify
 */
 contract LiquidationHelperDeploy is CommonDeploy {

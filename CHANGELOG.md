@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.14.0] - 2024-11-25
+### Added
+- Vault functionality based on MetaMorpho
+  - MetaMorpho was adjusted to work with ERC4626 standard
+  - Concept of Idle market needs to be replaced with additional vault. By default, in Silo `IdleVault` is used. 
+
 ## [0.13.0] - 2024-11-19
 ### Added
 - `LiquidationHelper` and `Tower`
