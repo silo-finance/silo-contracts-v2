@@ -781,7 +781,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
             IERC4626 market = withdrawQueue[i];
 
             // original implementation were using `_accruedSupplyBalance` which does not care about liquidity
-            // now, liquidity is considared by using `maxWithdraw`
+            // now, liquidity is considered by using `maxWithdraw`
             uint256 toWithdraw = UtilsLib.min(market.maxWithdraw(address(this)), assets);
 
             if (toWithdraw > 0) {
