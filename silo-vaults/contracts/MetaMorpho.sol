@@ -788,7 +788,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     assets -= toWithdraw;
-                } catch {}
+                } catch {
+                }
             }
 
             if (assets == 0) return;
