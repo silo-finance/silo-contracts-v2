@@ -715,8 +715,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         delete pendingGuardian;
     }
 
-    /// @dev Sets the cap of the market defined by `id` to `supplyCap`.
-    /// @dev Assumes that the inputs `marketParams` and `id` match.
+    /// @dev Sets the cap of the market.
     function _setCap(IERC4626 market, uint184 supplyCap) internal virtual {
         MarketConfig storage marketConfig = config[market];
 

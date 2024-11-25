@@ -28,7 +28,6 @@ interface IOwnable {
 /// @dev This interface is used for factorizing IMetaMorphoStaticTyping and IMetaMorpho.
 /// @dev Consider using the IMetaMorpho interface instead of this one.
 interface IMetaMorphoBase {
-    /// @notice The address of the Morpho contract.
     function DECIMALS_OFFSET() external view returns (uint8);
 
     /// @notice The address of the curator.
