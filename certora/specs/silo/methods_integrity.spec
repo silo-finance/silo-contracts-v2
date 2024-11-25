@@ -1,21 +1,5 @@
 /* Integrity of main methods */
 
-// no longer needed
-// import "../summaries/two_silos_summaries.spec";
-// import "../summaries/config_for_two_in_cvl.spec";
-// import "../summaries/siloconfig_dispatchers.spec";
-// import "../summaries/tokens_dispatchers.spec";
-// import "../summaries/safe-approximations.spec";
-
-// import "../requirements/tokens_requirements.spec";
-
-// using Silo0 as silo0;
-// using Silo1 as silo1;
-// using Token0 as token0;
-// using Token1 as token1;
-// using ShareDebtToken0 as shareDebtToken0;
-// using ShareDebtToken1 as shareDebtToken1;
-
 import "../previousAudits/CompleteSiloSetup.spec";
 
 methods {

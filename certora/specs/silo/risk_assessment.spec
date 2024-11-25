@@ -6,13 +6,6 @@ Reentrancy protection is shared among the different Silo contracts that interact
 3. Guard must be checked on all public functions 
 */
 
-// not needed. These are already imported in authorized_functions.spec
-// import "../summaries/two_silos_summaries.spec";
-// import "../summaries/siloconfig_dispatchers.spec";
-// import "../summaries/config_for_two_in_cvl.spec";
-// import "../summaries/tokens_dispatchers.spec";
-// import "../summaries/safe-approximations.spec";
-// import "../requirements/tokens_requirements.spec";
 import "./authorized_functions.spec";
 
 methods {
