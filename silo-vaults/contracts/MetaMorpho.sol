@@ -346,7 +346,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
             MarketAllocation memory allocation = allocations[i];
 
             // in original MetaMorpho, we are not checking liquidity, so this realocation will fail if not enough assets
-            (uint256 supplyAssets, uint256 supplyShares) = _accruedSupplyBalance(allocation.market);
+            (uint256 supplyAssets, uint256 supplyShares) = _supplyBalance(allocation.market);
             uint256 withdrawn = UtilsLib.zeroFloorSub(supplyAssets, allocation.assets);
 
             if (withdrawn > 0) {
@@ -677,9 +677,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /* INTERNAL */
 
 
-    /// @dev Accrues interest on Morpho Blue and returns the vault's assets & corresponding shares supplied on the
-    /// market defined by `marketParams`, as well as the market's state.
-    function _accruedSupplyBalance(IERC4626 market)
+    /// @dev Returns the vault's assets & corresponding shares supplied on the
+    /// market defined by `market`, as well as the market's state.
+    function _supplyBalance(IERC4626 market)
         internal
         view
         virtual
