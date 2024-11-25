@@ -1,17 +1,13 @@
 /* Third party protection rules (i.e. unrelated addresses are not affected)  */
 
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/safe-approximations.spec";
+// import "../summaries/two_silos_summaries.spec";
+// import "../summaries/siloconfig_dispatchers.spec";
+// import "../summaries/tokens_dispatchers.spec";
+// import "../summaries/safe-approximations.spec";
 
-import "../requirements/tokens_requirements.spec";
+// import "../requirements/tokens_requirements.spec";
 
-using Silo0 as silo0;
-using Token0 as token0;
-using ShareDebtToken0 as shareDebtToken0;
-using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
-
+import "../previousAudits/CompleteSiloSetup.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------

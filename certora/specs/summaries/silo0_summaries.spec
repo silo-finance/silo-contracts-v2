@@ -1,8 +1,13 @@
 /* Summaries for single `Silo0` setup */
 
+import "tokens_dispatchers.spec";
+import "../requirements/single_silo_methods.spec";
+
 methods {
     // ---- `envfree` ----------------------------------------------------------
-    function Silo0.config() external returns (address) envfree;
+    // function Silo0.config() external returns (address) envfree; // moved to single_silo_methods.spec
+    // TODO can we move more methods there??
+    
     function Silo0.getTotalAssetsStorage(ISilo.AssetType) external returns(uint256) envfree;
 
     // Harness

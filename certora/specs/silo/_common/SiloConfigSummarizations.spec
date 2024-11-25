@@ -1,5 +1,4 @@
-using SiloConfig as siloConfig;
-
+import "single_silo_methods.spec";
 methods {
     // Summaries for all the siloConfig getters 
     function siloConfig.getAssetForSilo(
