@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Vault functionality based on MetaMorpho
+  - MetaMorpho was adjusted to work with ERC4626 standard
+  - Concept of Idle market needs to be replaced with additional vault. By default, in Silo `IdleVault` is used. 
 
 ## [0.13.0] - 2024-11-19
 ### Added

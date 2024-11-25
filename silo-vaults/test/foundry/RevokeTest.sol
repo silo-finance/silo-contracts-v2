@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "./helpers/IntegrationTest.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
+import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
+import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {PendingUint192, MarketConfig, PendingAddress} from "../../contracts/libraries/PendingLib.sol";
+
+import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {TIMELOCK} from "./helpers/BaseTest.sol";
 
 uint256 constant FEE = 0.1 ether; // 10%
 
+/*
+FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc RevokeTest -vvv
+*/
 contract RevokeTest is IntegrationTest {
-    using Math for uint256;
-    using MathLib for uint256;
-    using MarketParamsLib for MarketParams;
-
     function setUp() public override {
         super.setUp();
 
@@ -40,24 +46,22 @@ contract RevokeTest is IntegrationTest {
     }
 
     function testCuratorRevokeCapIncreased(uint256 seed, uint256 cap, uint256 elapsed) public {
-        MarketParams memory marketParams = _randomMarketParams(seed);
+        IERC4626 market = _randomMarket(seed);
         elapsed = bound(elapsed, 0, TIMELOCK - 1);
         cap = bound(cap, 1, type(uint184).max);
 
         vm.prank(OWNER);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         vm.warp(block.timestamp + elapsed);
 
-        Id id = marketParams.id();
-
         vm.expectEmit();
-        emit EventsLib.RevokePendingCap(CURATOR, id);
+        emit EventsLib.RevokePendingCap(CURATOR, market);
         vm.prank(CURATOR);
-        vault.revokePendingCap(id);
+        vault.revokePendingCap(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, 0, "cap");
         assertEq(marketConfig.enabled, false, "enabled");
@@ -67,24 +71,22 @@ contract RevokeTest is IntegrationTest {
     }
 
     function testOwnerRevokeCapIncreased(uint256 seed, uint256 cap, uint256 elapsed) public {
-        MarketParams memory marketParams = _randomMarketParams(seed);
+        IERC4626 market = _randomMarket(seed);
         elapsed = bound(elapsed, 0, TIMELOCK - 1);
         cap = bound(cap, 1, type(uint184).max);
 
         vm.prank(OWNER);
-        vault.submitCap(marketParams, cap);
+        vault.submitCap(market, cap);
 
         vm.warp(block.timestamp + elapsed);
 
-        Id id = marketParams.id();
-
         vm.expectEmit();
-        emit EventsLib.RevokePendingCap(OWNER, id);
+        emit EventsLib.RevokePendingCap(OWNER, market);
         vm.prank(OWNER);
-        vault.revokePendingCap(id);
+        vault.revokePendingCap(market);
 
-        MarketConfig memory marketConfig = vault.config(id);
-        PendingUint192 memory pendingCap = vault.pendingCap(id);
+        MarketConfig memory marketConfig = vault.config(market);
+        PendingUint192 memory pendingCap = vault.pendingCap(market);
 
         assertEq(marketConfig.cap, 0, "cap");
         assertEq(marketConfig.enabled, false, "enabled");
