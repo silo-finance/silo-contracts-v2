@@ -804,10 +804,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
-            // The vault withdrawing from Morpho cannot fail because:
-            // 1. oracle.price() is never called (the vault doesn't borrow)
-            // 2. the amount is capped to the liquidity available on Morpho
-            // 3. virtually accruing interest didn't fail
             assets = UtilsLib.zeroFloorSub(assets, market.maxWithdraw(address(this)));
 
             if (assets == 0) break;
