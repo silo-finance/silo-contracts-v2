@@ -737,7 +737,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         }
 
         marketConfig.cap = supplyCap;
-        // TODO should we use forceApprove? and should we use max?
         IERC20(asset()).approve(address(market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), market, supplyCap);
 
