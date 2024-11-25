@@ -737,6 +737,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         }
 
         marketConfig.cap = supplyCap;
+        // one time approval, so market can pull any amount of tokens from MetaMorpho in a future
         IERC20(asset()).approve(address(market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), market, supplyCap);
 
