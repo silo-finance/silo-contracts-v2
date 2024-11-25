@@ -345,7 +345,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         for (uint256 i; i < allocations.length; ++i) {
             MarketAllocation memory allocation = allocations[i];
 
-            // in original MetaMorpho, we not checking liquidity, so this realocation will fail if not enough assets
+            // in original MetaMorpho, we are not checking liquidity, so this realocation will fail if not enough assets
             (uint256 supplyAssets, uint256 supplyShares) = _accruedSupplyBalance(allocation.market);
             uint256 withdrawn = UtilsLib.zeroFloorSub(supplyAssets, allocation.assets);
 
