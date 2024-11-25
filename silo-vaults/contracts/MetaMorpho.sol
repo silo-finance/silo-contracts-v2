@@ -105,7 +105,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(owner) {
         require(_asset != address(0), ErrorsLib.ZeroAddress());
 
-        // TODO do we want to do +3?
         DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18, IERC20Metadata(_asset).decimals()));
 
         _checkTimelockBounds(initialTimelock);
