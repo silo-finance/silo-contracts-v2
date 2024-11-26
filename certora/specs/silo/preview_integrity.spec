@@ -27,7 +27,7 @@ invariant assetsZeroInterestRateTimestampZero(env e)
 
 // ---- Rules ------------------------------------------------------------------
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/c718bcc6d805415f83255bf440b1ef17?anonymousKey=52ff03ee66ee85abf5370119b82433e9d94c4e18
+/// @status Done
 rule HLP_PreviewMintCorrectness_strict(address receiver)
 {
     env e;
@@ -47,7 +47,7 @@ rule HLP_PreviewMintCorrectness_strict(address receiver)
     assert assetsReported == assetsPaid;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/d718e23421274125bc9e540a1e890577?anonymousKey=7bf294a459b0560234f3f13ea85704e93e934eac
+/// @status Done
 rule HLP_PreviewRedeemCorrectness(address receiver)
 {
     env e;
@@ -67,7 +67,7 @@ rule HLP_PreviewRedeemCorrectness(address receiver)
     assert assetsReported <= assetsReceived;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/f55ff4263cbd40a58b28d3601234c99e?anonymousKey=796a8296609848e1822ba7680ad2fabca71ad9e2
+/// @status Done
 rule HLP_PreviewDepositCorrectness(address receiver)
 {
     env e;
@@ -87,7 +87,7 @@ rule HLP_PreviewDepositCorrectness(address receiver)
     assert sharesReported <= sharesReceived;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/dac3f20517bd46158890ed2e082112f8?anonymousKey=6f5deb062eb061faeadd94476742891ad43e66a8
+/// @status Done
 rule HLP_PreviewWithdrawCorrectness_strict(address receiver)
 {
     env e;
@@ -106,7 +106,7 @@ rule HLP_PreviewWithdrawCorrectness_strict(address receiver)
     assert sharesPaid == sharesReported;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/5f54a319b0a14f4eb7fcaf11e8b5f526?anonymousKey=98bc6736865b9a5b08b8467a11030c5b2f53975b
+/// @status Done
 rule HLP_PreviewBorrowCorrectness_strict(address receiver)
 {
     env e;
@@ -126,7 +126,7 @@ rule HLP_PreviewBorrowCorrectness_strict(address receiver)
     assert debtSharesReported == debtSharesReceived;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/9cd5865d6bb54f348227a21f66d059e3?anonymousKey=3fa36708608ed5fe351e95752dec70babf80bbae
+/// @status Done
 rule HLP_PreviewRepayCorrectness_strict(address receiver)
 {
     env e;
@@ -145,7 +145,7 @@ rule HLP_PreviewRepayCorrectness_strict(address receiver)
     assert debtSharesReported == debtSharesRepaid;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/fa2c85488a5b43bc903f5f6955fe33a6?anonymousKey=5e67aec259990ed6dd07acc6e7ee7b3aa92b5d63
+/// @status Done
 rule HLP_PreviewBorrowSharesCorrectness(address receiver)
 {
     env e;
@@ -165,7 +165,7 @@ rule HLP_PreviewBorrowSharesCorrectness(address receiver)
     assert assetsReported <= assetsReceived;
 }
 
-/// @status Done: https://vaas-stg.certora.com/output/39601/b62ea4cd47b24d7b9a2d40d14000ff7d?anonymousKey=1f67cd9ccc9f2ce3a1e5a509c801b9bfbb29f3e2
+/// @status Done
 rule HLP_PreviewRepaySharesCorrectness(address receiver)
 {
     env e;
