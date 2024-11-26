@@ -11,6 +11,8 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
+import {console} from "forge-std/console.sol";
+
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
     SiloIncentivesController internal _controller;
@@ -22,7 +24,7 @@ contract SiloIncentivesControllerTest is Test {
     address internal user1 = makeAddr("User1");
     address internal user2 = makeAddr("User2");
     address internal user3 = makeAddr("User3");
-    
+
     uint256 internal constant _PRECISION = 10 ** 18;
     uint256 internal constant _TOTAL_SUPPLY = 1000e18;
     string internal constant _PROGRAM_NAME = "Test";
@@ -157,6 +159,147 @@ contract SiloIncentivesControllerTest is Test {
         _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp + 1000), 1000e18);
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_handleAction_for_to
+    function test_handleAction_for_to() public {
+        ERC20Mock(_rewardToken).mint(address(_controller), 20e18);
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: 0,
+            emissionPerSecond: 1e18
+        }));
+
+        uint256 clockStart = block.timestamp;
+
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(clockStart + 20));
+
+        vm.warp(block.timestamp + 10);
+
+        vm.prank(user1);
+        ERC20Mock(_notifier).transfer(user2, user1Deposit1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: user1,
+            _senderBalance: 0,
+            _recipient: user2,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        vm.warp(block.timestamp + 10);
+
+        // user1 claim rewards
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        // user2 claim rewards
+        vm.prank(user2);
+        _controller.claimRewards(user2);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user1), 10e18, "invalid user1 balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user2), 10e18, "invalid user2 balance");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_decrease_rewards
+    function test_decrease_rewards() public {
+        ERC20Mock(_rewardToken).mint(address(_controller), 11e18);
+
+        uint104 initialEmissionPerSecond = 1e18;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: 0,
+            emissionPerSecond: initialEmissionPerSecond
+        }));
+
+        uint256 clockStart = block.timestamp;
+
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        uint40 newDistributionEnd = uint40(clockStart + 20);
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, newDistributionEnd);
+
+        vm.warp(block.timestamp + 10);
+
+        vm.prank(_owner);
+        _controller.updateIncentivesProgram({
+            _incentivesProgram: _PROGRAM_NAME,
+            _distributionEnd: newDistributionEnd,
+            _emissionPerSecond: uint104(initialEmissionPerSecond / 10)
+        });
+
+        // user2 deposit 100
+        uint256 user2Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user2, user2Deposit1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user2,
+            _recipientBalance: user2Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user2Deposit1
+        });
+
+        vm.warp(block.timestamp + 10);
+
+        uint256 expectedRewardsUser1 = 105e17;
+        uint256 expectedRewardsUser2 = 5e17;
+
+        uint256 rewards = _controller.getRewardsBalance(user1, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser1, "invalid user1 rewards");
+
+        rewards = _controller.getRewardsBalance(user2, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser2, "invalid user2 rewards");
+
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        vm.prank(user2);
+        _controller.claimRewards(user2);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_Success
     function test_updateIncentivesProgram_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
@@ -201,12 +344,12 @@ contract SiloIncentivesControllerTest is Test {
         ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
 
         uint256 expectedIndex = indexBefore +
-            emissionPerSecond * (block.timestamp - lastUpdateTimestampBefore) * _PRECISION / _TOTAL_SUPPLY;
+            emissionPerSecondBefore * (block.timestamp - lastUpdateTimestampBefore) * _PRECISION / _TOTAL_SUPPLY;
 
-        assertEq(indexCurrent, expectedIndex);
-        assertEq(emissionPerSecondCurrent, emissionPerSecond);
-        assertEq(distributionEndCurrent, distributionEnd);
-        assertEq(lastUpdateTimestampCurrent, block.timestamp);
+        assertEq(indexCurrent, expectedIndex, "invalid index");
+        assertEq(emissionPerSecondCurrent, emissionPerSecond, "invalid emissionPerSecond");
+        assertEq(distributionEndCurrent, distributionEnd, "invalid distributionEnd");
+        assertEq(lastUpdateTimestampCurrent, block.timestamp, "invalid lastUpdateTimestamp");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_OnlyNotifier
@@ -303,11 +446,11 @@ contract SiloIncentivesControllerTest is Test {
             emissionPerSecond: emissionPerSecond
         }));
 
+        // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
         ERC20Mock(_notifier).mint(user1, user1Deposit1);
         uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
 
-        // user1 deposit 100
         vm.prank(_notifier);
         _controller.afterTokenTransfer({
             _sender: address(0),

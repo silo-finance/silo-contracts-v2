@@ -64,10 +64,12 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
 
         require(_incentivesProgramIds.contains(programId), IncentivesProgramNotFound());
 
+        uint256 totalSupply = _shareToken().totalSupply();
+
+        _updateAssetStateInternal(programId, totalSupply);
+
         incentivesPrograms[programId].distributionEnd = _distributionEnd;
         incentivesPrograms[programId].emissionPerSecond = _emissionPerSecond;
-
-        _updateAssetStateInternal(programId, _shareToken().totalSupply());
 
         emit IncentivesProgramUpdated(programId);
     }
