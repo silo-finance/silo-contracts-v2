@@ -11,8 +11,6 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
-import {console} from "forge-std/console.sol";
-
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
     SiloIncentivesController internal _controller;
