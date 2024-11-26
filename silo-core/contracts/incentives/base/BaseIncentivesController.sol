@@ -172,7 +172,8 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
 
         for (uint256 i = 0; i < accruedRewards.length; i++) {
             uint256 unclaimedRewards = _usersUnclaimedRewards[user][accruedRewards[i].programId];
-            accruedRewards[i].amount += unclaimedRewards + accruedRewards[i].amount;
+
+            accruedRewards[i].amount += unclaimedRewards;
 
             if (accruedRewards[i].amount != 0) {
                 emit RewardsAccrued(user, accruedRewards[i].rewardToken, accruedRewards[i].amount);

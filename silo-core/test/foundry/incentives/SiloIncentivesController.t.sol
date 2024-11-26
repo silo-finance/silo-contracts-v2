@@ -11,6 +11,8 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
+import {console} from "forge-std/console.sol";
+
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
     SiloIncentivesController internal _controller;
@@ -18,6 +20,10 @@ contract SiloIncentivesControllerTest is Test {
     address internal _owner = makeAddr("Owner");
     address internal _notifier;
     address internal _rewardToken;
+
+    address internal user1 = makeAddr("User1");
+    address internal user2 = makeAddr("User2");
+    address internal user3 = makeAddr("User3");
     
     uint256 internal constant _PRECISION = 10 ** 18;
     uint256 internal constant _TOTAL_SUPPLY = 1000e18;
@@ -32,8 +38,6 @@ contract SiloIncentivesControllerTest is Test {
         _notifier = address(new ERC20Mock());
 
         _controller = new SiloIncentivesController(_owner, _notifier);
-
-        ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
@@ -76,6 +80,8 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_Success
     function test_createIncentivesProgram_Success() public {
+        ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
+
         uint104 emissionPerSecond = 1000e18;
         uint256 distributionEnd = block.timestamp + 1000;
 
@@ -155,6 +161,8 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_Success
     function test_updateIncentivesProgram_Success() public {
+        ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
+
         uint40 distributionEnd = uint40(block.timestamp + 1000);
         uint104 emissionPerSecond = 1000e18;
 
@@ -218,6 +226,8 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_Success
     function test_afterTokenTransfer_Success() public {
+        ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
+
         uint40 distributionEnd = uint40(block.timestamp + 30 days);
         uint104 emissionPerSecond = 100e18;
 
@@ -268,5 +278,273 @@ contract SiloIncentivesControllerTest is Test {
 
         assertEq(rewards, expectedRewards);
         assertNotEq(rewards, 0);
+    }
+
+    // test scenario 1 for immediateDistribution
+    //
+    // distribute 0
+    // user1 deposit 100
+    // move time 1 month
+    // distribute 1000
+    // user2 deposit 100
+    // move 100 days
+    // distribute 1000
+    // user3 deposit 100
+    // claimRewards (user1 - 1500, user2 - 500, user3 - 0)
+    //
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_scenario_1_for_immediateDistribution
+    function test_scenario_1_for_immediateDistribution() public {
+        uint40 distributionEnd = 0;
+        uint104 emissionPerSecond = 0;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: distributionEnd,
+            emissionPerSecond: emissionPerSecond
+        }));
+
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        // user1 deposit 100
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        // move time 1 month
+        vm.warp(block.timestamp + 30 days);
+
+        // distribute 1000
+        uint256 toDistribute = 1000e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+
+        // user2 deposit 100
+        uint256 user2Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user2, user2Deposit1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user2,
+            _recipientBalance: user2Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user2Deposit1
+        });
+
+        // move 100 days
+        vm.warp(block.timestamp + 100 days);
+
+        // distribute 1000
+        toDistribute = 1000e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+
+        // user3 deposit 100
+        uint256 user3Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user3, user3Deposit1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user3,
+            _recipientBalance: user3Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user3Deposit1
+        });
+
+        uint256 expectedRewardsUser1 = 1500e18;
+        uint256 expectedRewardsUser2 = 500e18;
+        uint256 expectedRewardsUser3 = 0;
+
+        uint256 rewards = _controller.getRewardsBalance(user1, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser1);
+
+        rewards = _controller.getRewardsBalance(user2, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser2);
+
+        rewards = _controller.getRewardsBalance(user3, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser3);
+
+        // user1 claim rewards
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        // user2 claim rewards
+        vm.prank(user2);
+        _controller.claimRewards(user2);
+        // user3 claim rewards
+        vm.prank(user3);
+        _controller.claimRewards(user3);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user3), expectedRewardsUser3, "invalid user3 balance");
+    }
+
+    // test scenario 2 for immediateDistribution
+    //
+    // distribute 0
+    // user1 deposit 100
+    // move time 1 month
+    // distribute 1000
+    // user2 deposit 100
+    // distribute 900
+    // user1 withdraw 100
+    // move 100 days
+    // distribute 100
+    // user3 deposit 100
+    // claimRewards (user1 - 1450, user2 - 550, user3 - 0)
+    //
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_scenario_2_for_immediateDistribution
+    function test_scenario_2_for_immediateDistribution() public {
+        uint40 distributionEnd = 0;
+        uint104 emissionPerSecond = 0;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: distributionEnd,
+            emissionPerSecond: emissionPerSecond
+        }));
+
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        // move time 1 month
+        vm.warp(block.timestamp + 30 days);
+
+        // distribute 1000
+        uint256 toDistribute = 1000e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+
+        // user2 deposit 100
+        uint256 user2Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user2, user2Deposit1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user2,
+            _recipientBalance: user2Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user2Deposit1
+        });
+
+        // move 100 days
+        vm.warp(block.timestamp + 100 days);
+
+        // distribute 900
+        toDistribute = 900e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+
+        // user1 withdraw 100
+        uint256 user1Withdraw1 = 100e18;
+        ERC20Mock(_notifier).burn(user1, user1Withdraw1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: user1,
+            _senderBalance: user1Deposit1 - user1Withdraw1,
+            _recipient: address(0),
+            _recipientBalance: 0,
+            _totalSupply: totalSupply,
+            _amount: user1Withdraw1
+        });
+
+        // move 100 days
+        vm.warp(block.timestamp + 100 days);
+
+        // distribute 100
+        toDistribute = 100e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+
+        // user3 deposit 100
+        uint256 user3Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user3, user3Deposit1);
+        totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user3,
+            _recipientBalance: user3Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user3Deposit1
+        });
+
+        uint256 expectedRewardsUser1 = 1450e18;
+        uint256 expectedRewardsUser2 = 550e18;
+        uint256 expectedRewardsUser3 = 0;
+
+        uint256 rewards = _controller.getRewardsBalance(user1, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser1);
+
+        rewards = _controller.getRewardsBalance(user2, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser2);
+
+        rewards = _controller.getRewardsBalance(user3, _PROGRAM_NAME);
+        assertEq(rewards, expectedRewardsUser3);
+
+        // user1 claim rewards
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        // user2 claim rewards
+        vm.prank(user2);
+        _controller.claimRewards(user2);
+        // user3 claim rewards
+        vm.prank(user3);
+        _controller.claimRewards(user3);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(user3), expectedRewardsUser3, "invalid user3 balance");
     }
 }

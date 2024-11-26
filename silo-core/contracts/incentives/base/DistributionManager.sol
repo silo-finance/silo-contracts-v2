@@ -169,25 +169,24 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         returns (AccruedRewards[] memory accruedRewards)
     {
         uint256 length = _incentivesProgramIds.length();
-        uint256 totalStaked = _shareToken().totalSupply();
         accruedRewards = new AccruedRewards[](length);
+
+        (uint256 userStaked, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
 
         for (uint256 i = 0; i < length; i++) {
             bytes32 incentivesProgramId = _incentivesProgramIds.at(i);
-            accruedRewards[i] = _accrueRewards(_user, incentivesProgramId, totalStaked);
+            accruedRewards[i] = _accrueRewards(_user, incentivesProgramId, totalStaked, userStaked);
         }
     }
 
-    function _accrueRewards(address _user, bytes32 _programId, uint256 _totalStaked)
+    function _accrueRewards(address _user, bytes32 _programId, uint256 _totalStaked, uint256 _userStaked)
         internal
         returns (AccruedRewards memory accruedRewards)
     {
-        uint256 userIndex = incentivesPrograms[_programId].users[_user];
-
         uint256 rewards = _updateUserAssetInternal(
             _programId,
             _user,
-            userIndex,
+            _userStaked,
             _totalStaked
         );
 
