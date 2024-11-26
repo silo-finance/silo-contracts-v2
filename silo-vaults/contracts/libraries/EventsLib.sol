@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {PendingAddress} from "./PendingLib.sol";
+import {IMetaMorpho} from "../interfaces/IMetaMorpho.sol";
+import {FlowCapsConfig} from "../interfaces/IPublicAllocator.sol";
 
 /// @title EventsLib
 /// @author Morpho Labs
@@ -110,4 +112,26 @@ library EventsLib {
         string symbol,
         bytes32 salt
     );
+
+    /// @notice Emitted during a public reallocation for each withdrawn-from market.
+    event PublicWithdrawal(
+        address indexed sender, IMetaMorpho indexed vault, IERC4626 indexed market, uint256 withdrawnAssets
+    );
+
+    /// @notice Emitted at the end of a public reallocation.
+    event PublicReallocateTo(
+        address indexed sender, IMetaMorpho indexed vault, IERC4626 indexed supplyMarket, uint256 suppliedAssets
+    );
+
+    /// @notice Emitted when the admin is set for a vault.
+    event SetAdmin(address indexed sender, IMetaMorpho indexed vault, address admin);
+
+    /// @notice Emitted when the fee is set for a vault.
+    event SetFee(address indexed sender, IMetaMorpho indexed vault, uint256 fee);
+
+    /// @notice Emitted when the fee is transfered for a vault.
+    event TransferFee(address indexed sender, IMetaMorpho indexed vault, uint256 amount, address indexed feeRecipient);
+
+    /// @notice Emitted when the flow caps are set for a vault.
+    event SetFlowCaps(address indexed sender, IMetaMorpho indexed vault, FlowCapsConfig[] config);
 }
