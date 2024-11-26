@@ -8,8 +8,8 @@ import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
-import {BaseIncentivesController} from "silo-core/contracts/incentives/base/BaseIncentivesController.sol";
-import {DistributionManager} from "silo-core/contracts/incentives/base/DistributionManager.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
@@ -50,7 +50,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
     function test_createIncentivesProgram_InvalidIncentivesProgramName() public {
-        vm.expectRevert(abi.encodeWithSelector(BaseIncentivesController.InvalidIncentivesProgramName.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidIncentivesProgramName.selector));
 
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -63,7 +63,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidRewardToken
     function test_createIncentivesProgram_InvalidRewardToken() public {
-        vm.expectRevert(abi.encodeWithSelector(BaseIncentivesController.InvalidRewardToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidRewardToken.selector));
 
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -118,7 +118,7 @@ contract SiloIncentivesControllerTest is Test {
             emissionPerSecond: 1000e18
         }));
 
-        vm.expectRevert(abi.encodeWithSelector(BaseIncentivesController.IncentivesProgramAlreadyExists.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramAlreadyExists.selector));
 
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -139,7 +139,7 @@ contract SiloIncentivesControllerTest is Test {
             emissionPerSecond: 1000e18
         }));
 
-        vm.expectRevert(abi.encodeWithSelector(BaseIncentivesController.InvalidDistributionEnd.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
 
         vm.prank(_owner);
         _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp - 1), 1000e18);
@@ -147,7 +147,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramNotFound
     function test_updateIncentivesProgram_IncentivesProgramNotFound() public {
-        vm.expectRevert(abi.encodeWithSelector(BaseIncentivesController.IncentivesProgramNotFound.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramNotFound.selector));
 
         vm.prank(_owner);
         _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp + 1000), 1000e18);
@@ -205,7 +205,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_OnlyNotifier
     function test_afterTokenTransfer_OnlyNotifier() public {
-        vm.expectRevert(abi.encodeWithSelector(DistributionManager.OnlyNotifier.selector));
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector));
 
         _controller.afterTokenTransfer(address(0), 0, address(0), 0, 0, 0);
     }

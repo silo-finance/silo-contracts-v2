@@ -6,13 +6,14 @@ import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 import {DistributionManager} from "./DistributionManager.sol";
+import {ISiloIncentivesController} from "../interfaces/ISiloIncentivesController.sol";
 
 /**
  * @title BaseIncentivesController
  * @notice Abstract contract template to build Distributors contracts for ERC20 rewards to protocol participants
  * @author Aave
   */
-abstract contract BaseIncentivesController is DistributionManager {
+abstract contract BaseIncentivesController is DistributionManager, ISiloIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     mapping(address user => mapping(bytes32 programId => uint256 unclaimedRewards)) internal _usersUnclaimedRewards;
@@ -22,32 +23,15 @@ abstract contract BaseIncentivesController is DistributionManager {
     // rewards
     mapping(address => address) internal _authorizedClaimers;
 
-    event RewardsAccrued(address indexed user, bytes32 indexed programId, uint256 amount);
-    event RewardsClaimed(address indexed user, address indexed to, address indexed claimer, uint256 amount);
-    event ClaimerSet(address indexed user, address indexed claimer);
-    event IncentivesProgramCreated(bytes32 indexed incentivesProgramId);
-    event IncentivesProgramUpdated(bytes32 indexed programId);
-
-    error InvalidDistributionEnd();
-
     modifier onlyAuthorizedClaimers(address claimer, address user) {
         if (_authorizedClaimers[user] != claimer) revert ClaimerUnauthorized();
 
         _;
     }
 
-    error InvalidConfiguration();
-    error IndexOverflowAtEmissionsPerSecond();
-    error InvalidToAddress();
-    error InvalidUserAddress();
-    error ClaimerUnauthorized();
-    error InvalidRewardToken();
-    error IncentivesProgramAlreadyExists();
-    error InvalidIncentivesProgramName();
-    error IncentivesProgramNotFound();
-
     constructor(address _owner, address _notifier) DistributionManager(_owner, _notifier) {}
 
+    /// @inheritdoc ISiloIncentivesController
     function createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput)
         external
         onlyOwner
@@ -68,6 +52,7 @@ abstract contract BaseIncentivesController is DistributionManager {
         emit IncentivesProgramCreated(programId);
     }
 
+    /// @inheritdoc ISiloIncentivesController
     function updateIncentivesProgram(
         string calldata _incentivesProgram,
         uint40 _distributionEnd,
@@ -87,21 +72,23 @@ abstract contract BaseIncentivesController is DistributionManager {
         emit IncentivesProgramUpdated(programId);
     }
 
+    /// @inheritdoc ISiloIncentivesController
     function handleAction(
-        bytes32 incentivesProgramId,
-        address user,
-        uint256 totalSupply,
-        uint256 userBalance
+        bytes32 _incentivesProgramId,
+        address _user,
+        uint256 _totalSupply,
+        uint256 _userBalance
     ) public onlyNotifier {
-        uint256 accruedRewards = _updateUserAssetInternal(incentivesProgramId, user, userBalance, totalSupply);
+        uint256 accruedRewards = _updateUserAssetInternal(_incentivesProgramId, _user, _userBalance, _totalSupply);
 
         if (accruedRewards != 0) {
-            uint256 newUnclaimedRewards = _usersUnclaimedRewards[user][incentivesProgramId] + accruedRewards;
-            _usersUnclaimedRewards[user][incentivesProgramId] = newUnclaimedRewards;
-            emit RewardsAccrued(user, incentivesProgramId, newUnclaimedRewards);
+            uint256 newUnclaimedRewards = _usersUnclaimedRewards[_user][_incentivesProgramId] + accruedRewards;
+            _usersUnclaimedRewards[_user][_incentivesProgramId] = newUnclaimedRewards;
+            emit RewardsAccrued(_user, _incentivesProgramId, newUnclaimedRewards);
         }
     }
 
+    /// @inheritdoc ISiloIncentivesController
     function getRewardsBalance(address _user, string calldata _programName)
         external
         view
@@ -111,24 +98,27 @@ abstract contract BaseIncentivesController is DistributionManager {
         unclaimedRewards = getRewardsBalance(_user, programId);
     }
 
-    function getRewardsBalance(address user, bytes32 programId)
+    /// @inheritdoc ISiloIncentivesController
+    function getRewardsBalance(address _user, bytes32 _programId)
         public
         view
         returns (uint256 unclaimedRewards)
     {
-        unclaimedRewards = _usersUnclaimedRewards[user][programId];
+        unclaimedRewards = _usersUnclaimedRewards[_user][_programId];
 
-        (uint256 stakedByUser, uint256 totalStaked) = _getScaledUserBalanceAndSupply(user);
+        (uint256 stakedByUser, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
 
-        unclaimedRewards += _getUnclaimedRewards(programId, user, stakedByUser, totalStaked);
+        unclaimedRewards += _getUnclaimedRewards(_programId, _user, stakedByUser, totalStaked);
     }
 
-    function claimRewards(address to) external returns (AccruedRewards[] memory accruedRewards) {
-        if (to == address(0)) revert InvalidToAddress();
+    /// @inheritdoc ISiloIncentivesController
+    function claimRewards(address _to) external returns (AccruedRewards[] memory accruedRewards) {
+        if (_to == address(0)) revert InvalidToAddress();
 
-        accruedRewards = _claimRewards(msg.sender, msg.sender, to);
+        accruedRewards = _claimRewards(msg.sender, msg.sender, _to);
     }
 
+    /// @inheritdoc ISiloIncentivesController
     function claimRewardsOnBehalf(address _user, address _to)
         external
         onlyAuthorizedClaimers(msg.sender, _user)
@@ -140,19 +130,23 @@ abstract contract BaseIncentivesController is DistributionManager {
         accruedRewards = _claimRewards(msg.sender, _user, _to);
     }
 
+    /// @inheritdoc ISiloIncentivesController
     function claimRewardsToSelf() external returns (AccruedRewards[] memory accruedRewards) {
         accruedRewards = _claimRewards(msg.sender, msg.sender, msg.sender);
     }
 
-    function setClaimer(address user, address caller) external onlyOwner {
-        _authorizedClaimers[user] = caller;
-        emit ClaimerSet(user, caller);
+    /// @inheritdoc ISiloIncentivesController
+    function setClaimer(address _user, address _caller) external onlyOwner {
+        _authorizedClaimers[_user] = _caller;
+        emit ClaimerSet(_user, _caller);
     }
 
-    function getClaimer(address user) external view returns (address) {
-        return _authorizedClaimers[user];
+    /// @inheritdoc ISiloIncentivesController
+    function getClaimer(address _user) external view returns (address) {
+        return _authorizedClaimers[_user];
     }
 
+    /// @inheritdoc ISiloIncentivesController
     function getUserUnclaimedRewards(address _user, string calldata _programName)
         external
         view

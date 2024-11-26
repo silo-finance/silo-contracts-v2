@@ -18,12 +18,6 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     EnumerableSet.Bytes32Set internal _incentivesProgramIds;
 
-    struct AccruedRewards {
-        uint256 amount;
-        bytes32 programId;
-        address rewardToken;
-    }
-
     mapping(bytes32 => IncentivesProgram) public incentivesPrograms;
 
     address public immutable NOTIFIER; // solhint-disable-line var-name-mixedcase
@@ -31,10 +25,6 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     uint8 public constant PRECISION = 18;
     uint256 public constant TEN_POW_PRECISION = 10 ** PRECISION;
 
-    event IncentivesProgramIndexUpdated(bytes32 indexed programId, uint256 newIndex);
-    event UserIndexUpdated(address indexed user, bytes32 indexed programId, uint256 newIndex);
-
-    error OnlyNotifier();
 
     modifier onlyNotifier() {
         if (msg.sender != NOTIFIER) revert OnlyNotifier();
