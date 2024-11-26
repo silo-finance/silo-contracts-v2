@@ -132,7 +132,7 @@ jobs:
             name: HLP_integrityOfRepayShares,
             command: 'silo/methods_integrity.conf --rule HLP_integrityOfRepayShares'
           }
-          # ==== methods_integrity =============================================
+          # ==== preview_integrity =============================================
           - {
             name: HLP_PreviewMintCorrectness_strict,
             command: 'silo/preview_integrity.conf --rule HLP_PreviewMintCorrectness_strict'
