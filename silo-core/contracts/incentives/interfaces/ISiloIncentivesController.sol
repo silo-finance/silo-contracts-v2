@@ -5,11 +5,18 @@ import {IDistributionManager} from "./IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
 interface ISiloIncentivesController is IDistributionManager {
-    event RewardsAccrued(address indexed user, bytes32 indexed programId, uint256 amount);
-    event RewardsClaimed(address indexed user, address indexed to, address indexed claimer, uint256 amount);
+    event RewardsAccrued(address indexed user, address indexed rewardToken, uint256 amount);
     event ClaimerSet(address indexed user, address indexed claimer);
     event IncentivesProgramCreated(bytes32 indexed incentivesProgramId);
     event IncentivesProgramUpdated(bytes32 indexed programId);
+
+    event RewardsClaimed(
+        address indexed user,
+        address indexed to,
+        address indexed rewardToken,
+        address claimer,
+        uint256 amount
+    );
 
     error InvalidDistributionEnd();
     error InvalidConfiguration();
@@ -21,6 +28,32 @@ interface ISiloIncentivesController is IDistributionManager {
     error IncentivesProgramAlreadyExists();
     error InvalidIncentivesProgramName();
     error IncentivesProgramNotFound();
+
+    /**
+     * @dev Silo share token event handler
+     * @param _sender The address of the sender
+     * @param _senderBalance The balance of the sender
+     * @param _recipient The address of the recipient
+     * @param _recipientBalance The balance of the recipient
+     * @param _totalSupply The total supply of the asset in the lending pool
+     * @param _amount The amount of the transfer
+     */
+    function afterTokenTransfer(
+        address _sender,
+        uint256 _senderBalance,
+        address _recipient,
+        uint256 _recipientBalance,
+        uint256 _totalSupply,
+        uint256 _amount
+    ) external;
+
+    /**
+     * @dev Immediately distributes rewards to the incentives program
+     * @param _programId The id of the incentives program
+     * @param _amount The amount of rewards to distribute
+     * @param _totalStaked The total staked amount
+     */
+    function immediateDistribution(bytes32 _programId, uint104 _amount, uint256 _totalStaked) external;
 
     /**
      * @dev Whitelists an address to claim the rewards on behalf of another address

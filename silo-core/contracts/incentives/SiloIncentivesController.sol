@@ -5,8 +5,8 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
+import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.sol";
 import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
-
 
 /**
  * @title SiloIncentivesController
@@ -21,9 +21,7 @@ contract SiloIncentivesController is BaseIncentivesController {
 
     constructor(address _owner, address _notifier) BaseIncentivesController(_owner, _notifier) {}
 
-    /**
-     * @dev Silo share token event handler
-     */
+    /// @inheritdoc ISiloIncentivesController
     function afterTokenTransfer(
         address _sender,
         uint256 _senderBalance,
@@ -78,21 +76,22 @@ contract SiloIncentivesController is BaseIncentivesController {
         }
     }
 
-    function immediateDistribution(bytes32 programId, uint104 amount, uint256 totalStaked) external onlyNotifier {
-        IncentivesProgram storage program = incentivesPrograms[programId];
+    /// @inheritdoc ISiloIncentivesController
+    function immediateDistribution(bytes32 _programId, uint104 _amount, uint256 _totalStaked) external onlyNotifier {
+        IncentivesProgram storage program = incentivesPrograms[_programId];
 
         if (program.lastUpdateTimestamp == 0) return;
 
-        _updateAssetStateInternal(programId, totalStaked);
+        _updateAssetStateInternal(_programId, _totalStaked);
 
         uint40 distributionEndBefore = program.distributionEnd;
         uint104 emissionPerSecondBefore = program.emissionPerSecond;
 
         program.distributionEnd = uint40(block.timestamp);
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
-        program.emissionPerSecond = amount;
+        program.emissionPerSecond = _amount;
 
-        _updateAssetStateInternal(programId, totalStaked);
+        _updateAssetStateInternal(_programId, _totalStaked);
 
         program.distributionEnd = distributionEndBefore;
         program.lastUpdateTimestamp = uint40(block.timestamp);
