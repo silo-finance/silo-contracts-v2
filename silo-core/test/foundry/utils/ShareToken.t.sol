@@ -3,16 +3,20 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IShareTokenInitializable} from "silo-core/contracts/interfaces/IShareTokenInitializable.sol";
 
 import {HookReceiverMock} from "../_mocks/HookReceiverMock.sol";
 import {SiloMock} from "../_mocks/SiloMock.sol";
 import {MintableToken as Token} from "../_common/MintableToken.sol";
 import {SiloConfigMock} from "../_mocks/SiloConfigMock.sol";
+import {ERC20UpgradableMock} from "../_mocks/ERC20UpgradableMock.sol";
 
 // solhint-disable func-name-mixedcase
 // FOUNDRY_PROFILE=core-test forge test -vv --mc ShareTokenTest
@@ -104,6 +108,59 @@ contract ShareTokenTest is Test {
         sToken.decreaseReceiveAllowance(owner, type(uint256).max);
 
         assertEq(sToken.receiveAllowance(owner, recipient), 0, "expect have no allowance");
+    }
+
+    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_CallOnBehalfOfShareToken
+    function test_CallOnBehalfOfShareToken() public {
+        address upgradableMock = address(new ERC20UpgradableMock());
+        address siloAddr = silo.ADDRESS();
+
+        silo.configMock(siloConfig.ADDRESS());
+        address hookAddr = hookReceiverMock.ADDRESS();
+
+        IShareTokenInitializable protectedShareToken = IShareTokenInitializable(
+            ShareProtectedCollateralToken(Clones.clone(address(new ShareProtectedCollateralToken())))
+        );
+
+        protectedShareToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.PROTECTED_TOKEN));
+
+        IShareTokenInitializable debtShareToken = IShareTokenInitializable(
+            ShareDebtToken(Clones.clone(address(new ShareDebtToken())))
+        );
+
+        debtShareToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.DEBT_TOKEN));
+
+        address someUser = makeAddr("SomeUser");
+
+        uint256 amountOfEth = 0;
+        bytes memory data = abi.encodeWithSelector(ERC20UpgradableMock.mockUserBalance.selector, someUser);
+
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
+        protectedShareToken.callOnBehalfOfShareToken(upgradableMock, amountOfEth, ISilo.CallType.Delegatecall, data);
+
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
+        debtShareToken.callOnBehalfOfShareToken(upgradableMock, amountOfEth, ISilo.CallType.Delegatecall, data);
+
+        assertEq(IERC20(address(protectedShareToken)).balanceOf(someUser), 0);
+        assertEq(IERC20(address(debtShareToken)).balanceOf(someUser), 0);
+
+        vm.prank(hookAddr);
+        protectedShareToken.callOnBehalfOfShareToken(upgradableMock, amountOfEth, ISilo.CallType.Delegatecall, data);
+
+        assertEq(
+            IERC20(address(protectedShareToken)).balanceOf(someUser),
+            ERC20UpgradableMock(upgradableMock).USER_BALANCE(),
+            "expect valid balance"
+        );
+
+        vm.prank(hookAddr);
+        debtShareToken.callOnBehalfOfShareToken(upgradableMock, amountOfEth, ISilo.CallType.Delegatecall, data);
+
+        assertEq(
+            IERC20(address(debtShareToken)).balanceOf(someUser),
+            ERC20UpgradableMock(upgradableMock).USER_BALANCE(),
+            "expect valid balance"
+        );
     }
 
     function _afterTokenTransferMockOnMint(uint256 _amount) internal {
