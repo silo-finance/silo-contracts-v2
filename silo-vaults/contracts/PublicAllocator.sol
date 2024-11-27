@@ -123,7 +123,6 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
             uint256 assets = _expectedSupplyAssets(market, address(vault));
 
             if (flowCaps[vault][market].maxOut < withdrawal.amount) revert ErrorsLib.MaxOutflowExceeded(market);
-            // TODO consider using maxWithdraw because this revert can miss liquidity problems and we will revert anyway
             if (assets < withdrawal.amount) revert ErrorsLib.NotEnoughSupply(market);
 
             flowCaps[vault][market].maxIn += withdrawal.amount;
