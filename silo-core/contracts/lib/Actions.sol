@@ -328,6 +328,8 @@ library Actions {
         external
         returns (bool success)
     {
+        require(_amount != 0, ISilo.ZeroAmount());
+
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.FLASH_LOAN)) {
