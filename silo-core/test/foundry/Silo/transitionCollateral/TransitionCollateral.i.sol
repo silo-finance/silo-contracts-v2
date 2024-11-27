@@ -155,4 +155,24 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
         vm.expectRevert(ISilo.NotSolvent.selector);
         silo0.transitionCollateral(0.5e18, owner, ISilo.CollateralType.Protected);
     }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_deposit_inSolvent
+    */
+    function test_transitionCollateral_deposit_inSolvent() public {
+        address owner = address(this);
+
+        _deposit(1e18, owner, ISilo.CollateralType.Protected);
+        _depositForBorrow(0.7e18, owner); // this is not collateral!
+
+        _depositForBorrow(0.7e18, makeAddr("depositor"));
+        _borrow(silo1.maxBorrow(owner), owner);
+
+        vm.warp(block.timestamp + 200 days);
+        assertFalse(silo0.isSolvent(owner), "expect insolvent for this test");
+
+        uint256 gasStart = gasleft();
+        silo1.transitionCollateral({_shares: 1e3, _owner: owner, _transitionFrom: ISilo.CollateralType.Collateral});
+        emit log_named_uint("gas for transitionCollateral", gasStart - gasleft()); // 180582 => 167639
+    }
 }
