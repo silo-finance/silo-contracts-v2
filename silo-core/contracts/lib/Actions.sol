@@ -118,11 +118,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBeforeBorrow(_args, Hook.BORROW);
+
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
-        _hookCallBeforeBorrow(_args, Hook.BORROW);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -151,11 +151,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
+
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
-        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
