@@ -393,7 +393,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     function _forwardTransferFromNoChecksPermissions(IShareToken _shareToken) internal {
-        vm.expectRevert(IShareToken.OnlySilo.selector);
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         _shareToken.forwardTransferFromNoChecks(address(0), address(0), 0);
     }
 
@@ -423,7 +423,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 balance = _shareToken.balanceOf(user);
         assertEq(balance, mintAmount, "expect valid balance for a user");
 
-        vm.prank(address(silo));
+        vm.prank(address(_shareToken.hookSetup().hookReceiver));
         _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
 
         balance = _shareToken.balanceOf(otherUser);

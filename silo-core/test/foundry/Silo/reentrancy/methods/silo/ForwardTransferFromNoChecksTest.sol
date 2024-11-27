@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
@@ -22,11 +23,11 @@ contract ForwardTransferFromNoChecksTest is MethodReentrancyTest {
 
     function _ensureItWillRevertWithOnlySilo() internal {
         address silo0 = address(TestStateLib.silo0());
-        vm.expectRevert(IShareToken.OnlySilo.selector);
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         IShareToken(silo0).forwardTransferFromNoChecks(address(1), address(2), 3);
 
         address silo1 = address(TestStateLib.silo1());
-        vm.expectRevert(IShareToken.OnlySilo.selector);
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         IShareToken(silo1).forwardTransferFromNoChecks(address(1), address(2), 3);
     }
 }
