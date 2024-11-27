@@ -55,7 +55,7 @@ contract BorrowTest is Test {
             abi.encode(0)
         );
 
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
 
         impl.borrow({
             _debtShareToken: configData.debtShareToken,
