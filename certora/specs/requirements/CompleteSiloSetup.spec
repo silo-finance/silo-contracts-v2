@@ -186,8 +186,6 @@ definition canIncreaseAccrueInterest(method f) returns bool =
     f.selector == sig:Silo0.deposit(uint256,address).selector ||
     f.selector == sig:Silo0.deposit(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.flashLoan(address,address,uint256,bytes).selector ||
-    // f.selector == sig:leverage(uint256,address,address,bytes).selector ||
-    // f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
     f.selector == sig:Silo0.mint(uint256,address).selector ||
     f.selector == sig:Silo0.mint(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.redeem(uint256,address,address).selector ||
@@ -205,10 +203,8 @@ definition canDecreaseAccrueInterest(method f) returns bool =
     f.selector == sig:Silo0.borrowShares(uint256,address,address).selector ||
     f.selector == sig:Silo0.deposit(uint256,address).selector ||
     f.selector == sig:Silo0.deposit(uint256,address,ISilo.CollateralType).selector ||
-    // f.selector == sig:leverage(uint256,address,address,bytes).selector ||
     f.selector == sig:Silo0.mint(uint256,address).selector ||
     f.selector == sig:Silo0.mint(uint256,address,ISilo.CollateralType).selector ||
-    // f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.redeem(uint256,address,address).selector ||
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
@@ -222,8 +218,6 @@ definition canIncreaseTimestamp(method f) returns bool =
     f.selector == sig:Silo0.accrueInterest().selector ||
     f.selector == sig:Silo0.borrow(uint256,address,address).selector ||
     f.selector == sig:Silo0.borrowShares(uint256,address,address).selector ||
-    // f.selector == sig:leverage(uint256,address,address,bytes).selector ||
-    // f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector ||
@@ -256,7 +250,6 @@ definition canDecreaseSharesBalance(method f) returns bool =
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector;
-    //f.selector == sig:withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool).selector;
     
 definition canIncreaseProtectedAssets(method f) returns bool =
     f.selector == sig:Silo0.deposit(uint256,address,ISilo.CollateralType).selector ||
@@ -266,7 +259,6 @@ definition canIncreaseProtectedAssets(method f) returns bool =
 definition canDecreaseProtectedAssets(method f) returns bool =
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector ||
-    //f.selector == sig:withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool).selector ||
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector;
 
 definition canIncreaseTotalCollateral(method f) returns bool = 
@@ -279,22 +271,18 @@ definition canIncreaseTotalCollateral(method f) returns bool =
 definition canDecreaseTotalCollateral(method f) returns bool =
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector;
-    //f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector;
-
+    
 definition canIncreaseTotalProtectedCollateral(method f) returns bool = 
     canIncreaseTotalCollateral(f);
 
 definition canDecreaseTotalProtectedCollateral(method f) returns bool =
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector;
-    //f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector;
-    //f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector;
-
+    
 definition canIncreaseTotalDebt(method f) returns bool =
     f.selector == sig:Silo0.borrow(uint256,address,address).selector ||
     f.selector == sig:Silo0.borrowShares(uint256,address,address).selector;
-    //f.selector == sig:leverage(uint256,address,address,bytes).selector;
-
+    
 definition canDecreaseTotalDebt(method f) returns bool =
     f.selector == sig:Silo0.repay(uint256,address).selector ||
     f.selector == sig:Silo0.repayShares(uint256,address).selector;
