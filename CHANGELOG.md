@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Added
 - `PublicAllocator` contract for vaults
+- add reentrancy for `withdrawFees`
 
 ## [0.14.0] - 2024-11-25
 ### Added
