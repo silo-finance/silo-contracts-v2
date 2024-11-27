@@ -267,7 +267,7 @@ library Actions {
             _collateralType: depositType
         });
 
-        // solvency check
+        // If deposit is collateral, then check the solvency.
         if (depositConfig.silo == collateralConfig.silo) {
             _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);
         }
