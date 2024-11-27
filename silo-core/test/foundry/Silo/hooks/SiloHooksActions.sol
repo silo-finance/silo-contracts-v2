@@ -970,20 +970,21 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         bool _receiveSToken
     ) internal {
         uint256 expectedWithdrawCollateral = 100000000000000000000;
-        address shareTokenReceiver = _receiveSToken ? address(this) : address(partialLiquidation);
 
-        vm.expectEmit(true, true, true, true);
+        if (_receiveSToken) {
+            vm.expectEmit(true, true, true, true);
 
-        emit ShareTokenAfterHA(
-            address(silo1),
-            _borrowerAddr,
-            shareTokenReceiver,
-            expectedWithdrawCollateral.decimalsOffsetPow(),
-            0, // no balance for the sender
-            expectedWithdrawCollateral.decimalsOffsetPow(), // recipient balance
-            expectedWithdrawCollateral.decimalsOffsetPow(), // total supply
-            PROTECTED
-        );
+            emit ShareTokenAfterHA(
+                address(silo1),
+                _borrowerAddr,
+                address(this), // because we transfer collateral
+                expectedWithdrawCollateral.decimalsOffsetPow(),
+                0, // no balance for the sender
+                expectedWithdrawCollateral.decimalsOffsetPow(), // recipient balance
+                expectedWithdrawCollateral.decimalsOffsetPow(), // total supply
+                PROTECTED
+            );
+        }
 
         vm.expectEmit(true, true, true, true);
 
@@ -997,20 +998,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             0 // total supply
         );
 
-        vm.expectEmit(true, true, true, true);
+        if (!_receiveSToken) {
+            vm.expectEmit(true, true, true, true);
 
-        if (_receiveSToken) {
-            emit ShareTokenAfterHA(
-                address(silo1),
-                _borrowerAddr,
-                address(this), // because we transfer collateral
-                expectedWithdrawCollateral.decimalsOffsetPow(),
-                0, // no balance for the sender
-                expectedWithdrawCollateral.decimalsOffsetPow(), // recipient balance
-                expectedWithdrawCollateral.decimalsOffsetPow(), // total supply
-                PROTECTED
-            );
-        } else {
             emit ShareTokenAfterHA(
                 address(silo1),
                 address(partialLiquidation),
