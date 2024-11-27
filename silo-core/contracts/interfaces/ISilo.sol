@@ -178,8 +178,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();
     error RepayTooHigh();
-    error InputZeroAssetsOrShares();
-    error ReturnZeroAssetsOrShares();
+    error InputZeroShares();
+    error ReturnZeroAssets();
+    error ReturnZeroShares();
 
     /// @return siloFactory The associated factory of the silo
     function factory() external view returns (ISiloFactory siloFactory);

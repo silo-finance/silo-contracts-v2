@@ -143,19 +143,18 @@ library SiloMathLib {
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
-        require(_assets != 0 || _shares != 0, ISilo.InputZeroAssetsOrShares());
-
         if (_assets == 0) {
+            require(_shares != 0, ISilo.InputZeroShares());
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
+            require(assets != 0, ISilo.ReturnZeroAssets());
         } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
+            require(shares != 0, ISilo.ReturnZeroShares());
         } else {
             revert ISilo.InputCanBeAssetsOrShares();
         }
-
-        require(assets != 0 && shares != 0, ISilo.ReturnZeroAssetsOrShares());
     }
 
     /// @dev Math for collateral is exact copy of

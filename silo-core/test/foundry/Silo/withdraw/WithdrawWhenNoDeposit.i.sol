@@ -79,7 +79,7 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         _anyDeposit(ISilo.CollateralType.Collateral);
 
         // test
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
         silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
