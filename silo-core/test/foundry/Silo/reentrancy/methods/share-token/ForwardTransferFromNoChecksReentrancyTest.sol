@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
@@ -22,7 +22,7 @@ contract ForwardTransferFromNoChecksReentrancyTest is ShareTokenMethodReentrancy
     }
 
     function _ensureItWillRevertOnlySilo(address _token) internal {
-        vm.expectRevert(IShareToken.OnlySilo.selector);
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         ShareToken(_token).forwardTransferFromNoChecks(address(0), address(0), 100);
     }
 }
