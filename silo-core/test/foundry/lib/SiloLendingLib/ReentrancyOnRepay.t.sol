@@ -105,6 +105,12 @@ contract ReentrancyOnRepayTest is Test {
 
         vm.mockCall(
             address(_debtShareToken),
+            abi.encodePacked(IShareToken.balanceOfAndTotalSupply.selector),
+            abi.encode(991, 1000)
+        );
+
+        vm.mockCall(
+            address(_debtShareToken),
             abi.encodeCall(IShareToken.burn, (_borrower, _repayer, 991)),
             abi.encode(true)
         );
