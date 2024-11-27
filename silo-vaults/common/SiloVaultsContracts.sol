@@ -5,6 +5,7 @@ import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 library SiloVaultsContracts {
     string public constant META_MORPHO_FACTORY = "MetaMorphoFactory.sol";
+    string public constant PUBLIC_ALLOCATOR = "PublicAllocator.sol";
 }
 
 library SiloVaultsDeployments {
