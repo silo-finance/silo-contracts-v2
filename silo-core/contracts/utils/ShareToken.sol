@@ -69,6 +69,15 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         _;
     }
 
+    modifier onlyHookReceiver() {
+        require(
+            msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
+            ISilo.OnlyHookReceiver()
+        );
+
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();

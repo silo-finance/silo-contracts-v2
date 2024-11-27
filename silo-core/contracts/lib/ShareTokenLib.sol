@@ -114,6 +114,26 @@ library ShareTokenLib {
         debtConfig.callSolvencyOracleBeforeQuote();
     }
 
+    /// @dev Call on behalf of share token
+    /// @param _target target address to call
+    /// @param _value value to send
+    /// @param _callType call type
+    /// @param _input input data
+    /// @return success true if the call was successful, false otherwise
+    /// @return result bytes returned by the call
+    function callOnBehalfOfShareToken(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
+        internal
+        returns (bool success, bytes memory result)
+    {
+        // Share token will not send back any ether leftovers after the call.
+        // The hook receiver should request the ether if needed in a separate call.
+        if (_callType == ISilo.CallType.Delegatecall) {
+            (success, result) = _target.delegatecall(_input); // solhint-disable-line avoid-low-level-calls
+        } else {
+            (success, result) = _target.call{value: _value}(_input); // solhint-disable-line avoid-low-level-calls
+        }
+    }
+
     /// @dev checks if operation is "real" transfer
     /// @param _sender sender address
     /// @param _recipient recipient address
