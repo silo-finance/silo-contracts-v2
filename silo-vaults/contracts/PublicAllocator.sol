@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.24;
+pragma solidity 0.8.28;
+
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
+import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
 import {
     FlowCaps,
@@ -9,93 +13,76 @@ import {
     IPublicAllocatorStaticTyping,
     IPublicAllocatorBase
 } from "./interfaces/IPublicAllocator.sol";
-import {
-    Id, IMorpho, IMetaMorpho, MarketAllocation, MarketParams
-} from "../lib/metamorpho/src/interfaces/IMetaMorpho.sol";
-import {Market} from "../lib/metamorpho/lib/morpho-blue/src/interfaces/IMorpho.sol";
+import {IMetaMorpho, MarketAllocation} from "./interfaces/IMetaMorpho.sol";
 
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
-import {UtilsLib} from "../lib/metamorpho/lib/morpho-blue/src/libraries/UtilsLib.sol";
-import {MarketParamsLib} from "../lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
-import {MorphoBalancesLib} from "../lib/metamorpho/lib/morpho-blue/src/libraries/periphery/MorphoBalancesLib.sol";
 
 /// @title PublicAllocator
-/// @author Morpho Labs
+/// @author Forked with gratitude from Morpho Labs.
 /// @custom:contact security@morpho.org
 /// @notice Publicly callable allocator for MetaMorpho vaults.
 contract PublicAllocator is IPublicAllocatorStaticTyping {
-    using MorphoBalancesLib for IMorpho;
-    using MarketParamsLib for MarketParams;
     using UtilsLib for uint256;
-
-    /* CONSTANTS */
-
-    /// @inheritdoc IPublicAllocatorBase
-    IMorpho public immutable MORPHO;
-
+    
     /* STORAGE */
 
     /// @inheritdoc IPublicAllocatorBase
-    mapping(address => address) public admin;
+    mapping(IMetaMorpho => address) public admin;
     /// @inheritdoc IPublicAllocatorBase
-    mapping(address => uint256) public fee;
+    mapping(IMetaMorpho => uint256) public fee;
     /// @inheritdoc IPublicAllocatorBase
-    mapping(address => uint256) public accruedFee;
+    mapping(IMetaMorpho => uint256) public accruedFee;
     /// @inheritdoc IPublicAllocatorStaticTyping
-    mapping(address => mapping(Id => FlowCaps)) public flowCaps;
+    mapping(IMetaMorpho => mapping(IERC4626 => FlowCaps)) public flowCaps;
 
     /* MODIFIER */
 
     /// @dev Reverts if the caller is not the admin nor the owner of this vault.
-    modifier onlyAdminOrVaultOwner(address vault) {
+    modifier onlyAdminOrVaultOwner(IMetaMorpho vault) {
         if (msg.sender != admin[vault] && msg.sender != IMetaMorpho(vault).owner()) {
             revert ErrorsLib.NotAdminNorVaultOwner();
         }
         _;
     }
 
-    /* CONSTRUCTOR */
-
-    /// @dev Initializes the contract.
-    constructor(address morpho) {
-        MORPHO = IMorpho(morpho);
-    }
-
     /* ADMIN OR VAULT OWNER ONLY */
 
     /// @inheritdoc IPublicAllocatorBase
-    function setAdmin(address vault, address newAdmin) external onlyAdminOrVaultOwner(vault) {
+    function setAdmin(IMetaMorpho vault, address newAdmin) external onlyAdminOrVaultOwner(vault) {
         if (admin[vault] == newAdmin) revert ErrorsLib.AlreadySet();
         admin[vault] = newAdmin;
         emit EventsLib.SetAdmin(msg.sender, vault, newAdmin);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFee(address vault, uint256 newFee) external onlyAdminOrVaultOwner(vault) {
+    function setFee(IMetaMorpho vault, uint256 newFee) external onlyAdminOrVaultOwner(vault) {
         if (fee[vault] == newFee) revert ErrorsLib.AlreadySet();
         fee[vault] = newFee;
         emit EventsLib.SetFee(msg.sender, vault, newFee);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFlowCaps(address vault, FlowCapsConfig[] calldata config) external onlyAdminOrVaultOwner(vault) {
+    function setFlowCaps(IMetaMorpho vault, FlowCapsConfig[] calldata config) external onlyAdminOrVaultOwner(vault) {
         for (uint256 i = 0; i < config.length; i++) {
-            Id id = config[i].id;
-            if (!IMetaMorpho(vault).config(id).enabled && (config[i].caps.maxIn > 0 || config[i].caps.maxOut > 0)) {
-                revert ErrorsLib.MarketNotEnabled(id);
+            FlowCapsConfig memory cfg = config[i];
+            IERC4626 market = cfg.market;
+            
+            if (!vault.config(market).enabled && (cfg.caps.maxIn > 0 || cfg.caps.maxOut > 0)) {
+                revert ErrorsLib.MarketNotEnabled(market);
             }
-            if (config[i].caps.maxIn > MAX_SETTABLE_FLOW_CAP || config[i].caps.maxOut > MAX_SETTABLE_FLOW_CAP) {
+            if (cfg.caps.maxIn > MAX_SETTABLE_FLOW_CAP || cfg.caps.maxOut > MAX_SETTABLE_FLOW_CAP) {
                 revert ErrorsLib.MaxSettableFlowCapExceeded();
             }
-            flowCaps[vault][id] = config[i].caps;
+            
+            flowCaps[vault][market] = cfg.caps;
         }
 
         emit EventsLib.SetFlowCaps(msg.sender, vault, config);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function transferFee(address vault, address payable feeRecipient) external onlyAdminOrVaultOwner(vault) {
+    function transferFee(IMetaMorpho vault, address payable feeRecipient) external onlyAdminOrVaultOwner(vault) {
         uint256 claimed = accruedFee[vault];
         accruedFee[vault] = 0;
         feeRecipient.transfer(claimed);
@@ -105,58 +92,63 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     /* PUBLIC */
 
     /// @inheritdoc IPublicAllocatorBase
-    function reallocateTo(address vault, Withdrawal[] calldata withdrawals, MarketParams calldata supplyMarketParams)
-    external
-    payable
+    function reallocateTo(IMetaMorpho vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
+        external
+        payable
     {
         if (msg.value != fee[vault]) revert ErrorsLib.IncorrectFee();
         if (msg.value > 0) accruedFee[vault] += msg.value;
 
         if (withdrawals.length == 0) revert ErrorsLib.EmptyWithdrawals();
 
-        Id supplyMarketId = supplyMarketParams.id();
-        if (!IMetaMorpho(vault).config(supplyMarketId).enabled) revert ErrorsLib.MarketNotEnabled(supplyMarketId);
+        if (!vault.config(supplyMarket).enabled) revert ErrorsLib.MarketNotEnabled(supplyMarket);
 
         MarketAllocation[] memory allocations = new MarketAllocation[](withdrawals.length + 1);
         uint128 totalWithdrawn;
 
-        Id id;
-        Id prevId;
+        IERC4626 market;
+        IERC4626 prevMarket;
+        
         for (uint256 i = 0; i < withdrawals.length; i++) {
-            prevId = id;
-            id = withdrawals[i].marketParams.id();
-            if (!IMetaMorpho(vault).config(id).enabled) revert ErrorsLib.MarketNotEnabled(id);
-            uint128 withdrawnAssets = withdrawals[i].amount;
-            if (withdrawnAssets == 0) revert ErrorsLib.WithdrawZero(id);
+            prevMarket = market;
+            Withdrawal memory withdrawal = withdrawals[i];
+            market = withdrawal.market;
 
-            if (Id.unwrap(id) <= Id.unwrap(prevId)) revert ErrorsLib.InconsistentWithdrawals();
-            if (Id.unwrap(id) == Id.unwrap(supplyMarketId)) revert ErrorsLib.DepositMarketInWithdrawals();
+            if (!vault.config(market).enabled) revert ErrorsLib.MarketNotEnabled(market);
+            if (withdrawal.amount == 0) revert ErrorsLib.WithdrawZero(market);
 
-            MORPHO.accrueInterest(withdrawals[i].marketParams);
-            uint256 assets = MORPHO.expectedSupplyAssets(withdrawals[i].marketParams, address(vault));
+            if (address(market) <= address(prevMarket)) revert ErrorsLib.InconsistentWithdrawals();
+            if (address(market) == address(supplyMarket)) revert ErrorsLib.DepositMarketInWithdrawals();
 
-            if (flowCaps[vault][id].maxOut < withdrawnAssets) revert ErrorsLib.MaxOutflowExceeded(id);
-            if (assets < withdrawnAssets) revert ErrorsLib.NotEnoughSupply(id);
+            uint256 assets = _expectedSupplyAssets(market, address(vault));
 
-            flowCaps[vault][id].maxIn += withdrawnAssets;
-            flowCaps[vault][id].maxOut -= withdrawnAssets;
-            allocations[i].marketParams = withdrawals[i].marketParams;
-            allocations[i].assets = assets - withdrawnAssets;
+            if (flowCaps[vault][market].maxOut < withdrawal.amount) revert ErrorsLib.MaxOutflowExceeded(market);
+            if (assets < withdrawal.amount) revert ErrorsLib.NotEnoughSupply(market);
 
-            totalWithdrawn += withdrawnAssets;
+            flowCaps[vault][market].maxIn += withdrawal.amount;
+            flowCaps[vault][market].maxOut -= withdrawal.amount;
+            allocations[i].market = market;
+            allocations[i].assets = assets - withdrawal.amount;
 
-            emit EventsLib.PublicWithdrawal(msg.sender, vault, id, withdrawnAssets);
+            totalWithdrawn += withdrawal.amount;
+
+            emit EventsLib.PublicWithdrawal(msg.sender, vault, market, withdrawal.amount);
         }
 
-        if (flowCaps[vault][supplyMarketId].maxIn < totalWithdrawn) revert ErrorsLib.MaxInflowExceeded(supplyMarketId);
+        if (flowCaps[vault][supplyMarket].maxIn < totalWithdrawn) revert ErrorsLib.MaxInflowExceeded(supplyMarket);
 
-        flowCaps[vault][supplyMarketId].maxIn -= totalWithdrawn;
-        flowCaps[vault][supplyMarketId].maxOut += totalWithdrawn;
-        allocations[withdrawals.length].marketParams = supplyMarketParams;
+        flowCaps[vault][supplyMarket].maxIn -= totalWithdrawn;
+        flowCaps[vault][supplyMarket].maxOut += totalWithdrawn;
+        allocations[withdrawals.length].market = supplyMarket;
         allocations[withdrawals.length].assets = type(uint256).max;
 
-        IMetaMorpho(vault).reallocate(allocations);
+        vault.reallocate(allocations);
 
-        emit EventsLib.PublicReallocateTo(msg.sender, vault, supplyMarketId, totalWithdrawn);
+        emit EventsLib.PublicReallocateTo(msg.sender, vault, supplyMarket, totalWithdrawn);
+    }
+
+    /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
+    function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
+        assets = _market.convertToAssets(_market.balanceOf(_user));
     }
 }
