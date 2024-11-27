@@ -120,9 +120,11 @@ contract RepayTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 1 days);
 
         token1.approve(address(silo1), assetsToRepay);
-        // for some reason we not bale to check for this error: Error != expected error: NH{q != Arithmetic over/underflow
-        vm.expectRevert();
+
         silo1.repay(assetsToRepay, borrower);
+
+        (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repaid");
     }
 
     /*
