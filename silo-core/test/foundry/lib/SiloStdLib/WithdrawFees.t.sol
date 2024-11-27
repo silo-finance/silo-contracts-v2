@@ -8,12 +8,15 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
+import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 
 import {SiloConfigMock} from "../../_mocks/SiloConfigMock.sol";
 import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
-// forge test -vv --ffi --mc WithdrawFeesTest
+/*
+FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc WithdrawFeesTest
+*/
 contract WithdrawFeesTest is Test {
     uint256 constant public NO_PROTECTED_ASSETS = 0;
 
@@ -29,27 +32,34 @@ contract WithdrawFeesTest is Test {
     }
 
     function setUp() public {
-        siloConfig = new SiloConfigMock(address(0));
+        siloConfig = new SiloConfigMock( makeAddr("siloConfig"));
+
+        ShareTokenLib.getShareTokenStorage().siloConfig = ISiloConfig(siloConfig.ADDRESS());
         config = ISiloConfig(siloConfig.ADDRESS());
 
         siloFactory = new SiloFactoryMock(address(0));
         factory = ISiloFactory(siloFactory.ADDRESS());
 
         token = new TokenMock(makeAddr("Asset"));
+
+        ISiloConfig cfg = ShareTokenLib.siloConfig();
+        emit log_address(address(cfg));
     }
 
     /*
-    forge test -vv --mt test_withdrawFees_revert_WhenNoData
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdrawFees_revert_WhenNoData
     */
     function test_withdrawFees_revert_WhenNoData() external {
         _reset();
+
+        siloConfig.turnOnReentrancyProtectionMock();
 
         vm.expectRevert();
         _withdrawFees(ISilo(address(this)));
     }
 
     /*
-    forge test -vv --mt test_withdrawFees_revert_NoLiquidity
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
     function test_withdrawFees_revert_NoLiquidity() external {
         _$().daoAndDeployerRevenue = 1;
@@ -62,8 +72,10 @@ contract WithdrawFeesTest is Test {
         address dao;
         address deployer;
 
+        siloConfig.turnOnReentrancyProtectionMock();
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+
         token.balanceOfMock(address(this), 0);
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
@@ -76,6 +88,8 @@ contract WithdrawFeesTest is Test {
     */
     function test_withdrawFees_EarnedZero() external {
         _setProtectedAssets(NO_PROTECTED_ASSETS);
+
+        siloConfig.turnOnReentrancyProtectionMock();
 
         vm.expectRevert(ISilo.EarnedZero.selector);
         _withdrawFees(ISilo(address(this)));
@@ -93,8 +107,11 @@ contract WithdrawFeesTest is Test {
         address dao = makeAddr("DAO");
         address deployer;
 
+        siloConfig.turnOnReentrancyProtectionMock();
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+        siloConfig.turnOffReentrancyProtectionMock();
+
         token.balanceOfMock(address(this), 1e18);
 
         _$().daoAndDeployerRevenue = 9;
@@ -141,8 +158,11 @@ contract WithdrawFeesTest is Test {
         address dao = makeAddr("DAO");
         address deployer;
 
+        siloConfig.turnOnReentrancyProtectionMock();
         siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+        siloConfig.turnOffReentrancyProtectionMock();
+
         token.balanceOfMock(address(this), siloBalance);
 
         _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
@@ -169,8 +189,11 @@ contract WithdrawFeesTest is Test {
         address dao = makeAddr("DAO");
         address deployer = makeAddr("Deployer");
 
+        siloConfig.turnOnReentrancyProtectionMock();
         siloConfig.getFeesWithAssetMock(address(this), _daoFee, _deployerFee, flashloanFeeInBp, asset);
         siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+        siloConfig.turnOffReentrancyProtectionMock();
+
         token.balanceOfMock(address(this), 999e18);
 
         _$().daoAndDeployerRevenue = 1e18;
