@@ -1,6 +1,7 @@
 /* Integrity of main methods */
 
 import "../previousAudits/CompleteSiloSetup.spec";
+import "unresolved.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
