@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.13;
 
-import {Test, console} from "forge-std/Test.sol";
-import {stdError} from "forge-std/StdError.sol";
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-
-import {MorphoBalancesLib} from "morpho-blue/libraries/periphery/MorphoBalancesLib.sol";
-import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
@@ -71,7 +65,7 @@ contract PublicAllocatorTest is IntegrationTest {
         _sortSupplyQueueIdleLast();
     }
 
-    function testAdmin() public {
+    function testAdmin() public view {
         assertEq(publicAllocator.admin(vault), address(0));
     }
 
@@ -509,7 +503,7 @@ contract PublicAllocatorTest is IntegrationTest {
         publicAllocator.reallocateTo(vault, withdrawals, allMarkets[0]);
     }
 
-    function testMaxFlowCapValue() public {
+    function testMaxFlowCapValue() public pure {
         assertEq(MAX_SETTABLE_FLOW_CAP, 170141183460469231731687303715884105727);
     }
 
