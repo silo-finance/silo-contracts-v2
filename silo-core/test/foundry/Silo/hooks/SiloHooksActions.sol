@@ -970,6 +970,32 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         bool _receiveSToken
     ) internal {
         uint256 expectedWithdrawCollateral = 100000000000000000000;
+        address shareTokenReceiver = _receiveSToken ? address(this) : address(partialLiquidation);
+
+        vm.expectEmit(true, true, true, true);
+
+        emit ShareTokenAfterHA(
+            address(silo1),
+            _borrowerAddr,
+            shareTokenReceiver,
+            expectedWithdrawCollateral.decimalsOffsetPow(),
+            0, // no balance for the sender
+            expectedWithdrawCollateral.decimalsOffsetPow(), // recipient balance
+            expectedWithdrawCollateral.decimalsOffsetPow(), // total supply
+            PROTECTED
+        );
+
+        vm.expectEmit(true, true, true, true);
+
+        emit DebtShareTokenAfterHA(
+            address(silo0),
+            _borrowerAddr,
+            address(0), // because we burn debt share tokens
+            _borrowAmount,
+            0, // no balance for the sender
+            0, // balance
+            0 // total supply
+        );
 
         vm.expectEmit(true, true, true, true);
 
@@ -996,18 +1022,6 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
                 PROTECTED
             );
         }
-
-        vm.expectEmit(true, true, true, true);
-
-        emit DebtShareTokenAfterHA(
-            address(silo0),
-            _borrowerAddr,
-            address(0), // because we burn debt share tokens
-            _borrowAmount,
-            0, // no balance for the sender
-            0, // balance
-            0 // total supply
-        );
 
         partialLiquidation.liquidationCall(address(token1), address(token0), _borrower, _debtToRepay, _receiveSToken);
     }
