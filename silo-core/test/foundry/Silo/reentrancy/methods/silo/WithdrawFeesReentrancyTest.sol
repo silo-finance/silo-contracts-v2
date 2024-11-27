@@ -31,7 +31,7 @@ contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
         silo1.deposit(collateralAmount, borrower);
         uint256 shares = silo0.borrow(borrowAmount, borrower, borrower);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(block.timestamp + 10 days);
 
         silo0.repayShares(shares, borrower);
         vm.stopPrank();
@@ -53,10 +53,13 @@ contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
     }
 
     function _revertAsExpectedIfNoFees() internal {
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        TestStateLib.silo0().withdrawFees();
+        ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        TestStateLib.silo1().withdrawFees();
+        silo0.withdrawFees();
+
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo1.withdrawFees();
     }
 }
