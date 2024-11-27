@@ -19,7 +19,7 @@ import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 
 /// @title PublicAllocator
-/// @author Morpho Labs
+/// @author Forked with gratitude from Morpho Labs.
 /// @custom:contact security@morpho.org
 /// @notice Publicly callable allocator for MetaMorpho vaults.
 contract PublicAllocator is IPublicAllocatorStaticTyping {
