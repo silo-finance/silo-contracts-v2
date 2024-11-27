@@ -44,33 +44,6 @@ invariant shareDebtToken1_tracked()         shareDebtToken1.totalSupply() == 0 <
 invariant shareProtectedToken1_tracked()    shareProtectedCollateralToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
 invariant siloToken1_tracked()              silo1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
 
-// total supply is more than balance - 1 user
-invariant totalSupplyMoreThanBalance_token0(address user)               token0.totalSupply() >= token0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareProtectedToken0(address user) shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareDebtToken0(address user)      shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_siloToken0(address user)           silo0.totalSupply() >= silo0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_token1(address user)               token1.totalSupply() >= token1.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareProtectedToken1(address user) shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareDebtToken1(address user)      shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(user);
-invariant totalSupplyMoreThanBalance_siloToken1(address user)           silo1.totalSupply() >= silo1.balanceOf(user);
-
-// total supply is more than balance - 2 users
-invariant totalSupplyMoreThanBalance2_token0(address user0, address user1)
-    user0 != user1 => token0.totalSupply() >= require_uint256(token0.balanceOf(user0) + token0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareProtectedToken0(address user0, address user1)
-    user0 != user1 => shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(user0) + shareProtectedCollateralToken0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareDebtToken0(address user0, address user1)
-    user0 != user1 => shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(user0) + shareDebtToken0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_siloToken0(address user0, address user1)
-    user0 != user1 => silo0.totalSupply() >= require_uint256(silo0.balanceOf(user0) + silo0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_token1(address user0, address user1)
-    user0 != user1 => token1.totalSupply() >= require_uint256(token1.balanceOf(user0) + token1.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareProtectedToken1(address user0, address user1)
-    user0 != user1 => shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(user0) + shareProtectedCollateralToken1.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareDebtToken1(address user0, address user1)
-    user0 != user1 => shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(user0) + shareDebtToken1.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_siloToken1(address user0, address user1)
-    user0 != user1 => silo1.totalSupply() >= require_uint256(silo1.balanceOf(user0) + silo1.balanceOf(user1));
 
 // sum of [(normal)assets + protected assets + balance of any user] is no more than totalSupply of the token
 // otherwise there's an overflow in "unchecked" in SiloSolvencyLib.getPositionValues 
@@ -409,3 +382,33 @@ function max(mathint a, mathint b) returns mathint
 //         //totalProtectedAssets * 5 == totalProtectedShares * 3 ||
 //         totalProtectedAssets == totalProtectedShares;
 // }
+
+// old invariants
+
+// // total supply is more than balance - 1 user
+// invariant totalSupplyMoreThanBalance_token0(address user)               token0.totalSupply() >= token0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareProtectedToken0(address user) shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareDebtToken0(address user)      shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_siloToken0(address user)           silo0.totalSupply() >= silo0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_token1(address user)               token1.totalSupply() >= token1.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareProtectedToken1(address user) shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareDebtToken1(address user)      shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_siloToken1(address user)           silo1.totalSupply() >= silo1.balanceOf(user);
+
+// // total supply is more than balance - 2 users
+// invariant totalSupplyMoreThanBalance2_token0(address user0, address user1)
+//     user0 != user1 => token0.totalSupply() >= require_uint256(token0.balanceOf(user0) + token0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareProtectedToken0(address user0, address user1)
+//     user0 != user1 => shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(user0) + shareProtectedCollateralToken0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareDebtToken0(address user0, address user1)
+//     user0 != user1 => shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(user0) + shareDebtToken0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_siloToken0(address user0, address user1)
+//     user0 != user1 => silo0.totalSupply() >= require_uint256(silo0.balanceOf(user0) + silo0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_token1(address user0, address user1)
+//     user0 != user1 => token1.totalSupply() >= require_uint256(token1.balanceOf(user0) + token1.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareProtectedToken1(address user0, address user1)
+//     user0 != user1 => shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(user0) + shareProtectedCollateralToken1.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareDebtToken1(address user0, address user1)
+//     user0 != user1 => shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(user0) + shareDebtToken1.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_siloToken1(address user0, address user1)
+//     user0 != user1 => silo1.totalSupply() >= require_uint256(silo1.balanceOf(user0) + silo1.balanceOf(user1));

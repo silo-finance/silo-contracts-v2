@@ -2,6 +2,11 @@
  *
  * NOTE: this spec assumes that `Silo0` and `Silo1` are the collateral share tokens.
  * NOTE: Requires `silo0()` and `siloConfig()` to be `envfree`.
+ 
+ * This file is being imported in most other files. 
+ * Don't add anything dangerous here (like methods' summaries, etc.) !!!
+
+ * Add more requirements on silo1's tokens here if needed (as a functions that can be called in rules)
  */
 
 import "two_silos_methods.spec";
