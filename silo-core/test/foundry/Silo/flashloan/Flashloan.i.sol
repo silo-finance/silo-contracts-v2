@@ -79,6 +79,14 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     }
 
     /*
+    forge test -vv --ffi --mt test_flashLoan_zeroAmount
+    */
+    function test_flashLoan_zeroAmount() public {
+        vm.expectRevert(ISilo.ZeroAmount.selector);
+        silo0.flashLoan(IERC3156FlashBorrower(address(this)), address(token0), 0, "");
+    }
+
+    /*
     forge test -vv --ffi --mt test_maxFlashLoan
     */
     function test_maxFlashLoan() public view {
