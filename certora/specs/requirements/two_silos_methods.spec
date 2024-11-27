@@ -1,3 +1,8 @@
+// This is being imported in most other files. 
+// Don't add anything dangerous here (like methods' summaries, etc.) !!!
+// This is just for "using X as x" and envfree methods
+// Don't add more "using X as x" to other files if it's already here. Reference the file instead.
+
 import "single_silo_methods.spec";
 
 using Silo1 as silo1;

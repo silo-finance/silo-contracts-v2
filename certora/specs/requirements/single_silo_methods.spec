@@ -1,3 +1,8 @@
+// This is being imported in most other files. 
+// Don't add anything dangerous here (like methods' summaries, etc.) !!!
+// This is just for "using X as x" and envfree methods
+// Don't add more "using X as x" to other files if it's already here. Reference the file instead.
+
 using Silo0 as silo0;
 using Token0 as token0;
 using ShareDebtToken0 as shareDebtToken0;

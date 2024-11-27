@@ -44,33 +44,6 @@ invariant shareDebtToken1_tracked()         shareDebtToken1.totalSupply() == 0 <
 invariant shareProtectedToken1_tracked()    shareProtectedCollateralToken1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Protected) == 0;
 invariant siloToken1_tracked()              silo1.totalSupply() == 0 <=> silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral) == 0;
 
-// total supply is more than balance - 1 user
-invariant totalSupplyMoreThanBalance_token0(address user)               token0.totalSupply() >= token0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareProtectedToken0(address user) shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareDebtToken0(address user)      shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_siloToken0(address user)           silo0.totalSupply() >= silo0.balanceOf(user);
-invariant totalSupplyMoreThanBalance_token1(address user)               token1.totalSupply() >= token1.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareProtectedToken1(address user) shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(user);
-invariant totalSupplyMoreThanBalance_shareDebtToken1(address user)      shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(user);
-invariant totalSupplyMoreThanBalance_siloToken1(address user)           silo1.totalSupply() >= silo1.balanceOf(user);
-
-// total supply is more than balance - 2 users
-invariant totalSupplyMoreThanBalance2_token0(address user0, address user1)
-    user0 != user1 => token0.totalSupply() >= require_uint256(token0.balanceOf(user0) + token0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareProtectedToken0(address user0, address user1)
-    user0 != user1 => shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(user0) + shareProtectedCollateralToken0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareDebtToken0(address user0, address user1)
-    user0 != user1 => shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(user0) + shareDebtToken0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_siloToken0(address user0, address user1)
-    user0 != user1 => silo0.totalSupply() >= require_uint256(silo0.balanceOf(user0) + silo0.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_token1(address user0, address user1)
-    user0 != user1 => token1.totalSupply() >= require_uint256(token1.balanceOf(user0) + token1.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareProtectedToken1(address user0, address user1)
-    user0 != user1 => shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(user0) + shareProtectedCollateralToken1.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_shareDebtToken1(address user0, address user1)
-    user0 != user1 => shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(user0) + shareDebtToken1.balanceOf(user1));
-invariant totalSupplyMoreThanBalance2_siloToken1(address user0, address user1)
-    user0 != user1 => silo1.totalSupply() >= require_uint256(silo1.balanceOf(user0) + silo1.balanceOf(user1));
 
 // sum of [(normal)assets + protected assets + balance of any user] is no more than totalSupply of the token
 // otherwise there's an overflow in "unchecked" in SiloSolvencyLib.getPositionValues 
@@ -213,8 +186,6 @@ definition canIncreaseAccrueInterest(method f) returns bool =
     f.selector == sig:Silo0.deposit(uint256,address).selector ||
     f.selector == sig:Silo0.deposit(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.flashLoan(address,address,uint256,bytes).selector ||
-    // f.selector == sig:leverage(uint256,address,address,bytes).selector ||
-    // f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
     f.selector == sig:Silo0.mint(uint256,address).selector ||
     f.selector == sig:Silo0.mint(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.redeem(uint256,address,address).selector ||
@@ -232,10 +203,8 @@ definition canDecreaseAccrueInterest(method f) returns bool =
     f.selector == sig:Silo0.borrowShares(uint256,address,address).selector ||
     f.selector == sig:Silo0.deposit(uint256,address).selector ||
     f.selector == sig:Silo0.deposit(uint256,address,ISilo.CollateralType).selector ||
-    // f.selector == sig:leverage(uint256,address,address,bytes).selector ||
     f.selector == sig:Silo0.mint(uint256,address).selector ||
     f.selector == sig:Silo0.mint(uint256,address,ISilo.CollateralType).selector ||
-    // f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.redeem(uint256,address,address).selector ||
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
@@ -249,8 +218,6 @@ definition canIncreaseTimestamp(method f) returns bool =
     f.selector == sig:Silo0.accrueInterest().selector ||
     f.selector == sig:Silo0.borrow(uint256,address,address).selector ||
     f.selector == sig:Silo0.borrowShares(uint256,address,address).selector ||
-    // f.selector == sig:leverage(uint256,address,address,bytes).selector ||
-    // f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector ||
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector ||
@@ -283,7 +250,6 @@ definition canDecreaseSharesBalance(method f) returns bool =
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector;
-    //f.selector == sig:withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool).selector;
     
 definition canIncreaseProtectedAssets(method f) returns bool =
     f.selector == sig:Silo0.deposit(uint256,address,ISilo.CollateralType).selector ||
@@ -293,7 +259,6 @@ definition canIncreaseProtectedAssets(method f) returns bool =
 definition canDecreaseProtectedAssets(method f) returns bool =
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector ||
-    //f.selector == sig:withdrawCollateralsToLiquidator(uint256,uint256,address,address,bool).selector ||
     f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector;
 
 definition canIncreaseTotalCollateral(method f) returns bool = 
@@ -306,22 +271,18 @@ definition canIncreaseTotalCollateral(method f) returns bool =
 definition canDecreaseTotalCollateral(method f) returns bool =
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector;
-    //f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector;
-
+    
 definition canIncreaseTotalProtectedCollateral(method f) returns bool = 
     canIncreaseTotalCollateral(f);
 
 definition canDecreaseTotalProtectedCollateral(method f) returns bool =
     f.selector == sig:Silo0.redeem(uint256,address,address,ISilo.CollateralType).selector ||
     f.selector == sig:Silo0.withdraw(uint256,address,address,ISilo.CollateralType).selector;
-    //f.selector == sig:liquidationCall(address,address,address,uint256,bool).selector;
-    //f.selector == sig:Silo0.transitionCollateral(uint256,address,ISilo.CollateralType).selector;
-
+    
 definition canIncreaseTotalDebt(method f) returns bool =
     f.selector == sig:Silo0.borrow(uint256,address,address).selector ||
     f.selector == sig:Silo0.borrowShares(uint256,address,address).selector;
-    //f.selector == sig:leverage(uint256,address,address,bytes).selector;
-
+    
 definition canDecreaseTotalDebt(method f) returns bool =
     f.selector == sig:Silo0.repay(uint256,address).selector ||
     f.selector == sig:Silo0.repayShares(uint256,address).selector;
@@ -409,3 +370,33 @@ function max(mathint a, mathint b) returns mathint
 //         //totalProtectedAssets * 5 == totalProtectedShares * 3 ||
 //         totalProtectedAssets == totalProtectedShares;
 // }
+
+// old invariants
+
+// // total supply is more than balance - 1 user
+// invariant totalSupplyMoreThanBalance_token0(address user)               token0.totalSupply() >= token0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareProtectedToken0(address user) shareProtectedCollateralToken0.totalSupply() >= shareProtectedCollateralToken0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareDebtToken0(address user)      shareDebtToken0.totalSupply() >= shareDebtToken0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_siloToken0(address user)           silo0.totalSupply() >= silo0.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_token1(address user)               token1.totalSupply() >= token1.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareProtectedToken1(address user) shareProtectedCollateralToken1.totalSupply() >= shareProtectedCollateralToken1.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_shareDebtToken1(address user)      shareDebtToken1.totalSupply() >= shareDebtToken1.balanceOf(user);
+// invariant totalSupplyMoreThanBalance_siloToken1(address user)           silo1.totalSupply() >= silo1.balanceOf(user);
+
+// // total supply is more than balance - 2 users
+// invariant totalSupplyMoreThanBalance2_token0(address user0, address user1)
+//     user0 != user1 => token0.totalSupply() >= require_uint256(token0.balanceOf(user0) + token0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareProtectedToken0(address user0, address user1)
+//     user0 != user1 => shareProtectedCollateralToken0.totalSupply() >= require_uint256(shareProtectedCollateralToken0.balanceOf(user0) + shareProtectedCollateralToken0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareDebtToken0(address user0, address user1)
+//     user0 != user1 => shareDebtToken0.totalSupply() >= require_uint256(shareDebtToken0.balanceOf(user0) + shareDebtToken0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_siloToken0(address user0, address user1)
+//     user0 != user1 => silo0.totalSupply() >= require_uint256(silo0.balanceOf(user0) + silo0.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_token1(address user0, address user1)
+//     user0 != user1 => token1.totalSupply() >= require_uint256(token1.balanceOf(user0) + token1.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareProtectedToken1(address user0, address user1)
+//     user0 != user1 => shareProtectedCollateralToken1.totalSupply() >= require_uint256(shareProtectedCollateralToken1.balanceOf(user0) + shareProtectedCollateralToken1.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_shareDebtToken1(address user0, address user1)
+//     user0 != user1 => shareDebtToken1.totalSupply() >= require_uint256(shareDebtToken1.balanceOf(user0) + shareDebtToken1.balanceOf(user1));
+// invariant totalSupplyMoreThanBalance2_siloToken1(address user0, address user1)
+//     user0 != user1 => silo1.totalSupply() >= require_uint256(silo1.balanceOf(user0) + silo1.balanceOf(user1));
