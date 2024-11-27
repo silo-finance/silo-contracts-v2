@@ -52,6 +52,17 @@ interface IPublicAllocatorBase {
     /// @dev Will revert when `withdrawals` contains a duplicate or is not sorted.
     /// @dev Will revert if `withdrawals` contains the supply market.
     /// @dev Will revert if a withdrawal amount is larger than available liquidity.
+    /// @dev flow is as follow:
+    /// - iterating over withdrawals markets
+    ///   - increase flowCaps.maxIn by withdrawal amount for market
+    ///   - decrease flowCaps.maxOut by withdrawal amount for market
+    ///   - put market into allocation list with amount equal `market deposit - withdrawal amount`
+    ///   - increase total amount to withdraw
+    /// - after iteration, with allocation list ready, final steps are:
+    ///   - decrease flowCaps.maxIn by total withdrawal amount for `supplyMarket`
+    ///   - increase flowCaps.maxOut by total withdrawal amount for `supplyMarket`
+    ///   - add `supplyMarket` to allocation list with MAX assets
+    ///   - run `reallocate` on MetaMorpho
     function reallocateTo(IMetaMorpho vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
         external
         payable;

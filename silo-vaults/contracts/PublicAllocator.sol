@@ -114,26 +114,26 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
             Withdrawal memory withdrawal = withdrawals[i];
             market = withdrawal.market;
 
-            if (!IMetaMorpho(vault).config(market).enabled) revert ErrorsLib.MarketNotEnabled(market);
-            uint128 withdrawnAssets = withdrawal.amount;
-            if (withdrawnAssets == 0) revert ErrorsLib.WithdrawZero(market);
+            if (!vault.config(market).enabled) revert ErrorsLib.MarketNotEnabled(market);
+            if (withdrawal.amount == 0) revert ErrorsLib.WithdrawZero(market);
 
             if (address(market) <= address(prevMarket)) revert ErrorsLib.InconsistentWithdrawals();
             if (address(market) == address(supplyMarket)) revert ErrorsLib.DepositMarketInWithdrawals();
 
             uint256 assets = _expectedSupplyAssets(market, address(vault));
 
-            if (flowCaps[vault][market].maxOut < withdrawnAssets) revert ErrorsLib.MaxOutflowExceeded(market);
-            if (assets < withdrawnAssets) revert ErrorsLib.NotEnoughSupply(market);
+            if (flowCaps[vault][market].maxOut < withdrawal.amount) revert ErrorsLib.MaxOutflowExceeded(market);
+            // TODO consider using maxWithdraw because this revert can miss liquidity problems and we will revert anyway
+            if (assets < withdrawal.amount) revert ErrorsLib.NotEnoughSupply(market);
 
-            flowCaps[vault][market].maxIn += withdrawnAssets;
-            flowCaps[vault][market].maxOut -= withdrawnAssets;
+            flowCaps[vault][market].maxIn += withdrawal.amount;
+            flowCaps[vault][market].maxOut -= withdrawal.amount;
             allocations[i].market = market;
-            allocations[i].assets = assets - withdrawnAssets;
+            allocations[i].assets = assets - withdrawal.amount;
 
-            totalWithdrawn += withdrawnAssets;
+            totalWithdrawn += withdrawal.amount;
 
-            emit EventsLib.PublicWithdrawal(msg.sender, vault, market, withdrawnAssets);
+            emit EventsLib.PublicWithdrawal(msg.sender, vault, market, withdrawal.amount);
         }
 
         if (flowCaps[vault][supplyMarket].maxIn < totalWithdrawn) revert ErrorsLib.MaxInflowExceeded(supplyMarket);
@@ -143,7 +143,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
         allocations[withdrawals.length].market = supplyMarket;
         allocations[withdrawals.length].assets = type(uint256).max;
 
-        IMetaMorpho(vault).reallocate(allocations);
+        vault.reallocate(allocations);
 
         emit EventsLib.PublicReallocateTo(msg.sender, vault, supplyMarket, totalWithdrawn);
     }
