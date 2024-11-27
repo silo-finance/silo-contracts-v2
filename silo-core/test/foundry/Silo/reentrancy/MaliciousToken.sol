@@ -9,17 +9,14 @@ import {Registries} from "./registries/Registries.sol";
 import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "./TestState.sol";
+import {MintableToken} from "../../_common/MintableToken.sol";
 
-contract MaliciousToken is ERC20, Test {
+contract MaliciousToken is MintableToken, Test {
     IMethodsRegistry[] internal _methodRegistries;
 
-    constructor() ERC20("MaliciousToken", "MLST") {
+    constructor() MintableToken(18) {
         Registries registries = new Registries();
         _methodRegistries = registries.list();
-    }
-
-    function mint(address _to, uint256 _amount) external {
-        _mint(_to, _amount);
     }
 
     function transfer(address recipient, uint256 amount) public override returns (bool) {
