@@ -1,4 +1,5 @@
 import "../requirements/CompleteSiloSetup.spec";
+import "unresolved.spec";
 
 ghost bool wasCalled_setThisSiloAsCollateralSilo;
 ghost bool wasCalled_setOtherSiloAsCollateralSilo;
@@ -39,7 +40,7 @@ definition canCall_setOtherSiloAsCollateralSilo(method f) returns bool =
     f.selector == sig:borrowShares(uint256,address,address).selector;
     
 
-// setThisSiloAsCollateralSilo() should be called only by: borrowSameAsset, leverageSameAsset, switchCollateralToThisSilo
+// setThisSiloAsCollateralSilo() should be called only by: borrowSameAsset, switchCollateralToThisSilo
 rule whoCalls_setThisSiloAsCollateralSilo(env e, method f)
 {
     require wasCalled_setThisSiloAsCollateralSilo == false;

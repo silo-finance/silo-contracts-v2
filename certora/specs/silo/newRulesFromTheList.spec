@@ -2,6 +2,7 @@
 
 import "../requirements/CompleteSiloSetup.spec";
 import "unresolved.spec";
+import "../_simplifications/SiloMathLib.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------

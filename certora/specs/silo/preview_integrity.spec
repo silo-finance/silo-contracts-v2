@@ -2,6 +2,7 @@
 
 import "../requirements/CompleteSiloSetup.spec";
 
+
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
     // Since `getCompoundInterestRateAndUpdate` is not view, this is not strictly sound.
