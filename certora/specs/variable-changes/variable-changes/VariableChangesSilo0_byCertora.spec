@@ -12,7 +12,7 @@
 
 //////////////////////
 // TODO
-// we need to update this to new version !!!
+// we need to update this to the new version !!!
 // and there are still some rules unfinished
 ////////////////////// 
 

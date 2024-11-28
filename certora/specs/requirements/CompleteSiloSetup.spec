@@ -18,7 +18,7 @@ function SafeAssumptionsEnv_withInvariants(env e)
 
 function SafeAssumptions_withInvariants(env e, address user) 
 {
-    require user != 0;
+    require user != 0;  //TODO not safe!!
     SafeAssumptionsEnv_withInvariants(e);
     requireEnvAndUserInvariants(e, user);
 }
