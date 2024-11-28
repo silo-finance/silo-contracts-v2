@@ -211,9 +211,14 @@ library PartialLiquidationLib {
         }
     }
 
-    /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LT
-    /// where Dv: debt value, Cv: collateral value, LT: expected LT, f: liquidation fee, x: is value we looking for
-    /// x = (Dv - LT * Cv) / (DP - LT - LT * f)
+    /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LTV
+    /// where 
+    ///    Dv: debt value,
+    ///    Cv: collateral value,
+    ///    LTV: expected LTV after liquidation,
+    ///    f: liquidation fee,
+    ///    x: is value we looking for
+    /// x = (Dv - LTV * Cv) / (DP - LTV - LTV * f)
     /// result also take into consideration the dust
     /// @notice protocol does not uses this method, because in protocol our input is debt to cover in assets
     /// however this is useful to figure out what is max debt to cover.
@@ -234,15 +239,15 @@ library PartialLiquidationLib {
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
         if (_ltvAfterLiquidation == 0) return _totalBorrowerDebtValue; // full liquidation
 
-        // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
+        // x = (Dv - LTV * Cv) / (DP - LTV - LTV * f) ==> (Dv - LTV * Cv) / (DP - (LTV + LTV * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;
         // to lose as low precision as possible, instead of `ltCv/1e18`, we increase precision of DebtValue
         _totalBorrowerDebtValue *= _PRECISION_DECIMALS;
 
-        // negative value means our current LT is lower than _ltvAfterLiquidation
+        // negative value means our current LTV is lower than _ltvAfterLiquidation
         if (ltCv >= _totalBorrowerDebtValue) return 0;
 
-        uint256 dividerR; // LT + LT * f
+        uint256 dividerR; // LTV + LTV * f
 
         unchecked {
             // safe because of above `LTCv >= _totalBorrowerDebtValue`
