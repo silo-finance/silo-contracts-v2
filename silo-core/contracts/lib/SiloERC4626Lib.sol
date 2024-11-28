@@ -249,7 +249,7 @@ library SiloERC4626Lib {
             assets = SiloMathLib.convertToAssets(
                 shares,
                 _totalAssets,
-                _assetTypeShareTokenTotalSupply,
+                _shareTokenTotalSupply,
                 Rounding.MAX_WITHDRAW_TO_ASSETS,
                 ISilo.AssetType(uint256(_collateralType))
             );
