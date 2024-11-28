@@ -1,4 +1,4 @@
-import "../previousAudits/CompleteSiloSetup.spec";
+import "../requirements/CompleteSiloSetup.spec";
 
 // The ERC4626 spec doesn't require that max{method} is as close as possible to the real bound.
 // I.e. it can happen that maxBorrow(user) = X; and borrow(user, X+1) still goes through

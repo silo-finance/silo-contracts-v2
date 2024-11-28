@@ -1,6 +1,6 @@
 /* Third party protection rules (i.e. unrelated addresses are not affected)  */
 
-import "../previousAudits/CompleteSiloSetup.spec";
+import "../requirements/CompleteSiloSetup.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------

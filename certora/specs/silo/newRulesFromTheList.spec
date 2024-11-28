@@ -1,6 +1,6 @@
 /* Integrity of main methods */
 
-import "../previousAudits/CompleteSiloSetup.spec";
+import "../requirements/CompleteSiloSetup.spec";
 import "unresolved.spec";
 
 methods {

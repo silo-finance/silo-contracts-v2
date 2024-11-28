@@ -1,4 +1,4 @@
-import "../previousAudits/CompleteSiloSetup.spec";
+import "../requirements/CompleteSiloSetup.spec";
 
 ghost bool wasCalled_setThisSiloAsCollateralSilo;
 ghost bool wasCalled_setOtherSiloAsCollateralSilo;

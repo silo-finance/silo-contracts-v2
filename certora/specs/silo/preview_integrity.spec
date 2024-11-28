@@ -1,6 +1,6 @@
 /* Integrity of preview functions */
 
-import "../previousAudits/CompleteSiloSetup.spec";
+import "../requirements/CompleteSiloSetup.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
