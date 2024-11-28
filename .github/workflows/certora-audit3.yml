@@ -132,6 +132,39 @@ jobs:
             name: HLP_integrityOfRepayShares,
             command: 'silo/methods_integrity.conf --rule HLP_integrityOfRepayShares'
           }
+          # ==== preview_integrity =============================================
+          - {
+            name: HLP_PreviewMintCorrectness_strict,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewMintCorrectness_strict'
+          }
+          - {
+            name: HLP_PreviewRedeemCorrectness,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewRedeemCorrectness'
+          }
+          - {
+            name: HLP_PreviewDepositCorrectness,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewDepositCorrectness'
+          }
+          - {
+            name: HLP_PreviewWithdrawCorrectness_strict,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewWithdrawCorrectness_strict'
+          }
+          - {
+            name: HLP_PreviewBorrowCorrectness_strict,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewBorrowCorrectness_strict'
+          }
+          - {
+            name: HLP_PreviewRepayCorrectness_strict,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewRepayCorrectness_strict'
+          }
+          - {
+            name: HLP_PreviewBorrowSharesCorrectness,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewBorrowSharesCorrectness'
+          }
+          - {
+            name: HLP_PreviewRepaySharesCorrectness,
+            command: 'silo/preview_integrity.conf --rule HLP_PreviewRepaySharesCorrectness'
+          }
           # ==== access-single-silo ============================================
           - {
             name: RA_anyone_deposit_repay,
