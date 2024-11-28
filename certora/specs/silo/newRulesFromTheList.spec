@@ -1,13 +1,6 @@
 /* Integrity of main methods */
 
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/safe-approximations.spec";
-
-import "../requirements/tokens_requirements.spec";
 import "../previousAudits/CompleteSiloSetup.spec";
-
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
@@ -26,7 +19,7 @@ methods {
 // accrueInterest() should never revert
 rule accrueInterest_neverReverts(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
 
     _ = accrueInterest@withrevert(e);
     assert !lastReverted;
@@ -41,7 +34,7 @@ invariant noDebt_thenSolventAndNoLTV(env e, address user)
 // accrueInterest() calling twice is the same as calling once (in a single block)
 rule accrueInterest_idempotent(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     _ = accrueInterest(e);
     storage after1 = lastStorage;
     _ = accrueInterest(e);
@@ -52,7 +45,7 @@ rule accrueInterest_idempotent(env e)
 // withdrawFees() always reverts in a second call in the same block
 rule withdrawFees_revertsSecondTime(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     withdrawFees(e);
     withdrawFees@withrevert(e);
     assert lastReverted;
@@ -63,7 +56,7 @@ rule withdrawFees_revertsSecondTime(env e)
 // ???
 rule withdrawFees_increasesDaoDeploerFees(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     uint daoFeesBefore = getSiloDataDaoAndDeployerRevenue(e);
     withdrawFees(e);
     uint daoFeesAfter = getSiloDataDaoAndDeployerRevenue(e);
@@ -74,7 +67,7 @@ rule withdrawFees_increasesDaoDeploerFees(env e)
 // any other function in the system (including view functions results)
 rule withdrawFees_noAdditionalEffect(env e, method f)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     storage init = lastStorage;
     calldataarg args;
     f(e, args);
@@ -93,22 +86,22 @@ rule withdrawFees_noAdditionalEffect(env e, method f)
 // it never goes back to zero
 rule borrowerCollateralSilo_neverSetToZero(env e, method f) // TODO exclude view
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     address user;
-    address colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+    address colSiloBefore = config().borrowerCollateralSilo(e, user);
     
     calldataarg args;
     f(e, args);
-    address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    address colSiloAfter = config().borrowerCollateralSilo(e, user);
     assert colSiloBefore != 0 => colSiloAfter != 0;
 }
 
 // calling accrueInterestForSilo(_silo) should be equal to calling _silo.accrueInterest()
 rule accrueInterestForSilo_equivalent(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     storage init = lastStorage;
-    _ = config(e).accrueInterestForSilo(e, silo0);
+    _ = config().accrueInterestForSilo(e, silo0);
     storage after1 = lastStorage;
 
     silo0.accrueInterest(e) at init;
@@ -138,16 +131,16 @@ invariant cannotHaveDebtInBothSilos(env e, address user)
 // one of the debt share token totalSupply() increases 
 rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f) // TODO exclude view
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     address user;
-    address colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+    address colSiloBefore = config().borrowerCollateralSilo(e, user);
     uint totalShare0Before = shareDebtToken0.totalSupply();
     uint totalShare1Before = shareDebtToken1.totalSupply();
 
     calldataarg args;
     f(e, args);
 
-    address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    address colSiloAfter = config().borrowerCollateralSilo(e, user);
     uint totalShare0After = shareDebtToken0.totalSupply();
     uint totalShare1After = shareDebtToken1.totalSupply();
 
@@ -161,14 +154,14 @@ rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f) // TODO ex
 // excluding switchCollateralToThisSilo() method
 rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO exclude view and switchCollateralToThisSilo
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     address user;
-    address colSiloBefore = config(e).borrowerCollateralSilo(e, user);
+    address colSiloBefore = config().borrowerCollateralSilo(e, user);
 
     calldataarg args;
     f(e, args);
 
-    address colSiloAfter = config(e).borrowerCollateralSilo(e, user);
+    address colSiloAfter = config().borrowerCollateralSilo(e, user);
     uint debt0 = shareDebtToken0.balanceOf(e, user);
     uint debt1 = shareDebtToken1.balanceOf(e, user);
 
@@ -179,7 +172,7 @@ rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO
 // withdraw() should never revert if liquidity for a user and a silo is sufficient even if oracle reverts
 rule withdrawOnlyRevertsOnLiquidity(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
 
     uint256 assets;
     uint256 liquidity = getLiquidity(e);
@@ -194,7 +187,7 @@ rule withdrawOnlyRevertsOnLiquidity(env e, address receiver)
 // user is always solvent after withdraw()
 rule solventAfterWithdraw(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
         
     uint256 assets;
     uint256 sharesPaid = withdraw(e, assets, receiver, e.msg.sender);
@@ -206,29 +199,29 @@ rule solventAfterWithdraw(env e, address receiver)
 invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
     (shareDebtToken0.balanceOf(user) > 0 || shareDebtToken1.balanceOf(user) > 0)
     => (
-        (config(e).borrowerCollateralSilo(e, user) == silo0 ||
-         config(e).borrowerCollateralSilo(e, user) == silo1)
+        (config().borrowerCollateralSilo(e, user) == silo0 ||
+         config().borrowerCollateralSilo(e, user) == silo1)
         && (silo0.balanceOf(e, user) > 0 || silo1.balanceOf(e, user) > 0))
     {
-    preserved with (env e2) { SafeAssumptions(e2, user); }
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
 
 // debt in two silos is impossible
 invariant noDebtInBothSilos(env e, address user)
     shareDebtToken0.balanceOf(e, user) == 0  || shareDebtToken1.balanceOf(e, user) == 0
     {
-    preserved with (env e2) { SafeAssumptions(e2, user); }
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
 
 // flashFee() returns non-zero value if fee is set to non-zero value
 rule flashFee_nonZero(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     address token;
     uint amount; uint res;
     require amount > 0;
     uint256 daoFee; uint256 deployerFee; uint256 flashloanFee; address asset;
-    daoFee, deployerFee, flashloanFee, asset = config(e).getFeesWithAsset(e, silo0);
+    daoFee, deployerFee, flashloanFee, asset = config().getFeesWithAsset(e, silo0);
     res = flashFee(e, token, amount);
     assert flashloanFee > 0 => res > 0;
 }

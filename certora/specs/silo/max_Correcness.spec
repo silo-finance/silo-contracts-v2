@@ -1,9 +1,3 @@
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/safe-approximations.spec";
-
-import "../requirements/tokens_requirements.spec";
 import "../previousAudits/CompleteSiloSetup.spec";
 
 // The ERC4626 spec doesn't require that max{method} is as close as possible to the real bound.
@@ -12,7 +6,7 @@ import "../previousAudits/CompleteSiloSetup.spec";
 
 rule HLP_MaxMint_reverts(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
     
     uint256 maxShares = maxMint(e, receiver);
     uint256 shares;
@@ -23,7 +17,7 @@ rule HLP_MaxMint_reverts(env e, address receiver)
 
 rule HLP_MaxRedeem_reverts(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
 
     uint256 maxShares = maxRedeem(e, e.msg.sender);
     uint256 shares;
@@ -34,7 +28,7 @@ rule HLP_MaxRedeem_reverts(env e, address receiver)
 
 rule HLP_MaxDeposit_reverts(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
     
     uint256 maxAssets = maxDeposit(e, receiver);
     uint256 assets;
@@ -45,7 +39,7 @@ rule HLP_MaxDeposit_reverts(env e, address receiver)
 
 rule HLP_MaxWithdraw_reverts(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
     
     uint256 maxAssets = maxWithdraw(e, e.msg.sender);
     uint256 assets;
@@ -56,7 +50,7 @@ rule HLP_MaxWithdraw_reverts(env e, address receiver)
 
 rule HLP_MaxBorrow_reverts(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
     
     uint256 maxAssets = maxBorrow(e, e.msg.sender);
     uint256 assets;
@@ -67,7 +61,7 @@ rule HLP_MaxBorrow_reverts(env e, address receiver)
 
 rule HLP_MaxRepay_reverts(env e, address borrower)
 {
-    SafeAssumptions(e. borrower);
+    SafeAssumptions_withInvariants(e, borrower);
 
     uint maxAssets = maxRepay(e, borrower);
     uint256 assets;
@@ -78,7 +72,7 @@ rule HLP_MaxRepay_reverts(env e, address borrower)
 
 rule HLP_MaxRepayShares_reverts(env e, address borrower)
 {
-    SafeAssumptions(e. borrower);
+    SafeAssumptions_withInvariants(e, borrower);
     
     uint maxShares = maxRepayShares(e, borrower);
     uint256 shares;
@@ -90,7 +84,7 @@ rule HLP_MaxRepayShares_reverts(env e, address borrower)
 
 rule HLP_MaxBorrowSameAsset_reverts(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
     
     uint256 maxAssets = maxBorrowSameAsset(e, e.msg.sender);
     uint256 assets;
@@ -103,7 +97,7 @@ rule HLP_MaxBorrowSameAsset_reverts(env e, address receiver)
 // borrow should not revert because of solvency check
 rule maxBorrow_noRevert(env e, address user)
 {
-    SafeAssumptions(e, user);
+    SafeAssumptions_withInvariants(e, user);
 
     uint256 maxB = maxBorrow(e, user);
     address receiver;
@@ -114,7 +108,7 @@ rule maxBorrow_noRevert(env e, address user)
 // maxRepay() should never return more than totalAssets[AssetType.Debt]
 rule maxRepay_neverGreaterThanTotalDebt(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     address user;
     uint res = maxRepay(e, user);
     uint max = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);
@@ -124,7 +118,7 @@ rule maxRepay_neverGreaterThanTotalDebt(env e)
 // result of maxRedeem() used as input to redeem() should never revert
 rule HLP_MaxRedeem_noRevert(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
 
     uint256 maxShares = maxRedeem(e, e.msg.sender);
     uint256 assetsReceived = redeem@withrevert(e, maxShares, receiver, e.msg.sender);
@@ -134,7 +128,7 @@ rule HLP_MaxRedeem_noRevert(env e, address receiver)
 // result of maxRedeem() should never be more than share token balanceOf user
 rule HLP_MaxRedeem_noGreaterThanBalance(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
 
     uint sharesBalance = silo0.balanceOf(e.msg.sender);
     uint256 maxShares = maxRedeem(e, e.msg.sender);
@@ -145,7 +139,7 @@ rule HLP_MaxRedeem_noGreaterThanBalance(env e, address receiver)
 // repaying with maxRepay() value should burn all user share debt token balance
 rule maxRepay_burnsAllDebt(env e, address user)
 {
-    SafeAssumptions(e, user);
+    SafeAssumptions_withInvariants(e, user);
 
     uint maxAssets = maxRepay(e, user);
     uint256 shares = repay(e, maxAssets, user);    // this did not revert
@@ -157,7 +151,7 @@ rule maxRepay_burnsAllDebt(env e, address user)
 // result of maxWithdraw() used as input to withdraw() should never revert
 rule maxWithdraw_noRevert(env e, address receiver)
 {
-    SafeAssumptions(e, receiver);
+    SafeAssumptions_withInvariants(e, receiver);
     
     uint256 maxAssets = maxWithdraw(e, e.msg.sender);
     uint256 sharesPaid = withdraw@withrevert(e, maxAssets, receiver, e.msg.sender);
@@ -167,7 +161,7 @@ rule maxWithdraw_noRevert(env e, address receiver)
 // result of maxWithdraw() should never be more than liquidity of the Silo
 rule maxWithdraw_noGreaterThanLiquidity(env e)
 {
-    SafeAssumptionsEnv(e);
+    SafeAssumptionsEnv_withInvariants(e);
     
     uint totalCollateral = silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     uint totalDebt = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);

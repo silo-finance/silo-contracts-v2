@@ -1,32 +1,37 @@
 /* Requirement functions for a setup with the various tokens 
  *
- * NOTE: this spec assumes that `Silo0` is the collateral share token.
+ * NOTE: this spec assumes that `Silo0` and `Silo1` are the collateral share tokens.
  * NOTE: Requires `silo0()` and `siloConfig()` to be `envfree`.
-
+ 
  * This file is being imported in most other files. 
  * Don't add anything dangerous here (like methods' summaries, etc.) !!!
 
- * Add more requirements on silo0s' tokens here if needed (as a functions that can be called in rules)
+ * Add more requirements on silo1's tokens here if needed (as a functions that can be called in rules)
  */
 
-import "single_silo_methods.spec";
+import "two_silos_methods.spec";
 
 // ---- Functions --------------------------------------------------------------
 
 // @title Prevents having block timestamp less than interest rate timestamp
 function silosTimestampSetupRequirements(env e) {
-    require require_uint64(e.block.timestamp) >= silo0.getSiloDataInterestRateTimestamp(e);
+    require require_uint64(e.block.timestamp) >= silo0.getSiloDataInterestRateTimestamp();
+    require require_uint64(e.block.timestamp) >= silo1.getSiloDataInterestRateTimestamp();
 }
 
 // @title Given address is not one of the tokens, silos or config
 function nonSceneAddressRequirements(address sender) {
     require sender != silo0;
+    require sender != silo1;
     require sender != siloConfig;
 
     require sender != shareDebtToken0;
     require sender != shareProtectedCollateralToken0;
+    require sender != shareDebtToken1;
+    require sender != shareProtectedCollateralToken1;
 
     require sender != token0;
+    require sender != token1;
 }
 
 // @title Ensures the `siloConfig` is set up properly
@@ -34,12 +39,22 @@ function configForEightTokensSetupRequirements() {
     require silo0.silo() == silo0;
     require silo0.config() == siloConfig;
 
+    require silo1.silo() == silo1;
+    require silo1.config() == siloConfig;
+
     require shareDebtToken0.silo() == silo0;
     require shareProtectedCollateralToken0.silo() == silo0;
     
     require silo0.siloConfig() == siloConfig;
     require shareDebtToken0.siloConfig() == siloConfig;
     require shareDebtToken0.siloConfig() == siloConfig;
+
+    require shareDebtToken1.silo() == silo1;
+    require shareProtectedCollateralToken1.silo() == silo1;
+    
+    require silo1.siloConfig() == siloConfig;
+    require shareDebtToken1.siloConfig() == siloConfig;
+    require shareDebtToken1.siloConfig() == siloConfig;
 }
 
 function totalSuppliesMoreThanBalances(address user1, address user2) {
@@ -60,6 +75,24 @@ function totalSuppliesMoreThanBalances(address user1, address user2) {
     require (
         to_mathint(token0.totalSupply()) >=
         token0.balanceOf(user1) + token0.balanceOf(user2)
+    );
+
+    require (
+        to_mathint(silo1.totalSupply()) >=
+        silo1.balanceOf(user1) + silo1.balanceOf(user2)
+    );
+    require (
+        to_mathint(shareDebtToken1.totalSupply()) >=
+        shareDebtToken1.balanceOf(user1) + shareDebtToken1.balanceOf(user2)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken1.totalSupply()) >=
+        shareProtectedCollateralToken1.balanceOf(user1) +
+        shareProtectedCollateralToken1.balanceOf(user2)
+    );
+    require (
+        to_mathint(token1.totalSupply()) >=
+        token1.balanceOf(user1) + token1.balanceOf(user2)
     );
 }
 
@@ -84,5 +117,26 @@ function totalSuppliesMoreThanThreeBalances(address user1, address user2, addres
     require (
         to_mathint(token0.totalSupply()) >=
         token0.balanceOf(user1) + token0.balanceOf(user2) + token0.balanceOf(user3)
+    );
+
+    require (
+        to_mathint(silo1.totalSupply()) >=
+        silo1.balanceOf(user1) + silo1.balanceOf(user2) + silo1.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareDebtToken1.totalSupply()) >=
+        shareDebtToken1.balanceOf(user1) +
+        shareDebtToken1.balanceOf(user2) +
+        shareDebtToken1.balanceOf(user3)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken1.totalSupply()) >=
+        shareProtectedCollateralToken1.balanceOf(user1) +
+        shareProtectedCollateralToken1.balanceOf(user2) +
+        shareProtectedCollateralToken1.balanceOf(user3)
+    );
+    require (
+        to_mathint(token1.totalSupply()) >=
+        token1.balanceOf(user1) + token1.balanceOf(user2) + token1.balanceOf(user3)
     );
 }
