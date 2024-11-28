@@ -4,7 +4,7 @@ methods {
         uint256 _shares,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal returns (uint256) =>
     sharesToAssetsApprox(_shares, _totalAssets, _totalShares, _rounding, _assetType);
@@ -13,7 +13,7 @@ methods {
         uint256 _assets,
         uint256 _totalAssets,
         uint256 _totalShares,
-        MathUpgradeable.Rounding _rounding,
+        Math.Rounding _rounding,
         ISilo.AssetType _assetType
     ) internal returns (uint256) =>
     assetsToSharesApprox(_assets, _totalAssets, _totalShares, _rounding, _assetType);
@@ -125,7 +125,7 @@ function sharesToAssetsApprox(
     uint256 _shares,
     uint256 _totalAssets,
     uint256 _totalShares,
-    MathUpgradeable.Rounding _rounding,
+    Math.Rounding _rounding,
     ISilo.AssetType _assetType
  ) returns uint256 {
     uint256 totalShares = _assetType == ISilo.AssetType.Debt ?
@@ -136,8 +136,8 @@ function sharesToAssetsApprox(
     if (totalShares == 0 || totalAssets == 0) return _shares;
 
     //Replace for exact mulDiv
-    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //exact
-    return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == MathUpgradeable.Rounding.Up);  //summ
+    //return mulDiv_mathLib(_shares,totalAssets,totalShares,_rounding == Math.Rounding.Ceil);  //exact
+    return sharesMulDiv(_shares,totalAssets,totalShares,_rounding == Math.Rounding.Ceil);  //summ
     //return discreteRatioMulDiv(_shares, totalAssets, totalShares); // under-approx (rarely used)
 }
 
@@ -146,7 +146,7 @@ function assetsToSharesApprox(
     uint256 _assets,
     uint256 _totalAssets,
     uint256 _totalShares,
-    MathUpgradeable.Rounding _rounding,
+    Math.Rounding _rounding,
     ISilo.AssetType _assetType
 ) returns uint256 {
     uint256 totalShares = _assetType == ISilo.AssetType.Debt ?
@@ -157,8 +157,8 @@ function assetsToSharesApprox(
     if (totalShares == 0 || totalAssets == 0) return _assets;
 
     //Replace for exact mulDiv
-    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //exact
-    return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == MathUpgradeable.Rounding.Up);  //summ
+    //return mulDiv_mathLib(_assets,totalShares,totalAssets,_rounding == Math.Rounding.Ceil);  //exact
+    return sharesMulDiv(_assets,totalShares,totalAssets,_rounding == Math.Rounding.Ceil);  //summ
     //return discreteRatioMulDiv(_assets, totalAssets, totalShares); // under-approx (rarely used)
 }
 
