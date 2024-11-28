@@ -245,8 +245,14 @@ library SiloERC4626Lib {
         );
 
         if (assets != 0) {
-            // even if we using rounding Down, we still need underestimation with 1wei
-            unchecked { assets--; }
+            // recalculate assets due to rounding error that we have in convertToShares
+            assets = SiloMathLib.convertToAssets(
+                shares,
+                _totalAssets,
+                _assetTypeShareTokenTotalSupply,
+                Rounding.MAX_WITHDRAW_TO_ASSETS,
+                ISilo.AssetType(uint256(_collateralType))
+            );
         }
     }
 }
