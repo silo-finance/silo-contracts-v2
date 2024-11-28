@@ -246,6 +246,15 @@ jobs:
             name: flashFee_nonZero,
             command: 'silo/newRulesFromTheList.conf --rule flashFee_nonZero'
           }
+          # ==== whoCanCallSetSiloAsCollateral================================
+          - {
+            name: whoCalls_setThisSiloAsCollateralSilo,
+            command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setThisSiloAsCollateralSilo'
+          }
+          - {
+            name: whoCalls_setOtherSiloAsCollateralSilo,
+            command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setOtherSiloAsCollateralSilo'
+          }
           # ==== max- correctness ============================================
           - {
             name: HLP_MaxMint_reverts,
