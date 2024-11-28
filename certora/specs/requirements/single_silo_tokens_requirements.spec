@@ -42,8 +42,32 @@ function configForEightTokensSetupRequirements() {
     require shareDebtToken0.siloConfig() == siloConfig;
 }
 
+function totalSupplyMoreThanBalance(address user1) {
+    require (
+        to_mathint(silo0.totalSupply()) >=
+        silo0.balanceOf(user1)
+    );
+    require (
+        to_mathint(shareDebtToken0.totalSupply()) >=
+        shareDebtToken0.balanceOf(user1)
+    );
+    require (
+        to_mathint(shareProtectedCollateralToken0.totalSupply()) >=
+        shareProtectedCollateralToken0.balanceOf(user1)
+    );
+    require (
+        to_mathint(token0.totalSupply()) >=
+        token0.balanceOf(user1)
+    );
+}
+
 function totalSuppliesMoreThanBalances(address user1, address user2) {
-    require user1 != user2;
+    if (user1 == user2) 
+    {
+        totalSupplyMoreThanBalance(user1);
+        return;
+    }
+    //require user1 != user2;
     require (
         to_mathint(silo0.totalSupply()) >=
         silo0.balanceOf(user1) + silo0.balanceOf(user2)
@@ -64,7 +88,8 @@ function totalSuppliesMoreThanBalances(address user1, address user2) {
 }
 
 function totalSuppliesMoreThanThreeBalances(address user1, address user2, address user3) {
-    require user1 != user2 && user1 != user3 && user2 != user3;
+    if (user1 == user2 || user1 == user3 || user2 == user3) return;
+    //require user1 != user2 && user1 != user3 && user2 != user3;
     require (
         to_mathint(silo0.totalSupply()) >=
         silo0.balanceOf(user1) + silo0.balanceOf(user2) + silo0.balanceOf(user3)
