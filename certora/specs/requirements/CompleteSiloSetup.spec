@@ -99,16 +99,8 @@ function requireEnvFreeInvariants()
 // requires all the invariants with env defined bellow.
 // !!  if you add more, also require them here    !!
 function requireEnvInvariants(env e)
-{       
-    requireInvariant totalSupplyMoreThanBalance_token0(e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(e.msg.sender);
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(e.msg.sender);      
-    requireInvariant totalSupplyMoreThanBalance_siloToken0(e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance_token1(e.msg.sender);               
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(e.msg.sender); 
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(e.msg.sender);     
-    requireInvariant totalSupplyMoreThanBalance_siloToken1(e.msg.sender);      
-
+{
+    totalSuppliesMoreThanBalances(e.msg.sender, silo0);
     requireInvariant token0Distribution(e.msg.sender);
     requireInvariant token1Distribution(e.msg.sender);
     requireInvariant debt0ThenHasCollateral(e.msg.sender);
@@ -119,23 +111,7 @@ function requireEnvInvariants(env e)
 // !!  if you add more, also require them here    !!
 function requireEnvAndUserInvariants(env e, address user)
 {
-    requireInvariant totalSupplyMoreThanBalance_token0(user);           
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken0(user);
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken0(user);      
-    requireInvariant totalSupplyMoreThanBalance_siloToken0(user);           
-    requireInvariant totalSupplyMoreThanBalance_token1(user);               
-    requireInvariant totalSupplyMoreThanBalance_shareProtectedToken1(user); 
-    requireInvariant totalSupplyMoreThanBalance_shareDebtToken1(user);     
-    requireInvariant totalSupplyMoreThanBalance_siloToken1(user);        
-
-    requireInvariant totalSupplyMoreThanBalance2_token0(user, e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken0(user, e.msg.sender);
-    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken0(user, e.msg.sender);      
-    requireInvariant totalSupplyMoreThanBalance2_siloToken0(user, e.msg.sender);           
-    requireInvariant totalSupplyMoreThanBalance2_token1(user, e.msg.sender);               
-    requireInvariant totalSupplyMoreThanBalance2_shareProtectedToken1(user, e.msg.sender); 
-    requireInvariant totalSupplyMoreThanBalance2_shareDebtToken1(user, e.msg.sender);     
-    requireInvariant totalSupplyMoreThanBalance2_siloToken1(user, e.msg.sender);    
+    totalSuppliesMoreThanThreeBalances(e.msg.sender, user, silo0);
 
     requireInvariant token0Distribution(user);
     requireInvariant token1Distribution(user);
