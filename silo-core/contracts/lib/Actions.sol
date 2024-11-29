@@ -279,10 +279,6 @@ library Actions {
     function switchCollateralToThisSilo() external {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
-
-        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
-
         uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
@@ -290,6 +286,10 @@ library Actions {
                 address(this), action, abi.encodePacked(msg.sender)
             );
         }
+
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
+        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.setThisSiloAsCollateralSilo(msg.sender);
