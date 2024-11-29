@@ -115,14 +115,37 @@ contract SiloHooksBorrow2AssetsTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrow_2debt
     */
     function test_borrow_2debt() public {
-        vm.prank(BORROWER);
 //        _hookReceiver.setBefore(uint24(Hook.BORROW | Hook.BORROW_SAME_ASSET | Hook.TRANSITION_COLLATERAL));
         _hookReceiver.setBefore(uint24(Hook.BORROW));
+        silo1.updateHooks();
 
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.prank(BORROWER);
         silo1.borrow(0.5e18, BORROWER, BORROWER);
 
         _hookReceiver.setBefore(uint24(0));
+        silo1.updateHooks();
+
+        vm.prank(BORROWER);
+        silo1.borrow(0.5e18, BORROWER, BORROWER);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrow_2debt
+    */
+    function test_borrow_2debt() public {
+//        _hookReceiver.setBefore(uint24(Hook.BORROW | Hook.BORROW_SAME_ASSET | Hook.TRANSITION_COLLATERAL));
+        _hookReceiver.setBefore(uint24(Hook.BORROW));
+        silo1.updateHooks();
+
+        vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.prank(BORROWER);
+        silo1.borrow(0.5e18, BORROWER, BORROWER);
+
+        _hookReceiver.setBefore(uint24(0));
+        silo1.updateHooks();
+
+        vm.prank(BORROWER);
         silo1.borrow(0.5e18, BORROWER, BORROWER);
     }
 }
