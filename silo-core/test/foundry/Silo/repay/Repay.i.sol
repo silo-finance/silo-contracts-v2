@@ -16,6 +16,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 contract RepayTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
+    event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+
     function setUp() public {
         siloConfig = _setUpLocalFixture();
     }
@@ -111,7 +113,7 @@ contract RepayTest is SiloLittleHelper, Test {
 
     function _repay_tooMuch() private {
         uint128 assets = 1e18;
-        uint256 assetsToRepay = assets * 2;
+        uint256 assetsToRepay = type(uint256).max;
         address borrower = address(this);
 
         _createDebt(assets, borrower);
@@ -120,6 +122,12 @@ contract RepayTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 1 days);
 
         token1.approve(address(silo1), assetsToRepay);
+
+        uint256 maxRepay = silo1.maxRepay(borrower);
+        uint256 shares = silo1.previewRepay(maxRepay);
+
+        vm.expectEmit(address(silo1));
+        emit Repay(address(this), borrower, maxRepay, shares);
 
         silo1.repay(assetsToRepay, borrower);
 
