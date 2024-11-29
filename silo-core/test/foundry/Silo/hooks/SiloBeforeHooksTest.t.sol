@@ -10,6 +10,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
+import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
 
 contract HookReceiver is IHookReceiver, Test {
@@ -108,7 +109,6 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
         configOverride.token1 = address(token1);
 
         configOverride.hookReceiver = _hookReceiverAddr;
-        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
