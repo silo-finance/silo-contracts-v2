@@ -226,14 +226,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         if (shares == 0) return 0;
 
-        (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
-            _shareToken,
-            0 /* eth value */,
-            ISilo.CallType.Call,
-            abi.encodeWithSelector(IShareToken.forwardTransferFromNoChecks.selector, _borrower, _receiver, shares)
-        );
-
-        if (!success) RevertLib.revertBytes(result, "");
+        IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
     }
 
     function _initialize(ISiloConfig _siloConfig) internal virtual {
