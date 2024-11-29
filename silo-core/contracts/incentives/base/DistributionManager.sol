@@ -1,122 +1,128 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.28;
 
-import {IAaveDistributionManager} from "../interfaces/IAaveDistributionManager.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
+
+import {IDistributionManager} from "../interfaces/IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
 /**
  * @title DistributionManager
  * @notice Accounting contract to manage multiple staking distributions
- * @author Aave
  */
-contract DistributionManager is IAaveDistributionManager {
-    struct AssetData {
-        uint256 index;
-        uint104 emissionPerSecond;
-        uint40 lastUpdateTimestamp;
-        mapping(address => uint256) users;
-    }
+contract DistributionManager is IDistributionManager, Ownable2Step {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    address public immutable EMISSION_MANAGER; // solhint-disable-line var-name-mixedcase
+    EnumerableSet.Bytes32Set internal _incentivesProgramIds;
+
+    mapping(bytes32 => IncentivesProgram) public incentivesPrograms;
+
+    address public immutable NOTIFIER; // solhint-disable-line var-name-mixedcase
 
     uint8 public constant PRECISION = 18;
     uint256 public constant TEN_POW_PRECISION = 10 ** PRECISION;
 
-    mapping(address => AssetData) public assets;
 
-    uint256 internal _distributionEnd;
-
-    error OnlyEmissionManager();
-
-    modifier onlyEmissionManager() {
-        if (msg.sender != EMISSION_MANAGER) revert OnlyEmissionManager();
-
+    modifier onlyNotifier() {
+        if (msg.sender != NOTIFIER) revert OnlyNotifier();
         _;
     }
 
-    constructor(address emissionManager) {
-        EMISSION_MANAGER = emissionManager;
+    constructor(address _owner, address _notifier) Ownable(_owner) {
+        NOTIFIER = _notifier;
     }
 
-    /// @inheritdoc IAaveDistributionManager
-    function setDistributionEnd(uint256 distributionEnd) external override onlyEmissionManager {
-        _distributionEnd = distributionEnd;
-        emit DistributionEndUpdated(distributionEnd);
+    /// @inheritdoc IDistributionManager
+    function setDistributionEnd(
+        string calldata _incentivesProgram,
+        uint40 _distributionEnd
+    ) external onlyOwner {
+        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        incentivesPrograms[incentivesProgramId].distributionEnd = _distributionEnd;
+
+        emit DistributionEndUpdated(incentivesProgramId, _distributionEnd);
     }
 
-    /// @inheritdoc IAaveDistributionManager
-    function getDistributionEnd() external view override returns (uint256) {
-        return _distributionEnd;
+    /// @inheritdoc IDistributionManager
+    function getDistributionEnd(string calldata _incentivesProgram) external view override returns (uint256) {
+        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        return incentivesPrograms[incentivesProgramId].distributionEnd;
     }
 
-    /// @inheritdoc IAaveDistributionManager
-    function DISTRIBUTION_END() external view override returns (uint256) { // solhint-disable-line func-name-mixedcase
-        return _distributionEnd;
+    /// @inheritdoc IDistributionManager
+    function getUserData(address _user, string calldata _incentivesProgram) public view override returns (uint256) {
+        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        return incentivesPrograms[incentivesProgramId].users[_user];
     }
 
-    /// @inheritdoc IAaveDistributionManager
-    function getUserAssetData(address user, address asset) public view override returns (uint256) {
-        return assets[asset].users[user];
+    /// @inheritdoc IDistributionManager
+    function getIncentivesProgramData(string calldata _incentivesProgram)
+        public
+        view
+        override
+        returns (
+            uint256 index,
+            uint256 emissionPerSecond,
+            uint256 lastUpdateTimestamp,
+            uint256 distributionEnd
+        )
+    {
+        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+
+        index = incentivesPrograms[incentivesProgramId].index;
+        emissionPerSecond = incentivesPrograms[incentivesProgramId].emissionPerSecond;
+        lastUpdateTimestamp = incentivesPrograms[incentivesProgramId].lastUpdateTimestamp;
+        distributionEnd = incentivesPrograms[incentivesProgramId].distributionEnd;
     }
 
-    /// @inheritdoc IAaveDistributionManager
-    function getAssetData(address asset) public view override returns (uint256, uint256, uint256) {
-        return (assets[asset].index, assets[asset].emissionPerSecond, assets[asset].lastUpdateTimestamp);
-    }
-
-    /**
-     * @dev Configure the assets for a specific emission
-     * @param assetsConfigInput The array of each asset configuration
-     */
-    function _configureAssets(DistributionTypes.AssetConfigInput[] memory assetsConfigInput) internal {
-        for (uint256 i = 0; i < assetsConfigInput.length;) {
-            AssetData storage assetConfig = assets[assetsConfigInput[i].underlyingAsset];
-
-            _updateAssetStateInternal(
-                assetsConfigInput[i].underlyingAsset,
-                assetConfig,
-                assetsConfigInput[i].totalStaked
-            );
-
-            assetConfig.emissionPerSecond = assetsConfigInput[i].emissionPerSecond;
-
-            emit AssetConfigUpdated(
-                assetsConfigInput[i].underlyingAsset,
-                assetsConfigInput[i].emissionPerSecond
-            );
-
-            unchecked { i++; }
-        }
+    /// @inheritdoc IDistributionManager
+    function incentivesProgram(string calldata _incentivesProgram)
+        external
+        view
+        returns (IncentiveProgramDetails memory details)
+    {
+        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        details = IncentiveProgramDetails(
+            incentivesPrograms[incentivesProgramId].index,
+            incentivesPrograms[incentivesProgramId].rewardToken,
+            incentivesPrograms[incentivesProgramId].emissionPerSecond,
+            incentivesPrograms[incentivesProgramId].lastUpdateTimestamp,
+            incentivesPrograms[incentivesProgramId].distributionEnd
+        );
     }
 
     /**
      * @dev Updates the state of one distribution, mainly rewards index and timestamp
-     * @param asset The address of the asset being updated
-     * @param assetConfig Storage pointer to the distribution's config
+     * @param incentivesProgramId The id of the incentives program being updated
      * @param totalStaked Current total of staked assets for this distribution
      * @return The new distribution index
      */
     function _updateAssetStateInternal(
-        address asset,
-        AssetData storage assetConfig,
+        bytes32 incentivesProgramId,
         uint256 totalStaked
     ) internal returns (uint256) {
-        uint256 oldIndex = assetConfig.index;
-        uint256 emissionPerSecond = assetConfig.emissionPerSecond;
-        uint128 lastUpdateTimestamp = assetConfig.lastUpdateTimestamp;
+        uint256 oldIndex = incentivesPrograms[incentivesProgramId].index;
+        uint256 emissionPerSecond = incentivesPrograms[incentivesProgramId].emissionPerSecond;
+        uint256 lastUpdateTimestamp = incentivesPrograms[incentivesProgramId].lastUpdateTimestamp;
+        uint256 distributionEnd = incentivesPrograms[incentivesProgramId].distributionEnd;
 
         if (block.timestamp == lastUpdateTimestamp) {
             return oldIndex;
         }
 
-        uint256 newIndex = _getAssetIndex(oldIndex, emissionPerSecond, lastUpdateTimestamp, totalStaked);
+        uint256 newIndex = _getIncentivesProgramIndex(
+            oldIndex, emissionPerSecond, lastUpdateTimestamp, distributionEnd, totalStaked
+        );
 
         if (newIndex != oldIndex) {
-            assetConfig.index = newIndex;
-            assetConfig.lastUpdateTimestamp = uint40(block.timestamp);
-            emit AssetIndexUpdated(asset, newIndex);
+            incentivesPrograms[incentivesProgramId].index = newIndex;
+            incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
+            emit IncentivesProgramIndexUpdated(incentivesProgramId, newIndex);
         } else {
-            assetConfig.lastUpdateTimestamp = uint40(block.timestamp);
+            incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
         }
 
         return newIndex;
@@ -124,31 +130,30 @@ contract DistributionManager is IAaveDistributionManager {
 
     /**
      * @dev Updates the state of an user in a distribution
+     * @param incentivesProgramId The id of the incentives program being updated
      * @param user The user's address
-     * @param asset The address of the reference asset of the distribution
      * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
      * @param totalStaked Total tokens staked in the distribution
      * @return The accrued rewards for the user until the moment
      */
     function _updateUserAssetInternal(
+        bytes32 incentivesProgramId,
         address user,
-        address asset,
         uint256 stakedByUser,
         uint256 totalStaked
     ) internal returns (uint256) {
-        AssetData storage assetData = assets[asset];
-        uint256 userIndex = assetData.users[user];
+        uint256 userIndex = incentivesPrograms[incentivesProgramId].users[user];
         uint256 accruedRewards = 0;
 
-        uint256 newIndex = _updateAssetStateInternal(asset, assetData, totalStaked);
+        uint256 newIndex = _updateAssetStateInternal(incentivesProgramId, totalStaked);
 
         if (userIndex != newIndex) {
             if (stakedByUser != 0) {
                 accruedRewards = _getRewards(stakedByUser, newIndex, userIndex);
             }
 
-            assetData.users[user] = newIndex;
-            emit UserIndexUpdated(user, asset, newIndex);
+            incentivesPrograms[incentivesProgramId].users[user] = newIndex;
+            emit UserIndexUpdated(user, incentivesProgramId, newIndex);
         }
 
         return accruedRewards;
@@ -156,59 +161,66 @@ contract DistributionManager is IAaveDistributionManager {
 
     /**
      * @dev Used by "frontend" stake contracts to update the data of an user when claiming rewards from there
-     * @param user The address of the user
-     * @param stakes List of structs of the user data related with his stake
-     * @return The accrued rewards for the user until the moment
+     * @param _user The address of the user
+     * @return accruedRewards The accrued rewards for the user until the moment
      */
-    function _claimRewards(address user, DistributionTypes.UserStakeInput[] memory stakes)
+    function _accrueRewards(address _user)
         internal
-        returns (uint256)
+        returns (AccruedRewards[] memory accruedRewards)
     {
-        uint256 accruedRewards = 0;
+        uint256 length = _incentivesProgramIds.length();
+        accruedRewards = new AccruedRewards[](length);
 
-        for (uint256 i = 0; i < stakes.length;) {
-            accruedRewards = accruedRewards + _updateUserAssetInternal(
-                    user,
-                    stakes[i].underlyingAsset,
-                    stakes[i].stakedByUser,
-                    stakes[i].totalStaked
-                );
+        (uint256 userStaked, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
 
-            unchecked { i++; }
+        for (uint256 i = 0; i < length; i++) {
+            bytes32 incentivesProgramId = _incentivesProgramIds.at(i);
+            accruedRewards[i] = _accrueRewards(_user, incentivesProgramId, totalStaked, userStaked);
         }
+    }
 
-        return accruedRewards;
+    function _accrueRewards(address _user, bytes32 _programId, uint256 _totalStaked, uint256 _userStaked)
+        internal
+        returns (AccruedRewards memory accruedRewards)
+    {
+        uint256 rewards = _updateUserAssetInternal(
+            _programId,
+            _user,
+            _userStaked,
+            _totalStaked
+        );
+
+        accruedRewards = AccruedRewards({
+            amount: rewards,
+            programId: _programId,
+            rewardToken: incentivesPrograms[_programId].rewardToken
+        });
     }
 
     /**
      * @dev Return the accrued rewards for an user over a list of distribution
+     * @param programId The id of the incentives program being updated
      * @param user The address of the user
-     * @param stakes List of structs of the user data related with his stake
-     * @return The accrued rewards for the user until the moment
+     * @param stakedByUser Amount of tokens staked by the user in the distribution at the moment
+     * @param totalStaked Total tokens staked in the distribution
+     * @return accruedRewards The accrued rewards for the user until the moment
      */
-    function _getUnclaimedRewards(address user, DistributionTypes.UserStakeInput[] memory stakes)
+    function _getUnclaimedRewards(bytes32 programId, address user, uint256 stakedByUser, uint256 totalStaked)
         internal
         view
-        returns (uint256)
+        returns (uint256 accruedRewards)
     {
-        uint256 accruedRewards = 0;
+        uint256 userIndex = incentivesPrograms[programId].users[user];
 
-        for (uint256 i = 0; i < stakes.length;) {
-            AssetData storage assetConfig = assets[stakes[i].underlyingAsset];
+        uint256 incentivesProgramIndex = _getIncentivesProgramIndex(
+            incentivesPrograms[programId].index,
+            incentivesPrograms[programId].emissionPerSecond,
+            incentivesPrograms[programId].lastUpdateTimestamp,
+            incentivesPrograms[programId].distributionEnd,
+            totalStaked
+        );
 
-            uint256 assetIndex = _getAssetIndex(
-                assetConfig.index,
-                assetConfig.emissionPerSecond,
-                assetConfig.lastUpdateTimestamp,
-                stakes[i].totalStaked
-            );
-
-            accruedRewards = accruedRewards + _getRewards(stakes[i].stakedByUser, assetIndex, assetConfig.users[user]);
-
-            unchecked { i++; }
-        }
-
-        return accruedRewards;
+        accruedRewards = _getRewards(stakedByUser, incentivesProgramIndex, userIndex);
     }
 
     /**
@@ -233,17 +245,17 @@ contract DistributionManager is IAaveDistributionManager {
      * @param emissionPerSecond Representing the total rewards distributed per second per asset unit,
      * on the distribution
      * @param lastUpdateTimestamp Last moment this distribution was updated
+     * @param distributionEnd The end of the distribution
      * @param totalBalance of tokens considered for the distribution
      * @return newIndex The new index.
      */
-    function _getAssetIndex(
+    function _getIncentivesProgramIndex(
         uint256 currentIndex,
         uint256 emissionPerSecond,
-        uint128 lastUpdateTimestamp,
+        uint256 lastUpdateTimestamp,
+        uint256 distributionEnd,
         uint256 totalBalance
     ) internal view returns (uint256 newIndex) {
-        uint256 distributionEnd = _distributionEnd;
-
         if (
             emissionPerSecond == 0 ||
             totalBalance == 0 ||
@@ -259,5 +271,19 @@ contract DistributionManager is IAaveDistributionManager {
         newIndex = emissionPerSecond * timeDelta * TEN_POW_PRECISION;
         unchecked { newIndex /= totalBalance; }
         newIndex += currentIndex;
+    }
+
+    function _shareToken() internal view virtual returns (IERC20 shareToken) {
+        shareToken = IERC20(NOTIFIER);
+    }
+
+    function _getScaledUserBalanceAndSupply(address _user)
+        internal
+        view
+        virtual
+        returns (uint256 userBalance, uint256 totalSupply)
+    {
+        userBalance = _shareToken().balanceOf(_user);
+        totalSupply = _shareToken().totalSupply();
     }
 }

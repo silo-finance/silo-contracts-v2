@@ -3,8 +3,10 @@ pragma solidity 0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
+import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
+import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.sol";
+import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
 
 /**
  * @title SiloIncentivesController
@@ -14,75 +16,85 @@ import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
  * @author Aave
  */
 contract SiloIncentivesController is BaseIncentivesController {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
-    constructor(IERC20 rewardToken, address emissionManager) BaseIncentivesController(rewardToken, emissionManager) {}
+    constructor(address _owner, address _notifier) BaseIncentivesController(_owner, _notifier) {}
 
-    /**
-     * @dev Silo share token event handler
-     */
-    function onAfterTransfer(address /* _token */, address _from, address _to, uint256 _amount) external {
-        if (assets[msg.sender].lastUpdateTimestamp == 0 || _from == _to) {
-            // optimisation check, if we never configured rewards distribution, then no need for updating any data
+    /// @inheritdoc ISiloIncentivesController
+    function afterTokenTransfer(
+        address _sender,
+        uint256 _senderBalance,
+        address _recipient,
+        uint256 _recipientBalance,
+        uint256 _totalSupply,
+        uint256 _amount
+    ) external onlyNotifier {
+        uint256 numberOfPrograms = _incentivesProgramIds.length();
+
+        if (_sender == _recipient || numberOfPrograms == 0) {
             return;
         }
 
-        uint256 totalSupplyBefore = IERC20(msg.sender).totalSupply();
+        // updating total supply and users balances to the state before the transfer
 
-        if (_from == address(0x0)) {
+        if (_sender == address(0)) {
             // we minting tokens, so supply before was less
             // we safe, because this amount came from token, if token handle them we can handle as well
-            unchecked { totalSupplyBefore -= _amount; }
-        } else if (_to == address(0x0)) {
+            unchecked { _totalSupply -= _amount; }
+        } else if (_recipient == address(0)) {
             // we burning, so supply before was more
             // we safe, because this amount came from token, if token handle them we can handle as well
-            unchecked { totalSupplyBefore += _amount; }
+            unchecked { _totalSupply += _amount; }
         }
 
         // here user either transferring token to someone else or burning tokens
         // user state will be new, because this event is `onAfterTransfer`
         // we need to recreate status before event in order to automatically calculate rewards
-        if (_from != address(0x0)) {
-            uint256 balanceBefore;
+        if (_sender != address(0)) {
             // we safe, because this amount came from token, if token handle them we can handle as well
-            unchecked { balanceBefore = IERC20(msg.sender).balanceOf(_from) + _amount; }
-            handleAction(_from, totalSupplyBefore, balanceBefore);
+            unchecked { _senderBalance = _senderBalance + _amount; }
         }
 
-        // we have to checkout also user `_to`
-        if (_to != address(0x0)) {
-            uint256 balanceBefore;
+        // we have to checkout also user `_recipient`
+        if (_recipient != address(0)) {
             // we safe, because this amount came from token, if token handle them we can handle as well
-            unchecked { balanceBefore = IERC20(msg.sender).balanceOf(_to) - _amount; }
-            handleAction(_to, totalSupplyBefore, balanceBefore);
+            unchecked { _recipientBalance = _recipientBalance - _amount; }
+        }
+
+        // iterate over incentives programs
+        for (uint256 i = 0; i < numberOfPrograms; i++) {
+            bytes32 programId = _incentivesProgramIds.at(i);
+
+            if (_sender != address(0)) {
+                handleAction(programId, _sender, _totalSupply, _senderBalance);
+            }
+
+            if (_recipient != address(0)) {
+                handleAction(programId, _recipient, _totalSupply, _recipientBalance);
+            }
         }
     }
 
-    /// @dev it will transfer all balance of reward token to emission manager wallet
-    function rescueRewards() external onlyEmissionManager {
-        IERC20(REWARD_TOKEN).safeTransfer(msg.sender, IERC20(REWARD_TOKEN).balanceOf(address(this)));
-    }
+    /// @inheritdoc ISiloIncentivesController
+    function immediateDistribution(bytes32 _programId, uint104 _amount, uint256 _totalStaked) external onlyNotifier {
+        IncentivesProgram storage program = incentivesPrograms[_programId];
 
-    function notificationReceiverPing() external pure returns (bytes4) {
-        return this.notificationReceiverPing.selector;
-    }
+        if (program.lastUpdateTimestamp == 0) return;
 
-    function _transferRewards(address to, uint256 amount) internal override {
-        IERC20(REWARD_TOKEN).safeTransfer(to, amount);
-    }
+        _updateAssetStateInternal(_programId, _totalStaked);
 
-    /**
-     * @dev in Silo, there is no scale, we simply using balance and total supply. Original method name is used here
-     * to keep as much of original code.
-     */
-    function _getScaledUserBalanceAndSupply(address _asset, address _user)
-        internal
-        virtual
-        view
-        override
-        returns (uint256 userBalance, uint256 totalSupply)
-    {
-        userBalance = IERC20(_asset).balanceOf(_user);
-        totalSupply = IERC20(_asset).totalSupply();
+        uint40 distributionEndBefore = program.distributionEnd;
+        uint104 emissionPerSecondBefore = program.emissionPerSecond;
+
+        program.distributionEnd = uint40(block.timestamp);
+        program.lastUpdateTimestamp = uint40(block.timestamp - 1);
+        program.emissionPerSecond = _amount;
+
+        _updateAssetStateInternal(_programId, _totalStaked);
+
+        program.distributionEnd = distributionEndBefore;
+        program.lastUpdateTimestamp = uint40(block.timestamp);
+        program.emissionPerSecond = emissionPerSecondBefore;
     }
 }

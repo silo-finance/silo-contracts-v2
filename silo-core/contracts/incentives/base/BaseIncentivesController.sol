@@ -2,22 +2,21 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 import {DistributionManager} from "./DistributionManager.sol";
-import {IAaveIncentivesController} from "../interfaces/IAaveIncentivesController.sol";
+import {ISiloIncentivesController} from "../interfaces/ISiloIncentivesController.sol";
 
 /**
  * @title BaseIncentivesController
  * @notice Abstract contract template to build Distributors contracts for ERC20 rewards to protocol participants
  * @author Aave
   */
-abstract contract BaseIncentivesController is IAaveIncentivesController, DistributionManager {
-    uint256 public constant REVISION = 1;
+abstract contract BaseIncentivesController is DistributionManager, ISiloIncentivesController {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    address public immutable override REWARD_TOKEN; // solhint-disable-line var-name-mixedcase
-
-    mapping(address => uint256) internal _usersUnclaimedRewards;
+    mapping(address user => mapping(bytes32 programId => uint256 unclaimedRewards)) internal _usersUnclaimedRewards;
 
     // this mapping allows whitelisted addresses to claim on behalf of others
     // useful for contracts that hold tokens to be rewarded but don't have any native logic to claim Liquidity Mining
@@ -30,186 +29,170 @@ abstract contract BaseIncentivesController is IAaveIncentivesController, Distrib
         _;
     }
 
-    error InvalidConfiguration();
-    error IndexOverflowAtEmissionsPerSecond();
-    error InvalidToAddress();
-    error InvalidUserAddress();
-    error ClaimerUnauthorized();
+    constructor(address _owner, address _notifier) DistributionManager(_owner, _notifier) {}
 
-    constructor(IERC20 rewardToken, address emissionManager) DistributionManager(emissionManager) {
-        REWARD_TOKEN = address(rewardToken);
-    }
-
-    /// @inheritdoc IAaveIncentivesController
-    function configureAssets(address[] calldata assets, uint256[] calldata emissionsPerSecond)
+    /// @inheritdoc ISiloIncentivesController
+    function createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput)
         external
-        override
-        onlyEmissionManager
+        onlyOwner
     {
-        if (assets.length != emissionsPerSecond.length) revert InvalidConfiguration();
+        require(bytes(_incentivesProgramInput.name).length > 0, InvalidIncentivesProgramName());
 
-        DistributionTypes.AssetConfigInput[] memory assetsConfig =
-            new DistributionTypes.AssetConfigInput[](assets.length);
+        bytes32 programId = keccak256(abi.encodePacked(_incentivesProgramInput.name));
 
-        for (uint256 i = 0; i < assets.length;) {
-            if (uint104(emissionsPerSecond[i]) != emissionsPerSecond[i]) revert IndexOverflowAtEmissionsPerSecond();
+        require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
+        require(_incentivesProgramIds.add(programId), IncentivesProgramAlreadyExists());
 
-            assetsConfig[i].underlyingAsset = assets[i];
-            assetsConfig[i].emissionPerSecond = uint104(emissionsPerSecond[i]);
-            assetsConfig[i].totalStaked = IERC20(assets[i]).totalSupply();
+        incentivesPrograms[programId].rewardToken = _incentivesProgramInput.rewardToken;
+        incentivesPrograms[programId].distributionEnd = _incentivesProgramInput.distributionEnd;
+        incentivesPrograms[programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
 
-            unchecked { i++; }
-        }
+        _updateAssetStateInternal(programId, _shareToken().totalSupply());
 
-        _configureAssets(assetsConfig);
+        emit IncentivesProgramCreated(programId);
     }
 
-    /// @inheritdoc IAaveIncentivesController
+    /// @inheritdoc ISiloIncentivesController
+    function updateIncentivesProgram(
+        string calldata _incentivesProgram,
+        uint40 _distributionEnd,
+        uint104 _emissionPerSecond
+    ) external onlyOwner {
+        require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
+
+        bytes32 programId = keccak256(abi.encodePacked(_incentivesProgram));
+
+        require(_incentivesProgramIds.contains(programId), IncentivesProgramNotFound());
+
+        uint256 totalSupply = _shareToken().totalSupply();
+
+        _updateAssetStateInternal(programId, totalSupply);
+
+        incentivesPrograms[programId].distributionEnd = _distributionEnd;
+        incentivesPrograms[programId].emissionPerSecond = _emissionPerSecond;
+
+        emit IncentivesProgramUpdated(programId);
+    }
+
+    /// @inheritdoc ISiloIncentivesController
     function handleAction(
-        address user,
-        uint256 totalSupply,
-        uint256 userBalance
-    ) public override {
-        uint256 accruedRewards = _updateUserAssetInternal(user, msg.sender, userBalance, totalSupply);
+        bytes32 _incentivesProgramId,
+        address _user,
+        uint256 _totalSupply,
+        uint256 _userBalance
+    ) public onlyNotifier {
+        uint256 accruedRewards = _updateUserAssetInternal(_incentivesProgramId, _user, _userBalance, _totalSupply);
 
         if (accruedRewards != 0) {
-            _usersUnclaimedRewards[user] = _usersUnclaimedRewards[user] + accruedRewards;
-            emit RewardsAccrued(user, accruedRewards);
+            uint256 newUnclaimedRewards = _usersUnclaimedRewards[_user][_incentivesProgramId] + accruedRewards;
+            _usersUnclaimedRewards[_user][_incentivesProgramId] = newUnclaimedRewards;
+            emit RewardsAccrued(_user, incentivesPrograms[_incentivesProgramId].rewardToken, newUnclaimedRewards);
         }
     }
 
-    /// @inheritdoc IAaveIncentivesController
-    function getRewardsBalance(address[] calldata assets, address user)
+    /// @inheritdoc ISiloIncentivesController
+    function getRewardsBalance(address _user, string calldata _programName)
         external
         view
-        override
-        returns (uint256)
+        returns (uint256 unclaimedRewards)
     {
-        uint256 unclaimedRewards = _usersUnclaimedRewards[user];
-
-        DistributionTypes.UserStakeInput[] memory userState = new DistributionTypes.UserStakeInput[](assets.length);
-
-        for (uint256 i = 0; i < assets.length;) {
-            userState[i].underlyingAsset = assets[i];
-            (userState[i].stakedByUser, userState[i].totalStaked) = _getScaledUserBalanceAndSupply(assets[i], user);
-
-            unchecked { i++; }
-        }
-
-        unclaimedRewards = unclaimedRewards + _getUnclaimedRewards(user, userState);
-        return unclaimedRewards;
+        bytes32 programId = keccak256(abi.encodePacked(_programName));
+        unclaimedRewards = getRewardsBalance(_user, programId);
     }
 
-    /// @inheritdoc IAaveIncentivesController
-    function claimRewards(
-        address[] calldata assets,
-        uint256 amount,
-        address to
-    ) external override returns (uint256) {
-        if (to == address(0)) revert InvalidToAddress();
+    /// @inheritdoc ISiloIncentivesController
+    function getRewardsBalance(address _user, bytes32 _programId)
+        public
+        view
+        returns (uint256 unclaimedRewards)
+    {
+        unclaimedRewards = _usersUnclaimedRewards[_user][_programId];
 
-        return _claimRewards(assets, amount, msg.sender, msg.sender, to);
+        (uint256 stakedByUser, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
+
+        unclaimedRewards += _getUnclaimedRewards(_programId, _user, stakedByUser, totalStaked);
     }
 
-    /// @inheritdoc IAaveIncentivesController
-    function claimRewardsOnBehalf(
-        address[] calldata assets,
-        uint256 amount,
-        address user,
-        address to
-    ) external override onlyAuthorizedClaimers(msg.sender, user) returns (uint256) {
-        if (user == address(0)) revert InvalidUserAddress();
-        if (to == address(0)) revert InvalidToAddress();
+    /// @inheritdoc ISiloIncentivesController
+    function claimRewards(address _to) external returns (AccruedRewards[] memory accruedRewards) {
+        if (_to == address(0)) revert InvalidToAddress();
 
-        return _claimRewards(assets, amount, msg.sender, user, to);
+        accruedRewards = _claimRewards(msg.sender, msg.sender, _to);
     }
 
-    /// @inheritdoc IAaveIncentivesController
-    function claimRewardsToSelf(address[] calldata assets, uint256 amount)
+    /// @inheritdoc ISiloIncentivesController
+    function claimRewardsOnBehalf(address _user, address _to)
         external
-        override
+        onlyAuthorizedClaimers(msg.sender, _user)
+        returns (AccruedRewards[] memory accruedRewards)
+    {
+        if (_user == address(0)) revert InvalidUserAddress();
+        if (_to == address(0)) revert InvalidToAddress();
+
+        accruedRewards = _claimRewards(msg.sender, _user, _to);
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    function claimRewardsToSelf() external returns (AccruedRewards[] memory accruedRewards) {
+        accruedRewards = _claimRewards(msg.sender, msg.sender, msg.sender);
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    function setClaimer(address _user, address _caller) external onlyOwner {
+        _authorizedClaimers[_user] = _caller;
+        emit ClaimerSet(_user, _caller);
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    function getClaimer(address _user) external view returns (address) {
+        return _authorizedClaimers[_user];
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    function getUserUnclaimedRewards(address _user, string calldata _programName)
+        external
+        view
         returns (uint256)
     {
-        return _claimRewards(assets, amount, msg.sender, msg.sender, msg.sender);
-    }
-
-    /// @inheritdoc IAaveIncentivesController
-    function setClaimer(address user, address caller) external override onlyEmissionManager {
-        _authorizedClaimers[user] = caller;
-        emit ClaimerSet(user, caller);
-    }
-
-    /// @inheritdoc IAaveIncentivesController
-    function getClaimer(address user) external view override returns (address) {
-        return _authorizedClaimers[user];
-    }
-
-    /// @inheritdoc IAaveIncentivesController
-    function getUserUnclaimedRewards(address _user) external view override returns (uint256) {
-        return _usersUnclaimedRewards[_user];
+        bytes32 programId = keccak256(abi.encodePacked(_programName));
+        return _usersUnclaimedRewards[_user][programId];
     }
 
     /**
      * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending rewards
-     * @param amount Amount of rewards to claim
+     * @param claimer Address to check and claim rewards
      * @param user Address to check and claim rewards
      * @param to Address that will be receiving the rewards
-     * @return Rewards claimed
+     * @return accruedRewards claimed
      */
     function _claimRewards(
-        address[] calldata assets,
-        uint256 amount,
         address claimer,
         address user,
         address to
-    ) internal returns (uint256) {
-        if (amount == 0) {
-            return 0;
-        }
+    ) internal returns (AccruedRewards[] memory accruedRewards) {
+        accruedRewards = _accrueRewards(user);
 
-        uint256 unclaimedRewards = _usersUnclaimedRewards[user];
+        for (uint256 i = 0; i < accruedRewards.length; i++) {
+            uint256 unclaimedRewards = _usersUnclaimedRewards[user][accruedRewards[i].programId];
 
-        if (amount > unclaimedRewards) {
-            DistributionTypes.UserStakeInput[] memory userState = new DistributionTypes.UserStakeInput[](assets.length);
+            accruedRewards[i].amount += unclaimedRewards;
 
-            for (uint256 i = 0; i < assets.length;) {
-                userState[i].underlyingAsset = assets[i];
-                (userState[i].stakedByUser, userState[i].totalStaked) = _getScaledUserBalanceAndSupply(assets[i], user);
+            if (accruedRewards[i].amount != 0) {
+                emit RewardsAccrued(user, accruedRewards[i].rewardToken, accruedRewards[i].amount);
 
-                unchecked { i++; }
-            }
-
-            uint256 accruedRewards = _claimRewards(user, userState);
-
-            if (accruedRewards != 0) {
-                unclaimedRewards = unclaimedRewards + accruedRewards;
-                emit RewardsAccrued(user, accruedRewards);
+                _transferRewards(accruedRewards[i].rewardToken, to, accruedRewards[i].amount);
+                emit RewardsClaimed(user, to, accruedRewards[i].rewardToken, claimer, accruedRewards[i].amount);
             }
         }
-
-        if (unclaimedRewards == 0) {
-            return 0;
-        }
-
-        uint256 amountToClaim = amount > unclaimedRewards ? unclaimedRewards : amount;
-        unchecked { _usersUnclaimedRewards[user] = unclaimedRewards - amountToClaim; } // Safe due to the previous line
-
-        _transferRewards(to, amountToClaim);
-        emit RewardsClaimed(user, to, claimer, amountToClaim);
-
-        return amountToClaim;
     }
 
     /**
      * @dev Abstract function to transfer rewards to the desired account
+     * @param rewardToken Reward token address
      * @param to Account address to send the rewards
      * @param amount Amount of rewards to transfer
      */
-    function _transferRewards(address to, uint256 amount) internal virtual;
-
-    function _getScaledUserBalanceAndSupply(address _asset, address _user)
-        internal
-        view
-        virtual
-        returns (uint256 userBalance, uint256 totalSupply);
+    function _transferRewards(address rewardToken, address to, uint256 amount) internal virtual {
+        IERC20(rewardToken).transfer(to, amount);
+    }
 }
