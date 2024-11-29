@@ -6,7 +6,7 @@ import {IERC3156FlashBorrower} from "./IERC3156FlashBorrower.sol";
 /// @notice https://eips.ethereum.org/EIPS/eip-3156
 interface IERC3156FlashLender {
     /// @notice Protected deposits are not available for a flash loan.
-    /// When you inside flashloan, Silo methods are not taking into consideration the fact, that some (or all)
+    /// During the execution of the flashloan, Silo methods are not taking into consideration the fact, that some (or all)
     /// tokens were transferred as flashloan, therefore some methods can return invalid state eg. maxWithdraw
     /// can return amount that are not available to withdraw during flashlon.
     /// @dev Initiate a flash loan.
