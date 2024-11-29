@@ -26,19 +26,21 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 
 contract HookReceiver is IHookReceiver, Test {
     bool imIn;
-    address silo;
+
     uint24 hooksBefore;
     uint24 hooksAfter;
+    ISiloConfig siloConfig;
 
-    function initialize(ISiloConfig siloConfig, bytes calldata) external {
-        (silo, ) = siloConfig.getSilos();
+    function initialize(ISiloConfig _siloConfig, bytes calldata) external {
+        siloConfig = _siloConfig;
     }
 
     /// @notice state of Silo before action, can be also without interest, if you need them, call silo.accrueInterest()
     function beforeAction(address _silo, uint256 _action, bytes calldata _input) external {
         // return to not create infinite loop
         if (imIn) return;
-        assertTrue(_silo != silo, "we need to try to create debt on other silo");
+
+        (address silo0, address silo1) = siloConfig.getSilos();
 
         imIn = true;
         address receiver;
@@ -46,11 +48,28 @@ contract HookReceiver is IHookReceiver, Test {
         if (Hook.matchAction(Hook.BORROW, _action)) {
             Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_input);
             receiver = input.receiver;
-        }
 
-        // try to create debt in two silos
-        vm.prank(receiver);
-        ISilo(silo).borrowSameAsset(1, receiver, receiver);
+            // create debt in two silos
+            vm.prank(receiver);
+            ISilo(silo0).borrowSameAsset(1, receiver, receiver);
+        } else if (Hook.matchAction(Hook.BORROW_SAME_ASSET, _action)) {
+            Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_input);
+            receiver = input.receiver;
+
+            // create debt in two silos
+            vm.prank(receiver);
+            ISilo(silo1).borrow(1, receiver, receiver);
+        } else if (Hook.matchAction(Hook.SWITCH_COLLATERAL, _action)) {
+            Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_input);
+            receiver = input.user;
+
+            // we want to use higher collateral, to create debt, and then when we back from hook,
+            // we want to try to switch
+            vm.prank(receiver);
+            ISilo(silo1).borrow(1, receiver, receiver);
+        } else {
+            revert("should not happen");
+        }
 
         imIn = false;
     }
@@ -106,7 +125,7 @@ contract SiloHooksBorrow2AssetsTest is SiloLittleHelper, Test {
         (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
         _depositCollateral(1e18, BORROWER, TWO_ASSETS);
-        _depositForBorrow(1e18, DEPOSITOR);
+        _depositForBorrow(10, DEPOSITOR);
 
         _hookReceiver.initialize(_siloConfig, "");
     }
@@ -115,37 +134,53 @@ contract SiloHooksBorrow2AssetsTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrow_2debt
     */
     function test_borrow_2debt() public {
-//        _hookReceiver.setBefore(uint24(Hook.BORROW | Hook.BORROW_SAME_ASSET | Hook.TRANSITION_COLLATERAL));
         _hookReceiver.setBefore(uint24(Hook.BORROW));
         silo1.updateHooks();
 
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
         vm.prank(BORROWER);
-        silo1.borrow(0.5e18, BORROWER, BORROWER);
+        silo1.borrow(8, BORROWER, BORROWER);
 
         _hookReceiver.setBefore(uint24(0));
         silo1.updateHooks();
 
         vm.prank(BORROWER);
-        silo1.borrow(0.5e18, BORROWER, BORROWER);
+        silo1.borrow(8, BORROWER, BORROWER);
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrow_2debt
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrowSmeAsset_2debt
     */
-    function test_borrow_2debt() public {
-//        _hookReceiver.setBefore(uint24(Hook.BORROW | Hook.BORROW_SAME_ASSET | Hook.TRANSITION_COLLATERAL));
-        _hookReceiver.setBefore(uint24(Hook.BORROW));
-        silo1.updateHooks();
+    function test_borrowSmeAsset_2debt() public {
+        _hookReceiver.setBefore(uint24(Hook.BORROW_SAME_ASSET));
+        silo0.updateHooks();
 
         vm.expectRevert(ISilo.BorrowNotPossible.selector);
         vm.prank(BORROWER);
-        silo1.borrow(0.5e18, BORROWER, BORROWER);
+        silo0.borrowSameAsset(8, BORROWER, BORROWER);
 
         _hookReceiver.setBefore(uint24(0));
-        silo1.updateHooks();
+        silo0.updateHooks();
 
         vm.prank(BORROWER);
-        silo1.borrow(0.5e18, BORROWER, BORROWER);
+        silo0.borrowSameAsset(8, BORROWER, BORROWER);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_switchCollateralToThisSilo_debt
+    */
+    function test_switchCollateralToThisSilo_debt() public {
+        _hookReceiver.setBefore(uint24(Hook.SWITCH_COLLATERAL));
+        silo0.updateHooks();
+
+        vm.expectRevert(ISilo.BorrowNotPossible.selector);
+        vm.prank(BORROWER);
+        silo0.borrowSameAsset(0.5e18, BORROWER, BORROWER);
+
+        _hookReceiver.setBefore(uint24(0));
+        silo0.updateHooks();
+
+        vm.prank(BORROWER);
+        silo0.borrowSameAsset(0.5e18, BORROWER, BORROWER);
     }
 }
