@@ -5,17 +5,7 @@ import "unresolved.spec";
 import "../_simplifications/SiloMathLib.spec";
 
 methods {
-    // ---- `IInterestRateModel` -----------------------------------------------
-    // Since `getCompoundInterestRateAndUpdate` is not view, this is not strictly sound.
-    function _.getCompoundInterestRateAndUpdate(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _interestRateTimestamp
-    ) external => NONDET;
 
-    // ---- `ISiloOracle` ------------------------------------------------------
-    // NOTE: Since `beforeQuote` is not a view function, strictly speaking this is unsound.
-    function _.beforeQuote(address) external => NONDET DELETE;
 }
 
 // accrueInterest() should never revert
@@ -30,8 +20,11 @@ rule accrueInterest_neverReverts(env e)
 // if user has no debt, should always be solvent and ltv == 0
 invariant noDebt_thenSolventAndNoLTV(env e, address user)
     shareDebtToken0.balanceOf(user) == 0
-     => (silo0.isSolvent(e, user) &&
-         getLTV(e, user) == 0);
+     => (silo0.isSolvent(e, user) && getLTV(e, user) == 0)
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
+
 
 // accrueInterest() calling twice is the same as calling once (in a single block)
 rule accrueInterest_idempotent(env e)
@@ -45,6 +38,7 @@ rule accrueInterest_idempotent(env e)
 }
 
 // withdrawFees() always reverts in a second call in the same block
+//
 rule withdrawFees_revertsSecondTime(env e)
 {
     SafeAssumptionsEnv_withInvariants(e);
@@ -82,8 +76,6 @@ rule withdrawFees_noAdditionalEffect(env e, method f)
     assert afterF == afterWF;
 }
 
-
-
 // if borrowerCollateralSilo[user] is set from zero to non-zero value,
 // it never goes back to zero
 rule borrowerCollateralSilo_neverSetToZero(env e, method f) // TODO exclude view
@@ -103,7 +95,7 @@ rule accrueInterestForSilo_equivalent(env e)
 {
     SafeAssumptionsEnv_withInvariants(e);
     storage init = lastStorage;
-    _ = config().accrueInterestForSilo(e, silo0);
+    siloConfig.accrueInterestForSilo(e, silo0);
     storage after1 = lastStorage;
 
     silo0.accrueInterest(e) at init;
@@ -114,20 +106,28 @@ rule accrueInterestForSilo_equivalent(env e)
 
 // if user is insolvent, it must have debt shares
 invariant insolventHaveDebtShares(env e, address user)
-    !silo0.isSolvent(e, user) => shareDebtToken0.balanceOf(user) > 0;
+    !silo0.isSolvent(e, user) => shareDebtToken0.balanceOf(user) > 0
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
 
 //////////////////////////
 //// Rules bellow require setup for both silos
 /////////////////////////
 
 invariant isSolvent_inEitherSilo(env e, address user)
-    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user);
+    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
 
 // user should never have balance of debt share token in both silos
 invariant cannotHaveDebtInBothSilos(env e, address user)
     !(shareDebtToken0.balanceOf(user) > 0 &&
-        shareDebtToken1.balanceOf(user) > 0);
-
+        shareDebtToken1.balanceOf(user) > 0)
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
 
 // if borrowerCollateralSilo[user] is set from zero to non-zero value, 
 // one of the debt share token totalSupply() increases 

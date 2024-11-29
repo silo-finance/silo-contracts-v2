@@ -1,5 +1,6 @@
 import "../requirements/CompleteSiloSetup.spec";
 import "unresolved.spec";
+import "../_simplifications/SiloMathLib.spec";
 
 ghost bool wasCalled_setThisSiloAsCollateralSilo;
 ghost bool wasCalled_setOtherSiloAsCollateralSilo;
@@ -15,14 +16,6 @@ function setOtherSiloAsCollateralSilo_CVL(address user)
 }
 
 methods {
-
-    function _.getCompoundInterestRateAndUpdate(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _interestRateTimestamp
-    ) external => NONDET;
-    function _.beforeQuote(address) external => NONDET DELETE;
-
     function siloConfig.setThisSiloAsCollateralSilo(address _borrower) external => 
         setThisSiloAsCollateralSilo_CVL(_borrower);
 
@@ -43,6 +36,7 @@ definition canCall_setOtherSiloAsCollateralSilo(method f) returns bool =
 // setThisSiloAsCollateralSilo() should be called only by: borrowSameAsset, switchCollateralToThisSilo
 rule whoCalls_setThisSiloAsCollateralSilo(env e, method f)
 {
+    SafeAssumptionsEnv_withInvariants(e);
     require wasCalled_setThisSiloAsCollateralSilo == false;
     calldataarg args;
     f(e, args);
@@ -52,6 +46,7 @@ rule whoCalls_setThisSiloAsCollateralSilo(env e, method f)
 // setOtherSiloAsCollateralSilo() should be called only by: borrow, borrowShares
 rule whoCalls_setOtherSiloAsCollateralSilo(env e, method f)
 {
+    SafeAssumptionsEnv_withInvariants(e);
     require wasCalled_setOtherSiloAsCollateralSilo == false;
     calldataarg args;
     f(e, args);
