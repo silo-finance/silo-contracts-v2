@@ -369,6 +369,9 @@ library Actions {
     /// accordingly
     /// @param _silo Silo address
     function withdrawFees(ISilo _silo) external returns (uint256 daoRevenue, uint256 deployerRevenue) {
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
+        siloConfig.turnOnReentrancyProtection();
+
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 earnedFees = $.daoAndDeployerRevenue;
@@ -414,6 +417,8 @@ library Actions {
             IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
             IERC20(asset).safeTransfer(deployerFeeReceiver, deployerRevenue);
         }
+
+        siloConfig.turnOffReentrancyProtection();
     }
 
     function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter) {
