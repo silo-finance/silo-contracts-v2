@@ -43,16 +43,31 @@ library SiloLendingLib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
+        (uint256 debtSharesBalance, uint256 totalDebtShares) = _debtShareToken.balanceOfAndTotalSupply(_borrower);
 
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
-            _assets,
-            _shares,
-            totalDebtAssets,
-            _debtShareToken.totalSupply(),
-            Rounding.REPAY_TO_ASSETS,
-            Rounding.REPAY_TO_SHARES,
-            ISilo.AssetType.Debt
-        );
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
+            _assets: _assets,
+            _shares: _shares,
+            _totalAssets: totalDebtAssets,
+            _totalShares: totalDebtShares,
+            _roundingToAssets: Rounding.REPAY_TO_ASSETS,
+            _roundingToShares: Rounding.REPAY_TO_SHARES,
+            _assetType: ISilo.AssetType.Debt
+        });
+
+        if (shares > debtSharesBalance) {
+            shares = debtSharesBalance;
+
+            (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
+                _assets: 0,
+                _shares: shares,
+                _totalAssets: totalDebtAssets,
+                _totalShares: totalDebtShares,
+                _roundingToAssets: Rounding.REPAY_TO_ASSETS,
+                _roundingToShares: Rounding.REPAY_TO_SHARES,
+                _assetType: ISilo.AssetType.Debt
+            });
+        }
 
         require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
 
