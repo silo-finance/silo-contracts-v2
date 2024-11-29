@@ -11,7 +11,8 @@ interface ISiloLiquidityGauge {
         uint256 _user1_new_balancer,
         address _user2,
         uint256 _user2_new_balancer,
-        uint256 _total_supply
+        uint256 _total_supply,
+        uint256 _amount
     )
         external
         returns (bool);
