@@ -117,7 +117,7 @@ contract RepayTest is SiloLittleHelper, Test {
         address borrower = address(this);
 
         _createDebt(assets, borrower);
-        _mintTokens(token1, assetsToRepay, borrower);
+        _mintTokens(token1, assets * 2, borrower);
 
         vm.warp(block.timestamp + 1 days);
 
