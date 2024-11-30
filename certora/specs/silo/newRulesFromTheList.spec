@@ -18,9 +18,10 @@ rule accrueInterest_neverReverts(env e)
 }
 
 // if user has no debt, should always be solvent and ltv == 0
-invariant noDebt_thenSolventAndNoLTV(env e, address user)
+invariant noDebt_thenSolventAndNoLTV(env e, address user) 
     shareDebtToken0.balanceOf(user) == 0
      => (silo0.isSolvent(e, user) && getLTV(e, user) == 0)
+    filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
@@ -78,7 +79,7 @@ rule withdrawFees_noAdditionalEffect(env e, method f)
 
 // if borrowerCollateralSilo[user] is set from zero to non-zero value,
 // it never goes back to zero
-rule borrowerCollateralSilo_neverSetToZero(env e, method f) // TODO exclude view
+rule borrowerCollateralSilo_neverSetToZero(env e, method f) filtered { f -> !filterOutInInvariants(f) }
 {
     SafeAssumptionsEnv_withInvariants(e);
     address user;
@@ -105,8 +106,9 @@ rule accrueInterestForSilo_equivalent(env e)
 }
 
 // if user is insolvent, it must have debt shares
-invariant insolventHaveDebtShares(env e, address user)
+invariant insolventHaveDebtShares(env e, address user) 
     !silo0.isSolvent(e, user) => shareDebtToken0.balanceOf(user) > 0
+    filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
@@ -117,6 +119,7 @@ invariant insolventHaveDebtShares(env e, address user)
 
 invariant isSolvent_inEitherSilo(env e, address user)
     silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
+    filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
@@ -125,6 +128,7 @@ invariant isSolvent_inEitherSilo(env e, address user)
 invariant cannotHaveDebtInBothSilos(env e, address user)
     !(shareDebtToken0.balanceOf(user) > 0 &&
         shareDebtToken1.balanceOf(user) > 0)
+    filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
@@ -154,7 +158,8 @@ rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f) // TODO ex
 // if borrowerCollateralSilo[user] is set from zero to non-zero value,
 // user must have balance in one of debt share tokens
 // excluding switchCollateralToThisSilo() method
-rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO exclude view and switchCollateralToThisSilo
+rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f)
+    filtered { f -> !filterOutInInvariants(f) && f.selector != sig:switchCollateralToThisSilo().selector }
 {
     SafeAssumptionsEnv_withInvariants(e);
     address user;
@@ -164,8 +169,8 @@ rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f) // TODO
     f(e, args);
 
     address colSiloAfter = config().borrowerCollateralSilo(e, user);
-    uint debt0 = shareDebtToken0.balanceOf(e, user);
-    uint debt1 = shareDebtToken1.balanceOf(e, user);
+    uint debt0 = shareDebtToken0.balanceOf(user);
+    uint debt1 = shareDebtToken1.balanceOf(user);
 
     assert (colSiloBefore == 0 && colSiloAfter != 0) 
         => (debt0 > 0 || debt1 > 0);
@@ -203,14 +208,16 @@ invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
     => (
         (config().borrowerCollateralSilo(e, user) == silo0 ||
          config().borrowerCollateralSilo(e, user) == silo1)
-        && (silo0.balanceOf(e, user) > 0 || silo1.balanceOf(e, user) > 0))
+        && (silo0.balanceOf(user) > 0 || silo1.balanceOf(user) > 0))
+    filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
 
 // debt in two silos is impossible
 invariant noDebtInBothSilos(env e, address user)
-    shareDebtToken0.balanceOf(e, user) == 0  || shareDebtToken1.balanceOf(e, user) == 0
+    shareDebtToken0.balanceOf(user) == 0  || shareDebtToken1.balanceOf(user) == 0
+    filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }

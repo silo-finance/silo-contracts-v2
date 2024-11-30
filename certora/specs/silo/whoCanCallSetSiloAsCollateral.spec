@@ -34,7 +34,7 @@ definition canCall_setOtherSiloAsCollateralSilo(method f) returns bool =
     
 
 // setThisSiloAsCollateralSilo() should be called only by: borrowSameAsset, switchCollateralToThisSilo
-rule whoCalls_setThisSiloAsCollateralSilo(env e, method f)
+rule whoCalls_setThisSiloAsCollateralSilo(env e, method f) filtered { f -> !filterOutInInvariants(f) }
 {
     SafeAssumptionsEnv_withInvariants(e);
     require wasCalled_setThisSiloAsCollateralSilo == false;
@@ -44,7 +44,7 @@ rule whoCalls_setThisSiloAsCollateralSilo(env e, method f)
 }
 
 // setOtherSiloAsCollateralSilo() should be called only by: borrow, borrowShares
-rule whoCalls_setOtherSiloAsCollateralSilo(env e, method f)
+rule whoCalls_setOtherSiloAsCollateralSilo(env e, method f) filtered { f -> !filterOutInInvariants(f) }
 {
     SafeAssumptionsEnv_withInvariants(e);
     require wasCalled_setOtherSiloAsCollateralSilo == false;

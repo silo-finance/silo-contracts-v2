@@ -271,6 +271,18 @@ definition canDecreaseDebt(method f) returns bool =
     f.selector == sig:Silo0.repay(uint256,address).selector ||
     f.selector == sig:Silo0.repayShares(uint256,address).selector;
 
+definition harnessFunction(method f) returns bool =
+    false;
+
+definition ignoredFunction(method f) returns bool =
+    harnessFunction(f) ||
+    f.selector == sig:Silo0.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes).selector ||
+    f.selector == sig:Silo1.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes).selector;
+
+definition filterOutInInvariants(method f) returns bool =
+    f.isView ||
+    ignoredFunction(f);
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////
 /// ideas, left over pices of code
