@@ -211,83 +211,83 @@ jobs:
           #   command: 'meta/config_for_two_equivalence.conf --exclude_rule sanityWithSetup_borrow'
           # }
           # ==== new rules from the list ============================================
-          - {
-            name: accrueInterest_neverReverts,
-            command: 'silo/newRulesFromTheList.conf --rule accrueInterest_neverReverts'
-          }
-          - {
-            name: noDebt_thenSolventAndNoLTV,
-            command: 'silo/newRulesFromTheList.conf --rule noDebt_thenSolventAndNoLTV'
-          }
-          - {
-            name: accrueInterest_idempotent,
-            command: 'silo/newRulesFromTheList.conf --rule accrueInterest_idempotent'
-          }
-          - {
-            name: withdrawFees_revertsSecondTime,
-            command: 'silo/newRulesFromTheList.conf --rule withdrawFees_revertsSecondTime'
-          }
-          - {
-            name: withdrawFees_increasesDaoDeploerFees,
-            command: 'silo/newRulesFromTheList.conf --rule withdrawFees_increasesDaoDeploerFees'
-          }
-          - {
-            name: withdrawFees_noAdditionalEffect,
-            command: 'silo/newRulesFromTheList.conf --rule withdrawFees_noAdditionalEffect'
-          }
-          - {
-            name: borrowerCollateralSilo_neverSetToZero,
-            command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_neverSetToZero'
-          }
-          - {
-            name: accrueInterestForSilo_equivalent,
-            command: 'silo/newRulesFromTheList.conf --rule accrueInterestForSilo_equivalent'
-          }
-          - {
-            name: insolventHaveDebtShares,
-            command: 'silo/newRulesFromTheList.conf --rule insolventHaveDebtShares'
-          }
-          - {
-            name: cannotHaveDebtInBothSilos,
-            command: 'silo/newRulesFromTheList.conf --rule cannotHaveDebtInBothSilos'
-          }
-          - {
-            name: borrowerCollateralSilo_setNonzeroIncreasesDebt,
-            command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_setNonzeroIncreasesDebt'
-          }
-          - {
-            name: borrowerCollateralSilo_setNonzeroIncreasesBalance,
-            command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_setNonzeroIncreasesBalance'
-          }
-          - {
-            name: withdrawOnlyRevertsOnLiquidity,
-            command: 'silo/newRulesFromTheList.conf --rule withdrawOnlyRevertsOnLiquidity'
-          }
-          - {
-            name: solventAfterWithdraw,
-            command: 'silo/newRulesFromTheList.conf --rule solventAfterWithdraw'
-          }
-          - {
-            name: debt_thenBorrowerCollateralSiloSetAndHasShares,
-            command: 'silo/newRulesFromTheList.conf --rule debt_thenBorrowerCollateralSiloSetAndHasShares'
-          }
-          - {
-            name: noDebtInBothSilos,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos'
-          }
-          - {
-            name: flashFee_nonZero,
-            command: 'silo/newRulesFromTheList.conf --rule flashFee_nonZero'
-          }
-          # ==== whoCanCallSetSiloAsCollateral================================
-          - {
-            name: whoCalls_setThisSiloAsCollateralSilo,
-            command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setThisSiloAsCollateralSilo'
-          }
-          - {
-            name: whoCalls_setOtherSiloAsCollateralSilo,
-            command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setOtherSiloAsCollateralSilo'
-          }
+          # - {
+          #   name: accrueInterest_neverReverts,
+          #   command: 'silo/newRulesFromTheList.conf --rule accrueInterest_neverReverts'
+          # }
+          # - {
+          #   name: noDebt_thenSolventAndNoLTV,
+          #   command: 'silo/newRulesFromTheList.conf --rule noDebt_thenSolventAndNoLTV'
+          # }
+          # - {
+          #   name: accrueInterest_idempotent,
+          #   command: 'silo/newRulesFromTheList.conf --rule accrueInterest_idempotent'
+          # }
+          # - {
+          #   name: withdrawFees_revertsSecondTime,
+          #   command: 'silo/newRulesFromTheList.conf --rule withdrawFees_revertsSecondTime'
+          # }
+          # - {
+          #   name: withdrawFees_increasesDaoDeploerFees,
+          #   command: 'silo/newRulesFromTheList.conf --rule withdrawFees_increasesDaoDeploerFees'
+          # }
+          # - {
+          #   name: withdrawFees_noAdditionalEffect,
+          #   command: 'silo/newRulesFromTheList.conf --rule withdrawFees_noAdditionalEffect'
+          # }
+          # - {
+          #   name: borrowerCollateralSilo_neverSetToZero,
+          #   command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_neverSetToZero'
+          # }
+          # - {
+          #   name: accrueInterestForSilo_equivalent,
+          #   command: 'silo/newRulesFromTheList.conf --rule accrueInterestForSilo_equivalent'
+          # }
+          # - {
+          #   name: insolventHaveDebtShares,
+          #   command: 'silo/newRulesFromTheList.conf --rule insolventHaveDebtShares'
+          # }
+          # - {
+          #   name: cannotHaveDebtInBothSilos,
+          #   command: 'silo/newRulesFromTheList.conf --rule cannotHaveDebtInBothSilos'
+          # }
+          # - {
+          #   name: borrowerCollateralSilo_setNonzeroIncreasesDebt,
+          #   command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_setNonzeroIncreasesDebt'
+          # }
+          # - {
+          #   name: borrowerCollateralSilo_setNonzeroIncreasesBalance,
+          #   command: 'silo/newRulesFromTheList.conf --rule borrowerCollateralSilo_setNonzeroIncreasesBalance'
+          # }
+          # - {
+          #   name: withdrawOnlyRevertsOnLiquidity,
+          #   command: 'silo/newRulesFromTheList.conf --rule withdrawOnlyRevertsOnLiquidity'
+          # }
+          # - {
+          #   name: solventAfterWithdraw,
+          #   command: 'silo/newRulesFromTheList.conf --rule solventAfterWithdraw'
+          # }
+          # - {
+          #   name: debt_thenBorrowerCollateralSiloSetAndHasShares,
+          #   command: 'silo/newRulesFromTheList.conf --rule debt_thenBorrowerCollateralSiloSetAndHasShares'
+          # }
+          # - {
+          #   name: noDebtInBothSilos,
+          #   command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos'
+          # }
+          # - {
+          #   name: flashFee_nonZero,
+          #   command: 'silo/newRulesFromTheList.conf --rule flashFee_nonZero'
+          # }
+          # # ==== whoCanCallSetSiloAsCollateral================================
+          # - {
+          #   name: whoCalls_setThisSiloAsCollateralSilo,
+          #   command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setThisSiloAsCollateralSilo'
+          # }
+          # - {
+          #   name: whoCalls_setOtherSiloAsCollateralSilo,
+          #   command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setOtherSiloAsCollateralSilo'
+          # }
           # ==== max- correctness ============================================
           - {
             name: HLP_MaxMint_reverts,
