@@ -2,7 +2,7 @@ import "../requirements/CompleteSiloSetup.spec";
 import "unresolved.spec";
 //import "../_simplifications/SiloMathLib.spec";
 //import "../_simplifications/Oracle_quote_one.spec";
-//qimport "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 
 // The ERC4626 spec doesn't require that max{method} is as close as possible to the real bound.
@@ -113,8 +113,8 @@ rule maxBorrow_noRevert(env e, address user)
 // maxRepay() should never return more than totalAssets[AssetType.Debt]
 rule maxRepay_neverGreaterThanTotalDebt(env e)
 {
-    SafeAssumptionsEnv_withInvariants(e);
     address user;
+    SafeAssumptions_withInvariants(e, user);
     uint res = maxRepay(e, user);
     uint max = silo0.getTotalAssetsStorage(ISilo.AssetType.Debt);
     assert res <= max;
