@@ -3,6 +3,8 @@
 import "../requirements/CompleteSiloSetup.spec";
 import "unresolved.spec";
 import "../_simplifications/SiloMathLib.spec";
+import "../_simplifications/Oracle_quote_one.spec";
+import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
 
@@ -54,9 +56,9 @@ rule withdrawFees_revertsSecondTime(env e)
 rule withdrawFees_increasesDaoDeploerFees(env e)
 {
     SafeAssumptionsEnv_withInvariants(e);
-    uint daoFeesBefore = getSiloDataDaoAndDeployerRevenue(e);
+    uint daoFeesBefore = getSiloDataDaoAndDeployerRevenue();
     withdrawFees(e);
-    uint daoFeesAfter = getSiloDataDaoAndDeployerRevenue(e);
+    uint daoFeesAfter = getSiloDataDaoAndDeployerRevenue();
     assert daoFeesAfter > daoFeesBefore;
 }
 
@@ -96,7 +98,7 @@ rule accrueInterestForSilo_equivalent(env e)
 {
     SafeAssumptionsEnv_withInvariants(e);
     storage init = lastStorage;
-    siloConfig.accrueInterestForSilo(e, silo0);
+    siloConfig.accrueInterestForSilo(silo0);
     storage after1 = lastStorage;
 
     silo0.accrueInterest(e) at init;
