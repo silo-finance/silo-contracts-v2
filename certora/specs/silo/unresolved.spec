@@ -31,7 +31,7 @@ methods {
     // borrowerCollateralSilo_setNonzeroIncreasesBalance
     // borrowerCollateralSilo_setNonzeroIncreasesDebt
 
-// storage equivalence violated for no obvious reas// ˙˙˙on accrueInterestForSilo_equivalent 
+// storage equivalence violated for no obvious reason accrueInterestForSilo_equivalent 
 // how to invetigate sanity issues?
     // https://prover.certora.com/output/1000000000/0e85a451305b4c7394b2314d33792cde?anonymousKey=a0875810941731ae3c62f30248f062bf331a988a
 
