@@ -161,10 +161,11 @@ rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f) // TODO ex
 // user must have balance in one of debt share tokens
 // excluding switchCollateralToThisSilo() method
 rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f)
-    filtered { f -> !filterOutInInvariants(f) && f.selector != sig:switchCollateralToThisSilo().selector }
+    filtered { f -> !filterOutInInvariants(f) && 
+                    f.selector != sig:switchCollateralToThisSilo().selector }
 {
-    SafeAssumptionsEnv_withInvariants(e);
     address user;
+    SafeAssumptions_withInvariants(e, user);
     address colSiloBefore = config().borrowerCollateralSilo(e, user);
 
     calldataarg args;
@@ -208,9 +209,8 @@ rule solventAfterWithdraw(env e, address receiver)
 invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
     (shareDebtToken0.balanceOf(user) > 0 || shareDebtToken1.balanceOf(user) > 0)
     => (
-        (config().borrowerCollateralSilo(e, user) == silo0 ||
-         config().borrowerCollateralSilo(e, user) == silo1)
-        && (silo0.balanceOf(user) > 0 || silo1.balanceOf(user) > 0))
+        (config().borrowerCollateralSilo(e, user) == silo0 && silo0.balanceOf(user) > 0) || 
+        (config().borrowerCollateralSilo(e, user) == silo1 && silo1.balanceOf(user) > 0)
     filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
