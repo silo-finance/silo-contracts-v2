@@ -220,7 +220,8 @@ contract MainnetTest is IntegrationTest {
             _balance,
             address(0),
             0,
-            _totalSupply
+            _totalSupply,
+            0 // we don't use it in the gauge
         );
     }
 
