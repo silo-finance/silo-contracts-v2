@@ -25,7 +25,7 @@ contract HookReceiver is IHookReceiver, Test {
     }
 
     /// @notice state of Silo before action, can be also without interest, if you need them, call silo.accrueInterest()
-    function beforeAction(address _silo, uint256 _action, bytes calldata _input) external {
+    function beforeAction(address /* _silo */, uint256 _action, bytes calldata _input) external {
         // return to not create infinite loop
         if (imIn) return;
 
@@ -63,12 +63,12 @@ contract HookReceiver is IHookReceiver, Test {
         imIn = false;
     }
 
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address, uint256, bytes calldata) external {
         revert("not in use");
     }
 
     /// @notice return hooksBefore and hooksAfter configuration
-    function hookReceiverConfig(address _silo) external view returns (uint24, uint24) {
+    function hookReceiverConfig(address) external view returns (uint24, uint24) {
         return (hooksBefore, hooksAfter);
     }
 
