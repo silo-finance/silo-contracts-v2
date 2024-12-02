@@ -118,11 +118,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBeforeBorrow(_args, Hook.BORROW);
+
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
-        _hookCallBeforeBorrow(_args, Hook.BORROW);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -151,11 +151,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
+
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
-        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -280,10 +280,6 @@ library Actions {
     function switchCollateralToThisSilo() external {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
-
-        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
-
         uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
@@ -291,6 +287,10 @@ library Actions {
                 address(this), action, abi.encodePacked(msg.sender)
             );
         }
+
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
+        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.setThisSiloAsCollateralSilo(msg.sender);
