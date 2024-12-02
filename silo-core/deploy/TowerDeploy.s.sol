@@ -25,6 +25,9 @@ contract TowerDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         tower = new Tower();
+        tower.register("SiloFactory", getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
+        tower.register("LiquidationHelper", getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER));
+        tower.register("SiloLens", getDeployedAddress(SiloCoreContracts.SILO_LENS));
 
         vm.stopBroadcast();
 

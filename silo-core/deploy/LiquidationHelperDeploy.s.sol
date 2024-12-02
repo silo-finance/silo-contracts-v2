@@ -23,6 +23,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
 
+    address payable constant GNOSIS_SAFE_MAINNET = payable(0); // placeholder for integration tests
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9) ;
     address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d) ;
 
@@ -52,8 +53,9 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(1);
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
 
-        revert(string.concat("can not find native token for", getChainAlias()));
+        revert(string.concat("can not find native token for ", getChainAlias()));
     }
 
     function _exchangeProxy() private returns (address) {
@@ -62,8 +64,9 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(2);
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
+        if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
 
-        revert(string.concat("exchangeProxy not set for", getChainAlias()));
+        revert(string.concat("exchangeProxy not set for ", getChainAlias()));
     }
 
     function _tokenReceiver() private returns (address payable) {
@@ -72,7 +75,11 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return GNOSIS_SAFE_OP;
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return GNOSIS_SAFE_ARB;
+        if (chainId == ChainsLib.MAINNET_CHAIN_ID) {
+            console2.log("[LiquidationHelperDeploy] TODO set _tokenReceiver for ", getChainAlias());
+            return GNOSIS_SAFE_MAINNET;
+        }
 
-        revert(string.concat("tokenReceiver not set for", getChainAlias()));
+        revert(string.concat("tokenReceiver not set for ", getChainAlias()));
     }
 }
