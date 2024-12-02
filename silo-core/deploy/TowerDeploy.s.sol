@@ -17,6 +17,10 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
     FOUNDRY_PROFILE=core forge verify-contract \
     0x22fBF354f7E8A99673559352c63Ae022E58460dd silo-core/contracts/utils/Tower.sol:Tower \
     --chain 42161 --watch
+
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core forge verify-contract \
+    0xfe3d66E505AD5124A2d432e5EA6d6fD901E73436 silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol:InterestRateModelV2Config \
+    --chain 42161 --watch
  */
 contract TowerDeploy is CommonDeploy {
     function run() public returns (Tower tower) {
