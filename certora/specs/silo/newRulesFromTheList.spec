@@ -210,7 +210,7 @@ invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
     (shareDebtToken0.balanceOf(user) > 0 || shareDebtToken1.balanceOf(user) > 0)
     => (
         (config().borrowerCollateralSilo(e, user) == silo0 && silo0.balanceOf(user) > 0) || 
-        (config().borrowerCollateralSilo(e, user) == silo1 && silo1.balanceOf(user) > 0)
+        (config().borrowerCollateralSilo(e, user) == silo1 && silo1.balanceOf(user) > 0))
     filtered { f -> !filterOutInInvariants(f) }
     {
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
