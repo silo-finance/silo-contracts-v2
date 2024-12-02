@@ -98,14 +98,14 @@ library SiloLendingLib {
 
         uint64 lastTimestamp = $.interestRateTimestamp;
 
-        // This is the first time, so we can return early and save some gas
-        if (lastTimestamp == 0) {
-            $.interestRateTimestamp = uint64(block.timestamp);
+        // Interest has already been accrued this block
+        if (lastTimestamp == block.timestamp) {
             return 0;
         }
 
-        // Interest has already been accrued this block
-        if (lastTimestamp == block.timestamp) {
+        // This is the first time, so we can return early and save some gas
+        if (lastTimestamp == 0) {
+            $.interestRateTimestamp = uint64(block.timestamp);
             return 0;
         }
 
