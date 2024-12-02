@@ -118,11 +118,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBeforeBorrow(_args, Hook.BORROW);
+
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
-        _hookCallBeforeBorrow(_args, Hook.BORROW);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -151,11 +151,11 @@ library Actions {
         external
         returns (uint256 assets, uint256 shares)
     {
+        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
+
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
-        _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -225,14 +225,18 @@ library Actions {
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
 
-        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(this));
+        (
+            ISiloConfig.DepositConfig memory depositConfig,
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
 
         uint256 shares;
 
         // transition collateral withdraw
         address shareTokenFrom = _args.transitionFrom == ISilo.CollateralType.Collateral
-            ? collateralShareToken
-            : protectedShareToken;
+            ? depositConfig.collateralShareToken
+            : depositConfig.protectedShareToken;
 
         (assets, shares) = SiloERC4626Lib.withdraw({
             _asset: address(0), // empty token because we don't want to transfer
@@ -250,8 +254,8 @@ library Actions {
         // transition collateral deposit
         (ISilo.CollateralType depositType, address shareTokenTo) =
             _args.transitionFrom == ISilo.CollateralType.Collateral
-                ? (ISilo.CollateralType.Protected, protectedShareToken)
-                : (ISilo.CollateralType.Collateral, collateralShareToken);
+                ? (ISilo.CollateralType.Protected, depositConfig.protectedShareToken)
+                : (ISilo.CollateralType.Collateral, depositConfig.collateralShareToken);
 
         (assets, toShares) = SiloERC4626Lib.deposit({
             _token: address(0), // empty token because we don't want to transfer
@@ -263,13 +267,10 @@ library Actions {
             _collateralType: depositType
         });
 
-        // solvency check
-        ISiloConfig.ConfigData memory collateralConfig;
-        ISiloConfig.ConfigData memory debtConfig;
-
-        (collateralConfig, debtConfig) = siloConfig.getConfigsForSolvency(_args.owner);
-
-        _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);
+        // If deposit is collateral, then check the solvency.
+        if (depositConfig.silo == collateralConfig.silo) {
+            _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);
+        }
 
         siloConfig.turnOffReentrancyProtection();
 
@@ -279,10 +280,6 @@ library Actions {
     function switchCollateralToThisSilo() external {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
-        ISiloConfig siloConfig = _shareStorage.siloConfig;
-
-        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
-
         uint256 action = Hook.SWITCH_COLLATERAL;
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(action)) {
@@ -290,6 +287,10 @@ library Actions {
                 address(this), action, abi.encodePacked(msg.sender)
             );
         }
+
+        ISiloConfig siloConfig = _shareStorage.siloConfig;
+
+        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.setThisSiloAsCollateralSilo(msg.sender);
@@ -328,6 +329,8 @@ library Actions {
         external
         returns (bool success)
     {
+        require(_amount != 0, ISilo.ZeroAmount());
+
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.FLASH_LOAN)) {
@@ -367,6 +370,9 @@ library Actions {
     /// accordingly
     /// @param _silo Silo address
     function withdrawFees(ISilo _silo) external returns (uint256 daoRevenue, uint256 deployerRevenue) {
+        ISiloConfig siloConfig = ShareTokenLib.siloConfig();
+        siloConfig.turnOnReentrancyProtection();
+
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 earnedFees = $.daoAndDeployerRevenue;
@@ -412,6 +418,8 @@ library Actions {
             IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
             IERC20(asset).safeTransfer(deployerFeeReceiver, deployerRevenue);
         }
+
+        siloConfig.turnOffReentrancyProtection();
     }
 
     function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter) {
@@ -450,17 +458,17 @@ library Actions {
 
     // this method expect interest to be already accrued
     function _checkSolvencyWithoutAccruingInterest(
-        ISiloConfig.ConfigData memory collateralConfig,
-        ISiloConfig.ConfigData memory debtConfig,
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
         address _user
     ) private {
-        if (debtConfig.silo != collateralConfig.silo) {
-            collateralConfig.callSolvencyOracleBeforeQuote();
-            debtConfig.callSolvencyOracleBeforeQuote();
+        if (_debtConfig.silo != _collateralConfig.silo) {
+            _collateralConfig.callSolvencyOracleBeforeQuote();
+            _debtConfig.callSolvencyOracleBeforeQuote();
         }
 
         bool userIsSolvent = SiloSolvencyLib.isSolvent(
-            collateralConfig, debtConfig, _user, ISilo.AccrueInterestInMemory.No
+            _collateralConfig, _debtConfig, _user, ISilo.AccrueInterestInMemory.No
         );
 
         require(userIsSolvent, ISilo.NotSolvent());

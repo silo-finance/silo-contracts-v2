@@ -2,6 +2,9 @@
 pragma solidity >=0.5.0;
 
 interface IERC3156FlashBorrower {
+    /// @notice During the execution of the flashloan, Silo methods are not taking into consideration the fact,
+    /// that some (or all) tokens were transferred as flashloan, therefore some methods can return invalid state
+    /// eg. maxWithdraw can return amount that are not available to withdraw during flashlon.
     /// @dev Receive a flash loan.
     /// @param _initiator The initiator of the loan.
     /// @param _token The loan currency.

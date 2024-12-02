@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.15.0] - 2024-12-02
+### Added
+- `PublicAllocator` contract for vaults
+- add reentrancy for `withdrawFees`
+
+### Fixed
+- ensure transition deposit not fail when user insolvent
+
 ## [0.14.0] - 2024-11-25
 ### Added
 - Vault functionality based on MetaMorpho

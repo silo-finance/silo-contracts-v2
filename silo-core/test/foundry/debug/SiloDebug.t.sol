@@ -5,6 +5,8 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -31,14 +33,17 @@ contract SiloDebugTest is IntegrationTest {
     function setUp() public {
         vm.createSelectFork(
             getChainRpcUrl(ARBITRUM_ONE_ALIAS),
-            154571300
+            279148740
         );
 
         vm.label(address(_IRM), "irm");
         vm.label(_SILO_ADDR, "silo");
     }
 
-    function testIt() public view {
+    /*
+    FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --mt test_skip_It --ffi -vvv
+    */
+    function test_skip_It() public view {
         // IInterestRateModelV2.ConfigWithState memory config = _IRM.getConfig(_SILO_ADDR);
 
         IRMGetters.Setup memory setup = _IRM_GETTERS.getSetup(_SILO_ADDR);
@@ -46,5 +51,23 @@ contract SiloDebugTest is IntegrationTest {
         console.log("ri: ", uint256(int256(setup.ri)));
         console.log("Tcrit: ", uint256(int256(setup.Tcrit)));
         console.log("config: ", address(setup.config));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --mt test_skip_siloLens_getLtv --ffi -vvv
+    */
+    function test_skip_siloLens_getLtv() public {
+        SiloLens siloLens = SiloLens(0xF56ccaa52f95C7CCE6c21df9636a5Dcefa22aa96);
+
+        address borrower = 0xdEDcF5806c4968C6397eeE97e68047bdA339d0c1;
+
+        // this silo is not compatible with lens, it is from different deployment
+        ISilo silo = ISilo(0x5d216642CE5936177f39EE12d57b1fE0d934bcb1);
+        vm.expectRevert();
+        siloLens.getLtv(silo, borrower);
+
+        // silo from newest deployment
+        silo = ISilo(0x0f3E42679f6Cf6Ee00b7eAC7b1676CA044615402);
+        console.log("ltv: ", siloLens.getLtv(silo, borrower));
     }
 }

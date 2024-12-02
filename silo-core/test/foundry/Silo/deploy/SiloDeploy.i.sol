@@ -66,7 +66,7 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.FULL_CONFIG_TEST).run();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_hooks_are_initialized
+    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_hooks_are_initialized
     function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 

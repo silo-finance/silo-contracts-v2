@@ -19,6 +19,17 @@ import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.s
 /// @custom:security-contact security@silo.finance
 contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
     /// @inheritdoc IShareTokenInitializable
+    function callOnBehalfOfShareToken(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
+        external
+        payable
+        virtual
+        onlyHookReceiver()
+        returns (bool success, bytes memory result)
+    {
+        (success, result) = ShareTokenLib.callOnBehalfOfShareToken(_target, _value, _callType, _input);
+    }
+
+    /// @inheritdoc IShareTokenInitializable
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);
     }

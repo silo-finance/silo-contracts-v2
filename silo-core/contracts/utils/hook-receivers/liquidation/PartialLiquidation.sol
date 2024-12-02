@@ -56,6 +56,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         require(address(siloConfigCached) != address(0), EmptySiloConfig());
         require(_maxDebtToCover != 0, NoDebtToCover());
 
+        siloConfigCached.turnOnReentrancyProtection();
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
@@ -84,32 +86,34 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         emit LiquidationCall(msg.sender, _receiveSToken);
 
-        siloConfigCached.turnOnReentrancyProtection();
-        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
-        IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+        {
+            IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+            IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+
+            address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
+
+            collateralShares = _callShareTokenForwardTransferNoChecks(
+                collateralConfig.silo,
+                _borrower,
+                shareTokenReceiver,
+                withdrawAssetsFromCollateral,
+                collateralConfig.collateralShareToken,
+                ISilo.AssetType.Collateral
+            );
+
+            protectedShares = _callShareTokenForwardTransferNoChecks(
+                collateralConfig.silo,
+                _borrower,
+                shareTokenReceiver,
+                withdrawAssetsFromProtected,
+                collateralConfig.protectedShareToken,
+                ISilo.AssetType.Protected
+            );
+        }
+
         siloConfigCached.turnOffReentrancyProtection();
 
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
-
-        address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
-
-        collateralShares = _callShareTokenForwardTransferNoChecks(
-            collateralConfig.silo,
-            _borrower,
-            shareTokenReceiver,
-            withdrawAssetsFromCollateral,
-            collateralConfig.collateralShareToken,
-            ISilo.AssetType.Collateral
-        );
-
-        protectedShares = _callShareTokenForwardTransferNoChecks(
-            collateralConfig.silo,
-            _borrower,
-            shareTokenReceiver,
-            withdrawAssetsFromProtected,
-            collateralConfig.protectedShareToken,
-            ISilo.AssetType.Protected
-        );
 
         if (_receiveSToken) {
             if (collateralShares != 0) {
@@ -222,14 +226,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         if (shares == 0) return 0;
 
-        (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo(
-            _shareToken,
-            0 /* eth value */,
-            ISilo.CallType.Call,
-            abi.encodeWithSelector(IShareToken.forwardTransferFromNoChecks.selector, _borrower, _receiver, shares)
-        );
-
-        if (!success) RevertLib.revertBytes(result, "");
+        IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
     }
 
     function _initialize(ISiloConfig _siloConfig) internal virtual {

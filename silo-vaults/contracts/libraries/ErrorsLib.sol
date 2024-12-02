@@ -70,6 +70,7 @@ library ErrorsLib {
     error NotEnoughLiquidity();
 
     /// @notice Thrown when interacting with a non previously enabled `market`.
+    /// @notice Thrown when attempting to reallocate or set flows to non-zero values for a non-enabled market.
     error MarketNotEnabled(IERC4626 market);
 
     /// @notice Thrown when the submitted timelock is above the max timelock.
@@ -92,4 +93,34 @@ library ErrorsLib {
 
     /// @notice Thrown when all caps have been reached.
     error AllCapsReached();
+
+    /// @notice Thrown when the `msg.sender` is not the admin nor the owner of the vault.
+    error NotAdminNorVaultOwner();
+
+    /// @notice Thrown when the reallocation fee given is wrong.
+    error IncorrectFee();
+
+    /// @notice Thrown when `withdrawals` is empty.
+    error EmptyWithdrawals();
+
+    /// @notice Thrown when `withdrawals` contains a duplicate or is not sorted.
+    error InconsistentWithdrawals();
+
+    /// @notice Thrown when the deposit market is in `withdrawals`.
+    error DepositMarketInWithdrawals();
+
+    /// @notice Thrown when attempting to withdraw zero of a market.
+    error WithdrawZero(IERC4626 market);
+
+    /// @notice Thrown when attempting to set max inflow/outflow above the MAX_SETTABLE_FLOW_CAP.
+    error MaxSettableFlowCapExceeded();
+
+    /// @notice Thrown when attempting to withdraw more than the available supply of a market.
+    error NotEnoughSupply(IERC4626 market);
+
+    /// @notice Thrown when attempting to withdraw more than the max outflow of a market.
+    error MaxOutflowExceeded(IERC4626 market);
+
+    /// @notice Thrown when attempting to supply more than the max inflow of a market.
+    error MaxInflowExceeded(IERC4626 market);
 }

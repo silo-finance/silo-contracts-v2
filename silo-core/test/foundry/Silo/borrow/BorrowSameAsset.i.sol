@@ -35,7 +35,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrowSameAsset_all_zeros
     */
     function test_borrowSameAsset_all_zeros() public {
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
         silo0.borrowSameAsset(0, address(0), address(0));
     }
 
@@ -46,7 +46,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         uint256 assets = 0;
         address borrower = address(1);
 
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
         silo0.borrowSameAsset(assets, borrower, borrower);
     }
 

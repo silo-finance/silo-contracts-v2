@@ -58,7 +58,7 @@ contract SiloLendingLibBorrowTestData {
         uint256 i;
 
         _init(data[i], "#0 all zeros");
-        data[i].output.reverts = ISilo.InputZeroAssetsOrShares.selector;
+        data[i].output.reverts = ISilo.InputZeroShares.selector;
         data[i].mocks.debtSharesTotalSupplyMock = true;
 
         i++;

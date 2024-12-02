@@ -9,6 +9,9 @@ import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {PartialLiquidationDeploy} from "./PartialLiquidationDeploy.s.sol";
 import {GaugeHookReceiverDeploy} from "./GaugeHookReceiverDeploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
+import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
+import {TowerDeploy} from "./TowerDeploy.s.sol";
+import {SiloLensDeploy} from "./SiloLensDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -24,6 +27,9 @@ contract MainnetDeploy is CommonDeploy {
         PartialLiquidationDeploy siloLiquidationDeploy = new PartialLiquidationDeploy();
         GaugeHookReceiverDeploy gaugeHookReceiverDeploy = new GaugeHookReceiverDeploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
+        LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
+        SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
+        TowerDeploy towerDeploy = new TowerDeploy();
 
         siloFactoryDeploy.run();
         interestRateModelV2ConfigFactoryDeploy.run();
@@ -31,5 +37,8 @@ contract MainnetDeploy is CommonDeploy {
         siloLiquidationDeploy.run();
         gaugeHookReceiverDeploy.run();
         siloDeployerDeploy.run();
+        liquidationHelperDeploy.run();
+        siloLensDeploy.run();
+        towerDeploy.run();
     }
 }

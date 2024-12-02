@@ -276,7 +276,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
     function _calculateChunk(uint256 _maxDebtToCover, uint256 _i) internal view returns (uint256 _chunk) {
         if (_maxDebtToCover == 0) return 0;
 
-        // min amount of assets that will not generate InputZeroAssetsOrShares error
+        // min amount of assets that will not generate InputZeroShares error
         uint256 minAssets = silo1.previewRepayShares(1);
 
         if (_i < 2 || _i == 4) {
@@ -321,9 +321,9 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
 
-            bytes4 expectedError = bytes4(keccak256(abi.encodePacked("ReturnZeroAssetsOrShares()")));
+            bytes4 expectedError = bytes4(keccak256(abi.encodePacked("ReturnZeroAssets()")));
 
-            assertEq(errorType, expectedError, "only ReturnZeroAssetsOrShares error is expected");
+            assertEq(errorType, expectedError, "only ReturnZeroAssets error is expected");
         }
     }
 

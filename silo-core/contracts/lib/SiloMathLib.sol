@@ -143,19 +143,18 @@ library SiloMathLib {
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
     ) internal pure returns (uint256 assets, uint256 shares) {
-        require(_assets != 0 || _shares != 0, ISilo.InputZeroAssetsOrShares());
-
         if (_assets == 0) {
+            require(_shares != 0, ISilo.InputZeroShares());
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
+            require(assets != 0, ISilo.ReturnZeroAssets());
         } else if (_shares == 0) {
             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);
             assets = _assets;
+            require(shares != 0, ISilo.ReturnZeroShares());
         } else {
             revert ISilo.InputCanBeAssetsOrShares();
         }
-
-        require(assets != 0 && shares != 0, ISilo.ReturnZeroAssetsOrShares());
     }
 
     /// @dev Math for collateral is exact copy of
@@ -237,13 +236,6 @@ library SiloMathLib {
 
         // using Rounding.LT (up) to have highest collateralValue that we have to leave for user to stay solvent
         uint256 minimumCollateralValue = _debtValue.mulDiv(_PRECISION_DECIMALS, _lt, Rounding.LTV);
-
-        // +1 is solution for precision error that math can produce and when that happen,
-        // `maxAssets` can cause insolvency, so it can not be withdraw
-        // this 1 is a dust that we generating by rounding always in favor of protocol
-        // potentially we could also do `maxAssets--` at the end, but adjusting value is "stronger", it will produce
-        // lower assets, so it should be safer when we calculate solvency back from assets via it's value.
-        minimumCollateralValue++;
 
         // if we over LT, we can not withdraw
         if (_sumOfCollateralsValue <= minimumCollateralValue) {

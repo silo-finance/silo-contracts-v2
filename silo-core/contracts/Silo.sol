@@ -608,7 +608,6 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IERC3156FlashLender
-    /// @notice Protected deposits are not available for a flash loan.
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
         virtual

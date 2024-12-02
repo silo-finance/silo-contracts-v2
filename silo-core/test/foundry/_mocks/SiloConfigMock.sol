@@ -52,4 +52,18 @@ contract SiloConfigMock is Test {
         vm.mockCall(ADDRESS, data, abi.encode(_status));
         vm.expectCall(ADDRESS, data);
     }
+
+    function turnOnReentrancyProtectionMock() external {
+        bytes memory data = abi.encodeWithSelector(ICrossReentrancyGuard.turnOnReentrancyProtection.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(0));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function turnOffReentrancyProtectionMock() external {
+        bytes memory data = abi.encodeWithSelector(ICrossReentrancyGuard.turnOffReentrancyProtection.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(0));
+        vm.expectCall(ADDRESS, data);
+    }
 }

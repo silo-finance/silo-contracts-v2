@@ -16,6 +16,8 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 contract RepayTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
+    event Repay(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+
     function setUp() public {
         siloConfig = _setUpLocalFixture();
     }
@@ -24,7 +26,7 @@ contract RepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_repay_zeros
     */
     function test_repay_zeros() public {
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
         silo0.repay(0, address(0));
     }
 
@@ -65,7 +67,7 @@ contract RepayTest is SiloLittleHelper, Test {
         _createDebt(assets, borrower);
         vm.warp(block.timestamp + 50 * 365 days); // interest must be big, so conversion 1 asset => share be 0
 
-        vm.expectRevert(ISilo.ReturnZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.ReturnZeroShares.selector);
         silo1.repay(assets, borrower);
     }
 
@@ -111,18 +113,26 @@ contract RepayTest is SiloLittleHelper, Test {
 
     function _repay_tooMuch() private {
         uint128 assets = 1e18;
-        uint256 assetsToRepay = assets * 2;
+        uint256 assetsToRepay = type(uint256).max;
         address borrower = address(this);
 
         _createDebt(assets, borrower);
-        _mintTokens(token1, assetsToRepay, borrower);
+        _mintTokens(token1, assets * 2, borrower);
 
         vm.warp(block.timestamp + 1 days);
 
         token1.approve(address(silo1), assetsToRepay);
-        // for some reason we not bale to check for this error: Error != expected error: NH{q != Arithmetic over/underflow
-        vm.expectRevert();
+
+        uint256 maxRepay = silo1.maxRepay(borrower);
+        uint256 shares = silo1.previewRepay(maxRepay);
+
+        vm.expectEmit(address(silo1));
+        emit Repay(address(this), borrower, maxRepay, shares);
+
         silo1.repay(assetsToRepay, borrower);
+
+        (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
+        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt fully repaid");
     }
 
     /*
