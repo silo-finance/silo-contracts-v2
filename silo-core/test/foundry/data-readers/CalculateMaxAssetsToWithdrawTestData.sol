@@ -25,23 +25,23 @@ contract CalculateMaxAssetsToWithdrawTestData {
         _add(100, 1, 0, 0, 0, 0, "when over LT");
         _add(1e4, 1, 0.0001e18, 0, 0, 0, "LT is 0.01% and LTV is 0.01%");
 
-        uint256 ourMax = 9900 - 1;
+        uint256 ourMax = 9900;
         _add(1e4, 1, 0.01e18, 0.5e4, 0.5e4, ourMax);
         _add(1e4, 1, 0.01e18, 0.8e4, 0.2e4, ourMax);
         _add(1e4, 1, 0.01e18, 1e4, 0, ourMax);
         _add(1e4, 1, 0.01e18, 0, 1e4, ourMax);
-        _add(1e4 - ourMax, 1, 0.01e18, 101, 0, 0, "based on above examples, we expect 0 now");
+        _add(1e4 - ourMax, 0, 0.01e18, 101, 0, 100);
 
-        ourMax = 2e4 - 202;
+        ourMax = 2e4 - 200;
         _add(1e4, 1, 0.01e18, 1e4, 1e4, ourMax, "LT 1%, debt 1, so collateral must be 100 (e4)");
-        _add(1e4 - ourMax / 2, 1, 0.01e18, 202, 0, 0, "based on prev, we expect 0");
+        _add(1e4 - ourMax / 2, 1, 0.01e18, 200, 0, 0, "based on prev, we expect 0");
 
         _add(100, 80, 0.8e18, 0, 0, 0, "exact LT");
-        _add(101, 80, 0.8e18, 100, 1, 0, "expect 0");
+        _add(101, 80, 0.8e18, 100, 1, 1);
 
         _add(10, 8, 0.8888e18, 10, 10, 0, "8/(10 - 1) = 100% > LT (!), only zero is acceptable");
 
-        ourMax = 999099909990999098;
+        ourMax = 999099909990999099;
         _add(10e18, 8e18, 0.8888e18, 5e18, 5e18, ourMax, "LTV after => 88,88% (1)");
         _add(
             10e18 - ourMax, 8e18, 0.8888e18, 10e18 - ourMax, 0, 0,
@@ -53,7 +53,7 @@ contract CalculateMaxAssetsToWithdrawTestData {
         _add(10e18 - ourMax * 5, 8e18, 0.8888e18, 1e18 - ourMax, 0, 0, "^ LTV after => 88,88% (2)");
 
         //  0.1e18 / (3e18 - 2882352941176470589));
-        ourMax = 2882352941176470587;
+        ourMax = 2882352941176470588;
         _add(3e18, 0.1e18, 0.85e18, 2e18, 1e18, ourMax, "LTV after => 85%");
         _add(3e18 - ourMax, 0.1e18, 0.85e18, 0, 3e18 - ourMax, 0, "^ LTV after => 85%");
 
