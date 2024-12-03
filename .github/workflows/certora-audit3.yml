@@ -352,5 +352,5 @@ jobs:
           # ==== accrueInterest - per method ============================================
           - {
             name: accruing_withdraw,
-            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method withdraw(uint256,address,address,uint8)'
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
           }
