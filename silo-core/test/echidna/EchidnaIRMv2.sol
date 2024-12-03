@@ -71,7 +71,9 @@ contract EchidnaIRMv2 is PropertiesAsserts {
             kcrit: 317097919838,
             klow: 105699306613,
             klin: 4439370878,
-            beta: 69444444444444
+            beta: 69444444444444,
+            ri: 0,
+            Tcrit: 0
         });
 
         (, IInterestRateModelV2 createdIRM) = factory.create(_config);
@@ -97,7 +99,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         });
     }
 
-    function _fetchConfigAndUtilization() internal view returns (IInterestRateModelV2.ConfigWithState memory config, int256 utilization) {
+    function _fetchConfigAndUtilization() internal view returns (IInterestRateModelV2.Config memory config, int256 utilization) {
         config = IRMv2.getConfig(address(this));
         utilization = SiloMathLib.calculateUtilization(_DP, totalCollateral, totalDebt).toInt256();
     }
@@ -120,7 +122,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     function compInterest_criticalUtilizationGrowth() public {
         require(block.timestamp > interestRateTimestamp);
 
-        (IInterestRateModelV2.ConfigWithState memory config, int256 utilization) = _fetchConfigAndUtilization();
+        (IInterestRateModelV2.Config memory config, int256 utilization) = _fetchConfigAndUtilization();
         uint256 rcomp;
         int256 ri;
         int256 Tcrit;
@@ -135,7 +137,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     function compInterest_optimalUtilizationGrowth() public {
         require(block.timestamp > interestRateTimestamp);
 
-        (IInterestRateModelV2.ConfigWithState memory config, int256 utilization) = _fetchConfigAndUtilization();
+        (IInterestRateModelV2.Config memory config, int256 utilization) = _fetchConfigAndUtilization();
         uint256 rcomp;
         int256 ri;
         int256 Tcrit;

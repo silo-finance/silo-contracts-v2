@@ -5,6 +5,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
@@ -40,6 +41,8 @@ library Actions {
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
         _sharedStorage.siloConfig = _siloConfig;
+
+        IInterestRateModelV2(configData.interestRateModel).initializeSiloSetup();
 
         return configData.hookReceiver;
     }

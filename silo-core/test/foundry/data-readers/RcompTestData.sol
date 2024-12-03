@@ -8,9 +8,9 @@ import {IInterestRateModelV2} from "../../../contracts/interfaces/IInterestRateM
 contract RcompTestData is Test {
     // must be in alphabetic order
     struct Input {
-        int256 Tcrit;
+        int128 Tcrit;
         uint256 currentTime;
-        int256 integratorState;
+        int128 integratorState;
         uint256 lastTransactionTime;
         uint256 lastUtilization;
         uint256 totalBorrowAmount;
@@ -85,23 +85,6 @@ contract RcompTestData is Test {
         emit log_named_int("newTcrit", _data.expected.newTcrit);
     }
 
-    function _toConfigWithState(RcompData memory _data)
-        internal
-        pure
-        returns (IInterestRateModelV2.ConfigWithState memory cfg)
-    {
-        cfg.uopt = _data.constants.uopt;
-        cfg.ucrit = _data.constants.ucrit;
-        cfg.ulow = _data.constants.ulow;
-        cfg.ki = _data.constants.ki;
-        cfg.kcrit = _data.constants.kcrit;
-        cfg.klow = _data.constants.klow;
-        cfg.klin = _data.constants.klin;
-        cfg.ri = _data.input.integratorState;
-        cfg.Tcrit = _data.input.Tcrit;
-        cfg.beta = _data.constants.beta;
-    }
-
     function _toConfigStruct(RcompData memory _data)
         internal
         pure
@@ -114,6 +97,8 @@ contract RcompTestData is Test {
         cfg.kcrit = _data.constants.kcrit;
         cfg.klow = _data.constants.klow;
         cfg.klin = _data.constants.klin;
+        cfg.ri = _data.input.integratorState;
+        cfg.Tcrit = _data.input.Tcrit;
         cfg.beta = _data.constants.beta;
     }
 }
