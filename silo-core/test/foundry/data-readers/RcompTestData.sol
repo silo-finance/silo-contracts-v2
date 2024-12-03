@@ -8,9 +8,9 @@ import {IInterestRateModelV2} from "../../../contracts/interfaces/IInterestRateM
 contract RcompTestData is Test {
     // must be in alphabetic order
     struct Input {
-        int256 Tcrit;
+        int128 Tcrit;
         uint256 currentTime;
-        int256 integratorState;
+        int128 integratorState;
         uint256 lastTransactionTime;
         uint256 lastUtilization;
         uint256 totalBorrowAmount;

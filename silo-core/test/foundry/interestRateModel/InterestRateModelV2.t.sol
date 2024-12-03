@@ -92,7 +92,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     // forge test -vv --mt test_IRM_calculateCurrentInterestRate_CAP
     function test_IRM_calculateCurrentInterestRate_CAP() public view {
         uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
-            _configWithState(),
+            _defaultConfig(),
             100e18, // _totalDeposits,
             99e18, // _totalBorrowAmount,
             TODAY, // _interestRateTimestamp,
@@ -120,7 +120,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         uint256 cap = 3170979198376 * (1 + _t);
 
         (uint256 rcur,,,) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
-            _configWithState(),
+            _defaultConfig(),
             100e18, // _totalDeposits,
             99e18, // _totalBorrowAmount,
             TODAY, // _interestRateTimestamp,
@@ -134,7 +134,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO
     function test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO() public view {
         (uint256 rcur,,,) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
-            _configWithState(),
+            _defaultConfig(),
             100e18, // _totalDeposits,
             99e18, // _totalBorrowAmount,
             TODAY, // _interestRateTimestamp,
@@ -151,7 +151,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         int256 Tcrit;
         bool overflow;
 
-        IInterestRateModelV2.Config memory config = IInterestRateModelV2.ConfigWithState({
+        IInterestRateModelV2.Config memory config = IInterestRateModelV2.Config({
             uopt: 300000000000000000,
             ucrit: 500000000000000000,
             ulow: 700000000000000000,

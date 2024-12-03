@@ -58,12 +58,12 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
-        vm.mockCall(irmConfigAddress, encodedData, abi.encode(_configWithState()));
+        vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
         vm.expectCall(irmConfigAddress, encodedData);
 
         IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
-        assertEq(keccak256(abi.encode(_configWithState())), keccak256(abi.encode(fullConfig)), "config match");
+        assertEq(keccak256(abi.encode(_defaultConfig())), keccak256(abi.encode(fullConfig)), "config match");
 
         assertGt(fullConfig.beta, 0, "beta");
         assertGt(fullConfig.kcrit, 0, "kcrit");

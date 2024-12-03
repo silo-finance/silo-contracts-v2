@@ -80,6 +80,16 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         emit Initialized(_config);
     }
 
+    /// @inheritdoc IInterestRateModelV2
+    function setup() external {
+        Config memory config = irmConfig.getConfig();
+
+        // TODO should we add at least condition, that we can only set eg both zeros?
+        // otherwise it can be set anytime eg via hook, or this will be feature?
+        getSetup[msg.sender].ri = config.ri;
+        getSetup[msg.sender].Tcrit = config.Tcrit;
+    }
+
     /// @inheritdoc IInterestRateModel
     function getCompoundInterestRateAndUpdate(
         uint256 _collateralAssets,
@@ -263,7 +273,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRateWithOverflowDetection( // solhint-disable-line function-max-lines
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
