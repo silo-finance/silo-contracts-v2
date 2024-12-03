@@ -46,8 +46,6 @@ contract InterestRateModelConfigData {
         ConfigData[] memory configs = _readDataFromJson();
 
         for (uint256 index = 0; index < configs.length; index++) {
-            revert("dddd");
-            console2.log("iteration", index);
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
                 modelConfig.beta = configs[index].config.beta;
                 modelConfig.ki = configs[index].config.ki;
@@ -70,15 +68,15 @@ contract InterestRateModelConfigData {
     }
 
     function print(IInterestRateModelV2.Config memory _configData) public pure {
+        console2.log("Tcrit", _configData.Tcrit);
         console2.log("beta", _configData.beta);
         console2.log("kcrit", _configData.kcrit);
         console2.log("ki", _configData.ki);
         console2.log("klin", _configData.klin);
         console2.log("klow", _configData.klow);
+        console2.log("ri", _configData.ri);
         console2.log("ucrit", _configData.ucrit);
         console2.log("ulow", _configData.ulow);
         console2.log("uopt", _configData.uopt);
-        console2.log("ri", _configData.ri);
-        console2.log("Tcrit", _configData.Tcrit);
     }
 }
