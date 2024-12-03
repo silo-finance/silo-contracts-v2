@@ -14,8 +14,8 @@ contract InterestRateModelConfigs {
             klow:  31709791984,
             klin:  1585489599,
             beta:  27777777777778,
-            ri:  0,
-            Tcrit:  0
+            ri:  10,
+            Tcrit:  1
         });
     }
 }

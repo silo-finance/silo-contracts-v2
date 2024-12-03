@@ -38,4 +38,12 @@ contract InterestRateModelV2ConfigHarness is InterestRateModelV2Config {
     function beta() external view returns (int256 _beta) {
         _beta = _BETA;
     }
+
+    function ri() external view returns (int256 _ri) {
+        _ri = _RI;
+    }
+
+    function Tcrit() external view returns (int256 _Tcrit) {
+        _Tcrit = _TCRIT;
+    }
 }

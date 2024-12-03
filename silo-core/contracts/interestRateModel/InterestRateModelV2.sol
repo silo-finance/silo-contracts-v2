@@ -91,8 +91,6 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     function setup() external {
         Config memory config = irmConfig.getConfig();
 
-        // TODO should we add at least condition, that we can only set eg both zeros?
-        // otherwise it can be set anytime eg via hook, or this will be feature?
         getSetup[msg.sender].ri = config.ri;
         getSetup[msg.sender].Tcrit = config.Tcrit;
     }
@@ -196,11 +194,11 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     }
 
     function getConfig(address _silo) public view virtual returns (Config memory fullConfig) {
-        Setup memory setup = getSetup[_silo];
+        Setup memory siloSetup = getSetup[_silo];
         fullConfig = irmConfig.getConfig();
 
-        fullConfig.ri = setup.ri;
-        fullConfig.Tcrit = setup.Tcrit;
+        fullConfig.ri = siloSetup.ri;
+        fullConfig.Tcrit = siloSetup.Tcrit;
     }
 
     /// @inheritdoc IInterestRateModelV2
