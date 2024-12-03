@@ -60,12 +60,12 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
         INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
-        vm.prank(silo);
-        INTEREST_RATE_MODEL.initializeSiloSetup();
-
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
         vm.expectCall(irmConfigAddress, encodedData);
+
+        vm.prank(silo);
+        INTEREST_RATE_MODEL.initializeSiloSetup();
 
         IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
@@ -76,13 +76,11 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertGt(fullConfig.ki, 0, "ki");
         assertGt(fullConfig.klin, 0, "klin");
         assertGt(fullConfig.klow, 0, "klow");
-        assertEq(fullConfig.ri, 0, "ri can be empty");
-        assertEq(fullConfig.Tcrit, 0, "Tcrit can be empty");
         assertGt(fullConfig.ucrit, 0, "ucrit");
         assertGt(fullConfig.ulow, 0, "ulow");
         assertGt(fullConfig.uopt, 0, "uopt");
-        assertGt(fullConfig.ri, 0, "ri");
-        assertGt(fullConfig.Tcrit, 0, "Tcrit");
+        assertEq(fullConfig.ri, 10, "ri");
+        assertEq(fullConfig.Tcrit, 1, "Tcrit");
     }
 
     function test_IRM_RcompData_Mock() public {
