@@ -90,4 +90,8 @@ contract SiloHarness is Silo {
             debtShareBalance
         );
     }
+    function getTransferWithChecks() external view returns (bool) {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        return $.transferWithChecks;
+    }
 }
