@@ -52,7 +52,7 @@ interface IInterestRateModelV2 {
     error InvalidRi();
 
     /// @dev Setup initial values for ri and Tcrit for silo (msg.sender)
-    function setup() external;
+    function initializeSiloSetup() external;
 
     /// @dev Get config for given asset in a Silo.
     /// @param _silo Silo address for which config should be set

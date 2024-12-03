@@ -81,7 +81,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
     }
 
     /// @inheritdoc IInterestRateModelV2
-    function setup() external {
+    function initializeSiloSetup() external {
         Config memory config = irmConfig.getConfig();
 
         getSetup[msg.sender].ri = config.ri;

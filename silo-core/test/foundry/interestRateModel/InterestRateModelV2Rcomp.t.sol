@@ -51,11 +51,17 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertEq(keccak256(abi.encode(emptyConfig)), keccak256(abi.encode(fullConfig)), "empty config");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_IRM_getConfig_withData
+    */
     function test_IRM_getConfig_withData() public {
         address silo = address(this);
         address irmConfigAddress = makeAddr("irmConfigAddress");
 
         INTEREST_RATE_MODEL.initialize(irmConfigAddress);
+
+        vm.prank(silo);
+        INTEREST_RATE_MODEL.initializeSiloSetup();
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
@@ -75,6 +81,8 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertGt(fullConfig.ucrit, 0, "ucrit");
         assertGt(fullConfig.ulow, 0, "ulow");
         assertGt(fullConfig.uopt, 0, "uopt");
+        assertGt(fullConfig.ri, 0, "ri");
+        assertGt(fullConfig.Tcrit, 0, "Tcrit");
     }
 
     function test_IRM_RcompData_Mock() public {

@@ -211,9 +211,9 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     /*
-    forge test -vv --mt test_irm_setup
+    forge test -vv --mt test_initializeSiloSetup
     */
-    function test_irm_setup() public {
+    function test_initializeSiloSetup() public {
         (int128 ri, int128 Tcrit) = INTEREST_RATE_MODEL.getSetup(address(this));
 
         InterestRateModelV2Config cfg = new InterestRateModelV2Config(_defaultConfig());
@@ -222,7 +222,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         assertEq(ri, 0, "ri initial 0");
         assertEq(Tcrit, 0, "Tcrit initial 0");
 
-        INTEREST_RATE_MODEL.setup();
+        INTEREST_RATE_MODEL.initializeSiloSetup();
 
         (ri, Tcrit) = INTEREST_RATE_MODEL.getSetup(address(this));
         assertEq(ri, 10, "ri should be set with initial value");

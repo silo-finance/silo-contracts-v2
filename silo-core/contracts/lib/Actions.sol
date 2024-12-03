@@ -42,7 +42,7 @@ library Actions {
 
         _sharedStorage.siloConfig = _siloConfig;
 
-        IInterestRateModelV2(configData.interestRateModel).setup();
+        IInterestRateModelV2(configData.interestRateModel).initializeSiloSetup();
 
         return configData.hookReceiver;
     }
