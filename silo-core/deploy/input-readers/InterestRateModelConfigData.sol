@@ -17,7 +17,6 @@ contract InterestRateModelConfigData {
         int256 ki;
         int256 klin;
         int256 klow;
-        int256 ri;
         int256 ucrit;
         int256 ulow;
         int256 uopt;
@@ -54,8 +53,6 @@ contract InterestRateModelConfigData {
                 modelConfig.ucrit = configs[index].config.ucrit;
                 modelConfig.ulow = configs[index].config.ulow;
                 modelConfig.uopt = configs[index].config.uopt;
-                modelConfig.ri = int128(configs[index].config.ri);
-                print(modelConfig);
 
                 return modelConfig;
             }
@@ -73,6 +70,5 @@ contract InterestRateModelConfigData {
         console2.log("ucrit", _configData.ucrit);
         console2.log("ulow", _configData.ulow);
         console2.log("uopt", _configData.uopt);
-        console2.log("ri", _configData.ri);
     }
 }
