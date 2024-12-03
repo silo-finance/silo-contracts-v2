@@ -7,13 +7,13 @@ import "../_simplifications/Oracle_quote_one.spec";
 import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
-    
+
 }
 
 // accrueInterest doesn't affect sharesBalance
 // state S -> call method f -> check balanceOf(user)
 // state S -> call accrueInterest -> call method f -> check balanceOf(user)
-rule accruingDoesntAffectShareBalance(env e, address user, method f)
+rule accruing0DoesntAffectShareBalance(env e, address user, method f)
     filtered { f -> !filterOutInInvariants(f) }
 {
     SafeAssumptions_withInvariants_forMethod(e, user, f);
@@ -23,6 +23,23 @@ rule accruingDoesntAffectShareBalance(env e, address user, method f)
     mathint shares1 = silo0.balanceOf(user);
 
     silo0.accrueInterest(e) at init;
+    f(e, args);
+    mathint shares2 = silo0.balanceOf(user);
+
+    assert shares1 == shares2;
+}
+
+// same as before, calls silo1.accrue in between
+rule accruingDoesntAffectShareBalance(env e, address user, method f)
+    filtered { f -> !filterOutInInvariants(f) }
+{
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    storage init = lastStorage;
+    calldataarg args;
+    f(e, args);
+    mathint shares1 = silo0.balanceOf(user);
+
+    silo1.accrueInterest(e) at init;
     f(e, args);
     mathint shares2 = silo0.balanceOf(user);
 
