@@ -66,6 +66,9 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
         require(_config.klow >= 0, IInterestRateModelV2.InvalidKlow());
         require(_config.klin >= 0, IInterestRateModelV2.InvalidKlin());
         require(_config.beta >= 0, IInterestRateModelV2.InvalidBeta());
+
+        require(_config.ri >= 0, IInterestRateModelV2.InvalidRi());
+        require(_config.Tcrit >= 0, IInterestRateModelV2.InvalidTcrit());
     }
 
     /// @inheritdoc IInterestRateModelV2Factory

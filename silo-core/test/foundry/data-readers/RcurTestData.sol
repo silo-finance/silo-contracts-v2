@@ -80,23 +80,6 @@ contract RcurTestData is Test {
         emit log_named_uint("didOverflow", _data.expected.didOverflow);
     }
 
-    function _toConfigWithState(RcurData memory _data)
-        internal
-        pure
-        returns (IInterestRateModelV2.ConfigWithState memory cfg)
-    {
-        cfg.uopt = _data.constants.uopt;
-        cfg.ucrit = _data.constants.ucrit;
-        cfg.ulow = _data.constants.ulow;
-        cfg.ki = _data.constants.ki;
-        cfg.kcrit = _data.constants.kcrit;
-        cfg.klow = _data.constants.klow;
-        cfg.klin = _data.constants.klin;
-        cfg.ri = _data.input.integratorState;
-        cfg.Tcrit = _data.input.Tcrit;
-        cfg.beta = _data.constants.beta;
-    }
-
     function _toConfigStruct(RcurData memory _data)
         internal
         pure
@@ -109,6 +92,8 @@ contract RcurTestData is Test {
         cfg.kcrit = _data.constants.kcrit;
         cfg.klow = _data.constants.klow;
         cfg.klin = _data.constants.klin;
+        cfg.ri = _data.input.integratorState;
+        cfg.Tcrit = _data.input.Tcrit;
         cfg.beta = _data.constants.beta;
     }
 }

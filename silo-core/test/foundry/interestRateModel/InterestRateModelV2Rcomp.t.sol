@@ -40,13 +40,13 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
         INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
-        IInterestRateModelV2.ConfigWithState memory emptyConfig;
+        IInterestRateModelV2.Config memory emptyConfig;
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(emptyConfig));
         vm.expectCall(irmConfigAddress, encodedData);
 
-        IInterestRateModelV2.ConfigWithState memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
+        IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
         assertEq(keccak256(abi.encode(emptyConfig)), keccak256(abi.encode(fullConfig)), "empty config");
     }
@@ -61,7 +61,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(_configWithState()));
         vm.expectCall(irmConfigAddress, encodedData);
 
-        IInterestRateModelV2.ConfigWithState memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
+        IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
         assertEq(keccak256(abi.encode(_configWithState())), keccak256(abi.encode(fullConfig)), "config match");
 
@@ -86,7 +86,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
-            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
@@ -169,7 +169,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
-            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 

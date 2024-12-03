@@ -32,7 +32,7 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
         for (uint256 i; i < data.length; i++) {
             RcurData memory testCase = data[i];
 
-            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 

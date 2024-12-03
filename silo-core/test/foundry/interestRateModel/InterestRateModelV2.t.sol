@@ -78,13 +78,13 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_calculateCompoundInterestRate_InvalidTimestamps() public {
-        IInterestRateModelV2.ConfigWithState memory c;
+        IInterestRateModelV2.Config memory c;
         vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCompoundInterestRate(c, 0, 0, 1, 0);
     }
 
     function test_IRM_calculateCurrentInterestRate_InvalidTimestamps() public {
-        IInterestRateModelV2.ConfigWithState memory c;
+        IInterestRateModelV2.Config memory c;
         vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCurrentInterestRate(c, 0, 0, 1, 0);
     }
@@ -103,7 +103,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_calculateCurrentInterestRate_revertsWhenTimestampInvalid() public {
-        IInterestRateModelV2.ConfigWithState memory emptyConfig;
+        IInterestRateModelV2.Config memory emptyConfig;
 
         // currentTime should always be larger than last, so this should revert
         uint256 lastTransactionTime = 1;
@@ -151,7 +151,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         int256 Tcrit;
         bool overflow;
 
-        IInterestRateModelV2.ConfigWithState memory config = IInterestRateModelV2.ConfigWithState({
+        IInterestRateModelV2.Config memory config = IInterestRateModelV2.ConfigWithState({
             uopt: 300000000000000000,
             ucrit: 500000000000000000,
             ulow: 700000000000000000,
