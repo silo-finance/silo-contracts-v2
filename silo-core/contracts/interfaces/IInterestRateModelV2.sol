@@ -95,7 +95,7 @@ interface IInterestRateModelV2 {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) external pure returns (uint256 rcur);
+    ) external view returns (uint256 rcur);
 
     /// @dev pure function that calculates interest rate based on raw input data
     /// @param _c configuration object, IInterestRateModel.ConfigWithState
@@ -115,7 +115,7 @@ interface IInterestRateModelV2 {
         uint256 _blockTimestamp
     )
         external
-        pure
+        view
         returns (
             uint256 rcomp,
             int256 ri,
@@ -138,5 +138,5 @@ interface IInterestRateModelV2 {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) external pure returns (uint256 rcomp, int256 ri, int256 Tcrit);
+    ) external view returns (uint256 rcomp, int256 ri, int256 Tcrit);
 }
