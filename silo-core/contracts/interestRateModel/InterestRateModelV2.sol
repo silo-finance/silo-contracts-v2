@@ -312,6 +312,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         console2.log("[calculateCompoundInterestRateWithOverflowDetection] klow:");
         console2.logInt(_c.klow);
         console2.log("[calculateCompoundInterestRateWithOverflowDetection] klin:");
+        _c.klin = 100;
         console2.logInt(_c.klin);
         console2.log("[calculateCompoundInterestRateWithOverflowDetection] beta");
         console2.logInt(_c.beta);
