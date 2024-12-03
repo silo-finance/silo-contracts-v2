@@ -10,9 +10,28 @@ methods {
 
 }
 
+// accrueInterest doesn't affect sharesBalance
+// state S -> call method f -> check balanceOf(user)
+// state S -> call accrueInterest -> call method f -> check balanceOf(user)
+rule accruingDoesntAffectShareBalance(env e, address user, method f)
+{
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    storage init = lastStorage;
+    calldataarg args;
+    f(e, args);
+    mathint shares1 = silo0.balanceOf(user);
+
+    silo0.accrueInterest(e) at init;
+    f(e, args);
+    mathint shares2 = silo0.balanceOf(user);
+
+    assert shares1 == shares2;
+}
+
 // accrueInterest() should never revert
 rule accrueInterest_neverReverts(env e)
 {
+    require e.msg.value == 0;
     SafeAssumptionsEnv_withInvariants(e);
 
     _ = accrueInterest@withrevert(e);
@@ -83,8 +102,8 @@ rule withdrawFees_noAdditionalEffect(env e, method f)
 // it never goes back to zero
 rule borrowerCollateralSilo_neverSetToZero(env e, method f) filtered { f -> !filterOutInInvariants(f) }
 {
-    SafeAssumptionsEnv_withInvariants(e);
     address user;
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
     address colSiloBefore = config().borrowerCollateralSilo(e, user);
     
     calldataarg args;
@@ -96,6 +115,9 @@ rule borrowerCollateralSilo_neverSetToZero(env e, method f) filtered { f -> !fil
 // calling accrueInterestForSilo(_silo) should be equal to calling _silo.accrueInterest()
 rule accrueInterestForSilo_equivalent(env e)
 {
+
+    // TODO compare storage manualyl instead, especially getSiloStorage()
+    // totals of assets, etc. maybe even splt to several rules
     SafeAssumptionsEnv_withInvariants(e);
     storage init = lastStorage;
     siloConfig.accrueInterestForSilo(silo0);
@@ -115,10 +137,6 @@ invariant insolventHaveDebtShares(env e, address user)
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
 
-//////////////////////////
-//// Rules bellow require setup for both silos
-/////////////////////////
-
 invariant isSolvent_inEitherSilo(env e, address user)
     silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
     filtered { f -> !filterOutInInvariants(f) }
@@ -137,10 +155,11 @@ invariant cannotHaveDebtInBothSilos(env e, address user)
 
 // if borrowerCollateralSilo[user] is set from zero to non-zero value, 
 // one of the debt share token totalSupply() increases 
-rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f) // TODO exclude view
+rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f)
+     filtered { f -> !filterOutInInvariants(f) }
 {
-    SafeAssumptionsEnv_withInvariants(e);
     address user;
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
     address colSiloBefore = config().borrowerCollateralSilo(e, user);
     uint totalShare0Before = shareDebtToken0.totalSupply();
     uint totalShare1Before = shareDebtToken1.totalSupply();
@@ -165,7 +184,7 @@ rule borrowerCollateralSilo_setNonzeroIncreasesBalance (env e, method f)
                     f.selector != sig:switchCollateralToThisSilo().selector }
 {
     address user;
-    SafeAssumptions_withInvariants(e, user);
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
     address colSiloBefore = config().borrowerCollateralSilo(e, user);
 
     calldataarg args;

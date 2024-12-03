@@ -23,6 +23,18 @@ function SafeAssumptions_withInvariants(env e, address user)
     requireEnvAndUserInvariants(e, user);
 }
 
+function SafeAssumptions_withInvariants_forMethod(env e, address user, method f) 
+{
+    // otherwise we get vacuity 
+    if (!siloOnlyCallable(f)) nonSceneAddressRequirements(e.msg.sender);
+    require user != 0;  //TODO not safe!!
+    requireEnvFreeInvariants();
+    requireEnvInvariants(e);
+    requireEnvAndUserInvariants(e, user);
+    configForEightTokensSetupRequirements();
+    silosTimestampSetupRequirements(e);
+}
+
 function completeSiloSetupForEnv(env e) 
 {
     configForEightTokensSetupRequirements();
@@ -113,10 +125,10 @@ function requireEnvAndUserInvariants(env e, address user)
 {
     totalSuppliesMoreThanThreeBalances(e.msg.sender, user, silo0);
 
-    requireInvariant token0Distribution(user);
-    requireInvariant token1Distribution(user);
-    requireInvariant debt0ThenHasCollateral(user);
-    requireInvariant debt1ThenHasCollateral(user);
+    requireInvariant token0Distribution(e.msg.sender);
+    requireInvariant token1Distribution(e.msg.sender);
+    requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    requireInvariant debt1ThenHasCollateral(e.msg.sender);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -274,10 +286,21 @@ definition canDecreaseDebt(method f) returns bool =
 definition harnessFunction(method f) returns bool =
     false;
 
+definition siloOnlyCallable(method f) returns bool =
+    f.selector == sig:Silo0.initialize(address).selector ||
+    f.selector == sig:Silo1.initialize(address).selector ||
+    f.selector == sig:Silo0.burn(address,address,uint256).selector ||
+    f.selector == sig:Silo1.burn(address,address,uint256).selector ||
+    f.selector == sig:Silo0.forwardTransferFromNoChecks(address,address,uint256).selector ||
+    f.selector == sig:Silo1.forwardTransferFromNoChecks(address,address,uint256).selector ||
+    f.selector == sig:Silo0.mint(address,address,uint256).selector ||
+    f.selector == sig:Silo1.mint(address,address,uint256).selector;
+
 definition ignoredFunction(method f) returns bool =
     harnessFunction(f) ||
     f.selector == sig:Silo0.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes).selector ||
     f.selector == sig:Silo1.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes).selector;
+
 
 definition filterOutInInvariants(method f) returns bool =
     f.isView ||
