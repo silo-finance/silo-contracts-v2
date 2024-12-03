@@ -12,6 +12,7 @@ contract InterestRateModelConfigData {
 
     // must be in alphabetic order
     struct ModelConfig {
+        int256 Tcrit;
         int256 beta;
         int256 kcrit;
         int256 ki;
@@ -44,6 +45,8 @@ contract InterestRateModelConfigData {
         ConfigData[] memory configs = _readDataFromJson();
 
         for (uint256 index = 0; index < configs.length; index++) {
+            revert("dddd");
+            console2.log("iteration", index);
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
                 modelConfig.beta = configs[index].config.beta;
                 modelConfig.ki = configs[index].config.ki;
@@ -53,6 +56,9 @@ contract InterestRateModelConfigData {
                 modelConfig.ucrit = configs[index].config.ucrit;
                 modelConfig.ulow = configs[index].config.ulow;
                 modelConfig.uopt = configs[index].config.uopt;
+                modelConfig.Tcrit = int128(configs[index].config.Tcrit);
+
+                print(modelConfig);
 
                 return modelConfig;
             }
@@ -70,5 +76,7 @@ contract InterestRateModelConfigData {
         console2.log("ucrit", _configData.ucrit);
         console2.log("ulow", _configData.ulow);
         console2.log("uopt", _configData.uopt);
+
+        console2.log("Tcrit", _configData.Tcrit);
     }
 }
