@@ -37,9 +37,9 @@ rule HLP_PreviewMintCorrectness_strict(address receiver)
     // receiver is not one of the contracts in the scene
     nonSceneAddressRequirements(receiver);
     totalSuppliesMoreThanBalances(receiver, silo0);
-
-    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
     
+    requireInvariant assetsZeroInterestRateTimestampZero(e) ;
+
     uint256 shares;
     uint256 assetsReported = previewMint(e, shares);
     uint256 assetsPaid = mint(e, shares, receiver);
