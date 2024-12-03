@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/console2.sol";
+//import {console2} from "forge-std/console2.sol";
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
@@ -116,12 +116,12 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             block.timestamp
         );
 
-        console2.log("[getCompoundInterestRateAndUpdate] silo %silo", silo);
-        console2.log("[getCompoundInterestRateAndUpdate] ri");
-        console2.logInt(ri);
-        console2.log("[getCompoundInterestRateAndUpdate] Tcrit");
-        console2.logInt(Tcrit);
-        console2.log("[getCompoundInterestRateAndUpdate] rcomp %s", rcomp);
+//        console2.log("[getCompoundInterestRateAndUpdate] silo %silo", silo);
+//        console2.log("[getCompoundInterestRateAndUpdate] ri");
+//        console2.logInt(ri);
+//        console2.log("[getCompoundInterestRateAndUpdate] Tcrit");
+//        console2.logInt(Tcrit);
+//        console2.log("[getCompoundInterestRateAndUpdate] rcomp %s", rcomp);
 
         currentSetup.ri = ri > type(int128).max
             ? type(int128).max
@@ -217,7 +217,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) public view /* pure */ virtual returns (uint256 rcur) {
+    ) public pure virtual returns (uint256 rcur) {
         require(_interestRateTimestamp <= _blockTimestamp, InvalidTimestamps());
 
         LocalVarsRCur memory _l = LocalVarsRCur(0,0,0,0,0,0,false); // struct for local vars to avoid "Stack too deep"
@@ -272,7 +272,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) public view /* pure */ virtual override returns (
+    ) public pure virtual override returns (
         uint256 rcomp,
         int256 ri,
         int256 Tcrit
@@ -293,29 +293,29 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) public view /* pure */ virtual returns (
+    ) public pure virtual returns (
         uint256 rcomp,
         int256 ri,
         int256 Tcrit,
         bool overflow
     ) {
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] uopt:");
-        console2.logInt(_c.uopt);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] ucrit:");
-        console2.logInt(_c.ucrit);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] ulow:");
-        console2.logInt(_c.ulow);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] ki:");
-        console2.logInt(_c.ki);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] kcrit:");
-        console2.logInt(_c.kcrit);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] klow:");
-        console2.logInt(_c.klow);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] klin:");
-        _c.klin = 100;
-        console2.logInt(_c.klin);
-        console2.log("[calculateCompoundInterestRateWithOverflowDetection] beta");
-        console2.logInt(_c.beta);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] uopt:");
+//        console2.logInt(_c.uopt);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] ucrit:");
+//        console2.logInt(_c.ucrit);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] ulow:");
+//        console2.logInt(_c.ulow);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] ki:");
+//        console2.logInt(_c.ki);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] kcrit:");
+//        console2.logInt(_c.kcrit);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] klow:");
+//        console2.logInt(_c.klow);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] klin:");
+////        _c.klin = 100;
+//        console2.logInt(_c.klin);
+//        console2.log("[calculateCompoundInterestRateWithOverflowDetection] beta");
+//        console2.logInt(_c.beta);
 
         ri = _c.ri;
         Tcrit = _c.Tcrit;
@@ -330,19 +330,19 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             // length of time period in seconds
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
-        console2.log("... T %s - %s", _blockTimestamp,  _interestRateTimestamp);
-        console2.logInt(_l.T);
+//        console2.log("... T %s - %s", _blockTimestamp,  _interestRateTimestamp);
+//        console2.logInt(_l.T);
 
         int256 decimalPoints = int256(_DP);
 
         _l.u = SiloMathLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
-        console2.log("...calculateUtilization");
-        console2.logInt(_l.u);
+//        console2.log("...calculateUtilization");
+//        console2.logInt(_l.u);
 
         // slopei := ki * (u0 - uopt )
         _l.slopei = _c.ki * (_l.u - _c.uopt) / decimalPoints;
-        console2.log("...slopei");
-        console2.logInt(_l.slopei);
+//        console2.log("...slopei");
+//        console2.logInt(_l.slopei);
 
         if (_l.u > _c.ucrit) {
             // rp := kcrit * (1 + Tcrit) * (u0 - ucrit )
@@ -359,9 +359,9 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             // Tcrit := max (0, Tcrit - beta * T)
             Tcrit = _max(0, Tcrit - _c.beta * _l.T);
 
-            console2.log("....T, Tcrit");
-            console2.logInt(_l.T);
-            console2.logInt(Tcrit - _c.beta * _l.T);
+//            console2.log("....T, Tcrit");
+//            console2.logInt(_l.T);
+//            console2.logInt(Tcrit - _c.beta * _l.T);
         }
 
         // rlin := klin * u0 # lower bound between t0 and t1
@@ -399,7 +399,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         // Checking for the overflow below. In case of the overflow, ri and Tcrit will be set back to zeros. Rcomp is
         // calculated to not make an overflow in totalBorrowedAmount, totalDeposits.
         (rcomp, overflow) = _calculateRComp(_totalDeposits, _totalBorrowAmount, _l.x);
-        console2.log("rcomp %s, overflow %s", rcomp, overflow);
+//        console2.log("rcomp %s, overflow %s", rcomp, overflow);
 
         // if we got a limit for rcomp, we reset Tcrit and Ri model parameters to zeros
         // Resetting parameters will make IR drop from 10k%/year to 100% per year and it will start growing again.
@@ -422,9 +422,9 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         int256 _x
-    ) internal view /* pure */ virtual returns (uint256 rcomp, bool overflow) {
+    ) internal pure virtual returns (uint256 rcomp, bool overflow) {
         int256 rcompSigned;
-        console2.log("[_calculateRComp] _totalDeposits %s, _totalBorrowAmount %s", _totalDeposits, _totalBorrowAmount);
+//        console2.log("[_calculateRComp] _totalDeposits %s, _totalBorrowAmount %s", _totalDeposits, _totalBorrowAmount);
 
         if (_x >= X_MAX) {
             rcomp = RCOMP_MAX;
@@ -433,10 +433,10 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             overflow = true;
         } else {
             rcompSigned = _x.exp() - int256(_DP);
-            console2.log("[_calculateRComp] _x, (X.exp), _DP:");
-            console2.logInt(_x);
-            console2.logInt( _x.exp());
-            console2.log( _DP);
+//            console2.log("[_calculateRComp] _x, (X.exp), _DP:");
+//            console2.logInt(_x);
+//            console2.logInt( _x.exp());
+//            console2.log( _DP);
 
             rcomp = rcompSigned > 0 ? rcompSigned.toUint256() : 0;
         }
@@ -468,16 +468,16 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     }
 
     /// @dev Returns the largest of two numbers
-    function _max(int256 a, int256 b) internal view /* pure */ virtual returns (int256) {
+    function _max(int256 a, int256 b) internal pure virtual returns (int256) {
         return a > b ? a : b;
     }
 
     /// @dev Returns the smallest of two numbers
-    function _min(int256 a, int256 b) internal view /* pure */ virtual returns (int256) {
+    function _min(int256 a, int256 b) internal pure virtual returns (int256) {
         return a < b ? a : b;
     }
 
-    /// @dev in order to keep methods view /* pure */ and bee able to deploy easily new caps,
+    /// @dev in order to keep methods pure and bee able to deploy easily new caps,
     /// that method with hardcoded CAP was created
     /// @notice limit for compounding interest rcomp := RCOMP_CAP * _l.T.
     /// The limit is simple. Let’s threat our interest rate model as the black box. And for past _l.T time we got
@@ -488,7 +488,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     /// market going back below the limit.
     function _compoundInterestRateCAP(uint256 _rcomp, uint256 _t)
         internal
-        view /* pure */
+        pure
         virtual
         returns (uint256 updatedRcomp, bool capApplied)
     {
@@ -505,7 +505,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     /// We don’t read the current interest rate in our protocol, because we care only about the interest we compounded
     /// over the past time since the last update. It is used in UI and other protocols integrations,
     /// for example investing strategies.
-    function _currentInterestRateCAP(uint256 _rcur) internal view /* pure */ virtual returns (uint256) {
+    function _currentInterestRateCAP(uint256 _rcur) internal pure virtual returns (uint256) {
         uint256 cap = 1e20; // 10**20; this is 10,000% APR in the 18-decimals format.
         return _rcur > cap ? cap : _rcur;
     }

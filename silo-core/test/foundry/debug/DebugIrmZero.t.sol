@@ -37,10 +37,11 @@ interface V1 {
     function interestRateModelPing() external pure returns (bytes4);
 }
 
-// FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --ffi -vvv
+/*
+ FOUNDRY_PROFILE=core-test forge test --mc DebugIrmZeroTest --ffi -vvv
+*/
 contract DebugIrmZeroTest is IntegrationTest {
-
-ISiloConfig constant internal _SILO_CFG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB);
+    ISiloConfig constant internal _SILO_CFG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB);
 
     InterestRateModelV2 debugIRM;
 
@@ -84,13 +85,13 @@ ISiloConfig constant internal _SILO_CFG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7
 
         debugIRM.initialize(address(irm.irmConfig()));
 //        console.log("getCurrentInterestRate:", debugIRM.getCurrentInterestRate(_silo, block.timestamp));
-
-        (int128 ri, int128 Tcrit) = irm.getSetup(address(_silo));
-        console.log("ri:");
-        console.logInt(ri);
-        console.log("Tcrit:");
-        console.logInt(Tcrit);
-        console.log("--------");
+//
+//        (int128 ri, int128 Tcrit) = irm.getSetup(address(_silo));
+//        console.log("ri:");
+//        console.logInt(ri);
+//        console.log("Tcrit:");
+//        console.logInt(Tcrit);
+//        console.log("--------");
 
         IInterestRateModelV2.Config memory irmConfig = irm.irmConfig().getConfig();
 
@@ -98,17 +99,20 @@ ISiloConfig constant internal _SILO_CFG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7
         IInterestRateModelV2.ConfigWithState memory fullConfig = irm.getConfig(_silo);
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
-        console.log("[V1] ping:");
-//        console.logBytes(abi.encodePacked(V1(address(v1RM)).interestRateModelPing()));
-        console.log("[V1] DP:", V1(address(v1RM)).DP());
+        if (fullConfig.ri == 0) revert("missing ri!");
+        fullConfig.ri = 1071790969;
 
-        console.log("[V1] getCompoundInterestRateAndUpdate:", v1RM.calculateCurrentInterestRate(
-            fullConfig,
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
-            block.timestamp
-        ));
+//        console.log("[V1] ping:");
+//        console.logBytes(abi.encodePacked(V1(address(v1RM)).interestRateModelPing()));
+//        console.log("[V1] DP:", V1(address(v1RM)).DP());
+
+//        console.log("[V1] getCompoundInterestRateAndUpdate:", v1RM.calculateCurrentInterestRate(
+//            fullConfig,
+//            data.collateralAssets,
+//            data.debtAssets,
+//            data.interestRateTimestamp,
+//            block.timestamp
+//        ));
 
         console.log("[DEBUG] getCompoundInterestRateAndUpdate:", debugIRM.calculateCurrentInterestRate(
             fullConfig,
@@ -117,6 +121,16 @@ ISiloConfig constant internal _SILO_CFG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7
             data.interestRateTimestamp,
             block.timestamp
         ));
+
+        console.log("[IRM] getCompoundInterestRateAndUpdate:", irm.calculateCurrentInterestRate(
+            fullConfig,
+            data.collateralAssets,
+            data.debtAssets,
+            data.interestRateTimestamp,
+            block.timestamp
+        ));
+
+        return;
 
         // config.uopt = _UOPT;
         //        config.ucrit = _UCRIT;
@@ -157,12 +171,12 @@ ISiloConfig constant internal _SILO_CFG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7
         //        uint256 _interestRateTimestamp
         console.log("getCompoundInterestRateAndUpdate:", debugIRM.getCompoundInterestRateAndUpdate(data.collateralAssets, data.debtAssets, data.interestRateTimestamp));
 
-        ( ri,  Tcrit) = debugIRM.getSetup(address(_silo));
-        console.log("ri:");
-        console.logInt(ri);
-        console.log("Tcrit:");
-        console.logInt(Tcrit);
-        console.log("--------");
+//        ( ri,  Tcrit) = debugIRM.getSetup(address(_silo));
+//        console.log("ri:");
+//        console.logInt(ri);
+//        console.log("Tcrit:");
+//        console.logInt(Tcrit);
+//        console.log("--------");
 
 //        emit log_named_address("accrueInterest1", ISilo(_silo).accrueInterest(), 18);
 
