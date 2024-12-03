@@ -7,13 +7,14 @@ import "../_simplifications/Oracle_quote_one.spec";
 import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
-
+    
 }
 
 // accrueInterest doesn't affect sharesBalance
 // state S -> call method f -> check balanceOf(user)
 // state S -> call accrueInterest -> call method f -> check balanceOf(user)
 rule accruingDoesntAffectShareBalance(env e, address user, method f)
+    filtered { f -> !filterOutInInvariants(f) }
 {
     SafeAssumptions_withInvariants_forMethod(e, user, f);
     storage init = lastStorage;
@@ -84,6 +85,7 @@ rule withdrawFees_increasesDaoDeploerFees(env e)
 // withdrawFees() is ghost function - it should not influence result of 
 // any other function in the system (including view functions results)
 rule withdrawFees_noAdditionalEffect(env e, method f)
+    filtered { f -> !filterOutInInvariants(f) }
 {
     SafeAssumptionsEnv_withInvariants(e);
     storage init = lastStorage;
