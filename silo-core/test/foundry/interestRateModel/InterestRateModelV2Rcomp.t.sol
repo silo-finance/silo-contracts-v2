@@ -99,6 +99,16 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertEq(Tcrit, 0, "Tcrit not initialized");
 
         (ri, Tcrit, initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+
+        assertFalse(initialized, "not initialized yet");
+        assertEq(ri, 0, "ri not initialized yet");
+        assertEq(Tcrit, 0, "Tcrit not initialized yet");
+
+        vm.prank(silo);
+        INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(0, 0, block.timestamp);
+
+        (ri, Tcrit, initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+
         assertTrue(initialized, "initialized");
         assertEq(ri, 10, "ri initialized");
         assertEq(Tcrit, 1, "Tcrit initialized");
