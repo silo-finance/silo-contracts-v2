@@ -7,6 +7,7 @@ import {PreviewBorrowTest} from "./PreviewBorrow.i.sol";
 
 /*
     forge test -vv --ffi --mc PreviewBorrowSameAssetProtectedTest
+    FOUNDRY_PROFILE=core-test forge test --ffi --mc PreviewBorrowSameAssetProtectedTest  --mt test_previewBorrow_max_fuzz -vv
 */
 contract PreviewBorrowSameAssetProtectedTest is PreviewBorrowTest {
     function _sameAsset() internal pure virtual override returns (bool) {
