@@ -64,9 +64,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
         vm.expectCall(irmConfigAddress, encodedData);
 
-        vm.prank(silo);
-        INTEREST_RATE_MODEL.initializeSiloSetup();
-
+        IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
         IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
         assertEq(keccak256(abi.encode(_defaultConfig())), keccak256(abi.encode(fullConfig)), "config match");
@@ -81,6 +79,30 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertGt(fullConfig.uopt, 0, "uopt");
         assertEq(fullConfig.ri, 10, "ri");
         assertEq(fullConfig.Tcrit, 1, "Tcrit");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_IRM_getSetup
+    */
+    function test_IRM_getSetup() public {
+        address silo = address(this);
+        address irmConfigAddress = makeAddr("irmConfigAddress");
+
+        INTEREST_RATE_MODEL.initialize(irmConfigAddress);
+
+        bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
+        vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
+        vm.expectCall(irmConfigAddress, encodedData);
+
+        (int112 ri, int112 Tcrit, bool initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+        assertFalse(initialized, "not initialized");
+        assertEq(ri, 0, "ri not initialized");
+        assertEq(Tcrit, 0, "Tcrit not initialized");
+
+        (int112 ri, int112 Tcrit, bool initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+        assertTrue(initialized, "initialized");
+        assertEq(ri, 10, "ri initialized");
+        assertEq(Tcrit, 1, "Tcrit initialized");
     }
 
     function test_IRM_RcompData_Mock() public {
@@ -200,8 +222,9 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 testCase.input.lastTransactionTime
             );
 
-            (int256 storageRi, int256 storageTcrit)= IRMv2Impl.getSetup(silo);
+            (int112 storageRi, int112 storageTcrit, bool initialized) = IRMv2Impl.getSetup(silo);
 
+            assertTrue(initialized);
             assertEq(storageRi, ri, _concatMsg(i, "storageRi"));
             assertEq(storageTcrit, Tcrit, _concatMsg(i, "storageTcrit"));
         }
