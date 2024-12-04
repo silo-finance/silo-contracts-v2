@@ -219,7 +219,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         uint256 maxBorrow = silo0.maxBorrowSameAsset(borrower);
 
-        assertEq(maxBorrow, 0.75e18 - 1, "invalid maxBorrow for two tokens");
+        assertEq(maxBorrow, 0.75e18, "invalid maxBorrow for two tokens");
 
         uint256 borrowToMuch = maxBorrow + 2;
         emit log_named_uint("borrowToMuch", borrowToMuch);
@@ -323,8 +323,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         uint256 maxBorrow = silo1.maxBorrow(_borrower);
         assertEq(maxBorrow, 0, "maxBorrow should be 0, because we don't have collateral there");
 
-        // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
-        maxBorrow = silo0.maxBorrowSameAsset(_borrower) + 1;
+        maxBorrow = silo0.maxBorrowSameAsset(_borrower);
         emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
         assertEq(maxBorrow, maxLtv, "maxBorrow borrower can do, maxLTV is 75%");
 
@@ -349,8 +348,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         assertEq(gotShares, convertToShares, "convertToShares returns same result");
         assertEq(borrowAmount, silo0.convertToAssets(gotShares, ISilo.AssetType.Debt), "convertToAssets returns borrowAmount");
 
-        // in this particular scenario max borrow is underestimated by 1, so we compensate by +1, to max out
-        borrowAmount = silo0.maxBorrowSameAsset(_borrower) + 1;
+        borrowAmount = silo0.maxBorrowSameAsset(_borrower);
         emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
         assertEq(borrowAmount, maxLtv / 2, "borrow second time");
 
