@@ -65,7 +65,6 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         vm.expectCall(irmConfigAddress, encodedData);
 
         IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
-        IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
         assertEq(keccak256(abi.encode(_defaultConfig())), keccak256(abi.encode(fullConfig)), "config match");
 
@@ -99,7 +98,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         assertEq(ri, 0, "ri not initialized");
         assertEq(Tcrit, 0, "Tcrit not initialized");
 
-        (int112 ri, int112 Tcrit, bool initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+        (ri, Tcrit, initialized) = INTEREST_RATE_MODEL.getSetup(silo);
         assertTrue(initialized, "initialized");
         assertEq(ri, 10, "ri initialized");
         assertEq(Tcrit, 1, "Tcrit initialized");

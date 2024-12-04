@@ -107,6 +107,8 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
             block.timestamp
         );
 
+        currentSetup.initialized = true;
+
         currentSetup.ri = ri > type(int112).max
             ? type(int112).max
             : ri < type(int112).min ? type(int112).min : int112(ri);
@@ -185,10 +187,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         if (siloSetup.initialized) {
             fullConfig.ri = siloSetup.ri;
             fullConfig.Tcrit = siloSetup.Tcrit;
-        } else {
-            getSetup[_silo].initialized = true;
-            // starting with original full setup
-        }
+        } // else starting with original full setup
     }
 
     /// @inheritdoc IInterestRateModelV2
