@@ -350,220 +350,111 @@ jobs:
           #   command: 'silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity'
           # }
           # ==== accrueInterest - per method ============================================
-          # - {
-          #   name: accruing_accrueInterestForConfig,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "accrueInterestForConfig(address,uint256,uint256)"'
-          # }
-          # - {
-          #   name: accruing_permit,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
-          # }
-          # - {
-          #   name: accruing_withdraw,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
-          # }
-          # - {
-          #   name: accruing_redeem,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address,uint8)"'
-          # }
-          # - {
-          #   name: accruing_initialize,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "initialize(address)"'
-          # }
-          # - {
-          #   name: accruing_approve,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "approve(address,uint256)"'
-          # }
-          # - {
-          #   name: accruing_transfer,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "transfer(address,uint256)"'
-          # }
-          # - {
-          #   name: accruing_borrowSameAsset,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "borrowSameAsset(uint256,address,address)"'
-          # }
-          # - {
-          #   name: accruing_borrow,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "borrow(uint256,address,address)"'
-          # }
-          # - {
-          #   name: accruing_redeem2,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address)"'
-          # }
-          # - {
-          #   name: accruing_withdraw2,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address)"'
-          # }
-          # - {
-          #   name: accruing_borrowShares,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "borrowShares(uint256,address,address)"'
-          # }
-          # - {
-          #   name: accruing_updateHooks,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "updateHooks()"'
-          # }
-          # - {
-          #   name: accruing_switchCollateralToThisSilo,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "switchCollateralToThisSilo()"'
-          # }
-          # - {
-          #   name: accruing_withdrawFees,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdrawFees()"'
-          # }
-          # - {
-          #   name: accruing_synchronizeHooks,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "synchronizeHooks(uint24,uint24)"'
-          # }
-          # - {
-          #   name: accruing_flashLoan,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "flashLoan(address,address,uint256,bytes)"'
-          # }
-          # - {
-          #   name: accruing_deposit,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address)"'
-          # }
-          # - {
-          #   name: accruing_repayShares,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "repayShares(uint256,address)"'
-          # }
-          # - {
-          #   name: accruing_repay,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "repay(uint256,address)"'
-          # }
-          # - {
-          #   name: accruing_mint,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address)"'
-          # }
-          # - {
-          #   name: accruing_deposit2,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address,uint8)"'
-          # }
-          # - {
-          #   name: accruing_mint2,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address,uint8)"'
-          # }
-          # - {
-          #   name: accruing_transferFrom,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "transferFrom(address,address,uint256)"'
-          # }
-          # - {
-          #   name: accruing_burn,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "burn(address,address,uint256)"'
-          # }
-          # - {
-          #   name: accruing_forwardTransferFromNoChecks,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "forwardTransferFromNoChecks(address,address,uint256)"'
-          # }
-          # - {
-          #   name: accruing_mint3,
-          #   command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
-          # }
-          # ==== accrueInterest - per method ============================================
           - {
-            name: debtInBoth_accrueInterestForConfig,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "accrueInterestForConfig(address,uint256,uint256)"'
+            name: accruing_accrueInterestForConfig,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "accrueInterestForConfig(address,uint256,uint256)"'
           }
           - {
-            name: debtInBoth_permit,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
+            name: accruing_permit,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
           }
           - {
-            name: debtInBoth_withdraw,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "withdraw(uint256,address,address,uint8)"'
+            name: accruing_withdraw,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
           }
           - {
-            name: debtInBoth_redeem,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "redeem(uint256,address,address,uint8)"'
+            name: accruing_redeem,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address,uint8)"'
           }
           - {
-            name: debtInBoth_initialize,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "initialize(address)"'
+            name: accruing_initialize,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "initialize(address)"'
           }
           - {
-            name: debtInBoth_approve,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "approve(address,uint256)"'
+            name: accruing_approve,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "approve(address,uint256)"'
           }
           - {
-            name: debtInBoth_transfer,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "transfer(address,uint256)"'
+            name: accruing_transfer,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "transfer(address,uint256)"'
           }
           - {
-            name: debtInBoth_borrowSameAsset,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "borrowSameAsset(uint256,address,address)"'
+            name: accruing_borrowSameAsset,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "borrowSameAsset(uint256,address,address)"'
           }
           - {
-            name: debtInBoth_borrow,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "borrow(uint256,address,address)"'
+            name: accruing_borrow,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "borrow(uint256,address,address)"'
           }
           - {
-            name: debtInBoth_redeem2,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "redeem(uint256,address,address)"'
+            name: accruing_redeem2,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address)"'
           }
           - {
-            name: debtInBoth_withdraw2,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "withdraw(uint256,address,address)"'
+            name: accruing_withdraw2,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address)"'
           }
           - {
-            name: debtInBoth_borrowShares,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "borrowShares(uint256,address,address)"'
+            name: accruing_borrowShares,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "borrowShares(uint256,address,address)"'
           }
           - {
-            name: debtInBoth_updateHooks,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "updateHooks()"'
+            name: accruing_updateHooks,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "updateHooks()"'
           }
           - {
-            name: debtInBoth_switchCollateralToThisSilo,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "switchCollateralToThisSilo()"'
+            name: accruing_switchCollateralToThisSilo,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "switchCollateralToThisSilo()"'
           }
           - {
-            name: debtInBoth_withdrawFees,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "withdrawFees()"'
+            name: accruing_withdrawFees,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "withdrawFees()"'
           }
           - {
-            name: debtInBoth_synchronizeHooks,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "synchronizeHooks(uint24,uint24)"'
+            name: accruing_synchronizeHooks,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "synchronizeHooks(uint24,uint24)"'
           }
           - {
-            name: debtInBoth_flashLoan,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "flashLoan(address,address,uint256,bytes)"'
+            name: accruing_flashLoan,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "flashLoan(address,address,uint256,bytes)"'
           }
           - {
-            name: debtInBoth_deposit,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "deposit(uint256,address)"'
+            name: accruing_deposit,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address)"'
           }
           - {
-            name: debtInBoth_repayShares,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "repayShares(uint256,address)"'
+            name: accruing_repayShares,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "repayShares(uint256,address)"'
           }
           - {
-            name: debtInBoth_repay,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "repay(uint256,address)"'
+            name: accruing_repay,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "repay(uint256,address)"'
           }
           - {
-            name: debtInBoth_mint,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "mint(uint256,address)"'
+            name: accruing_mint,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address)"'
           }
           - {
-            name: debtInBoth_deposit2,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "deposit(uint256,address,uint8)"'
+            name: accruing_deposit2,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address,uint8)"'
           }
           - {
-            name: debtInBoth_mint2,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "mint(uint256,address,uint8)"'
+            name: accruing_mint2,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address,uint8)"'
           }
           - {
-            name: debtInBoth_transferFrom,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "transferFrom(address,address,uint256)"'
+            name: accruing_transferFrom,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "transferFrom(address,address,uint256)"'
           }
           - {
-            name: debtInBoth_burn,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "burn(address,address,uint256)"'
+            name: accruing_burn,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "burn(address,address,uint256)"'
           }
           - {
-            name: debtInBoth_forwardTransferFromNoChecks,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "forwardTransferFromNoChecks(address,address,uint256)"'
+            name: accruing_forwardTransferFromNoChecks,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "forwardTransferFromNoChecks(address,address,uint256)"'
           }
           - {
-            name: debtInBoth_mint3,
-            command: 'silo/newRulesFromTheList.conf --rule noDebtInBothSilos_asRule --method "mint(address,address,uint256)"'
+            name: accruing_mint3,
+            command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
           }
