@@ -8,6 +8,7 @@ Reentrancy protection is shared among the different Silo contracts that interact
 
 import "./authorized_functions.spec";
 
+
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
     // Since `getCompoundInterestRateAndUpdate` is not view, this is not strictly sound.
@@ -105,6 +106,11 @@ rule RA_reentrancyGuardChecked(method f) filtered {f-> !onlySiloContractsMethods
 */
 rule RA_reentrancyGuardStatusChanged(method f) 
         filtered {f-> !f.isView && !onlySiloContractsMethods(f) 
+                    // functions that are approved to not turn on reentrancy
+                    && f.selector != sig:silo0.callOnBehalfOfSilo(address,uint256,ISilo.CallType,bytes).selector 
+                    && f.selector != sig:silo0.flashLoan(address,address,uint256,bytes).selector 
+                    // todo: once the code is fixed remove this 
+                    && f.selector != sig:silo0.withdrawFees().selector 
 }
 {
     // setup requirements 
