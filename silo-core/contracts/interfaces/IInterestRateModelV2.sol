@@ -32,7 +32,7 @@ interface IInterestRateModelV2 {
         int112 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
         int112 Tcrit;
-        // flat that informs if setup is initialized
+        // flag that informs if setup is initialized
         bool initialized;
     }
     /* solhint-enable */
