@@ -11,7 +11,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxBorrowSharesTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxBorrowSharesTest
 */
 contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
@@ -62,7 +62,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
         vm.assume(maxBorrowShares > 0);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 1);
 
         _assertMaxBorrowSharesIsZeroAtTheEnd();
     }
@@ -116,7 +116,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         maxBorrowShares = silo1.maxBorrowShares(borrower);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 1);
         _assertMaxBorrowSharesIsZeroAtTheEnd();
     }
 
@@ -163,7 +163,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         maxBorrowShares = silo1.maxBorrowShares(borrower);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
         _assertMaxBorrowSharesIsZeroAtTheEnd(1);
     }
 
@@ -225,7 +225,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         maxBorrowShares = silo1.maxBorrowShares(borrower);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
         _assertMaxBorrowSharesIsZeroAtTheEnd(1);
     }
 

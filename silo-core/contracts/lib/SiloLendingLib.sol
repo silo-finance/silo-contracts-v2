@@ -251,11 +251,6 @@ library SiloLendingLib {
                 ISilo.AssetType.Debt
             );
         }
-
-        if (assets != 0) {
-            // sometimes even with rounding down, we need to do -1 wei to not revert on borrow
-            unchecked { assets--; }
-        }
     }
 
     function maxBorrow(address _borrower, bool _sameAsset)
@@ -350,6 +345,13 @@ library SiloLendingLib {
         // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
         shares = SiloMathLib.convertToShares(
             assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
+        );
+
+        // we need to recalculate assets, because what we did above is assets => shares with rounding down, but when
+        // we input assets, they will generate more shares, so we need to calculate assets based on final shares
+        // not based on borrow value
+        assets = SiloMathLib.convertToAssets(
+            shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
         );
     }
 }
