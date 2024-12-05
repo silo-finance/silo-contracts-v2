@@ -7,7 +7,7 @@ import "../summaries/config_for_two_in_cvl.spec";
 import "../summaries/safe-approximations.spec";
 import "../summaries/interest_rate_model_v2.spec";
 
-// ---- Invariants -------------------------------------------------------------
+// ---- Methods and Invariants -------------------------------------------------
 
 // This invariant is required for some of the rules above,
 // and should be proved elsewhere (TODO indicate where)
@@ -15,6 +15,9 @@ invariant assetsZeroInterestRateTimestampZero(env e)
     silo0.getCollateralAssets(e) > 0 || silo0.getDebtAssets(e) > 0 =>
     silo0.getSiloDataInterestRateTimestamp(e) > 0 ;
 
+methods {
+    function _.quote(uint256 _baseAmount, address _baseToken) external => CONSTANT ;
+}
 
 // ---- Rules ------------------------------------------------------------------
 
