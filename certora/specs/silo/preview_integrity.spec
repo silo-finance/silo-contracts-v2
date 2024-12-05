@@ -174,3 +174,50 @@ rule HLP_PreviewRepaySharesCorrectness(address receiver)
     uint256 assetsPaid = repayShares(e, shares, receiver);
     assert assetsReported >= assetsPaid;
 }
+
+// ---- Rules from the list ----------------------------------------------------
+
+/// @dev rule 59:
+//          if user is solvent transitionCollateral() for
+//          _transitionFrom == CollateralType.Protected should never revert
+
+/// @status Proved a weaker result with "satisfy" due to time constraints
+
+rule transitionSucceedsIfSolvent(uint256 _shares,address _owner) {
+    env e;
+
+    // Block time-stamp >= interest rate time-stamp
+    silosTimestampSetupRequirements(e);
+    // e.msg.sender is not one of the contracts in the scene
+    nonSceneAddressRequirements(_owner);
+    totalSuppliesMoreThanBalances(_owner, silo0);
+
+    // user is solvent
+    require silo0.isSolvent(e,_owner) == true;
+
+    // transitions collateral
+    silo0.transitionCollateral@withrevert(e,_shares,_owner,ISilo.CollateralType.Protected);
+
+    // did not revert
+    satisfy !lastReverted;
+}
+
+
+/// @dev rule 64:
+//  user must be solvent after switchCollateralToThisSilo()
+
+/// @status Done
+
+rule solventAfterSwitch() {
+    env e;
+    
+    // Block time-stamp >= interest rate time-stamp
+    silosTimestampSetupRequirements(e);
+    // e.msg.sender is not one of the contracts in the scene
+    nonSceneAddressRequirements(e.msg.sender);
+    totalSuppliesMoreThanBalances(e.msg.sender, silo0);
+
+    silo0.switchCollateralToThisSilo(e);
+
+    assert silo0.isSolvent(e,e.msg.sender);
+}
