@@ -80,14 +80,6 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         emit Initialized(_config);
     }
 
-    /// @inheritdoc IInterestRateModelV2
-    function initializeSiloSetup() external {
-        Config memory config = irmConfig.getConfig();
-
-        getSetup[msg.sender].ri = config.ri;
-        getSetup[msg.sender].Tcrit = config.Tcrit;
-    }
-
     /// @inheritdoc IInterestRateModel
     function getCompoundInterestRateAndUpdate(
         uint256 _collateralAssets,
@@ -115,13 +107,15 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
             block.timestamp
         );
 
-        currentSetup.ri = ri > type(int128).max
-            ? type(int128).max
-            : ri < type(int128).min ? type(int128).min : int128(ri);
+        currentSetup.initialized = true;
 
-        currentSetup.Tcrit = Tcrit > type(int128).max
-            ? type(int128).max
-            : Tcrit < type(int128).min ? type(int128).min : int128(Tcrit);
+        currentSetup.ri = ri > type(int112).max
+            ? type(int112).max
+            : ri < type(int112).min ? type(int112).min : int112(ri);
+
+        currentSetup.Tcrit = Tcrit > type(int112).max
+            ? type(int112).max
+            : Tcrit < type(int112).min ? type(int112).min : int112(Tcrit);
     }
 
     /// @inheritdoc IInterestRateModel
@@ -190,8 +184,10 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         Setup memory siloSetup = getSetup[_silo];
         fullConfig = irmConfig.getConfig();
 
-        fullConfig.ri = siloSetup.ri;
-        fullConfig.Tcrit = siloSetup.Tcrit;
+        if (siloSetup.initialized) {
+            fullConfig.ri = siloSetup.ri;
+            fullConfig.Tcrit = siloSetup.Tcrit;
+        } // else starting with original full setup
     }
 
     /// @inheritdoc IInterestRateModelV2

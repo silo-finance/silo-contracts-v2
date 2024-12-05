@@ -29,9 +29,11 @@ interface IInterestRateModelV2 {
 
     struct Setup {
         // ri ≥ 0 – initial value of the integrator
-        int128 ri;
+        int112 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
-        int128 Tcrit;
+        int112 Tcrit;
+        // flag that informs if setup is initialized
+        bool initialized;
     }
     /* solhint-enable */
 
@@ -50,9 +52,6 @@ interface IInterestRateModelV2 {
     error InvalidUlow();
     error InvalidUopt();
     error InvalidRi();
-
-    /// @dev Setup initial values for ri and Tcrit for silo (msg.sender)
-    function initializeSiloSetup() external;
 
     /// @dev Get config for given asset in a Silo.
     /// @param _silo Silo address for which config should be set
