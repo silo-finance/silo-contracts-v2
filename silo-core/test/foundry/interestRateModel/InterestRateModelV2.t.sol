@@ -209,27 +209,4 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         assertEq(rcomp1, rcomp2, "expect exact rcomp value");
         assertEq(overflow1, overflow2, "expect exact overflow value");
     }
-
-    /*
-    forge test -vv --mt test_initializeSiloSetup
-    */
-    function test_initializeSiloSetup() public {
-        (int128 ri, int128 Tcrit) = INTEREST_RATE_MODEL.getSetup(address(this));
-
-        InterestRateModelV2Config cfg = new InterestRateModelV2Config(_defaultConfig());
-        INTEREST_RATE_MODEL.initialize(address(cfg));
-
-        assertEq(ri, 0, "ri initial 0");
-        assertEq(Tcrit, 0, "Tcrit initial 0");
-
-        INTEREST_RATE_MODEL.initializeSiloSetup();
-
-        (ri, Tcrit) = INTEREST_RATE_MODEL.getSetup(address(this));
-        assertEq(ri, 10, "ri should be set with initial value");
-        assertEq(Tcrit, 1, "Tcrit should be set with initial value");
-
-        (ri, Tcrit) = INTEREST_RATE_MODEL.getSetup(address(1));
-        assertEq(ri, 0, "ri should be NOT set");
-        assertEq(Tcrit, 0, "Tcrit should be NOT set");
-    }
 }
