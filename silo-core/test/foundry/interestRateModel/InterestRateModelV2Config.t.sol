@@ -49,5 +49,7 @@ contract InterestRateModelV2ConfigTest is Test, InterestRateModelConfigs {
         assertEq(irmc.klow(), defaultCfg.klow, "klow mismatch");
         assertEq(irmc.klin(), defaultCfg.klin, "klin mismatch");
         assertEq(irmc.beta(), defaultCfg.beta, "beta mismatch");
+        assertEq(irmc.ri(), defaultCfg.ri, "ri mismatch");
+        assertEq(irmc.Tcrit(), defaultCfg.Tcrit, "Tcrit mismatch");
     }
 }

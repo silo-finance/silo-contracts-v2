@@ -6,6 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
@@ -78,13 +79,13 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_calculateCompoundInterestRate_InvalidTimestamps() public {
-        IInterestRateModelV2.ConfigWithState memory c;
+        IInterestRateModelV2.Config memory c;
         vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCompoundInterestRate(c, 0, 0, 1, 0);
     }
 
     function test_IRM_calculateCurrentInterestRate_InvalidTimestamps() public {
-        IInterestRateModelV2.ConfigWithState memory c;
+        IInterestRateModelV2.Config memory c;
         vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCurrentInterestRate(c, 0, 0, 1, 0);
     }
@@ -92,7 +93,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     // forge test -vv --mt test_IRM_calculateCurrentInterestRate_CAP
     function test_IRM_calculateCurrentInterestRate_CAP() public view {
         uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
-            _configWithState(),
+            _defaultConfig(),
             100e18, // _totalDeposits,
             99e18, // _totalBorrowAmount,
             TODAY, // _interestRateTimestamp,
@@ -103,7 +104,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     function test_IRM_calculateCurrentInterestRate_revertsWhenTimestampInvalid() public {
-        IInterestRateModelV2.ConfigWithState memory emptyConfig;
+        IInterestRateModelV2.Config memory emptyConfig;
 
         // currentTime should always be larger than last, so this should revert
         uint256 lastTransactionTime = 1;
@@ -120,7 +121,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         uint256 cap = 3170979198376 * (1 + _t);
 
         (uint256 rcur,,,) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
-            _configWithState(),
+            _defaultConfig(),
             100e18, // _totalDeposits,
             99e18, // _totalBorrowAmount,
             TODAY, // _interestRateTimestamp,
@@ -134,7 +135,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO
     function test_IRM_calculateCompoundInterestRateWithOverflowDetection_ZERO() public view {
         (uint256 rcur,,,) = INTEREST_RATE_MODEL.calculateCompoundInterestRateWithOverflowDetection(
-            _configWithState(),
+            _defaultConfig(),
             100e18, // _totalDeposits,
             99e18, // _totalBorrowAmount,
             TODAY, // _interestRateTimestamp,
@@ -151,7 +152,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         int256 Tcrit;
         bool overflow;
 
-        IInterestRateModelV2.ConfigWithState memory config = IInterestRateModelV2.ConfigWithState({
+        IInterestRateModelV2.Config memory config = IInterestRateModelV2.Config({
             uopt: 300000000000000000,
             ucrit: 500000000000000000,
             ulow: 700000000000000000,

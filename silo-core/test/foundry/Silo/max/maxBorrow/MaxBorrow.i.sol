@@ -13,7 +13,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxBorrowTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxBorrowTest
 */
 contract MaxBorrowTest is SiloLittleHelper, Test {
     using Strings for uint256;
@@ -101,7 +101,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = _maxBorrow1(_sameAsset);
         emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 2, _sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 1, _sameAsset);
         _assertMaxBorrowIsZeroAtTheEnd(_sameAsset);
     }
 
@@ -116,7 +116,6 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         _assertMaxBorrowIsZeroAtTheEnd(TWO_ASSETS);
     }
-
 
     /*
     forge test -vv --ffi --mt test_debug_case
@@ -179,7 +178,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         // now we have debt
 
         maxBorrow = _maxBorrow1(_sameAsset);
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 2, _sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 1, _sameAsset);
 
         _assertMaxBorrowIsZeroAtTheEnd(_sameAsset);
     }
@@ -217,7 +216,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = _maxBorrow1(_sameAsset);
         emit log_named_uint("maxBorrow", maxBorrow);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, _sameAsset);
 
         _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
     }
@@ -289,7 +288,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = _maxBorrow1(_sameAsset);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 4, _sameAsset);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, _sameAsset);
         _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
     }
 

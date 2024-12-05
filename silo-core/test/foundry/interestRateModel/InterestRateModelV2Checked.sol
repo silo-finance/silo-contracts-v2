@@ -107,13 +107,15 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
             block.timestamp
         );
 
-        currentSetup.ri = ri > type(int128).max
-            ? type(int128).max
-            : ri < type(int128).min ? type(int128).min : int128(ri);
+        currentSetup.initialized = true;
 
-        currentSetup.Tcrit = Tcrit > type(int128).max
-            ? type(int128).max
-            : Tcrit < type(int128).min ? type(int128).min : int128(Tcrit);
+        currentSetup.ri = ri > type(int112).max
+            ? type(int112).max
+            : ri < type(int112).min ? type(int112).min : int112(ri);
+
+        currentSetup.Tcrit = Tcrit > type(int112).max
+            ? type(int112).max
+            : Tcrit < type(int112).min ? type(int112).min : int112(Tcrit);
     }
 
     /// @inheritdoc IInterestRateModel
@@ -178,25 +180,19 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         );
     }
 
-    function getConfig(address _silo) public view virtual returns (ConfigWithState memory fullConfig) {
-        Setup memory setup = getSetup[_silo];
-        Config memory config = irmConfig.getConfig();
+    function getConfig(address _silo) public view virtual returns (Config memory fullConfig) {
+        Setup memory siloSetup = getSetup[_silo];
+        fullConfig = irmConfig.getConfig();
 
-        fullConfig.uopt = config.uopt;
-        fullConfig.ucrit = config.ucrit;
-        fullConfig.ulow = config.ulow;
-        fullConfig.ki = config.ki;
-        fullConfig.kcrit = config.kcrit;
-        fullConfig.klow = config.klow;
-        fullConfig.klin = config.klin;
-        fullConfig.beta = config.beta;
-        fullConfig.ri = setup.ri;
-        fullConfig.Tcrit = setup.Tcrit;
+        if (siloSetup.initialized) {
+            fullConfig.ri = siloSetup.ri;
+            fullConfig.Tcrit = siloSetup.Tcrit;
+        } // else starting with original full setup
     }
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCurrentInterestRate(
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
@@ -250,7 +246,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRate(
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
@@ -271,7 +267,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRateWithOverflowDetection( // solhint-disable-line function-max-lines
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,

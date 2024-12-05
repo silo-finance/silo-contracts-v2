@@ -24,17 +24,10 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
     // beta ≥ 0 - a scaling factor
     int256 internal immutable _BETA;
 
-    error InvalidBeta();
-    error InvalidKcrit();
-    error InvalidKi();
-    error InvalidKlin();
-    error InvalidKlow();
-    error InvalidTcrit();
-    error InvalidTimestamps();
-    error InvalidUcrit();
-    error InvalidUlow();
-    error InvalidUopt();
-    error InvalidRi();
+    // initial value for ri, ri ≥ 0 – initial value of the integrator
+    int128 internal immutable _RI;
+    // initial value for Tcrit, Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
+    int128 internal immutable _TCRIT;
 
     constructor(IInterestRateModelV2.Config memory _config) {
         _UOPT = _config.uopt;
@@ -45,6 +38,9 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
         _KLOW = _config.klow;
         _KLIN = _config.klin;
         _BETA = _config.beta;
+
+        _RI = _config.ri;
+        _TCRIT = _config.Tcrit;
     }
 
     /// @inheritdoc IInterestRateModelV2Config
@@ -57,5 +53,8 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
         config.klow = _KLOW;
         config.klin = _KLIN;
         config.beta = _BETA;
+
+        config.ri = _RI;
+        config.Tcrit = _TCRIT;
     }
 }
