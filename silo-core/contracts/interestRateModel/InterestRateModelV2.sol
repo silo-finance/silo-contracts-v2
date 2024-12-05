@@ -191,10 +191,11 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         Setup memory siloSetup = getSetup[_silo];
         fullConfig = irmConfig.getConfig();
 
+        // if initialized, read ri and Tcrit from storage. Otherwise use config values.
         if (siloSetup.initialized) {
             fullConfig.ri = siloSetup.ri;
             fullConfig.Tcrit = siloSetup.Tcrit;
-        } // else starting with original full setup
+        }
     }
 
     /// @inheritdoc IInterestRateModelV2
