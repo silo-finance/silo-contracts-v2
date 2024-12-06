@@ -55,8 +55,11 @@ contract InterestRateModelConfigData {
                 modelConfig.ucrit = configs[index].config.ucrit;
                 modelConfig.ulow = configs[index].config.ulow;
                 modelConfig.uopt = configs[index].config.uopt;
-                modelConfig.ri = int128(configs[index].config.ri);
-                modelConfig.Tcrit = int128(configs[index].config.Tcrit);
+                modelConfig.ri = int112(configs[index].config.ri);
+                modelConfig.Tcrit = int112(configs[index].config.Tcrit);
+
+                require(modelConfig.ri == configs[index].config.ri, "ri overflow");
+                require(modelConfig.Tcrit == configs[index].config.Tcrit, "Tcrit overflow");
 
                 return modelConfig;
             }
