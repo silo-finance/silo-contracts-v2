@@ -73,7 +73,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     event IncentivesProgramUpdated(bytes32 indexed programId);
     event ClaimerSet(address indexed user, address indexed claimer);
 
-    function _setUp() internal {
+    function setUp() public {
         hook = new HookContract();
 
         token0 = new MintableToken(18);
@@ -108,7 +108,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_parallel_programs -vvv
     */
     function test_scenario_parallel_programs() public {
-        _setUp();
         uint256 emissionPerSecond = 1e6;
 
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -151,18 +150,72 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         uint256 immediateDistribution = 7e7;
 
         vm.startPrank(address(hook));
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), token0.totalSupply());
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
         vm.stopPrank();
 
         // TODO bug?: after immediateDistribution calculations are off
-        // 7000_0000000 != 120000000
-        // assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), emissionPerSecond * 50 + immediateDistribution, "standard rewards + immediate");
+        // 70000000 != 120000000
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), emissionPerSecond * 50 + immediateDistribution, "standard rewards + immediate");
 
         vm.warp(block.timestamp + 50);
         vm.prank(user1);
         _controller.claimRewards(user1);
-        // TODO bug: at the end user has undexpected number of tokens:
-        // 70100000000 != 170000000
         assertEq(_rewardToken.balanceOf(user1), emissionPerSecond * 100 + immediateDistribution, "rewards at the end");
+    }
+
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_single_program -vvv
+    */
+    function test_scenario_single_program() public {
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: address(_rewardToken),
+            distributionEnd: uint40(block.timestamp + 100),
+            emissionPerSecond: uint104(0)
+        }));
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards without deposit");
+
+//        vm.expectEmit(true, true, true, true);
+//        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18);
+
+        bytes memory data = abi.encodeWithSelector(
+            SiloIncentivesController.afterTokenTransfer.selector,
+            address(0),
+            0,
+            user1,
+            100e18, // balance
+            100e18, // total
+            100e18 // amount
+        );
+
+//        vm.expectCall(address(_controller), data);
+
+        silo0.deposit(100e18, user1);
+        assertEq(silo0.balanceOf(user1), 100_000e18, "expect deposit");
+
+        vm.warp(block.timestamp + 50);
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "NO rewards after 1/2 period of time");
+
+        assertEq(_rewardToken.balanceOf(user1), 0, "rewards before");
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+
+        assertEq(_rewardToken.balanceOf(user1), 0, "rewards after");
+
+        uint256 immediateDistribution = 33e7;
+
+        vm.startPrank(address(hook));
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
+        vm.stopPrank();
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), immediateDistribution, "immediate reward");
+
+        vm.warp(block.timestamp + 50);
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        assertEq(_rewardToken.balanceOf(user1), immediateDistribution, "rewards at the end");
     }
 }
