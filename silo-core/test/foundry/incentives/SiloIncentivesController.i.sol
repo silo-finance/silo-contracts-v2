@@ -80,6 +80,10 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         token1 = new MintableToken(18);
         _rewardToken = new MintableToken(18);
 
+        vm.label(address(token0), "underlying0");
+        vm.label(address(token1), "underlying1");
+        vm.label(address(_rewardToken), "rewardToken");
+
         token0.setOnDemand(true);
         token1.setOnDemand(true);
         _rewardToken.setOnDemand(true);
@@ -95,7 +99,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         __init(token0, token1, silo0, silo1);
 
         _controller = new SiloIncentivesController(address(this), address(hook));
-        hook.setup(_controller, token0);
+        hook.setup(_controller, MintableToken(address(silo0)));
 
         silo0.updateHooks();
     }
@@ -105,43 +109,60 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     */
     function test_scenario_parallel_programs() public {
         _setUp();
+        uint256 emissionPerSecond = 1e6;
 
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: address(_rewardToken),
             distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: 1e18
+            emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
         }));
-
-        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 100)); // again??
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards without deposit");
 
-        _deposit(100e18, user1);
+//        vm.expectEmit(true, true, true, true);
+//        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18);
 
-        vm.warp(block.timestamp + 1);
+        bytes memory data = abi.encodeWithSelector(
+            SiloIncentivesController.afterTokenTransfer.selector,
+            address(0),
+            0,
+            user1,
+            100e18, // balance
+            100e18, // total
+            100e18 // amount
+        );
 
-        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "still no rewards?");
+//        vm.expectCall(address(_controller), data);
 
-        vm.startPrank(address(hook));
-        _controller.immediateDistribution(_PROGRAM_ID, 5e6, token0.totalSupply());
-        vm.stopPrank();
+        silo0.deposit(100e18, user1);
+        assertEq(silo0.balanceOf(user1), 100_000e18, "expect deposit");
+
+        vm.warp(block.timestamp + 50);
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), emissionPerSecond * 50, "some rewards after 1/2 period of time");
 
         assertEq(_rewardToken.balanceOf(user1), 0, "rewards before");
+        vm.prank(user1);
         _controller.claimRewards(user1);
-        assertEq(_rewardToken.balanceOf(user1), 10, "rewards after");
 
-        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 100, "getRewardsBalance in main program after 1 sec");
+        assertEq(_rewardToken.balanceOf(user1), emissionPerSecond * 50, "rewards after");
 
+        uint256 immediateDistribution = 7e7;
 
-//        vm.prank(notifier);
-//        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
-        // user3 claim rewards
-//        vm.prank(user3);
-//        _controller.claimRewards(user3);
-//
-//        assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
-//        assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
-//        assertEq(ERC20Mock(_rewardToken).balanceOf(user3), expectedRewardsUser3, "invalid user3 balance");
+        vm.startPrank(address(hook));
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), token0.totalSupply());
+        vm.stopPrank();
+
+        // TODO bug?: after immediateDistribution calculations are off
+        // 7000_0000000 != 120000000
+        // assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), emissionPerSecond * 50 + immediateDistribution, "standard rewards + immediate");
+
+        vm.warp(block.timestamp + 50);
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        // TODO bug: at the end user has undexpected number of tokens:
+        // 70100000000 != 170000000
+        assertEq(_rewardToken.balanceOf(user1), emissionPerSecond * 100 + immediateDistribution, "rewards at the end");
     }
 }
