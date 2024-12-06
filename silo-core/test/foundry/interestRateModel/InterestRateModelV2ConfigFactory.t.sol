@@ -90,8 +90,18 @@ contract InterestRateModelV2FactoryTest is Test, InterestRateModelConfigs {
         config.beta = -1;
         vm.expectRevert(IInterestRateModelV2.InvalidBeta.selector);
         factory.verifyConfig(config);
-
         config.beta = 1;
+
+        config.ri = -1;
+        vm.expectRevert(IInterestRateModelV2.InvalidRi.selector);
+        factory.verifyConfig(config);
+        config.ri = type(int112).max; // valid
+
+        config.Tcrit = -1;
+        vm.expectRevert(IInterestRateModelV2.InvalidTcrit.selector);
+        factory.verifyConfig(config);
+        config.Tcrit = type(int112).max; // valid
+
         factory.verifyConfig(config);
 
         factory.verifyConfig(_defaultConfig());

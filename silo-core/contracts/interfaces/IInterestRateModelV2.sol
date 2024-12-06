@@ -22,13 +22,13 @@ interface IInterestRateModelV2 {
         // beta ≥ 0 - a scaling factor
         int256 beta;
         // ri ≥ 0 – initial value of the integrator
-        int128 ri;
-        // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
-        int128 Tcrit;
+        int112 ri;
+        // Tcrit ≥ 0 - initial value of the time during which the utilization exceeds the critical value
+        int112 Tcrit;
     }
 
     struct Setup {
-        // ri ≥ 0 – initial value of the integrator
+        // ri ≥ 0 – the integrator
         int112 ri;
         // Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
         int112 Tcrit;
