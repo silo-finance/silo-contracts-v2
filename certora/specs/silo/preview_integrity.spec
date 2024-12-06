@@ -1,22 +1,13 @@
 /* Integrity of preview functions */
 
+import "../requirements/two_silos_tokens_requirements.spec";
 import "../summaries/two_silos_summaries.spec";
 import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/safe-approximations.spec";
 import "../summaries/config_for_two_in_cvl.spec";
+import "../summaries/safe-approximations.spec";
 import "../summaries/interest_rate_model_v2.spec";
 
-import "../requirements/tokens_requirements.spec";
-
-using Silo0 as silo0;
-using Silo1 as silo1;
-using Token0 as token0;
-using Token1 as token1;
-using ShareDebtToken0 as shareDebtToken0;
-using ShareDebtToken1 as shareDebtToken1;
-
-// ---- Invariants -------------------------------------------------------------
+// ---- Methods and Invariants -------------------------------------------------
 
 // This invariant is required for some of the rules above,
 // and should be proved elsewhere (TODO indicate where)
@@ -24,6 +15,9 @@ invariant assetsZeroInterestRateTimestampZero(env e)
     silo0.getCollateralAssets(e) > 0 || silo0.getDebtAssets(e) > 0 =>
     silo0.getSiloDataInterestRateTimestamp(e) > 0 ;
 
+methods {
+    function _.quote(uint256 _baseAmount, address _baseToken) external => CONSTANT ;
+}
 
 // ---- Rules ------------------------------------------------------------------
 
@@ -182,4 +176,51 @@ rule HLP_PreviewRepaySharesCorrectness(address receiver)
     uint256 assetsReported = previewRepayShares(e, shares);
     uint256 assetsPaid = repayShares(e, shares, receiver);
     assert assetsReported >= assetsPaid;
+}
+
+// ---- Rules from the list ----------------------------------------------------
+
+/// @dev rule 59:
+//          if user is solvent transitionCollateral() for
+//          _transitionFrom == CollateralType.Protected should never revert
+
+/// @status Proved a weaker result with "satisfy" due to time constraints
+
+rule transitionSucceedsIfSolvent(uint256 _shares,address _owner) {
+    env e;
+
+    // Block time-stamp >= interest rate time-stamp
+    silosTimestampSetupRequirements(e);
+    // e.msg.sender is not one of the contracts in the scene
+    nonSceneAddressRequirements(_owner);
+    totalSuppliesMoreThanBalances(_owner, silo0);
+
+    // user is solvent
+    require silo0.isSolvent(e,_owner) == true;
+
+    // transitions collateral
+    silo0.transitionCollateral@withrevert(e,_shares,_owner,ISilo.CollateralType.Protected);
+
+    // did not revert
+    satisfy !lastReverted;
+}
+
+
+/// @dev rule 64:
+//  user must be solvent after switchCollateralToThisSilo()
+
+/// @status Done
+
+rule solventAfterSwitch() {
+    env e;
+    
+    // Block time-stamp >= interest rate time-stamp
+    silosTimestampSetupRequirements(e);
+    // e.msg.sender is not one of the contracts in the scene
+    nonSceneAddressRequirements(e.msg.sender);
+    totalSuppliesMoreThanBalances(e.msg.sender, silo0);
+
+    silo0.switchCollateralToThisSilo(e);
+
+    assert silo0.isSolvent(e,e.msg.sender);
 }
