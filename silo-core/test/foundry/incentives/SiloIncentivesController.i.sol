@@ -106,6 +106,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
     /*
     FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_parallel_programs -vvv
+    // TODO do it for 2 users as well
     */
     function test_scenario_parallel_programs() public {
         uint256 emissionPerSecond = 1e6;
