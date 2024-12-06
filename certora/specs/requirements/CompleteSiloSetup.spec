@@ -115,8 +115,8 @@ function requireEnvInvariants(env e)
     totalSuppliesMoreThanBalances(e.msg.sender, silo0);
     requireInvariant token0Distribution(e.msg.sender);
     requireInvariant token1Distribution(e.msg.sender);
-    requireInvariant debt0ThenHasCollateral(e.msg.sender);
-    requireInvariant debt1ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt1ThenHasCollateral(e.msg.sender);
 }
 
 // requires all the invariants with env and user defined bellow.
@@ -127,8 +127,8 @@ function requireEnvAndUserInvariants(env e, address user)
 
     requireInvariant token0Distribution(e.msg.sender);
     requireInvariant token1Distribution(e.msg.sender);
-    requireInvariant debt0ThenHasCollateral(e.msg.sender);
-    requireInvariant debt1ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt1ThenHasCollateral(e.msg.sender);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
