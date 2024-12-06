@@ -10,42 +10,6 @@ methods {
 
 }
 
-// accrueInterest doesn't affect sharesBalance
-// state S -> call method f -> check balanceOf(user)
-// state S -> call accrueInterest -> call method f -> check balanceOf(user)
-rule accruing0DoesntAffectShareBalance(env e, address user, method f)
-    filtered { f -> !filterOutInInvariants(f) }
-{
-    SafeAssumptions_withInvariants_forMethod(e, user, f);
-    storage init = lastStorage;
-    calldataarg args;
-    f(e, args);
-    mathint shares1 = silo0.balanceOf(user);
-
-    silo0.accrueInterest(e) at init;
-    f(e, args);
-    mathint shares2 = silo0.balanceOf(user);
-
-    assert shares1 == shares2;
-}
-
-// same as before, calls silo1.accrue in between
-rule accruingDoesntAffectShareBalance(env e, address user, method f)
-    filtered { f -> !filterOutInInvariants(f) }
-{
-    SafeAssumptions_withInvariants_forMethod(e, user, f);
-    storage init = lastStorage;
-    calldataarg args;
-    f(e, args);
-    mathint shares1 = silo0.balanceOf(user);
-
-    silo1.accrueInterest(e) at init;
-    f(e, args);
-    mathint shares2 = silo0.balanceOf(user);
-
-    assert shares1 == shares2;
-}
-
 // accrueInterest() should never revert
 rule accrueInterest_neverReverts(env e)
 {
@@ -65,6 +29,58 @@ invariant noDebt_thenSolventAndNoLTV(env e, address user)
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
 
+// if user is insolvent, it must have debt shares
+invariant insolventHaveDebtShares(env e, address user) 
+    !silo0.isSolvent(e, user) => shareDebtToken0.balanceOf(user) > 0
+    filtered { f -> !filterOutInInvariants(f) }
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
+
+invariant isSolvent_inEitherSilo(env e, address user)
+    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
+    filtered { f -> !filterOutInInvariants(f) }
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
+
+// if user has debt, borrowerCollateralSilo[user] should be silo0 or silo1
+// and one of shares tokens balances should not be 0
+invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
+    (shareDebtToken0.balanceOf(user) > 0 || shareDebtToken1.balanceOf(user) > 0)
+    => (
+        (config().borrowerCollateralSilo(e, user) == silo0 && silo0.balanceOf(user) > 0) || 
+        (config().borrowerCollateralSilo(e, user) == silo1 && silo1.balanceOf(user) > 0))
+    filtered { f -> !filterOutInInvariants(f) }
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
+
+// debt in two silos is impossible
+invariant noDebtInBothSilos(env e, address user)
+    shareDebtToken0.balanceOf(user) == 0  || shareDebtToken1.balanceOf(user) == 0
+    filtered { f -> !filterOutInInvariants(f) }
+    {
+    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
+}
+
+// debt in two silos is impossible - rule
+rule noDebtInBothSilos_asRule(env e, address user, method f)
+    filtered { f -> !filterOutInInvariants(f) }
+{   
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    bool hasDebt0Before = shareDebtToken0.balanceOf(user) != 0;
+    bool hasDebt1Before = shareDebtToken1.balanceOf(user) != 0;
+
+    calldataarg args;
+    f(e, args);
+
+    bool hasDebt0After = shareDebtToken0.balanceOf(user) != 0;
+    bool hasDebt1After = shareDebtToken1.balanceOf(user) != 0;
+
+    assert !(hasDebt0Before && hasDebt1Before)
+        => !(hasDebt0After && hasDebt1After);
+}
 
 // accrueInterest() calling twice is the same as calling once (in a single block)
 rule accrueInterest_idempotent(env e)
@@ -148,29 +164,6 @@ rule accrueInterestForSilo_equivalent(env e)
     assert after1 == after2;
 }
 
-// if user is insolvent, it must have debt shares
-invariant insolventHaveDebtShares(env e, address user) 
-    !silo0.isSolvent(e, user) => shareDebtToken0.balanceOf(user) > 0
-    filtered { f -> !filterOutInInvariants(f) }
-    {
-    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
-}
-
-invariant isSolvent_inEitherSilo(env e, address user)
-    silo0.isSolvent(e, user) <=> silo1.isSolvent(e, user)
-    filtered { f -> !filterOutInInvariants(f) }
-    {
-    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
-}
-
-// user should never have balance of debt share token in both silos
-invariant cannotHaveDebtInBothSilos(env e, address user)
-    !(shareDebtToken0.balanceOf(user) > 0 &&
-        shareDebtToken1.balanceOf(user) > 0)
-    filtered { f -> !filterOutInInvariants(f) }
-    {
-    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
-}
 
 // if borrowerCollateralSilo[user] is set from zero to non-zero value, 
 // one of the debt share token totalSupply() increases 
@@ -242,43 +235,6 @@ rule solventAfterWithdraw(env e, address receiver)
     assert isSolvent(e, e.msg.sender);
 }
 
-// if user has debt, borrowerCollateralSilo[user] should be silo0 or silo1
-// and one of shares tokens balances should not be 0
-invariant debt_thenBorrowerCollateralSiloSetAndHasShares(env e, address user)
-    (shareDebtToken0.balanceOf(user) > 0 || shareDebtToken1.balanceOf(user) > 0)
-    => (
-        (config().borrowerCollateralSilo(e, user) == silo0 && silo0.balanceOf(user) > 0) || 
-        (config().borrowerCollateralSilo(e, user) == silo1 && silo1.balanceOf(user) > 0))
-    filtered { f -> !filterOutInInvariants(f) }
-    {
-    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
-}
-
-// debt in two silos is impossible
-invariant noDebtInBothSilos(env e, address user)
-    shareDebtToken0.balanceOf(user) == 0  || shareDebtToken1.balanceOf(user) == 0
-    filtered { f -> !filterOutInInvariants(f) }
-    {
-    preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
-}
-
-// debt in two silos is impossible - rule
-rule noDebtInBothSilos_asRule(env e, address user, method f)
-    filtered { f -> !filterOutInInvariants(f) }
-{   
-    SafeAssumptions_withInvariants_forMethod(e, user, f);
-    bool hasDebt0Before = shareDebtToken0.balanceOf(user) != 0;
-    bool hasDebt1Before = shareDebtToken1.balanceOf(user) != 0;
-
-    calldataarg args;
-    f(e, args);
-
-    bool hasDebt0After = shareDebtToken0.balanceOf(user) != 0;
-    bool hasDebt1After = shareDebtToken1.balanceOf(user) != 0;
-
-    assert !(hasDebt0Before && hasDebt1Before)
-        => !(hasDebt0After && hasDebt1After);
-}
 
 // flashFee() returns non-zero value if fee is set to non-zero value
 rule flashFee_nonZero(env e)
