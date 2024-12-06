@@ -39,18 +39,15 @@ contract HookContract {
     }
 
     function hookReceiverConfig(address) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
-        hooksAfter = uint24(Hook.DEPOSIT);
+        hooksAfter = uint24(Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN);
     }
 
-    function afterTokenTransfer(
-        address _sender,
-        uint256 _senderBalance,
-        address _recipient,
-        uint256 _recipientBalance,
-        uint256 _totalSupply,
-        uint256 _amount
-    ) external {
-        controller.afterTokenTransfer(_sender, _senderBalance, _recipient, _recipientBalance, _totalSupply, _amount);
+    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+        Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+
+        controller.afterTokenTransfer(
+            input.sender, input.senderBalance, input.recipient, input.recipientBalance, input.totalSupply, input.amount
+        );
     }
 }
 
@@ -59,7 +56,8 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     SiloIncentivesController internal _controller;
 
     address internal _notifier;
-    address internal _rewardToken;
+    MintableToken internal _rewardToken;
+    HookContract hook;
 
     address internal user1 = makeAddr("User1");
     address internal user2 = makeAddr("User2");
@@ -74,11 +72,11 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     event ClaimerSet(address indexed user, address indexed claimer);
 
     function _setUp() internal {
-        HookContract hook = new HookContract();
+        hook = new HookContract();
 
         token0 = new MintableToken(18);
         token1 = new MintableToken(18);
-        _rewardToken = address(new MintableToken(18));
+        _rewardToken = new MintableToken(18);
 
         token0.setOnDemand(true);
         token1.setOnDemand(true);
@@ -95,6 +93,8 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         _controller = new SiloIncentivesController(address(this), address(hook));
         hook.setup(_controller, token0);
+
+        silo0.updateHooks();
     }
 
     /*
@@ -110,14 +110,25 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
             emissionPerSecond: 100
         }));
 
-        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_ID), 0, "no rewards without deposit");
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 100)); // again??
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards without deposit");
 
         _deposit(100e18, user1);
 
-        // move time 1 month
         vm.warp(block.timestamp + 1);
 
-        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_ID), 100, "getRewardsBalance in main program after 1 sec");
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "still no rewards?");
+
+        vm.startPrank(address(hook));
+        _controller.immediateDistribution(_PROGRAM_ID, 55, token0.totalSupply());
+        vm.stopPrank();
+
+        assertEq(_rewardToken.balanceOf(user1), 0, "rewards before");
+        _controller.claimRewards(user1);
+        assertEq(_rewardToken.balanceOf(user1), 10, "rewards after");
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 100, "getRewardsBalance in main program after 1 sec");
 
 
 //        vm.prank(notifier);
