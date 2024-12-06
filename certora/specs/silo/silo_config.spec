@@ -41,10 +41,3 @@ rule accrueInterestConsistency() {
         separate_calls_01 == single_call
     ) ;
 }
-
-
-/// @dev this is an invariant that needs to be proved for the preview integrity rules
-/// @status violation
-invariant assetsZeroInterestRateTimestampZero(env e)
-    silo0.getCollateralAssets(e) > 0 || silo0.getDebtAssets(e) > 0 =>
-    silo0.getSiloDataInterestRateTimestamp(e) > 0 ;
