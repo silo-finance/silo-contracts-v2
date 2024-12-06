@@ -155,6 +155,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         // TODO bug?: after immediateDistribution calculations are off
         // 70000000 != 120000000
+        // I think solution would be to disallow two programs at the same time
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), emissionPerSecond * 50 + immediateDistribution, "standard rewards + immediate");
 
         vm.warp(block.timestamp + 50);
@@ -163,6 +164,46 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         assertEq(_rewardToken.balanceOf(user1), emissionPerSecond * 100 + immediateDistribution, "rewards at the end");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_programs -vvv
+    */
+    function test_scenario_two_programs() public {
+        uint256 emissionPerSecond = 1e6;
+
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: address(_rewardToken),
+            distributionEnd: uint40(block.timestamp + 100),
+            emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
+        }));
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards without deposit");
+
+        silo0.deposit(100e18, user1);
+        assertEq(silo0.balanceOf(user1), 100_000e18, "expect deposit");
+
+        vm.warp(block.timestamp + 100);
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), emissionPerSecond * 100, "full rewards");
+
+        assertEq(_rewardToken.balanceOf(user1), 0, "rewards before");
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+
+        assertEq(_rewardToken.balanceOf(user1), emissionPerSecond * 100, "rewards after");
+
+        uint256 immediateDistribution = 7e7;
+
+        vm.startPrank(address(hook));
+        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
+        vm.stopPrank();
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), immediateDistribution, "only immediate rewards");
+
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+        assertEq(_rewardToken.balanceOf(user1), emissionPerSecond * 100 + immediateDistribution, "rewards at the end");
+    }
 
     /*
     FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_single_program -vvv
@@ -176,21 +217,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         }));
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards without deposit");
-
-//        vm.expectEmit(true, true, true, true);
-//        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18);
-
-        bytes memory data = abi.encodeWithSelector(
-            SiloIncentivesController.afterTokenTransfer.selector,
-            address(0),
-            0,
-            user1,
-            100e18, // balance
-            100e18, // total
-            100e18 // amount
-        );
-
-//        vm.expectCall(address(_controller), data);
 
         silo0.deposit(100e18, user1);
         assertEq(silo0.balanceOf(user1), 100_000e18, "expect deposit");
