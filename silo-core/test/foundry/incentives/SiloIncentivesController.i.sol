@@ -30,10 +30,12 @@ contract HookContract {
         notifierToken = _notifierToken;
     }
 
+    // notifier has to sum up total from all external contracts
     function totalSupply() external view returns (uint256) {
         return notifierToken.totalSupply();
     }
 
+    // notifier has to sum up balances from all external contracts
     function balanceOf(address _user) external view returns (uint256) {
         return notifierToken.balanceOf(_user);
     }
@@ -42,7 +44,7 @@ contract HookContract {
         hooksAfter = uint24(Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN);
     }
 
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
+    function afterAction(address /* _silo */, uint256 /* _action */, bytes calldata _inputAndOutput) external {
         Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
         controller.afterTokenTransfer(
@@ -80,6 +82,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         token0.setOnDemand(true);
         token1.setOnDemand(true);
+        _rewardToken.setOnDemand(true);
 
         SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory overrides;
@@ -107,7 +110,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
             name: _PROGRAM_NAME,
             rewardToken: address(_rewardToken),
             distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: 100
+            emissionPerSecond: 1e18
         }));
 
         _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 100)); // again??
@@ -121,7 +124,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "still no rewards?");
 
         vm.startPrank(address(hook));
-        _controller.immediateDistribution(_PROGRAM_ID, 55, token0.totalSupply());
+        _controller.immediateDistribution(_PROGRAM_ID, 5e6, token0.totalSupply());
         vm.stopPrank();
 
         assertEq(_rewardToken.balanceOf(user1), 0, "rewards before");
