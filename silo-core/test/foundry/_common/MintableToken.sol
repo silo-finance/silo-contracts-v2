@@ -52,4 +52,23 @@ contract MintableToken is ERC20 {
 
         return true;
     }
+
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        if (!onDemand) {
+            return super.transfer(recipient, amount);
+        }
+
+        // do whatever to be able to transfer from
+
+        mintOnDemand(msg.sender, amount);
+
+        _transfer(msg.sender, recipient, amount);
+
+        // no allowance!
+
+        return true;
+    }
 }
