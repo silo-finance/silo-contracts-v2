@@ -28,8 +28,8 @@ contract RewardsClaimer is Ownable2Step {
         bytes data;
     }
 
-    error InvalidData();
-    error EmptyData();
+    error MethodSignatureRequired();
+    error UnknownTarget();
 
     /// @dev `data` that allows to claim reward on `target` contract.
     mapping(address target => bytes memory data) claimingData;
@@ -43,21 +43,22 @@ contract RewardsClaimer is Ownable2Step {
     constructor(address _owner) Ownable(_owner) {}
 
     function setClaimingData(address _target, bytes calldata _data) external onlyOwner {
-        require(_data.length >= 8, InvalidData());
+        require(_data.length >= 8, MethodSignatureRequired());
 
         claimingData[_target] = _data;
     }
 
-    /// @dev this is entry method, anyone can call it
-    /// @param _vault
+    /// @dev this is entry method, it is open, anyone can call it
+    /// @dev vault needs to verify if `RewardsClaimer` is allowed to call `callOnBehalf` on it, because this method
+    /// requests delegatecall
+    /// @param _vault address
     function claimRewardsForVault(IClaimOnBehalf _vault, address[] calldata _targets) external {
         ClaimData[] memory claimData = new ClaimData[](_targets.length);
 
         for (uint256 i; i < _targets.length; i++) {
             address target = _targets[i];
             bytes memory data = claimingData[target];
-
-            require(data.length != 0, EmptyData());
+            require(data.length != 0, UnknownTarget());
 
             claimData[i] = ClaimData(target, data);
         }
@@ -71,8 +72,11 @@ contract RewardsClaimer is Ownable2Step {
         );
     }
 
+    /// @dev this should be called from vault as delegatecall
+    /// vault should cache balanceOf(rewardToken) before this call and calculate claimed rewards based on that
     function claimOnBehalfOfVault(ClaimData[] calldata _claimDatas) external {
         for (uint256 i; i < _claimDatas.length; i++) {
+            // TODO check if we save gas if we save ClaimData to temporary var istead of using index twice
             _claimDatas[i].target.call(_claimDatas[i].data);
         }
     }
