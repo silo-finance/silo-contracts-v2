@@ -10,7 +10,7 @@ interface IDistributionManager {
         uint104 emissionPerSecond; // configured by owner
         uint40 lastUpdateTimestamp;
         uint40 distributionEnd; // configured by owner
-        mapping(address asset => uint256 userIndex) users;
+        mapping(address user => uint256 userIndex) users;
     }
 
     struct IncentiveProgramDetails {
@@ -29,7 +29,6 @@ interface IDistributionManager {
 
     event AssetConfigUpdated(address indexed asset, uint256 emission);
     event AssetIndexUpdated(address indexed asset, uint256 index);
-    event UserIndexUpdated(address indexed user, address indexed asset, uint256 index);
     event DistributionEndUpdated(bytes32 indexed incentivesProgram, uint256 newDistributionEnd);
     event IncentivesProgramIndexUpdated(bytes32 indexed programId, uint256 newIndex);
     event UserIndexUpdated(address indexed user, bytes32 indexed programId, uint256 newIndex);

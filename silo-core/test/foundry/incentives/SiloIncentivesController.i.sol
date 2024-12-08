@@ -10,6 +10,7 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
@@ -132,20 +133,17 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] no rewards without deposit");
         assertEq(_controller.getRewardsBalance(user2, _PROGRAM_NAME), 0, "[user2] no rewards without deposit");
 
-//        vm.expectEmit(true, true, true, true);
-//        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18);
-
         bytes memory data = abi.encodeWithSelector(
             SiloIncentivesController.afterTokenTransfer.selector,
             address(0),
             0,
             user1,
-            100e18, // balance
-            100e18, // total
-            100e18 // amount
+            100e18 * SiloMathLib._DECIMALS_OFFSET_POW, // balance
+            100e18 * SiloMathLib._DECIMALS_OFFSET_POW, // total
+            100e18 * SiloMathLib._DECIMALS_OFFSET_POW // amount
         );
 
-//        vm.expectCall(address(_controller), data);
+        vm.expectCall(address(_controller), data);
 
         silo0.deposit(100e18, user1);
 
@@ -168,17 +166,41 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(_rewardToken.balanceOf(user1), 0, "[user1] rewards before");
         assertEq(_rewardToken.balanceOf(user2), 0, "[user2] rewards before");
+
+        vm.expectEmit(true, true, true, false);
+        emit IDistributionManager.UserIndexUpdated(user1, _PROGRAM_ID, 0);
+
+//        vm.expectEmit(true, true, true, true);
+//        emit ISiloIncentivesController.RewardsAccrued(
+//            user1,
+//            address(_rewardToken),
+//            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50
+//        );
+
+//        vm.expectEmit(true, true, true, true);
+//        emit ISiloIncentivesController.RewardsClaimed(
+//            user1,
+//            user1,
+//            address(_rewardToken),
+//            user1,
+//            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50
+//        );
+
         vm.prank(user1);
         _controller.claimRewards(user1);
 
         assertEq(
             _rewardToken.balanceOf(user1),
-            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50 ,
+            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50,
             "[user1] rewards after"
         );
+
         assertEq(_rewardToken.balanceOf(user2), 0, "[user2] rewards after");
 
         uint256 immediateDistribution = 7e7;
+
+//        vm.expectEmit(true, true, true, true);
+//        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         vm.startPrank(address(hook));
         _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
