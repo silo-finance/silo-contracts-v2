@@ -32,7 +32,7 @@ contract RewardsClaimer is Ownable2Step {
     error UnknownTarget();
 
     /// @dev `data` that allows to claim reward on `target` contract.
-    mapping(address target => bytes memory data) claimingData;
+    mapping(address target => bytes data) claimingData;
 
     /// @dev if we will define array of targets, we can create method `claimRewardsForVault()` without arguments
     /// to prevent out of gas, we can do this:
