@@ -1,20 +1,6 @@
 /* Integrity of main methods */
 
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/config_for_two_in_cvl.spec";
-import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/safe-approximations.spec";
-
-import "../requirements/tokens_requirements.spec";
-
-using Silo0 as silo0;
-using Silo1 as silo1;
-using Token0 as token0;
-using Token1 as token1;
-using ShareDebtToken0 as shareDebtToken0;
-using ShareDebtToken1 as shareDebtToken1;
-
+import "../requirements/CompleteSiloSetup.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
@@ -35,6 +21,7 @@ methods {
 /// @title Integrity of borrow
 /// @property borrow-integrity
 /// @status Done: https://vaas-stg.certora.com/output/39601/a92223ffd54b428bbc75fbbf76deaa91?anonymousKey=f962f690a342ccff3b3843c47f2d310b98d355f6
+// TODO add check for decrease of silo's balance
 rule HLP_integrityOfBorrow(address receiver, uint256 assets) {
     env e;
 
@@ -95,7 +82,7 @@ rule HLP_integrityOfBorrowSame(address receiver, uint256 assets) {
 
 
 /// @title Integrity of `borrowShares`
-/// @property borrow-integrity
+/// @property borrowShares-integrity
 /// @status Done: https://vaas-stg.certora.com/output/39601/ba5142728e9e4089a74f3a448e4df9fa?anonymousKey=c6c5cca56df4b25896022089b307da711046c6c8
 rule HLP_integrityOfBorrowShares(address receiver, uint256 shares) {
     env e;
