@@ -54,7 +54,9 @@ contract HookContract {
     }
 }
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
+/*
+ FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
+*/
 contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     SiloIncentivesController internal _controller;
 
@@ -206,26 +208,21 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
         vm.stopPrank();
 
-        // TODO bug?: after immediateDistribution calculations are off
-        // 70000000 != 120000000
-        // I think solution would be to disallow two programs at the same time
-        uint256 expectedTotalRewards = emissionPerSecond * 50 + immediateDistribution;
-
         assertEq(
             _controller.getRewardsBalance(user1, _PROGRAM_NAME),
-            _user2Deposit ? expectedTotalRewards / 2 : expectedTotalRewards,
+            _user2Deposit ? immediateDistribution / 2 : immediateDistribution,
             "[user1] standard rewards + immediate"
         );
 
         assertEq(
             _controller.getRewardsBalance(user2, _PROGRAM_NAME),
-            _user2Deposit ? expectedTotalRewards / 2 : 0,
+            _user2Deposit ? emissionPerSecond * 50 + immediateDistribution / 2 : 0,
             "[user2] standard rewards + immediate"
         );
 
         vm.warp(block.timestamp + 50);
 
-        expectedTotalRewards = emissionPerSecond * 100 + immediateDistribution;
+        uint256 expectedTotalRewards = emissionPerSecond * 100 + immediateDistribution;
 
         vm.prank(user1);
         _controller.claimRewards(user1);
