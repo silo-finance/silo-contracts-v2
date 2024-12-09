@@ -243,7 +243,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_programs -vvv
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_programs_1user -vvv
     */
     function test_scenario_two_programs_1user() public {
         _test_scenario_two_programs(false);
@@ -309,7 +309,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(
             _controller.getRewardsBalance(user1, _PROGRAM_NAME),
-            immediateDistribution / 2,
+            _user2Deposit ? immediateDistribution / 2 : immediateDistribution,
             "[user1] only immediate rewards"
         );
 
@@ -321,17 +321,21 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         vm.prank(user1);
         _controller.claimRewards(user1);
+
+        uint256 totalRewards = emissionPerSecond * 100 + immediateDistribution;
+
         assertEq(
             _rewardToken.balanceOf(user1),
-            (emissionPerSecond * 100 + immediateDistribution) / 2,
+            _user2Deposit ? totalRewards / 2 : totalRewards,
             "[user1] rewards at the end"
         );
 
         vm.prank(user2);
         _controller.claimRewards(user2);
+        
         assertEq(
             _rewardToken.balanceOf(user2),
-            _user2Deposit ? (emissionPerSecond * 100 + immediateDistribution) / 2 : 0,
+            _user2Deposit ? totalRewards / 2 : 0,
             "[user2] rewards at the end"
         );
     }
