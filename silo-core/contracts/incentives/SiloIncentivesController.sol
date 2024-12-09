@@ -66,6 +66,11 @@ contract SiloIncentivesController is BaseIncentivesController {
         for (uint256 i = 0; i < numberOfPrograms; i++) {
             bytes32 programId = _incentivesProgramIds.at(i);
 
+            if (incentivesPrograms[programId].lastUpdateTimestamp == 0) {
+                // optimisation check, if we never configured rewards distribution, then no need for updating any data
+                continue;
+            }
+
             if (_sender != address(0)) {
                 handleAction(programId, _sender, _totalSupply, _senderBalance);
             }
@@ -87,6 +92,8 @@ contract SiloIncentivesController is BaseIncentivesController {
         uint40 distributionEndBefore = program.distributionEnd;
         uint104 emissionPerSecondBefore = program.emissionPerSecond;
 
+        // we want to distribute all rewards in 1sec time, to do so, we need temporary override time for program,
+        // calculate new index based on amount and current state of total staked, and revert time to original state
         program.distributionEnd = uint40(block.timestamp);
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
         program.emissionPerSecond = _amount;
