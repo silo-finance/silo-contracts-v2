@@ -332,7 +332,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         vm.prank(user2);
         _controller.claimRewards(user2);
-        
+
         assertEq(
             _rewardToken.balanceOf(user2),
             _user2Deposit ? totalRewards / 2 : 0,
