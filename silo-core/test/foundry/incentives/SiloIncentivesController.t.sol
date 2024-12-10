@@ -25,7 +25,7 @@ contract SiloIncentivesControllerTest is Test {
     uint256 internal constant _PRECISION = 10 ** 18;
     uint256 internal constant _TOTAL_SUPPLY = 1000e18;
     string internal constant _PROGRAM_NAME = "Test";
-    bytes32 internal constant _PROGRAM_ID = keccak256(abi.encodePacked(_PROGRAM_NAME));
+    bytes32 internal constant _PROGRAM_ID = bytes32(abi.encodePacked(_PROGRAM_NAME));
 
     event IncentivesProgramCreated(bytes32 indexed programId, string indexed name);
     event IncentivesProgramUpdated(bytes32 indexed programId);
@@ -784,6 +784,12 @@ contract SiloIncentivesControllerTest is Test {
 
         assertEq(accruedRewards.length, 1, "expected 1 rewards and do not revert");
         assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_tooLongProgramName
+    function test_getProgramId_tooLongProgramName() public {
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.TooLongProgramName.selector));
+        _controller.getProgramId("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
     }
 
     function _claimRewardsToSelf(address _user) internal {

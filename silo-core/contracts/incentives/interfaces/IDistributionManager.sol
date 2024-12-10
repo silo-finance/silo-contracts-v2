@@ -35,6 +35,7 @@ interface IDistributionManager {
     event UserIndexUpdated(address indexed user, bytes32 indexed programId, uint256 newIndex);
 
     error OnlyNotifier();
+    error TooLongProgramName();
 
     /**
      * @dev Sets the end date for the distribution

@@ -95,7 +95,9 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     /// @inheritdoc IDistributionManager
     function getProgramId(string memory _programName) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_programName));
+        if (bytes(_programName).length > 32) revert TooLongProgramName();
+
+        return bytes32(abi.encodePacked(_programName));
     }
 
     /**
