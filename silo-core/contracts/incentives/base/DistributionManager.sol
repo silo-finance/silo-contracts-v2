@@ -25,7 +25,6 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     uint8 public constant PRECISION = 18;
     uint256 public constant TEN_POW_PRECISION = 10 ** PRECISION;
 
-
     modifier onlyNotifier() {
         if (msg.sender != NOTIFIER) revert OnlyNotifier();
         _;

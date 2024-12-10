@@ -5,15 +5,16 @@ import {IDistributionManager} from "./IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
 interface ISiloIncentivesController is IDistributionManager {
-    event RewardsAccrued(address indexed user, address indexed rewardToken, uint256 amount);
+    event RewardsAccrued(address indexed user, address indexed rewardToken, bytes32 indexed programId, uint256 amount);
     event ClaimerSet(address indexed user, address indexed claimer);
-    event IncentivesProgramCreated(bytes32 indexed incentivesProgramId);
+    event IncentivesProgramCreated(bytes32 indexed programId, string indexed name);
     event IncentivesProgramUpdated(bytes32 indexed programId);
 
     event RewardsClaimed(
         address indexed user,
         address indexed to,
         address indexed rewardToken,
+        bytes32 programId,
         address claimer,
         uint256 amount
     );

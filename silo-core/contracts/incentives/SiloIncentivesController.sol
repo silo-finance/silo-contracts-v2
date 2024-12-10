@@ -82,17 +82,21 @@ contract SiloIncentivesController is BaseIncentivesController {
 
         if (program.lastUpdateTimestamp == 0) return;
 
+        // Update the program's internal state to guarantee that further actions will not break it.
         _updateAssetStateInternal(_programId, _totalStaked);
 
         uint40 distributionEndBefore = program.distributionEnd;
         uint104 emissionPerSecondBefore = program.emissionPerSecond;
 
+        // Distributing `_amount` of rewards in one second allows the rewards to be added to users' balances
+        // even to the active incentives program.
         program.distributionEnd = uint40(block.timestamp);
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
         program.emissionPerSecond = _amount;
 
         _updateAssetStateInternal(_programId, _totalStaked);
 
+        // If we have ongoing distribution, we need to revert the changes and keep the state as it was.
         program.distributionEnd = distributionEndBefore;
         program.lastUpdateTimestamp = uint40(block.timestamp);
         program.emissionPerSecond = emissionPerSecondBefore;

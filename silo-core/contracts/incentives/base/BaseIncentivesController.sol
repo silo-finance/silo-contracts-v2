@@ -49,7 +49,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
 
         _updateAssetStateInternal(programId, _shareToken().totalSupply());
 
-        emit IncentivesProgramCreated(programId);
+        emit IncentivesProgramCreated(programId, _incentivesProgramInput.name);
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -86,7 +86,13 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         if (accruedRewards != 0) {
             uint256 newUnclaimedRewards = _usersUnclaimedRewards[_user][_incentivesProgramId] + accruedRewards;
             _usersUnclaimedRewards[_user][_incentivesProgramId] = newUnclaimedRewards;
-            emit RewardsAccrued(_user, incentivesPrograms[_incentivesProgramId].rewardToken, newUnclaimedRewards);
+
+            emit RewardsAccrued(
+                _user,
+                incentivesPrograms[_incentivesProgramId].rewardToken,
+                _incentivesProgramId,
+                newUnclaimedRewards
+            );
         }
     }
 
@@ -178,10 +184,23 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
             accruedRewards[i].amount += unclaimedRewards;
 
             if (accruedRewards[i].amount != 0) {
-                emit RewardsAccrued(user, accruedRewards[i].rewardToken, accruedRewards[i].amount);
+                emit RewardsAccrued(
+                    user,
+                    accruedRewards[i].rewardToken,
+                    accruedRewards[i].programId,
+                    accruedRewards[i].amount
+                );
 
                 _transferRewards(accruedRewards[i].rewardToken, to, accruedRewards[i].amount);
-                emit RewardsClaimed(user, to, accruedRewards[i].rewardToken, claimer, accruedRewards[i].amount);
+
+                emit RewardsClaimed(
+                    user,
+                    to,
+                    accruedRewards[i].rewardToken,
+                    accruedRewards[i].programId,
+                    claimer,
+                    accruedRewards[i].amount
+                );
             }
         }
     }

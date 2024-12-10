@@ -27,7 +27,7 @@ contract SiloIncentivesControllerTest is Test {
     string internal constant _PROGRAM_NAME = "Test";
     bytes32 internal constant _PROGRAM_ID = keccak256(abi.encodePacked(_PROGRAM_NAME));
 
-    event IncentivesProgramCreated(bytes32 indexed incentivesProgramId);
+    event IncentivesProgramCreated(bytes32 indexed programId, string indexed name);
     event IncentivesProgramUpdated(bytes32 indexed programId);
     event ClaimerSet(address indexed user, address indexed claimer);
 
@@ -86,7 +86,7 @@ contract SiloIncentivesControllerTest is Test {
         (,, uint256 lastUpdateTimestampBefore, ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
 
         vm.expectEmit(true, true, true, true);
-        emit IncentivesProgramCreated(_PROGRAM_ID);
+        emit IncentivesProgramCreated(_PROGRAM_ID, _PROGRAM_NAME);
 
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
