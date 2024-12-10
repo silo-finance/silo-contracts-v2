@@ -77,4 +77,11 @@ interface IDistributionManager {
         external
         view
         returns (IncentiveProgramDetails memory details);
+
+    /**
+     * @dev Returns the program id for the given program name
+     * @param _programName The incentives program name
+     * @return programId
+     */
+    function getProgramId(string calldata _programName) external pure returns (bytes32 programId);
 }

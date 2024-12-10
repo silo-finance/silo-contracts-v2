@@ -39,7 +39,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         string calldata _incentivesProgram,
         uint40 _distributionEnd
     ) external onlyOwner {
-        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         incentivesPrograms[incentivesProgramId].distributionEnd = _distributionEnd;
 
         emit DistributionEndUpdated(incentivesProgramId, _distributionEnd);
@@ -47,13 +47,13 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     /// @inheritdoc IDistributionManager
     function getDistributionEnd(string calldata _incentivesProgram) external view override returns (uint256) {
-        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         return incentivesPrograms[incentivesProgramId].distributionEnd;
     }
 
     /// @inheritdoc IDistributionManager
     function getUserData(address _user, string calldata _incentivesProgram) public view override returns (uint256) {
-        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         return incentivesPrograms[incentivesProgramId].users[_user];
     }
 
@@ -69,7 +69,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             uint256 distributionEnd
         )
     {
-        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
 
         index = incentivesPrograms[incentivesProgramId].index;
         emissionPerSecond = incentivesPrograms[incentivesProgramId].emissionPerSecond;
@@ -83,7 +83,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         view
         returns (IncentiveProgramDetails memory details)
     {
-        bytes32 incentivesProgramId = keccak256(abi.encodePacked(_incentivesProgram));
+        bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         details = IncentiveProgramDetails(
             incentivesPrograms[incentivesProgramId].index,
             incentivesPrograms[incentivesProgramId].rewardToken,
@@ -91,6 +91,11 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp,
             incentivesPrograms[incentivesProgramId].distributionEnd
         );
+    }
+
+    /// @inheritdoc IDistributionManager
+    function getProgramId(string memory _programName) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_programName));
     }
 
     /**

@@ -38,7 +38,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     {
         require(bytes(_incentivesProgramInput.name).length > 0, InvalidIncentivesProgramName());
 
-        bytes32 programId = keccak256(abi.encodePacked(_incentivesProgramInput.name));
+        bytes32 programId = getProgramId(_incentivesProgramInput.name);
 
         require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
         require(_incentivesProgramIds.add(programId), IncentivesProgramAlreadyExists());
@@ -60,7 +60,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     ) external onlyOwner {
         require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
 
-        bytes32 programId = keccak256(abi.encodePacked(_incentivesProgram));
+        bytes32 programId = getProgramId(_incentivesProgram);
 
         require(_incentivesProgramIds.contains(programId), IncentivesProgramNotFound());
 
@@ -102,7 +102,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         view
         returns (uint256 unclaimedRewards)
     {
-        bytes32 programId = keccak256(abi.encodePacked(_programName));
+        bytes32 programId = getProgramId(_programName);
         unclaimedRewards = getRewardsBalance(_user, programId);
     }
 
@@ -160,7 +160,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         view
         returns (uint256)
     {
-        bytes32 programId = keccak256(abi.encodePacked(_programName));
+        bytes32 programId = getProgramId(_programName);
         return _usersUnclaimedRewards[_user][programId];
     }
 
