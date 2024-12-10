@@ -11,7 +11,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloRouterDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
  */
 contract SiloRouterDeploy is CommonDeploy {
     function run() public returns (SiloRouter siloRouter) {

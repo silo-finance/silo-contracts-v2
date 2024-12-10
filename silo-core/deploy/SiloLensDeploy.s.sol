@@ -9,7 +9,7 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloLensDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
  */
 contract SiloLensDeploy is CommonDeploy {
     function run() public returns (ISiloLens siloLens) {
