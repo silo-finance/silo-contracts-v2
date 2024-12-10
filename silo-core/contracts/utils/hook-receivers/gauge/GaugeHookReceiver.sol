@@ -120,7 +120,8 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
             input.senderBalance,
             input.recipient,
             input.recipientBalance,
-            input.totalSupply
+            input.totalSupply,
+            input.amount
         );
     }
 

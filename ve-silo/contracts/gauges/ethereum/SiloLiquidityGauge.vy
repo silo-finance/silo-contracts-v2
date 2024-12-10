@@ -456,7 +456,8 @@ def afterTokenTransfer(
     _user1_new_balance: uint256,
     _user2: address,
     _user2_new_balance: uint256,
-    _total_supply: uint256
+    _total_supply: uint256,
+    _amount: uint256
 ) -> bool:
     assert msg.sender == self.hook_receiver # dev: only silo hook receiver
 
