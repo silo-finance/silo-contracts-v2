@@ -535,14 +535,11 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(rewards, expectedRewardsUser3);
 
         // user1 claim rewards
-        vm.prank(user1);
-        _controller.claimRewardsToSelf();
+        _claimRewardsToSelf(user1);
         // user2 claim rewards
-        vm.prank(user2);
-        _controller.claimRewards(user2);
+        _claimRewards(user2, user2);
         // user3 claim rewards
-        vm.prank(user3);
-        _controller.claimRewards(user3);
+        _claimRewards(user3, user3);
 
         assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
@@ -683,14 +680,11 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(rewards, expectedRewardsUser3);
 
         // user1 claim rewards
-        vm.prank(user1);
-        _controller.claimRewardsToSelf();
+        _claimRewardsToSelf(user1);
         // user2 claim rewards
-        vm.prank(user2);
-        _controller.claimRewards(user2);
+        _claimRewards(user2, user2);
         // user3 claim rewards
-        vm.prank(user3);
-        _controller.claimRewards(user3);
+        _claimRewards(user3, user3);
 
         assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
@@ -718,6 +712,16 @@ contract SiloIncentivesControllerTest is Test {
     function test_claimRewardsOnBehalf_onlyAuthorizedClaimers() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
         _controller.claimRewardsOnBehalf(user1, user2);
+
+        bytes32[] memory programsIds = new bytes32[](1);
+        programsIds[0] = _PROGRAM_ID;
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
+        _controller.claimRewardsOnBehalf(user1, user2, programsIds);
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = _PROGRAM_NAME;
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
+        _controller.claimRewardsOnBehalf(user1, user2, programsNames);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_inputsValidation
@@ -733,6 +737,24 @@ contract SiloIncentivesControllerTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
         _controller.claimRewardsOnBehalf(user1, address(0));
+
+        bytes32[] memory programsIds = new bytes32[](1);
+        programsIds[0] = _PROGRAM_ID;
+
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidUserAddress.selector));
+        _controller.claimRewardsOnBehalf(address(0), user2, programsIds);
+
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
+        _controller.claimRewardsOnBehalf(user1, address(0), programsIds);
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = _PROGRAM_NAME;
+
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidUserAddress.selector));
+        _controller.claimRewardsOnBehalf(address(0), user2, programsNames);
+
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
+        _controller.claimRewardsOnBehalf(user1, address(0), programsNames);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_success
@@ -746,5 +768,85 @@ contract SiloIncentivesControllerTest is Test {
         );
 
         assertEq(accruedRewards.length, 0, "expected 0 rewards and do not revert");
+
+        bytes32[] memory programsIds = new bytes32[](1);
+        programsIds[0] = _PROGRAM_ID;
+
+        accruedRewards = _controller.claimRewardsOnBehalf(user1, address(this), programsIds);
+
+        assertEq(accruedRewards.length, 1, "expected 1 rewards and do not revert");
+        assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = _PROGRAM_NAME;
+
+        accruedRewards = _controller.claimRewardsOnBehalf(user1, address(this), programsNames);
+
+        assertEq(accruedRewards.length, 1, "expected 1 rewards and do not revert");
+        assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
+    }
+
+    function _claimRewardsToSelf(address _user) internal {
+        uint256 snapshotId = vm.snapshot();
+
+        vm.prank(_user);
+        IDistributionManager.AccruedRewards[] memory accruedRewards1 = _controller.claimRewardsToSelf();
+
+        vm.revertTo(snapshotId);
+
+        bytes32[] memory programsIds = new bytes32[](1);
+        programsIds[0] = _PROGRAM_ID;
+
+        vm.prank(_user);
+        IDistributionManager.AccruedRewards[] memory accruedRewards2 = _controller.claimRewardsToSelf(programsIds);
+
+        vm.revertTo(snapshotId);
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = _PROGRAM_NAME;
+
+        vm.prank(_user);
+        IDistributionManager.AccruedRewards[] memory accruedRewards3 = _controller.claimRewardsToSelf(programsNames);
+
+        bytes32 rewards1 = keccak256(abi.encode(accruedRewards1));
+        bytes32 rewards2 = keccak256(abi.encode(accruedRewards2));
+        bytes32 rewards3 = keccak256(abi.encode(accruedRewards3));
+
+        assertTrue(
+            rewards1 == rewards2 && rewards2 == rewards3,
+            "expected rewards1, rewards2, and rewards3 to be the same"
+        );
+    }
+
+    function _claimRewards(address _user, address _to) internal {
+        uint256 snapshotId = vm.snapshot();
+
+        vm.prank(_user);
+        IDistributionManager.AccruedRewards[] memory accruedRewards1 = _controller.claimRewards(_to);
+
+        vm.revertTo(snapshotId);
+
+        bytes32[] memory programsIds = new bytes32[](1);
+        programsIds[0] = _PROGRAM_ID;
+
+        vm.prank(_user);
+        IDistributionManager.AccruedRewards[] memory accruedRewards2 = _controller.claimRewards(_to, programsIds);
+
+        vm.revertTo(snapshotId);
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = _PROGRAM_NAME;
+
+        vm.prank(_user);
+        IDistributionManager.AccruedRewards[] memory accruedRewards3 = _controller.claimRewards(_to, programsNames);
+
+        bytes32 rewards1 = keccak256(abi.encode(accruedRewards1));
+        bytes32 rewards2 = keccak256(abi.encode(accruedRewards2));
+        bytes32 rewards3 = keccak256(abi.encode(accruedRewards3));
+
+        assertTrue(
+            rewards1 == rewards2 && rewards2 == rewards3,
+            "expected rewards1, rewards2, and rewards3 to be the same"
+        );
     }
 }

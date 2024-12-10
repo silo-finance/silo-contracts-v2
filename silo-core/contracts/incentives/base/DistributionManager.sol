@@ -172,14 +172,26 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         internal
         returns (AccruedRewards[] memory accruedRewards)
     {
-        uint256 length = _incentivesProgramIds.length();
+        accruedRewards = _accrueRewardsForPrograms(_user, _incentivesProgramIds.values());
+    }
+
+    /**
+     * @dev Accrues rewards for a list of programs
+     * @param _user The address of the user
+     * @param _programIds The ids of the programs
+     * @return accruedRewards The accrued rewards for the user until the moment
+     */
+    function _accrueRewardsForPrograms(address _user, bytes32[] memory _programIds)
+        internal
+        returns (AccruedRewards[] memory accruedRewards)
+    {
+        uint256 length = _programIds.length;
         accruedRewards = new AccruedRewards[](length);
 
         (uint256 userStaked, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
 
         for (uint256 i = 0; i < length; i++) {
-            bytes32 incentivesProgramId = _incentivesProgramIds.at(i);
-            accruedRewards[i] = _accrueRewards(_user, incentivesProgramId, totalStaked, userStaked);
+            accruedRewards[i] = _accrueRewards(_user, _programIds[i], totalStaked, userStaked);
         }
     }
 

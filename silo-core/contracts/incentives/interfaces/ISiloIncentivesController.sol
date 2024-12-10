@@ -105,6 +105,28 @@ interface ISiloIncentivesController is IDistributionManager {
     function claimRewards(address _to) external returns (AccruedRewards[] memory accruedRewards);
 
     /**
+     * @dev Claims reward for an user to the desired address, on all the assets of the lending pool,
+     * accumulating the pending rewards
+     * @param _to Address that will be receiving the rewards
+     * @param _programIds The incentives program ids
+     * @return accruedRewards
+     */
+    function claimRewards(address _to, bytes32[] calldata _programIds)
+        external
+        returns (AccruedRewards[] memory accruedRewards);
+
+    /**
+     * @dev Claims reward for an user to the desired address, on all the assets of the lending pool,
+     * accumulating the pending rewards
+     * @param _to Address that will be receiving the rewards
+     * @param _programNames The incentives program names
+     * @return accruedRewards
+     */
+    function claimRewards(address _to, string[] calldata _programNames)
+        external
+        returns (AccruedRewards[] memory accruedRewards);
+
+    /**
      * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending
      * rewards. The caller must be whitelisted via "allowClaimOnBehalf" function by the RewardsAdmin role manager
      * @param _user Address to check and claim rewards
@@ -116,10 +138,52 @@ interface ISiloIncentivesController is IDistributionManager {
         returns (AccruedRewards[] memory accruedRewards);
 
     /**
+     * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending
+     * rewards. The caller must be whitelisted via "allowClaimOnBehalf" function by the RewardsAdmin role manager
+     * @param _user Address to check and claim rewards
+     * @param _to Address that will be receiving the rewards
+     * @param _programIds The incentives program ids
+     * @return accruedRewards
+     */
+    function claimRewardsOnBehalf(address _user, address _to, bytes32[] calldata _programIds)
+        external
+        returns (AccruedRewards[] memory accruedRewards);
+
+    /**
+     * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending
+     * rewards. The caller must be whitelisted via "allowClaimOnBehalf" function by the RewardsAdmin role manager
+     * @param _user Address to check and claim rewards
+     * @param _to Address that will be receiving the rewards
+     * @param _programNames The incentives program names
+     * @return accruedRewards
+     */
+    function claimRewardsOnBehalf(address _user, address _to, string[] calldata _programNames)
+        external
+        returns (AccruedRewards[] memory accruedRewards);
+
+    /**
      * @dev Claims reward for msg.sender, on all the assets of the lending pool, accumulating the pending rewards
      * @return accruedRewards
      */
     function claimRewardsToSelf() external returns (AccruedRewards[] memory accruedRewards);
+
+    /**
+     * @dev Claims reward for msg.sender, on all the assets of the lending pool, accumulating the pending rewards
+     * @param _programIds The incentives program ids
+     * @return accruedRewards
+     */
+    function claimRewardsToSelf(bytes32[] calldata _programIds)
+        external
+        returns (AccruedRewards[] memory accruedRewards);
+
+    /**
+     * @dev Claims reward for msg.sender, on all the assets of the lending pool, accumulating the pending rewards
+     * @param _programNames The incentives program names
+     * @return accruedRewards
+     */
+    function claimRewardsToSelf(string[] calldata _programNames)
+        external
+        returns (AccruedRewards[] memory accruedRewards);
 
     /**
      * @dev Returns the whitelisted claimer for a certain address (0x0 if not set)
