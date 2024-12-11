@@ -10,7 +10,7 @@ interface IDistributionManager {
         uint104 emissionPerSecond; // configured by owner
         uint40 lastUpdateTimestamp;
         uint40 distributionEnd; // configured by owner
-        mapping(address => uint256) users;
+        mapping(address user => uint256 userIndex) users;
     }
 
     struct IncentiveProgramDetails {
