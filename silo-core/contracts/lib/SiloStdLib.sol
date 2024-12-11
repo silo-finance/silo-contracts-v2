@@ -102,7 +102,13 @@ library SiloStdLib {
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
-        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
+        uint256 rcomp;
+
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
+            rcomp = r;
+        } catch() {
+            // do not lock silo
+        }
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
@@ -134,8 +140,14 @@ library SiloStdLib {
         view
         returns (uint256 totalDebtAssetsWithInterest)
     {
-        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
+        uint256 rcomp;
 
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
+            rcomp = r;
+        } catch() {
+            // do not lock silo
+        }
+        
         (
             totalDebtAssetsWithInterest,
         ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
