@@ -113,11 +113,21 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
-            totalCollateralAssets,
-            totalDebtAssets,
-            lastTimestamp
-        );
+        uint256 rcomp;
+
+        try
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+                totalCollateralAssets,
+                totalDebtAssets,
+                lastTimestamp
+            )
+            returns (uint256 interestRate)
+        {
+            rcomp = interestRate;
+        } catch {
+            // do not lock silo on interest calculation
+            emit IInterestRateModel.InterestRateModelError();
+        }
 
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
