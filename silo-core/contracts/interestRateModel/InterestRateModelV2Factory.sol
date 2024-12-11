@@ -15,6 +15,8 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
     /// @dev DP is 18 decimal points used for integer calculations
     uint256 public constant DP = 1e18;
 
+    int256 public constant MAX_TCRIT = 2 ** 112;
+
     /// @dev IRM contract implementation address to clone
     address public immutable IRM;
 
@@ -67,8 +69,15 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
         require(_config.klin >= 0, IInterestRateModelV2.InvalidKlin());
         require(_config.beta >= 0, IInterestRateModelV2.InvalidBeta());
 
-        require(_config.ri >= 0, IInterestRateModelV2.InvalidRi());
-        require(_config.Tcrit >= 0, IInterestRateModelV2.InvalidTcrit());
+        uint256 tmpMax = _config.ri > _config.klin ? _config.ri : _config.klin;
+
+        require(
+            _config.ri >= 0 && tmpMax + _config.kcrit * (1 - _config.ucrit) < 10**20,
+            IInterestRateModelV2.InvalidRi()
+        );
+
+        require(_config.Tcrit >= 0 && _config.Tcrit < MAX_TCRIT, IInterestRateModelV2.InvalidTcrit());
+
     }
 
     /// @inheritdoc IInterestRateModelV2Factory
