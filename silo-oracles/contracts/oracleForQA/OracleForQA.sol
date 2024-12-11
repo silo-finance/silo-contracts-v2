@@ -6,13 +6,13 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract OracleForQA is ISiloOracle {
     address immutable QUOTE_TOKEN;
-    uint256 immutable ONE_TOKEN;
+    uint256 immutable BASE_DECIMALS;
 
-    uint256 public price;
+    uint256 public priceOfOneBaseToken;
 
-    constructor (address _quote) {
+    constructor (address base, address _quote) {
         QUOTE_TOKEN = _quote;
-        ONE_TOKEN = 10 ** IERC20Metadata(_quote).decimals();
+        BASE_DECIMALS = IERC20Metadata(base).decimals();
     }
 
     function quoteToken() external view override virtual returns (address) {
@@ -21,11 +21,14 @@ contract OracleForQA is ISiloOracle {
 
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        return _baseToken == QUOTE_TOKEN ? _baseAmount : _baseAmount * price / ONE_TOKEN;
+        return _baseToken == QUOTE_TOKEN
+            ? _baseAmount
+            : _baseAmount * priceOfOneBaseToken / (10 ** BASE_DECIMALS);
     }
 
-    function setPriceForOneToken(uint256 _price) external {
-       price = _price;
+    /// @param _price if oracle is set for WETH/USDC, where USDC is quote, then correct price would be 3000e6
+    function setPriceOfOneBaseToken(uint256 _price) external {
+        priceOfOneBaseToken = _price;
     }
 
     function beforeQuote(address) external pure virtual override {
