@@ -19,6 +19,13 @@ function silosTimestampSetupRequirements(env e) {
     require require_uint64(e.block.timestamp) >= silo1.getSiloDataInterestRateTimestamp();
 }
 
+// @title Assume accrue has been update - used by rules such as solvnecy check 
+function accrueHasBeenCalled(env e) {
+    require require_uint64(e.block.timestamp) == silo0.getSiloDataInterestRateTimestamp();
+    require require_uint64(e.block.timestamp) == silo1.getSiloDataInterestRateTimestamp();
+}
+
+
 // @title Given address is not one of the tokens, silos or config
 function nonSceneAddressRequirements(address sender) {
     require sender != silo0;
