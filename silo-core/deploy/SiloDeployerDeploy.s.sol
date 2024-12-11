@@ -31,6 +31,9 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     --rpc-url $RPC_ARBITRUM \
     --watch
 
+
+    cast abi-encode "constructor(address)" 0x44347a91cf3e9b30f80e2161438e0f10fceda0a0
+
     FOUNDRY_PROFILE=core forge verify-contract 0x30aaA84098CD71781aafCbfE8bB06aC6643a29DC \
     silo-core/contracts/Silo.sol:Silo \
     --libraries silo-core/contracts/lib/ShareTokenLib.sol:ShareTokenLib:0xC65Ca9496257CEC7d9d1802e3af60f62e12CD46B \
@@ -38,11 +41,11 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     --libraries silo-core/contracts/lib/Actions.sol:Actions:0x23d286b11b071CBe1C5df2D6340d23D6CEd8Ff53 \
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
     --libraries silo-core/contracts/lib/ShareCollateralTokenLib.sol:ShareCollateralTokenLib:0x939E48510C64307201aB90dE70b9405c138E8bf9 \
-    --constructor-args 0x00000000000000000000000044347a91cf3e9b30f80e2161438e0f10fceda0a0 \
+    --constructor-args <cast abi-encode output> \
     --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
-    
+
     FOUNDRY_PROFILE=core forge verify-contract 0x0E8696a9f49020Bb76718d705981ECb5BA725B28 \
     silo-core/contracts/utils/ShareProtectedCollateralToken.sol:ShareProtectedCollateralToken \
     --libraries silo-core/contracts/lib/ShareTokenLib.sol:ShareTokenLib:0xC65Ca9496257CEC7d9d1802e3af60f62e12CD46B \
@@ -51,18 +54,29 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     --rpc-url $RPC_ARBITRUM \
     --watch
 
+
+    cast abi-encode "constructor(address)" 0x6d228fa4dad2163056a48fc2186d716f5c65e89a
+
     FOUNDRY_PROFILE=core forge verify-contract 0x44347A91Cf3E9B30F80e2161438E0f10fCeDA0a0 \
     silo-core/contracts/SiloFactory.sol:SiloFactory \
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
-    --constructor-args 0x0000000000000000000000006d228fa4dad2163056a48fc2186d716f5c65e89a \
+    --constructor-args <cast abi-encode output> \
     --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
 
+
+    cast abi-encode "constructor(address,address,address,address,address)" \
+    0xda91d956498d667f5db71eecd58ba02c4b960a53 \
+    0x44347a91cf3e9b30f80e2161438e0f10fceda0a0 \
+    0x30aaa84098cd71781aafcbfe8bb06ac6643a29dc \
+    0x0e8696a9f49020bb76718d705981ecb5ba725b28 \
+    0x058a54bf6560038ca2cb58d6cdaf17c5d93cd436
+
     FOUNDRY_PROFILE=core forge verify-contract 0xF2D1f664b81388C0767460d9795aE2d86a29eF7B \
     silo-core/contracts/SiloDeployer.sol:SiloDeployer \
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
-    --constructor-args 0x000000000000000000000000da91d956498d667f5db71eecd58ba02c4b960a5300000000000000000000000044347a91cf3e9b30f80e2161438e0f10fceda0a000000000000000000000000030aaa84098cd71781aafcbfe8bb06ac6643a29dc0000000000000000000000000e8696a9f49020bb76718d705981ecb5ba725b28000000000000000000000000058a54bf6560038ca2cb58d6cdaf17c5d93cd436 \
+    --constructor-args <cast abi-encode output> \
     --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
