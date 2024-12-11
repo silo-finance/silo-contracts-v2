@@ -7,8 +7,8 @@ import {DistributionTypes} from "../lib/DistributionTypes.sol";
 interface ISiloIncentivesController is IDistributionManager {
     event RewardsAccrued(address indexed user, address indexed rewardToken, bytes32 indexed programId, uint256 amount);
     event ClaimerSet(address indexed user, address indexed claimer);
-    event IncentivesProgramCreated(bytes32 indexed programId, string indexed name);
-    event IncentivesProgramUpdated(bytes32 indexed programId);
+    event IncentivesProgramCreated(string indexed name);
+    event IncentivesProgramUpdated(string indexed name);
 
     event RewardsClaimed(
         address indexed user,
@@ -27,7 +27,6 @@ interface ISiloIncentivesController is IDistributionManager {
     error ClaimerUnauthorized();
     error InvalidRewardToken();
     error IncentivesProgramAlreadyExists();
-    error InvalidIncentivesProgramName();
     error IncentivesProgramNotFound();
 
     /**

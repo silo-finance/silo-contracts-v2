@@ -43,8 +43,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         external
         onlyOwner
     {
-        require(bytes(_incentivesProgramInput.name).length > 0, InvalidIncentivesProgramName());
-
         bytes32 programId = getProgramId(_incentivesProgramInput.name);
 
         require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
@@ -56,7 +54,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
 
         _updateAssetStateInternal(programId, _shareToken().totalSupply());
 
-        emit IncentivesProgramCreated(programId, _incentivesProgramInput.name);
+        emit IncentivesProgramCreated(_incentivesProgramInput.name);
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -78,7 +76,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         incentivesPrograms[programId].distributionEnd = _distributionEnd;
         incentivesPrograms[programId].emissionPerSecond = _emissionPerSecond;
 
-        emit IncentivesProgramUpdated(programId);
+        emit IncentivesProgramUpdated(_incentivesProgram);
     }
 
     /// @inheritdoc ISiloIncentivesController

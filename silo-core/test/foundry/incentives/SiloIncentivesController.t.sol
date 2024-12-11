@@ -27,8 +27,8 @@ contract SiloIncentivesControllerTest is Test {
     string internal constant _PROGRAM_NAME = "Test";
     bytes32 internal constant _PROGRAM_ID = bytes32(abi.encodePacked(_PROGRAM_NAME));
 
-    event IncentivesProgramCreated(bytes32 indexed programId, string indexed name);
-    event IncentivesProgramUpdated(bytes32 indexed programId);
+    event IncentivesProgramCreated(string indexed name);
+    event IncentivesProgramUpdated(string indexed name);
     event ClaimerSet(address indexed user, address indexed claimer);
 
     function setUp() public {
@@ -52,7 +52,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
     function test_createIncentivesProgram_InvalidIncentivesProgramName() public {
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidIncentivesProgramName.selector));
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
 
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -86,7 +86,7 @@ contract SiloIncentivesControllerTest is Test {
         (,, uint256 lastUpdateTimestampBefore, ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
 
         vm.expectEmit(true, true, true, true);
-        emit IncentivesProgramCreated(_PROGRAM_ID, _PROGRAM_NAME);
+        emit IncentivesProgramCreated(_PROGRAM_NAME);
 
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -339,7 +339,7 @@ contract SiloIncentivesControllerTest is Test {
         emissionPerSecond = 2000e18;
 
         vm.expectEmit(true, true, true, true);
-        emit IncentivesProgramUpdated(_PROGRAM_ID);
+        emit IncentivesProgramUpdated(_PROGRAM_NAME);
 
         vm.prank(_owner);
         _controller.updateIncentivesProgram(_PROGRAM_NAME, distributionEnd, emissionPerSecond);

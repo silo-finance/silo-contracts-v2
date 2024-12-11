@@ -8,6 +8,7 @@ import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {IDistributionManager} from "../interfaces/IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
+import {TokenHelper} from "../../lib/TokenHelper.sol";
 
 /**
  * @title DistributionManager
@@ -42,7 +43,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         incentivesPrograms[incentivesProgramId].distributionEnd = _distributionEnd;
 
-        emit DistributionEndUpdated(incentivesProgramId, _distributionEnd);
+        emit DistributionEndUpdated(_incentivesProgram, _distributionEnd);
     }
 
     /// @inheritdoc IDistributionManager
@@ -95,7 +96,8 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     /// @inheritdoc IDistributionManager
     function getProgramId(string memory _programName) public pure returns (bytes32) {
-        if (bytes(_programName).length > 32) revert TooLongProgramName();
+        require(bytes(_programName).length > 0, InvalidIncentivesProgramName());
+        require(bytes(_programName).length <= 32, TooLongProgramName());
 
         return bytes32(abi.encodePacked(_programName));
     }
@@ -126,7 +128,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         if (newIndex != oldIndex) {
             incentivesPrograms[incentivesProgramId].index = newIndex;
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
-            emit IncentivesProgramIndexUpdated(incentivesProgramId, newIndex);
+            emit IncentivesProgramIndexUpdated(string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))), newIndex);
         } else {
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
         }
@@ -159,7 +161,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             }
 
             incentivesPrograms[incentivesProgramId].users[user] = newIndex;
-            emit UserIndexUpdated(user, incentivesProgramId, newIndex);
+            emit UserIndexUpdated(user, string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))), newIndex);
         }
 
         return accruedRewards;

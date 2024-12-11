@@ -9,12 +9,6 @@ library DistributionTypes {
         uint40 distributionEnd;
     }
 
-    struct IncentivesProgramUpdateInput {
-        bytes32 incentivesProgramId;
-        uint40 distributionEnd;
-        uint104 emissionPerSecond;
-    }
-
     struct AssetConfigInput {
         uint104 emissionPerSecond;
         uint256 totalStaked;

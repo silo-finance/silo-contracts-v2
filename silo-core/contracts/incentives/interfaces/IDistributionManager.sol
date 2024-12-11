@@ -29,13 +29,13 @@ interface IDistributionManager {
 
     event AssetConfigUpdated(address indexed asset, uint256 emission);
     event AssetIndexUpdated(address indexed asset, uint256 index);
-    event UserIndexUpdated(address indexed user, address indexed asset, uint256 index);
-    event DistributionEndUpdated(bytes32 indexed incentivesProgram, uint256 newDistributionEnd);
-    event IncentivesProgramIndexUpdated(bytes32 indexed programId, uint256 newIndex);
-    event UserIndexUpdated(address indexed user, bytes32 indexed programId, uint256 newIndex);
+    event DistributionEndUpdated(string indexed incentivesProgram, uint256 newDistributionEnd);
+    event IncentivesProgramIndexUpdated(string indexed incentivesProgram, uint256 newIndex);
+    event UserIndexUpdated(address indexed user, string indexed incentivesProgram, uint256 newIndex);
 
     error OnlyNotifier();
     error TooLongProgramName();
+    error InvalidIncentivesProgramName();
 
     /**
      * @dev Sets the end date for the distribution
