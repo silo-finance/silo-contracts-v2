@@ -28,6 +28,7 @@ contract VaultIncentivesModuleTest is Test {
     address internal _deployer;
 
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
+    event IncentivesClaimingLogicUpdated(address indexed market, address logic);
     event IncentivesClaimingLogicRemoved(address indexed market);
     event IncentivesDistributionSolutionAdded(address solution);
     event IncentivesDistributionSolutionRemoved(address solution);
@@ -239,5 +240,47 @@ contract VaultIncentivesModuleTest is Test {
         module.acceptOwnership();
 
         assertEq(module.owner(), newOwner);
+    }
+
+    /*
+    forge test --mt test_updateIncentivesClaimingLogic -vvv
+    */
+    function test_updateIncentivesClaimingLogic() public {
+        vm.prank(_deployer);
+        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+
+        vm.expectEmit(true, true, true, true);
+        emit IncentivesClaimingLogicUpdated(_market1, _logic2);
+
+        vm.prank(_deployer);
+        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market1);
+
+        assertEq(incentivesModule.marketToLogic(_market1), _logic2);
+    }
+
+    /*
+    forge test --mt test_updateIncentivesClaimingLogic_onlyOwner -vvv
+    */
+    function test_updateIncentivesClaimingLogic_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market1);
+    }
+
+    /*
+    forge test --mt test_updateIncentivesClaimingLogic_marketNotConfigured -vvv
+    */
+    function test_updateIncentivesClaimingLogic_marketNotConfigured() public {
+        vm.expectRevert(IVaultIncentivesModule.MarketNotConfigured.selector);
+        vm.prank(_deployer);
+        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market1);
+    }
+
+    /*
+    forge test --mt test_updateIncentivesClaimingLogic_zeroAddress -vvv
+    */
+    function test_updateIncentivesClaimingLogic_zeroAddress() public {
+        vm.expectRevert(IVaultIncentivesModule.AddressZero.selector);
+        vm.prank(_deployer);
+        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(address(0)), _market1);
     }
 }
