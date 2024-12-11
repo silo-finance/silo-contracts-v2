@@ -12,24 +12,41 @@ import {IIncentivesDistributionSolution} from "../interfaces/IIncentivesDistribu
 contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    EnumerableSet.AddressSet private _logics;
+    EnumerableSet.AddressSet private _markets;
     EnumerableSet.AddressSet private _solutions;
+
+    mapping(address market => address logic) public marketToLogic;
 
     constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesClaimingLogic(IIncentivesClaimingLogic logic) external onlyOwner {
+    function addIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external onlyOwner {
         require(address(logic) != address(0), AddressZero());
-        require(_logics.add(address(logic)), LogicAlreadyAdded());
+        require(marketToLogic[_market] == address(0), LogicAlreadyAdded());
 
-        emit IncentivesClaimingLogicAdded(address(logic));
+        _markets.add(_market);
+        marketToLogic[_market] = address(logic);
+
+        emit IncentivesClaimingLogicAdded(_market, address(logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeIncentivesClaimingLogic(IIncentivesClaimingLogic logic) external onlyOwner {
-        require(_logics.remove(address(logic)), LogicNotFound());
+    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external onlyOwner {
+        require(marketToLogic[_market] != address(0), MarketNotConfigured());
 
-        emit IncentivesClaimingLogicRemoved(address(logic));
+        marketToLogic[_market] = address(logic);
+
+        emit IncentivesClaimingLogicUpdated(_market, address(logic));
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function removeIncentivesClaimingLogic(address _market) external onlyOwner {
+        require(marketToLogic[_market] != address(0), LogicNotFound());
+
+        _markets.remove(_market);
+        delete marketToLogic[_market];
+
+        emit IncentivesClaimingLogicRemoved(_market);
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -49,11 +66,37 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     /// @inheritdoc IVaultIncentivesModule
     function getIncentivesClaimingLogics() external view returns (address[] memory logics) {
-        logics = _logics.values();
+        address[] memory markets = _markets.values();
+
+        logics = _getIncentivesClaimingLogics(markets);
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function getIncentivesClaimingLogics(address[] memory _marketsInput)
+        external
+        view
+        returns (address[] memory logics)
+    {
+        logics = _getIncentivesClaimingLogics(_marketsInput);
     }
 
     /// @inheritdoc IVaultIncentivesModule
     function getIncentivesDistributionSolutions() external view returns (address[] memory solutions) {
         solutions = _solutions.values();
+    }
+
+    /// @dev Internal function to get the incentives claiming logics for a given market.
+    /// @param _marketsInput The markets to get the incentives claiming logics for.
+    /// @return logics The incentives claiming logics.
+    function _getIncentivesClaimingLogics(address[] memory _marketsInput)
+        internal
+        view
+        returns (address[] memory logics)
+    {
+        logics = new address[](_marketsInput.length);
+
+        for (uint256 i = 0; i < _marketsInput.length; i++) {
+            logics[i] = marketToLogic[_marketsInput[i]];
+        }
     }
 }
