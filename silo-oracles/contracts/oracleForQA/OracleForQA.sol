@@ -8,7 +8,7 @@ contract OracleForQA is ISiloOracle {
     address immutable QUOTE_TOKEN;
     uint256 immutable ONE_TOKEN;
 
-    uint256 price;
+    uint256 public price;
 
     constructor (address _quote) {
         QUOTE_TOKEN = _quote;
