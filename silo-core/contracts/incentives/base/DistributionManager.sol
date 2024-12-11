@@ -128,7 +128,11 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         if (newIndex != oldIndex) {
             incentivesPrograms[incentivesProgramId].index = newIndex;
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
-            emit IncentivesProgramIndexUpdated(string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))), newIndex);
+
+            emit IncentivesProgramIndexUpdated(
+                string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))),
+                newIndex
+            );
         } else {
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
         }
@@ -161,7 +165,12 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             }
 
             incentivesPrograms[incentivesProgramId].users[user] = newIndex;
-            emit UserIndexUpdated(user, string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))), newIndex);
+
+            emit UserIndexUpdated(
+                user,
+                string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))),
+                newIndex
+            );
         }
 
         return accruedRewards;
