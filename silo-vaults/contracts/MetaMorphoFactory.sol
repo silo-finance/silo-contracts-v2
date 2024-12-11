@@ -29,10 +29,12 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
         address asset,
         string memory name,
         string memory symbol,
+        address _rewardsClaimer,
         bytes32 salt
     ) external returns (IMetaMorpho metaMorpho) {
-        metaMorpho =
-            IMetaMorpho(address(new MetaMorpho{salt: salt}(initialOwner, initialTimelock, asset, name, symbol)));
+        metaMorpho = IMetaMorpho(address(new MetaMorpho{salt: salt}(
+            initialOwner, initialTimelock, asset, name, symbol, _rewardsClaimer))
+        );
 
         isMetaMorpho[address(metaMorpho)] = true;
 
