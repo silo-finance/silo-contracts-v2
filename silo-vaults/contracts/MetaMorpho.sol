@@ -48,6 +48,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     uint8 public immutable DECIMALS_OFFSET;
 
     IVaultIncentivesModule public immutable INCENTIVES_MODULE;
+    address public immutable REWARDS_CLAIMER;
 
     /* STORAGE */
 
@@ -108,18 +109,21 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         address _owner,
         uint256 _initialTimelock,
         IVaultIncentivesModule _vaultIncentivesModule,
+        address _rewardsClaimer,
         address _asset,
         string memory _name,
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
+        require(address(_rewardsClaimer) != address(0), ErrorsLib.ZeroAddress());
 
         DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18, IERC20Metadata(_asset).decimals()));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
         INCENTIVES_MODULE = _vaultIncentivesModule;
+        REWARDS_CLAIMER = _rewardsClaimer;
     }
 
     /* MODIFIERS */
@@ -481,6 +485,19 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         emit EventsLib.Skim(_msgSender(), _token, amount);
     }
 
+    function claimRewards() public {
+        // TODO
+
+        // REWARDS_CLAIMER.claimAndDistribute();
+        address[] memory _marketsInput = supplyQueue;
+
+        (address[] memory logics) = REWARDS_CLAIMER.getIncentivesClaimingLogics(_marketsInput);
+
+        for (uint256 i; i < logics.length; i++) {
+            logics[i].delegatecall(abi.encodeWithSelector(claimAndDistribute.selector));
+        }
+    }
+
     /* ERC4626 (PUBLIC) */
 
     /// @inheritdoc IERC20Metadata
@@ -665,6 +682,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @inheritdoc ERC4626
     /// @dev Used in mint or deposit to deposit the underlying asset to Morpho markets.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
+        // on deposit, claim must be first action, new user should not get reward
+        claimRewards();
         super._deposit(_caller, _receiver, _assets, _shares);
 
         _supplyMorpho(_assets);
@@ -684,6 +703,11 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         virtual
         override
     {
+        // on withdraw, claim must can be first action, user that is leaving should get rewards
+        // immediate deposit-withdraw operation will not abused it, because before deposit all rewards will be
+        // claimed, so on withdraw on the same block no additional rewards will be generated.
+        claimRewards();
+
         _withdrawMorpho(_assets);
 
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);

@@ -43,8 +43,15 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
         );
 
+        address rewardsClaimer = VaultIncentivesModule(
+            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
+
+        );
+
         metaMorpho = IMetaMorpho(address(
-            new MetaMorpho{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
+            new MetaMorpho{salt: salt}(
+                initialOwner, initialTimelock, vaultIncentivesModule, rewardsClaimer, asset, name, symbol
+            ))
         );
 
         isMetaMorpho[address(metaMorpho)] = true;
