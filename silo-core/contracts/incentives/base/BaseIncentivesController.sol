@@ -21,7 +21,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     // this mapping allows whitelisted addresses to claim on behalf of others
     // useful for contracts that hold tokens to be rewarded but don't have any native logic to claim Liquidity Mining
     // rewards
-    mapping(address => address) internal _authorizedClaimers;
+    mapping(address user => address claimer) internal _authorizedClaimers;
 
     modifier onlyAuthorizedClaimers(address claimer, address user) {
         if (_authorizedClaimers[user] != claimer) revert ClaimerUnauthorized();
