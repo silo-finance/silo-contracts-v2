@@ -32,6 +32,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     /// @inheritdoc IVaultIncentivesModule
     function updateIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external onlyOwner {
+        require(address(logic) != address(0), AddressZero());
         require(marketToLogic[_market] != address(0), MarketNotConfigured());
 
         marketToLogic[_market] = address(logic);
