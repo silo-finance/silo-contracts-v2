@@ -106,7 +106,7 @@ library SiloStdLib {
 
         try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
             rcomp = r;
-        } catch() {
+        } catch {
             // do not lock silo
         }
 
@@ -144,10 +144,10 @@ library SiloStdLib {
 
         try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
             rcomp = r;
-        } catch() {
+        } catch {
             // do not lock silo
         }
-        
+
         (
             totalDebtAssetsWithInterest,
         ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
