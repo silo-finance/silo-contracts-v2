@@ -76,9 +76,16 @@ contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] IRM configs prepared");
         
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
+        siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
+        siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
+        siloInitData.solvencyOracle1 = oracles.solvencyOracle1.deployed;
+        siloInitData.maxLtvOracle1 = oracles.maxLtvOracle1.deployed;
+        console2.log("[SiloCommonDeploy] siloInitData.solvencyOracle0", siloInitData.solvencyOracle0);
+        console2.log("[SiloCommonDeploy] siloInitData.maxLtvOracle0", siloInitData.maxLtvOracle0);
+        console2.log("[SiloCommonDeploy] siloInitData.solvencyOracle1", siloInitData.solvencyOracle1);
+        console2.log("[SiloCommonDeploy] siloInitData.maxLtvOracle1", siloInitData.maxLtvOracle1);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-
 
         console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
         console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
