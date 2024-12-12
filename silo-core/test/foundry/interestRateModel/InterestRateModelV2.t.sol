@@ -209,4 +209,29 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         assertEq(rcomp1, rcomp2, "expect exact rcomp value");
         assertEq(overflow1, overflow2, "expect exact overflow value");
     }
+
+    /*
+    forge test -vv --mt test_IRM_configOverflowCheck
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_IRM_configOverflowCheck(int112 _Tcrit, int112 _ri) public {
+        vm.assume(_Tcrit > 0);
+        vm.assume(_ri > 0);
+
+        IInterestRateModelV2.Config memory config = IInterestRateModelV2.Config({
+            uopt: 300000000000000000,
+            ucrit: 500000000000000000,
+            ulow: 700000000000000000,
+            ki: 1761655,
+            kcrit: 63419583967,
+            klow: 3170979198,
+            klin: 634195839,
+            beta: 69444444444444,
+            ri: _ri,
+            Tcrit: _Tcrit
+        });
+
+        InterestRateModelV2 impl = new InterestRateModelV2();
+        impl.configOverflowCheck(config);
+    }
 }
