@@ -12,7 +12,9 @@ import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol"
 import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
 import {InterestRateModelV2Checked} from "./InterestRateModelV2Checked.sol";
 
-// forge test -vv --mc InterestRateModelV2Test
+/*
+ forge test -vv --mc InterestRateModelV2Test
+*/
 contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     uint256 constant TODAY = 1682885514;
     InterestRateModelV2 immutable INTEREST_RATE_MODEL;
