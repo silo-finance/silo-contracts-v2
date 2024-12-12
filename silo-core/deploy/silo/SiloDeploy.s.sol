@@ -7,7 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
-import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
+import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
@@ -188,7 +188,7 @@ contract SiloDeploy is CommonDeploy {
             return _diaTxData(_oracleConfigName);
         }
 
-        address deployed = _isFixedAddress(_oracleConfigName);
+        address deployed = SiloCoreDeployments.isFixedAddress(_oracleConfigName);
 
         if (deployed != address(0)) {
             txData.deployed = deployed;
@@ -297,17 +297,6 @@ contract SiloDeploy is CommonDeploy {
         );
 
         isDiaOracle = diaOracle != address(0);
-    }
-
-    function _isFixedAddress(string memory _oracleConfigName) internal pure returns (address fixedAddress) {
-        bytes32 ox = keccak256(bytes("0x"));
-        bytes32 twoChars = keccak256(abi.encodePacked(bytes(_oracleConfigName)[0], bytes(_oracleConfigName)[1]));
-
-        if (ox == twoChars && bytes(_oracleConfigName).length == 42) {
-            fixedAddress = address(bytes20(bytes(_oracleConfigName)));
-        }
-
-        return fixedAddress;
     }
 
     function beforeCreateSilo(
