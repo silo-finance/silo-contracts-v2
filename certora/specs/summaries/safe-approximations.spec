@@ -1,5 +1,5 @@
 /* Various sound summaries */
-
+//todo - rename to safe_approximations.spec
 methods {
     // ---- Mathematical simplifications ---------------------------------------
     function _.mulDiv(
@@ -17,3 +17,5 @@ function cvlMulDiv(uint256 x, uint256 y, uint256 denominator) returns uint {
     require denominator != 0;
     return require_uint256(x * y / denominator);
 }
+
+//todo - we should prove that it is equivalence 

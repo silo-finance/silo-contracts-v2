@@ -3,6 +3,7 @@
 // This is just for "using X as x" and envfree methods
 // Don't add more "using X as x" to other files if it's already here. Reference the file instead.
 
+//todo - can delete, looks like 
 using Silo0 as silo0;
 using Token0 as token0;
 using ShareDebtToken0 as shareDebtToken0;

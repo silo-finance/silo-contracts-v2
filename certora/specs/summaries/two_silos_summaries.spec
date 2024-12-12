@@ -3,6 +3,8 @@ import "../requirements/two_silos_methods.spec";
 
 /* Summaries for two silos setup */
 
+// TODO - rename file to silo1_envfree as no summaries here 
+
 methods {
     // ---- `envfree` ----------------------------------------------------------
     function Silo1.config() external returns (address) envfree;
