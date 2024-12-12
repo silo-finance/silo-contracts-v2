@@ -310,7 +310,7 @@ definition filterOutInInvariants(method f) returns bool =
 //////////////////////////////
 /// ideas, left over pices of code
 //////////////////////////////
-// remove - move to todo list
+
 // prove that (accrueInterest; f();) has the same effect as f()
 // afterwards add require that accrueInterest was already called before.
 // It will simplify some methods, save runtime
@@ -334,7 +334,6 @@ function max(mathint a, mathint b) returns mathint
     return a;
 }
 
-// todo remove
 // // limits token.totalSupply() and silo.total[] to reasonable values
 // function totalsNotTooHigh(env e, mathint max)
 // {

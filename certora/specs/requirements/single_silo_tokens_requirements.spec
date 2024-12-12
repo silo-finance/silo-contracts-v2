@@ -10,7 +10,7 @@
  */
 
 import "single_silo_methods.spec";
-//todo - delete? 
+
 // ---- Functions --------------------------------------------------------------
 
 // @title Prevents having block timestamp less than interest rate timestamp

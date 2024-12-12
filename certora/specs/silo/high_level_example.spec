@@ -1,5 +1,4 @@
 /* High level properties example */
-//todo - this can be deleted ? 
 import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 import "../erc20cvl.spec";
 import "_common/SiloConfigSummarizations.spec";

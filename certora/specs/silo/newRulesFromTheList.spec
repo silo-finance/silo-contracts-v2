@@ -1,6 +1,5 @@
 /* Integrity of main methods */
 
-// todo rename. maybe  silo.spec ?
 import "../requirements/CompleteSiloSetup.spec";
 import "unresolved.spec";
 import "../_simplifications/SiloMathLib.spec";

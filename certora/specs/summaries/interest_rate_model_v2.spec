@@ -24,7 +24,7 @@ methods {
         _interestRateTimestamp
     ) expect (uint256);
     
-    // rule interestRateTimestampIsBlockTimestamp proves assumption of this summary
+    // TODO: Soundness needs to be proved
     function _.getCompoundInterestRate(
         address _silo,
         uint256 _blockTimestamp
@@ -59,7 +59,6 @@ function CVLGetCompoundInterestRate(
     uint256 _debtAssets ;
     (_,_interestRateTimestamp,_,_collateralAssets,_debtAssets) = getSiloStorage();
     
-    // rule interestRateTimestampIsBlockTimestamp proves assumption of this summary
     if (_interestRateTimestamp == _blockTimestamp) {
         return 0;
     }

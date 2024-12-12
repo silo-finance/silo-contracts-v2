@@ -9,7 +9,7 @@
    - Soundness of the code yet to be checked. Particularly with regards to Debt Token and
      transfer.
 */
-//todo - I think we ended up not using it, lets delete 
+
 methods {
     function _.totalSupply() internal => totalSupplyByToken[calledContract] expect uint256;
     function _.balanceOf(
