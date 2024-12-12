@@ -14,7 +14,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+        --ffi --broadcast --rpc-url $RPC_OPTIMISM --verify
 
     Lib verification:
 
