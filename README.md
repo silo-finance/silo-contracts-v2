@@ -50,6 +50,7 @@ forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 
 $ anvil --fork-url $RPC_ARBITRUM --fork-block-number 284045200 & 
 
+# in case of issues, deploy contracts locally, so you can retreive errors
 FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2FactoryDeploy.s.sol:InterestRateModelV2FactoryDeploy \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545 
