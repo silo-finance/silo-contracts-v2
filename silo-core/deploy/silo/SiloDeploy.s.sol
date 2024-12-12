@@ -188,7 +188,7 @@ contract SiloDeploy is CommonDeploy {
             return _diaTxData(_oracleConfigName);
         }
 
-        address deployed = SiloCoreDeployments.isFixedAddress(_oracleConfigName);
+        address deployed = SiloCoreDeployments.parseAddress(_oracleConfigName);
 
         if (deployed != address(0)) {
             txData.deployed = deployed;

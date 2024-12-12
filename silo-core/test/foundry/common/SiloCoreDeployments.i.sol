@@ -52,20 +52,20 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_isFixedAddress
+    forge test -vv --ffi --mt test_parseAddress
     */
-    function test_isFixedAddress() public {
-        assertEq(SiloCoreDeployments.isFixedAddress(""), address(0), "empty string");
-        assertEq(SiloCoreDeployments.isFixedAddress("0x"), address(0), "0x string");
+    function test_parseAddress() public {
+        assertEq(SiloCoreDeployments.parseAddress(""), address(0), "empty string");
+        assertEq(SiloCoreDeployments.parseAddress("0x"), address(0), "0x string");
 
         assertEq(
-            SiloCoreDeployments.isFixedAddress("0xb720078680Dc65B54568673410aBb81195E0812"),
+            SiloCoreDeployments.parseAddress("0xb720078680Dc65B54568673410aBb81195E0812"),
             address(0),
             "not an address"
         );
 
         assertEq(
-            SiloCoreDeployments.isFixedAddress("0xb720078680Dc65B54568673410aBb81195E08122"),
+            SiloCoreDeployments.parseAddress("0xb720078680Dc65B54568673410aBb81195E08122"),
             address(0xb720078680Dc65B54568673410aBb81195E08122),
             "0x string"
         );

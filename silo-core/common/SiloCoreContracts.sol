@@ -33,7 +33,7 @@ library SiloCoreDeployments {
         return Deployments.getAddress(DEPLOYMENTS_DIR, _network, _contract);
     }
 
-    function isFixedAddress(string memory _string) internal pure returns (address fixedAddress) {
+    function parseAddress(string memory _string) internal pure returns (address fixedAddress) {
         if (bytes(_string).length != 42) return address(0);
 
         bytes32 ox = keccak256(bytes("0x"));
