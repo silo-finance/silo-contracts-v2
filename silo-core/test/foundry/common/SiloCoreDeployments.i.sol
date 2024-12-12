@@ -41,13 +41,33 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
         assertEq(addr, 0xb720078680Dc65B54568673410aBb81195E08122, "expect valid address on Arbitrum");
     }
 
-   function test_get_contractNotExists() public {
+    function test_get_contractNotExists() public {
        address addr = SiloCoreDeployments.get("not.exist", ChainsLib.OPTIMISM_ALIAS);
        assertEq(addr, address(0), "expect to return 0");
-   }
+    }
 
-   function test_get_invalidNetwork() public {
+    function test_get_invalidNetwork() public {
        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "abcd");
        assertEq(addr, address(0), "expect to return 0");
-   }
+    }
+
+    /*
+    forge test -vv --ffi --mt test_parseAddress
+    */
+    function test_parseAddress() public {
+        assertEq(SiloCoreDeployments.parseAddress(""), address(0), "empty string");
+        assertEq(SiloCoreDeployments.parseAddress("0x"), address(0), "0x string");
+
+        assertEq(
+            SiloCoreDeployments.parseAddress("0xb720078680Dc65B54568673410aBb81195E0812"),
+            address(0),
+            "not an address"
+        );
+
+        assertEq(
+            SiloCoreDeployments.parseAddress("0xb720078680Dc65B54568673410aBb81195E08122"),
+            address(0xb720078680Dc65B54568673410aBb81195E08122),
+            "0x string"
+        );
+    }
 }
