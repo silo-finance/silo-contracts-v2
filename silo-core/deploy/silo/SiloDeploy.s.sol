@@ -7,7 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
-import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
+import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
@@ -186,6 +186,22 @@ contract SiloDeploy is CommonDeploy {
 
         if (_isDiaOracle(_oracleConfigName)) {
             return _diaTxData(_oracleConfigName);
+        }
+
+        address deployed = SiloCoreDeployments.parseAddress(_oracleConfigName);
+
+        if (deployed != address(0)) {
+            txData.deployed = deployed;
+            console2.log("using already deployed oracle with fixed address: %s", _oracleConfigName, deployed);
+            return txData;
+        }
+
+        deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
+
+        if (deployed != address(0)) {
+            txData.deployed = deployed;
+            console2.log("using already deployed oracle %s: %s", _oracleConfigName, deployed);
+            return txData;
         }
 
         revert("[_getOracleTxData] unknown oracle type");

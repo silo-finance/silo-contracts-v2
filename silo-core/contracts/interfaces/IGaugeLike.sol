@@ -7,7 +7,8 @@ interface IGaugeLike {
         uint256 _senderBalance,
         address _recipient,
         uint256 _recipientBalance,
-        uint256 _totalSupply
+        uint256 _totalSupply,
+        uint256 _amount
     ) external;
 
     // solhint-disable func-name-mixedcase

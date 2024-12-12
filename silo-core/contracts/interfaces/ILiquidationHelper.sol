@@ -16,7 +16,8 @@ interface ILiquidationHelper {
         bytes swapCallData;
     }
 
-    /// @param hook partial liquidation hook address
+    /// @param hook partial liquidation hook address assigned to silo
+    /// you can get hook address by calling: silo.config().getConfig(_silo).hookReceiver
     /// @param collateralAsset address of underlying collateral token of `user` position
     /// @param user silo borrower address
     struct LiquidationData {
@@ -25,11 +26,12 @@ interface ILiquidationHelper {
         address user;
     }
 
-    /// @param _flashLoanFrom silo from where we can flashloan `_maxDebtToCover` amount to repay debt
-    /// @param _debtAsset address of debt token
-    /// @param _maxDebtToCover maximum amount we want to repay, check `IPartialLiquidation.maxLiquidation()`
-    /// @param _liquidation see desc for `LiquidationData`
-    /// @param _dexSwapInput swap that allow us to swap all collateral assets to debt asset,
+    /// @param _flashLoanFrom silo from where we can flashloan `_maxDebtToCover` amount of `_debtAsset` to repay debt
+    /// @param _debtAsset address of debt token (underlying token)
+    /// @param _maxDebtToCover maximum amount we want to repay,
+    /// you can use `IPartialLiquidation.maxLiquidation()` to get maximum possible  value
+    /// @param _liquidation see desc for `LiquidationData` struct
+    /// @param _dexSwapInput swap bytes that allows to swap all collateral assets to debt asset,
     /// this is optional and required only for two assets position
     function executeLiquidation(
         ISilo _flashLoanFrom,
