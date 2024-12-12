@@ -41,6 +41,18 @@ contract VaultIncentivesModuleTest is Test {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
+
+        vm.mockCall(
+            address(_logic1),
+            abi.encodeWithSelector(IIncentivesClaimingLogic.incentivesClaimingLogicPing.selector),
+            abi.encode(keccak256(abi.encode("IncentivesClaimingLogic")))
+        );
+
+        vm.mockCall(
+            address(_logic2),
+            abi.encodeWithSelector(IIncentivesClaimingLogic.incentivesClaimingLogicPing.selector),
+            abi.encode(keccak256(abi.encode("IncentivesClaimingLogic")))
+        );
     }
 
     /*
@@ -95,6 +107,17 @@ contract VaultIncentivesModuleTest is Test {
     function test_addIncentivesClaimingLogic_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+    }
+
+    /*
+    forge test --mt test_addIncentivesClaimingLogic_failedToPing -vvv
+    */
+    function test_addIncentivesClaimingLogic_failedToPing() public {
+        address logic = makeAddr("Fake logic");
+
+        vm.expectRevert(IVaultIncentivesModule.FailedToPing.selector);
+        vm.prank(_deployer);
+        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(logic), _market1);
     }
 
     /*
@@ -282,5 +305,19 @@ contract VaultIncentivesModuleTest is Test {
         vm.expectRevert(IVaultIncentivesModule.AddressZero.selector);
         vm.prank(_deployer);
         incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(address(0)), _market1);
+    }
+
+    /*
+    forge test --mt test_updateIncentivesClaimingLogic_failedToPing -vvv
+    */
+    function test_updateIncentivesClaimingLogic_failedToPing() public {
+        vm.prank(_deployer);
+        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+
+        address logic = makeAddr("Fake logic");
+
+        vm.expectRevert(IVaultIncentivesModule.FailedToPing.selector);
+        vm.prank(_deployer);
+        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(logic), _market1);
     }
 }

@@ -6,4 +6,8 @@ interface IIncentivesClaimingLogic {
     /// @notice Claim and distribute rewards to the vault.
     /// @dev Can claim rewards from multiple sources and distribute them to the vault users.
     function claimAndDistribute() external;
+
+    /// @notice Simple human error protection.
+    /// @return result The result of the ping keccak256(abi.encode("IncentivesClaimingLogic")).
+    function incentivesClaimingLogicPing() external pure returns (bytes32 result);
 }

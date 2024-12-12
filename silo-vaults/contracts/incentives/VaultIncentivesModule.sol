@@ -12,6 +12,8 @@ import {IIncentivesDistributionSolution} from "../interfaces/IIncentivesDistribu
 contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    bytes32 public constant INCENTIVES_CLAIMING_LOGIC_PING = keccak256(abi.encode("IncentivesClaimingLogic"));
+
     EnumerableSet.AddressSet private _markets;
     EnumerableSet.AddressSet private _solutions;
 
@@ -21,23 +23,25 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     /// @inheritdoc IVaultIncentivesModule
     function addIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
-        require(address(logic) != address(0), AddressZero());
+        require(address(_logic) != address(0), AddressZero());
         require(marketToLogic[_market] == address(0), LogicAlreadyAdded());
+        require(_logicPassesPing(_logic), FailedToPing());
 
         _markets.add(_market);
-        marketToLogic[_market] = address(logic);
+        marketToLogic[_market] = address(_logic);
 
-        emit IncentivesClaimingLogicAdded(_market, address(logic));
+        emit IncentivesClaimingLogicAdded(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external onlyOwner {
-        require(address(logic) != address(0), AddressZero());
+    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
+        require(address(_logic) != address(0), AddressZero());
         require(marketToLogic[_market] != address(0), MarketNotConfigured());
+        require(_logicPassesPing(_logic), FailedToPing());
 
-        marketToLogic[_market] = address(logic);
+        marketToLogic[_market] = address(_logic);
 
-        emit IncentivesClaimingLogicUpdated(_market, address(logic));
+        emit IncentivesClaimingLogicUpdated(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -51,18 +55,18 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external onlyOwner {
-        require(address(solution) != address(0), AddressZero());
-        require(_solutions.add(address(solution)), SolutionAlreadyAdded());
+    function addIncentivesDistributionSolution(IIncentivesDistributionSolution _solution) external onlyOwner {
+        require(address(_solution) != address(0), AddressZero());
+        require(_solutions.add(address(_solution)), SolutionAlreadyAdded());
 
-        emit IncentivesDistributionSolutionAdded(address(solution));
+        emit IncentivesDistributionSolutionAdded(address(_solution));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external onlyOwner {
-        require(_solutions.remove(address(solution)), SolutionNotFound());
+    function removeIncentivesDistributionSolution(IIncentivesDistributionSolution _solution) external onlyOwner {
+        require(_solutions.remove(address(_solution)), SolutionNotFound());
 
-        emit IncentivesDistributionSolutionRemoved(address(solution));
+        emit IncentivesDistributionSolutionRemoved(address(_solution));
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -99,5 +103,15 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
         for (uint256 i = 0; i < _marketsInput.length; i++) {
             logics[i] = marketToLogic[_marketsInput[i]];
         }
+    }
+
+    /// @dev Internal function to check if the logic passes the ping.
+    /// @param _logic The logic to check.
+    /// @return passedPing The result of the ping.
+    function _logicPassesPing(IIncentivesClaimingLogic _logic) internal view returns (bool passedPing) {
+        bytes memory payload = abi.encodeWithSelector(IIncentivesClaimingLogic.incentivesClaimingLogicPing.selector);
+        (bool success, bytes memory result) = address(_logic).staticcall(payload);
+
+        passedPing = success && result.length == 32 && abi.decode(result, (bytes32)) == INCENTIVES_CLAIMING_LOGIC_PING;
     }
 }

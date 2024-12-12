@@ -19,28 +19,29 @@ interface IVaultIncentivesModule {
     error SolutionNotFound();
     error MarketAlreadySet();
     error MarketNotConfigured();
+    error FailedToPing();
 
     /// @notice Add an incentives claiming logic for the vault.
-    /// @param logic The logic to add.
+    /// @param _logic The logic to add.
     /// @param _market The market to add the logic for.
-    function addIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external;
+    function addIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external;
 
     /// @notice Update an incentives claiming logic for the vault.
-    /// @param logic The logic to update.
+    /// @param _logic The logic to update.
     /// @param _market The market to update the logic for.
-    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external;
+    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external;
 
     /// @notice Remove an incentives claiming logic for the vault.
     /// @param _market The market to remove the logic for.
     function removeIncentivesClaimingLogic(address _market) external;
 
     /// @notice Add an incentives distribution solution for the vault.
-    /// @param solution The solution to add.
-    function addIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external;
+    /// @param _solution The solution to add.
+    function addIncentivesDistributionSolution(IIncentivesDistributionSolution _solution) external;
 
     /// @notice Remove an incentives distribution solution for the vault.
-    /// @param solution The solution to remove.
-    function removeIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external;
+    /// @param _solution The solution to remove.
+    function removeIncentivesDistributionSolution(IIncentivesDistributionSolution _solution) external;
 
     /// @notice Get all incentives claiming logics for the vault.
     /// @return logics The logics.
