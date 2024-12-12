@@ -49,7 +49,7 @@ interface IVaultIncentivesModule {
     /// @notice Get all incentives claiming logics for the vault.
     /// @param _markets The markets to get the incentives claiming logics for.
     /// @return logics The logics.
-    function getIncentivesClaimingLogics(address[] memory _markets) external view returns (address[] memory logics);
+    function getIncentivesClaimingLogics(address[] calldata _markets) external view returns (address[] memory logics);
 
     /// @notice Get all incentives distribution solutions for the vault.
     /// @return solutions The solutions.
