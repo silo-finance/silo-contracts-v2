@@ -48,13 +48,15 @@ forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 ```shell
 # 1. Test your config by deploying the Silo in the local fork as described above.
 
+$ anvil --fork-url $RPC_ARBITRUM --fork-block-number 284045200 & 
+
 # 2. Execute the script to deploy a Silo. This script will sign and send real on-chain transaction. Smart
 # contract will be verified on Etherscan. Standard Foundry --verifier-url parameter can be provided for other
 # verification providers, including Arbiscan. 
 
-$ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME_WITHOUT_JSON_EXTENSION \
+$ FOUNDRY_PROFILE=core CONFIG=testMarket_WETH_USDC \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
---ffi --verify --broadcast --rpc-url $YOUR_RPC_URL
+--ffi --verify --broadcast --rpc-url 127.0.0.1:8545
 
 # 3. Silo is deployed on-chain. Address is saved to silo-core/deploy/silo/_siloDeployments.json. 
 # You can create a PR to merge config and deployed address to develop branch.
