@@ -20,7 +20,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external onlyOwner {
+    function addIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
         require(address(logic) != address(0), AddressZero());
         require(marketToLogic[_market] == address(0), LogicAlreadyAdded());
 
