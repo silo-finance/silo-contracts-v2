@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.16.0] - 2024-12-12
+### Added
+- add support for custom oracle setup
+
 ## [0.15.1] - 2024-12-03
 ### Added
 - add initial setup for IRM params: `ri` and `Tcrit`
