@@ -188,7 +188,15 @@ contract SiloDeploy is CommonDeploy {
             return _diaTxData(_oracleConfigName);
         }
 
-        address deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
+        address deployed = _isFixedAddress(_oracleConfigName);
+
+        if (deployed != address(0)) {
+            txData.deployed = deployed;
+            console2.log("using already deployed oracle with fixed address: %s", _oracleConfigName, deployed);
+            return txData;
+        }
+
+        deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
 
         if (deployed != address(0)) {
             txData.deployed = deployed;
@@ -289,6 +297,17 @@ contract SiloDeploy is CommonDeploy {
         );
 
         isDiaOracle = diaOracle != address(0);
+    }
+
+    function _isFixedAddress(string memory _oracleConfigName) internal pure returns (address fixedAddress) {
+        bytes32 ox = keccak256(bytes("0x"));
+        bytes32 twoChars = keccak256(abi.encodePacked(bytes(_oracleConfigName)[0], bytes(_oracleConfigName)[1]));
+
+        if (ox == twoChars && bytes(_oracleConfigName).length == 42) {
+            fixedAddress = address(bytes20(bytes(_oracleConfigName)));
+        }
+
+        return fixedAddress;
     }
 
     function beforeCreateSilo(
