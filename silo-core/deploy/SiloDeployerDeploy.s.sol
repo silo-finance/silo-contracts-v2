@@ -12,9 +12,31 @@ import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProt
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 /**
-    FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
-        --ffi --broadcast --rpc-url $RPC_OPTIMISM --verify
+        --ffi --broadcast --rpc-url $RPC_ARBITRUM --verify
+
+    cast abi-encode "constructor(address,address,address,address,address)" \
+    0xda91d956498d667f5db71eecd58ba02c4b960a53 \
+    0x44347a91cf3e9b30f80e2161438e0f10fceda0a0 \
+    0x30aaa84098cd71781aafcbfe8bb06ac6643a29dc \
+    0x0e8696a9f49020bb76718d705981ecb5ba725b28 \
+    0x058a54bf6560038ca2cb58d6cdaf17c5d93cd436
+
+    FOUNDRY_PROFILE=core forge verify-contract 0xF2D1f664b81388C0767460d9795aE2d86a29eF7B \
+    silo-core/contracts/SiloDeployer.sol:SiloDeployer \
+    --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
+    --constructor-args <cast abi-encode output> \
+    --compiler-version 0.8.28 \
+    --rpc-url $RPC_ARBITRUM \
+    --watch
+
+    cast abi-encode "constructor(address)" 0x44347a91cf3e9b30f80e2161438e0f10fceda0a0
+
+
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
+        forge verify-contract 0xD37A51a5262A3537746944e61349f463d1D06Aab silo-core/contracts/SiloDeployer.sol:SiloDeployer \
+        --chain 42161 --watch --compiler-version 0.8.28
 
     Lib verification:
 
@@ -59,22 +81,6 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
     FOUNDRY_PROFILE=core forge verify-contract 0x44347A91Cf3E9B30F80e2161438E0f10fCeDA0a0 \
     silo-core/contracts/SiloFactory.sol:SiloFactory \
-    --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
-    --constructor-args <cast abi-encode output> \
-    --compiler-version 0.8.28 \
-    --rpc-url $RPC_ARBITRUM \
-    --watch
-
-
-    cast abi-encode "constructor(address,address,address,address,address)" \
-    0xda91d956498d667f5db71eecd58ba02c4b960a53 \
-    0x44347a91cf3e9b30f80e2161438e0f10fceda0a0 \
-    0x30aaa84098cd71781aafcbfe8bb06ac6643a29dc \
-    0x0e8696a9f49020bb76718d705981ecb5ba725b28 \
-    0x058a54bf6560038ca2cb58d6cdaf17c5d93cd436
-
-    FOUNDRY_PROFILE=core forge verify-contract 0xF2D1f664b81388C0767460d9795aE2d86a29eF7B \
-    silo-core/contracts/SiloDeployer.sol:SiloDeployer \
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
     --constructor-args <cast abi-encode output> \
     --compiler-version 0.8.28 \
