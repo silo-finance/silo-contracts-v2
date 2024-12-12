@@ -188,6 +188,14 @@ contract SiloDeploy is CommonDeploy {
             return _diaTxData(_oracleConfigName);
         }
 
+        address deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
+
+        if (deployed != address(0)) {
+            txData.deployed = deployed;
+            console2.log("using already deployed oracle %s: %s", _oracleConfigName, deployed);
+            return txData;
+        }
+
         revert("[_getOracleTxData] unknown oracle type");
     }
 
