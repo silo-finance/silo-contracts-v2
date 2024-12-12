@@ -65,7 +65,7 @@ FOUNDRY_PROFILE=core \
 
 $ FOUNDRY_PROFILE=core CONFIG=testMarket_WETH_USDC \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
---ffi --verify --broadcast --rpc-url 127.0.0.1:8545
+--ffi --broadcast --rpc-url 127.0.0.1:8545 --verify
 
 # 3. Silo is deployed on-chain. Address is saved to silo-core/deploy/silo/_siloDeployments.json. 
 # You can create a PR to merge config and deployed address to develop branch.
