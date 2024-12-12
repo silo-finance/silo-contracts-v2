@@ -10,7 +10,7 @@ import {
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 /**
-    FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2FactoryDeploy.s.sol:InterestRateModelV2FactoryDeploy \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
 
