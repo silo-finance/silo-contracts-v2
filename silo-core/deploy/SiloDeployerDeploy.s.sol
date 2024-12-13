@@ -86,8 +86,7 @@ contract SiloDeployerDeploy is CommonDeploy {
         string memory chainAlias = getChainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        ISiloFactory siloFactory = ISiloFactory(0x44347A91Cf3E9B30F80e2161438E0f10fCeDA0a0); // UI prod
-        // ISiloFactory siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));
+        ISiloFactory siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));
 
         address irmConfigFactory = SiloCoreDeployments.get(
             SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY,
