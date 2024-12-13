@@ -88,7 +88,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function marketIncentivesClaimingLogics(address market) external view returns (address[] memory logics) {
+    function getMarketIncentivesClaimingLogics(address market) external view returns (address[] memory logics) {
         logics = _marketLogics[market].values();
     }
 
