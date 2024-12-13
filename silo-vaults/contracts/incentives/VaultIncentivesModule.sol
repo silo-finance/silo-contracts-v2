@@ -83,7 +83,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function configuredMarkets() external view returns (address[] memory markets) {
+    function getConfiguredMarkets() external view returns (address[] memory markets) {
         markets = _markets.values();
     }
 
