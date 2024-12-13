@@ -63,7 +63,7 @@ FOUNDRY_PROFILE=core \
 # contract will be verified on Etherscan. Standard Foundry --verifier-url parameter can be provided for other
 # verification providers, including Arbiscan. 
 
-$ FOUNDRY_PROFILE=core CONFIG=testMarket_WETH_USDC \
+$ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME_WITHOUT_JSON_EXTENSION \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 --ffi --broadcast --rpc-url 127.0.0.1:8545 --verify
 
