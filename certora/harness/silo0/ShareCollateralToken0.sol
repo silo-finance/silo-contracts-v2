@@ -7,4 +7,9 @@ import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralTok
 contract ShareCollateralToken0 is ShareCollateralToken {
 
 
+    function getTransferWithChecks() external view returns (bool) {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        return $.transferWithChecks;
+    }
+
 }

@@ -27,11 +27,11 @@ definition onlySiloContractsMethods(method f) returns bool =
     )
     ||
     (  f.contract ==  siloConfig &&
-        (   f.selector == sig:onDebtTransfer(address,address).selector ||
-            f.selector == sig:turnOnReentrancyProtection().selector ||
-            f.selector == sig:turnOffReentrancyProtection().selector ||
-            f.selector == sig:setOtherSiloAsCollateralSilo(address).selector ||
-            f.selector == sig:setThisSiloAsCollateralSilo(address).selector
+        (   f.selector == sig:siloConfig.onDebtTransfer(address,address).selector ||
+            f.selector == sig:siloConfig.turnOnReentrancyProtection().selector ||
+            f.selector == sig:siloConfig.turnOffReentrancyProtection().selector ||
+            f.selector == sig:siloConfig.setOtherSiloAsCollateralSilo(address).selector ||
+            f.selector == sig:siloConfig.setThisSiloAsCollateralSilo(address).selector
         )
      )
      ;

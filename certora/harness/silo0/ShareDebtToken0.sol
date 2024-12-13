@@ -7,15 +7,9 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 contract ShareDebtToken0 is ShareDebtToken {
 
-    /*
-    function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override 
-    {
-        // solhint-disable-previous-line ordering
-        ShareDebtToken._afterTokenTransfer(_sender, _recipient, _amount);
-        uint256 assets = 1000;
-        (ISiloConfig.ConfigData memory debtConfig, ISiloConfig.ConfigData memory collateralConfig) =
-            silo.config().getConfigs(address(silo));
-        ISilo(debtConfig.otherSilo).withdraw(assets, _sender, _sender);
+    
+    function getTransferWithChecks() external view returns (bool) {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        return $.transferWithChecks;
     }
-    */
 }

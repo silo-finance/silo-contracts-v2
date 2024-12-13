@@ -3,4 +3,11 @@ pragma solidity ^0.8.24;
 
 import {ShareCollateralToken} from "silo-core/contracts/utils/ShareCollateralToken.sol";
 
-contract ShareProtectedCollateralToken0 is ShareCollateralToken {}
+contract ShareProtectedCollateralToken0 is ShareCollateralToken {
+
+
+    function getTransferWithChecks() external view returns (bool) {
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        return $.transferWithChecks;
+    }
+}
