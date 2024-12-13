@@ -77,13 +77,15 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(bytes32 _programId, uint104 _amount, uint256 _totalStaked) external onlyNotifier {
-        IncentivesProgram storage program = incentivesPrograms[_programId];
+    function immediateDistribution(string calldata _programName, uint104 _amount, uint256 _totalStaked) external onlyNotifier {
+        bytes32 programId = getProgramId(_programName);
+
+        IncentivesProgram storage program = incentivesPrograms[programId];
 
         if (program.lastUpdateTimestamp == 0) return;
 
         // Update the program's internal state to guarantee that further actions will not break it.
-        _updateAssetStateInternal(_programId, _totalStaked);
+        _updateAssetStateInternal(programId, _totalStaked);
 
         uint40 distributionEndBefore = program.distributionEnd;
         uint104 emissionPerSecondBefore = program.emissionPerSecond;
@@ -94,7 +96,7 @@ contract SiloIncentivesController is BaseIncentivesController {
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
         program.emissionPerSecond = _amount;
 
-        _updateAssetStateInternal(_programId, _totalStaked);
+        _updateAssetStateInternal(programId, _totalStaked);
 
         // If we have ongoing distribution, we need to revert the changes and keep the state as it was.
         program.distributionEnd = distributionEndBefore;

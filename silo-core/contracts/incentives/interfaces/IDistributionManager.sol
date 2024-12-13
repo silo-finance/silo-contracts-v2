@@ -60,16 +60,6 @@ interface IDistributionManager {
     function getUserData(address _user, string calldata _incentivesProgram) external view returns (uint256);
 
     /**
-     * @dev Returns the configuration of the distribution for a certain asset
-     * @param _incentivesProgram The incentives program name
-     * @return The index, the emission per second and the last updated timestamp
-     */
-    function getIncentivesProgramData(string calldata _incentivesProgram)
-        external
-        view
-        returns (uint256, uint256, uint256, uint256);
-
-    /**
      * @dev Returns the configuration of the distribution for a certain incentives program
      * @param _incentivesProgram The incentives program name
      * @return details The configuration of the incentives program
@@ -85,4 +75,10 @@ interface IDistributionManager {
      * @return programId
      */
     function getProgramId(string calldata _programName) external pure returns (bytes32 programId);
+
+    /**
+     * @dev returns the names of all the incentives programs
+     * @return programsNames the names of all the incentives programs
+     */
+    function getAllProgramsNames() external view returns (string[] memory programsNames);
 }

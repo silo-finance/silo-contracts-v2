@@ -49,11 +49,11 @@ interface ISiloIncentivesController is IDistributionManager {
 
     /**
      * @dev Immediately distributes rewards to the incentives program
-     * @param _programId The id of the incentives program
+     * @param _programName The name of the incentives program
      * @param _amount The amount of rewards to distribute
      * @param _totalStaked The total staked amount
      */
-    function immediateDistribution(bytes32 _programId, uint104 _amount, uint256 _totalStaked) external;
+    function immediateDistribution(string calldata _programName, uint104 _amount, uint256 _totalStaked) external;
 
     /**
      * @dev Whitelists an address to claim the rewards on behalf of another address
@@ -107,17 +107,6 @@ interface ISiloIncentivesController is IDistributionManager {
      * @dev Claims reward for an user to the desired address, on all the assets of the lending pool,
      * accumulating the pending rewards
      * @param _to Address that will be receiving the rewards
-     * @param _programIds The incentives program ids
-     * @return accruedRewards
-     */
-    function claimRewards(address _to, bytes32[] calldata _programIds)
-        external
-        returns (AccruedRewards[] memory accruedRewards);
-
-    /**
-     * @dev Claims reward for an user to the desired address, on all the assets of the lending pool,
-     * accumulating the pending rewards
-     * @param _to Address that will be receiving the rewards
      * @param _programNames The incentives program names
      * @return accruedRewards
      */
@@ -130,57 +119,10 @@ interface ISiloIncentivesController is IDistributionManager {
      * rewards. The caller must be whitelisted via "allowClaimOnBehalf" function by the RewardsAdmin role manager
      * @param _user Address to check and claim rewards
      * @param _to Address that will be receiving the rewards
-     * @return accruedRewards
-     */
-    function claimRewardsOnBehalf(address _user, address _to)
-        external
-        returns (AccruedRewards[] memory accruedRewards);
-
-    /**
-     * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending
-     * rewards. The caller must be whitelisted via "allowClaimOnBehalf" function by the RewardsAdmin role manager
-     * @param _user Address to check and claim rewards
-     * @param _to Address that will be receiving the rewards
-     * @param _programIds The incentives program ids
-     * @return accruedRewards
-     */
-    function claimRewardsOnBehalf(address _user, address _to, bytes32[] calldata _programIds)
-        external
-        returns (AccruedRewards[] memory accruedRewards);
-
-    /**
-     * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending
-     * rewards. The caller must be whitelisted via "allowClaimOnBehalf" function by the RewardsAdmin role manager
-     * @param _user Address to check and claim rewards
-     * @param _to Address that will be receiving the rewards
      * @param _programNames The incentives program names
      * @return accruedRewards
      */
     function claimRewardsOnBehalf(address _user, address _to, string[] calldata _programNames)
-        external
-        returns (AccruedRewards[] memory accruedRewards);
-
-    /**
-     * @dev Claims reward for msg.sender, on all the assets of the lending pool, accumulating the pending rewards
-     * @return accruedRewards
-     */
-    function claimRewardsToSelf() external returns (AccruedRewards[] memory accruedRewards);
-
-    /**
-     * @dev Claims reward for msg.sender, on all the assets of the lending pool, accumulating the pending rewards
-     * @param _programIds The incentives program ids
-     * @return accruedRewards
-     */
-    function claimRewardsToSelf(bytes32[] calldata _programIds)
-        external
-        returns (AccruedRewards[] memory accruedRewards);
-
-    /**
-     * @dev Claims reward for msg.sender, on all the assets of the lending pool, accumulating the pending rewards
-     * @param _programNames The incentives program names
-     * @return accruedRewards
-     */
-    function claimRewardsToSelf(string[] calldata _programNames)
         external
         returns (AccruedRewards[] memory accruedRewards);
 

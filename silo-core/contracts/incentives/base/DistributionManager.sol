@@ -59,32 +59,13 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     }
 
     /// @inheritdoc IDistributionManager
-    function getIncentivesProgramData(string calldata _incentivesProgram)
-        public
-        view
-        override
-        returns (
-            uint256 index,
-            uint256 emissionPerSecond,
-            uint256 lastUpdateTimestamp,
-            uint256 distributionEnd
-        )
-    {
-        bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
-
-        index = incentivesPrograms[incentivesProgramId].index;
-        emissionPerSecond = incentivesPrograms[incentivesProgramId].emissionPerSecond;
-        lastUpdateTimestamp = incentivesPrograms[incentivesProgramId].lastUpdateTimestamp;
-        distributionEnd = incentivesPrograms[incentivesProgramId].distributionEnd;
-    }
-
-    /// @inheritdoc IDistributionManager
     function incentivesProgram(string calldata _incentivesProgram)
         external
         view
         returns (IncentiveProgramDetails memory details)
     {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
+
         details = IncentiveProgramDetails(
             incentivesPrograms[incentivesProgramId].index,
             incentivesPrograms[incentivesProgramId].rewardToken,
@@ -92,6 +73,16 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp,
             incentivesPrograms[incentivesProgramId].distributionEnd
         );
+    }
+
+    /// @inheritdoc IDistributionManager
+    function getAllProgramsNames() external view returns (string[] memory programsNames) {
+        uint256 length = _incentivesProgramIds.values().length;
+        programsNames = new string[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            programsNames[i] = _nameToString(_incentivesProgramIds.values()[i]);
+        }
     }
 
     /// @inheritdoc IDistributionManager
@@ -129,10 +120,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             incentivesPrograms[incentivesProgramId].index = newIndex;
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
 
-            emit IncentivesProgramIndexUpdated(
-                string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))),
-                newIndex
-            );
+            emit IncentivesProgramIndexUpdated(_nameToString(incentivesProgramId), newIndex);
         } else {
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
         }
@@ -166,11 +154,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
             incentivesPrograms[incentivesProgramId].users[user] = newIndex;
 
-            emit UserIndexUpdated(
-                user,
-                string(TokenHelper.removeZeros(abi.encodePacked(incentivesProgramId))),
-                newIndex
-            );
+            emit UserIndexUpdated(user, _nameToString(incentivesProgramId), newIndex);
         }
 
         return accruedRewards;
@@ -314,5 +298,9 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     {
         userBalance = _shareToken().balanceOf(_user);
         totalSupply = _shareToken().totalSupply();
+    }
+
+    function _nameToString(bytes32 _name) internal pure returns (string memory) {
+        return string(TokenHelper.removeZeros(abi.encodePacked(_name)));
     }
 }

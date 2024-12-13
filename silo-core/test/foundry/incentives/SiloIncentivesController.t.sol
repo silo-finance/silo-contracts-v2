@@ -83,7 +83,7 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 1000e18;
         uint256 distributionEnd = block.timestamp + 1000;
 
-        (,, uint256 lastUpdateTimestampBefore, ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsBefore = _controller.incentivesProgram(_PROGRAM_NAME);
 
         vm.expectEmit(true, true, true, true);
         emit IncentivesProgramCreated(_PROGRAM_NAME);
@@ -96,28 +96,20 @@ contract SiloIncentivesControllerTest is Test {
             emissionPerSecond: emissionPerSecond
         }));
 
-        (
-            uint256 indexCurrent,
-            uint256 emissionPerSecondCurrent,
-            uint256 lastUpdateTimestampCurrent,
-            uint256 distributionEndCurrent
-        ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
 
         uint256 expectedIndex =
-            emissionPerSecond * (block.timestamp - lastUpdateTimestampBefore) * _PRECISION / _TOTAL_SUPPLY;
-
-        assertEq(emissionPerSecondCurrent, emissionPerSecond);
-        assertEq(lastUpdateTimestampCurrent, block.timestamp);
-        assertEq(distributionEndCurrent, distributionEnd);
-        assertEq(indexCurrent, expectedIndex);
-
-        IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
+            emissionPerSecond * (block.timestamp - detailsBefore.lastUpdateTimestamp) * _PRECISION / _TOTAL_SUPPLY;
 
         assertEq(details.rewardToken, _rewardToken, "invalid rewardToken");
         assertEq(details.distributionEnd, distributionEnd, "invalid distributionEnd");
         assertEq(details.emissionPerSecond, emissionPerSecond, "invalid emissionPerSecond");
         assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
         assertEq(details.index, expectedIndex, "invalid index");
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = _PROGRAM_NAME;
+        assertEq(_controller.getAllProgramsNames(), programsNames);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramAlreadyExists
@@ -323,15 +315,10 @@ contract SiloIncentivesControllerTest is Test {
             emissionPerSecond: emissionPerSecond
         }));
 
-        (
-            uint256 indexBefore,
-            uint256 emissionPerSecondBefore,
-            uint256 lastUpdateTimestampBefore,
-            uint256 distributionEndBefore
-        ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsBefore = _controller.incentivesProgram(_PROGRAM_NAME);
 
-        assertEq(emissionPerSecondBefore, emissionPerSecond);
-        assertEq(distributionEndBefore, distributionEnd);
+        assertEq(detailsBefore.emissionPerSecond, emissionPerSecond);
+        assertEq(detailsBefore.distributionEnd, distributionEnd);
 
         vm.warp(block.timestamp + 1000);
 
@@ -344,20 +331,16 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_owner);
         _controller.updateIncentivesProgram(_PROGRAM_NAME, distributionEnd, emissionPerSecond);
 
-        (
-            uint256 indexCurrent,
-            uint256 emissionPerSecondCurrent,
-            uint256 lastUpdateTimestampCurrent,
-            uint256 distributionEndCurrent
-        ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
+        uint256 expectedIndex = detailsBefore.index +
+            detailsBefore.emissionPerSecond *
+            (block.timestamp - detailsBefore.lastUpdateTimestamp) * _PRECISION / _TOTAL_SUPPLY;
 
-        uint256 expectedIndex = indexBefore +
-            emissionPerSecondBefore * (block.timestamp - lastUpdateTimestampBefore) * _PRECISION / _TOTAL_SUPPLY;
+        IDistributionManager.IncentiveProgramDetails memory detailsAfter = _controller.incentivesProgram(_PROGRAM_NAME);
 
-        assertEq(indexCurrent, expectedIndex, "invalid index");
-        assertEq(emissionPerSecondCurrent, emissionPerSecond, "invalid emissionPerSecond");
-        assertEq(distributionEndCurrent, distributionEnd, "invalid distributionEnd");
-        assertEq(lastUpdateTimestampCurrent, block.timestamp, "invalid lastUpdateTimestamp");
+        assertEq(detailsAfter.index, expectedIndex, "invalid index");
+        assertEq(detailsAfter.emissionPerSecond, emissionPerSecond, "invalid emissionPerSecond");
+        assertEq(detailsAfter.distributionEnd, distributionEnd, "invalid distributionEnd");
+        assertEq(detailsAfter.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_OnlyNotifier
@@ -403,16 +386,15 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_notifier);
         _controller.afterTokenTransfer(address(0), 0, recipient, recipientBalance, newTotalSupply, amount);
 
-        (uint256 indexAfter,,,) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsAfter = _controller.incentivesProgram(_PROGRAM_NAME);
 
         uint256 userDataAfter = _controller.getUserData(recipient, _PROGRAM_NAME);
 
-        (,, uint256 lastUpdateTimestamp, ) = _controller.getIncentivesProgramData(_PROGRAM_NAME);
+        uint256 expectedIndex = detailsAfter.index +
+            detailsAfter.emissionPerSecond *
+            (block.timestamp - detailsAfter.lastUpdateTimestamp) * _PRECISION / newTotalSupply;
 
-        uint256 expectedIndex = indexAfter +
-            emissionPerSecond * (block.timestamp - lastUpdateTimestamp) * _PRECISION / newTotalSupply;
-
-        assertEq(expectedIndex, indexAfter);
+        assertEq(expectedIndex, detailsAfter.index);
         assertEq(userDataAfter, expectedIndex);
 
         vm.warp(block.timestamp + 10 days);
@@ -420,7 +402,8 @@ contract SiloIncentivesControllerTest is Test {
         uint256 rewards = _controller.getRewardsBalance(recipient, _PROGRAM_NAME);
 
         expectedIndex = expectedIndex +
-            emissionPerSecond * (block.timestamp - lastUpdateTimestamp) * _PRECISION / newTotalSupply;
+            detailsAfter.emissionPerSecond *
+            (block.timestamp - detailsAfter.lastUpdateTimestamp) * _PRECISION / newTotalSupply;
 
         uint256 expectedRewards = recipientBalance * (expectedIndex - userDataAfter) / _PRECISION;
         expectedRewards += _controller.getUserUnclaimedRewards(recipient, _PROGRAM_NAME);
@@ -478,7 +461,7 @@ contract SiloIncentivesControllerTest is Test {
         totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
 
         // user2 deposit 100
         uint256 user2Deposit1 = 100e18;
@@ -504,7 +487,7 @@ contract SiloIncentivesControllerTest is Test {
         totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
 
         // user3 deposit 100
         uint256 user3Deposit1 = 100e18;
@@ -535,7 +518,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(rewards, expectedRewardsUser3);
 
         // user1 claim rewards
-        _claimRewardsToSelf(user1);
+        _claimRewards(user1, user1);
         // user2 claim rewards
         _claimRewards(user2, user2);
         // user3 claim rewards
@@ -597,7 +580,7 @@ contract SiloIncentivesControllerTest is Test {
         totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
 
         // user2 deposit 100
         uint256 user2Deposit1 = 100e18;
@@ -623,7 +606,7 @@ contract SiloIncentivesControllerTest is Test {
         totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
 
         // user1 withdraw 100
         uint256 user1Withdraw1 = 100e18;
@@ -649,7 +632,7 @@ contract SiloIncentivesControllerTest is Test {
         totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
 
         // user3 deposit 100
         uint256 user3Deposit1 = 100e18;
@@ -680,7 +663,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(rewards, expectedRewardsUser3);
 
         // user1 claim rewards
-        _claimRewardsToSelf(user1);
+        _claimRewards(user1, user1);
         // user2 claim rewards
         _claimRewards(user2, user2);
         // user3 claim rewards
@@ -710,14 +693,6 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_onlyAuthorizedClaimers
     function test_claimRewardsOnBehalf_onlyAuthorizedClaimers() public {
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
-        _controller.claimRewardsOnBehalf(user1, user2);
-
-        bytes32[] memory programsIds = new bytes32[](1);
-        programsIds[0] = _PROGRAM_ID;
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
-        _controller.claimRewardsOnBehalf(user1, user2, programsIds);
-
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
@@ -729,23 +704,8 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_owner);
         _controller.setClaimer(address(0), address(this));
 
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidUserAddress.selector));
-        _controller.claimRewardsOnBehalf(address(0), user2);
-
         vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
-        _controller.claimRewardsOnBehalf(user1, address(0));
-
-        bytes32[] memory programsIds = new bytes32[](1);
-        programsIds[0] = _PROGRAM_ID;
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidUserAddress.selector));
-        _controller.claimRewardsOnBehalf(address(0), user2, programsIds);
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
-        _controller.claimRewardsOnBehalf(user1, address(0), programsIds);
 
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
@@ -762,25 +722,11 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
 
-        IDistributionManager.AccruedRewards[] memory accruedRewards = _controller.claimRewardsOnBehalf(
-            user1,
-            address(this)
-        );
-
-        assertEq(accruedRewards.length, 0, "expected 0 rewards and do not revert");
-
-        bytes32[] memory programsIds = new bytes32[](1);
-        programsIds[0] = _PROGRAM_ID;
-
-        accruedRewards = _controller.claimRewardsOnBehalf(user1, address(this), programsIds);
-
-        assertEq(accruedRewards.length, 1, "expected 1 rewards and do not revert");
-        assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
-
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
 
-        accruedRewards = _controller.claimRewardsOnBehalf(user1, address(this), programsNames);
+        IDistributionManager.AccruedRewards[] memory accruedRewards =
+            _controller.claimRewardsOnBehalf(user1, address(this), programsNames);
 
         assertEq(accruedRewards.length, 1, "expected 1 rewards and do not revert");
         assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
@@ -792,38 +738,6 @@ contract SiloIncentivesControllerTest is Test {
         _controller.getProgramId("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
     }
 
-    function _claimRewardsToSelf(address _user) internal {
-        uint256 snapshotId = vm.snapshot();
-
-        vm.prank(_user);
-        IDistributionManager.AccruedRewards[] memory accruedRewards1 = _controller.claimRewardsToSelf();
-
-        vm.revertTo(snapshotId);
-
-        bytes32[] memory programsIds = new bytes32[](1);
-        programsIds[0] = _PROGRAM_ID;
-
-        vm.prank(_user);
-        IDistributionManager.AccruedRewards[] memory accruedRewards2 = _controller.claimRewardsToSelf(programsIds);
-
-        vm.revertTo(snapshotId);
-
-        string[] memory programsNames = new string[](1);
-        programsNames[0] = _PROGRAM_NAME;
-
-        vm.prank(_user);
-        IDistributionManager.AccruedRewards[] memory accruedRewards3 = _controller.claimRewardsToSelf(programsNames);
-
-        bytes32 rewards1 = keccak256(abi.encode(accruedRewards1));
-        bytes32 rewards2 = keccak256(abi.encode(accruedRewards2));
-        bytes32 rewards3 = keccak256(abi.encode(accruedRewards3));
-
-        assertTrue(
-            rewards1 == rewards2 && rewards2 == rewards3,
-            "expected rewards1, rewards2, and rewards3 to be the same"
-        );
-    }
-
     function _claimRewards(address _user, address _to) internal {
         uint256 snapshotId = vm.snapshot();
 
@@ -832,27 +746,15 @@ contract SiloIncentivesControllerTest is Test {
 
         vm.revertTo(snapshotId);
 
-        bytes32[] memory programsIds = new bytes32[](1);
-        programsIds[0] = _PROGRAM_ID;
-
-        vm.prank(_user);
-        IDistributionManager.AccruedRewards[] memory accruedRewards2 = _controller.claimRewards(_to, programsIds);
-
-        vm.revertTo(snapshotId);
-
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
 
         vm.prank(_user);
-        IDistributionManager.AccruedRewards[] memory accruedRewards3 = _controller.claimRewards(_to, programsNames);
+        IDistributionManager.AccruedRewards[] memory accruedRewards2 = _controller.claimRewards(_to, programsNames);
 
         bytes32 rewards1 = keccak256(abi.encode(accruedRewards1));
         bytes32 rewards2 = keccak256(abi.encode(accruedRewards2));
-        bytes32 rewards3 = keccak256(abi.encode(accruedRewards3));
 
-        assertTrue(
-            rewards1 == rewards2 && rewards2 == rewards3,
-            "expected rewards1, rewards2, and rewards3 to be the same"
-        );
+        assertTrue(rewards1 == rewards2, "expected rewards1 and rewards2 to be the same");
     }
 }

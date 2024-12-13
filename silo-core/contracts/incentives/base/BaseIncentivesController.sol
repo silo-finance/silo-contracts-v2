@@ -133,17 +133,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function claimRewards(address _to, bytes32[] calldata _programIds)
-        external
-        returns (AccruedRewards[] memory accruedRewards)
-    {
-        if (_to == address(0)) revert InvalidToAddress();
-
-        accruedRewards = _accrueRewardsForPrograms(_to, _programIds);
-        _claimRewards(msg.sender, msg.sender, _to, accruedRewards);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
     function claimRewards(address _to, string[] calldata _programNames)
         external
         returns (AccruedRewards[] memory accruedRewards)
@@ -156,28 +145,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function claimRewardsOnBehalf(address _user, address _to)
-        external
-        onlyAuthorizedClaimers(msg.sender, _user)
-        inputsValidation(_user, _to)
-        returns (AccruedRewards[] memory accruedRewards)
-    {
-        accruedRewards = _accrueRewards(_user);
-        _claimRewards(msg.sender, _user, _to, accruedRewards);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function claimRewardsOnBehalf(address _user, address _to, bytes32[] calldata _programIds)
-        external
-        onlyAuthorizedClaimers(msg.sender, _user)
-        inputsValidation(_user, _to)
-        returns (AccruedRewards[] memory accruedRewards)
-    {
-        accruedRewards = _accrueRewardsForPrograms(_user, _programIds);
-        _claimRewards(msg.sender, _user, _to, accruedRewards);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
     function claimRewardsOnBehalf(address _user, address _to, string[] calldata _programNames)
         external
         onlyAuthorizedClaimers(msg.sender, _user)
@@ -187,31 +154,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         bytes32[] memory programIds = _getProgramsIds(_programNames);
         accruedRewards = _accrueRewardsForPrograms(_user, programIds);
         _claimRewards(msg.sender, _user, _to, accruedRewards);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function claimRewardsToSelf() external returns (AccruedRewards[] memory accruedRewards) {
-        accruedRewards = _accrueRewards(msg.sender);
-        _claimRewards(msg.sender, msg.sender, msg.sender, accruedRewards);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function claimRewardsToSelf(bytes32[] calldata _programIds)
-        external
-        returns (AccruedRewards[] memory accruedRewards)
-    {
-        accruedRewards = _accrueRewardsForPrograms(msg.sender, _programIds);
-        _claimRewards(msg.sender, msg.sender, msg.sender, accruedRewards);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function claimRewardsToSelf(string[] calldata _programNames)
-        external
-        returns (AccruedRewards[] memory accruedRewards)
-    {
-        bytes32[] memory programIds = _getProgramsIds(_programNames);
-        accruedRewards = _accrueRewardsForPrograms(msg.sender, programIds);
-        _claimRewards(msg.sender, msg.sender, msg.sender, accruedRewards);
     }
 
     /// @inheritdoc ISiloIncentivesController
