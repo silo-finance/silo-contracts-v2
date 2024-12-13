@@ -67,13 +67,6 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
         require(_config.klin >= 0, IInterestRateModelV2.InvalidKlin());
         require(_config.beta >= 0, IInterestRateModelV2.InvalidBeta());
 
-//        int256 tmpMax = _config.ri > _config.klin ? _config.ri : _config.klin;
-//
-//        require(
-//            (_config.ri >= 0) && (tmpMax + _config.kcrit * (dp - _config.ucrit) < 10**20),
-//            IInterestRateModelV2.InvalidRi()
-//        );
-
         require(_config.ri >= 0, IInterestRateModelV2.InvalidRi());
         require(_config.Tcrit >= 0, IInterestRateModelV2.InvalidTcrit());
 

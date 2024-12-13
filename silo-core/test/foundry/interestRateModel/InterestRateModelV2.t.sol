@@ -213,10 +213,10 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     /*
-    forge test -vv --mt test_IRM_configOverflowCheck
+    forge test -vv --mt test_IRM_configOverflowCheck_always_pass_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 10000
-    function test_IRM_configOverflowCheck(int112 _Tcrit, int112 _ri) public {
+    function test_IRM_configOverflowCheck_always_pass_fuzz(int112 _Tcrit, int112 _ri) public {
         vm.assume(_Tcrit > 0);
         vm.assume(_ri > 0);
 
@@ -235,5 +235,99 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
 
         InterestRateModelV2 impl = new InterestRateModelV2();
         impl.configOverflowCheck(config);
+
+        impl.initialize(address(new InterestRateModelV2Config(config)));
+
+        vm.warp(block.timestamp + 50 * 365 days);
+
+        // should not overflow in 50y
+        impl.getCompoundInterestRateAndUpdate({
+            _collateralAssets: 1e18,
+            _debtAssets: 0.99e18,
+            _interestRateTimestamp: block.timestamp
+        });
+    }
+
+    /*
+    forge test -vv --mt test_IRM_configOverflowCheck_awalys_revert_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 1000
+    function test_IRM_configOverflowCheck_awalys_revert_fuzz(int112 _Tcrit, int112 _ri) public {
+        vm.assume(_Tcrit > 0);
+        vm.assume(_ri > 0);
+
+        // set up ki, kcrit and beta to arbitraryValue will make configOverflowCheck to revert
+        int256 arbitraryValue = 10 ** 40;
+
+        IInterestRateModelV2.Config memory config = IInterestRateModelV2.Config({
+            uopt: 300000000000000000,
+            ucrit: 500000000000000000,
+            ulow: 700000000000000000,
+            ki: arbitraryValue,
+            kcrit: arbitraryValue,
+            klow: 3170979198,
+            klin: 634195839,
+            beta: arbitraryValue,
+            ri: _ri,
+            Tcrit: _Tcrit
+        });
+
+        InterestRateModelV2 impl = new InterestRateModelV2();
+
+        try impl.configOverflowCheck(config) {
+            assertTrue(false, "we should revert");
+        } catch {
+            // we want to test case when we do not revert on configOverflowCheck
+            assertTrue(true);
+        }
+    }
+
+    /*
+    forge test -vv --mt test_IRM_configOverflowCheck_fuzz
+    */
+    /// forge-config: core-test.fuzz.runs = 10000
+    function test_IRM_configOverflowCheck_fuzz(int112 _Tcrit, int112 _ri) public {
+        vm.assume(_Tcrit > 0);
+        vm.assume(_ri > 0);
+
+        // set up ki, kcrit and beta to arbitraryValue will make configOverflowCheck to revert for some combination
+        // of _Tcrit and _ri
+        int256 arbitraryValue = 10 ** 30;
+
+        IInterestRateModelV2.Config memory config = IInterestRateModelV2.Config({
+            uopt: 300000000000000000,
+            ucrit: 500000000000000000,
+            ulow: 700000000000000000,
+            ki: arbitraryValue,
+            kcrit: arbitraryValue,
+            klow: 3170979198,
+            klin: 634195839,
+            beta: arbitraryValue,
+            ri: _ri,
+            Tcrit: _Tcrit
+        });
+
+        InterestRateModelV2 impl = new InterestRateModelV2();
+        impl.initialize(address(new InterestRateModelV2Config(config)));
+        vm.warp(block.timestamp + 50 * 365 days);
+
+        bool possibleRevert;
+
+        try impl.configOverflowCheck(config) {
+            // we should not revert
+        } catch {
+            // we want to test case when we do not revert on configOverflowCheck
+            possibleRevert = true;
+        }
+
+        try impl.getCompoundInterestRateAndUpdate({
+            _collateralAssets: 1e18,
+            _debtAssets: 0.99e18,
+            _interestRateTimestamp: block.timestamp
+        }) {
+            // if not revert, all good
+        } catch {
+            assertTrue(possibleRevert, "we accept revert only when we detect it with configOverflowCheck");
+        }
     }
 }
