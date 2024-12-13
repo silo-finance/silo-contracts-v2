@@ -22,24 +22,24 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     /// @inheritdoc IVaultIncentivesModule
     function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {
         require(address(_logic) != address(0), AddressZero());
-        require(!_marketLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
+        require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
 
-        if (_marketLogics[_market].length() == 0) {
+        if (_claimingLogics[_market].length() == 0) {
             _markets.add(_market);
         }
 
-        _marketLogics[_market].add(address(_logic));
+        _claimingLogics[_market].add(address(_logic));
 
         emit IncentivesClaimingLogicAdded(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
     function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {
-        require(_marketLogics[_market].contains(address(_logic)), LogicNotFound());
+        require(_claimingLogics[_market].contains(address(_logic)), LogicNotFound());
 
-        _marketLogics[_market].remove(address(_logic));
+        _claimingLogics[_market].remove(address(_logic));
 
-        if (_marketLogics[_market].length() == 0) {
+        if (_claimingLogics[_market].length() == 0) {
             _markets.remove(_market);
         }
 
@@ -65,16 +65,16 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     function getAllIncentivesClaimingLogics() external view returns (address[] memory logics) {
         address[] memory markets = _markets.values();
 
-        logics = _getIncentivesClaimingLogics(markets);
+        logics = _getAllIncentivesClaimingLogics(markets);
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getIncentivesClaimingLogics(address[] memory _marketsInput)
+    function getMarketsIncentivesClaimingLogics(address[] calldata _marketsInput)
         external
         view
         returns (address[] memory logics)
     {
-        logics = _getIncentivesClaimingLogics(_marketsInput);
+        logics = _getAllIncentivesClaimingLogics(_marketsInput);
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -89,13 +89,13 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     /// @inheritdoc IVaultIncentivesModule
     function getMarketIncentivesClaimingLogics(address market) external view returns (address[] memory logics) {
-        logics = _marketLogics[market].values();
+        logics = _claimingLogics[market].values();
     }
 
     /// @dev Internal function to get the incentives claiming logics for a given market.
     /// @param _marketsInput The markets to get the incentives claiming logics for.
     /// @return logics The incentives claiming logics.
-    function _getIncentivesClaimingLogics(address[] memory _marketsInput)
+    function _getAllIncentivesClaimingLogics(address[] memory _marketsInput)
         internal
         view
         returns (address[] memory logics)
@@ -105,7 +105,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
         for (uint256 i = 0; i < _marketsInput.length; i++) {
             unchecked {
                 // safe to uncheck as we will never have more than 2^256 logics
-                totalLogics += _marketLogics[_marketsInput[i]].length();
+                totalLogics += _claimingLogics[_marketsInput[i]].length();
             }
         }
 
@@ -113,7 +113,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
         uint256 index;
         for (uint256 i = 0; i < _marketsInput.length; i++) {
-            address[] memory marketLogics = _marketLogics[_marketsInput[i]].values();
+            address[] memory marketLogics = _claimingLogics[_marketsInput[i]].values();
 
             for (uint256 j = 0; j < marketLogics.length; j++) {
                 unchecked {

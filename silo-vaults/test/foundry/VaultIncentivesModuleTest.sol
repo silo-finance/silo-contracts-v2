@@ -58,7 +58,7 @@ contract VaultIncentivesModuleTest is Test {
         vm.prank(_deployer);
         incentivesModule.addIncentivesClaimingLogic(_market2, IIncentivesClaimingLogic(_logic2));
 
-        address[] memory logics = incentivesModule.getIncentivesClaimingLogics();
+        address[] memory logics = incentivesModule.getAllIncentivesClaimingLogics();
         assertEq(logics.length, 2);
         assertEq(logics[0], _logic1);
         assertEq(logics[1], _logic2);
@@ -69,14 +69,14 @@ contract VaultIncentivesModuleTest is Test {
         address[] memory expectedLogics2 = new address[](1);
         expectedLogics2[0] = _logic2;
 
-        assertEq(incentivesModule.marketIncentivesClaimingLogics(_market1), expectedLogics1);
-        assertEq(incentivesModule.marketIncentivesClaimingLogics(_market2), expectedLogics2);
+        assertEq(incentivesModule.getMarketIncentivesClaimingLogics(_market1), expectedLogics1);
+        assertEq(incentivesModule.getMarketIncentivesClaimingLogics(_market2), expectedLogics2);
 
         address[] memory expectedMarkets = new address[](2);
         expectedMarkets[0] = _market1;
         expectedMarkets[1] = _market2;
 
-        assertEq(incentivesModule.configuredMarkets(), expectedMarkets);
+        assertEq(incentivesModule.getConfiguredMarkets(), expectedMarkets);
     }
 
     /*
@@ -115,13 +115,13 @@ contract VaultIncentivesModuleTest is Test {
         vm.prank(_deployer);
         incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
 
-        address[] memory logics = incentivesModule.getIncentivesClaimingLogics();
+        address[] memory logics = incentivesModule.getAllIncentivesClaimingLogics();
         assertEq(logics.length, 1);
 
         address[] memory expectedMarkets = new address[](1);
         expectedMarkets[0] = _market1;
 
-        assertEq(incentivesModule.configuredMarkets(), expectedMarkets);
+        assertEq(incentivesModule.getConfiguredMarkets(), expectedMarkets);
 
         vm.expectEmit(true, true, true, true);
         emit IncentivesClaimingLogicRemoved(_market1, _logic1);
@@ -129,11 +129,11 @@ contract VaultIncentivesModuleTest is Test {
         vm.prank(_deployer);
         incentivesModule.removeIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
 
-        logics = incentivesModule.getIncentivesClaimingLogics();
+        logics = incentivesModule.getAllIncentivesClaimingLogics();
         assertEq(logics.length, 0);
 
         expectedMarkets = new address[](0);
-        assertEq(incentivesModule.configuredMarkets(), expectedMarkets);
+        assertEq(incentivesModule.getConfiguredMarkets(), expectedMarkets);
     }
 
     /*
