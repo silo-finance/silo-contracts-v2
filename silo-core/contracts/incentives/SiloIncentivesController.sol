@@ -86,6 +86,7 @@ contract SiloIncentivesController is BaseIncentivesController {
 
         IncentivesProgram storage program = incentivesPrograms[programId];
 
+        // early return if program do not exist
         if (program.lastUpdateTimestamp == 0) return;
 
         // Update the program's internal state to guarantee that further actions will not break it.

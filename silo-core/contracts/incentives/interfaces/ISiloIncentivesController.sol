@@ -151,14 +151,6 @@ interface ISiloIncentivesController is IDistributionManager {
         returns (uint256 unclaimedRewards);
 
     /**
-     * @dev Returns the total of rewards of an user, already accrued + not yet accrued
-     * @param _user The address of the user
-     * @param _programId The incentives program id
-     * @return unclaimedRewards
-     */
-    function getRewardsBalance(address _user, bytes32 _programId) external view returns (uint256 unclaimedRewards);
-
-    /**
      * @dev returns the unclaimed rewards of the user
      * @param _user the address of the user
      * @param _programName The incentives program name

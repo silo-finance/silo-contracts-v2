@@ -81,7 +81,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         programsNames = new string[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            programsNames[i] = _nameToString(_incentivesProgramIds.values()[i]);
+            programsNames[i] = getProgramName(_incentivesProgramIds.values()[i]);
         }
     }
 
@@ -91,6 +91,11 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         require(bytes(_programName).length <= 32, TooLongProgramName());
 
         return bytes32(abi.encodePacked(_programName));
+    }
+
+    
+    function getProgramName(bytes32 _programId) public pure returns (string memory) {
+        return string(TokenHelper.removeZeros(abi.encodePacked(_programId)));
     }
 
     /**
@@ -120,7 +125,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             incentivesPrograms[incentivesProgramId].index = newIndex;
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
 
-            emit IncentivesProgramIndexUpdated(_nameToString(incentivesProgramId), newIndex);
+            emit IncentivesProgramIndexUpdated(getProgramName(incentivesProgramId), newIndex);
         } else {
             incentivesPrograms[incentivesProgramId].lastUpdateTimestamp = uint40(block.timestamp);
         }
@@ -154,7 +159,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
             incentivesPrograms[incentivesProgramId].users[user] = newIndex;
 
-            emit UserIndexUpdated(user, _nameToString(incentivesProgramId), newIndex);
+            emit UserIndexUpdated(user, getProgramName(incentivesProgramId), newIndex);
         }
 
         return accruedRewards;
@@ -298,9 +303,5 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     {
         userBalance = _shareToken().balanceOf(_user);
         totalSupply = _shareToken().totalSupply();
-    }
-
-    function _nameToString(bytes32 _name) internal pure returns (string memory) {
-        return string(TokenHelper.removeZeros(abi.encodePacked(_name)));
     }
 }

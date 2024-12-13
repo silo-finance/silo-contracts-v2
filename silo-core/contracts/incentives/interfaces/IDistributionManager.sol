@@ -81,4 +81,11 @@ interface IDistributionManager {
      * @return programsNames the names of all the incentives programs
      */
     function getAllProgramsNames() external view returns (string[] memory programsNames);
+
+    /**
+     * @dev returns the name of an incentives program
+     * @param _programName the name (bytes32) of the incentives program
+     * @return programName the name (string) of the incentives program
+     */
+    function getProgramName(bytes32 _programName) external pure returns (string memory programName);
 }

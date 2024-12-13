@@ -95,7 +95,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
             emit RewardsAccrued(
                 _user,
                 incentivesPrograms[_incentivesProgramId].rewardToken,
-                _nameToString(_incentivesProgramId),
+                getProgramName(_incentivesProgramId),
                 newUnclaimedRewards
             );
         }
@@ -108,20 +108,12 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         returns (uint256 unclaimedRewards)
     {
         bytes32 programId = getProgramId(_programName);
-        unclaimedRewards = getRewardsBalance(_user, programId);
-    }
 
-    /// @inheritdoc ISiloIncentivesController
-    function getRewardsBalance(address _user, bytes32 _programId)
-        public
-        view
-        returns (uint256 unclaimedRewards)
-    {
-        unclaimedRewards = _usersUnclaimedRewards[_user][_programId];
+        unclaimedRewards = _usersUnclaimedRewards[_user][programId];
 
         (uint256 stakedByUser, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
 
-        unclaimedRewards += _getUnclaimedRewards(_programId, _user, stakedByUser, totalStaked);
+        unclaimedRewards += _getUnclaimedRewards(programId, _user, stakedByUser, totalStaked);
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -198,7 +190,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
                 emit RewardsAccrued(
                     user,
                     accruedRewards[i].rewardToken,
-                    _nameToString(accruedRewards[i].programId),
+                    getProgramName(accruedRewards[i].programId),
                     accruedRewards[i].amount
                 );
 
