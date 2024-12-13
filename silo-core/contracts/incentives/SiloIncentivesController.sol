@@ -77,7 +77,11 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(string calldata _programName, uint104 _amount, uint256 _totalStaked) external onlyNotifier {
+    function immediateDistribution(
+        string calldata _programName,
+        uint104 _amount,
+        uint256 _totalStaked
+    ) external onlyNotifier {
         bytes32 programId = getProgramId(_programName);
 
         IncentivesProgram storage program = incentivesPrograms[programId];
