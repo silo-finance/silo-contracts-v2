@@ -28,8 +28,7 @@ contract VaultIncentivesModuleTest is Test {
     address internal _deployer;
 
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
-    event IncentivesClaimingLogicUpdated(address indexed market, address logic);
-    event IncentivesClaimingLogicRemoved(address indexed market);
+    event IncentivesClaimingLogicRemoved(address indexed market, address logic);
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
 
@@ -51,21 +50,33 @@ contract VaultIncentivesModuleTest is Test {
         emit IncentivesClaimingLogicAdded(_market1, _logic1);
 
         vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+        incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
 
         vm.expectEmit(true, true, true, true);
         emit IncentivesClaimingLogicAdded(_market2, _logic2);
 
         vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market2);
+        incentivesModule.addIncentivesClaimingLogic(_market2, IIncentivesClaimingLogic(_logic2));
 
         address[] memory logics = incentivesModule.getIncentivesClaimingLogics();
         assertEq(logics.length, 2);
         assertEq(logics[0], _logic1);
         assertEq(logics[1], _logic2);
 
-        assertEq(incentivesModule.marketToLogic(_market1), _logic1);
-        assertEq(incentivesModule.marketToLogic(_market2), _logic2);
+        address[] memory expectedLogics1 = new address[](1);
+        expectedLogics1[0] = _logic1;
+
+        address[] memory expectedLogics2 = new address[](1);
+        expectedLogics2[0] = _logic2;
+
+        assertEq(incentivesModule.marketIncentivesClaimingLogics(_market1), expectedLogics1);
+        assertEq(incentivesModule.marketIncentivesClaimingLogics(_market2), expectedLogics2);
+
+        address[] memory expectedMarkets = new address[](2);
+        expectedMarkets[0] = _market1;
+        expectedMarkets[1] = _market2;
+
+        assertEq(incentivesModule.configuredMarkets(), expectedMarkets);
     }
 
     /*
@@ -73,11 +84,11 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_addIncentivesClaimingLogic_alreadyAdded() public {
         vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+        incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
 
         vm.expectRevert(IVaultIncentivesModule.LogicAlreadyAdded.selector);
         vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+        incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
     }
 
     /*
@@ -86,7 +97,7 @@ contract VaultIncentivesModuleTest is Test {
     function test_addIncentivesClaimingLogic_zeroAddress() public {
         vm.expectRevert(IVaultIncentivesModule.AddressZero.selector);
         vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(address(0)), _market1);
+        incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(address(0)));
     }
 
     /*
@@ -94,7 +105,7 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_addIncentivesClaimingLogic_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+        incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
     }
 
     /*
@@ -102,19 +113,27 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_removeIncentivesClaimingLogic() public {
         vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
+        incentivesModule.addIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
 
         address[] memory logics = incentivesModule.getIncentivesClaimingLogics();
         assertEq(logics.length, 1);
 
+        address[] memory expectedMarkets = new address[](1);
+        expectedMarkets[0] = _market1;
+
+        assertEq(incentivesModule.configuredMarkets(), expectedMarkets);
+
         vm.expectEmit(true, true, true, true);
-        emit IncentivesClaimingLogicRemoved(_market1);
+        emit IncentivesClaimingLogicRemoved(_market1, _logic1);
 
         vm.prank(_deployer);
-        incentivesModule.removeIncentivesClaimingLogic(_market1);
+        incentivesModule.removeIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
 
         logics = incentivesModule.getIncentivesClaimingLogics();
         assertEq(logics.length, 0);
+
+        expectedMarkets = new address[](0);
+        assertEq(incentivesModule.configuredMarkets(), expectedMarkets);
     }
 
     /*
@@ -123,7 +142,7 @@ contract VaultIncentivesModuleTest is Test {
     function test_removeIncentivesClaimingLogic_notAdded() public {
         vm.expectRevert(IVaultIncentivesModule.LogicNotFound.selector);
         vm.prank(_deployer);
-        incentivesModule.removeIncentivesClaimingLogic(_market1);
+        incentivesModule.removeIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
     }
 
     /*
@@ -131,7 +150,7 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_removeIncentivesClaimingLogic_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        incentivesModule.removeIncentivesClaimingLogic(_market1);
+        incentivesModule.removeIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
     }
 
     /*
@@ -240,47 +259,5 @@ contract VaultIncentivesModuleTest is Test {
         module.acceptOwnership();
 
         assertEq(module.owner(), newOwner);
-    }
-
-    /*
-    forge test --mt test_updateIncentivesClaimingLogic -vvv
-    */
-    function test_updateIncentivesClaimingLogic() public {
-        vm.prank(_deployer);
-        incentivesModule.addIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic1), _market1);
-
-        vm.expectEmit(true, true, true, true);
-        emit IncentivesClaimingLogicUpdated(_market1, _logic2);
-
-        vm.prank(_deployer);
-        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market1);
-
-        assertEq(incentivesModule.marketToLogic(_market1), _logic2);
-    }
-
-    /*
-    forge test --mt test_updateIncentivesClaimingLogic_onlyOwner -vvv
-    */
-    function test_updateIncentivesClaimingLogic_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market1);
-    }
-
-    /*
-    forge test --mt test_updateIncentivesClaimingLogic_marketNotConfigured -vvv
-    */
-    function test_updateIncentivesClaimingLogic_marketNotConfigured() public {
-        vm.expectRevert(IVaultIncentivesModule.MarketNotConfigured.selector);
-        vm.prank(_deployer);
-        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(_logic2), _market1);
-    }
-
-    /*
-    forge test --mt test_updateIncentivesClaimingLogic_zeroAddress -vvv
-    */
-    function test_updateIncentivesClaimingLogic_zeroAddress() public {
-        vm.expectRevert(IVaultIncentivesModule.AddressZero.selector);
-        vm.prank(_deployer);
-        incentivesModule.updateIncentivesClaimingLogic(IIncentivesClaimingLogic(address(0)), _market1);
     }
 }

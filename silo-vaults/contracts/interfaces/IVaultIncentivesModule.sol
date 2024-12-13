@@ -7,8 +7,7 @@ import {INotificationReceiver} from "./INotificationReceiver.sol";
 /// @title Vault Incentives Module interface
 interface IVaultIncentivesModule {
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
-    event IncentivesClaimingLogicUpdated(address indexed market, address logic);
-    event IncentivesClaimingLogicRemoved(address indexed market);
+    event IncentivesClaimingLogicRemoved(address indexed market, address logic);
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
 
@@ -23,16 +22,12 @@ interface IVaultIncentivesModule {
     /// @notice Add an incentives claiming logic for the vault.
     /// @param logic The logic to add.
     /// @param _market The market to add the logic for.
-    function addIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external;
-
-    /// @notice Update an incentives claiming logic for the vault.
-    /// @param logic The logic to update.
-    /// @param _market The market to update the logic for.
-    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external;
+    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic logic) external;
 
     /// @notice Remove an incentives claiming logic for the vault.
     /// @param _market The market to remove the logic for.
-    function removeIncentivesClaimingLogic(address _market) external;
+    /// @param logic The logic to remove.
+    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic logic) external;
 
     /// @notice Add an incentives distribution solution for the vault.
     /// @param solution The solution to add.
@@ -55,9 +50,13 @@ interface IVaultIncentivesModule {
     /// @return solutions The solutions.
     function getNotificationReceivers() external view returns (address[] memory solutions);
 
-    /// @notice Get the incentives claiming logic for a market.
-    /// @param market The market to get the incentives claiming logic for.
-    /// @return logic The logic.
-    function marketToLogic(address market) external view returns (address logic);
+    /// @notice Get incentives claiming logics for a market.
+    /// @param market The market to get the incentives claiming logics for.
+    /// @return logics
+    function marketIncentivesClaimingLogics(address market) external view returns (address[] memory logics);
+
+    /// @notice Get all configured markets for the vault.
+    /// @return markets
+    function configuredMarkets() external view returns (address[] memory markets);
 }
 

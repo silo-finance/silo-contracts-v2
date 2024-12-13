@@ -15,39 +15,35 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     EnumerableSet.AddressSet private _markets;
     EnumerableSet.AddressSet private _notificationReceivers;
 
-    mapping(address market => address logic) public marketToLogic;
+    mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) private _marketLogics;
 
     constructor() Ownable(msg.sender) {}
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
+    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {
         require(address(_logic) != address(0), AddressZero());
-        require(marketToLogic[_market] == address(0), LogicAlreadyAdded());
+        require(!_marketLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
 
-        _markets.add(_market);
-        marketToLogic[_market] = address(_logic);
+        if (_marketLogics[_market].length() == 0) {
+            _markets.add(_market);
+        }
+
+        _marketLogics[_market].add(address(_logic));
 
         emit IncentivesClaimingLogicAdded(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
-        require(address(_logic) != address(0), AddressZero());
-        require(marketToLogic[_market] != address(0), MarketNotConfigured());
+    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {
+        require(_marketLogics[_market].contains(address(_logic)), LogicNotFound());
 
-        marketToLogic[_market] = address(_logic);
+        _marketLogics[_market].remove(address(_logic));
 
-        emit IncentivesClaimingLogicUpdated(_market, address(_logic));
-    }
+        if (_marketLogics[_market].length() == 0) {
+            _markets.remove(_market);
+        }
 
-    /// @inheritdoc IVaultIncentivesModule
-    function removeIncentivesClaimingLogic(address _market) external onlyOwner {
-        require(marketToLogic[_market] != address(0), LogicNotFound());
-
-        _markets.remove(_market);
-        delete marketToLogic[_market];
-
-        emit IncentivesClaimingLogicRemoved(_market);
+        emit IncentivesClaimingLogicRemoved(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -86,6 +82,16 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
         receivers = _notificationReceivers.values();
     }
 
+    /// @inheritdoc IVaultIncentivesModule
+    function configuredMarkets() external view returns (address[] memory markets) {
+        markets = _markets.values();
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function marketIncentivesClaimingLogics(address market) external view returns (address[] memory logics) {
+        logics = _marketLogics[market].values();
+    }
+
     /// @dev Internal function to get the incentives claiming logics for a given market.
     /// @param _marketsInput The markets to get the incentives claiming logics for.
     /// @return logics The incentives claiming logics.
@@ -94,10 +100,27 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
         view
         returns (address[] memory logics)
     {
-        logics = new address[](_marketsInput.length);
+        uint256 totalLogics;
 
         for (uint256 i = 0; i < _marketsInput.length; i++) {
-            logics[i] = marketToLogic[_marketsInput[i]];
+            unchecked {
+                // safe to uncheck as we will never have more than 2^256 logics
+                totalLogics += _marketLogics[_marketsInput[i]].length();
+            }
+        }
+
+        logics = new address[](totalLogics);
+
+        uint256 index;
+        for (uint256 i = 0; i < _marketsInput.length; i++) {
+            address[] memory marketLogics = _marketLogics[_marketsInput[i]].values();
+
+            for (uint256 j = 0; j < marketLogics.length; j++) {
+                unchecked {
+                    // safe to uncheck as we will never have more than 2^256 logics
+                    logics[index++] = marketLogics[j];
+                }
+            }
         }
     }
 }
