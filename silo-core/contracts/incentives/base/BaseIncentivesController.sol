@@ -95,7 +95,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
             emit RewardsAccrued(
                 _user,
                 incentivesPrograms[_incentivesProgramId].rewardToken,
-                _incentivesProgramId,
+                _nameToString(_incentivesProgramId),
                 newUnclaimedRewards
             );
         }
@@ -198,7 +198,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
                 emit RewardsAccrued(
                     user,
                     accruedRewards[i].rewardToken,
-                    accruedRewards[i].programId,
+                    _nameToString(accruedRewards[i].programId),
                     accruedRewards[i].amount
                 );
 
