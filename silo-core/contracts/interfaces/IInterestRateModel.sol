@@ -2,6 +2,8 @@
 pragma solidity >=0.5.0;
 
 interface IInterestRateModel {
+    event InterestRateModelError();
+
     /// @dev Sets config address for all Silos that will use this model
     /// @param _irmConfig address of IRM config contract
     function initialize(address _irmConfig) external;
