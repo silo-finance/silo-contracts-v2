@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// @title Incentives Distribution Solution interface
-interface IIncentivesDistributionSolution {
+/// @title Notification Receiver interface
+interface INotificationReceiver {
     /// @notice Called after a token transfer.
     /// @dev Notifies the solution about the token transfer.
     function afterTokenTransfer(

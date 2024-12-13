@@ -6,14 +6,14 @@ import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.sol";
-import {IIncentivesDistributionSolution} from "../interfaces/IIncentivesDistributionSolution.sol";
+import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
 
 /// @title Vault Incentives Module
 contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     EnumerableSet.AddressSet private _markets;
-    EnumerableSet.AddressSet private _solutions;
+    EnumerableSet.AddressSet private _notificationReceivers;
 
     mapping(address market => address logic) public marketToLogic;
 
@@ -21,23 +21,23 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     /// @inheritdoc IVaultIncentivesModule
     function addIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
-        require(address(logic) != address(0), AddressZero());
+        require(address(_logic) != address(0), AddressZero());
         require(marketToLogic[_market] == address(0), LogicAlreadyAdded());
 
         _markets.add(_market);
-        marketToLogic[_market] = address(logic);
+        marketToLogic[_market] = address(_logic);
 
-        emit IncentivesClaimingLogicAdded(_market, address(logic));
+        emit IncentivesClaimingLogicAdded(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic logic, address _market) external onlyOwner {
-        require(address(logic) != address(0), AddressZero());
+    function updateIncentivesClaimingLogic(IIncentivesClaimingLogic _logic, address _market) external onlyOwner {
+        require(address(_logic) != address(0), AddressZero());
         require(marketToLogic[_market] != address(0), MarketNotConfigured());
 
-        marketToLogic[_market] = address(logic);
+        marketToLogic[_market] = address(_logic);
 
-        emit IncentivesClaimingLogicUpdated(_market, address(logic));
+        emit IncentivesClaimingLogicUpdated(_market, address(_logic));
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -51,18 +51,18 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external onlyOwner {
-        require(address(solution) != address(0), AddressZero());
-        require(_solutions.add(address(solution)), SolutionAlreadyAdded());
+    function addNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+        require(address(_notificationReceiver) != address(0), AddressZero());
+        require(_notificationReceivers.add(address(_notificationReceiver)), NotificationReceiverAlreadyAdded());
 
-        emit IncentivesDistributionSolutionAdded(address(solution));
+        emit NotificationReceiverAdded(address(_notificationReceiver));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external onlyOwner {
-        require(_solutions.remove(address(solution)), SolutionNotFound());
+    function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+        require(_notificationReceivers.remove(address(_notificationReceiver)), NotificationReceiverNotFound());
 
-        emit IncentivesDistributionSolutionRemoved(address(solution));
+        emit NotificationReceiverRemoved(address(_notificationReceiver));
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -82,8 +82,8 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getIncentivesDistributionSolutions() external view returns (address[] memory solutions) {
-        solutions = _solutions.values();
+    function getNotificationReceivers() external view returns (address[] memory receivers) {
+        receivers = _notificationReceivers.values();
     }
 
     /// @dev Internal function to get the incentives claiming logics for a given market.

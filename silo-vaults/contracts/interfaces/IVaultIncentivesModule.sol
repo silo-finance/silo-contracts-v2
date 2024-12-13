@@ -2,21 +2,21 @@
 pragma solidity >=0.5.0;
 
 import {IIncentivesClaimingLogic} from "./IIncentivesClaimingLogic.sol";
-import {IIncentivesDistributionSolution} from "./IIncentivesDistributionSolution.sol";
+import {INotificationReceiver} from "./INotificationReceiver.sol";
 
 /// @title Vault Incentives Module interface
 interface IVaultIncentivesModule {
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
     event IncentivesClaimingLogicUpdated(address indexed market, address logic);
     event IncentivesClaimingLogicRemoved(address indexed market);
-    event IncentivesDistributionSolutionAdded(address solution);
-    event IncentivesDistributionSolutionRemoved(address solution);
+    event NotificationReceiverAdded(address notificationReceiver);
+    event NotificationReceiverRemoved(address notificationReceiver);
 
     error AddressZero();
     error LogicAlreadyAdded();
     error LogicNotFound();
-    error SolutionAlreadyAdded();
-    error SolutionNotFound();
+    error NotificationReceiverAlreadyAdded();
+    error NotificationReceiverNotFound();
     error MarketAlreadySet();
     error MarketNotConfigured();
 
@@ -36,11 +36,11 @@ interface IVaultIncentivesModule {
 
     /// @notice Add an incentives distribution solution for the vault.
     /// @param solution The solution to add.
-    function addIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external;
+    function addNotificationReceiver(INotificationReceiver solution) external;
 
     /// @notice Remove an incentives distribution solution for the vault.
     /// @param solution The solution to remove.
-    function removeIncentivesDistributionSolution(IIncentivesDistributionSolution solution) external;
+    function removeNotificationReceiver(INotificationReceiver solution) external;
 
     /// @notice Get all incentives claiming logics for the vault.
     /// @return logics The logics.
@@ -53,7 +53,7 @@ interface IVaultIncentivesModule {
 
     /// @notice Get all incentives distribution solutions for the vault.
     /// @return solutions The solutions.
-    function getIncentivesDistributionSolutions() external view returns (address[] memory solutions);
+    function getNotificationReceivers() external view returns (address[] memory solutions);
 
     /// @notice Get the incentives claiming logic for a market.
     /// @param market The market to get the incentives claiming logic for.

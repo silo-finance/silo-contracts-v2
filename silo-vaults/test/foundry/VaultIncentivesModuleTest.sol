@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
-import {IIncentivesDistributionSolution} from "silo-vaults/contracts/interfaces/IIncentivesDistributionSolution.sol";
+import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
 import {VaultIncentivesModuleDeploy} from "silo-vaults/deploy/VaultIncentivesModuleDeploy.s.sol";
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
@@ -30,8 +30,8 @@ contract VaultIncentivesModuleTest is Test {
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
     event IncentivesClaimingLogicUpdated(address indexed market, address logic);
     event IncentivesClaimingLogicRemoved(address indexed market);
-    event IncentivesDistributionSolutionAdded(address solution);
-    event IncentivesDistributionSolutionRemoved(address solution);
+    event NotificationReceiverAdded(address notificationReceiver);
+    event NotificationReceiverRemoved(address notificationReceiver);
 
     function setUp() public {
         VaultIncentivesModuleDeploy deployer = new VaultIncentivesModuleDeploy();
@@ -135,22 +135,22 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    forge test --mt test_addIncentivesDistributionSolutionAndGetter -vvv
+    forge test --mt test_addNotificationReceiverAndGetter -vvv
     */
-    function test_addIncentivesDistributionSolutionAndGetter() public {
+    function test_addNotificationReceiverAndGetter() public {
         vm.expectEmit(true, true, true, true);
-        emit IncentivesDistributionSolutionAdded(_solution1);
+        emit NotificationReceiverAdded(_solution1);
 
         vm.prank(_deployer);
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
 
         vm.expectEmit(true, true, true, true);
-        emit IncentivesDistributionSolutionAdded(_solution2);
+        emit NotificationReceiverAdded(_solution2);
 
         vm.prank(_deployer);
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution2));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(_solution2));
 
-        address[] memory solutions = incentivesModule.getIncentivesDistributionSolutions();
+        address[] memory solutions = incentivesModule.getNotificationReceivers();
 
         assertEq(solutions.length, 2);
         assertEq(solutions[0], _solution1);
@@ -158,69 +158,69 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    forge test --mt test_addIncentivesDistributionSolution_alreadyAdded -vvv
+    forge test --mt test_addNotificationReceiver_alreadyAdded -vvv
     */
-    function test_addIncentivesDistributionSolution_alreadyAdded() public {
+    function test_addNotificationReceiver_alreadyAdded() public {
         vm.prank(_deployer);
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
 
-        vm.expectRevert(IVaultIncentivesModule.SolutionAlreadyAdded.selector);
+        vm.expectRevert(IVaultIncentivesModule.NotificationReceiverAlreadyAdded.selector);
         vm.prank(_deployer);
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
     }
 
     /*
-    forge test --mt test_addIncentivesDistributionSolution_zeroAddress -vvv
+    forge test --mt test_addNotificationReceiver_zeroAddress -vvv
     */
-    function test_addIncentivesDistributionSolution_zeroAddress() public {
+    function test_addNotificationReceiver_zeroAddress() public {
         vm.expectRevert(IVaultIncentivesModule.AddressZero.selector);
         vm.prank(_deployer);
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(address(0)));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(address(0)));
     }
 
     /*
-    forge test --mt test_addIncentivesDistributionSolution_onlyOwner -vvv
+    forge test --mt test_addNotificationReceiver_onlyOwner -vvv
     */
-    function test_addIncentivesDistributionSolution_onlyOwner() public {
+    function test_addNotificationReceiver_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
     }
 
     /*
-    forge test --mt test_removeIncentivesDistributionSolution -vvv
+    forge test --mt test_removeNotificationReceiver -vvv
     */
-    function test_removeIncentivesDistributionSolution() public {
+    function test_removeNotificationReceiver() public {
         vm.prank(_deployer);
-        incentivesModule.addIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
 
-        address[] memory solutions = incentivesModule.getIncentivesDistributionSolutions();
+        address[] memory solutions = incentivesModule.getNotificationReceivers();
         assertEq(solutions.length, 1);
 
         vm.expectEmit(true, true, true, true);
-        emit IncentivesDistributionSolutionRemoved(_solution1);
+        emit NotificationReceiverRemoved(_solution1);
 
         vm.prank(_deployer);
-        incentivesModule.removeIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1));
 
-        solutions = incentivesModule.getIncentivesDistributionSolutions();
+        solutions = incentivesModule.getNotificationReceivers();
         assertEq(solutions.length, 0);
     }
 
     /*
-    forge test --mt test_removeIncentivesDistributionSolution_notAdded -vvv
+    forge test --mt test_removeNotificationReceiver_notAdded -vvv
     */
-    function test_removeIncentivesDistributionSolution_notAdded() public {
-        vm.expectRevert(IVaultIncentivesModule.SolutionNotFound.selector);
+    function test_removeNotificationReceiver_notAdded() public {
+        vm.expectRevert(IVaultIncentivesModule.NotificationReceiverNotFound.selector);
         vm.prank(_deployer);
-        incentivesModule.removeIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1));
     }
 
     /*
-    forge test --mt test_removeIncentivesDistributionSolution_onlyOwner -vvv
+    forge test --mt test_removeNotificationReceiver_onlyOwner -vvv
     */
-    function test_removeIncentivesDistributionSolution_onlyOwner() public {
+    function test_removeNotificationReceiver_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        incentivesModule.removeIncentivesDistributionSolution(IIncentivesDistributionSolution(_solution1));
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1));
     }
 
     /*
