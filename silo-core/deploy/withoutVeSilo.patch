@@ -1,0 +1,38 @@
+diff --git a/silo-core/deploy/SiloFactoryDeploy.s.sol b/silo-core/deploy/SiloFactoryDeploy.s.sol
+index ee670589..86eae2f8 100644
+--- a/silo-core/deploy/SiloFactoryDeploy.s.sol
++++ b/silo-core/deploy/SiloFactoryDeploy.s.sol
+@@ -17,7 +17,8 @@ contract SiloFactoryDeploy is CommonDeploy {
+     function run() public returns (ISiloFactory siloFactory) {
+         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+ 
+-        address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
++        // address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
++        address daoFeeReceiver = vm.addr(deployerPrivateKey);
+ 
+         vm.startBroadcast(deployerPrivateKey);
+ 
+@@ -25,7 +26,8 @@ contract SiloFactoryDeploy is CommonDeploy {
+ 
+         vm.stopBroadcast();
+ 
+-        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
++        // address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
++        address timelock = vm.addr(deployerPrivateKey);
+ 
+         vm.startBroadcast(deployerPrivateKey);
+ 
+diff --git a/silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol b/silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol
+index 0f56a36f..62037a2d 100644
+--- a/silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol
++++ b/silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol
+@@ -15,7 +15,8 @@ contract SiloDeployWithGaugeHookReceiver is SiloDeploy {
+         override
+         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
+     {
+-        address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
++        // address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, getChainAlias());
++        address timelock = vm.addr(uint256(vm.envBytes32("PRIVATE_KEY")));
+ 
+         hookReceiver = ISiloDeployer.ClonableHookReceiver({
+             implementation: _implementation,

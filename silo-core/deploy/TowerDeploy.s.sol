@@ -22,12 +22,16 @@ contract TowerDeploy is CommonDeploy {
     function run() public returns (Tower tower) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
+        address siloFactory = getDeployedAddress(SiloCoreContracts.SILO_FACTORY);
+        address liquidationHelper = getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER);
+        address siloLens = getDeployedAddress(SiloCoreContracts.SILO_LENS);
+
         vm.startBroadcast(deployerPrivateKey);
 
         tower = new Tower();
-        tower.register("SiloFactory", getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
-        tower.register("LiquidationHelper", getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER));
-        tower.register("SiloLens", getDeployedAddress(SiloCoreContracts.SILO_LENS));
+        tower.register("SiloFactory", siloFactory);
+        tower.register("LiquidationHelper", liquidationHelper);
+        tower.register("SiloLens", siloLens);
 
         vm.stopBroadcast();
 

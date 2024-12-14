@@ -25,9 +25,9 @@ contract InterestRateModelV2Config is IInterestRateModelV2Config {
     int256 internal immutable _BETA;
 
     // initial value for ri, ri ≥ 0 – initial value of the integrator
-    int128 internal immutable _RI;
+    int112 internal immutable _RI;
     // initial value for Tcrit, Tcrit ≥ 0 - the time during which the utilization exceeds the critical value
-    int128 internal immutable _TCRIT;
+    int112 internal immutable _TCRIT;
 
     constructor(IInterestRateModelV2.Config memory _config) {
         _UOPT = _config.uopt;
