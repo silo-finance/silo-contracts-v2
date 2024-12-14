@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 
 contract ShareDebtToken0 is ShareDebtToken {
 
