@@ -14,7 +14,16 @@ import {TowerDeploy} from "./TowerDeploy.s.sol";
 import {SiloLensDeploy} from "./SiloLensDeploy.s.sol";
 
 /**
-    FOUNDRY_PROFILE=core \
+    script to deploy whole silo-core
+
+    Note: for deploying without ve-silo, we need adjustment:
+
+    git apply silo-core/deploy/withoutVeSilo.patch
+
+    this patch was created with `git diff > withoutVeSilo.patch`
+
+
+    ETHERSCAN_API_KEY=$OPTIMISM_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
  */
