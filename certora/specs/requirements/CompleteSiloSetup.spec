@@ -149,6 +149,11 @@ function requireNotInitialState()
     require silo1.totalSupply() > 0;
 }
 
+function accrueHasBeenCalled(env e) {
+    require require_uint64(e.block.timestamp) == silo0.getSiloDataInterestRateTimestamp();
+    require require_uint64(e.block.timestamp) == silo1.getSiloDataInterestRateTimestamp();
+}
+
 // limits the [assets / shares] to reasonable values
 function sharesToAssetsNotTooHigh(env e, mathint max)
 {

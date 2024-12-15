@@ -46,6 +46,16 @@ methods {
 // summarise some of tha hard methods
 // show that accrue is called at the beginning of every method
 
-// mutant 1: config l:160, l:364
-// mutant 2: config l:160, sharedebtToken l:101
+// debtInBoth:
+// mutant 24: config 160, 364, 350 return false
+// mutant 25: config 364, sharedebtToken 101
+// mutant 26: actions 123, 156
+
+// accrue:
+// mutant 20 Actions 91: siloConfig.accrueInterestForBothSilos() => siloConfig.accrueInterestForSilo(address(this))
+
+// mutant 21 ShareCollateralTokenLib: 28 siloConfig.accrueInterestForBothSilos() => siloConfig.accrueInterestForSilo(address($.silo));
+//           sharedebtToken 130
+
+// mutant 22 : partial liquidation
 

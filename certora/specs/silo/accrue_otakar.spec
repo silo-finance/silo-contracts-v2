@@ -6,6 +6,25 @@ import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
 
+
+function SiloSolvencyLib.getLtv(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        ISilo.OracleType _oracleType,
+        ISilo.AccrueInterestInMemory _accrueInMemory,
+        uint256 _debtShareBalance) internal returns (uint256) => NONDET; // difficulty 69
+function SiloSolvencyLib.isSolvent(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory) internal returns (bool) => NONDET; // difficulty 53
+function SiloSolvencyLib.isBelowMaxLtv(
+    ISiloConfig.ConfigData memory _collateralConfig,
+    ISiloConfig.ConfigData memory _debtConfig,
+    address _borrower,
+    ISilo.AccrueInterestInMemory _accrueInMemory) internal returns (bool) => NONDET; // difficulty 53 
+
 function SiloERC4626Lib.maxWithdrawWhenDebt(        
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
@@ -13,36 +32,19 @@ function SiloERC4626Lib.maxWithdrawWhenDebt(
         uint256 _liquidity,
         uint256 _shareTokenTotalSupply,
         ISilo.CollateralType _collateralType,
-        uint256 _totalAssets) internal returns (uint256,uint256) => NONDET /* difficulty 83 */; 
+        uint256 _totalAssets) internal returns (uint256,uint256) => NONDET; // difficulty 83 
 function SiloLendingLib.calculateMaxBorrow( 
         ISiloConfig.ConfigData memory _collateralConfig,
         ISiloConfig.ConfigData memory _debtConfig,
         address _borrower,
         uint256 _totalDebtAssets,
         uint256 _totalDebtShares,
-        address _siloConfig) internal returns (uint256,uint256) => NONDET /* difficulty 118 */; 
-function SiloSolvencyLib.getLtv(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.OracleType _oracleType,
-        ISilo.AccrueInterestInMemory _accrueInMemory,
-        uint256 _debtShareBalance) internal returns (uint256) => NONDET /* difficulty 69 */; 
-function SiloSolvencyLib.isSolvent(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory) internal returns (bool) => NONDET /* difficulty 53 */; 
+        address _siloConfig) internal returns (uint256,uint256) => NONDET; // difficulty 118
 function SiloLendingLib.maxBorrow(address,bool) internal returns (uint256,uint256) 
-    => NONDET /* difficulty 186 */; 
+    => NONDET; // difficulty 186 
 function SiloERC4626Lib.maxWithdraw(address,ISilo.CollateralType,uint256) internal returns (uint256,uint256) 
-    => NONDET /* difficulty 141 */; 
-function SiloSolvencyLib.isBelowMaxLtv(
-    ISiloConfig.ConfigData memory _collateralConfig,
-    ISiloConfig.ConfigData memory _debtConfig,
-    address _borrower,
-    ISilo.AccrueInterestInMemory _accrueInMemory) internal returns (bool) => NONDET /* difficulty 53 */;
-}
+    => NONDET; // difficulty 141
+} 
 
 // accrueInterest doesn't affect sharesBalance
 // state S -> call method f -> check balanceOf(user)
@@ -152,4 +154,37 @@ rule accruing1DoesntAffectTotalAssets(env e, address user, method f)
     mathint assets2 = token0.totalSupply();
 
     assert assets1 == assets2;
+}
+
+// calling silo0.accrue doesnt cause a method to revert
+rule accruing0DoesntCauseRevert(env e, address user, method f)
+    filtered { f -> !filterOutInInvariants(f) }
+{  
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    
+    storage init = lastStorage;
+    calldataarg args;
+    f(e, args);
+        
+    silo0.accrueInterest(e) at init;
+    f@withrevert(e, args);
+    bool reverted2 = lastReverted;
+    assert !reverted2;
+}
+
+// calling silo0.accrue doesnt affect revertion of a method
+rule accruing0DoesntAffectReverts(env e, address user, method f)
+    filtered { f -> !filterOutInInvariants(f) }
+{  
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    
+    storage init = lastStorage;
+    calldataarg args;
+    f@withrevert(e, args);
+    bool reverted1 = lastReverted;
+    
+    silo0.accrueInterest(e) at init;
+    f@withrevert(e, args);
+    bool reverted2 = lastReverted;
+    assert reverted1 == reverted2;
 }
