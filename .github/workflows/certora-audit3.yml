@@ -462,3 +462,11 @@ jobs:
             name: accruing_mint3,
             command: 'silo/newRulesFromTheList.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
           }
+          - {
+            name: solvent_checked_silo,
+            command: 'silo/solvent_user.conf  --parametric_contracts Silo0'
+          }
+          - {
+            name: solvent_checked_not_silo,
+            command: 'silo/solvent_user.conf'
+          }
