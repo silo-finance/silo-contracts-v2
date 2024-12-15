@@ -11,7 +11,7 @@ methods {
 
     // ---- `IInterestRateModel` -----------------------------------------------
     
-    // using _simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec instead
+    // using simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec instead
     // Since `getCompoundInterestRateAndUpdate` is not view, this is not strictly sound.
     // function _.getCompoundInterestRateAndUpdate(
     //     uint256 _collateralAssets,

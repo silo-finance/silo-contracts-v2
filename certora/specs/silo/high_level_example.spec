@@ -1,5 +1,5 @@
 /* High level properties example */
-import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 import "../erc20cvl.spec";
 import "_common/SiloConfigSummarizations.spec";
 

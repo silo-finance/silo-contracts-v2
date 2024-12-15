@@ -3,9 +3,9 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-import "../../_simplifications/priceOracle.spec";
-import "../../_simplifications/SiloMathLib.spec";
-import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../../simplifications/priceOracle.spec";
+import "../../simplifications/SiloMathLib.spec";
+import "../../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 use rule assetsToSharesAndBackAxiom;
 use rule mulDiv_axioms_test;

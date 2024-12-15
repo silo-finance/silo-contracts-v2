@@ -4,10 +4,10 @@
 // import "../_common/Helpers.spec";
 // import "../_common/CommonSummarizations.spec";
 // import "../_common/AccrueInterestWasCalled_hook.spec";
-// import "../../_simplifications/Oracle_quote_one.spec";
-// //import "../../_simplifications/Silo_isSolvent_ghost.spec";
-// import "../../_simplifications/SiloSolvencyLib.spec";
-// import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+// import "../../simplifications/Oracle_quote_one.spec";
+// //import "../../simplifications/Silo_isSolvent_ghost.spec";
+// import "../../simplifications/SiloSolvencyLib.spec";
+// import "../../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 
 //////////////////////

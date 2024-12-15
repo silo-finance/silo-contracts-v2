@@ -3,9 +3,9 @@
 // import "../requirements/CompleteSiloSetup.spec";
 import "authorized_functions.spec";
 import "unresolved.spec";
-import "../_simplifications/SiloMathLib.spec";
-import "../_simplifications/Oracle_quote_one.spec";
-import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../simplifications/SiloMathLib.spec";
+import "../simplifications/Oracle_quote_one.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
 
