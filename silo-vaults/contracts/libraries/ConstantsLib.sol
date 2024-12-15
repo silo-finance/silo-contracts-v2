@@ -10,7 +10,7 @@ library ConstantsLib {
     uint256 internal constant MAX_TIMELOCK = 2 weeks;
 
     /// @dev The minimum delay of a timelock.
-    uint256 internal constant MIN_TIMELOCK = 1 days;
+    uint256 internal constant MIN_TIMELOCK = 1 minutes;
 
     /// @dev The maximum number of markets in the supply/withdraw queue.
     uint256 internal constant MAX_QUEUE_LENGTH = 30;
