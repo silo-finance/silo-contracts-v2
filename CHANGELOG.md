@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.17.1] - 2024-12-14
+### Updated
+- redeployment of silo-vault with `MIN_TIMELOCK` set to 1 minute for QA purposes
+
 ## [0.17.0] - 2024-12-14
 ### Updated
 - redepoy of whole protocol
