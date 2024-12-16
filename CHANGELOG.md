@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.17.1] - 2024-12-16
+### Added
+- new markets for v0.17: `wstETH/WETH`, `gmETH/WETH`, `solvBTC/wBTC`, `ETHPlus/WETH`
+
 ## [0.17.1] - 2024-12-14
 ### Updated
 - redeployment of silo-vault with `MIN_TIMELOCK` set to 1 minute for QA purposes
