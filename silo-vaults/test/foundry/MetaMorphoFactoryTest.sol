@@ -37,7 +37,7 @@ contract MetaMorphoFactoryTest is IntegrationTest {
             type(MetaMorpho).creationCode,
             abi.encode(initialOwner, initialTimelock, vaultIncentivesModule, address(loanToken), name, symbol)
         );
-        address expectedAddress = computeCreate2Address(salt, initCodeHash, address(factory));
+        address expectedAddress = vm.computeCreate2Address(salt, initCodeHash, address(factory));
 
         vm.expectEmit(address(factory));
         emit EventsLib.CreateMetaMorpho(
