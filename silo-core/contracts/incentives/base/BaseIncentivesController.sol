@@ -121,7 +121,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
             if (rewardsToken == address(0)) {
                 rewardsToken = programRewardsToken;
             } else if (rewardsToken != programRewardsToken) {
-                revert RewardsTokenMismatch();
+                revert DifferentRewardsTokens();
             }
 
             unclaimedRewards += _getRewardsBalance(_user, programId, stakedByUser, totalStaked);
