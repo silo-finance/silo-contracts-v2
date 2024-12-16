@@ -680,6 +680,23 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(ERC20Mock(_rewardToken).balanceOf(user3), expectedRewardsUser3, "invalid user3 balance");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_createIncentivesProgram
+    function test_immediateDistribution_createIncentivesProgram() public {
+        string memory programName = Strings.toHexString(_rewardToken);
+
+        vm.expectEmit(true, true, true, true);
+        emit IncentivesProgramCreated(programName);
+
+        vm.prank(_owner);
+        _controller.immediateDistribution(_rewardToken, 1e18);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_doNotRevert_when_amount_is_0
+    function test_immediateDistribution_doNotRevert_when_amount_is_0() public {
+        vm.prank(_owner);
+        _controller.immediateDistribution(_rewardToken, 0);
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_onlyOwner
     function test_setClaimer_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));

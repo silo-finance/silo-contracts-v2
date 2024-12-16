@@ -80,6 +80,8 @@ contract SiloIncentivesController is BaseIncentivesController {
 
     /// @inheritdoc ISiloIncentivesController
     function immediateDistribution(address _tokenToDistribute, uint104 _amount) external onlyNotifierOrOwner {
+        if (_amount == 0) return;
+
         uint256 totalStaked = _shareToken().totalSupply();
 
         bytes32 programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
