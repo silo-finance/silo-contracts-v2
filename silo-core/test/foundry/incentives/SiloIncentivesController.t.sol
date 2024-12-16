@@ -738,6 +738,23 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewards_toSomeoneElse
+    function test_claimRewards_toSomeoneElse() public {
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+
+        string memory programName = Strings.toHexString(_rewardToken);
+
+        uint256 toDistribute = 1000e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
+
+        _claimRewards(user1, user2, programName);
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_tooLongProgramName
     function test_getProgramId_tooLongProgramName() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.TooLongProgramName.selector));

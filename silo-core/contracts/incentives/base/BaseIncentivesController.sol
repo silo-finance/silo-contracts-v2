@@ -109,7 +109,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     function claimRewards(address _to) external returns (AccruedRewards[] memory accruedRewards) {
         if (_to == address(0)) revert InvalidToAddress();
 
-        accruedRewards = _accrueRewards(_to);
+        accruedRewards = _accrueRewards(msg.sender);
         _claimRewards(msg.sender, msg.sender, _to, accruedRewards);
     }
 
@@ -121,7 +121,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         if (_to == address(0)) revert InvalidToAddress();
 
         bytes32[] memory programIds = _getProgramsIds(_programNames);
-        accruedRewards = _accrueRewardsForPrograms(_to, programIds);
+        accruedRewards = _accrueRewardsForPrograms(msg.sender, programIds);
         _claimRewards(msg.sender, msg.sender, _to, accruedRewards);
     }
 
