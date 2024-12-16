@@ -10,7 +10,7 @@ import "../summaries/tokens_dispatchers.spec";
 import "../summaries/config_for_one_in_cvl.spec";
 import "../summaries/safe-approximations.spec";
 
-import "../requirements/single_silo_tokens_requirements.spec";
+import "../setup/single_silo_tokens_requirements.spec";
 
 using Silo0 as silo0;
 using Token0 as token0;

@@ -3,18 +3,14 @@ import "../_common/IsSiloFunction.spec";
 import "../_common/SiloMethods.spec";
 import "../_common/Helpers.spec";
 import "../_common/CommonSummarizations.spec";
-import "../../_simplifications/priceOracle.spec";
-import "../../_simplifications/SiloMathLib.spec";
-import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../../simplifications/priceOracle.spec";
+import "../../simplifications/SiloMathLib.spec";
+import "../../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 use rule assetsToSharesAndBackAxiom;
 use rule mulDiv_axioms_test;
 
-
-
 // A user cannot redeem anything after redeeming whole balance.
-// holds
-// https://prover.certora.com/output/6893/6ebdfe9df3f04b4b887bdb1c5372637c/?anonymousKey=af1886c64a28e05f1ee50a3c98745a75596a38ad
 rule RA_Silo_no_redeem_after_redeeming_all(env e, address user, ISilo.AssetType type)
 {
     completeSiloSetupEnv(e);
@@ -40,7 +36,6 @@ rule RA_Silo_no_redeem_after_redeeming_all(env e, address user, ISilo.AssetType 
 
 }
 
-// In development..
 // A user should not be able to fully repay a loan with less amount than he borrowed.
 rule RA_Silo_no_negative_interest_for_loan(env e, address user)
 {
@@ -56,7 +51,6 @@ rule RA_Silo_no_negative_interest_for_loan(env e, address user)
     assert assetsBorrowed > assetsRepayed => debt > debtPaid;
 }
 
-// In development..
 // A user should not be able to fully repay a loan with less amount than he borrowed.
 // Even if there's a method called in between.
 rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
@@ -75,27 +69,7 @@ rule RA_Silo_no_negative_interest_for_loan_Param(env e, address user, method f)
     assert assetsBorrowed > assetsRepayed => debt > debtPaid;
 }
 
-/*
-// A user should not be able to deposit an asset that he borrowed in the Silo.
-// violated
-// DEPRECATED - No longer applicable in current version
-rule RA_Silo_borrowed_asset_not_depositable(env e, address user)
-{
-    completeSiloSetupEnv(e);
-    totalSupplyMoreThanBalance(user);
-    totalSupplyMoreThanBalance(e.msg.sender);
-    
-    mathint debtBefore = shareDebtToken0.balanceOf(e.msg.sender);
-    require debtBefore > 0;
-    uint256 assets;
-    mathint sharesD = deposit@withrevert(e, assets, user);
-    assert lastReverted;
-}
-*/
-
 /// @title A user has no debt after being repaid with max shares amount.
-// holds
-// https://prover.certora.com/output/6893/a22af9f11ffb407bb7e4cf394cb3055e/?anonymousKey=9509c87048a98ee81867020227f1441090132ff9
 rule RA_Silo_repay_all_shares(env e, address receiver)
 {
     completeSiloSetupEnv(e);
@@ -113,7 +87,6 @@ rule RA_Silo_repay_all_shares(env e, address receiver)
 }
 
 /// @title User should not be able to borrow more than maxBorrow().
-/// Violated (but not a real issue - maxBorrow() could under-estimate)
 rule RA_silo_cant_borrow_more_than_max(env e, address borrower) {
     completeSiloSetupEnv(e);
     totalSupplyMoreThanBalance(borrower);
@@ -144,7 +117,6 @@ rule RA_silo_cant_borrow_without_collateral(env e, address borrower) {
 }
 
 /// @title If there is no collateral in the system, there couldn't be any debt.
-/// Violated: case of bad debt.
 invariant RA_no_collateral_assets_no_debt_assets()
     silo0.total(ISilo.AssetType.Collateral) ==0 &&
     silo0.total(ISilo.AssetType.Protected) ==0 =>
@@ -162,25 +134,8 @@ invariant RA_no_collateral_assets_no_debt_assets()
         }
     }
 
-/*
-Violation analysis:
 
-- accrueInterest:
-    While the total supply of the collateral share token is zero,
-    interest accretion from the debt token is possible through
-    SiloMathLib.getCollateralAmountsWithInterest which will increase
-    total[AssetType.collateral].assets by the interest.
 
-    hence the violation shows:
-    ShareCollateralToken.totalSupply() == 0 but total[AssetType.collateral].assets ! =0
-
-    TOTAL SUPPLY = 0 ; TOTAL ASSETS = Y
-    TOTAL_SUPPLY = +X ; TOTAL_ASSETS = Y + X
-
-    Conclusion:
-    For the case of bad debt (debt shares are available without collateral shares),
-
-*/
 invariant RA_zero_assets_iff_zero_shares() 
     (silo0.total(ISilo.AssetType.Protected) ==0 <=> shareProtectedCollateralToken0.totalSupply() == 0) &&
     (silo0.total(ISilo.AssetType.Collateral) ==0 <=> shareCollateralToken0.totalSupply() == 0) &&

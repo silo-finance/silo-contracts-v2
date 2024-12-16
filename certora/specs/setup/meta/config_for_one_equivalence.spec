@@ -1,12 +1,12 @@
 /* Checks equivalence of `SiloConfig` summarized functions from 
- * `functions/config_for_two_functions.spec`.
+ * `functions/config_for_one_functions.spec`.
  *
- * NOTE: This spec is the same as `meta/config_for_one_equivalence.spec` except for
+ * NOTE: This spec is the same as `meta/config_for_two_equivalence.spec` except for
  * the import.
  */
 
-import "../functions/config_for_two_functions.spec";
-import "../requirements/tokens_requirements.spec";
+import "../functions/config_for_one_functions.spec";
+import "../setup/single_silo_tokens_requirements.spec";
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------
@@ -36,7 +36,8 @@ rule sanityWithSetup_borrow() {
     satisfy true;
 }
 
-rule getSilosEquivalence() {
+
+rule getSilosSingleEquivalence() {
     address s0;
     address s1;
     s0, s1 = getSilos();
@@ -49,7 +50,7 @@ rule getSilosEquivalence() {
 }
 
 
-rule getShareTokensEquivalence(address _silo) {
+rule getShareTokensSingleEquivalence(address _silo) {
     address protected;
     address collateral;
     address debt;
@@ -67,7 +68,7 @@ rule getShareTokensEquivalence(address _silo) {
 }
 
 
-rule getAssetForSiloEquivalence(address _silo) {
+rule getAssetForSiloSingleEquivalence(address _silo) {
     assert (
         getAssetForSilo(_silo) == CVLGetAssetForSilo(_silo),
         "getAssetForSilo equivalent to CVLGetAssetForSilo"
@@ -75,7 +76,7 @@ rule getAssetForSiloEquivalence(address _silo) {
 }
 
 
-rule getFeesWithAssetEquivalence(address _silo) {
+rule getFeesWithAssetSingleEquivalence(address _silo) {
     uint256 dao_fee;
     uint256 deployer_fee;
     uint256 flash_fee;
@@ -98,7 +99,7 @@ rule getFeesWithAssetEquivalence(address _silo) {
 }
 
 
-rule getCollateralShareTokenAndAssetEquivalence(
+rule getCollateralShareTokenAndAssetSingleEquivalence(
     address _silo,
     ISilo.CollateralType _collateralType
 ) {
@@ -117,7 +118,7 @@ rule getCollateralShareTokenAndAssetEquivalence(
 }
 
 
-rule getDebtShareTokenAndAssetEquivalence(address _silo) {
+rule getDebtShareTokenAndAssetSingleEquivalence(address _silo) {
     address debt;
     address token;
     debt, token = getDebtShareTokenAndAsset(_silo);

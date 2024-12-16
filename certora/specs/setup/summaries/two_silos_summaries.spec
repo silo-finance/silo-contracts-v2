@@ -1,5 +1,5 @@
 import "silo0_summaries.spec";
-import "../requirements/two_silos_methods.spec";
+import "../two_silos_methods.spec";
 
 /* Summaries for two silos setup */
 

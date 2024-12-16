@@ -1,13 +1,11 @@
-import "../_common/CompleteSiloSetup.spec";
-import "../_common/IsSiloFunction.spec";
-import "../_common/SiloMethods.spec";
-import "../_common/Helpers.spec";
-import "../_common/CommonSummarizations.spec";
-//import "../../_simplifications/Oracle_quote_one.spec";
-import "../../_simplifications/priceOracle.spec";
-//import "../../_simplifications/Silo_isSolvent_ghost.spec";
-import "../../_simplifications/SiloSolvencyLib.spec";
-import "../../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../setup/CompleteSiloSetup.spec";
+import "unresolved.spec";
+import "../simplifications/SiloMathLib.spec";
+import "../simplifications/Oracle_quote_one.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+
+//import "../simplifications/Silo_isSolvent_ghost.spec";
+//import "../simplifications/SiloSolvencyLib.spec";
 
 //checks that sequences of method calls don't free funds to the user (e.g. due to rounding)
 // most of these rules timeout, except for the "simplified" calculations (see below)
@@ -131,7 +129,6 @@ rule HLP_MintWithdrawNotProfitable(env e, address receiver)
     satisfy balanceTokenW > balanceTokenBefore => balanceCollateralW < balanceCollateralBefore;
 }
 
-// violated
 rule HLP_AssetsPerShareNondecreasing(env e, method f)
 {
     completeSiloSetupEnv(e);
@@ -169,11 +166,6 @@ rule HLP_AssetsPerShareNondecreasing(env e, method f)
     //assert totalProtectedAssetsB * totalProtectedSharesA <= totalProtectedAssetsA * totalProtectedSharesB;
     //assert totalSumColateralB * totalSumSharesA <= totalSumColateralA * totalSumSharesB;
 }
-
-// we know that value per share can decrease. 
-// These rules show that others cannot decrease value of my shares such that
-// it diminishes return of some method
-// Currently all these timeout
 
 rule HLP_OthersCantDecreaseMyRedeem(env e, env eOther, method f)
     filtered { f -> !f.isView }
