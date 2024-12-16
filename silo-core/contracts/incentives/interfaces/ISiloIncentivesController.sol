@@ -34,7 +34,7 @@ interface ISiloIncentivesController is IDistributionManager {
     error InvalidRewardToken();
     error IncentivesProgramAlreadyExists();
     error IncentivesProgramNotFound();
-
+    error DifferentRewardsTokens();
     /**
      * @dev Silo share token event handler
      * @param _sender The address of the sender
@@ -146,6 +146,17 @@ interface ISiloIncentivesController is IDistributionManager {
      * @return unclaimedRewards
      */
     function getRewardsBalance(address _user, string calldata _programName)
+        external
+        view
+        returns (uint256 unclaimedRewards);
+
+    /**
+     * @dev Returns the total of rewards of an user, already accrued + not yet accrued
+     * @param _user The address of the user
+     * @param _programNames The incentives program names (should have the same rewards token)
+     * @return unclaimedRewards
+     */
+    function getRewardsBalance(address _user, string[] calldata _programNames)
         external
         view
         returns (uint256 unclaimedRewards);

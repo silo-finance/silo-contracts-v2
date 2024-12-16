@@ -98,11 +98,44 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     {
         bytes32 programId = getProgramId(_programName);
 
-        unclaimedRewards = _usersUnclaimedRewards[_user][programId];
+        (uint256 stakedByUser, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
+
+        unclaimedRewards = _getRewardsBalance(_user, programId, stakedByUser, totalStaked);
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    function getRewardsBalance(address _user, string[] calldata _programNames)
+        external
+        view
+        returns (uint256 unclaimedRewards)
+    {
+        address rewardsToken;
 
         (uint256 stakedByUser, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
 
-        unclaimedRewards += _getUnclaimedRewards(programId, _user, stakedByUser, totalStaked);
+        for (uint256 i = 0; i < _programNames.length; i++) {
+            bytes32 programId = getProgramId(_programNames[i]);
+
+            address programRewardsToken = incentivesPrograms[programId].rewardToken;
+
+            if (rewardsToken == address(0)) {
+                rewardsToken = programRewardsToken;
+            } else if (rewardsToken != programRewardsToken) {
+                revert DifferentRewardsTokens();
+            }
+
+            unclaimedRewards += _getRewardsBalance(_user, programId, stakedByUser, totalStaked);
+        }
+    }
+
+    /// @dev Internal function to get the rewards balance for a user and a program
+    function _getRewardsBalance(address _user, bytes32 _programId, uint256 _stakedByUser, uint256 _totalStaked)
+        internal
+        view
+        returns (uint256 unclaimedRewards)
+    {
+        unclaimedRewards = _usersUnclaimedRewards[_user][_programId];
+        unclaimedRewards += _getUnclaimedRewards(_programId, _user, _stakedByUser, _totalStaked);
     }
 
     /// @inheritdoc ISiloIncentivesController
