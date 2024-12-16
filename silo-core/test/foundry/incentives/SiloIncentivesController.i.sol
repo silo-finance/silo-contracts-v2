@@ -70,7 +70,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
     uint256 internal constant _PRECISION = 10 ** 18;
     string internal constant _PROGRAM_NAME = "Test";
-    bytes32 internal constant _PROGRAM_ID = keccak256(abi.encodePacked(_PROGRAM_NAME));
 
     event IncentivesProgramCreated(bytes32 indexed incentivesProgramId);
     event IncentivesProgramUpdated(bytes32 indexed programId);
@@ -170,7 +169,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         assertEq(_rewardToken.balanceOf(user2), 0, "[user2] rewards before");
 
         vm.expectEmit(true, true, true, false);
-        emit IDistributionManager.UserIndexUpdated(user1, _PROGRAM_ID, 0);
+        emit IDistributionManager.UserIndexUpdated(user1, _PROGRAM_NAME, 0);
 
 //        vm.expectEmit(true, true, true, true);
 //        emit ISiloIncentivesController.RewardsAccrued(
@@ -205,7 +204,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 //        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         vm.startPrank(address(hook));
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
+        _controller.immediateDistribution(address(_rewardToken), uint104(immediateDistribution));
         vm.stopPrank();
 
         assertEq(
@@ -304,7 +303,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         uint256 immediateDistribution = 7e7;
 
         vm.startPrank(address(hook));
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
+        _controller.immediateDistribution(address(_rewardToken), uint104(immediateDistribution));
         vm.stopPrank();
 
         assertEq(
@@ -369,7 +368,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         uint256 immediateDistribution = 33e7;
 
         vm.startPrank(address(hook));
-        _controller.immediateDistribution(_PROGRAM_ID, uint104(immediateDistribution), silo0.totalSupply());
+        _controller.immediateDistribution(address(_rewardToken), uint104(immediateDistribution));
         vm.stopPrank();
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), immediateDistribution, "immediate reward");
