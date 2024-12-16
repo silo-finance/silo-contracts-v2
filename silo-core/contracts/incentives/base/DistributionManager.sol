@@ -193,12 +193,31 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         returns (AccruedRewards[] memory accruedRewards)
     {
         uint256 length = _programIds.length;
-        accruedRewards = new AccruedRewards[](length);
+        AccruedRewards[] memory tmp = new AccruedRewards[](length);
 
         (uint256 userStaked, uint256 totalStaked) = _getScaledUserBalanceAndSupply(_user);
+        uint256 nonZeros;
 
         for (uint256 i = 0; i < length; i++) {
-            accruedRewards[i] = _accrueRewards(_user, _programIds[i], totalStaked, userStaked);
+            uint256 reward = _accrueRewards(_user, _programIds[i], totalStaked, userStaked);
+
+            if (reward != 0) {
+                unchecked { nonZeros++; }
+                tmp[i] = reward;
+            }
+        }
+
+        if (nonZeros == length) return tmp;
+
+        accruedRewards = new AccruedRewards[](nonZeros);
+        uint256 j;
+
+        for (uint256 i = 0; i < length; i++) {
+            uint256 reward = tmp[i];
+            if (reward == 0) continue;
+
+            accruedRewards[j] = reward;
+            unchecked { j++; }
         }
     }
 
