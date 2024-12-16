@@ -7,7 +7,7 @@ import "../summaries/safe-approximations.spec";
 import "../summaries/config_for_two_in_cvl.spec";
 import "../summaries/interest_rate_model_v2.spec";
 
-import "../requirements/tokens_requirements.spec";
+import "../setup/tokens_requirements.spec";
 
 using Silo0 as silo0;
 using Silo1 as silo1;

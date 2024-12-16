@@ -6,7 +6,7 @@
  */
 
 import "../functions/config_for_two_functions.spec";
-import "../requirements/tokens_requirements.spec";
+import "../setup/tokens_requirements.spec";
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------

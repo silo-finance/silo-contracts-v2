@@ -6,7 +6,7 @@
  */
 
 import "../functions/config_for_one_functions.spec";
-import "../requirements/single_silo_tokens_requirements.spec";
+import "../setup/single_silo_tokens_requirements.spec";
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------
