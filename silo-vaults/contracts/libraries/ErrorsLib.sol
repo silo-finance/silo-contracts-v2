@@ -8,6 +8,9 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 /// @custom:contact security@morpho.org
 /// @notice Library exposing error messages.
 library ErrorsLib {
+    /// @notice Thrown on reentering token transfer while notification are being dispatched
+    error NotificationDispatchError();
+
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();
 

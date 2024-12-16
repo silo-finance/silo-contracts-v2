@@ -24,16 +24,18 @@ contract MetaMorphoFactoryTest is IntegrationTest {
     function testCreateMetaMorpho(
         address initialOwner,
         uint256 initialTimelock,
+        address vaultIncentivesModule,
         string memory name,
         string memory symbol,
         bytes32 salt
     ) public {
         vm.assume(address(initialOwner) != address(0));
+        vm.assume(address(vaultIncentivesModule) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
         bytes32 initCodeHash = hashInitCode(
             type(MetaMorpho).creationCode,
-            abi.encode(initialOwner, initialTimelock, address(loanToken), name, symbol)
+            abi.encode(initialOwner, initialTimelock, vaultIncentivesModule, address(loanToken), name, symbol)
         );
         address expectedAddress = computeCreate2Address(salt, initCodeHash, address(factory));
 

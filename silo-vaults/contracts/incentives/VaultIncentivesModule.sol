@@ -17,7 +17,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) private _claimingLogics;
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address _owner) Ownable(_owner) {}
 
     /// @inheritdoc IVaultIncentivesModule
     function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {

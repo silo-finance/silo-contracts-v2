@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+
 import {IMetaMorpho} from "./interfaces/IMetaMorpho.sol";
 import {IMetaMorphoFactory} from "./interfaces/IMetaMorphoFactory.sol";
 
 import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {MetaMorpho} from "./MetaMorpho.sol";
+import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 
 /// @title MetaMorphoFactory
 /// @author Morpho Labs
@@ -14,11 +17,16 @@ import {MetaMorpho} from "./MetaMorpho.sol";
 /// @notice This contract allows to create MetaMorpho vaults, and to index them easily.
 contract MetaMorphoFactory is IMetaMorphoFactory {
     /* STORAGE */
+    address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
 
     /// @inheritdoc IMetaMorphoFactory
     mapping(address => bool) public isMetaMorpho;
 
     /* CONSTRUCTOR */
+
+    constructor() {
+        VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule(msg.sender));
+    }
 
     /* EXTERNAL */
 
@@ -31,8 +39,11 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
         string memory symbol,
         bytes32 salt
     ) external returns (IMetaMorpho metaMorpho) {
-        metaMorpho =
-            IMetaMorpho(address(new MetaMorpho{salt: salt}(initialOwner, initialTimelock, asset, name, symbol)));
+        VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION));
+
+        metaMorpho = IMetaMorpho(address(
+            new MetaMorpho{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
+        );
 
         isMetaMorpho[address(metaMorpho)] = true;
 
