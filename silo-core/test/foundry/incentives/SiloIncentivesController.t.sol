@@ -773,8 +773,8 @@ contract SiloIncentivesControllerTest is Test {
         _claimRewards(user1, user2, programName);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getRewardsBalance_rewardsTokenMismatch
-    function test_getRewardsBalance_rewardsTokenMismatch() public {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getRewardsBalance_DifferentRewardsTokens
+    function test_getRewardsBalance_DifferentRewardsTokens() public {
         uint256 distributionEnd = block.timestamp + 100 days;
         uint104 emissionPerSecond = 1e18;
 
@@ -790,7 +790,7 @@ contract SiloIncentivesControllerTest is Test {
         programsNames[0] = _PROGRAM_NAME;
         programsNames[1] = "Some other program";
 
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.RewardsTokenMismatch.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.DifferentRewardsTokens.selector));
         _controller.getRewardsBalance(user1, programsNames);
     }
 
