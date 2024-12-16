@@ -43,18 +43,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         external
         onlyOwner
     {
-        bytes32 programId = getProgramId(_incentivesProgramInput.name);
-
-        require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
-        require(_incentivesProgramIds.add(programId), IncentivesProgramAlreadyExists());
-
-        incentivesPrograms[programId].rewardToken = _incentivesProgramInput.rewardToken;
-        incentivesPrograms[programId].distributionEnd = _incentivesProgramInput.distributionEnd;
-        incentivesPrograms[programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
-
-        _updateAssetStateInternal(programId, _shareToken().totalSupply());
-
-        emit IncentivesProgramCreated(_incentivesProgramInput.name);
+        _createIncentiveProgram(_incentivesProgramInput);
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -206,6 +195,27 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
                 );
             }
         }
+    }
+
+    /**
+     * @dev Creates a new incentive program
+     * @param _incentivesProgramInput The incentives program creation input
+     */
+    function _createIncentiveProgram(
+        DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput
+    ) internal {
+        bytes32 programId = getProgramId(_incentivesProgramInput.name);
+
+        require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
+        require(_incentivesProgramIds.add(programId), IncentivesProgramAlreadyExists());
+
+        incentivesPrograms[programId].rewardToken = _incentivesProgramInput.rewardToken;
+        incentivesPrograms[programId].distributionEnd = _incentivesProgramInput.distributionEnd;
+        incentivesPrograms[programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
+
+        _updateAssetStateInternal(programId, _shareToken().totalSupply());
+
+        emit IncentivesProgramCreated(_incentivesProgramInput.name);
     }
 
     /**

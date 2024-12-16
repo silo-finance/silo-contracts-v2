@@ -4,9 +4,11 @@ pragma solidity 0.8.28;
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.sol";
 import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
+import {DistributionTypes} from "./lib/DistributionTypes.sol";
 
 /**
  * @title SiloIncentivesController
@@ -77,35 +79,49 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(
-        string calldata _programName,
-        uint104 _amount,
-        uint256 _totalStaked
-    ) external onlyNotifier {
-        bytes32 programId = getProgramId(_programName);
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external onlyNotifierOrOwner {
+        uint256 totalStaked = _shareToken().totalSupply();
+
+        bytes32 programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
 
         IncentivesProgram storage program = incentivesPrograms[programId];
 
-        // early return if program do not exist
-        if (program.lastUpdateTimestamp == 0) return;
-
         // Update the program's internal state to guarantee that further actions will not break it.
-        _updateAssetStateInternal(programId, _totalStaked);
+        _updateAssetStateInternal(programId, totalStaked);
 
         uint40 distributionEndBefore = program.distributionEnd;
         uint104 emissionPerSecondBefore = program.emissionPerSecond;
 
         // Distributing `_amount` of rewards in one second allows the rewards to be added to users' balances
         // even to the active incentives program.
-        program.distributionEnd = uint40(block.timestamp);
+        program.distributionEnd = uint40(block.timestamp);  
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
         program.emissionPerSecond = _amount;
 
-        _updateAssetStateInternal(programId, _totalStaked);
+        _updateAssetStateInternal(programId, totalStaked);
 
         // If we have ongoing distribution, we need to revert the changes and keep the state as it was.
         program.distributionEnd = distributionEndBefore;
         program.lastUpdateTimestamp = uint40(block.timestamp);
         program.emissionPerSecond = emissionPerSecondBefore;
+    }
+
+    /// @dev Creates a new immediate distribution program if it does not exist.
+    /// @param _tokenToDistribute The address of the token to distribute.
+    /// @return programId The ID of the created or existing program.
+    function _getOrCreateImmediateDistributionProgram(address _tokenToDistribute) internal returns (bytes32 programId) {
+        string memory programName = Strings.toHexString(_tokenToDistribute);
+        programId = getProgramId(programName);
+
+        if (incentivesPrograms[programId].lastUpdateTimestamp == 0) {
+            DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput;
+
+            _incentivesProgramInput.name = programName;
+            _incentivesProgramInput.rewardToken = _tokenToDistribute;
+            _incentivesProgramInput.emissionPerSecond = 0;
+            _incentivesProgramInput.distributionEnd = 0;
+
+            _createIncentiveProgram(_incentivesProgramInput);
+        }
     }
 }

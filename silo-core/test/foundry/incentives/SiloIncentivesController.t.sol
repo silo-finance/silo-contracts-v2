@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
@@ -25,10 +26,9 @@ contract SiloIncentivesControllerTest is Test {
     uint256 internal constant _PRECISION = 10 ** 18;
     uint256 internal constant _TOTAL_SUPPLY = 1000e18;
     string internal constant _PROGRAM_NAME = "Test";
-    bytes32 internal constant _PROGRAM_ID = bytes32(abi.encodePacked(_PROGRAM_NAME));
 
-    event IncentivesProgramCreated(string indexed name);
-    event IncentivesProgramUpdated(string indexed name);
+    event IncentivesProgramCreated(string name);
+    event IncentivesProgramUpdated(string name);
     event ClaimerSet(address indexed user, address indexed claimer);
 
     function setUp() public {
@@ -412,6 +412,12 @@ contract SiloIncentivesControllerTest is Test {
         assertNotEq(rewards, 0);
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_permissions
+    function test_immediateDistribution_permissions() public {
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifierOrOwner.selector));
+        _controller.immediateDistribution(_rewardToken, 100e18);
+    }
+
     // test scenario 1 for immediateDistribution
     //
     // distribute 0
@@ -429,9 +435,11 @@ contract SiloIncentivesControllerTest is Test {
         uint40 distributionEnd = 0;
         uint104 emissionPerSecond = 0;
 
+        string memory programName = Strings.toHexString(_rewardToken);
+
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
+            name: programName,
             rewardToken: _rewardToken,
             distributionEnd: distributionEnd,
             emissionPerSecond: emissionPerSecond
@@ -458,10 +466,9 @@ contract SiloIncentivesControllerTest is Test {
         // distribute 1000
         uint256 toDistribute = 1000e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
-        totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user2 deposit 100
         uint256 user2Deposit1 = 100e18;
@@ -484,10 +491,9 @@ contract SiloIncentivesControllerTest is Test {
         // distribute 1000
         toDistribute = 1000e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
-        totalSupply = ERC20Mock(_notifier).totalSupply();
 
-        vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
+        vm.prank(_owner);
+        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user3 deposit 100
         uint256 user3Deposit1 = 100e18;
@@ -508,21 +514,21 @@ contract SiloIncentivesControllerTest is Test {
         uint256 expectedRewardsUser2 = 500e18;
         uint256 expectedRewardsUser3 = 0;
 
-        uint256 rewards = _controller.getRewardsBalance(user1, _PROGRAM_NAME);
-        assertEq(rewards, expectedRewardsUser1);
+        uint256 rewards = _controller.getRewardsBalance(user1, programName);
+        assertEq(rewards, expectedRewardsUser1, "invalid user1 balance before claim");
 
-        rewards = _controller.getRewardsBalance(user2, _PROGRAM_NAME);
-        assertEq(rewards, expectedRewardsUser2);
+        rewards = _controller.getRewardsBalance(user2, programName);
+        assertEq(rewards, expectedRewardsUser2, "invalid user2 balance before claim");
 
-        rewards = _controller.getRewardsBalance(user3, _PROGRAM_NAME);
-        assertEq(rewards, expectedRewardsUser3);
+        rewards = _controller.getRewardsBalance(user3, programName);
+        assertEq(rewards, expectedRewardsUser3, "invalid user3 balance before claim");
 
         // user1 claim rewards
-        _claimRewards(user1, user1);
+        _claimRewards(user1, user1, programName);
         // user2 claim rewards
-        _claimRewards(user2, user2);
+        _claimRewards(user2, user2, programName);
         // user3 claim rewards
-        _claimRewards(user3, user3);
+        _claimRewards(user3, user3, programName);
 
         assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
@@ -548,9 +554,11 @@ contract SiloIncentivesControllerTest is Test {
         uint40 distributionEnd = 0;
         uint104 emissionPerSecond = 0;
 
+        string memory programName = Strings.toHexString(_rewardToken);
+
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
+            name: programName,
             rewardToken: _rewardToken,
             distributionEnd: distributionEnd,
             emissionPerSecond: emissionPerSecond
@@ -577,10 +585,9 @@ contract SiloIncentivesControllerTest is Test {
         // distribute 1000
         uint256 toDistribute = 1000e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
-        totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user2 deposit 100
         uint256 user2Deposit1 = 100e18;
@@ -603,10 +610,9 @@ contract SiloIncentivesControllerTest is Test {
         // distribute 900
         toDistribute = 900e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
-        totalSupply = ERC20Mock(_notifier).totalSupply();
 
-        vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
+        vm.prank(_owner);
+        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user1 withdraw 100
         uint256 user1Withdraw1 = 100e18;
@@ -632,7 +638,7 @@ contract SiloIncentivesControllerTest is Test {
         totalSupply = ERC20Mock(_notifier).totalSupply();
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_PROGRAM_NAME, uint104(toDistribute), totalSupply);
+        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user3 deposit 100
         uint256 user3Deposit1 = 100e18;
@@ -653,21 +659,21 @@ contract SiloIncentivesControllerTest is Test {
         uint256 expectedRewardsUser2 = 550e18;
         uint256 expectedRewardsUser3 = 0;
 
-        uint256 rewards = _controller.getRewardsBalance(user1, _PROGRAM_NAME);
+        uint256 rewards = _controller.getRewardsBalance(user1, programName);
         assertEq(rewards, expectedRewardsUser1);
 
-        rewards = _controller.getRewardsBalance(user2, _PROGRAM_NAME);
+        rewards = _controller.getRewardsBalance(user2, programName);
         assertEq(rewards, expectedRewardsUser2);
 
-        rewards = _controller.getRewardsBalance(user3, _PROGRAM_NAME);
+        rewards = _controller.getRewardsBalance(user3, programName);
         assertEq(rewards, expectedRewardsUser3);
 
         // user1 claim rewards
-        _claimRewards(user1, user1);
+        _claimRewards(user1, user1, programName);
         // user2 claim rewards
-        _claimRewards(user2, user2);
+        _claimRewards(user2, user2, programName);
         // user3 claim rewards
-        _claimRewards(user3, user3);
+        _claimRewards(user3, user3, programName);
 
         assertEq(ERC20Mock(_rewardToken).balanceOf(user1), expectedRewardsUser1, "invalid user1 balance");
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
@@ -738,7 +744,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.getProgramId("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
     }
 
-    function _claimRewards(address _user, address _to) internal {
+    function _claimRewards(address _user, address _to, string memory _programName) internal {
         uint256 snapshotId = vm.snapshot();
 
         vm.prank(_user);
@@ -747,7 +753,7 @@ contract SiloIncentivesControllerTest is Test {
         vm.revertTo(snapshotId);
 
         string[] memory programsNames = new string[](1);
-        programsNames[0] = _PROGRAM_NAME;
+        programsNames[0] = _programName;
 
         vm.prank(_user);
         IDistributionManager.AccruedRewards[] memory accruedRewards2 = _controller.claimRewards(_to, programsNames);

@@ -6,8 +6,8 @@ import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
 interface ISiloIncentivesController is IDistributionManager {
     event ClaimerSet(address indexed user, address indexed claimer);
-    event IncentivesProgramCreated(string indexed name);
-    event IncentivesProgramUpdated(string indexed name);
+    event IncentivesProgramCreated(string name);
+    event IncentivesProgramUpdated(string name);
 
     event RewardsAccrued(
         address indexed user,
@@ -55,11 +55,11 @@ interface ISiloIncentivesController is IDistributionManager {
 
     /**
      * @dev Immediately distributes rewards to the incentives program
-     * @param _programName The name of the incentives program
+     * Expect an `_amount` to be transferred to the contract before calling this fn
+     * @param _tokenToDistribute The token to distribute
      * @param _amount The amount of rewards to distribute
-     * @param _totalStaked The total staked amount
      */
-    function immediateDistribution(string calldata _programName, uint104 _amount, uint256 _totalStaked) external;
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external;
 
     /**
      * @dev Whitelists an address to claim the rewards on behalf of another address

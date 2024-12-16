@@ -31,6 +31,11 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         _;
     }
 
+    modifier onlyNotifierOrOwner() {
+        if (msg.sender != NOTIFIER && msg.sender != owner()) revert OnlyNotifierOrOwner();
+        _;
+    }
+
     constructor(address _owner, address _notifier) Ownable(_owner) {
         NOTIFIER = _notifier;
     }
@@ -88,7 +93,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     /// @inheritdoc IDistributionManager
     function getProgramId(string memory _programName) public pure returns (bytes32) {
         require(bytes(_programName).length > 0, InvalidIncentivesProgramName());
-        require(bytes(_programName).length <= 32, TooLongProgramName());
+        require(bytes(_programName).length <= 42, TooLongProgramName());
 
         return bytes32(abi.encodePacked(_programName));
     }
