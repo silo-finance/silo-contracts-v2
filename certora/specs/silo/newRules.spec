@@ -1,6 +1,6 @@
 /* Integrity of main methods */
 
-import "../requirements/CompleteSiloSetup.spec";
+import "../setup/CompleteSiloSetup.spec";
 import "unresolved.spec";
 import "../simplifications/SiloMathLib.spec";
 import "../simplifications/Oracle_quote_one.spec";

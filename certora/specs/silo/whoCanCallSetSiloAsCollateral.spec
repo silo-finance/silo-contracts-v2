@@ -1,4 +1,4 @@
-import "../requirements/CompleteSiloSetup.spec";
+import "../setup/CompleteSiloSetup.spec";
 import "unresolved.spec";
 import "../simplifications/SiloMathLib.spec";
 
