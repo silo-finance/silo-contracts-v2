@@ -1,6 +1,6 @@
 /* Integrity of main methods */
 
-import "../requirements/CompleteSiloSetup.spec";
+import "../setup/CompleteSiloSetup.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------

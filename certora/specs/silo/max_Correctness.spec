@@ -1,8 +1,8 @@
-import "../requirements/CompleteSiloSetup.spec";
+import "../setup/CompleteSiloSetup.spec";
 import "unresolved.spec";
-//import "../_simplifications/SiloMathLib.spec";
-//import "../_simplifications/Oracle_quote_one.spec";
-import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+//import "../simplifications/SiloMathLib.spec";
+//import "../simplifications/Oracle_quote_one.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 
 // The ERC4626 spec doesn't require that max{method} is as close as possible to the real bound.

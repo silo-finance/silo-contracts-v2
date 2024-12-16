@@ -1,6 +1,6 @@
-import "../requirements/CompleteSiloSetup.spec";
+import "../setup/CompleteSiloSetup.spec";
 import "unresolved.spec";
-import "../_simplifications/SiloMathLib.spec";
+import "../simplifications/SiloMathLib.spec";
 
 ghost bool wasCalled_setThisSiloAsCollateralSilo;
 ghost bool wasCalled_setOtherSiloAsCollateralSilo;

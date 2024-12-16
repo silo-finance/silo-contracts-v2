@@ -289,182 +289,176 @@ jobs:
           #   command: 'silo/whoCanCallSetSilo.conf --rule whoCalls_setOtherSiloAsCollateralSilo'
           # }
           # ==== max- correctness ============================================
-          # - {
-          #   name: HLP_MaxMint_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxMint_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxRedeem_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxDeposit_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxDeposit_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxWithdraw_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxWithdraw_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxBorrow_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxBorrow_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxRepay_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxRepay_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxRepayShares_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxRepayShares_reverts'
-          # }
-          # - {
-          #   name: HLP_MaxBorrowSameAsset_reverts,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxBorrowSameAsset_reverts'
-          # }
-          # - {
-          #   name: maxBorrow_noRevert,
-          #   command: 'silo/maxCorectness.conf --rule maxBorrow_noRevert'
-          # }
-          # - {
-          #   name: maxRepay_neverGreaterThanTotalDebt,
-          #   command: 'silo/maxCorectness.conf --rule maxRepay_neverGreaterThanTotalDebt'
-          # }
-          # - {
-          #   name: HLP_MaxRedeem_noRevert,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_noRevert'
-          # }
-          # - {
-          #   name: HLP_MaxRedeem_noGreaterThanBalance,
-          #   command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_noGreaterThanBalance'
-          # }
-          # - {
-          #   name: maxRepay_burnsAllDebt,
-          #   command: 'silo/maxCorectness.conf --rule maxRepay_burnsAllDebt'
-          # }
-          # - {
-          #   name: maxWithdraw_noRevert,
-          #   command: 'silo/maxCorectness.conf --rule maxWithdraw_noRevert'
-          # }
-          # - {
-          #   name: maxWithdraw_noGreaterThanLiquidity,
-          #   command: 'silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity'
-          # }
+          - {
+            name: HLP_MaxMint_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxMint_reverts'
+          }
+          - {
+            name: HLP_MaxRedeem_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_reverts'
+          }
+          - {
+            name: HLP_MaxDeposit_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxDeposit_reverts'
+          }
+          - {
+            name: HLP_MaxWithdraw_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxWithdraw_reverts'
+          }
+          - {
+            name: HLP_MaxBorrow_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxBorrow_reverts'
+          }
+          - {
+            name: HLP_MaxRepay_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxRepay_reverts'
+          }
+          - {
+            name: HLP_MaxRepayShares_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxRepayShares_reverts'
+          }
+          - {
+            name: HLP_MaxBorrowSameAsset_reverts,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxBorrowSameAsset_reverts'
+          }
+          - {
+            name: maxBorrow_noRevert,
+            command: 'silo/maxCorectness.conf --rule maxBorrow_noRevert'
+          }
+          - {
+            name: maxRepay_neverGreaterThanTotalDebt,
+            command: 'silo/maxCorectness.conf --rule maxRepay_neverGreaterThanTotalDebt'
+          }
+          - {
+            name: HLP_MaxRedeem_noRevert,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_noRevert'
+          }
+          - {
+            name: HLP_MaxRedeem_noGreaterThanBalance,
+            command: 'silo/maxCorectness.conf --rule HLP_MaxRedeem_noGreaterThanBalance'
+          }
+          - {
+            name: maxRepay_burnsAllDebt,
+            command: 'silo/maxCorectness.conf --rule maxRepay_burnsAllDebt'
+          }
+          - {
+            name: maxWithdraw_noRevert,
+            command: 'silo/maxCorectness.conf --rule maxWithdraw_noRevert'
+          }
+          - {
+            name: maxWithdraw_noGreaterThanLiquidity,
+            command: 'silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity'
+          }
           # ==== accrueInterest - per method ============================================
-          - {
-            name: accruing_accrueInterestForConfig,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "accrueInterestForConfig(address,uint256,uint256)"'
-          }
-          - {
-            name: accruing_permit,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
-          }
-          - {
-            name: accruing_withdraw,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
-          }
-          - {
-            name: accruing_redeem,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address,uint8)"'
-          }
-          - {
-            name: accruing_initialize,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "initialize(address)"'
-          }
-          - {
-            name: accruing_approve,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "approve(address,uint256)"'
-          }
-          - {
-            name: accruing_transfer,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "transfer(address,uint256)"'
-          }
-          - {
-            name: accruing_borrowSameAsset,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "borrowSameAsset(uint256,address,address)"'
-          }
-          - {
-            name: accruing_borrow,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "borrow(uint256,address,address)"'
-          }
-          - {
-            name: accruing_redeem2,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address)"'
-          }
-          - {
-            name: accruing_withdraw2,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address)"'
-          }
-          - {
-            name: accruing_borrowShares,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "borrowShares(uint256,address,address)"'
-          }
-          - {
-            name: accruing_updateHooks,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "updateHooks()"'
-          }
-          - {
-            name: accruing_switchCollateralToThisSilo,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "switchCollateralToThisSilo()"'
-          }
-          - {
-            name: accruing_withdrawFees,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "withdrawFees()"'
-          }
-          - {
-            name: accruing_synchronizeHooks,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "synchronizeHooks(uint24,uint24)"'
-          }
-          - {
-            name: accruing_flashLoan,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "flashLoan(address,address,uint256,bytes)"'
-          }
-          - {
-            name: accruing_deposit,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address)"'
-          }
-          - {
-            name: accruing_repayShares,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "repayShares(uint256,address)"'
-          }
-          - {
-            name: accruing_repay,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "repay(uint256,address)"'
-          }
-          - {
-            name: accruing_mint,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address)"'
-          }
-          - {
-            name: accruing_deposit2,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address,uint8)"'
-          }
-          - {
-            name: accruing_mint2,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address,uint8)"'
-          }
-          - {
-            name: accruing_transferFrom,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "transferFrom(address,address,uint256)"'
-          }
-          - {
-            name: accruing_burn,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "burn(address,address,uint256)"'
-          }
-          - {
-            name: accruing_forwardTransferFromNoChecks,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "forwardTransferFromNoChecks(address,address,uint256)"'
-          }
-          - {
-            name: accruing_mint3,
-            command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
-          }
-          # ==== solvent_user ============================================
-          }
-          - {
-            name: solvent_checked_silo,
-            command: 'silo/solvent_user.conf  --parametric_contracts Silo0'
-          }
-          - {
-            name: solvent_checked_not_silo,
-            command: 'silo/solvent_user.conf'
-          }
+          # - {
+          #   name: accruing_withdraw,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method withdraw(uint256,address,address,uint8)'
+          # }
+          # - {
+          #   name: accruing_accrueInterestForConfig,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "accrueInterestForConfig(address,uint256,uint256)"'
+          # }
+          # - {
+          #   name: accruing_permit,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
+          # }
+          # - {
+          #   name: accruing_withdraw,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_redeem,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_initialize,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "initialize(address)"'
+          # }
+          # - {
+          #   name: accruing_approve,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "approve(address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_transfer,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "transfer(address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_borrowSameAsset,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "borrowSameAsset(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_borrow,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "borrow(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_redeem2,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_withdraw2,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_borrowShares,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "borrowShares(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_updateHooks,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "updateHooks()"'
+          # }
+          # - {
+          #   name: accruing_switchCollateralToThisSilo,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "switchCollateralToThisSilo()"'
+          # }
+          # - {
+          #   name: accruing_withdrawFees,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "withdrawFees()"'
+          # }
+          # - {
+          #   name: accruing_synchronizeHooks,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "synchronizeHooks(uint24,uint24)"'
+          # }
+          # - {
+          #   name: accruing_flashLoan,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "flashLoan(address,address,uint256,bytes)"'
+          # }
+          # - {
+          #   name: accruing_deposit,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_repayShares,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "repayShares(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_repay,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "repay(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_mint,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_deposit2,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_mint2,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_transferFrom,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "transferFrom(address,address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_burn,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "burn(address,address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_forwardTransferFromNoChecks,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "forwardTransferFromNoChecks(address,address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_mint3,
+          #   command: 'silo/newRules.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
+          # }

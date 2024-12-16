@@ -1,8 +1,8 @@
-import "../requirements/two_silos_tokens_requirements.spec";
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/config_for_two_in_cvl.spec";
-import "../summaries/safe-approximations.spec";
+import "two_silos_tokens_requirements.spec";
+import "summaries/two_silos_summaries.spec";
+import "summaries/siloconfig_dispatchers.spec";
+import "summaries/config_for_two_in_cvl.spec";
+import "summaries/safe-approximations.spec";
 
 function SafeAssumptionsEnv_simple(env e) 
 {
@@ -115,8 +115,8 @@ function requireEnvInvariants(env e)
     totalSuppliesMoreThanBalances(e.msg.sender, silo0);
     requireInvariant token0Distribution(e.msg.sender);
     requireInvariant token1Distribution(e.msg.sender);
-    requireInvariant debt0ThenHasCollateral(e.msg.sender);
-    requireInvariant debt1ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt1ThenHasCollateral(e.msg.sender);
 }
 
 // requires all the invariants with env and user defined bellow.
@@ -127,8 +127,8 @@ function requireEnvAndUserInvariants(env e, address user)
 
     requireInvariant token0Distribution(e.msg.sender);
     requireInvariant token1Distribution(e.msg.sender);
-    requireInvariant debt0ThenHasCollateral(e.msg.sender);
-    requireInvariant debt1ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt0ThenHasCollateral(e.msg.sender);
+    //requireInvariant debt1ThenHasCollateral(e.msg.sender);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +147,11 @@ function requireNotInitialState()
     require shareProtectedCollateralToken1.totalSupply() > 0;
     require shareDebtToken1.totalSupply() > 0;
     require silo1.totalSupply() > 0;
+}
+
+function accrueHasBeenCalled(env e) {
+    require require_uint64(e.block.timestamp) == silo0.getSiloDataInterestRateTimestamp();
+    require require_uint64(e.block.timestamp) == silo1.getSiloDataInterestRateTimestamp();
 }
 
 // limits the [assets / shares] to reasonable values

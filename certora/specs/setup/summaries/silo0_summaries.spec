@@ -1,7 +1,7 @@
 /* Summaries for single `Silo0` setup */
 
 import "tokens_dispatchers.spec";
-import "../requirements/single_silo_methods.spec";
+import "../single_silo_methods.spec";
 
 methods {
     // ---- `envfree` ----------------------------------------------------------
