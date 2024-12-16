@@ -7,7 +7,10 @@ import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 /**
-    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
+    note: when using `FOUNDRY_PROFILE` for deploying new market, foundry can not access oracle files
+    and can not verify oracle contracts
+
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY \
         forge script silo-core/deploy/GaugeHookReceiverDeploy.s.sol \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
 
