@@ -193,18 +193,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         _controller.immediateDistribution(address(_rewardToken), uint104(immediateDistribution));
         vm.stopPrank();
 
-        assertEq(
-            _controller.getRewardsBalance(user1, _PROGRAM_NAME),
-            _user2Deposit ? immediateDistribution / 2 : immediateDistribution,
-            "[user1] standard rewards + immediate"
-        );
-
-        assertEq(
-            _controller.getRewardsBalance(user2, _PROGRAM_NAME),
-            _user2Deposit ? emissionPerSecond * 50 + immediateDistribution / 2 : 0,
-            "[user2] standard rewards + immediate"
-        );
-
         vm.warp(block.timestamp + 50);
 
         uint256 expectedTotalRewards = emissionPerSecond * 100 + immediateDistribution;
@@ -429,7 +417,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(
             _controller.getRewardsBalance(user2, _PROGRAM_NAME),
-            _user2Deposit ? (emissionPerSecond * 50 + immediateDistribution) / 2 : 0,
+            _user2Deposit ? (emissionPerSecond * 50) / 2 : 0,
             "[user2] normal rewards"
         );
 
@@ -506,7 +494,11 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         _controller.immediateDistribution(address(_rewardToken), uint104(immediateDistribution));
         vm.stopPrank();
 
-        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), immediateDistribution, "immediate reward");
+        assertEq(
+            _controller.getRewardsBalance(user1, Strings.toHexString(address(_rewardToken))),
+            immediateDistribution,
+            "immediate reward"
+        );
 
         vm.warp(block.timestamp + 50);
         vm.prank(user1);
