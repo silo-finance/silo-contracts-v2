@@ -176,22 +176,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         vm.expectEmit(true, true, true, false);
         emit IDistributionManager.UserIndexUpdated(user1, _PROGRAM_NAME, 0);
 
-//        vm.expectEmit(true, true, true, true);
-//        emit ISiloIncentivesController.RewardsAccrued(
-//            user1,
-//            address(_rewardToken),
-//            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50
-//        );
-
-//        vm.expectEmit(true, true, true, true);
-//        emit ISiloIncentivesController.RewardsClaimed(
-//            user1,
-//            user1,
-//            address(_rewardToken),
-//            user1,
-//            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50
-//        );
-
         vm.prank(user1);
         _controller.claimRewards(user1);
 
@@ -204,9 +188,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         assertEq(_rewardToken.balanceOf(user2), 0, "[user2] rewards after");
 
         uint256 immediateDistribution = 7e7;
-
-//        vm.expectEmit(true, true, true, true);
-//        emit IDistributionManager.UserIndexUpdated(user1, address(silo0), 100e18 * SiloMathLib._DECIMALS_OFFSET_POW);
 
         vm.startPrank(address(hook));
         _controller.immediateDistribution(address(_rewardToken), uint104(immediateDistribution));
