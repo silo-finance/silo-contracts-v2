@@ -3,7 +3,7 @@
 methods {
     
     // `envfree`
-    function getSiloStorage() external returns (uint192,uint64,uint256,uint256,uint256) envfree ;
+    function getSiloStorage() external returns (uint192,uint64,uint256,uint256,uint256) envfree optional ;
     
     // Dispatcher
     function _.getCollateralAndDebtTotalsStorage() external => DISPATCHER(true);
