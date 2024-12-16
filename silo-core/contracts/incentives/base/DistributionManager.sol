@@ -199,9 +199,9 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 nonZeros;
 
         for (uint256 i = 0; i < length; i++) {
-            uint256 reward = _accrueRewards(_user, _programIds[i], totalStaked, userStaked);
+            AccruedRewards memory reward = _accrueRewards(_user, _programIds[i], totalStaked, userStaked);
 
-            if (reward != 0) {
+            if (reward.amount != 0) {
                 unchecked { nonZeros++; }
                 tmp[i] = reward;
             }
@@ -213,8 +213,8 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 j;
 
         for (uint256 i = 0; i < length; i++) {
-            uint256 reward = tmp[i];
-            if (reward == 0) continue;
+            AccruedRewards memory reward = tmp[i];
+            if (reward.amount == 0) continue;
 
             accruedRewards[j] = reward;
             unchecked { j++; }
