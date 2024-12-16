@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
@@ -92,6 +93,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         token0.setOnDemand(true);
         token1.setOnDemand(true);
         _rewardToken.setOnDemand(true);
+        _anotherRewardToken.setOnDemand(true);
 
         SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory overrides;
@@ -403,8 +405,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         );
 
         uint256 immediateDistribution = 7e7;
-        string memory immediateProgramName = "0xa0Cb889707d426A7A386870A03bc70d1b0697598";
-        assertEq(0xa0Cb889707d426A7A386870A03bc70d1b0697598, address(_anotherRewardToken), "immediateProgramName");
+        string memory immediateProgramName = Strings.toHexString(address(_anotherRewardToken));
 
         vm.startPrank(address(hook));
         _controller.immediateDistribution(address(_anotherRewardToken), uint104(immediateDistribution));
@@ -430,7 +431,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(
             _controller.getRewardsBalance(user2, immediateProgramName),
-            immediateDistribution / 2,
+            _user2Deposit ? immediateDistribution / 2 : 0,
             "[user2] immediate rewards"
         );
 
