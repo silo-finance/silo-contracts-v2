@@ -132,10 +132,9 @@ function CVLAccrueInterestForAsset(
     return ret;
 }
 
-
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) interestGhost;
 
-/// @title An arbitrary (pure) function for the interest rate
+// @title An arbitrary (pure) function for the interest rate
 function CVLGetCompoundInterestRate(
     uint256 _collateralAssets,
     uint256 _debtAssets,

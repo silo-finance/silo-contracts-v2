@@ -6,7 +6,7 @@
  * This file is being imported in most other files. 
  * Don't add anything dangerous here (like methods' summaries, etc.) !!!
 
- * Add more requirements on silo0s' tokens here if needed (as a functions that can be called in rules)
+ * Add more requirements on silo0s' tokens here if needed (as functions that can be called in rules)
  */
 
 import "single_silo_methods.spec";
