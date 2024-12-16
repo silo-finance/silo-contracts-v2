@@ -1,28 +1,14 @@
-// import "../_common/CompleteSiloSetup.spec";
-// import "../_common/IsSiloFunction.spec";
-// import "../_common/SiloMethods.spec";
-// import "../_common/Helpers.spec";
-// import "../_common/CommonSummarizations.spec";
-// import "../_common/AccrueInterestWasCalled_hook.spec";
-// import "../../simplifications/Oracle_quote_one.spec";
-// //import "../../simplifications/Silo_isSolvent_ghost.spec";
-// import "../../simplifications/SiloSolvencyLib.spec";
-// import "../../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
-
-
-//////////////////////
-// TODO
-// we need to update this to the new version !!!
-// and there are still some rules unfinished
-////////////////////// 
+import "../setup/CompleteSiloSetup.spec";
+import "unresolved.spec";
+import "../simplifications/SiloMathLib.spec";
+import "../simplifications/Oracle_quote_one.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 
 // collateralShareToken.totalSupply and Silo._total[ISilo.AssetType.Collateral].assets 
 //      should increase only on deposit, mint, and transitionCollateral. 
 //      should decrease only on withdraw, redeem, liquidationCall.
 // todo add other variants of the same method (redeem(..., uint8), ...)
-// todo investigate underflow on withdraw
-// https://prover.certora.com/output/6893/053f629b628648ad92079efe36bf1731/?anonymousKey=8d27b54436b2bb7aa3a99ddc1b3e175bd2373e25
 rule whoCanChangeShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
 {
     address receiver;
@@ -72,8 +58,6 @@ rule totalCollateralToTokenBalanceCorrespondence(env e, method f) filtered { f -
 // protectedShareToken.totalSupply and Silo._total[ISilo.AssetType.Protected].assets 
 //      should increase only on deposit, mint, and transitionCollateral. 
 //      should decrease only on withdraw, redeem, liquidationCall, and transitionCollateral. 
-// todo investigate the underflow on withdraw
-// https://prover.certora.com/output/6893/aacae5beb9b0469093dbc5fe045603ce/?anonymousKey=1b593216036053b602d60077813d921c069b2d2a
 rule whoCanChangeProtectedShareTokenTotalSupply(env e, method f) filtered { f -> !f.isView } 
 {
     address receiver;
@@ -167,8 +151,6 @@ rule totalDebtToTokenBalanceCorrespondence(env e, method f) filtered { f -> !f.i
     assert totalDebtAfter - totalDebtBefore == tokenBalanceBefore - tokenBalanceAfter;
 }
 
-// holds
-// https://prover.certora.com/output/6893/98bcc5443c92413790ce3468c9a7e156/?anonymousKey=ca021fc532d4d0d9e459b52813c0bf026cda6b0a
 rule whoCanChangeFees(env e, method f) filtered { f -> !f.isView } 
 {
     completeSiloSetupEnv(e);
@@ -182,8 +164,6 @@ rule whoCanChangeFees(env e, method f) filtered { f -> !f.isView }
     assert accruedInterestAfter < accruedInterestBefore => canDecreaseAccrueInterest(f);
 }
 
-//holds
-// https://prover.certora.com/output/6893/e8150cd118cc418b9d0c9383166598e0/?anonymousKey=7a312573f7863bf0b0b938615376ef40669ac79c
 rule whoCanChangeTimeStamp(env e, method f) filtered { f -> !f.isView } 
 {
     completeSiloSetupEnv(e);
@@ -226,7 +206,6 @@ rule whoCanChangeProtectedAssets(env e, method f) filtered { f -> !f.isView }
     assert protectedAssetsAfter < protectedAssetsBefore => canDecreaseProtectedAssets(f);
 }
 
-// TODO!
 rule whoCanChangeCollateral(env e, method f) filtered { f -> !f.isView } 
 {
     completeSiloSetupEnv(e);
