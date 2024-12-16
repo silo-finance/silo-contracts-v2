@@ -62,6 +62,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
     address internal _notifier;
     MintableToken internal _rewardToken;
+    MintableToken internal _anotherRewardToken;
     HookContract hook;
 
     address internal user1 = makeAddr("User1");
@@ -81,10 +82,12 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         token0 = new MintableToken(18);
         token1 = new MintableToken(18);
         _rewardToken = new MintableToken(18);
+        _anotherRewardToken = new MintableToken(18);
 
         vm.label(address(token0), "underlying0");
         vm.label(address(token1), "underlying1");
         vm.label(address(_rewardToken), "rewardToken");
+        vm.label(address(_anotherRewardToken), "anotherRewardToken");
 
         token0.setOnDemand(true);
         token1.setOnDemand(true);
@@ -337,6 +340,135 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
             _user2Deposit ? totalRewards / 2 : 0,
             "[user2] rewards at the end"
         );
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_different_programs_1user -vvv
+    */
+    function test_scenario_two_different_programs_1user() public {
+        _test_scenario_two_different_programs(false);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_different_programs_2users -vvv
+    */
+    function test_scenario_two_different_programs_2users() public {
+        _test_scenario_two_different_programs(true);
+    }
+
+    function _test_scenario_two_different_programs(bool _user2Deposit) internal {
+        uint256 emissionPerSecond = 1e6;
+        uint256 user1Deposit = 1e18;
+        uint256 user2Deposit = _user2Deposit ? user1Deposit : 0;
+
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: address(_rewardToken),
+            distributionEnd: uint40(block.timestamp + 100),
+            emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
+        }));
+
+        assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] no rewards without deposit");
+        assertEq(_controller.getRewardsBalance(user2, _PROGRAM_NAME), 0, "[user2] no rewards without deposit");
+
+        silo0.deposit(user1Deposit, user1);
+
+        if (user2Deposit > 0) {
+            silo0.deposit(user2Deposit, user2);
+        }
+
+        vm.warp(block.timestamp + 50);
+
+        assertEq(
+            _controller.getRewardsBalance(user1, _PROGRAM_NAME),
+            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50,
+            "[user1] 1/2 rewards"
+        );
+
+        assertEq(
+            _controller.getRewardsBalance(user2, _PROGRAM_NAME),
+            _user2Deposit ? emissionPerSecond * 50 / 2 : 0,
+            "[user2] 1/2 rewards"
+        );
+
+        assertEq(_rewardToken.balanceOf(user1), 0, "[user1] rewards before");
+        assertEq(_rewardToken.balanceOf(user2), 0, "[user2] rewards before");
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+
+        assertEq(
+            _rewardToken.balanceOf(user1),
+            _user2Deposit ? emissionPerSecond * 50 / 2 : emissionPerSecond * 50,
+            "[user1] rewards after"
+        );
+
+        uint256 immediateDistribution = 7e7;
+        string memory immediateProgramName = "0xa0Cb889707d426A7A386870A03bc70d1b0697598";
+        assertEq(0xa0Cb889707d426A7A386870A03bc70d1b0697598, address(_anotherRewardToken), "immediateProgramName");
+
+        vm.startPrank(address(hook));
+        _controller.immediateDistribution(address(_anotherRewardToken), uint104(immediateDistribution));
+        vm.stopPrank();
+
+        assertEq(
+            _controller.getRewardsBalance(user1, _PROGRAM_NAME),
+            0,
+            "[user1] no rewards, because it was claimed"
+        );
+
+        assertEq(
+            _controller.getRewardsBalance(user1, immediateProgramName),
+            _user2Deposit ? immediateDistribution / 2 : immediateDistribution,
+            "[user1] immediate rewards"
+        );
+
+        assertEq(
+            _controller.getRewardsBalance(user2, _PROGRAM_NAME),
+            _user2Deposit ? (emissionPerSecond * 50 + immediateDistribution) / 2 : 0,
+            "[user2] normal rewards"
+        );
+
+        assertEq(
+            _controller.getRewardsBalance(user2, immediateProgramName),
+            immediateDistribution / 2,
+            "[user2] immediate rewards"
+        );
+
+        vm.warp(block.timestamp + 50);
+
+        vm.prank(user1);
+        _controller.claimRewards(user1);
+
+        uint256 totalRewards = emissionPerSecond * 100 + immediateDistribution;
+
+        assertEq(
+            _rewardToken.balanceOf(user1),
+            _user2Deposit ? emissionPerSecond * 100 / 2 : emissionPerSecond * 100,
+            "[user1] rewards at the end"
+        );
+
+        assertEq(
+            _anotherRewardToken.balanceOf(user1),
+            _user2Deposit ? immediateDistribution / 2 : immediateDistribution,
+            "[user1] immediateDistribution rewards at the end"
+        );
+
+        vm.prank(user2);
+        _controller.claimRewards(user2);
+
+        assertEq(
+            _rewardToken.balanceOf(user2),
+            _user2Deposit ? emissionPerSecond * 100 / 2 : 0,
+            "[user2] rewards at the end"
+        );
+
+        assertEq(
+            _anotherRewardToken.balanceOf(user2),
+            _user2Deposit ? immediateDistribution / 2 : 0,
+            "[user2] immediateDistribution rewards at the end"
+        );
+
+        // TODO add total balance check once we have method
     }
 
     /*
