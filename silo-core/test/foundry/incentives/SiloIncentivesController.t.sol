@@ -26,6 +26,7 @@ contract SiloIncentivesControllerTest is Test {
     uint256 internal constant _PRECISION = 10 ** 18;
     uint256 internal constant _TOTAL_SUPPLY = 1000e18;
     string internal constant _PROGRAM_NAME = "Test";
+    string internal constant _PROGRAM_NAME_2 = "Test2";
 
     event IncentivesProgramCreated(string name);
     event IncentivesProgramUpdated(string name);
@@ -770,6 +771,81 @@ contract SiloIncentivesControllerTest is Test {
         _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         _claimRewards(user1, user2, programName);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getRewardsBalance_rewardsTokenMismatch
+    function test_getRewardsBalance_rewardsTokenMismatch() public {
+        uint256 distributionEnd = block.timestamp + 100 days;
+        uint104 emissionPerSecond = 1e18;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(distributionEnd),
+            emissionPerSecond: emissionPerSecond
+        }));
+
+        string[] memory programsNames = new string[](2);
+        programsNames[0] = _PROGRAM_NAME;
+        programsNames[1] = "Some other program";
+
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.RewardsTokenMismatch.selector));
+        _controller.getRewardsBalance(user1, programsNames);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getRewardsBalance_success
+    function test_getRewardsBalance_success() public {
+        uint256 distributionEnd = block.timestamp + 100 days;
+        uint104 emissionPerSecond = 1e18;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(distributionEnd),
+            emissionPerSecond: emissionPerSecond
+        }));
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME_2,
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(distributionEnd),
+            emissionPerSecond: emissionPerSecond
+        }));
+
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        vm.warp(block.timestamp + 1 days);
+
+        uint256 expectedRewards = 172800000000000000000000;
+
+        string[] memory programsNames = new string[](2);
+        programsNames[0] = _PROGRAM_NAME;
+        programsNames[1] = _PROGRAM_NAME_2;
+
+        uint256 rewards = _controller.getRewardsBalance(user1, programsNames);
+        assertEq(rewards, expectedRewards, "expected rewards");
+
+        string[] memory programsNames2 = new string[](1);
+        programsNames2[0] = _PROGRAM_NAME_2;
+
+        rewards = _controller.getRewardsBalance(user1, programsNames2);
+        assertEq(rewards, expectedRewards / 2, "expected rewards / 2");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_tooLongProgramName
