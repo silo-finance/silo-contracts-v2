@@ -5,6 +5,7 @@ import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {MarketConfig, PendingUint192, PendingAddress} from "../libraries/PendingLib.sol";
+import {VaultIncentivesModule} from "../incentives/VaultIncentivesModule.sol";
 
 struct MarketAllocation {
     /// @notice The market to allocate.
@@ -29,6 +30,8 @@ interface IOwnable {
 /// @dev Consider using the IMetaMorpho interface instead of this one.
 interface IMetaMorphoBase {
     function DECIMALS_OFFSET() external view returns (uint8);
+
+    function INCENTIVES_MODULE() external view returns (VaultIncentivesModule);
 
     /// @notice The address of the curator.
     function curator() external view returns (address);
