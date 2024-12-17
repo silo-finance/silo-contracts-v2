@@ -25,6 +25,8 @@ contract SiloIncentivesControllerCL is IIncentivesClaimingLogic {
             SILO_INCENTIVES_CONTROLLER.claimRewards(address(VAULT_INCENTIVES_CONTROLLER));
 
         for (uint256 i = 0; i < accruedRewards.length; i++) {
+            if (accruedRewards[i].amount == 0) continue;
+
             VAULT_INCENTIVES_CONTROLLER.immediateDistribution(
                 accruedRewards[i].rewardToken,
                 uint104(accruedRewards[i].amount)
