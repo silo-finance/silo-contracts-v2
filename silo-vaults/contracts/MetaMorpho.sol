@@ -94,7 +94,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @inheritdoc IMetaMorphoBase
     uint256 public lastTotalAssets;
 
-    bool _lock;
+    bool transient _lock;
 
     /* CONSTRUCTOR */
 
