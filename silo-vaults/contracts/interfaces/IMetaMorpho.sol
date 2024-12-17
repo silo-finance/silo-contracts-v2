@@ -37,7 +37,7 @@ interface IMetaMorphoBase {
     function curator() external view returns (address);
 
     /// @notice Stores whether an address is an allocator or not.
-    function isAllocator(address target) external view returns (bool);
+    function isAllocator(address _target) external view returns (bool);
 
     /// @notice The current guardian. Can be set even without the timelock set.
     function guardian() external view returns (address);
@@ -78,7 +78,7 @@ interface IMetaMorphoBase {
     /// @notice Submits a `newTimelock`.
     /// @dev Warning: Reverts if a timelock is already pending. Revoke the pending timelock to overwrite it.
     /// @dev In case the new timelock is higher than the current one, the timelock is set immediately.
-    function submitTimelock(uint256 newTimelock) external;
+    function submitTimelock(uint256 _newTimelock) external;
 
     /// @notice Accepts the pending timelock.
     function acceptTimelock() external;
@@ -91,14 +91,14 @@ interface IMetaMorphoBase {
     /// @dev Warning: Reverts if a cap is already pending. Revoke the pending cap to overwrite it.
     /// @dev Warning: Reverts if a market removal is pending.
     /// @dev In case the new cap is lower than the current one, the cap is set immediately.
-    function submitCap(IERC4626 market, uint256 newSupplyCap) external;
+    function submitCap(IERC4626 _market, uint256 _newSupplyCap) external;
 
     /// @notice Accepts the pending cap of the market defined by `marketParams`.
-    function acceptCap(IERC4626 market) external;
+    function acceptCap(IERC4626 _market) external;
 
     /// @notice Revokes the pending cap of the market defined by `market`.
     /// @dev Does not revert if there is no pending cap.
-    function revokePendingCap(IERC4626 market) external;
+    function revokePendingCap(IERC4626 _market) external;
 
     /// @notice Submits a forced market removal from the vault, eventually losing all funds supplied to the market.
     /// @notice Funds can be recovered by enabling this market again and withdrawing from it (using `reallocate`),
@@ -109,18 +109,18 @@ interface IMetaMorphoBase {
     /// @dev Warning: Removing a market with non-zero supply will instantly impact the vault's price per share.
     /// @dev Warning: Reverts for non-zero cap or if there is a pending cap. Successfully submitting a zero cap will
     /// prevent such reverts.
-    function submitMarketRemoval(IERC4626 market) external;
+    function submitMarketRemoval(IERC4626 _market) external;
 
     /// @notice Revokes the pending removal of the market defined by `market`.
     /// @dev Does not revert if there is no pending market removal.
-    function revokePendingMarketRemoval(IERC4626 market) external;
+    function revokePendingMarketRemoval(IERC4626 _market) external;
 
     /// @notice Submits a `newGuardian`.
     /// @notice Warning: a malicious guardian could disrupt the vault's operation, and would have the power to revoke
     /// any pending guardian.
     /// @dev In case there is no guardian, the gardian is set immediately.
     /// @dev Warning: Submitting a gardian will overwrite the current pending gardian.
-    function submitGuardian(address newGuardian) external;
+    function submitGuardian(address _newGuardian) external;
 
     /// @notice Accepts the pending guardian.
     function acceptGuardian() external;
@@ -132,24 +132,24 @@ interface IMetaMorphoBase {
     function skim(address) external;
 
     /// @notice Sets `newAllocator` as an allocator or not (`newIsAllocator`).
-    function setIsAllocator(address newAllocator, bool newIsAllocator) external;
+    function setIsAllocator(address _newAllocator, bool _newIsAllocator) external;
 
     /// @notice Sets `curator` to `newCurator`.
-    function setCurator(address newCurator) external;
+    function setCurator(address _newCurator) external;
 
     /// @notice Sets the `fee` to `newFee`.
-    function setFee(uint256 newFee) external;
+    function setFee(uint256 _newFee) external;
 
     /// @notice Sets `feeRecipient` to `newFeeRecipient`.
-    function setFeeRecipient(address newFeeRecipient) external;
+    function setFeeRecipient(address _newFeeRecipient) external;
 
     /// @notice Sets `skimRecipient` to `newSkimRecipient`.
-    function setSkimRecipient(address newSkimRecipient) external;
+    function setSkimRecipient(address _newSkimRecipient) external;
 
     /// @notice Sets `supplyQueue` to `newSupplyQueue`.
-    /// @param newSupplyQueue is an array of enabled markets, and can contain duplicate markets, but it would only
+    /// @param _newSupplyQueue is an array of enabled markets, and can contain duplicate markets, but it would only
     /// increase the cost of depositing to the vault.
-    function setSupplyQueue(IERC4626[] calldata newSupplyQueue) external;
+    function setSupplyQueue(IERC4626[] calldata _newSupplyQueue) external;
 
     /// @notice Updates the withdraw queue. Some markets can be removed, but no market can be added.
     /// @notice Removing a market requires the vault to have 0 supply on it, or to have previously submitted a removal
@@ -160,8 +160,8 @@ interface IMetaMorphoBase {
     /// @dev Warning: Removing a market with supply will decrease the fee accrued until one of the functions updating
     /// `lastTotalAssets` is triggered (deposit/mint/withdraw/redeem/setFee/setFeeRecipient).
     /// @dev Warning: `updateWithdrawQueue` is not idempotent. Submitting twice the same tx will change the queue twice.
-    /// @param indexes The indexes of each market in the previous withdraw queue, in the new withdraw queue's order.
-    function updateWithdrawQueue(uint256[] calldata indexes) external;
+    /// @param _indexes The indexes of each market in the previous withdraw queue, in the new withdraw queue's order.
+    function updateWithdrawQueue(uint256[] calldata _indexes) external;
 
     /// @notice Reallocates the vault's liquidity so as to reach a given allocation of assets on each given market.
     /// @dev The behavior of the reallocation can be altered by state changes, including:
@@ -174,7 +174,7 @@ interface IMetaMorphoBase {
     /// supply all the remaining withdrawn liquidity, which would ensure that `totalWithdrawn` = `totalSupplied`.
     /// @dev A supply in a reallocation step will make the reallocation revert if the amount is greater than the net
     /// amount from previous steps (i.e. total withdrawn minus total supplied).
-    function reallocate(MarketAllocation[] calldata allocations) external;
+    function reallocate(MarketAllocation[] calldata _allocations) external;
 }
 
 /// @dev This interface is inherited by MetaMorpho so that function signatures are checked by the compiler.
