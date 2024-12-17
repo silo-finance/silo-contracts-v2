@@ -93,7 +93,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @inheritdoc IMetaMorphoBase
     uint256 public lastTotalAssets;
 
-    bool transient _lock;
+    bool _lock;
 
     /* CONSTRUCTOR */
 
@@ -892,14 +892,25 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
+        // on deposit, claim must be first action, new user should not get reward
+
+        // on withdraw, claim must can be first action, user that is leaving should get rewards
+        // immediate deposit-withdraw operation will not abused it, because before deposit all rewards will be
+        // claimed, so on withdraw on the same block no additional rewards will be generated.
+
+        // transfer shares is basically withdraw->deposit, so claiming rewards should be done before any state changes
+
+        claimRewards();
+
         super._update(_from, _to, _value);
 
         if (_value == 0) return;
+        
+        _afterTokenTransfer(_from, _to, _value);
+    }
 
-        // after token transfer/mint/burn
-
-        // TODO should we claimRewards() here for transfer?
-        // mint/burn is covered direcly, but maybe here is better place for all of this acrions?
+    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual override {
+        if (_value == 0) return;
 
         require(!_lock, ErrorsLib.NotificationDispatchError());
         _lock = true;
