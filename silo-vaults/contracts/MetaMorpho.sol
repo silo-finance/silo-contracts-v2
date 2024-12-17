@@ -683,8 +683,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @inheritdoc ERC4626
     /// @dev Used in mint or deposit to deposit the underlying asset to Morpho markets.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
-        // on deposit, claim must be first action, new user should not get reward
-        claimRewards();
         super._deposit(_caller, _receiver, _assets, _shares);
 
         _supplyMorpho(_assets);
@@ -704,11 +702,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         virtual
         override
     {
-        // on withdraw, claim must can be first action, user that is leaving should get rewards
-        // immediate deposit-withdraw operation will not abused it, because before deposit all rewards will be
-        // claimed, so on withdraw on the same block no additional rewards will be generated.
-        claimRewards();
-
         _withdrawMorpho(_assets);
 
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
