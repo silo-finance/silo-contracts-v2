@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+
 import {MetaMorpho} from "../../contracts/MetaMorpho.sol";
 import {MetaMorphoFactory} from "../../contracts/MetaMorphoFactory.sol";
 import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
@@ -31,13 +33,23 @@ contract MetaMorphoFactoryTest is IntegrationTest {
         vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        vm.expectEmit(false, false, false, false);
+        address incentivesModule = Clones.predictDeterministicAddress(factory.VAULT_INCENTIVES_MODULE_IMPLEMENTATION(), salt, address(factory));
+
+        bytes32 initCodeHash = hashInitCode(
+            type(MetaMorpho).creationCode,
+            abi.encode(initialOwner, initialTimelock, incentivesModule, address(loanToken), name, symbol)
+        );
+        address expectedAddress = vm.computeCreate2Address(salt, initCodeHash, address(factory));
+
+        vm.expectEmit(address(factory));
         emit EventsLib.CreateMetaMorpho(
-            address(0), address(this), initialOwner, initialTimelock, address(loanToken), name, symbol, salt
+            expectedAddress, address(this), initialOwner, initialTimelock, address(loanToken), name, symbol, salt
         );
 
         IMetaMorpho metaMorpho =
             factory.createMetaMorpho(initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
+
+        assertEq(expectedAddress, address(metaMorpho), "computeCreate2Address");
 
         assertTrue(factory.isMetaMorpho(address(metaMorpho)), "isMetaMorpho");
 
@@ -47,14 +59,5 @@ contract MetaMorphoFactoryTest is IntegrationTest {
         assertEq(metaMorpho.name(), name, "name");
         assertEq(metaMorpho.symbol(), symbol, "symbol");
         assertTrue(address(metaMorpho.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
-
-        // we can still generate correct address but we have to predict INCENTIVES_MODULE address to do so
-        bytes32 initCodeHash = hashInitCode(
-            type(MetaMorpho).creationCode,
-            abi.encode(initialOwner, initialTimelock, metaMorpho.INCENTIVES_MODULE(), address(loanToken), name, symbol)
-        );
-        address expectedAddress = vm.computeCreate2Address(salt, initCodeHash, address(factory));
-
-        assertEq(expectedAddress, address(metaMorpho), "computeCreate2Address");
     }
 }

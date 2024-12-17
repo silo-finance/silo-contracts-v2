@@ -40,7 +40,7 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
         bytes32 salt
     ) external returns (IMetaMorpho metaMorpho) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION)
+            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
         );
 
         metaMorpho = IMetaMorpho(address(
