@@ -14,9 +14,10 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
 contract VaultIncentivesModuleDeploy is CommonDeploy {
     function run() public returns (VaultIncentivesModule incentivesModule) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address owner = vm.addr(deployerPrivateKey);
 
         vm.startBroadcast(deployerPrivateKey);
-        incentivesModule = new VaultIncentivesModule();
+        incentivesModule = new VaultIncentivesModule(owner);
         vm.stopBroadcast();
 
         _registerDeployment(address(incentivesModule), SiloVaultsContracts.VAULT_INCENTIVES_MODULE);

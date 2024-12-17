@@ -9,7 +9,7 @@ import {MetaMorpho, ConstantsLib} from "../../../contracts/MetaMorpho.sol";
 contract InternalTest is BaseTest, MetaMorpho {
 
     constructor()
-        MetaMorpho(OWNER, ConstantsLib.MIN_TIMELOCK, address(loanToken), "MetaMorpho Vault", "MM")
+        MetaMorpho(OWNER, ConstantsLib.MIN_TIMELOCK, vaultIncentivesModule, address(loanToken), "MetaMorpho Vault", "MM")
     {
 
     }

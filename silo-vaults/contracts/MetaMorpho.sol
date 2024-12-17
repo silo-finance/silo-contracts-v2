@@ -20,6 +20,9 @@ import {
     IMetaMorphoStaticTyping
 } from "./interfaces/IMetaMorpho.sol";
 
+import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
+import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
+
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
@@ -43,6 +46,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
     /// precision between shares and assets.
     uint8 public immutable DECIMALS_OFFSET;
+
+    IVaultIncentivesModule public immutable INCENTIVES_MODULE;
 
     /* STORAGE */
 
@@ -88,6 +93,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @inheritdoc IMetaMorphoBase
     uint256 public lastTotalAssets;
 
+    bool transient _lock;
+
     /* CONSTRUCTOR */
 
     /// @dev Initializes the contract.
@@ -99,16 +106,19 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     constructor(
         address owner,
         uint256 initialTimelock,
+        IVaultIncentivesModule vaultIncentivesModule,
         address _asset,
         string memory _name,
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(owner) {
         require(_asset != address(0), ErrorsLib.ZeroAddress());
+        require(address(vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
         DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18, IERC20Metadata(_asset).decimals()));
 
         _checkTimelockBounds(initialTimelock);
         _setTimelock(initialTimelock);
+        INCENTIVES_MODULE = vaultIncentivesModule;
     }
 
     /* MODIFIERS */
@@ -850,5 +860,39 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
     function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
         assets = _market.convertToAssets(_market.balanceOf(_user));
+    }
+
+    function _update(address from, address to, uint256 value) internal virtual override {
+        super._update(from, to, value);
+
+        if (value == 0) return;
+
+        // after token transfer/mint/burn
+
+        require(!_lock, ErrorsLib.NotificationDispatchError());
+        _lock = true;
+
+        address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
+
+        uint256 total = totalSupply();
+        uint256 senderBalance = from == address(0) ? 0 : balanceOf(from);
+        uint256 recipientBalance = to == address(0) ? 0 : balanceOf(to);
+
+        for(uint256 i; i < receivers.length; i++) {
+            try INotificationReceiver(receivers[i]).afterTokenTransfer({
+                _sender: from,
+                _senderBalance: senderBalance,
+                _recipient: to,
+                _recipientBalance: recipientBalance,
+                _totalSupply: total,
+                 _amount: value
+            }) {
+                // notification send
+            } catch {
+                // do not revert on invalid notification
+            }
+        }
+
+        _lock = false;
     }
 }
