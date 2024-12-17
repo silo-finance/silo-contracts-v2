@@ -880,7 +880,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         uint256 recipientBalance = to == address(0) ? 0 : balanceOf(to);
 
         for(uint256 i; i < receivers.length; i++) {
-            // TODO do we need delegate call here?
             try INotificationReceiver(receivers[i]).afterTokenTransfer({
                 _sender: from,
                 _senderBalance: senderBalance,

@@ -39,7 +39,9 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
         string memory symbol,
         bytes32 salt
     ) external returns (IMetaMorpho metaMorpho) {
-        VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION));
+        VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
+            Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION)
+        );
 
         metaMorpho = IMetaMorpho(address(
             new MetaMorpho{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
