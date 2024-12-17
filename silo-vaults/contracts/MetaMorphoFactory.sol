@@ -45,9 +45,7 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
         );
 
         metaMorpho = IMetaMorpho(address(
-            new MetaMorpho{salt: salt}(
-                initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol
-            ))
+            new MetaMorpho{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
 
         isMetaMorpho[address(metaMorpho)] = true;
