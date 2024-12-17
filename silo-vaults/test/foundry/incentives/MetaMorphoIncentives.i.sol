@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
+import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
 import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
 import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/BaseTest.sol";
@@ -20,12 +21,25 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_dummy -vv
-     boilerplate for integration tests
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_deposit_noRewardsSetup -vv
     */
-    function test_vaults_incentives_dummy() public {
+    function test_vaults_incentives_deposit_noRewardsSetup() public {
         assertTrue(address(vault.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
 
+        vm.expectCall(
+            address(vault.INCENTIVES_MODULE()),
+            abi.encodeWithSelector(IVaultIncentivesModule.getAllIncentivesClaimingLogics.selector)
+        );
+
+        vm.expectCall(
+            address(vault.INCENTIVES_MODULE()),
+            abi.encodeWithSelector(IVaultIncentivesModule.getNotificationReceivers.selector)
+        );
+
+        // does not revert without incentives setup
         vault.deposit(1, address(this));
+
+        // does not revert without incentives setup
+        vault.claimRewards();
     }
 }
