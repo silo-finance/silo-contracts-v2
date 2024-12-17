@@ -19,7 +19,6 @@ import {SiloIncentivesControllerCL} from "./incentives/claiming-logics/SiloIncen
 contract MetaMorphoFactory is IMetaMorphoFactory {
     /* STORAGE */
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
-    address public immutable SILO_INCENTIVES_CONTROLLER_CL_IMPLEMENTATION;
 
     /// @inheritdoc IMetaMorphoFactory
     mapping(address => bool) public isMetaMorpho;
@@ -28,7 +27,6 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
 
     constructor() {
         VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule(msg.sender));
-        SILO_INCENTIVES_CONTROLLER_CL_IMPLEMENTATION = address(new SiloIncentivesControllerCL());
     }
 
     /* EXTERNAL */

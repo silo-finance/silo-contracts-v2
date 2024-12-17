@@ -22,6 +22,7 @@ import {
 
 import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
+import {IIncentivesClaimingLogic} from "./interfaces/IIncentivesClaimingLogic.sol";
 
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
