@@ -898,6 +898,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
 
         // after token transfer/mint/burn
 
+        // TODO should we claimRewards() here for transfer?
+        // mint/burn is covered direcly, but maybe here is better place for all of this acrions?
+
         require(!_lock, ErrorsLib.NotificationDispatchError());
         _lock = true;
 
