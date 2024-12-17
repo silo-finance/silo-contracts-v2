@@ -20,7 +20,7 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_dummy -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_dummy -vv
      boilerplate for integration tests
     */
     function test_vaults_incentives_dummy() public {
