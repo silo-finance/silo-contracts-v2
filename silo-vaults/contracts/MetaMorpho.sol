@@ -11,8 +11,6 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
-import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
-
 import {
     MarketConfig,
     PendingUint192,
@@ -23,6 +21,7 @@ import {
 } from "./interfaces/IMetaMorpho.sol";
 
 import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
+import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
 
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
@@ -48,7 +47,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// precision between shares and assets.
     uint8 public immutable DECIMALS_OFFSET;
 
-    VaultIncentivesModule public immutable INCENTIVES_MODULE;
+    IVaultIncentivesModule public immutable INCENTIVES_MODULE;
 
     /* STORAGE */
 
@@ -107,7 +106,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     constructor(
         address owner,
         uint256 initialTimelock,
-        VaultIncentivesModule vaultIncentivesModule,
+        IVaultIncentivesModule vaultIncentivesModule,
         address _asset,
         string memory _name,
         string memory _symbol
