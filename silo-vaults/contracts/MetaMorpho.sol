@@ -888,7 +888,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     function _update(address _from, address _to, uint256 _value) internal virtual override {
         // on deposit, claim must be first action, new user should not get reward
 
-        // on withdraw, claim must can be first action, user that is leaving should get rewards
+        // on withdraw, claim must be first action, user that is leaving should get rewards
         // immediate deposit-withdraw operation will not abused it, because before deposit all rewards will be
         // claimed, so on withdraw on the same block no additional rewards will be generated.
 
