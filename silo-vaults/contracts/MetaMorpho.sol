@@ -482,9 +482,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     }
 
     function claimRewards() public {
-        // REWARDS_CLAIMER.claimAndDistribute();
-        // address[] memory _marketsInput = supplyQueue;
-
+        // TODO we can use supplyQueue as markets inputs, but what if we change queue and we still have rewards?
+        // I think it is better to let INCENTIVES_MODULE decide about markets
+        // (address[] memory logics) = INCENTIVES_MODULE.getMarketsIncentivesClaimingLogics(supplyQueue);
         (address[] memory logics) = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
 
         require(!_lock, ErrorsLib.ClaimingRewardsError());
