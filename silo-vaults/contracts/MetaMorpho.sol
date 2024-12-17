@@ -48,7 +48,6 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     uint8 public immutable DECIMALS_OFFSET;
 
     IVaultIncentivesModule public immutable INCENTIVES_MODULE;
-    address public immutable REWARDS_CLAIMER;
 
     /* STORAGE */
 
@@ -94,7 +93,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     /// @inheritdoc IMetaMorphoBase
     uint256 public lastTotalAssets;
 
-    bool transient _lock;
+    bool _lock;
 
     /* CONSTRUCTOR */
 
@@ -109,21 +108,18 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         address _owner,
         uint256 _initialTimelock,
         IVaultIncentivesModule _vaultIncentivesModule,
-        address _rewardsClaimer,
         address _asset,
         string memory _name,
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
-        require(address(_rewardsClaimer) != address(0), ErrorsLib.ZeroAddress());
 
         DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18, IERC20Metadata(_asset).decimals()));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
         INCENTIVES_MODULE = _vaultIncentivesModule;
-        REWARDS_CLAIMER = _rewardsClaimer;
     }
 
     /* MODIFIERS */
@@ -486,16 +482,20 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     }
 
     function claimRewards() public {
-        // TODO
-
         // REWARDS_CLAIMER.claimAndDistribute();
-        address[] memory _marketsInput = supplyQueue;
+        // address[] memory _marketsInput = supplyQueue;
 
-        (address[] memory logics) = REWARDS_CLAIMER.getIncentivesClaimingLogics(_marketsInput);
+        (address[] memory logics) = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
+
+        require(!_lock, ErrorsLib.ClaimingRewardsError());
+        _lock = true;
 
         for (uint256 i; i < logics.length; i++) {
-            logics[i].delegatecall(abi.encodeWithSelector(claimAndDistribute.selector));
+            logics[i].delegatecall(abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector));
+            // result of call is ignored
         }
+
+        _lock = false;
     }
 
     /* ERC4626 (PUBLIC) */

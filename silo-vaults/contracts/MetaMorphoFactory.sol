@@ -10,6 +10,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {MetaMorpho} from "./MetaMorpho.sol";
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
+import {SiloIncentivesControllerCL} from "./incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 /// @title MetaMorphoFactory
 /// @author Morpho Labs
@@ -18,6 +19,7 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 contract MetaMorphoFactory is IMetaMorphoFactory {
     /* STORAGE */
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
+    address public immutable SILO_INCENTIVES_CONTROLLER_CL_IMPLEMENTATION;
 
     /// @inheritdoc IMetaMorphoFactory
     mapping(address => bool) public isMetaMorpho;
@@ -26,6 +28,7 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
 
     constructor() {
         VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule(msg.sender));
+        SILO_INCENTIVES_CONTROLLER_CL_IMPLEMENTATION = address(new SiloIncentivesControllerCL());
     }
 
     /* EXTERNAL */
@@ -43,14 +46,9 @@ contract MetaMorphoFactory is IMetaMorphoFactory {
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
         );
 
-        address rewardsClaimer = VaultIncentivesModule(
-            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
-
-        );
-
         metaMorpho = IMetaMorpho(address(
             new MetaMorpho{salt: salt}(
-                initialOwner, initialTimelock, vaultIncentivesModule, rewardsClaimer, asset, name, symbol
+                initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol
             ))
         );
 
