@@ -20,6 +20,8 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
     MintableToken reward2 = new MintableToken(18);
 
+    IVaultIncentivesModule vaultIncentivesModule;
+
     function setUp() public override {
         super.setUp();
 
@@ -29,6 +31,8 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
 
         reward1.setOnDemand(true);
         reward2.setOnDemand(true);
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     /*
@@ -60,23 +64,18 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
     function test_vaults_incentives_standardRewards() public {
         address user = makeAddr("user");
 
-        IVaultIncentivesModule vaultIncentivesModule = vault.INCENTIVES_MODULE();
-
         // TODO add test when notifier will be wrong and expect no rewards (or revert?)
         SiloIncentivesController vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
 
-        uint256 reward1PerSec = 3;
+        uint256 rewardsPerSec = 3;
 
         // standard program for vault users
         vaultIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "x",
             rewardToken: address(reward1),
-            emissionPerSecond: uint104(reward1PerSec),
+            emissionPerSecond: uint104(rewardsPerSec),
             distributionEnd: uint40(block.timestamp + 10)
         }));
-
-        // add normal program
-        // and add immediate distributionj
 
         vm.prank(OWNER);
         vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
@@ -101,11 +100,11 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
 
         vm.warp(block.timestamp + 1);
 
-        assertEq(vaultIncentivesController.getRewardsBalance(user, "x"), reward1PerSec, "expected reward after 1s");
+        assertEq(vaultIncentivesController.getRewardsBalance(user, "x"), rewardsPerSec, "expected reward after 1s");
 
         vm.prank(user);
         vaultIncentivesController.claimRewards(user);
 
-        assertEq(reward1.balanceOf(user), reward1PerSec, "user can claim standard reward");
+        assertEq(reward1.balanceOf(user), rewardsPerSec, "user can claim standard reward");
     }
 }
