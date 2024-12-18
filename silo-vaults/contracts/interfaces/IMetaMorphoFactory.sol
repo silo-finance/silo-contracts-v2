@@ -4,8 +4,9 @@ pragma solidity >=0.5.0;
 import {IMetaMorpho} from "./IMetaMorpho.sol";
 
 /// @title IMetaMorphoFactory
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @dev Forked with gratitude from Morpho Labs.
+/// @author Silo Labs
+/// @custom:contact security@silo.finance
 /// @notice Interface of MetaMorpho's factory.
 interface IMetaMorphoFactory {
     /// @notice Whether a MetaMorpho vault was created with the factory.

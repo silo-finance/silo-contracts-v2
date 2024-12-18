@@ -4,8 +4,9 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 /// @title ErrorsLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @dev Forked with gratitude from Morpho Labs.
+/// @author Silo Labs
+/// @custom:contact security@silo.finance
 /// @notice Library exposing error messages.
 library ErrorsLib {
     /// @notice Thrown on reentering token transfer while notification are being dispatched

@@ -90,8 +90,9 @@ interface IPublicAllocatorStaticTyping is IPublicAllocatorBase {
 }
 
 /// @title IPublicAllocator
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @dev Forked with gratitude from Morpho Labs.
+/// @author Silo Labs
+/// @custom:contact security@silo.finance
 /// @dev Use this interface for PublicAllocator to have access to all the functions with the appropriate function
 /// signatures.
 interface IPublicAllocator is IPublicAllocatorBase {
