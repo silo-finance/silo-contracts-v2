@@ -6,7 +6,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {PublicAllocator, FlowCapsConfig, Withdrawal, FlowCaps} from "../../contracts/PublicAllocator.sol";
-import {MarketAllocation} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {MarketAllocation} from "../../contracts/interfaces/IMetaSilo.sol";
 import {IPublicAllocator, MAX_SETTABLE_FLOW_CAP} from "../../contracts/interfaces/IPublicAllocator.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";

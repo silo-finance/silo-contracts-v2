@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
-import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
-import {MetaMorpho} from "../../contracts/MetaMorpho.sol";
+import {IMetaSilo} from "../../contracts/interfaces/IMetaSilo.sol";
+import {MetaSilo} from "../../contracts/MetaSilo.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
@@ -12,19 +12,19 @@ import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 */
 contract DeploymentTest is IntegrationTest {
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaMorphoNotToken -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaSiloNotToken -vvv
     */
-    function testDeployMetaMorphoNotToken() public {
+    function testDeployMetaSiloNotToken() public {
         address notToken = makeAddr("address notToken");
 
         vm.expectRevert();
-        createMetaMorpho(OWNER, ConstantsLib.MIN_TIMELOCK, notToken, "MetaMorpho Vault", "MMV");
+        createMetaSilo(OWNER, ConstantsLib.MIN_TIMELOCK, notToken, "MetaSilo Vault", "MMV");
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaMorphoPass -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaSiloPass -vvv
     */
-    function testDeployMetaMorphoPass(
+    function testDeployMetaSiloPass(
         address owner,
         uint256 initialTimelock,
         string memory name,
@@ -33,7 +33,7 @@ contract DeploymentTest is IntegrationTest {
         assumeNotZeroAddress(owner);
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        IMetaMorpho newVault = createMetaMorpho(owner, initialTimelock, address(loanToken), name, symbol);
+        IMetaSilo newVault = createMetaSilo(owner, initialTimelock, address(loanToken), name, symbol);
 
         assertEq(newVault.owner(), owner, "owner");
         assertEq(newVault.timelock(), initialTimelock, "timelock");

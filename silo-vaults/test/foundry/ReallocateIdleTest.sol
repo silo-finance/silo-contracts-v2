@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {MarketAllocation} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {MarketAllocation} from "../../contracts/interfaces/IMetaSilo.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 

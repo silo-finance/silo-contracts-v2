@@ -26,9 +26,9 @@ interface IOwnable {
     function pendingOwner() external view returns (address);
 }
 
-/// @dev This interface is used for factorizing IMetaMorphoStaticTyping and IMetaMorpho.
-/// @dev Consider using the IMetaMorpho interface instead of this one.
-interface IMetaMorphoBase {
+/// @dev This interface is used for factorizing IMetaSiloStaticTyping and IMetaSilo.
+/// @dev Consider using the IMetaSilo interface instead of this one.
+interface IMetaSiloBase {
     function DECIMALS_OFFSET() external view returns (uint8);
 
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
@@ -180,9 +180,9 @@ interface IMetaMorphoBase {
     function reallocate(MarketAllocation[] calldata _allocations) external;
 }
 
-/// @dev This interface is inherited by MetaMorpho so that function signatures are checked by the compiler.
-/// @dev Consider using the IMetaMorpho interface instead of this one.
-interface IMetaMorphoStaticTyping is IMetaMorphoBase {
+/// @dev This interface is inherited by MetaSilo so that function signatures are checked by the compiler.
+/// @dev Consider using the IMetaSilo interface instead of this one.
+interface IMetaSiloStaticTyping is IMetaSiloBase {
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 
