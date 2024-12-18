@@ -14,13 +14,13 @@ import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/Base
 
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaMorphoInternalTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaMorphoIncentivesTest -vvv
 */
 contract MetaMorphoIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
     MintableToken reward2 = new MintableToken(18);
 
-    IVaultIncentivesModule vaultIncentivesModule;
+    SiloIncentivesController vaultIncentivesController;
 
     function setUp() public override {
         super.setUp();
@@ -32,7 +32,8 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
         reward1.setOnDemand(true);
         reward2.setOnDemand(true);
 
-        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        // TODO add test when notifier will be wrong and expect no rewards (or revert?)
+        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
     }
 
     /*
@@ -63,9 +64,6 @@ contract MetaMorphoIncentivesTest is IntegrationTest {
     */
     function test_vaults_incentives_standardRewards() public {
         address user = makeAddr("user");
-
-        // TODO add test when notifier will be wrong and expect no rewards (or revert?)
-        SiloIncentivesController vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
 
         uint256 rewardsPerSec = 3;
 
