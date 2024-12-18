@@ -43,3 +43,5 @@ crytic-export
 
 # certora
 .certora_internal
+runSilo.sh
+emv-**/*

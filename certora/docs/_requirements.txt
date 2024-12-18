@@ -1,0 +1,7 @@
+# Requirements file for the Certora docs
+# The basic requirements file used by pip-compile 
+sphinx
+sphinxcontrib-spelling
+sphinx-rtd-theme
+
+git+https://github.com/Certora/docs-infrastructure.git@master#egg=docsinfra
