@@ -96,7 +96,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
 
     bool transient _lock;
 
-    modifier noReentrancy() {
+    modifier nonReentrant() {
         require(!_lock, ErrorsLib.ClaimingRewardsError());
         _lock = true;
 
@@ -491,11 +491,12 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         emit EventsLib.Skim(_msgSender(), _token, amount);
     }
 
-    function claimRewards() public noReentrancy {
+    function claimRewards() public nonReentrant {
         address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
+        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
 
         for (uint256 i; i < logics.length; i++) {
-            logics[i].delegatecall(abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector));
+            logics[i].delegatecall(data);
             // result of call is ignored
         }
     }
@@ -904,7 +905,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         _afterTokenTransfer(_from, _to, _value);
     }
 
-    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual noReentrancy {
+    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual nonReentrant {
         if (_value == 0) return;
 
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
