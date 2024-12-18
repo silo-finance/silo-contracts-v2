@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import {IMetaMorpho} from "./IMetaMorpho.sol";
 
 /// @title IMetaMorphoFactory
-/// @dev Forked from Morpho with gratitude
+/// @dev Forked with gratitude from Morpho Labs.
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice Interface of MetaMorpho's factory.
