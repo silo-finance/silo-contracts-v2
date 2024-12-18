@@ -14,11 +14,13 @@ import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/Base
 
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaSiloInternalTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaSiloIncentivesTest -vvv
 */
 contract MetaSiloIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
     MintableToken reward2 = new MintableToken(18);
+
+    SiloIncentivesController vaultIncentivesController;
 
     function setUp() public override {
         super.setUp();
@@ -29,6 +31,9 @@ contract MetaSiloIncentivesTest is IntegrationTest {
 
         reward1.setOnDemand(true);
         reward2.setOnDemand(true);
+
+        // TODO add test when notifier will be wrong and expect no rewards (or revert?)
+        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
     }
 
     /*
@@ -55,31 +60,25 @@ contract MetaSiloIncentivesTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_deposit_withRewardsSetup -vv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_standardRewards -vv
     */
-    function test_vaults_incentives_deposit_withRewardsSetup() public {
+    function test_vaults_incentives_standardRewards() public {
         address user = makeAddr("user");
 
-        IVaultIncentivesModule vaultIncentivesModule = vault.INCENTIVES_MODULE();
-
-        // NOTICE: notificator must be vaultIncentivesModule not vault
-        // TODO add test when notifier will be wrong and expect no rewards
-        SiloIncentivesController vaultIncentivesController = new SiloIncentivesController(address(this), address(vaultIncentivesModule));
+        uint256 rewardsPerSec = 3;
 
         // standard program for vault users
         vaultIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "x",
             rewardToken: address(reward1),
-            emissionPerSecond: 1,
+            emissionPerSecond: uint104(rewardsPerSec),
             distributionEnd: uint40(block.timestamp + 10)
         }));
-
-        // add normal program
-        // and add immediate distributionj
 
         vm.prank(OWNER);
         vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
 
+        // this call is expected on depositing
         vm.expectCall(
             address(vaultIncentivesController),
             abi.encodeWithSelector(
@@ -93,16 +92,17 @@ contract MetaSiloIncentivesTest is IntegrationTest {
             )
         );
 
-        vm.prank(OWNER);
-        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
-
-
         // does not revert without incentives setup
         vm.prank(user);
         vault.deposit(1, user);
 
-        vaultIncentivesController.getRewardsBalance(user, "x");
-        // does not revert without incentives setup
-        vault.claimRewards();
+        vm.warp(block.timestamp + 1);
+
+        assertEq(vaultIncentivesController.getRewardsBalance(user, "x"), rewardsPerSec, "expected reward after 1s");
+
+        vm.prank(user);
+        vaultIncentivesController.claimRewards(user);
+
+        assertEq(reward1.balanceOf(user), rewardsPerSec, "user can claim standard reward");
     }
 }
