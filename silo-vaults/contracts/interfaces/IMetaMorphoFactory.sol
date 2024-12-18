@@ -9,21 +9,21 @@ import {IMetaMorpho} from "./IMetaMorpho.sol";
 /// @notice Interface of MetaMorpho's factory.
 interface IMetaMorphoFactory {
     /// @notice Whether a MetaMorpho vault was created with the factory.
-    function isMetaMorpho(address target) external view returns (bool);
+    function isMetaMorpho(address _target) external view returns (bool);
 
     /// @notice Creates a new MetaMorpho vault.
-    /// @param initialOwner The owner of the vault.
-    /// @param initialTimelock The initial timelock of the vault.
-    /// @param asset The address of the underlying asset.
-    /// @param name The name of the vault.
-    /// @param symbol The symbol of the vault.
-    /// @param salt The salt to use for the MetaMorpho vault's CREATE2 address.
+    /// @param _initialOwner The owner of the vault.
+    /// @param _initialTimelock The initial timelock of the vault.
+    /// @param _asset The address of the underlying asset.
+    /// @param _name The name of the vault.
+    /// @param _symbol The symbol of the vault.
+    /// @param _salt The salt to use for the MetaMorpho vault's CREATE2 address.
     function createMetaMorpho(
-        address initialOwner,
-        uint256 initialTimelock,
-        address asset,
-        string memory name,
-        string memory symbol,
-        bytes32 salt
+        address _initialOwner,
+        uint256 _initialTimelock,
+        address _asset,
+        string memory _name,
+        string memory _symbol,
+        bytes32 _salt
     ) external returns (IMetaMorpho metaMorpho);
 }

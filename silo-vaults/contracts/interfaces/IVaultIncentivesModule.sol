@@ -20,22 +20,22 @@ interface IVaultIncentivesModule {
     error MarketNotConfigured();
 
     /// @notice Add an incentives claiming logic for the vault.
-    /// @param logic The logic to add.
     /// @param _market The market to add the logic for.
-    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic logic) external;
+    /// @param _logic The logic to add.
+    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Remove an incentives claiming logic for the vault.
     /// @param _market The market to remove the logic for.
-    /// @param logic The logic to remove.
-    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic logic) external;
+    /// @param _logic The logic to remove.
+    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Add an incentives distribution solution for the vault.
-    /// @param solution The solution to add.
-    function addNotificationReceiver(INotificationReceiver solution) external;
+    /// @param _notificationReceiver The solution to add.
+    function addNotificationReceiver(INotificationReceiver _notificationReceiver) external;
 
     /// @notice Remove an incentives distribution solution for the vault.
-    /// @param solution The solution to remove.
-    function removeNotificationReceiver(INotificationReceiver solution) external;
+    /// @param _notificationReceiver The solution to remove.
+    function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external;
 
     /// @notice Get all incentives claiming logics for the vault.
     /// @return logics The logics.
@@ -50,13 +50,13 @@ interface IVaultIncentivesModule {
         returns (address[] memory logics);
 
     /// @notice Get all incentives distribution solutions for the vault.
-    /// @return solutions The solutions.
-    function getNotificationReceivers() external view returns (address[] memory solutions);
+    /// @return _notificationReceivers
+    function getNotificationReceivers() external view returns (address[] memory _notificationReceivers);
 
     /// @notice Get incentives claiming logics for a market.
-    /// @param market The market to get the incentives claiming logics for.
+    /// @param _market The market to get the incentives claiming logics for.
     /// @return logics
-    function getMarketIncentivesClaimingLogics(address market) external view returns (address[] memory logics);
+    function getMarketIncentivesClaimingLogics(address _market) external view returns (address[] memory logics);
 
     /// @notice Get all configured markets for the vault.
     /// @return markets
