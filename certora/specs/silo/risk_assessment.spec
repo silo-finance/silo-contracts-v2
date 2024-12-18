@@ -6,7 +6,7 @@ Reentrancy protection is shared among the different Silo contracts that interact
 3. Guard must be checked on all public functions 
 */
 
-import "./authorized_functions.spec";
+import "./../setup/meta/authorized_functions.spec";
 
 
 methods {

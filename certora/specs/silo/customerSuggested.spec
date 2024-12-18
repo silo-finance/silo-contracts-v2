@@ -5,8 +5,61 @@ import "../simplifications/Oracle_quote_one.spec";
 import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
 
 methods {
-
 }
+
+// accrueInterest() calling twice is the same as calling once (in a single block)
+rule accrueInterest_idempotent(env e)
+{
+    SafeAssumptionsEnv_withInvariants(e);
+    _ = accrueInterest(e);
+    storage after1 = lastStorage;
+    _ = accrueInterest(e);
+    storage after2 = lastStorage;
+    assert after1 == after2;
+}
+
+// if borrowerCollateralSilo[user] is set from zero to non-zero value,
+// it never goes back to zero
+rule borrowerCollateralSilo_neverSetToZero(env e, method f) filtered { f -> !filterOutInInvariants(f) }
+{
+    address user;
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    address colSiloBefore = config().borrowerCollateralSilo(e, user);
+    
+    calldataarg args;
+    f(e, args);
+    address colSiloAfter = config().borrowerCollateralSilo(e, user);
+    assert colSiloBefore != 0 => colSiloAfter != 0;
+}
+
+// if borrowerCollateralSilo[user] is set from zero to non-zero value, 
+// one of the debt share token totalSupply() increases 
+rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f)
+     filtered { f -> !filterOutInInvariants(f) }
+{
+    address user;
+    SafeAssumptions_withInvariants_forMethod(e, user, f);
+    address colSiloBefore = config().borrowerCollateralSilo(e, user);
+    uint totalShare0Before = shareDebtToken0.totalSupply();
+    uint totalShare1Before = shareDebtToken1.totalSupply();
+
+    calldataarg args;
+    f(e, args);
+
+    address colSiloAfter = config().borrowerCollateralSilo(e, user);
+    uint totalShare0After = shareDebtToken0.totalSupply();
+    uint totalShare1After = shareDebtToken1.totalSupply();
+
+    assert (colSiloBefore == 0 && colSiloAfter != 0) 
+        => (totalShare0After > totalShare0Before
+            || totalShare1After > totalShare1Before);
+}
+
+//////////////////////////////////
+//      IN DEVELOPMENT   
+//////////////////////////////////
+//      rules bellow are not done
+//////////////////////////////////
 
 // accrueInterest() should never revert
 rule accrueInterest_neverReverts(env e)
@@ -62,35 +115,6 @@ invariant noDebtInBothSilos(env e, address user)
     preserved with (env e2) { SafeAssumptions_withInvariants(e2, user); }
 }
 
-// debt in two silos is impossible - rule
-rule noDebtInBothSilos_asRule(env e, address user, method f)
-    filtered { f -> !filterOutInInvariants(f) }
-{   
-    SafeAssumptions_withInvariants_forMethod(e, user, f);
-    bool hasDebt0Before = shareDebtToken0.balanceOf(user) != 0;
-    bool hasDebt1Before = shareDebtToken1.balanceOf(user) != 0;
-
-    calldataarg args;
-    f(e, args);
-
-    bool hasDebt0After = shareDebtToken0.balanceOf(user) != 0;
-    bool hasDebt1After = shareDebtToken1.balanceOf(user) != 0;
-
-    assert !(hasDebt0Before && hasDebt1Before)
-        => !(hasDebt0After && hasDebt1After);
-}
-
-// accrueInterest() calling twice is the same as calling once (in a single block)
-rule accrueInterest_idempotent(env e)
-{
-    SafeAssumptionsEnv_withInvariants(e);
-    _ = accrueInterest(e);
-    storage after1 = lastStorage;
-    _ = accrueInterest(e);
-    storage after2 = lastStorage;
-    assert after1 == after2;
-}
-
 // withdrawFees() always reverts in a second call in the same block
 //
 rule withdrawFees_revertsSecondTime(env e)
@@ -103,7 +127,6 @@ rule withdrawFees_revertsSecondTime(env e)
 
 // withdrawFees() always increases dao and/or deployer (can be empty address) balances
 // another rule: withdrawFees() never increases daoAndDeployerRevenue in the same block
-// ???
 rule withdrawFees_increasesDaoDeploerFees(env e)
 {
     SafeAssumptionsEnv_withInvariants(e);
@@ -131,20 +154,6 @@ rule withdrawFees_noAdditionalEffect(env e, method f)
     assert afterF == afterWF;
 }
 
-// if borrowerCollateralSilo[user] is set from zero to non-zero value,
-// it never goes back to zero
-rule borrowerCollateralSilo_neverSetToZero(env e, method f) filtered { f -> !filterOutInInvariants(f) }
-{
-    address user;
-    SafeAssumptions_withInvariants_forMethod(e, user, f);
-    address colSiloBefore = config().borrowerCollateralSilo(e, user);
-    
-    calldataarg args;
-    f(e, args);
-    address colSiloAfter = config().borrowerCollateralSilo(e, user);
-    assert colSiloBefore != 0 => colSiloAfter != 0;
-}
-
 // calling accrueInterestForSilo(_silo) should be equal to calling _silo.accrueInterest()
 rule accrueInterestForSilo_equivalent(env e)
 {
@@ -160,30 +169,6 @@ rule accrueInterestForSilo_equivalent(env e)
     storage after2 = lastStorage;
 
     assert after1 == after2;
-}
-
-
-// if borrowerCollateralSilo[user] is set from zero to non-zero value, 
-// one of the debt share token totalSupply() increases 
-rule borrowerCollateralSilo_setNonzeroIncreasesDebt (env e, method f)
-     filtered { f -> !filterOutInInvariants(f) }
-{
-    address user;
-    SafeAssumptions_withInvariants_forMethod(e, user, f);
-    address colSiloBefore = config().borrowerCollateralSilo(e, user);
-    uint totalShare0Before = shareDebtToken0.totalSupply();
-    uint totalShare1Before = shareDebtToken1.totalSupply();
-
-    calldataarg args;
-    f(e, args);
-
-    address colSiloAfter = config().borrowerCollateralSilo(e, user);
-    uint totalShare0After = shareDebtToken0.totalSupply();
-    uint totalShare1After = shareDebtToken1.totalSupply();
-
-    assert (colSiloBefore == 0 && colSiloAfter != 0) 
-        => (totalShare0After > totalShare0Before
-            || totalShare1After > totalShare1Before);
 }
 
 // if borrowerCollateralSilo[user] is set from zero to non-zero value,

@@ -6,7 +6,6 @@ methods {
     function getSiloStorage() external returns (uint192,uint64,uint256,uint256,uint256) envfree optional ;
     
     // Dispatcher
-    function _.getCollateralAndDebtTotalsStorage() external => DISPATCHER(true);
     function _.isSolvent(address) external => NONDET; // user solvency doesn't matter for these 
     function _.quote(address) external => NONDET;
 
@@ -30,9 +29,6 @@ methods {
         uint256 _blockTimestamp
     ) external => CVLGetCompoundInterestRate(_silo, _blockTimestamp) expect (uint256);
 
-    // ---- `ISiloOracle` ------------------------------------------------------
-    // NOTE: Since `beforeQuote` is not a view function, strictly speaking this is unsound.
-    function _.beforeQuote(address) external => NONDET DELETE;
 }
 
 // ---- Functions and ghosts ---------------------------------------------------

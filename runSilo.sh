@@ -7,7 +7,7 @@
 
 # certoraRun.py certora/config/silo/methods_integrity.conf  # done
 # certoraRun.py certora/config/silo/preview_integrity.conf
-# certoraRun.py certora/config/silo/risk_assessment_silo.conf
+certoraRun.py certora/config/silo/risk_assessment_silo.conf
 # certoraRun.py certora/config/silo/risk_assessment.conf    # done
 
 # certoraRun.py certora/config/silo/silo_config.conf    # done
@@ -20,24 +20,12 @@
 # certoraRun.py certora/config/silo/noDebtInBoth.conf --parametric_contracts ShareDebtToken0 --msg "debtInBoth - ShareDebtToken0" # done
 
 # # customerSuggested.conf, by rule
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule accrueInterest_neverReverts --msg accrueInterest_neverReverts
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule noDebt_thenSolventAndNoLTV --msg noDebt_thenSolventAndNoLTV
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule accrueInterest_idempotent --msg accrueInterest_idempotent # done
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule withdrawFees_revertsSecondTime --msg withdrawFees_revertsSecondTime
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule withdrawFees_increasesDaoDeploerFees --msg withdrawFees_increasesDaoDeploerFees
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule withdrawFees_noAdditionalEffect --msg withdrawFees_noAdditionalEffect
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule borrowerCollateralSilo_neverSetToZero --msg borrowerCollateralSilo_neverSetToZero # done
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule accrueInterestForSilo_equivalent --msg accrueInterestForSilo_equivalent
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule insolventHaveDebtShares --msg insolventHaveDebtShares
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule borrowerCollateralSilo_setNonzeroIncreasesDebt --msg borrowerCollateralSilo_setNonzeroIncreasesDebt # done
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule borrowerCollateralSilo_setNonzeroIncreasesBalance --msg borrowerCollateralSilo_setNonzeroIncreasesBalance
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule withdrawOnlyRevertsOnLiquidity --msg withdrawOnlyRevertsOnLiquidity
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule solventAfterWithdraw --msg solventAfterWithdraw
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule debt_thenBorrowerCollateralSiloSetAndHasShares --msg debt_thenBorrowerCollateralSiloSetAndHasShares
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule noDebtInBothSilos --msg noDebtInBothSilos # done
-# certoraRun.py certora/config/silo/customerSuggested.conf --rule flashFee_nonZero --msg flashFee_nonZero
 
-# certoraRun.py certora/config/silo/access-single-silo.conf
-certoraRun.py certora/config/silo/accrue_hooks.conf
+# certoraRun.py certora/config/silo/access-single-silo.conf --exclude_rule RA_repay_borrower_is_not_restricted --msg access-single-silo # done
+# certoraRun.py certora/config/silo/accrue_hooks.conf
 
 # runAccrue.sh

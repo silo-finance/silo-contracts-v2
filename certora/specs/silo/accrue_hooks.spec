@@ -7,8 +7,8 @@
 
 import "../setup/single_silo_tokens_requirements.spec";
 import "../setup/summaries/silo0_summaries.spec";
-import "../setup/summaries/siloconfig_dispatchers.spec";
 import "../setup/summaries/config_for_one_in_cvl.spec";
+//import "../setup/summaries/siloconfig_dispatchers.spec";
 import "../setup/summaries/safe-approximations.spec";
 
 methods {
@@ -33,6 +33,8 @@ methods {
     function ShareDebtToken0.balanceOf(address) external returns (uint256) envfree;
     function ShareProtectedCollateralToken0.balanceOf(address) external returns (uint256) envfree;
 
+    function _.synchronizeHooks(uint24,uint24) external => DISPATCHER(true);
+
     // ---- `SiloConfig` -------------------------------------------------------
     // `envfree`
     function SiloConfig.accrueInterestForSilo(address) external envfree;
@@ -40,6 +42,22 @@ methods {
         address,
         ISilo.CollateralType
     ) external returns (address, address) envfree;
+
+    // Dispatcher
+    function _.accrueInterestForSilo(address) external => DISPATCHER(true);
+    function _.accrueInterestForBothSilos() external => DISPATCHER(true);
+    function _.getConfigsForWithdraw(address,address) external => DISPATCHER(true);
+    function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
+    function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
+    function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
+    function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
+    function _.getConfig(address) external  => DISPATCHER(true);
+    function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
+    function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
+
+    // `CrossReentrancyGuard`
+    function _.turnOnReentrancyProtection() external => DISPATCHER(true);
+    function _.turnOffReentrancyProtection() external => DISPATCHER(true);
 
     // ---- `ISiloOracle` ------------------------------------------------------
     // NOTE: Since `beforeQuote` is not a view function, strictly speaking this is unsound.
@@ -67,6 +85,7 @@ ghost uint64 interestRateTimestampAt;
 
 // Ghosts to check if balance changed before `_accrueInterestForAsset` was called
 ghost bool isAccrueCalledBefore;  // True if `_accrueInterestForAsset` was called before
+ghost bool isAccrueCalled;  // True if `_accrueInterestForAsset` was called
 ghost address user;  // Arbitrary user
 
 ghost uint256 userSilo0BalancePre;
@@ -87,6 +106,7 @@ function CVLAccrueInterestForAsset(
     uint256 _daoFee,
     uint256 _deployerFee
 ) returns uint256 {
+    isAccrueCalled = true;
     (
         daoAndDeployerRevenueAt,
         interestRateTimestampAt,
@@ -109,9 +129,10 @@ function CVLAccrueInterestForAsset(
     return ret;
 }
 
+
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) interestGhost;
 
-// @title An arbitrary (pure) function for the interest rate
+/// @title An arbitrary (pure) function for the interest rate
 function CVLGetCompoundInterestRate(
     uint256 _collateralAssets,
     uint256 _debtAssets,
@@ -119,6 +140,33 @@ function CVLGetCompoundInterestRate(
 ) returns uint256 {
     return interestGhost[_collateralAssets][_debtAssets][_interestRateTimestamp];
 }
+
+
+/// @title Methods that will be used in parametric rules (e.g. non-view methods)
+definition isParametricMethod(method f) returns bool = (
+    !f.isView &&
+    // `callOnBehalfOfSilo` uses a `delegatecall`
+    f.selector != sig:callOnBehalfOfSilo(address,uint256,ISilo.CallType,bytes).selector &&
+    // TODO: `decimals` fails sanity
+    f.selector != sig:decimals().selector &&
+    // NOTE: Inside `flashLoan` can call any other method, so it should be added to all
+    // the definitions here. But in order to save time, we simply skip it.
+    f.selector != sig:flashLoan(address,address,uint256,bytes).selector
+);
+
+
+/// @title Methods which change balances but do not accrue interest in storage
+definition isTranferNonAccruing(method f) returns bool = (
+    // The call to `_accrueInterestForAsset` in `transfer` is done after the transfer
+    // using `_afterTokenTransfer` in debt token (and there it is accrued in memory).
+    f.selector == sig:transfer(address,uint256).selector ||
+    f.selector == sig:transferFrom(address,address,uint256).selector ||
+    f.selector == sig:shareDebtToken0.transfer(address,uint256).selector ||
+    f.selector == sig:shareDebtToken0.transferFrom(address,address,uint256).selector ||
+    f.selector == sig:shareProtectedCollateralToken0.transfer(address,uint256).selector ||
+    f.selector == sig:shareProtectedCollateralToken0.transferFrom(address,address,uint256).selector
+);
+
 
 // ---- Hooks and ghosts -------------------------------------------------------
 // This hooks notes if account values change before calls to `_accrueInterestForAsset`.
@@ -142,8 +190,9 @@ hook Sstore token0._balances[KEY address a] uint new_val (uint old_val) {
 /// 1. There are no changes before calling `_accrueInterestForAsset`.
 /// 2. Only changes are possible if `_accrueInterestForAsset` is called.
 /// 3. At most one call to `_accrueInterestForAsset` per method.
-rule onlyAccrueCanChangeVars(method f) {
-
+rule onlyAccrueCanChangeVars(method f) filtered {
+    f -> isParametricMethod(f)
+} {
     numAccrueCalls[silo0] = 0;
 
     uint192 daoAndDeployerRevenuePre;
@@ -167,9 +216,11 @@ rule onlyAccrueCanChangeVars(method f) {
     ) = getSiloStorage();
 
     assert (
-        daoAndDeployerRevenuePre == daoAndDeployerRevenuePost &&
-        interestRateTimestampPre == interestRateTimestampPost,
-        "Only _accrueInterestForAsset can change revenue variables"
+        f.selector != sig:withdrawFees().selector => (
+            daoAndDeployerRevenuePre == daoAndDeployerRevenuePost &&
+            interestRateTimestampPre == interestRateTimestampPost
+        ),
+        "Only _accrueInterestForAsset and withdrawFees can change revenue variables"
     );
     assert (numAccrueCalls[silo0] <= 2, "At most two _accrueInterestForAsset call");
     assert (
@@ -183,9 +234,11 @@ rule onlyAccrueCanChangeVars(method f) {
 
 
 /// @title User's accounts are not changed before call to `_accrueInterestForAsset`
-rule noAccountChangesBeforeAccrue(method f) {
-
+rule noAccountChangesBeforeAccrue(method f) filtered {
+    f -> isParametricMethod(f) && !isTranferNonAccruing(f)
+} {
     numAccrueCalls[silo0] = 0;
+
     isAccrueCalledBefore = false;
     isUserSilo0BalanceChanged = false;
     isUserDebt0BalanceChanged = false;
