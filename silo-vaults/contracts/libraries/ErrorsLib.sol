@@ -4,8 +4,8 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 /// @title ErrorsLib
-/// @author Morpho Labs
-/// @custom:modified Silo Labs
+/// @dev Forked from Morpho with gratitude
+/// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice Library exposing error messages.
 library ErrorsLib {

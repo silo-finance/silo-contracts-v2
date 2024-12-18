@@ -12,8 +12,8 @@ import {MetaMorpho} from "./MetaMorpho.sol";
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 
 /// @title MetaMorphoFactory
-/// @author Morpho Labs
-/// @custom:modified Silo Labs
+/// @dev Forked from Morpho with gratitude
+/// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice This contract allows to create MetaMorpho vaults, and to index them easily.
 contract MetaMorphoFactory is IMetaMorphoFactory {

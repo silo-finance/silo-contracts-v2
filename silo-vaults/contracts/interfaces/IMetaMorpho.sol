@@ -197,8 +197,8 @@ interface IMetaMorphoStaticTyping is IMetaMorphoBase {
 }
 
 /// @title IMetaMorpho
-/// @author Morpho Labs
-/// @custom:modified Silo Labs
+/// @dev Forked from Morpho with gratitude
+/// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @dev Use this interface for MetaMorpho to have access to all the functions with the appropriate function signatures.
 interface IMetaMorpho is IMetaMorphoBase, IERC4626, IERC20Permit, IOwnable, IMulticall {

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 /// @title ConstantsLib
-/// @author Morpho Labs
-/// @custom:modified Silo Labs
+/// @dev Forked from Morpho with gratitude
+/// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice Library exposing constants.
 library ConstantsLib {

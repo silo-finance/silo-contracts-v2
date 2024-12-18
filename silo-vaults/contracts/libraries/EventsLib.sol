@@ -8,8 +8,8 @@ import {IMetaMorpho} from "../interfaces/IMetaMorpho.sol";
 import {FlowCapsConfig} from "../interfaces/IPublicAllocator.sol";
 
 /// @title EventsLib
-/// @author Morpho Labs
-/// @custom:modified Silo Labs
+/// @dev Forked from Morpho with gratitude
+/// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice Library exposing events.
 library EventsLib {

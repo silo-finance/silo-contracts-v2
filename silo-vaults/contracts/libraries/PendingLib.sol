@@ -25,8 +25,8 @@ struct PendingAddress {
 }
 
 /// @title PendingLib
-/// @author Morpho Labs
-/// @custom:modified Silo Labs
+/// @dev Forked from Morpho with gratitude
+/// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice Library to manage pending values and their validity timestamp.
 library PendingLib {
