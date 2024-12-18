@@ -2,8 +2,11 @@
  * This setup is for a single silo - `Silo0`
  */
 
-import "../setup/CompleteSiloSetup.spec";
-import "unresolved.spec";
+import "../setup/single_silo_tokens_requirements.spec";
+import "../setup/summaries/silo0_summaries.spec";
+import "../setup/summaries/siloconfig_dispatchers.spec";
+import "../setup/summaries/config_for_one_in_cvl.spec";
+import "../setup/summaries/safe-approximations.spec";
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------
@@ -13,22 +16,6 @@ methods {
         address,
         ISilo.CollateralType
     ) external returns (address, address) envfree;
-
-    // Dispatcher
-    function _.accrueInterestForSilo(address) external => DISPATCHER(true);
-    function _.accrueInterestForBothSilos() external => DISPATCHER(true);
-    function _.getConfigsForWithdraw(address,address) external => DISPATCHER(true);
-    function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
-    function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
-    function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
-    function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
-    function _.getConfig(address) external  => DISPATCHER(true);
-    function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
-    function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
-
-    // `CrossReentrancyGuard`
-    function _.turnOnReentrancyProtection() external => DISPATCHER(true);
-    function _.turnOffReentrancyProtection() external => DISPATCHER(true);
 
     // ---- `IInterestRateModel` -----------------------------------------------
     // Since `getCompoundInterestRateAndUpdate` is not *pure*, this is not strictly sound.

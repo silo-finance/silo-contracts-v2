@@ -1,15 +1,9 @@
 # certoraRun.py certora/config/silo/mathLib.conf --rule getDebtAmountsWithInterest_correctness # done
 
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxRedeem_noRevert --msg "HLP_MaxRedeem_noRevert"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxRedeem_reverts --msg "HLP_MaxRedeem_reverts"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxWithdraw_reverts --msg "HLP_MaxWithdraw_reverts"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule maxBorrow_noRevert --msg "maxBorrow_noRevert"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule maxWithdraw_noRevert --msg "maxWithdraw_noRevert"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxDeposit_reverts --msg "HLP_MaxDeposit_reverts"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxMint_revertsanBalance --msg "HLP_MaxMint_revertsanBalance"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxRepayShares_reverts --msg "HLP_MaxRepayShares_reverts"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule maxRepay_burnsAllDebt --msg "maxRepay_burnsAllDebt"
-# certoraRun.py certora/config/silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity --msg "maxWithdraw_noGreaterThanLiquidity"
+# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxDeposit_reverts --msg "HLP_MaxDeposit_reverts" # done
+# certoraRun.py certora/config/silo/maxCorectness.conf --rule HLP_MaxRepayShares_reverts --msg "HLP_MaxRepayShares_reverts" # done
+# certoraRun.py certora/config/silo/maxCorectness.conf --rule maxRepay_burnsAllDebt --msg "maxRepay_burnsAllDebt"   # done
+# certoraRun.py certora/config/silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity --msg "maxWithdraw_noGreaterThanLiquidity" # done
 
 # certoraRun.py certora/config/silo/methods_integrity.conf  # done
 # certoraRun.py certora/config/silo/preview_integrity.conf
@@ -25,7 +19,7 @@
 # certoraRun.py certora/config/silo/noDebtInBoth.conf --parametric_contracts Silo0 --msg "debtInBoth - Silo0" # done
 # certoraRun.py certora/config/silo/noDebtInBoth.conf --parametric_contracts ShareDebtToken0 --msg "debtInBoth - ShareDebtToken0" # done
 
-# # customerSuggested.conf - all, by rule
+# # customerSuggested.conf, by rule
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule accrueInterest_neverReverts --msg accrueInterest_neverReverts
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule noDebt_thenSolventAndNoLTV --msg noDebt_thenSolventAndNoLTV
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule accrueInterest_idempotent --msg accrueInterest_idempotent # done
@@ -43,7 +37,7 @@
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule noDebtInBothSilos --msg noDebtInBothSilos # done
 # certoraRun.py certora/config/silo/customerSuggested.conf --rule flashFee_nonZero --msg flashFee_nonZero
 
-certoraRun.py certora/config/silo/access-single-silo.conf
-# certoraRun.py certora/config/silo/accrue_hooks.conf
+# certoraRun.py certora/config/silo/access-single-silo.conf
+certoraRun.py certora/config/silo/accrue_hooks.conf
 
 # runAccrue.sh
