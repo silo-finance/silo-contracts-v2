@@ -16,9 +16,9 @@ import {
     PendingUint192,
     PendingAddress,
     MarketAllocation,
-    IMetaSiloBase,
-    IMetaSiloStaticTyping
-} from "./interfaces/IMetaSilo.sol";
+    ISiloVaultBase,
+    ISiloVaultStaticTyping
+} from "./interfaces/ISiloVault.sol";
 
 import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
@@ -30,12 +30,12 @@ import {ConstantsLib} from "./libraries/ConstantsLib.sol";
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 
-/// @title MetaSilo
+/// @title SiloVault
 /// @dev Forked with gratitude from Morpho Labs.
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
-/// @notice ERC4626 compliant vault allowing users to deposit assets to Silo.
-contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloStaticTyping {
+/// @notice ERC4626 compliant vault allowing users to deposit assets to any ERC4626 vault.
+contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultStaticTyping {
     uint256 constant WAD = 1e18;
 
     using Math for uint256;
@@ -54,46 +54,46 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
 
     /* STORAGE */
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     address public curator;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     mapping(address => bool) public isAllocator;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     address public guardian;
 
-    /// @inheritdoc IMetaSiloStaticTyping
+    /// @inheritdoc ISiloVaultStaticTyping
     mapping(IERC4626 => MarketConfig) public config;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     uint256 public timelock;
 
-    /// @inheritdoc IMetaSiloStaticTyping
+    /// @inheritdoc ISiloVaultStaticTyping
     PendingAddress public pendingGuardian;
 
-    /// @inheritdoc IMetaSiloStaticTyping
+    /// @inheritdoc ISiloVaultStaticTyping
     mapping(IERC4626 => PendingUint192) public pendingCap;
 
-    /// @inheritdoc IMetaSiloStaticTyping
+    /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     uint96 public fee;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     address public feeRecipient;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     address public skimRecipient;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     IERC4626[] public supplyQueue;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     IERC4626[] public withdrawQueue;
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     uint256 public lastTotalAssets;
 
     bool transient _lock;
@@ -183,7 +183,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
 
     /* ONLY OWNER FUNCTIONS */
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function setCurator(address _newCurator) external virtual onlyOwner {
         if (_newCurator == curator) revert ErrorsLib.AlreadySet();
 
@@ -192,7 +192,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetCurator(_newCurator);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function setIsAllocator(address _newAllocator, bool _newIsAllocator) external virtual onlyOwner {
         if (isAllocator[_newAllocator] == _newIsAllocator) revert ErrorsLib.AlreadySet();
 
@@ -201,7 +201,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetIsAllocator(_newAllocator, _newIsAllocator);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function setSkimRecipient(address _newSkimRecipient) external virtual onlyOwner {
         if (_newSkimRecipient == skimRecipient) revert ErrorsLib.AlreadySet();
 
@@ -210,7 +210,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetSkimRecipient(_newSkimRecipient);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function submitTimelock(uint256 _newTimelock) external virtual onlyOwner {
         if (_newTimelock == timelock) revert ErrorsLib.AlreadySet();
         if (pendingTimelock.validAt != 0) revert ErrorsLib.AlreadyPending();
@@ -226,7 +226,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         }
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function setFee(uint256 _newFee) external virtual onlyOwner {
         if (_newFee == fee) revert ErrorsLib.AlreadySet();
         if (_newFee > ConstantsLib.MAX_FEE) revert ErrorsLib.MaxFeeExceeded();
@@ -241,7 +241,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetFee(_msgSender(), fee);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function setFeeRecipient(address _newFeeRecipient) external virtual onlyOwner {
         if (_newFeeRecipient == feeRecipient) revert ErrorsLib.AlreadySet();
         if (_newFeeRecipient == address(0) && fee != 0) revert ErrorsLib.ZeroFeeRecipient();
@@ -254,7 +254,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetFeeRecipient(_newFeeRecipient);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function submitGuardian(address _newGuardian) external virtual onlyOwner {
         if (_newGuardian == guardian) revert ErrorsLib.AlreadySet();
         if (pendingGuardian.validAt != 0) revert ErrorsLib.AlreadyPending();
@@ -270,7 +270,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
 
     /* ONLY CURATOR FUNCTIONS */
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
         if (_market.asset() != asset()) revert ErrorsLib.InconsistentAsset(_market);
         if (pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
@@ -287,7 +287,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         }
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function submitMarketRemoval(IERC4626 _market) external virtual onlyCuratorRole {
         if (config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
         if (config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
@@ -302,7 +302,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
 
     /* ONLY ALLOCATOR FUNCTIONS */
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function setSupplyQueue(IERC4626[] calldata _newSupplyQueue) external virtual onlyAllocatorRole {
         uint256 length = _newSupplyQueue.length;
 
@@ -318,7 +318,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetSupplyQueue(_msgSender(), _newSupplyQueue);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function updateWithdrawQueue(uint256[] calldata _indexes) external virtual onlyAllocatorRole {
         uint256 newLength = _indexes.length;
         uint256 currLength = withdrawQueue.length;
@@ -361,14 +361,14 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.SetWithdrawQueue(_msgSender(), newWithdrawQueue);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function reallocate(MarketAllocation[] calldata _allocations) external virtual onlyAllocatorRole {
         uint256 totalSupplied;
         uint256 totalWithdrawn;
         for (uint256 i; i < _allocations.length; ++i) {
             MarketAllocation memory allocation = _allocations[i];
 
-            // in original MetaSilo, we are not checking liquidity, so this realocation will fail if not enough assets
+            // in original SiloVault, we are not checking liquidity, so this realocation will fail if not enough assets
             (uint256 supplyAssets, uint256 supplyShares) = _supplyBalance(allocation.market);
             uint256 withdrawn = UtilsLib.zeroFloorSub(supplyAssets, allocation.assets);
 
@@ -422,28 +422,28 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
 
     /* REVOKE FUNCTIONS */
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function revokePendingTimelock() external virtual onlyGuardianRole {
         delete pendingTimelock;
 
         emit EventsLib.RevokePendingTimelock(_msgSender());
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function revokePendingGuardian() external virtual onlyGuardianRole {
         delete pendingGuardian;
 
         emit EventsLib.RevokePendingGuardian(_msgSender());
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function revokePendingCap(IERC4626 _market) external virtual onlyCuratorOrGuardianRole {
         delete pendingCap[_market];
 
         emit EventsLib.RevokePendingCap(_msgSender(), _market);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function revokePendingMarketRemoval(IERC4626 _market) external virtual onlyCuratorOrGuardianRole {
         delete config[_market].removableAt;
 
@@ -452,27 +452,27 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
 
     /* EXTERNAL */
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function supplyQueueLength() external view virtual returns (uint256) {
         return supplyQueue.length;
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function withdrawQueueLength() external view virtual returns (uint256) {
         return withdrawQueue.length;
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function acceptTimelock() external virtual afterTimelock(pendingTimelock.validAt) {
         _setTimelock(pendingTimelock.value);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function acceptGuardian() external virtual afterTimelock(pendingGuardian.validAt) {
         _setGuardian(pendingGuardian.value);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function acceptCap(IERC4626 _market)
         external
         virtual
@@ -482,7 +482,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         _setCap(_market, uint184(pendingCap[_market].value));
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function skim(address _token) external virtual {
         if (skimRecipient == address(0)) revert ErrorsLib.ZeroAddress();
 
@@ -493,7 +493,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.Skim(_msgSender(), _token, amount);
     }
 
-    /// @inheritdoc IMetaSiloBase
+    /// @inheritdoc ISiloVaultBase
     function claimRewards() public nonReentrant {
         address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
         bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
@@ -775,7 +775,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         }
 
         marketConfig.cap = _supplyCap;
-        // one time approval, so market can pull any amount of tokens from MetaSilo in a future
+        // one time approval, so market can pull any amount of tokens from SiloVault in a future
         IERC20(asset()).approve(address(_market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 

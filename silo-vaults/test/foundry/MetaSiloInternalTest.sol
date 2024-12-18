@@ -8,9 +8,9 @@ import {InternalTest} from "./helpers/InternalTest.sol";
 import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "./helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaSiloInternalTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc SiloVaultInternalTest -vvv
 */
-contract MetaSiloInternalTest is InternalTest {
+contract SiloVaultInternalTest is InternalTest {
     /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetCapMaxQueueLengthExcedeed -vvv
     */

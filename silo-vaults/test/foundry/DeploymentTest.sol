@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
-import {IMetaSilo} from "../../contracts/interfaces/IMetaSilo.sol";
-import {MetaSilo} from "../../contracts/MetaSilo.sol";
+import {ISiloVault} from "../../contracts/interfaces/ISiloVault.sol";
+import {SiloVault} from "../../contracts/SiloVault.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
@@ -12,19 +12,19 @@ import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 */
 contract DeploymentTest is IntegrationTest {
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaSiloNotToken -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeploySiloVaultNotToken -vvv
     */
-    function testDeployMetaSiloNotToken() public {
+    function testDeploySiloVaultNotToken() public {
         address notToken = makeAddr("address notToken");
 
         vm.expectRevert();
-        createMetaSilo(OWNER, ConstantsLib.MIN_TIMELOCK, notToken, "MetaSilo Vault", "MMV");
+        createSiloVault(OWNER, ConstantsLib.MIN_TIMELOCK, notToken, "SiloVault Vault", "MMV");
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeployMetaSiloPass -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeploySiloVaultPass -vvv
     */
-    function testDeployMetaSiloPass(
+    function testDeploySiloVaultPass(
         address owner,
         uint256 initialTimelock,
         string memory name,
@@ -33,7 +33,7 @@ contract DeploymentTest is IntegrationTest {
         assumeNotZeroAddress(owner);
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        IMetaSilo newVault = createMetaSilo(owner, initialTimelock, address(loanToken), name, symbol);
+        ISiloVault newVault = createSiloVault(owner, initialTimelock, address(loanToken), name, symbol);
 
         assertEq(newVault.owner(), owner, "owner");
         assertEq(newVault.timelock(), initialTimelock, "timelock");
