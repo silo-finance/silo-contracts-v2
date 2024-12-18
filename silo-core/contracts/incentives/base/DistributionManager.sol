@@ -21,6 +21,8 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     mapping(bytes32 => IncentivesProgram) public incentivesPrograms;
 
+    /// @dev notifier is contract with IERC20 interface with users balances, based based on which
+    /// rewards distribution is calculated
     address public immutable NOTIFIER; // solhint-disable-line var-name-mixedcase
 
     uint8 public constant PRECISION = 18;
@@ -36,6 +38,8 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         _;
     }
 
+    /// @param _notifier is contract with IERC20 interface with users balances, based based on which
+    /// rewards distribution is calculated
     constructor(address _owner, address _notifier) Ownable(_owner) {
         NOTIFIER = _notifier;
     }

@@ -21,6 +21,9 @@ contract SiloIncentivesController is BaseIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
+    /// @param _owner address of wallet that can manage the storage
+    /// @param _notifier is contract with IERC20 interface with users balances, based based on which
+    /// rewards distribution is calculated
     constructor(address _owner, address _notifier) BaseIncentivesController(_owner, _notifier) {}
 
     /// @inheritdoc ISiloIncentivesController
