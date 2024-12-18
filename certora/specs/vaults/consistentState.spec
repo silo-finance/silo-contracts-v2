@@ -4,7 +4,7 @@ import "timelock.spec";
 using Util as Util;
 
 methods {
-    function Util.libId(MetaMorphoHarness.MarketParams) external returns(MetaMorphoHarness.Id) envfree;
+    function Util.libId(MetaMorphoHarness.MarketParams) external returns(address) envfree;
     function Util.libMulDivDown(uint256, uint256, uint256) external returns(uint256) envfree;
 }
 
@@ -12,7 +12,7 @@ methods {
 invariant noFeeToUnsetFeeRecipient()
     feeRecipient() == 0 => fee() == 0;
 
-function hasSupplyCapIsEnabled(MetaMorphoHarness.Id id) returns bool {
+function hasSupplyCapIsEnabled(address id) returns bool {
     MetaMorphoHarness.MarketConfig config = config_(id);
 
     return config.cap > 0 => config.enabled;
@@ -20,11 +20,11 @@ function hasSupplyCapIsEnabled(MetaMorphoHarness.Id id) returns bool {
 
 // Check that having a positive supply cap implies that the market is enabled.
 // This invariant is useful to conclude that markets that are not enabled cannot be interacted with (notably for reallocate).
-invariant supplyCapIsEnabled(MetaMorphoHarness.Id id)
+invariant supplyCapIsEnabled(address id)
     hasSupplyCapIsEnabled(id);
 
 function hasPendingSupplyCapHasConsistentAsset(MetaMorphoHarness.MarketParams marketParams) returns bool {
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
+    address id = Util.libId(marketParams);
 
     return pendingCap_(id).validAt > 0 => marketParams.loanToken == asset();
 }
@@ -34,7 +34,7 @@ invariant pendingSupplyCapHasConsistentAsset(MetaMorphoHarness.MarketParams mark
     hasPendingSupplyCapHasConsistentAsset(marketParams);
 
 function isEnabledHasConsistentAsset(MetaMorphoHarness.MarketParams marketParams) returns bool {
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
+    address id = Util.libId(marketParams);
 
     return config_(id).enabled => marketParams.loanToken == asset();
 }
@@ -48,27 +48,27 @@ invariant enabledHasConsistentAsset(MetaMorphoHarness.MarketParams marketParams)
   }
 }
 
-function hasSupplyCapIsNotMarkedForRemoval(MetaMorphoHarness.Id id) returns bool {
+function hasSupplyCapIsNotMarkedForRemoval(address id) returns bool {
     MetaMorphoHarness.MarketConfig config = config_(id);
 
     return config.cap > 0 => config.removableAt == 0;
 }
 
 // Check that a market with a positive cap cannot be marked for removal.
-invariant supplyCapIsNotMarkedForRemoval(MetaMorphoHarness.Id id)
+invariant supplyCapIsNotMarkedForRemoval(address id)
     hasSupplyCapIsNotMarkedForRemoval(id);
 
-function isNotEnabledIsNotMarkedForRemoval(MetaMorphoHarness.Id id) returns bool {
+function isNotEnabledIsNotMarkedForRemoval(address id) returns bool {
     MetaMorphoHarness.MarketConfig config = config_(id);
 
     return !config.enabled => config.removableAt == 0;
 }
 
 // Check that a non-enabled market cannot be marked for removal.
-invariant notEnabledIsNotMarkedForRemoval(MetaMorphoHarness.Id id)
+invariant notEnabledIsNotMarkedForRemoval(address id)
     isNotEnabledIsNotMarkedForRemoval(id);
 
 // Check that a market with a pending cap cannot be marked for removal.
-invariant pendingCapIsNotMarkedForRemoval(MetaMorphoHarness.Id id)
+invariant pendingCapIsNotMarkedForRemoval(address id)
     pendingCap_(id).validAt > 0 => config_(id).removableAt == 0;
 
