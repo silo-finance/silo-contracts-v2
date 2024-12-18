@@ -10,7 +10,6 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {MetaMorpho} from "./MetaMorpho.sol";
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
-import {SiloIncentivesControllerCL} from "./incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 /// @title MetaMorphoFactory
 /// @author Morpho Labs
