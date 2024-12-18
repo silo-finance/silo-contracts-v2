@@ -22,6 +22,7 @@ import {
 
 import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
+import {IIncentivesClaimingLogic} from "./interfaces/IIncentivesClaimingLogic.sol";
 
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
@@ -94,6 +95,15 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     uint256 public lastTotalAssets;
 
     bool transient _lock;
+
+    modifier nonReentrant() {
+        require(!_lock, ErrorsLib.ClaimingRewardsError());
+        _lock = true;
+
+        _;
+
+        _lock = false;
+    }
 
     /* CONSTRUCTOR */
 
@@ -479,6 +489,17 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         IERC20(_token).safeTransfer(skimRecipient, amount);
 
         emit EventsLib.Skim(_msgSender(), _token, amount);
+    }
+
+    /// @inheritdoc IMetaMorphoBase
+    function claimRewards() public nonReentrant {
+        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
+        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
+
+        for (uint256 i; i < logics.length; i++) {
+            logics[i].delegatecall(data);
+            // result of call is ignored
+        }
     }
 
     /* ERC4626 (PUBLIC) */
@@ -868,14 +889,25 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
+        // on deposit, claim must be first action, new user should not get reward
+
+        // on withdraw, claim must be first action, user that is leaving should get rewards
+        // immediate deposit-withdraw operation will not abused it, because before deposit all rewards will be
+        // claimed, so on withdraw on the same block no additional rewards will be generated.
+
+        // transfer shares is basically withdraw->deposit, so claiming rewards should be done before any state changes
+
+        claimRewards();
+
         super._update(_from, _to, _value);
 
         if (_value == 0) return;
+        
+        _afterTokenTransfer(_from, _to, _value);
+    }
 
-        // after token transfer/mint/burn
-
-        require(!_lock, ErrorsLib.NotificationDispatchError());
-        _lock = true;
+    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual nonReentrant {
+        if (_value == 0) return;
 
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
 
@@ -897,7 +929,5 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
                 // do not revert on invalid notification
             }
         }
-
-        _lock = false;
     }
 }

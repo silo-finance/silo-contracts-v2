@@ -33,6 +33,9 @@ interface IMetaMorphoBase {
 
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
 
+    /// @notice method for claiming and distributing incentives rewards for all vault users
+    function claimRewards() external;
+
     /// @notice The address of the curator.
     function curator() external view returns (address);
 
