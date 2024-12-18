@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
-import {IMetaMorphoBase} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {IMetaSiloBase} from "../../contracts/interfaces/IMetaSilo.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
@@ -13,9 +13,9 @@ contract MulticallTest is IntegrationTest {
     bytes[] internal data;
 
     function testMulticall() public {
-        data.push(abi.encodeCall(IMetaMorphoBase.setCurator, (address(1))));
-        data.push(abi.encodeCall(IMetaMorphoBase.setIsAllocator, (address(1), true)));
-        data.push(abi.encodeCall(IMetaMorphoBase.submitTimelock, (ConstantsLib.MAX_TIMELOCK)));
+        data.push(abi.encodeCall(IMetaSiloBase.setCurator, (address(1))));
+        data.push(abi.encodeCall(IMetaSiloBase.setIsAllocator, (address(1), true)));
+        data.push(abi.encodeCall(IMetaSiloBase.submitTimelock, (ConstantsLib.MAX_TIMELOCK)));
 
         vm.prank(OWNER);
         vault.multicall(data);

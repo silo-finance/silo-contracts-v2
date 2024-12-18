@@ -5,8 +5,8 @@ import {console2} from "forge-std/console2.sol";
 
 import {IERC1820Implementer} from "openzeppelin5/interfaces/IERC1820Implementer.sol";
 
-import {MetaMorpho} from "../../contracts/MetaMorpho.sol";
-import {IMetaMorpho} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {MetaSilo} from "../../contracts/MetaSilo.sol";
+import {IMetaSilo} from "../../contracts/interfaces/IMetaSilo.sol";
 import {ERC1820Registry} from "../../contracts/mocks/ERC1820Registry.sol";
 import {ERC777Mock, IERC1820Registry} from "../../contracts/mocks/ERC777Mock.sol";
 
@@ -38,9 +38,9 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
 
         idleMarket = _createNewMarket(address(collateralToken), address(reentrantToken));
 
-        vault = IMetaMorpho(
+        vault = IMetaSilo(
             address(
-                new MetaMorpho(OWNER, TIMELOCK, vaultIncentivesModule, address(reentrantToken), "MetaMorpho Vault", "MMV")
+                new MetaSilo(OWNER, TIMELOCK, vaultIncentivesModule, address(reentrantToken), "MetaSilo Vault", "MMV")
             )
         );
 
@@ -58,7 +58,7 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
         vm.prank(SUPPLIER);
         reentrantToken.approve(address(vault), type(uint256).max);
 
-        reentrantToken.setBalance(SUPPLIER, 100_000 ether); // SUPPLIER supplies 100_000e18 tokens to MetaMorpho.
+        reentrantToken.setBalance(SUPPLIER, 100_000 ether); // SUPPLIER supplies 100_000e18 tokens to MetaSilo.
 
         console2.log("Supplier starting with %s tokens.", loanToken.balanceOf(SUPPLIER));
 
@@ -66,7 +66,7 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
         uint256 userShares = vault.deposit(100_000 ether, SUPPLIER);
 
         console2.log(
-            "Supplier deposited %s loanTokens to metaMorpho_no_timelock in exchange for %s shares.",
+            "Supplier deposited %s loanTokens to MetaSilo_no_timelock in exchange for %s shares.",
             vault.previewRedeem(userShares),
             userShares
         );
@@ -124,7 +124,7 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
         if ((from == attacker) && (amount == 5000)) {
             // Don't call back on first deposit(1)
             vm.startPrank(attacker);
-            IMetaMorpho(to).withdraw(1, attacker, attacker);
+            IMetaSilo(to).withdraw(1, attacker, attacker);
             vm.stopPrank();
         }
     }

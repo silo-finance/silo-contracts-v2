@@ -15,10 +15,10 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
-import {MetaMorpho} from "../../../contracts/MetaMorpho.sol";
+import {MetaSilo} from "../../../contracts/MetaSilo.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
 
-import {IMetaMorpho} from "../../../contracts/interfaces/IMetaMorpho.sol";
+import {IMetaSilo} from "../../../contracts/interfaces/IMetaSilo.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
 import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
 
@@ -41,8 +41,6 @@ contract BaseTest is SiloLittleHelper, Test {
     address internal GUARDIAN = makeAddr("Guardian");
     address internal FEE_RECIPIENT = makeAddr("FeeRecipient");
     address internal SKIM_RECIPIENT = makeAddr("SkimRecipient");
-    address internal MORPHO_OWNER = makeAddr("MorphoOwner");
-    address internal MORPHO_FEE_RECIPIENT = makeAddr("MorphoFeeRecipient");
 
     MintableToken internal loanToken = new MintableToken(18);
     MintableToken internal collateralToken = new MintableToken(18);
@@ -53,7 +51,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
     IERC4626 internal idleMarket;
 
-    IMetaMorpho internal vault;
+    IMetaSilo internal vault;
 
     function setUp() public virtual {
         _createNewMarkets();
@@ -63,22 +61,22 @@ contract BaseTest is SiloLittleHelper, Test {
 
         emit log_named_address("loanToken", address(loanToken));
 
-        vault = IMetaMorpho(address(
-            new MetaMorpho(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "MetaMorpho Vault", "MMV")
+        vault = IMetaSilo(address(
+            new MetaSilo(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "MetaSilo Vault", "MMV")
         ));
 
         idleMarket = new IdleVault(address(vault), address(loanToken), "idle vault", "idle");
     }
 
-    function createMetaMorpho(
+    function createMetaSilo(
         address owner,
         uint256 initialTimelock,
         address asset,
         string memory name,
         string memory symbol
-    ) public returns (IMetaMorpho) {
-        return IMetaMorpho(address(
-            new MetaMorpho(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
+    ) public returns (IMetaSilo) {
+        return IMetaSilo(address(
+            new MetaSilo(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
         ));
     }
 

@@ -5,7 +5,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {MarketAllocation} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {MarketAllocation} from "../../contracts/interfaces/IMetaSilo.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 

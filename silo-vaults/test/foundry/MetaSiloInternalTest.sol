@@ -8,9 +8,9 @@ import {InternalTest} from "./helpers/InternalTest.sol";
 import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "./helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaMorphoInternalTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaSiloInternalTest -vvv
 */
-contract MetaMorphoInternalTest is InternalTest {
+contract MetaSiloInternalTest is InternalTest {
     /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetCapMaxQueueLengthExcedeed -vvv
     */
@@ -46,7 +46,7 @@ contract MetaMorphoInternalTest is InternalTest {
         silo1.borrow(silo1.maxBorrow(BORROWER), BORROWER, BORROWER);
         vm.stopPrank();
 
-        uint256 remaining = _simulateWithdrawMorpho(assets);
+        uint256 remaining = _simulateWithdrawSilo(assets);
         uint256 expectedWithdrawable = allMarkets[0].maxWithdraw(address(this));
         uint256 expectedRemaining = UtilsLib.zeroFloorSub(assets, expectedWithdrawable);
 

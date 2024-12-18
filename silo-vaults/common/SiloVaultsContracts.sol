@@ -4,7 +4,7 @@ pragma solidity >=0.7.6 <0.9.0;
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 library SiloVaultsContracts {
-    string public constant META_MORPHO_FACTORY = "MetaMorphoFactory.sol";
+    string public constant META_SILO_FACTORY = "MetaSiloFactory.sol";
     string public constant PUBLIC_ALLOCATOR = "PublicAllocator.sol";
     string public constant VAULT_INCENTIVES_MODULE = "VaultIncentivesModule.sol";
 }
