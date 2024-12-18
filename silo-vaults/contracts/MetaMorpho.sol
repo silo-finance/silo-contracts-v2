@@ -491,6 +491,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
         emit EventsLib.Skim(_msgSender(), _token, amount);
     }
 
+    /// @inheritdoc IMetaSilo
     function claimRewards() public nonReentrant {
         address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
         bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
