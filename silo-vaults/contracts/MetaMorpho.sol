@@ -492,7 +492,7 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
     }
 
     function claimRewards() public noReentracy {
-        (address[] memory logics) = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
+        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
 
         for (uint256 i; i < logics.length; i++) {
             logics[i].delegatecall(abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector));
