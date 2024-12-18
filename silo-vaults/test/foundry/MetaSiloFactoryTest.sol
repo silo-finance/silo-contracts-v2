@@ -46,18 +46,18 @@ contract MetaSiloFactoryTest is IntegrationTest {
             expectedAddress, address(this), initialOwner, initialTimelock, address(loanToken), name, symbol, salt
         );
 
-        IMetaSilo MetaSilo =
+        IMetaSilo metaSilo =
             factory.createMetaSilo(initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
 
-        assertEq(expectedAddress, address(MetaSilo), "computeCreate2Address");
+        assertEq(expectedAddress, address(metaSilo), "computeCreate2Address");
 
-        assertTrue(factory.isMetaSilo(address(MetaSilo)), "isMetaSilo");
+        assertTrue(factory.isMetaSilo(address(metaSilo)), "isMetaSilo");
 
-        assertEq(MetaSilo.owner(), initialOwner, "owner");
-        assertEq(MetaSilo.timelock(), initialTimelock, "timelock");
-        assertEq(MetaSilo.asset(), address(loanToken), "asset");
-        assertEq(MetaSilo.name(), name, "name");
-        assertEq(MetaSilo.symbol(), symbol, "symbol");
-        assertTrue(address(MetaSilo.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
+        assertEq(metaSilo.owner(), initialOwner, "owner");
+        assertEq(metaSilo.timelock(), initialTimelock, "timelock");
+        assertEq(metaSilo.asset(), address(loanToken), "asset");
+        assertEq(metaSilo.name(), name, "name");
+        assertEq(metaSilo.symbol(), symbol, "symbol");
+        assertTrue(address(metaSilo.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
     }
 }

@@ -24,6 +24,7 @@ import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "./interfaces/IIncentivesClaimingLogic.sol";
 
+
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
@@ -492,7 +493,7 @@ contract MetaSilo is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaSiloSta
         emit EventsLib.Skim(_msgSender(), _token, amount);
     }
 
-    /// @inheritdoc IMetaMorphoBase
+    /// @inheritdoc IMetaSiloBase
     function claimRewards() public nonReentrant {
         address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
         bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
