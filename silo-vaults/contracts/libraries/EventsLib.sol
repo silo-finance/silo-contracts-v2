@@ -9,7 +9,8 @@ import {FlowCapsConfig} from "../interfaces/IPublicAllocator.sol";
 
 /// @title EventsLib
 /// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @custom:modified Silo Labs
+/// @custom:contact security@silo.finance
 /// @notice Library exposing events.
 library EventsLib {
     /// @notice Emitted when a pending `newTimelock` is submitted.

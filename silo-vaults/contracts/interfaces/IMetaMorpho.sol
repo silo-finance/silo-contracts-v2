@@ -198,7 +198,8 @@ interface IMetaMorphoStaticTyping is IMetaMorphoBase {
 
 /// @title IMetaMorpho
 /// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @custom:modified Silo Labs
+/// @custom:contact security@silo.finance
 /// @dev Use this interface for MetaMorpho to have access to all the functions with the appropriate function signatures.
 interface IMetaMorpho is IMetaMorphoBase, IERC4626, IERC20Permit, IOwnable, IMulticall {
     /// @notice Returns the current configuration of each market.
