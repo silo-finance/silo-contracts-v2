@@ -6,6 +6,7 @@ methods {
         
 }
 
+// In development
 // getDebtAmountsWithInterest() should never return values where 
 // debtAssetsWithInterest + accruedInterest overflows
 rule getDebtAmountsWithInterest_noOverflow(env e)

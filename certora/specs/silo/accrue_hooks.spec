@@ -5,18 +5,8 @@
  * NOTE: This setup is for a single silo - `Silo0`.
  */
 
-import "../summaries/silo0_summaries.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/config_for_one_in_cvl.spec";
-import "../summaries/safe-approximations.spec";
-
-import "../setup/single_silo_tokens_requirements.spec";
-
-using Silo0 as silo0;
-using Token0 as token0;
-using ShareDebtToken0 as shareDebtToken0;
-using ShareProtectedCollateralToken0 as shareProtectedCollateralToken0;
-
+import "../setup/CompleteSiloSetup.spec";
+import "unresolved.spec";
 
 methods {
     // ---- `SiloHarness` ------------------------------------------------------

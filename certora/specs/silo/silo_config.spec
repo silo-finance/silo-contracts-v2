@@ -1,9 +1,7 @@
 /* The specification of the Silo configs */
 
-import "../requirements/two_silos_tokens_requirements.spec";
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/interest_rate_model_v2.spec";
-import "../summaries/siloconfig_dispatchers.spec";
+import "../setup/CompleteSiloSetup.spec";
+import "../setup/summaries/interest_rate_model_v2.spec";
 
 // ---- Rules and Invariants ----------------------------------------------------
 

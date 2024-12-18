@@ -2,17 +2,8 @@
  * This setup is for a single silo - `Silo0`
  */
 
-import "../summaries/silo0_summaries.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/config_for_one_in_cvl.spec";
-import "../summaries/safe-approximations.spec";
-
-import "../setup/single_silo_tokens_requirements.spec";
-
-using Silo0 as silo0;
-using Token0 as token0;
-using ShareDebtToken0 as shareDebtToken0;
-
+import "../setup/CompleteSiloSetup.spec";
+import "unresolved.spec";
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------
@@ -66,7 +57,7 @@ methods {
 
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) interestGhost;
 
-/// @title An arbitrary (pure) function for the interest rate
+// @title An arbitrary (pure) function for the interest rate
 function CVLGetCompoundInterestRate(
     uint256 _collateralAssets,
     uint256 _debtAssets,
@@ -78,7 +69,7 @@ function CVLGetCompoundInterestRate(
 
 ghost mapping(address => mapping(uint256 => uint256)) interestGhostSilo;
 
-/// @title An arbitrary (pure) function for the interest rate 
+// @title An arbitrary (pure) function for the interest rate 
 function CVLGetCompoundInterestRateForSilo(
     address _silo,
     uint256 _blockTimestamp
@@ -87,7 +78,7 @@ function CVLGetCompoundInterestRateForSilo(
 }
 
 
-/// @title Require that the second env has at least as much allowance and balance as first
+// @title Require that the second env has at least as much allowance and balance as first
 function requireSecondEnvAtLeastAsFirst(env e1, env e2) {
     /// At least as much allowance as first `env`
     require (
