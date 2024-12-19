@@ -55,7 +55,7 @@ contract BaseTest is SiloLittleHelper, Test {
     ISiloVault internal vault;
 
     function setUp() public virtual {
-        _createNewMarkets();
+        assertEq(allMarkets.length, 0, "allMarkets is fresh");
 
         collateralToken.setOnDemand(true);
         loanToken.setOnDemand(true);
@@ -67,6 +67,8 @@ contract BaseTest is SiloLittleHelper, Test {
         ));
 
         idleMarket = new IdleVault(address(vault), address(loanToken), "idle vault", "idle");
+
+        _createNewMarkets();
     }
 
     function createSiloVault(
@@ -91,7 +93,7 @@ contract BaseTest is SiloLittleHelper, Test {
         _override.token1 = address(loanToken);
         _override.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
 
-        for (uint256 i; i < NB_MARKETS; ++i) {
+        for (uint256 i; i < NB_MARKETS; i++) {
             (, ISilo silo0_, ISilo silo1_,,, address hook) = siloFixture.deploy_local(_override);
             vm.label(address(silo0_), string.concat("Market#", Strings.toString(i)));
 
