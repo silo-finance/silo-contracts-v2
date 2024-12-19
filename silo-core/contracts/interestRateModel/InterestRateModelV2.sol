@@ -374,7 +374,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
     }
 
     /// @dev this method is to detect possible overflow in math for provided config in next 50 years
-    function configOverflowCheck(IInterestRateModelV2.Config calldata _config) external pure {
+    function configOverflowCheck(IInterestRateModelV2.Config calldata _config) external pure virtual {
         int256 YEAR = 365 days;
         int256 MAX_TIME = 50 * 365 days;
         int256 DP = int256(_DP);

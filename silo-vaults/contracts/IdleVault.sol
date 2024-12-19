@@ -27,24 +27,24 @@ contract IdleVault is ERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address _depositor) public view override returns (uint256) {
+    function maxDeposit(address _depositor) public view virtual override returns (uint256) {
         return _depositor != ONLY_DEPOSITOR ? 0 : super.maxDeposit(_depositor);
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address _depositor) public view override returns (uint256) {
+    function maxMint(address _depositor) public view virtual override returns (uint256) {
         return _depositor != ONLY_DEPOSITOR ? 0 : super.maxMint(_depositor);
     }
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 _assets, address _receiver) public override returns (uint256 shares) {
+    function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {
         if (_receiver != ONLY_DEPOSITOR) revert();
 
         return super.deposit(_assets, _receiver);
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) public override returns (uint256 assets) {
+    function mint(uint256 _shares, address _receiver) public virtual override returns (uint256 assets) {
         if (_receiver != ONLY_DEPOSITOR) revert();
 
         return super.mint(_shares, _receiver);

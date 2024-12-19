@@ -34,7 +34,7 @@ contract SiloIncentivesController is BaseIncentivesController {
         uint256 _recipientBalance,
         uint256 _totalSupply,
         uint256 _amount
-    ) external onlyNotifier {
+    ) external virtual onlyNotifier {
         uint256 numberOfPrograms = _incentivesProgramIds.length();
 
         if (_sender == _recipient || numberOfPrograms == 0) {
@@ -82,7 +82,7 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external onlyNotifierOrOwner {
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifierOrOwner {
         if (_amount == 0) return;
 
         uint256 totalStaked = _shareToken().totalSupply();
@@ -114,7 +114,11 @@ contract SiloIncentivesController is BaseIncentivesController {
     /// @dev Creates a new immediate distribution program if it does not exist.
     /// @param _tokenToDistribute The address of the token to distribute.
     /// @return programId The ID of the created or existing program.
-    function _getOrCreateImmediateDistributionProgram(address _tokenToDistribute) internal returns (bytes32 programId) {
+    function _getOrCreateImmediateDistributionProgram(address _tokenToDistribute)
+        internal
+        virtual
+        returns (bytes32 programId)
+    {
         string memory programName = Strings.toHexString(_tokenToDistribute);
         programId = getProgramId(programName);
 

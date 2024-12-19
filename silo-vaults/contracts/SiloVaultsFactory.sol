@@ -40,7 +40,7 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
         string memory name,
         string memory symbol,
         bytes32 salt
-    ) external returns (ISiloVault siloVault) {
+    ) external virtual returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
         );
