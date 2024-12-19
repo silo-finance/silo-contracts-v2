@@ -106,9 +106,9 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         assertEq(silo1.totalSupply(), shares, "we expect deposit to go to silo");
 
         vm.warp(block.timestamp + 1);
-        assertEq(siloIncentivesController.getRewardsBalance(address(this), "x"), rewardsPerSec, "expected reward after 1s");
+        assertEq(siloIncentivesController.getRewardsBalance(address(vault), "x"), rewardsPerSec, "expected reward after 1s");
 
-        // TODO claiming logic
+        // TODO add claiming logic
 
         vault.claimRewards();
         siloIncentivesController.claimRewards(address(this));
