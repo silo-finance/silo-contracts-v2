@@ -91,7 +91,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
     function test_vaults_gauge_deposit_withRewards() public {
         uint256 rewardsPerSec = 3;
 
-        // standard program for vault users
+        // standard program for silo users
         siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "x",
             rewardToken: address(reward1),
@@ -105,72 +105,14 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         vault.deposit(amount, address(this));
         assertEq(silo1.totalSupply(), shares, "we expect deposit to go to silo");
 
-        // does not revert without incentives setup:
+        vm.warp(block.timestamp + 1);
+        assertEq(siloIncentivesController.getRewardsBalance(address(this), "x"), rewardsPerSec, "expected reward after 1s");
+
+        // TODO claiming logic
 
         vault.claimRewards();
         siloIncentivesController.claimRewards(address(this));
 
         assertEq(reward1.balanceOf(address(vault)), 1, "vault got rewards");
     }
-
-    /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_immediateDistribution -vv
-    */
-    function test_vaults_incentives_immediateDistribution() public {
-//        address user = makeAddr("user");
-//
-//        uint256 rewardsPerSec = 3;
-//
-//        // and add immediate distribution
-//
-//        vm.prank(OWNER);
-//        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
-//
-//        // this call is expected on depositing
-//        vm.expectCall(
-//            address(vaultIncentivesController),
-//            abi.encodeWithSelector(
-//                INotificationReceiver.afterTokenTransfer.selector,
-//                address(0),
-//                0,
-//                user,
-//                1,
-//                1,
-//                1
-//            )
-//        );
-//
-//        // does not revert without incentives setup
-//        vm.prank(user);
-//        vault.deposit(1, user);
-//
-//        vm.warp(block.timestamp + 1);
-//
-//        assertEq(vaultIncentivesController.getRewardsBalance(user, "x"), rewardsPerSec, "expected reward after 1s");
-//
-//        vm.prank(user);
-//        vaultIncentivesController.claimRewards(user);
-//
-//        assertEq(reward1.balanceOf(user), rewardsPerSec, "user can claim standard reward");
-    }
-
-//    function _createNewMarket() public virtual {
-//        // for deploying just new silo.
-//        SiloFixture siloFixture = new SiloFixtureWithVeSilo();
-//        SiloConfigOverride memory _override;
-//
-//        _override.token0 = address(collateralToken);
-//        _override.token1 = address(loanToken);
-//        _override.configName = SiloConfigsNames.LOCAL_VAULT_INCENTIVES;
-//        _override.hook = new HookContractForTesting();
-//
-//        (, silo0, silo1,,,) = siloFixture.deploy_local(_override);
-//        vm.label(address(silo0), string.concat("Market#0_withRewards"));
-//
-//        // NOTICE: overriding default market on position #0
-//        allMarkets[0] = silo1;
-//        collateralMarkets[silo1] = silo0;
-//
-//        _setCap(allMarkets[0], type(uint184).max);
-//    }
 }
