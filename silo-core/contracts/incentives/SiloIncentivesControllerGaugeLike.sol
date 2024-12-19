@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
 import {IGaugeLike} from "../interfaces/IGaugeLike.sol";
 import {SiloIncentivesController} from "./SiloIncentivesController.sol";
 import {ISiloIncentivesControllerGaugeLike} from "./interfaces/ISiloIncentivesControllerGaugeLike.sol";
@@ -42,5 +44,9 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, ISiloInc
     // solhint-disable-next-line func-name-mixedcase
     function is_killed() external view returns (bool) {
         return _isKilled;
+    }
+
+    function _shareToken() internal view override returns (IERC20 shareToken) {
+        shareToken = IERC20(SHARE_TOKEN);
     }
 }
