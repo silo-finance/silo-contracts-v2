@@ -3,12 +3,12 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {IGaugeLike} from "../interfaces/IGaugeLike.sol";
+import {IGaugeLike as IGauge} from "../interfaces/IGaugeLike.sol";
 import {SiloIncentivesController} from "./SiloIncentivesController.sol";
-import {ISiloIncentivesControllerGaugeLike} from "./interfaces/ISiloIncentivesControllerGaugeLike.sol";
+import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.sol";
 
 /// @dev Silo incentives controller that can be used as a gauge in the Gauge hook receiver
-contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, ISiloIncentivesControllerGaugeLike {
+contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
     /// @dev The share token of the gauge
     address public immutable SHARE_TOKEN;
 
@@ -22,25 +22,44 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, ISiloInc
         SHARE_TOKEN = _shareToken;
     }
 
-    /// @inheritdoc ISiloIncentivesControllerGaugeLike
+    /// @inheritdoc ISiloIncentivesController
+    function afterTokenTransfer(
+        address _sender,
+        uint256 _senderBalance,
+        address _recipient,
+        uint256 _recipientBalance,
+        uint256 _totalSupply,
+        uint256 _amount
+    )
+        public
+        virtual
+        override(SiloIncentivesController, IGauge)
+        onlyNotifier
+    {
+        SiloIncentivesController.afterTokenTransfer(
+            _sender, _senderBalance, _recipient, _recipientBalance, _totalSupply, _amount
+        );
+    }
+
+    /// @inheritdoc IGauge
     function killGauge() external virtual onlyOwner {
         _isKilled = true;
         emit GaugeKilled();
     }
 
-    /// @inheritdoc ISiloIncentivesControllerGaugeLike
+    /// @inheritdoc IGauge
     function unkillGauge() external virtual onlyOwner {
         _isKilled = false;
         emit GaugeUnkilled();
     }
 
-    /// @inheritdoc ISiloIncentivesControllerGaugeLike
+    /// @inheritdoc IGauge
     // solhint-disable-next-line func-name-mixedcase
     function share_token() external view returns (address) {
         return SHARE_TOKEN;
     }
 
-    /// @inheritdoc ISiloIncentivesControllerGaugeLike
+    /// @inheritdoc IGauge
     // solhint-disable-next-line func-name-mixedcase
     function is_killed() external view returns (bool) {
         return _isKilled;
