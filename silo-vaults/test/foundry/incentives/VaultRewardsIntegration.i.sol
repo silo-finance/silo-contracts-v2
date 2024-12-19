@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {SiloIncentivesControllerGaugeLike} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLike.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
@@ -25,9 +26,9 @@ import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/Base
 */
 contract VaultRewardsIntegrationTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
-    MintableToken reward2 = new MintableToken(18);
 
     SiloIncentivesControllerGaugeLike siloIncentivesController;
+    SiloIncentivesController vaultIncentivesController;
 
     function setUp() public override {
         super.setUp();
@@ -37,7 +38,8 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         _setCap(allMarkets[2], CAP);
 
         reward1.setOnDemand(true);
-        reward2.setOnDemand(true);
+
+        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
 
         // SiloIncentivesController is per silo
         siloIncentivesController = new SiloIncentivesControllerGaugeLike(
@@ -89,6 +91,9 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_gauge_deposit_withRewards -vv
     */
     function test_vaults_gauge_deposit_withRewards() public {
+        vm.prank(OWNER);
+        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
+
         uint256 rewardsPerSec = 3;
 
         // standard program for silo users

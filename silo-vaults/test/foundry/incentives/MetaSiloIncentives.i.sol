@@ -18,7 +18,6 @@ import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/Base
 */
 contract SiloVaultIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
-    MintableToken reward2 = new MintableToken(18);
 
     SiloIncentivesController siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
@@ -31,7 +30,6 @@ contract SiloVaultIncentivesTest is IntegrationTest {
         _setCap(allMarkets[2], CAP);
 
         reward1.setOnDemand(true);
-        reward2.setOnDemand(true);
 
         // TODO add test when notifier will be wrong and expect no rewards (or revert?)
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
