@@ -20,6 +20,8 @@ library SiloCoreContracts {
     string public constant SILO_LENS = "SiloLens.sol";
     string public constant SILO_ROUTER = "SiloRouter.sol";
     string public constant INCENTIVES_CONTROLLER_FACTORY = "SiloIncentivesControllerFactory.sol";
+    string public constant INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY
+        = "SiloIncentivesControllerGaugeLikeFactory.sol";
 }
 
 /// @notice SiloCoreDeployments library
