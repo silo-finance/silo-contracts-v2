@@ -6,6 +6,8 @@ import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
+import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
+import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
@@ -36,7 +38,14 @@ contract SiloIncentivesControllerTest is Test {
         _rewardToken = address(new ERC20Mock());
         _notifier = address(new ERC20Mock());
 
-        _controller = new SiloIncentivesController(_owner, _notifier);
+        SiloIncentivesControllerFactoryDeploy deployer = new SiloIncentivesControllerFactoryDeploy();
+        deployer.disableDeploymentsSync();
+
+        SiloIncentivesControllerFactory factory = deployer.run();
+
+        _controller = SiloIncentivesController(factory.create(_owner, _notifier));
+
+        assertTrue(factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
