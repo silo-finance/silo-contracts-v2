@@ -26,9 +26,9 @@ interface IOwnable {
     function pendingOwner() external view returns (address);
 }
 
-/// @dev This interface is used for factorizing IMetaSiloStaticTyping and IMetaSilo.
-/// @dev Consider using the IMetaSilo interface instead of this one.
-interface IMetaSiloBase {
+/// @dev This interface is used for factorizing ISiloVaultStaticTyping and ISiloVault.
+/// @dev Consider using the ISiloVault interface instead of this one.
+interface ISiloVaultBase {
     function DECIMALS_OFFSET() external view returns (uint8);
 
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
@@ -180,9 +180,9 @@ interface IMetaSiloBase {
     function reallocate(MarketAllocation[] calldata _allocations) external;
 }
 
-/// @dev This interface is inherited by MetaSilo so that function signatures are checked by the compiler.
-/// @dev Consider using the IMetaSilo interface instead of this one.
-interface IMetaSiloStaticTyping is IMetaSiloBase {
+/// @dev This interface is inherited by SiloVault so that function signatures are checked by the compiler.
+/// @dev Consider using the ISiloVault interface instead of this one.
+interface ISiloVaultStaticTyping is ISiloVaultBase {
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 
@@ -200,8 +200,8 @@ interface IMetaSiloStaticTyping is IMetaSiloBase {
 /// @dev Forked with gratitude from Morpho Labs.
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
-/// @dev Use this interface for MetaSilo to have access to all the functions with the appropriate function signatures.
-interface IMetaSilo is IMetaSiloBase, IERC4626, IERC20Permit, IOwnable, IMulticall {
+/// @dev Use this interface for SiloVault to have access to all the functions with the appropriate function signatures.
+interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulticall {
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (MarketConfig memory);
 

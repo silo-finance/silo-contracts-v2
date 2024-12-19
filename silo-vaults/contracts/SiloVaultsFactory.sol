@@ -3,26 +3,26 @@ pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
-import {IMetaSilo} from "./interfaces/IMetaSilo.sol";
-import {IMetaSiloFactory} from "./interfaces/IMetaSiloFactory.sol";
+import {ISiloVault} from "./interfaces/ISiloVault.sol";
+import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
 
 import {EventsLib} from "./libraries/EventsLib.sol";
 
-import {MetaSilo} from "./MetaSilo.sol";
+import {SiloVault} from "./SiloVault.sol";
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 import {SiloIncentivesControllerCL} from "./incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
-/// @title MetaSiloFactory
+/// @title SiloVaultsFactory
 /// @dev Forked with gratitude from Morpho Labs.
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
-/// @notice This contract allows to create MetaSilo vaults, and to index them easily.
-contract MetaSiloFactory is IMetaSiloFactory {
+/// @notice This contract allows to create SiloVault vaults, and to index them easily.
+contract SiloVaultsFactory is ISiloVaultsFactory {
     /* STORAGE */
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
 
-    /// @inheritdoc IMetaSiloFactory
-    mapping(address => bool) public isMetaSilo;
+    /// @inheritdoc ISiloVaultsFactory
+    mapping(address => bool) public isSiloVault;
 
     /* CONSTRUCTOR */
 
@@ -32,27 +32,27 @@ contract MetaSiloFactory is IMetaSiloFactory {
 
     /* EXTERNAL */
 
-    /// @inheritdoc IMetaSiloFactory
-    function createMetaSilo(
+    /// @inheritdoc ISiloVaultsFactory
+    function createSiloVault(
         address initialOwner,
         uint256 initialTimelock,
         address asset,
         string memory name,
         string memory symbol,
         bytes32 salt
-    ) external returns (IMetaSilo metaSilo) {
+    ) external returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
         );
 
-        metaSilo = IMetaSilo(address(
-            new MetaSilo{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
+        siloVault = ISiloVault(address(
+            new SiloVault{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
 
-        isMetaSilo[address(metaSilo)] = true;
+        isSiloVault[address(siloVault)] = true;
 
-        emit EventsLib.CreateMetaSilo(
-            address(metaSilo), msg.sender, initialOwner, initialTimelock, asset, name, symbol, salt
+        emit EventsLib.CreateSiloVault(
+            address(siloVault), msg.sender, initialOwner, initialTimelock, asset, name, symbol, salt
         );
     }
 }

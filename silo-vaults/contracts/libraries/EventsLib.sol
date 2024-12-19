@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {PendingAddress} from "./PendingLib.sol";
-import {IMetaSilo} from "../interfaces/IMetaSilo.sol";
+import {ISiloVault} from "../interfaces/ISiloVault.sol";
 import {FlowCapsConfig} from "../interfaces/IPublicAllocator.sol";
 
 /// @title EventsLib
@@ -94,17 +94,17 @@ library EventsLib {
     /// @notice Emitted when an `amount` of `token` is transferred to the skim recipient by `caller`.
     event Skim(address indexed caller, address indexed token, uint256 amount);
 
-    /// @notice Emitted when a new MetaSilo market is created.
-    /// @param MetaSilo The address of the MetaSilo market.
+    /// @notice Emitted when a new SiloVault market is created.
+    /// @param SiloVault The address of the SiloVault market.
     /// @param caller The caller of the function.
-    /// @param initialOwner The initial owner of the MetaSilo market.
-    /// @param initialTimelock The initial timelock of the MetaSilo market.
+    /// @param initialOwner The initial owner of the SiloVault market.
+    /// @param initialTimelock The initial timelock of the SiloVault market.
     /// @param asset The address of the underlying asset.
-    /// @param name The name of the MetaSilo market.
-    /// @param symbol The symbol of the MetaSilo market.
-    /// @param salt The salt used for the MetaSilo market's CREATE2 address.
-    event CreateMetaSilo(
-        address indexed MetaSilo,
+    /// @param name The name of the SiloVault market.
+    /// @param symbol The symbol of the SiloVault market.
+    /// @param salt The salt used for the SiloVault market's CREATE2 address.
+    event CreateSiloVault(
+        address indexed SiloVault,
         address indexed caller,
         address initialOwner,
         uint256 initialTimelock,
@@ -116,23 +116,23 @@ library EventsLib {
 
     /// @notice Emitted during a public reallocation for each withdrawn-from market.
     event PublicWithdrawal(
-        address indexed sender, IMetaSilo indexed vault, IERC4626 indexed market, uint256 withdrawnAssets
+        address indexed sender, ISiloVault indexed vault, IERC4626 indexed market, uint256 withdrawnAssets
     );
 
     /// @notice Emitted at the end of a public reallocation.
     event PublicReallocateTo(
-        address indexed sender, IMetaSilo indexed vault, IERC4626 indexed supplyMarket, uint256 suppliedAssets
+        address indexed sender, ISiloVault indexed vault, IERC4626 indexed supplyMarket, uint256 suppliedAssets
     );
 
     /// @notice Emitted when the admin is set for a vault.
-    event SetAdmin(address indexed sender, IMetaSilo indexed vault, address admin);
+    event SetAdmin(address indexed sender, ISiloVault indexed vault, address admin);
 
     /// @notice Emitted when the fee is set for a vault.
-    event SetFee(address indexed sender, IMetaSilo indexed vault, uint256 fee);
+    event SetFee(address indexed sender, ISiloVault indexed vault, uint256 fee);
 
     /// @notice Emitted when the fee is transfered for a vault.
-    event TransferFee(address indexed sender, IMetaSilo indexed vault, uint256 amount, address indexed feeRecipient);
+    event TransferFee(address indexed sender, ISiloVault indexed vault, uint256 amount, address indexed feeRecipient);
 
     /// @notice Emitted when the flow caps are set for a vault.
-    event SetFlowCaps(address indexed sender, IMetaSilo indexed vault, FlowCapsConfig[] config);
+    event SetFlowCaps(address indexed sender, ISiloVault indexed vault, FlowCapsConfig[] config);
 }

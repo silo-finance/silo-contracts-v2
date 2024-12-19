@@ -15,10 +15,10 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
-import {MetaSilo} from "../../../contracts/MetaSilo.sol";
+import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
 
-import {IMetaSilo} from "../../../contracts/interfaces/IMetaSilo.sol";
+import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
 import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
 
@@ -51,7 +51,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
     IERC4626 internal idleMarket;
 
-    IMetaSilo internal vault;
+    ISiloVault internal vault;
 
     function setUp() public virtual {
         _createNewMarkets();
@@ -61,22 +61,22 @@ contract BaseTest is SiloLittleHelper, Test {
 
         emit log_named_address("loanToken", address(loanToken));
 
-        vault = IMetaSilo(address(
-            new MetaSilo(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "MetaSilo Vault", "MMV")
+        vault = ISiloVault(address(
+            new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV")
         ));
 
         idleMarket = new IdleVault(address(vault), address(loanToken), "idle vault", "idle");
     }
 
-    function createMetaSilo(
+    function createSiloVault(
         address owner,
         uint256 initialTimelock,
         address asset,
         string memory name,
         string memory symbol
-    ) public returns (IMetaSilo) {
-        return IMetaSilo(address(
-            new MetaSilo(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
+    ) public returns (ISiloVault) {
+        return ISiloVault(address(
+            new SiloVault(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
         ));
     }
 

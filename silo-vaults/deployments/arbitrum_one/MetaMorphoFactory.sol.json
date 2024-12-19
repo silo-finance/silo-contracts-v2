@@ -34,11 +34,11 @@
           "type": "bytes32"
         }
       ],
-      "name": "createMetaSilo",
+      "name": "createSiloVault",
       "outputs": [
         {
-          "internalType": "contract IMetaSilo",
-          "name": "MetaSilo",
+          "internalType": "contract ISiloVault",
+          "name": "SiloVault",
           "type": "address"
         }
       ],
@@ -53,7 +53,7 @@
           "type": "address"
         }
       ],
-      "name": "isMetaSilo",
+      "name": "isSiloVault",
       "outputs": [
         {
           "internalType": "bool",
@@ -70,7 +70,7 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "MetaSilo",
+          "name": "SiloVault",
           "type": "address"
         },
         {
@@ -116,7 +116,7 @@
           "type": "bytes32"
         }
       ],
-      "name": "CreateMetaSilo",
+      "name": "CreateSiloVault",
       "type": "event"
     }
   ],

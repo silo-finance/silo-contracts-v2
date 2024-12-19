@@ -13,7 +13,7 @@ import {
     IPublicAllocatorStaticTyping,
     IPublicAllocatorBase
 } from "./interfaces/IPublicAllocator.sol";
-import {IMetaSilo, MarketAllocation} from "./interfaces/IMetaSilo.sol";
+import {ISiloVault, MarketAllocation} from "./interfaces/ISiloVault.sol";
 
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
@@ -21,26 +21,26 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @title PublicAllocator
 /// @author Forked with gratitude from Morpho Labs.
 /// @custom:contact security@morpho.org
-/// @notice Publicly callable allocator for MetaSilo vaults.
+/// @notice Publicly callable allocator for SiloVault vaults.
 contract PublicAllocator is IPublicAllocatorStaticTyping {
     using UtilsLib for uint256;
     
     /* STORAGE */
 
     /// @inheritdoc IPublicAllocatorBase
-    mapping(IMetaSilo => address) public admin;
+    mapping(ISiloVault => address) public admin;
     /// @inheritdoc IPublicAllocatorBase
-    mapping(IMetaSilo => uint256) public fee;
+    mapping(ISiloVault => uint256) public fee;
     /// @inheritdoc IPublicAllocatorBase
-    mapping(IMetaSilo => uint256) public accruedFee;
+    mapping(ISiloVault => uint256) public accruedFee;
     /// @inheritdoc IPublicAllocatorStaticTyping
-    mapping(IMetaSilo => mapping(IERC4626 => FlowCaps)) public flowCaps;
+    mapping(ISiloVault => mapping(IERC4626 => FlowCaps)) public flowCaps;
 
     /* MODIFIER */
 
     /// @dev Reverts if the caller is not the admin nor the owner of this vault.
-    modifier onlyAdminOrVaultOwner(IMetaSilo vault) {
-        if (msg.sender != admin[vault] && msg.sender != IMetaSilo(vault).owner()) {
+    modifier onlyAdminOrVaultOwner(ISiloVault vault) {
+        if (msg.sender != admin[vault] && msg.sender != ISiloVault(vault).owner()) {
             revert ErrorsLib.NotAdminNorVaultOwner();
         }
         _;
@@ -49,21 +49,21 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     /* ADMIN OR VAULT OWNER ONLY */
 
     /// @inheritdoc IPublicAllocatorBase
-    function setAdmin(IMetaSilo vault, address newAdmin) external onlyAdminOrVaultOwner(vault) {
+    function setAdmin(ISiloVault vault, address newAdmin) external onlyAdminOrVaultOwner(vault) {
         if (admin[vault] == newAdmin) revert ErrorsLib.AlreadySet();
         admin[vault] = newAdmin;
         emit EventsLib.SetAdmin(msg.sender, vault, newAdmin);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFee(IMetaSilo vault, uint256 newFee) external onlyAdminOrVaultOwner(vault) {
+    function setFee(ISiloVault vault, uint256 newFee) external onlyAdminOrVaultOwner(vault) {
         if (fee[vault] == newFee) revert ErrorsLib.AlreadySet();
         fee[vault] = newFee;
         emit EventsLib.SetFee(msg.sender, vault, newFee);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFlowCaps(IMetaSilo vault, FlowCapsConfig[] calldata config) external onlyAdminOrVaultOwner(vault) {
+    function setFlowCaps(ISiloVault vault, FlowCapsConfig[] calldata config) external onlyAdminOrVaultOwner(vault) {
         for (uint256 i = 0; i < config.length; i++) {
             FlowCapsConfig memory cfg = config[i];
             IERC4626 market = cfg.market;
@@ -82,7 +82,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function transferFee(IMetaSilo vault, address payable feeRecipient) external onlyAdminOrVaultOwner(vault) {
+    function transferFee(ISiloVault vault, address payable feeRecipient) external onlyAdminOrVaultOwner(vault) {
         uint256 claimed = accruedFee[vault];
         accruedFee[vault] = 0;
         feeRecipient.transfer(claimed);
@@ -92,7 +92,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     /* PUBLIC */
 
     /// @inheritdoc IPublicAllocatorBase
-    function reallocateTo(IMetaSilo vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
+    function reallocateTo(ISiloVault vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
         external
         payable
     {

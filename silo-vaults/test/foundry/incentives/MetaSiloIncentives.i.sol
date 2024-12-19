@@ -14,9 +14,9 @@ import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/Base
 
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaSiloIncentivesTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc SiloVaultIncentivesTest -vvv
 */
-contract MetaSiloIncentivesTest is IntegrationTest {
+contract SiloVaultIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
     MintableToken reward2 = new MintableToken(18);
 

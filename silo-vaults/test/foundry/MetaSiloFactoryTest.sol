@@ -3,27 +3,27 @@ pragma solidity ^0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
-import {MetaSilo} from "../../contracts/MetaSilo.sol";
-import {MetaSiloFactory} from "../../contracts/MetaSiloFactory.sol";
-import {IMetaSilo} from "../../contracts/interfaces/IMetaSilo.sol";
+import {SiloVault} from "../../contracts/SiloVault.sol";
+import {SiloVaultsFactory} from "../../contracts/SiloVaultsFactory.sol";
+import {ISiloVault} from "../../contracts/interfaces/ISiloVault.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaSiloFactoryTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc SiloVaultsFactoryTest -vvv
 */
-contract MetaSiloFactoryTest is IntegrationTest {
-    MetaSiloFactory factory;
+contract SiloVaultsFactoryTest is IntegrationTest {
+    SiloVaultsFactory factory;
 
     function setUp() public override {
         super.setUp();
 
-        factory = new MetaSiloFactory();
+        factory = new SiloVaultsFactory();
     }
 
-    function testCreateMetaSilo(
+    function testCreateSiloVault(
         address initialOwner,
         uint256 initialTimelock,
         string memory name,
@@ -36,28 +36,28 @@ contract MetaSiloFactoryTest is IntegrationTest {
         address incentivesModule = Clones.predictDeterministicAddress(factory.VAULT_INCENTIVES_MODULE_IMPLEMENTATION(), salt, address(factory));
 
         bytes32 initCodeHash = hashInitCode(
-            type(MetaSilo).creationCode,
+            type(SiloVault).creationCode,
             abi.encode(initialOwner, initialTimelock, incentivesModule, address(loanToken), name, symbol)
         );
         address expectedAddress = vm.computeCreate2Address(salt, initCodeHash, address(factory));
 
         vm.expectEmit(address(factory));
-        emit EventsLib.CreateMetaSilo(
+        emit EventsLib.CreateSiloVault(
             expectedAddress, address(this), initialOwner, initialTimelock, address(loanToken), name, symbol, salt
         );
 
-        IMetaSilo metaSilo =
-            factory.createMetaSilo(initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
+        ISiloVault SiloVault =
+            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
 
-        assertEq(expectedAddress, address(metaSilo), "computeCreate2Address");
+        assertEq(expectedAddress, address(SiloVault), "computeCreate2Address");
 
-        assertTrue(factory.isMetaSilo(address(metaSilo)), "isMetaSilo");
+        assertTrue(factory.isSiloVault(address(SiloVault)), "isSiloVault");
 
-        assertEq(metaSilo.owner(), initialOwner, "owner");
-        assertEq(metaSilo.timelock(), initialTimelock, "timelock");
-        assertEq(metaSilo.asset(), address(loanToken), "asset");
-        assertEq(metaSilo.name(), name, "name");
-        assertEq(metaSilo.symbol(), symbol, "symbol");
-        assertTrue(address(metaSilo.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
+        assertEq(SiloVault.owner(), initialOwner, "owner");
+        assertEq(SiloVault.timelock(), initialTimelock, "timelock");
+        assertEq(SiloVault.asset(), address(loanToken), "asset");
+        assertEq(SiloVault.name(), name, "name");
+        assertEq(SiloVault.symbol(), symbol, "symbol");
+        assertTrue(address(SiloVault.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
     }
 }
