@@ -437,7 +437,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
-    function _onlySiloOrTokenOrHookReceiver() internal view override {
+    function _onlySiloOrTokenOrHookReceiver() internal view virtual override {
         if (msg.sender != _SILO0 &&
             msg.sender != _SILO1 &&
             msg.sender != _HOOK_RECEIVER &&

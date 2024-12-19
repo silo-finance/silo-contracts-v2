@@ -148,7 +148,12 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOffReentrancyProtection();
     }
 
-    function approve(address spender, uint256 value) public override(ERC20Upgradeable, IERC20) returns (bool result) {
+    function approve(address spender, uint256 value)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20)
+        returns (bool result)
+    {
         NonReentrantLib.nonReentrant(_getSiloConfig());
 
         result = ERC20Upgradeable.approve(spender, value);

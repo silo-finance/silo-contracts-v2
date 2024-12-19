@@ -32,7 +32,7 @@ contract DexSwap {
     /// @param _sellToken The `sellTokenAddress` field from the API response.
     /// @param _spender The `allowanceTarget` field from the API response.
     /// @param _swapCallData The `data` field from the API response.
-    function fillQuote(address _sellToken, address _spender, bytes memory _swapCallData) public {
+    function fillQuote(address _sellToken, address _spender, bytes memory _swapCallData) public virtual {
         IERC20(_sellToken).approve(_spender, type(uint256).max);
 
         // Call the encoded swap function call on the contract at `swapTarget`

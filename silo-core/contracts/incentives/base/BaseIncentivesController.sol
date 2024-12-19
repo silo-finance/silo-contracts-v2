@@ -41,6 +41,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     /// @inheritdoc ISiloIncentivesController
     function createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput)
         external
+        virtual
         onlyOwner
     {
         _createIncentiveProgram(_incentivesProgramInput);
@@ -51,7 +52,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         string calldata _incentivesProgram,
         uint40 _distributionEnd,
         uint104 _emissionPerSecond
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
 
         bytes32 programId = getProgramId(_incentivesProgram);
@@ -74,7 +75,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         address _user,
         uint256 _totalSupply,
         uint256 _userBalance
-    ) public onlyNotifier {
+    ) public virtual onlyNotifier {
         uint256 accruedRewards = _updateUserAssetInternal(_incentivesProgramId, _user, _userBalance, _totalSupply);
 
         if (accruedRewards != 0) {
@@ -94,6 +95,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     function getRewardsBalance(address _user, string calldata _programName)
         external
         view
+        virtual
         returns (uint256 unclaimedRewards)
     {
         bytes32 programId = getProgramId(_programName);
@@ -107,6 +109,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     function getRewardsBalance(address _user, string[] calldata _programNames)
         external
         view
+        virtual
         returns (uint256 unclaimedRewards)
     {
         address rewardsToken;
@@ -132,6 +135,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     function _getRewardsBalance(address _user, bytes32 _programId, uint256 _stakedByUser, uint256 _totalStaked)
         internal
         view
+        virtual
         returns (uint256 unclaimedRewards)
     {
         unclaimedRewards = _usersUnclaimedRewards[_user][_programId];
@@ -139,7 +143,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function claimRewards(address _to) external returns (AccruedRewards[] memory accruedRewards) {
+    function claimRewards(address _to) external virtual returns (AccruedRewards[] memory accruedRewards) {
         if (_to == address(0)) revert InvalidToAddress();
 
         accruedRewards = _accrueRewards(msg.sender);
@@ -149,6 +153,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     /// @inheritdoc ISiloIncentivesController
     function claimRewards(address _to, string[] calldata _programNames)
         external
+        virtual
         returns (AccruedRewards[] memory accruedRewards)
     {
         if (_to == address(0)) revert InvalidToAddress();
@@ -161,6 +166,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     /// @inheritdoc ISiloIncentivesController
     function claimRewardsOnBehalf(address _user, address _to, string[] calldata _programNames)
         external
+        virtual
         onlyAuthorizedClaimers(msg.sender, _user)
         inputsValidation(_user, _to)
         returns (AccruedRewards[] memory accruedRewards)
@@ -171,13 +177,13 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function setClaimer(address _user, address _caller) external onlyOwner {
+    function setClaimer(address _user, address _caller) external virtual onlyOwner {
         _authorizedClaimers[_user] = _caller;
         emit ClaimerSet(_user, _caller);
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function getClaimer(address _user) external view returns (address) {
+    function getClaimer(address _user) external view virtual returns (address) {
         return _authorizedClaimers[_user];
     }
 
@@ -185,6 +191,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     function getUserUnclaimedRewards(address _user, string calldata _programName)
         external
         view
+        virtual
         returns (uint256)
     {
         bytes32 programId = getProgramId(_programName);
@@ -202,7 +209,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         address user,
         address to,
         AccruedRewards[] memory accruedRewards
-    ) internal {
+    ) internal virtual {
         for (uint256 i = 0; i < accruedRewards.length; i++) {
             uint256 unclaimedRewards = _usersUnclaimedRewards[user][accruedRewards[i].programId];
 
@@ -236,7 +243,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
      */
     function _createIncentiveProgram(
         DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput
-    ) internal {
+    ) internal virtual {
         bytes32 programId = getProgramId(_incentivesProgramInput.name);
 
         require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
@@ -256,7 +263,12 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
      * @param _programNames The program names
      * @return programIds The program ids
      */
-    function _getProgramsIds(string[] calldata _programNames) internal pure returns (bytes32[] memory programIds) {
+    function _getProgramsIds(string[] calldata _programNames)
+        internal
+        pure
+        virtual
+        returns (bytes32[] memory programIds)
+    {
         programIds = new bytes32[](_programNames.length);
 
         for (uint256 i = 0; i < _programNames.length; i++) {

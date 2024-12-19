@@ -48,7 +48,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     function setDistributionEnd(
         string calldata _incentivesProgram,
         uint40 _distributionEnd
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         incentivesPrograms[incentivesProgramId].distributionEnd = _distributionEnd;
 
@@ -56,13 +56,19 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     }
 
     /// @inheritdoc IDistributionManager
-    function getDistributionEnd(string calldata _incentivesProgram) external view override returns (uint256) {
+    function getDistributionEnd(string calldata _incentivesProgram) external view virtual override returns (uint256) {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         return incentivesPrograms[incentivesProgramId].distributionEnd;
     }
 
     /// @inheritdoc IDistributionManager
-    function getUserData(address _user, string calldata _incentivesProgram) public view override returns (uint256) {
+    function getUserData(address _user, string calldata _incentivesProgram)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         return incentivesPrograms[incentivesProgramId].users[_user];
     }
@@ -71,6 +77,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     function incentivesProgram(string calldata _incentivesProgram)
         external
         view
+        virtual
         returns (IncentiveProgramDetails memory details)
     {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
@@ -85,7 +92,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     }
 
     /// @inheritdoc IDistributionManager
-    function getAllProgramsNames() external view returns (string[] memory programsNames) {
+    function getAllProgramsNames() external view virtual returns (string[] memory programsNames) {
         uint256 length = _incentivesProgramIds.values().length;
         programsNames = new string[](length);
 
@@ -95,7 +102,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     }
 
     /// @inheritdoc IDistributionManager
-    function getProgramId(string memory _programName) public pure returns (bytes32) {
+    function getProgramId(string memory _programName) public pure virtual returns (bytes32) {
         require(bytes(_programName).length > 0, InvalidIncentivesProgramName());
         require(bytes(_programName).length <= 42, TooLongProgramName());
 
@@ -103,7 +110,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     }
 
     
-    function getProgramName(bytes32 _programId) public pure returns (string memory) {
+    function getProgramName(bytes32 _programId) public pure virtual returns (string memory) {
         return string(TokenHelper.removeZeros(abi.encodePacked(_programId)));
     }
 
@@ -116,7 +123,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     function _updateAssetStateInternal(
         bytes32 incentivesProgramId,
         uint256 totalStaked
-    ) internal returns (uint256) {
+    ) internal virtual returns (uint256) {
         uint256 oldIndex = incentivesPrograms[incentivesProgramId].index;
         uint256 emissionPerSecond = incentivesPrograms[incentivesProgramId].emissionPerSecond;
         uint256 lastUpdateTimestamp = incentivesPrograms[incentivesProgramId].lastUpdateTimestamp;
@@ -155,7 +162,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         address user,
         uint256 stakedByUser,
         uint256 totalStaked
-    ) internal returns (uint256) {
+    ) internal virtual returns (uint256) {
         uint256 userIndex = incentivesPrograms[incentivesProgramId].users[user];
         uint256 accruedRewards = 0;
 
@@ -181,6 +188,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
      */
     function _accrueRewards(address _user)
         internal
+        virtual
         returns (AccruedRewards[] memory accruedRewards)
     {
         accruedRewards = _accrueRewardsForPrograms(_user, _incentivesProgramIds.values());
@@ -194,6 +202,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
      */
     function _accrueRewardsForPrograms(address _user, bytes32[] memory _programIds)
         internal
+        virtual
         returns (AccruedRewards[] memory accruedRewards)
     {
         uint256 length = _programIds.length;
@@ -208,6 +217,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     function _accrueRewards(address _user, bytes32 _programId, uint256 _totalStaked, uint256 _userStaked)
         internal
+        virtual
         returns (AccruedRewards memory accruedRewards)
     {
         uint256 rewards = _updateUserAssetInternal(
@@ -235,6 +245,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     function _getUnclaimedRewards(bytes32 programId, address user, uint256 stakedByUser, uint256 totalStaked)
         internal
         view
+        virtual
         returns (uint256 accruedRewards)
     {
         uint256 userIndex = incentivesPrograms[programId].users[user];
@@ -261,7 +272,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 principalUserBalance,
         uint256 reserveIndex,
         uint256 userIndex
-    ) internal pure returns (uint256 rewards) {
+    ) internal pure virtual returns (uint256 rewards) {
         rewards = principalUserBalance * (reserveIndex - userIndex);
         unchecked { rewards /= TEN_POW_PRECISION; }
     }
@@ -282,7 +293,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 lastUpdateTimestamp,
         uint256 distributionEnd,
         uint256 totalBalance
-    ) internal view returns (uint256 newIndex) {
+    ) internal view virtual returns (uint256 newIndex) {
         if (
             emissionPerSecond == 0 ||
             totalBalance == 0 ||

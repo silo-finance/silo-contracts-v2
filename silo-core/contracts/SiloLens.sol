@@ -58,6 +58,7 @@ contract SiloLens is ISiloLens {
     function collateralBalanceOfUnderlying(ISilo _silo, address, address _borrower)
         external
         view
+        virtual
         returns (uint256 borrowerCollateral)
     {
         return SiloLensLib.collateralBalanceOfUnderlying(_silo, _borrower);
@@ -67,17 +68,23 @@ contract SiloLens is ISiloLens {
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
         external
         view
+        virtual
         returns (uint256 borrowerCollateral)
     {
         return SiloLensLib.collateralBalanceOfUnderlying(_silo, _borrower);
     }
 
     /// @inheritdoc ISiloLens
-    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view returns (uint256) {
+    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view virtual returns (uint256) {
         return _silo.maxRepay(_borrower);
     }
 
-    function debtBalanceOfUnderlying(ISilo _silo, address _borrower) public view returns (uint256 borrowerDebt) {
+    function debtBalanceOfUnderlying(ISilo _silo, address _borrower)
+        public
+        view
+        virtual
+        returns (uint256 borrowerDebt)
+    {
         return _silo.maxRepay(_borrower);
     }
 }

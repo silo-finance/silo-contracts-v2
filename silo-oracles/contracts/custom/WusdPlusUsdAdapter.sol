@@ -37,6 +37,7 @@ contract WusdPlusUsdAdapter is AggregatorV3Interface {
     function latestRoundData()
         external
         view
+        virtual
         returns (
             uint80 roundId,
             int256 answer,
@@ -65,17 +66,17 @@ contract WusdPlusUsdAdapter is AggregatorV3Interface {
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function decimals() external view returns (uint8) {
+    function decimals() external view virtual returns (uint8) {
         return USD_PLUS_USD_AGGREGATOR_DECIMALS;
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function description() external pure returns (string memory) {
+    function description() external pure virtual returns (string memory) {
         return "WUSD+ / USD";
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function version() external pure returns (uint256) {
+    function version() external pure virtual returns (uint256) {
         return 1;
     }
 
@@ -83,6 +84,7 @@ contract WusdPlusUsdAdapter is AggregatorV3Interface {
     function getRoundData(uint80)
         external
         pure
+        virtual
         returns (
             uint80,
             int256,
