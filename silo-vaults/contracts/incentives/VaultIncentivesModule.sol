@@ -20,7 +20,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     constructor(address _owner) Ownable(_owner) {}
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {
+    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyOwner {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
 
@@ -34,7 +34,11 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external onlyOwner {
+    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic)
+        external
+        virtual
+        onlyOwner
+    {
         require(_claimingLogics[_market].contains(address(_logic)), LogicNotFound());
 
         _claimingLogics[_market].remove(address(_logic));
@@ -47,7 +51,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function addNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+    function addNotificationReceiver(INotificationReceiver _notificationReceiver) external virtual onlyOwner {
         require(address(_notificationReceiver) != address(0), AddressZero());
         require(_notificationReceivers.add(address(_notificationReceiver)), NotificationReceiverAlreadyAdded());
 
@@ -55,14 +59,14 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+    function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external virtual onlyOwner {
         require(_notificationReceivers.remove(address(_notificationReceiver)), NotificationReceiverNotFound());
 
         emit NotificationReceiverRemoved(address(_notificationReceiver));
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getAllIncentivesClaimingLogics() external view returns (address[] memory logics) {
+    function getAllIncentivesClaimingLogics() external view virtual returns (address[] memory logics) {
         address[] memory markets = _markets.values();
 
         logics = _getAllIncentivesClaimingLogics(markets);
@@ -72,23 +76,24 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     function getMarketsIncentivesClaimingLogics(address[] calldata _marketsInput)
         external
         view
+        virtual
         returns (address[] memory logics)
     {
         logics = _getAllIncentivesClaimingLogics(_marketsInput);
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getNotificationReceivers() external view returns (address[] memory receivers) {
+    function getNotificationReceivers() external view virtual returns (address[] memory receivers) {
         receivers = _notificationReceivers.values();
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getConfiguredMarkets() external view returns (address[] memory markets) {
+    function getConfiguredMarkets() external view virtual returns (address[] memory markets) {
         markets = _markets.values();
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getMarketIncentivesClaimingLogics(address market) external view returns (address[] memory logics) {
+    function getMarketIncentivesClaimingLogics(address market) external view virtual returns (address[] memory logics) {
         logics = _claimingLogics[market].values();
     }
 
@@ -98,6 +103,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     function _getAllIncentivesClaimingLogics(address[] memory _marketsInput)
         internal
         view
+        virtual
         returns (address[] memory logics)
     {
         uint256 totalLogics;

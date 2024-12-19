@@ -494,7 +494,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ISiloVaultBase
-    function claimRewards() public nonReentrant {
+    function claimRewards() public virtual nonReentrant {
         address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
         bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
 

@@ -49,21 +49,25 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     /* ADMIN OR VAULT OWNER ONLY */
 
     /// @inheritdoc IPublicAllocatorBase
-    function setAdmin(ISiloVault vault, address newAdmin) external onlyAdminOrVaultOwner(vault) {
+    function setAdmin(ISiloVault vault, address newAdmin) external virtual onlyAdminOrVaultOwner(vault) {
         if (admin[vault] == newAdmin) revert ErrorsLib.AlreadySet();
         admin[vault] = newAdmin;
         emit EventsLib.SetAdmin(msg.sender, vault, newAdmin);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFee(ISiloVault vault, uint256 newFee) external onlyAdminOrVaultOwner(vault) {
+    function setFee(ISiloVault vault, uint256 newFee) external virtual onlyAdminOrVaultOwner(vault) {
         if (fee[vault] == newFee) revert ErrorsLib.AlreadySet();
         fee[vault] = newFee;
         emit EventsLib.SetFee(msg.sender, vault, newFee);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFlowCaps(ISiloVault vault, FlowCapsConfig[] calldata config) external onlyAdminOrVaultOwner(vault) {
+    function setFlowCaps(ISiloVault vault, FlowCapsConfig[] calldata config)
+        external
+        virtual
+        onlyAdminOrVaultOwner(vault)
+    {
         for (uint256 i = 0; i < config.length; i++) {
             FlowCapsConfig memory cfg = config[i];
             IERC4626 market = cfg.market;
@@ -82,7 +86,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function transferFee(ISiloVault vault, address payable feeRecipient) external onlyAdminOrVaultOwner(vault) {
+    function transferFee(ISiloVault vault, address payable feeRecipient) external virtual onlyAdminOrVaultOwner(vault) {
         uint256 claimed = accruedFee[vault];
         accruedFee[vault] = 0;
         feeRecipient.transfer(claimed);
@@ -95,6 +99,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     function reallocateTo(ISiloVault vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
         external
         payable
+        virtual
     {
         if (msg.value != fee[vault]) revert ErrorsLib.IncorrectFee();
         if (msg.value > 0) accruedFee[vault] += msg.value;
