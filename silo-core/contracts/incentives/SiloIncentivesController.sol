@@ -34,7 +34,7 @@ contract SiloIncentivesController is BaseIncentivesController {
         uint256 _recipientBalance,
         uint256 _totalSupply,
         uint256 _amount
-    ) external onlyNotifier {
+    ) external virtual onlyNotifier {
         uint256 numberOfPrograms = _incentivesProgramIds.length();
 
         if (_sender == _recipient || numberOfPrograms == 0) {
