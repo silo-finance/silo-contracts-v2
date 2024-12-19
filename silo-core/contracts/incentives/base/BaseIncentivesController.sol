@@ -263,7 +263,12 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
      * @param _programNames The program names
      * @return programIds The program ids
      */
-    function _getProgramsIds(string[] calldata _programNames) internal pure virtual returns (bytes32[] memory programIds) {
+    function _getProgramsIds(string[] calldata _programNames)
+        internal
+        pure
+        virtual
+        returns (bytes32[] memory programIds)
+    {
         programIds = new bytes32[](_programNames.length);
 
         for (uint256 i = 0; i < _programNames.length; i++) {
