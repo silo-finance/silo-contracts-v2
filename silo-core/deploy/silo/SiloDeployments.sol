@@ -5,6 +5,7 @@ import {KeyValueStorage} from "silo-foundry-utils/key-value/KeyValueStorage.sol"
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 library SiloConfigsNames {
+    string public constant LOCAL_VAULT_INCENTIVES = "Local_VaultIncentives";
     string public constant LOCAL_NO_ORACLE_SILO = "Local_noOracle";
     string public constant LOCAL_NO_ORACLE_NO_LTV_SILO = "Local_noOracleNoLtv";
     string public constant LOCAL_NOT_BORROWABLE = "Local_notBorrowable";

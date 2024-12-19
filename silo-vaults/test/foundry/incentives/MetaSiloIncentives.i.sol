@@ -20,6 +20,7 @@ contract SiloVaultIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
     MintableToken reward2 = new MintableToken(18);
 
+    SiloIncentivesController siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
 
     function setUp() public override {
@@ -34,6 +35,9 @@ contract SiloVaultIncentivesTest is IntegrationTest {
 
         // TODO add test when notifier will be wrong and expect no rewards (or revert?)
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
+
+        // we need separate deployment for each silo
+        siloIncentivesController = new SiloIncentivesController(address(this), address(allMarkets[0]));
     }
 
     /*
@@ -74,6 +78,47 @@ contract SiloVaultIncentivesTest is IntegrationTest {
             emissionPerSecond: uint104(rewardsPerSec),
             distributionEnd: uint40(block.timestamp + 10)
         }));
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
+
+        // this call is expected on depositing
+        vm.expectCall(
+            address(vaultIncentivesController),
+            abi.encodeWithSelector(
+                INotificationReceiver.afterTokenTransfer.selector,
+                address(0),
+                0,
+                user,
+                1,
+                1,
+                1
+            )
+        );
+
+        // does not revert without incentives setup
+        vm.prank(user);
+        vault.deposit(1, user);
+
+        vm.warp(block.timestamp + 1);
+
+        assertEq(vaultIncentivesController.getRewardsBalance(user, "x"), rewardsPerSec, "expected reward after 1s");
+
+        vm.prank(user);
+        vaultIncentivesController.claimRewards(user);
+
+        assertEq(reward1.balanceOf(user), rewardsPerSec, "user can claim standard reward");
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_incentives_immediateDistribution -vv
+    */
+    function test_vaults_incentives_immediateDistribution() public {
+        address user = makeAddr("user");
+
+        uint256 rewardsPerSec = 3;
+
+        // and add immediate distribution
 
         vm.prank(OWNER);
         vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));

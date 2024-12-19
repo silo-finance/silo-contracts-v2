@@ -8,6 +8,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -88,10 +89,10 @@ contract BaseTest is SiloLittleHelper, Test {
 
         _override.token0 = address(collateralToken);
         _override.token1 = address(loanToken);
-        _override.configName = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
+        _override.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
 
         for (uint256 i; i < NB_MARKETS; ++i) {
-            (, ISilo silo0_, ISilo silo1_,,,) = siloFixture.deploy_local(_override);
+            (, ISilo silo0_, ISilo silo1_,,, address hook) = siloFixture.deploy_local(_override);
             vm.label(address(silo0_), string.concat("Market#", Strings.toString(i)));
 
             allMarkets.push(silo1_);
@@ -101,6 +102,7 @@ contract BaseTest is SiloLittleHelper, Test {
                 // setup default values for silo fixture
                 silo0 = silo0_;
                 silo1 = silo1_;
+                partialLiquidation = IPartialLiquidation(hook);
             }
         }
 
