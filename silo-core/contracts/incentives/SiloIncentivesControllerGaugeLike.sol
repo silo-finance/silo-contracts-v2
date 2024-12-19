@@ -50,7 +50,7 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
     /// @inheritdoc IGauge
     function unkillGauge() external virtual onlyOwner {
         _isKilled = false;
-        emit GaugeUnkilled();
+        emit GaugeUnKilled();
     }
 
     /// @inheritdoc IGauge

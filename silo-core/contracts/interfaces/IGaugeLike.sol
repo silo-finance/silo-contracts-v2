@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 interface IGaugeLike {
     event GaugeKilled();
-    event GaugeUnkilled();
+    event GaugeUnKilled();
 
     function afterTokenTransfer(
         address _sender,

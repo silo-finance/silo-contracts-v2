@@ -37,7 +37,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     ISiloIncentivesControllerGaugeLikeFactory internal _factory;
 
     event GaugeKilled();
-    event GaugeUnkilled();
+    event GaugeUnKilled();
 
     function setUp() public {
         SiloIncentivesControllerGaugeLikeFactoryDeploy deploy = new SiloIncentivesControllerGaugeLikeFactoryDeploy();
@@ -105,7 +105,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
         assertTrue(IGauge(gaugeLike).is_killed(), "GaugeLike should be killed");
 
         vm.expectEmit(true, true, true, true);
-        emit GaugeUnkilled();
+        emit GaugeUnKilled();
 
         vm.prank(_owner);
         IGauge(gaugeLike).unkillGauge();
