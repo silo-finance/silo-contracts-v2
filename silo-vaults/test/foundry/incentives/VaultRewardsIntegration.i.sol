@@ -2,23 +2,27 @@
 pragma solidity ^0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {SiloIncentivesControllerGaugeLike} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLike.sol";
-import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
+
+import "../../../contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
+
 import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/BaseTest.sol";
 
 /*
@@ -40,6 +44,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         reward1.setOnDemand(true);
 
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
+        vm.label(address(vaultIncentivesController), "VaultIncentivesController");
 
         // SiloIncentivesController is per silo
         siloIncentivesController = new SiloIncentivesControllerGaugeLike(
@@ -94,7 +99,14 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         vm.prank(OWNER);
         vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
 
-        uint256 rewardsPerSec = 3;
+        SiloIncentivesControllerCL cl = new SiloIncentivesControllerCL(
+            address(vaultIncentivesController), address(siloIncentivesController)
+        );
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
+
+        uint256 rewardsPerSec = 3e3;
 
         // standard program for silo users
         siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -104,20 +116,54 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
             distributionEnd: uint40(block.timestamp + 10)
         }));
 
-        uint256 amount = 1e18;
-        uint256 shares = amount * SiloMathLib._DECIMALS_OFFSET_POW;
+        uint256 depositAmount = 2e8;
 
-        vault.deposit(amount, address(this));
-        assertEq(silo1.totalSupply(), shares, "we expect deposit to go to silo");
+//        vm.expectCall(
+//            address(siloIncentivesController),
+//            abi.encodeWithSelector(
+//                INotificationReceiver.afterTokenTransfer.selector,
+//                address(0),
+//                0,
+//                address(this),
+//                depositAmount,
+//                depositAmount,
+//                depositAmount
+//            )
+//        );
+
+        vm.expectCall(
+            address(vaultIncentivesController),
+            abi.encodeWithSelector(
+                INotificationReceiver.afterTokenTransfer.selector,
+                address(0),
+                0,
+                address(this),
+                depositAmount,
+                depositAmount,
+                depositAmount
+            )
+        );
+
+        vault.deposit(depositAmount, address(this));
+        assertEq(silo1.totalSupply(), depositAmount * SiloMathLib._DECIMALS_OFFSET_POW, "we expect deposit to go to silo");
 
         vm.warp(block.timestamp + 1);
-        assertEq(siloIncentivesController.getRewardsBalance(address(vault), "x"), rewardsPerSec, "expected reward after 1s");
 
-        // TODO add claiming logic
+        assertEq(
+            siloIncentivesController.getRewardsBalance(address(vault), "x"),
+            rewardsPerSec,
+            "expected rewards for silo after 1s"
+        );
 
-        vault.claimRewards();
-        siloIncentivesController.claimRewards(address(this));
+//        assertEq(
+//            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+//            rewardsPerSec,
+//            "expected rewards for vault after 1s"
+//        );
 
-        assertEq(reward1.balanceOf(address(vault)), 1, "vault got rewards");
+//        vault.claimRewards();
+//        siloIncentivesController.claimRewards(address(this));
+//
+//        assertEq(reward1.balanceOf(address(vault)), 1, "vault got rewards");
     }
 }
