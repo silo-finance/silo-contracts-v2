@@ -9,17 +9,19 @@ import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.
 
 /// @dev Silo incentives controller that can be used as a gauge in the Gauge hook receiver
 contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
-    /// @dev The share token of the gauge
+    /// @notice Silo share token
     address public immutable SHARE_TOKEN;
 
-    /// @dev Whether the gauge is killed
+    /// @notice Whether the gauge is killed
+    /// @dev This flag is not user in the SiloIncentivesController, but it is used in the Gauge hook receiver
+    /// it was added for a backward compatibility with gauges.
     bool private _isKilled;
 
     /// @param _owner The owner of the gauge
     /// @param _notifier The notifier of the gauge
-    /// @param _shareToken The share token of the gauge
-    constructor(address _owner, address _notifier, address _shareToken) SiloIncentivesController(_owner, _notifier) {
-        SHARE_TOKEN = _shareToken;
+    /// @param _siloShareToken The share token of the gauge
+    constructor(address _owner, address _notifier, address _siloShareToken) SiloIncentivesController(_owner, _notifier) {
+        SHARE_TOKEN = _siloShareToken;
     }
 
     /// @inheritdoc ISiloIncentivesController

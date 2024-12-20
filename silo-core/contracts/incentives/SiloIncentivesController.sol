@@ -72,11 +72,11 @@ contract SiloIncentivesController is BaseIncentivesController {
             bytes32 programId = _incentivesProgramIds.at(i);
 
             if (_sender != address(0)) {
-                handleAction(programId, _sender, _totalSupply, _senderBalance);
+                _handleAction(programId, _sender, _totalSupply, _senderBalance);
             }
 
             if (_recipient != address(0)) {
-                handleAction(programId, _recipient, _totalSupply, _recipientBalance);
+                _handleAction(programId, _recipient, _totalSupply, _recipientBalance);
             }
         }
     }
