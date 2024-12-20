@@ -91,11 +91,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         );
 
         vault.deposit(amount, address(this));
-        assertEq(
-            silo1.totalSupply(),
-            amount > _cap() ? _cap() * SiloMathLib._DECIMALS_OFFSET_POW : shares,
-            "we expect deposit to go to silo"
-        );
+        assertEq(silo1.totalSupply(), sharesCapped, "we expect deposit to go to silo");
 
         // does not revert without incentives setup:
 
@@ -160,13 +156,10 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         );
 
         vault.deposit(depositAmount, address(this));
-        assertEq(
-            silo1.totalSupply(),
-            depositAmount > _cap() ? _cap() * SiloMathLib._DECIMALS_OFFSET_POW : shares,
-            "we expect deposit to go to silo1"
-        );
+        assertEq(silo1.totalSupply(), sharesCapped, "we expect deposit to go to silo1");
 
         vm.warp(block.timestamp + 1);
+        string memory programName = Strings.toHexString(address(reward1));
 
         assertEq(
             siloIncentivesController.getRewardsBalance(address(vault), "x"),
@@ -175,7 +168,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         );
 
         assertEq(
-            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            vaultIncentivesController.getRewardsBalance(address(this), programName),
             0,
             "expected ZERO rewards, because they are generated BEFORE deposit"
         );
@@ -185,7 +178,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         vault.deposit(1e20, address(1));
 
         assertEq(
-            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            vaultIncentivesController.getRewardsBalance(address(this), programName),
             rewardsPerSec,
             "expected ALL rewards to go to first depositor"
         );
@@ -200,7 +193,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         );
 
         assertEq(
-            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            vaultIncentivesController.getRewardsBalance(address(this), programName),
             0,
             "rewards for vault claimed"
         );
