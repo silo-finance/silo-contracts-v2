@@ -44,6 +44,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         virtual
         onlyOwner
     {
+        require(bytes(_incentivesProgramInput.name).length <= 32, TooLongProgramName());
         _createIncentiveProgram(_incentivesProgramInput);
     }
 
@@ -67,28 +68,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         incentivesPrograms[programId].emissionPerSecond = _emissionPerSecond;
 
         emit IncentivesProgramUpdated(_incentivesProgram);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function handleAction(
-        bytes32 _incentivesProgramId,
-        address _user,
-        uint256 _totalSupply,
-        uint256 _userBalance
-    ) public virtual onlyNotifier {
-        uint256 accruedRewards = _updateUserAssetInternal(_incentivesProgramId, _user, _userBalance, _totalSupply);
-
-        if (accruedRewards != 0) {
-            uint256 newUnclaimedRewards = _usersUnclaimedRewards[_user][_incentivesProgramId] + accruedRewards;
-            _usersUnclaimedRewards[_user][_incentivesProgramId] = newUnclaimedRewards;
-
-            emit RewardsAccrued(
-                _user,
-                incentivesPrograms[_incentivesProgramId].rewardToken,
-                getProgramName(_incentivesProgramId),
-                newUnclaimedRewards
-            );
-        }
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -196,6 +175,34 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     {
         bytes32 programId = getProgramId(_programName);
         return _usersUnclaimedRewards[_user][programId];
+    }
+
+    /**
+     * @dev Called by the corresponding asset on any update that affects the rewards distribution
+     * @param _incentivesProgramId The id of the incentives program being updated
+     * @param _user The address of the user
+     * @param _totalSupply The total supply of the asset in the lending pool
+     * @param _userBalance The balance of the user of the asset in the lending pool
+     */
+    function _handleAction(
+        bytes32 _incentivesProgramId,
+        address _user,
+        uint256 _totalSupply,
+        uint256 _userBalance
+    ) internal virtual {
+        uint256 accruedRewards = _updateUserAssetInternal(_incentivesProgramId, _user, _userBalance, _totalSupply);
+
+        if (accruedRewards != 0) {
+            uint256 newUnclaimedRewards = _usersUnclaimedRewards[_user][_incentivesProgramId] + accruedRewards;
+            _usersUnclaimedRewards[_user][_incentivesProgramId] = newUnclaimedRewards;
+
+            emit RewardsAccrued(
+                _user,
+                incentivesPrograms[_incentivesProgramId].rewardToken,
+                getProgramName(_incentivesProgramId),
+                newUnclaimedRewards
+            );
+        }
     }
 
     /**

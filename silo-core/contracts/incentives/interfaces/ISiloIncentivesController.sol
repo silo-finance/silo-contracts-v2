@@ -88,20 +88,6 @@ interface ISiloIncentivesController is IDistributionManager {
     ) external;
 
     /**
-     * @dev Called by the corresponding asset on any update that affects the rewards distribution
-     * @param _incentivesProgramId The id of the incentives program being updated
-     * @param _user The address of the user
-     * @param _totalSupply The total supply of the asset in the lending pool
-     * @param _userBalance The balance of the user of the asset in the lending pool
-     */
-    function handleAction(
-        bytes32 _incentivesProgramId,
-        address _user,
-        uint256 _totalSupply,
-        uint256 _userBalance
-    ) external;
-
-    /**
      * @dev Claims reward for an user to the desired address, on all the assets of the lending pool,
      * accumulating the pending rewards
      * @param _to Address that will be receiving the rewards

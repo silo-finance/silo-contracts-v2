@@ -71,7 +71,8 @@ interface IDistributionManager {
         returns (IncentiveProgramDetails memory details);
 
     /**
-     * @dev Returns the program id for the given program name
+     * @dev Returns the program id for the given program name.
+     * This method TRUNCATES the program name to 32 bytes.
      * @param _programName The incentives program name
      * @return programId
      */
