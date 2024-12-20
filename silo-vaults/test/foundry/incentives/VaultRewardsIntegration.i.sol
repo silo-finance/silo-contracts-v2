@@ -65,9 +65,9 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_gauge_deposit_noRewards -vv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_noRevert -vv
     */
-    function test_vaults_gauge_deposit_noRewards() public {
+    function test_vaults_rewards_noRevert() public {
         uint256 amount = 1e18;
         uint256 shares = amount * SiloMathLib._DECIMALS_OFFSET_POW;
 
@@ -93,9 +93,9 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_gauge_deposit_withRewards -vv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_onDeposit -vv
     */
-    function test_vaults_gauge_deposit_withRewards() public {
+    function test_vaults_rewards_onDeposit() public {
         vm.prank(OWNER);
         vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
 
@@ -106,7 +106,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         vm.prank(OWNER);
         vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
 
-        uint256 rewardsPerSec = 3e3;
+        uint256 rewardsPerSec = 3210;
 
         // standard program for silo users
         siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -118,18 +118,18 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
 
         uint256 depositAmount = 2e8;
 
-//        vm.expectCall(
-//            address(siloIncentivesController),
-//            abi.encodeWithSelector(
-//                INotificationReceiver.afterTokenTransfer.selector,
-//                address(0),
-//                0,
-//                address(this),
-//                depositAmount,
-//                depositAmount,
-//                depositAmount
-//            )
-//        );
+        vm.expectCall(
+            address(siloIncentivesController),
+            abi.encodeWithSelector(
+                INotificationReceiver.afterTokenTransfer.selector,
+                address(0),
+                0,
+                address(vault),
+                depositAmount * SiloMathLib._DECIMALS_OFFSET_POW,
+                depositAmount * SiloMathLib._DECIMALS_OFFSET_POW,
+                depositAmount * SiloMathLib._DECIMALS_OFFSET_POW
+            )
+        );
 
         vm.expectCall(
             address(vaultIncentivesController),
@@ -145,7 +145,11 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         );
 
         vault.deposit(depositAmount, address(this));
-        assertEq(silo1.totalSupply(), depositAmount * SiloMathLib._DECIMALS_OFFSET_POW, "we expect deposit to go to silo");
+        assertEq(
+            silo1.totalSupply(),
+            depositAmount * SiloMathLib._DECIMALS_OFFSET_POW,
+            "we expect deposit to go to silo1"
+        );
 
         vm.warp(block.timestamp + 1);
 
@@ -155,15 +159,112 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
             "expected rewards for silo after 1s"
         );
 
-//        assertEq(
-//            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
-//            rewardsPerSec,
-//            "expected rewards for vault after 1s"
-//        );
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            0,
+            "expected ZERO rewards, because they are generated BEFORE deposit"
+        );
 
-//        vault.claimRewards();
-//        siloIncentivesController.claimRewards(address(this));
-//
-//        assertEq(reward1.balanceOf(address(vault)), 1, "vault got rewards");
+        // do another deposit, it will distribute
+        vm.prank(address(1));
+        vault.deposit(1e20, address(1));
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            rewardsPerSec,
+            "expected ALL rewards to go to first depositor"
+        );
+
+        vaultIncentivesController.claimRewards(address(this));
+        assertEq(reward1.balanceOf(address(this)), rewardsPerSec, "claimed rewards");
+
+        assertEq(
+            siloIncentivesController.getRewardsBalance(address(vault), "x"),
+            0,
+            "rewards for silo claimed"
+        );
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            0,
+            "rewards for vault claimed"
+        );
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_noClaimRewards -vv
+    */
+    function test_vaults_rewards_noClaimRewards() public {
+        vm.prank(OWNER);
+        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
+
+        SiloIncentivesControllerCL cl = new SiloIncentivesControllerCL(
+            address(vaultIncentivesController), address(siloIncentivesController)
+        );
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
+
+        uint256 rewardsPerSec = 3210;
+
+        // standard program for silo users
+        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: "x",
+            rewardToken: address(reward1),
+            emissionPerSecond: uint104(rewardsPerSec),
+            distributionEnd: uint40(block.timestamp + 10)
+        }));
+
+        uint256 depositAmount = 2e8;
+
+        vault.deposit(depositAmount, address(this));
+
+        vm.warp(block.timestamp + 1);
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            0,
+            "expected ZERO rewards, because they are generated BEFORE deposit"
+        );
+
+        vm.warp(block.timestamp + 1);
+        vault.claimRewards();
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            0,
+            "claimRewards will not generate any rewards, because incentives state was calculated before user deposit"
+        );
+
+        vault.withdraw(depositAmount / 2, address(this), address(this));
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            0,
+            "rewards should not be generated by withdraw"
+        );
+
+        vm.warp(block.timestamp + 1);
+        vault.claimRewards();
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            0,
+            "rewards should not be generated by claimRewards and time when no changes to state"
+        );
+
+
+        // do another deposit, it will distribute
+        vm.prank(address(1));
+        vault.deposit(1, address(1));
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), Strings.toHexString(address(reward1))),
+            rewardsPerSec,
+            "expected ALL rewards to go to first depositor"
+        );
+
+        vaultIncentivesController.claimRewards(address(this));
+        assertEq(reward1.balanceOf(address(this)), rewardsPerSec, "claimed rewards");
     }
 }
