@@ -26,22 +26,21 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         address initialOwner,
         uint256 initialTimelock,
         string memory name,
-        string memory symbol,
-        bytes32 salt
+        string memory symbol
     ) public {
         vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        ISiloVault SiloVault =
-            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
+        ISiloVault siloVault =
+            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol);
 
-        assertTrue(factory.isSiloVault(address(SiloVault)), "isSiloVault");
+        assertTrue(factory.isSiloVault(address(siloVault)), "isSiloVault");
 
-        assertEq(SiloVault.owner(), initialOwner, "owner");
-        assertEq(SiloVault.timelock(), initialTimelock, "timelock");
-        assertEq(SiloVault.asset(), address(loanToken), "asset");
-        assertEq(SiloVault.name(), name, "name");
-        assertEq(SiloVault.symbol(), symbol, "symbol");
-        assertTrue(address(SiloVault.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
+        assertEq(siloVault.owner(), initialOwner, "owner");
+        assertEq(siloVault.timelock(), initialTimelock, "timelock");
+        assertEq(siloVault.asset(), address(loanToken), "asset");
+        assertEq(siloVault.name(), name, "name");
+        assertEq(siloVault.symbol(), symbol, "symbol");
+        assertTrue(address(siloVault.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
     }
 }

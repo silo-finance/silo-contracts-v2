@@ -102,7 +102,6 @@ library EventsLib {
     /// @param asset The address of the underlying asset.
     /// @param name The name of the SiloVault market.
     /// @param symbol The symbol of the SiloVault market.
-    /// @param salt The salt used for the SiloVault market's CREATE2 address.
     event CreateSiloVault(
         address indexed SiloVault,
         address indexed caller,
@@ -110,8 +109,7 @@ library EventsLib {
         uint256 initialTimelock,
         address indexed asset,
         string name,
-        string symbol,
-        bytes32 salt
+        string symbol
     );
 
     /// @notice Emitted during a public reallocation for each withdrawn-from market.
