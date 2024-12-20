@@ -18,13 +18,11 @@ interface ISiloVaultsFactory {
     /// @param _asset The address of the underlying asset.
     /// @param _name The name of the vault.
     /// @param _symbol The symbol of the vault.
-    /// @param _salt The salt to use for the SiloVault vault's CREATE2 address.
     function createSiloVault(
         address _initialOwner,
         uint256 _initialTimelock,
         address _asset,
         string memory _name,
-        string memory _symbol,
-        bytes32 _salt
+        string memory _symbol
     ) external returns (ISiloVault SiloVault);
 }

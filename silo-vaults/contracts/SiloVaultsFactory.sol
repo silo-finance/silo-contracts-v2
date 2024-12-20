@@ -10,7 +10,6 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {SiloVault} from "./SiloVault.sol";
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
-import {SiloIncentivesControllerCL} from "./incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 /// @title SiloVaultsFactory
 /// @dev Forked with gratitude from Morpho Labs.
@@ -38,21 +37,20 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
         uint256 initialTimelock,
         address asset,
         string memory name,
-        string memory symbol,
-        bytes32 salt
+        string memory symbol
     ) external virtual returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
+            Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION)
         );
 
         siloVault = ISiloVault(address(
-            new SiloVault{salt: salt}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
+            new SiloVault(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
 
         isSiloVault[address(siloVault)] = true;
 
         emit EventsLib.CreateSiloVault(
-            address(siloVault), msg.sender, initialOwner, initialTimelock, asset, name, symbol, salt
+            address(siloVault), msg.sender, initialOwner, initialTimelock, asset, name, symbol
         );
     }
 }
