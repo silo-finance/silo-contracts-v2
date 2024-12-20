@@ -5,12 +5,10 @@ import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncen
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 
-import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
-
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
-import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/BaseTest.sol";
+import {CAP} from "../helpers/BaseTest.sol";
 
 
 /*
@@ -18,7 +16,6 @@ import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/Base
 */
 contract SiloVaultIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
-    MintableToken reward2 = new MintableToken(18);
 
     SiloIncentivesController vaultIncentivesController;
 
@@ -30,7 +27,6 @@ contract SiloVaultIncentivesTest is IntegrationTest {
         _setCap(allMarkets[2], CAP);
 
         reward1.setOnDemand(true);
-        reward2.setOnDemand(true);
 
         // TODO add test when notifier will be wrong and expect no rewards (or revert?)
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
@@ -66,6 +62,7 @@ contract SiloVaultIncentivesTest is IntegrationTest {
         address user = makeAddr("user");
 
         uint256 rewardsPerSec = 3;
+        uint256 depositAmount = 1;
 
         // standard program for vault users
         vaultIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -86,15 +83,15 @@ contract SiloVaultIncentivesTest is IntegrationTest {
                 address(0),
                 0,
                 user,
-                1,
-                1,
-                1
+                depositAmount,
+                depositAmount,
+                depositAmount
             )
         );
 
         // does not revert without incentives setup
         vm.prank(user);
-        vault.deposit(1, user);
+        vault.deposit(depositAmount, user);
 
         vm.warp(block.timestamp + 1);
 
