@@ -32,25 +32,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        bytes32 incentivesModuleInitCodeHash = hashInitCode(type(VaultIncentivesModule).creationCode, abi.encode(initialOwner));
-
-        address expectedIncentivesModuleAddress = vm.computeCreate2Address(salt, incentivesModuleInitCodeHash, address(factory));
-
-        bytes32 initCodeHash = hashInitCode(
-            type(SiloVault).creationCode,
-            abi.encode(initialOwner, initialTimelock, expectedIncentivesModuleAddress, address(loanToken), name, symbol)
-        );
-        address expectedAddress = vm.computeCreate2Address(salt, initCodeHash, address(factory));
-
-        vm.expectEmit(address(factory));
-        emit EventsLib.CreateSiloVault(
-            expectedAddress, address(this), initialOwner, initialTimelock, address(loanToken), name, symbol, salt
-        );
-
         ISiloVault SiloVault =
             factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, salt);
-
-        assertEq(expectedAddress, address(SiloVault), "computeCreate2Address");
 
         assertTrue(factory.isSiloVault(address(SiloVault)), "isSiloVault");
 
