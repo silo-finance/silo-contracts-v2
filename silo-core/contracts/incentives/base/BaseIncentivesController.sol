@@ -44,6 +44,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         virtual
         onlyOwner
     {
+        require(bytes(_incentivesProgramInput.name).length <= 32, TooLongProgramName());
         _createIncentiveProgram(_incentivesProgramInput);
     }
 

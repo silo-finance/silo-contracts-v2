@@ -103,13 +103,16 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     /// @inheritdoc IDistributionManager
     function getProgramId(string memory _programName) public pure virtual returns (bytes32) {
-        require(bytes(_programName).length > 0, InvalidIncentivesProgramName());
-        require(bytes(_programName).length <= 42, TooLongProgramName());
+        require(bytes(_programName).length != 0, InvalidIncentivesProgramName());
 
         return bytes32(abi.encodePacked(_programName));
     }
 
-    
+    /**
+     * @dev Returns the name of an incentives program (converts bytes32 to string)
+     * @param _programId The id of the incentives program
+     * @return The name of the incentives program
+     */
     function getProgramName(bytes32 _programId) public pure virtual returns (string memory) {
         return string(TokenHelper.removeZeros(abi.encodePacked(_programId)));
     }

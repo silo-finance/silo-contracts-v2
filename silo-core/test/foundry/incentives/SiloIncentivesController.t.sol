@@ -86,6 +86,19 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_tooLongProgramName
+    function test_createIncentivesProgram_tooLongProgramName() public {
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.TooLongProgramName.selector));
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(block.timestamp + 1000),
+            emissionPerSecond: 1000e18
+        }));
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_Success
     function test_createIncentivesProgram_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
@@ -442,18 +455,10 @@ contract SiloIncentivesControllerTest is Test {
     //
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_scenario_1_for_immediateDistribution
     function test_scenario_1_for_immediateDistribution() public {
-        uint40 distributionEnd = 0;
-        uint104 emissionPerSecond = 0;
-
         string memory programName = Strings.toHexString(_rewardToken);
 
-        vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: programName,
-            rewardToken: _rewardToken,
-            distributionEnd: distributionEnd,
-            emissionPerSecond: emissionPerSecond
-        }));
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_rewardToken, uint104(1));
 
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -561,18 +566,10 @@ contract SiloIncentivesControllerTest is Test {
     //
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_scenario_2_for_immediateDistribution
     function test_scenario_2_for_immediateDistribution() public {
-        uint40 distributionEnd = 0;
-        uint104 emissionPerSecond = 0;
-
         string memory programName = Strings.toHexString(_rewardToken);
 
-        vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: programName,
-            rewardToken: _rewardToken,
-            distributionEnd: distributionEnd,
-            emissionPerSecond: emissionPerSecond
-        }));
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_rewardToken, uint104(1));
 
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -855,12 +852,6 @@ contract SiloIncentivesControllerTest is Test {
 
         rewards = _controller.getRewardsBalance(user1, programsNames2);
         assertEq(rewards, expectedRewards / 2, "expected rewards / 2");
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_tooLongProgramName
-    function test_getProgramId_tooLongProgramName() public {
-        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.TooLongProgramName.selector));
-        _controller.getProgramId("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
     }
 
     function _claimRewards(address _user, address _to, string memory _programName) internal {
