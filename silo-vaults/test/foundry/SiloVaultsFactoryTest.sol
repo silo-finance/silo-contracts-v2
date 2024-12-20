@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
-import {Clones} from "openzeppelin5/proxy/Clones.sol";
-
 import {SiloVault} from "../../contracts/SiloVault.sol";
 import {SiloVaultsFactory} from "../../contracts/SiloVaultsFactory.sol";
+import {VaultIncentivesModule} from "../../contracts/incentives/VaultIncentivesModule.sol";
 import {ISiloVault} from "../../contracts/interfaces/ISiloVault.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
@@ -33,11 +32,13 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        address incentivesModule = Clones.predictDeterministicAddress(factory.VAULT_INCENTIVES_MODULE_IMPLEMENTATION(), salt, address(factory));
+        bytes32 incentivesModuleInitCodeHash = hashInitCode(type(VaultIncentivesModule).creationCode, abi.encode(initialOwner));
+
+        address expectedIncentivesModuleAddress = vm.computeCreate2Address(salt, incentivesModuleInitCodeHash, address(factory));
 
         bytes32 initCodeHash = hashInitCode(
             type(SiloVault).creationCode,
-            abi.encode(initialOwner, initialTimelock, incentivesModule, address(loanToken), name, symbol)
+            abi.encode(initialOwner, initialTimelock, expectedIncentivesModuleAddress, address(loanToken), name, symbol)
         );
         address expectedAddress = vm.computeCreate2Address(salt, initCodeHash, address(factory));
 
