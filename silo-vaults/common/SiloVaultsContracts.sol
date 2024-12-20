@@ -7,6 +7,7 @@ library SiloVaultsContracts {
     string public constant SILO_VAULTS_FACTORY = "SiloVaultsFactory.sol";
     string public constant PUBLIC_ALLOCATOR = "PublicAllocator.sol";
     string public constant VAULT_INCENTIVES_MODULE = "VaultIncentivesModule.sol";
+    string public constant SILO_INCENTIVES_CONTROLLER_CL_FACTORY = "SiloIncentivesControllerCLFactory.sol";
 }
 
 library SiloVaultsDeployments {
