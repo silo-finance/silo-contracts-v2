@@ -8,7 +8,6 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {SiloVault} from "./SiloVault.sol";
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
-import {SiloIncentivesControllerCL} from "./incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 /// @title SiloVaultsFactory
 /// @dev Forked with gratitude from Morpho Labs.
