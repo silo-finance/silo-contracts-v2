@@ -15,15 +15,10 @@ import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
-import "../../../contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
-
-import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
+import {SiloIncentivesControllerCL} from "../../../contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
-import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
-
-import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "../helpers/BaseTest.sol";
 
 /*
  FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaMorphoIncentivesTest -vvv
