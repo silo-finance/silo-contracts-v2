@@ -71,6 +71,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
     function test_vaults_rewards_noRevert() public {
         uint256 amount = 1e18;
         uint256 shares = amount * SiloMathLib._DECIMALS_OFFSET_POW;
+        uint256 sharesCapped = amount > _cap() ? _cap() * SiloMathLib._DECIMALS_OFFSET_POW : shares;
 
         vm.expectCall(
             address(partialLiquidation),
@@ -78,7 +79,14 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
                 IHookReceiver.afterAction.selector,
                 address(silo1),
                 Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER,
-                abi.encodePacked(address(0), address(vault), hex"00000000000000000000000000000000000000000000003635c9adc5dea00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003635c9adc5dea0000000000000000000000000000000000000000000000000003635c9adc5dea00000")
+                abi.encodePacked(
+                    address(0),
+                    address(vault),
+                    uint256(sharesCapped),
+                    uint256(0),
+                    uint256(sharesCapped),
+                    uint256(sharesCapped)
+                )
             )
         );
 
@@ -138,18 +146,18 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
             )
         );
 
-//        vm.expectCall(
-//            address(vaultIncentivesController),
-//            abi.encodeWithSelector(
-//                INotificationReceiver.afterTokenTransfer.selector,
-//                address(0),
-//                0,
-//                address(this),
-//                depositAmount,
-//                depositAmount,
-//                depositAmount
-//            )
-//        );
+        vm.expectCall(
+            address(vaultIncentivesController),
+            abi.encodeWithSelector(
+                INotificationReceiver.afterTokenTransfer.selector,
+                address(0),
+                0,
+                address(this),
+                depositAmount,
+                depositAmount,
+                depositAmount
+            )
+        );
 
         vault.deposit(depositAmount, address(this));
         assertEq(
