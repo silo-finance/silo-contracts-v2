@@ -61,7 +61,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         assertEq(hooksAfter, Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER, "hook after");
     }
 
-    function _cap() internal view returns (uint256) {
+    function _cap() internal view virtual returns (uint256) {
         return CAP;
     }
 
@@ -83,7 +83,11 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         );
 
         vault.deposit(amount, address(this));
-        assertEq(silo1.totalSupply(), shares, "we expect deposit to go to silo");
+        assertEq(
+            silo1.totalSupply(),
+            amount > _cap() ? _cap() * SiloMathLib._DECIMALS_OFFSET_POW : shares,
+            "we expect deposit to go to silo"
+        );
 
         // does not revert without incentives setup:
 
@@ -118,6 +122,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         }));
 
         uint256 depositAmount = 2e8;
+        uint256 shares = depositAmount * SiloMathLib._DECIMALS_OFFSET_POW;
 
         vm.expectCall(
             address(siloIncentivesController),
@@ -126,9 +131,9 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
                 address(0),
                 0,
                 address(vault),
-                depositAmount * SiloMathLib._DECIMALS_OFFSET_POW,
-                depositAmount * SiloMathLib._DECIMALS_OFFSET_POW,
-                depositAmount * SiloMathLib._DECIMALS_OFFSET_POW
+                shares,
+                shares,
+                shares
             )
         );
 
@@ -148,7 +153,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
         vault.deposit(depositAmount, address(this));
         assertEq(
             silo1.totalSupply(),
-            depositAmount * SiloMathLib._DECIMALS_OFFSET_POW,
+            depositAmount > _cap() ? _cap() * SiloMathLib._DECIMALS_OFFSET_POW : shares,
             "we expect deposit to go to silo1"
         );
 
