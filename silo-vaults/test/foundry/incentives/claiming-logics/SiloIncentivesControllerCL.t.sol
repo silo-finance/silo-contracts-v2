@@ -8,6 +8,14 @@ import {
 } from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 import {
+    SiloIncentivesControllerCLFactory
+} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCLFactory.sol";
+
+import {
+    SiloIncentivesControllerCLFactoryDeploy
+} from "silo-vaults/deploy/SiloIncentivesControllerCLFactoryDeploy.s.sol";
+
+import {
     ISiloIncentivesController,
     IDistributionManager
 } from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
@@ -20,7 +28,16 @@ contract SiloIncentivesControllerCLTest is Test {
     address internal _siloIncentivesController = makeAddr("SiloIncentivesController");
 
     function setUp() public {
-        incentivesControllerCL = new SiloIncentivesControllerCL(_vaultIncentivesController, _siloIncentivesController);
+        SiloIncentivesControllerCLFactoryDeploy factoryDeploy = new SiloIncentivesControllerCLFactoryDeploy();
+        factoryDeploy.disableDeploymentsSync();
+        address factory = factoryDeploy.run();
+
+        incentivesControllerCL = SiloIncentivesControllerCLFactory(factory).createIncentivesControllerCL(
+            _vaultIncentivesController,
+            _siloIncentivesController
+        );
+
+        assertTrue(SiloIncentivesControllerCLFactory(factory).createdInFactory(address(incentivesControllerCL)));
     }
 
     // FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mt test_claimRewardsAndDistribute
