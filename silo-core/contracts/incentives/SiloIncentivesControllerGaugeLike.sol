@@ -17,10 +17,14 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
     /// it was added for a backward compatibility with gauges.
     bool private _isKilled;
 
-    /// @param _owner The owner of the gauge
-    /// @param _notifier The notifier of the gauge
-    /// @param _siloShareToken The share token of the gauge
-    constructor(address _owner, address _notifier, address _siloShareToken) SiloIncentivesController(_owner, _notifier) {
+    /// @param _owner The owner of the incentives controller
+    /// @param _notifier The notifier (expected to be a gauge address)
+    /// @param _siloShareToken The share token (one of the Silo share tokens)
+    constructor(
+        address _owner,
+        address _notifier,
+        address _siloShareToken
+    ) SiloIncentivesController(_owner, _notifier) {
         SHARE_TOKEN = _siloShareToken;
     }
 
