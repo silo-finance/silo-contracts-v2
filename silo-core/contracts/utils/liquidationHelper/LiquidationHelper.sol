@@ -46,6 +46,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
+    receive() external payable {}
+
     /// @inheritdoc ILiquidationHelper
     /// @dev entry point for liquidation
     /// @notice for now we does not support liquidation with sTokens.

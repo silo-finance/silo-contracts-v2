@@ -15,10 +15,12 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
         --ffi --broadcast --rpc-url $RPC_ARBITRUM \
         --verify
+
+    NOTICE: remember to register it in Tower
 */
 contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
