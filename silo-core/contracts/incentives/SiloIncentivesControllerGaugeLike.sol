@@ -18,7 +18,7 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
     bool private _isKilled;
 
     /// @param _owner The owner of the incentives controller
-    /// @param _notifier The notifier (expected to be a gauge address)
+    /// @param _notifier The notifier (expected to be a hook receiver address)
     /// @param _siloShareToken The share token (one of the Silo share tokens)
     constructor(
         address _owner,
