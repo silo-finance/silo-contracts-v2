@@ -23,7 +23,7 @@ import {IntegrationTest} from "../helpers/IntegrationTest.sol";
 import {CAP} from "../helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MetaMorphoIncentivesTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc VaultRewardsIntegrationTest -vvv
 */
 contract VaultRewardsIntegrationTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
@@ -78,7 +78,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
                 IHookReceiver.afterAction.selector,
                 address(silo1),
                 Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER,
-                hex"00000000000000000000000000000000000000001d1499e622d69689cdf9004d05ec547d650ff21100000000000000000000000000000000000000000000003635c9adc5dea00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003635c9adc5dea0000000000000000000000000000000000000000000000000003635c9adc5dea00000"
+                abi.encodePacked(address(0), address(vault), hex"00000000000000000000000000000000000000000000003635c9adc5dea00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003635c9adc5dea0000000000000000000000000000000000000000000000000003635c9adc5dea00000")
             )
         );
 
