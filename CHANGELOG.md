@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-## [0.17.1] - 2024-12-16
+## [0.17.3] - 2024-12-20
+### Fixed
+- allow LiquidationHelper to accept ETH
+
+## [0.17.2] - 2024-12-16
 ### Added
 - new markets for v0.17: `wstETH/WETH`, `gmETH/WETH`, `solvBTC/wBTC`, `ETHPlus/WETH`
 
