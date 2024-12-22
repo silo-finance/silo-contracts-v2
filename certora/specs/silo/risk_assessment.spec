@@ -67,8 +67,6 @@ hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint r
                         (!siloContracts(addr) && !reentrantStatusMovedToTrue);
 }
 
-
-
 /**
 @title Every public method leave the reentrancy guard off
 */
@@ -83,7 +81,6 @@ invariant RA_reentrancyGuardStaysUnlocked()
             require e.msg.sender != siloConfig._HOOK_RECEIVER;
         } 
 }
-
 
 /**
 @title Every public method checks (loads) the reentrancy guard

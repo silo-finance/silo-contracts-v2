@@ -4,8 +4,8 @@
 import "authorized_functions.spec";
 import "unresolved.spec";
 import "../simplifications/SiloMathLib.spec";
-import "../simplifications/Oracle_quote_one.spec";
-import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../simplifications/Oracle_quote_one_UNSAFE.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 
 methods {
 

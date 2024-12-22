@@ -19,7 +19,7 @@ methods {
 definition RCOMP_MAX() returns uint256 = 2^16 * 10^18;  // Maximal compound interest
 
 
-/// @title Ghost function deteermining the interest rate based on the time diff
+/// @title Ghost function determining the interest rate based on the time diff
 ghost compoundInterestRate(uint256) returns uint256 {
     // `compoundInterestRate` is monotonic non-decreasing
     axiom forall uint256 timestampDiff0. forall uint256 timestampDiff1. (

@@ -1,11 +1,11 @@
 import "../setup/CompleteSiloSetup.spec";
 import "unresolved.spec";
 import "../simplifications/SiloMathLib.spec";
-import "../simplifications/Oracle_quote_one.spec";
-import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../simplifications/Oracle_quote_one_UNSAFE.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 
-//import "../simplifications/Silo_isSolvent_ghost.spec";
-//import "../simplifications/SiloSolvencyLib.spec";
+//import "../simplifications/Silo_isSolvent_ghost_UNSAFE.spec";
+//import "../simplifications/SiloSolvencyLib_UNSAFE.spec";
 
 //checks that sequences of method calls don't free funds to the user (e.g. due to rounding)
 // most of these rules timeout, except for the "simplified" calculations (see below)
