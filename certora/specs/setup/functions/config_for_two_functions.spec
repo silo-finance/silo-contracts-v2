@@ -22,14 +22,13 @@ using Token1 as token1_CC;
 
 // ---- Implementations --------------------------------------------------------
 
-/// @title Implements `SiloConfig.getSilos` in CVL
+// @title Implements `SiloConfig.getSilos` in CVL
 function CVLGetSilos() returns (address, address) {
     return (silo0_CC, silo1_CC);
 }
 
-
-/// @title Implements `SiloConfig.getShareTokens` in CVL
-/// @notice Assumes each silo is also the collateral share token!
+// @title Implements `SiloConfig.getShareTokens` in CVL
+// @notice Assumes each silo is also the collateral share token!
 function CVLGtShareTokens(address _silo) returns (address, address, address) {
     require _silo == silo0_CC || _silo == silo1_CC;  // TODO: change to assert?
     if (_silo == siloConfig_CC._SILO0) {
@@ -39,9 +38,7 @@ function CVLGtShareTokens(address _silo) returns (address, address, address) {
     }
 }
 
-
-
-/// @title Implements `SiloConfig.getAssetForSilo` in CVL
+// @title Implements `SiloConfig.getAssetForSilo` in CVL
 function CVLGetAssetForSilo(address _silo) returns address {
     require _silo == silo0_CC || _silo == silo1_CC;  // TODO: change to assert?
     if (_silo == siloConfig_CC._SILO0) {
@@ -58,7 +55,7 @@ function CVLGetSilo(address called) returns address {
         return silo0_CC;
 }
 
-/// @title Implements `SiloConfig.getFeesWithAsset` in CVL
+// @title Implements `SiloConfig.getFeesWithAsset` in CVL
 function CVLGetFeesWithAsset(address _silo) returns (uint256, uint256, uint256, address) {
     require _silo == silo0_CC || _silo == silo1_CC;  // TODO: change to assert?
     if (_silo == siloConfig_CC._SILO0) {
@@ -77,7 +74,6 @@ function CVLGetFeesWithAsset(address _silo) returns (uint256, uint256, uint256, 
         );
     }
 }
-
 
 /// @title Implements `SiloConfig.getCollateralShareTokenAndAsset` in CVL
 /// @notice Assumes each silo is also the collateral share token!
@@ -100,7 +96,6 @@ function CVLGetCollateralShareTokenAndAsset(
         }
     }
 }
-
 
 /// @title Implements `SiloConfig.getDebtShareTokenAndAsset` in CVL
 function CVLGetDebtShareTokenAndAsset(address _silo) returns (address, address) {

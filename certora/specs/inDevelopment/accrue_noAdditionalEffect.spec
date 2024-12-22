@@ -1,11 +1,10 @@
 import "../setup/CompleteSiloSetup.spec";
 import "unresolved.spec";
 import "../simplifications/SiloMathLib.spec";
-import "../simplifications/Oracle_quote_one.spec";
-import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../simplifications/Oracle_quote_one_UNSAFE.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 
 methods {
-
 
 function SiloSolvencyLib.getLtv(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -164,7 +163,7 @@ rule accruing0DoesntCauseRevert(env e, address user, method f)
     
     storage init = lastStorage;
     calldataarg args;
-    f(e, args);
+    f(e, args);     // didn't revert before
         
     silo0.accrueInterest(e) at init;
     f@withrevert(e, args);

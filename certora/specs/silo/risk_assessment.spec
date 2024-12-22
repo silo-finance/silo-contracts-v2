@@ -6,7 +6,7 @@ Reentrancy protection is shared among the different Silo contracts that interact
 3. Guard must be checked on all public functions 
 */
 
-import "./authorized_functions.spec";
+import "./../setup/meta/authorized_functions.spec";
 
 
 methods {
@@ -67,8 +67,6 @@ hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint r
                         (!siloContracts(addr) && !reentrantStatusMovedToTrue);
 }
 
-
-
 /**
 @title Every public method leave the reentrancy guard off
 */
@@ -83,7 +81,6 @@ invariant RA_reentrancyGuardStaysUnlocked()
             require e.msg.sender != siloConfig._HOOK_RECEIVER;
         } 
 }
-
 
 /**
 @title Every public method checks (loads) the reentrancy guard

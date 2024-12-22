@@ -4,13 +4,13 @@
 @title Verify that for all function the solvency check is applied on any increases of debt or decrease of collateral 
 
 */
-import "../requirements/CompleteSiloSetup.spec";
-import "../_simplifications/SiloMathLib.spec";
-import "../_simplifications/Oracle_quote_one.spec";
-import "../_simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../setup/CompleteSiloSetup.spec";
+import "../simplifications/SiloMathLib.spec";
+import "../simplifications/Oracle_quote_one_UNSAFE.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 
-import "./authorized_functions.spec";
-import "./unresolved.spec";
+import "../setup/meta/authorized_functions.spec";
+import "unresolved.spec";
 
 
 
@@ -56,20 +56,31 @@ function updateSolvent(address user) returns bool {
     return solventCalled[user];
 }
 
-invariant transferWithChecksAlwaysOn() 
-        silo0.getTransferWithChecks() &&
-        silo1.getTransferWithChecks() &&
-        shareDebtToken0.getTransferWithChecks() &&
-        shareDebtToken1.getTransferWithChecks() && 
-        shareProtectedCollateralToken0.getTransferWithChecks() && 
-        shareProtectedCollateralToken1.getTransferWithChecks() 
-        {
-            preserved with (env e) {
-                configForEightTokensSetupRequirements();
-                nonSceneAddressRequirements(e.msg.sender);
-                silosTimestampSetupRequirements(e);
-            }
-                }
+function allTransferWithChecks() returns bool
+{
+        return  silo0.getTransferWithChecks() &&
+                silo1.getTransferWithChecks() &&
+                shareDebtToken0.getTransferWithChecks() &&
+                shareDebtToken1.getTransferWithChecks() && 
+                shareProtectedCollateralToken0.getTransferWithChecks() && 
+                shareProtectedCollateralToken1.getTransferWithChecks();
+        
+}
+
+//@title The flag transferWithChecks is always on at then end of all public methods  
+rule transferWithChecksAlwaysOn(method f)  filtered {f-> !onlySiloContractsMethods(f) && !f.isView}
+{
+    env e;
+    calldataarg args;
+    configForEightTokensSetupRequirements();
+    nonSceneAddressRequirements(e.msg.sender);
+    silosTimestampSetupRequirements(e);
+
+    require allTransferWithChecks();
+    f(e,args);
+    assert allTransferWithChecks();
+}
+
 
 
 //@title Solvency check has been performed on the correct user 
@@ -84,7 +95,7 @@ rule solventChecked(method f)  filtered {f-> !onlySiloContractsMethods(f) && !f.
 
     accrueHasBeenCalled(e);
 
-    requireInvariant transferWithChecksAlwaysOn(); 
+    require allTransferWithChecks(); 
 
     require silo0 == siloConfig.borrowerCollateralSilo[user];
     

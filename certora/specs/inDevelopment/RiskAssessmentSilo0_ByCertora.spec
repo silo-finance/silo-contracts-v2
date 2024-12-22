@@ -1,11 +1,11 @@
-import "../_common/CompleteSiloSetup.spec";
-import "../_common/IsSiloFunction.spec";
-import "../_common/SiloMethods.spec";
-import "../_common/Helpers.spec";
-import "../_common/CommonSummarizations.spec";
-import "../../simplifications/priceOracle.spec";
-import "../../simplifications/SiloMathLib.spec";
-import "../../simplifications/SimplifiedGetCompoundInterestRateAndUpdate.spec";
+import "../setup/CompleteSiloSetup.spec";
+//import "../_common/IsSiloFunction.spec";
+//import "../_common/SiloMethods.spec";
+//import "../_common/Helpers.spec";
+//import "../_common/CommonSummarizations.spec";
+import "../simplifications/priceOracle_UNSAFE.spec";
+import "../simplifications/SiloMathLib.spec";
+import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 
 use rule assetsToSharesAndBackAxiom;
 use rule mulDiv_axioms_test;

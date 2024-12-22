@@ -2,17 +2,11 @@
  * This setup is for a single silo - `Silo0`
  */
 
-import "../summaries/silo0_summaries.spec";
-import "../summaries/tokens_dispatchers.spec";
-import "../summaries/config_for_one_in_cvl.spec";
-import "../summaries/safe-approximations.spec";
-
 import "../setup/single_silo_tokens_requirements.spec";
-
-using Silo0 as silo0;
-using Token0 as token0;
-using ShareDebtToken0 as shareDebtToken0;
-
+import "../setup/summaries/silo0_summaries.spec";
+import "../setup/summaries/siloconfig_dispatchers.spec";
+import "../setup/summaries/config_for_one_in_cvl.spec";
+import "../setup/summaries/safe-approximations.spec";
 
 methods {
     // ---- `SiloConfig` -------------------------------------------------------
@@ -22,22 +16,6 @@ methods {
         address,
         ISilo.CollateralType
     ) external returns (address, address) envfree;
-
-    // Dispatcher
-    function _.accrueInterestForSilo(address) external => DISPATCHER(true);
-    function _.accrueInterestForBothSilos() external => DISPATCHER(true);
-    function _.getConfigsForWithdraw(address,address) external => DISPATCHER(true);
-    function _.getConfigsForBorrow(address) external  => DISPATCHER(true);
-    function _.getConfigsForSolvency(address) external  => DISPATCHER(true);
-    function _.setThisSiloAsCollateralSilo(address) external  => DISPATCHER(true);
-    function _.setOtherSiloAsCollateralSilo(address) external  => DISPATCHER(true);
-    function _.getConfig(address) external  => DISPATCHER(true);
-    function _.borrowerCollateralSilo(address) external  => DISPATCHER(true);
-    function _.onDebtTransfer(address,address) external  => DISPATCHER(true);
-
-    // `CrossReentrancyGuard`
-    function _.turnOnReentrancyProtection() external => DISPATCHER(true);
-    function _.turnOffReentrancyProtection() external => DISPATCHER(true);
 
     // ---- `IInterestRateModel` -----------------------------------------------
     // Since `getCompoundInterestRateAndUpdate` is not *pure*, this is not strictly sound.
@@ -66,7 +44,7 @@ methods {
 
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) interestGhost;
 
-/// @title An arbitrary (pure) function for the interest rate
+// @title An arbitrary (pure) function for the interest rate
 function CVLGetCompoundInterestRate(
     uint256 _collateralAssets,
     uint256 _debtAssets,
@@ -78,7 +56,7 @@ function CVLGetCompoundInterestRate(
 
 ghost mapping(address => mapping(uint256 => uint256)) interestGhostSilo;
 
-/// @title An arbitrary (pure) function for the interest rate 
+// @title An arbitrary (pure) function for the interest rate 
 function CVLGetCompoundInterestRateForSilo(
     address _silo,
     uint256 _blockTimestamp
@@ -87,7 +65,7 @@ function CVLGetCompoundInterestRateForSilo(
 }
 
 
-/// @title Require that the second env has at least as much allowance and balance as first
+// @title Require that the second env has at least as much allowance and balance as first
 function requireSecondEnvAtLeastAsFirst(env e1, env e2) {
     /// At least as much allowance as first `env`
     require (
@@ -166,6 +144,35 @@ rule RA_deposit_recipient_is_not_restricted(address user1, address user2, uint25
     assert user2 !=0 => !lastReverted;
 }
 
+/// @title The repay action of a borrower is not discriminated (by shares)
+/// @property user-access
+rule RA_repay_borrower_is_not_restricted_by_shares(
+    address borrower1,
+    address borrower2,
+    uint256 amount
+) {
+    env e;
+    require borrower2 != 0;
+
+    // Get the borrowers debts
+    uint256 debt1 = shareDebtToken0.balanceOf(e, borrower1);
+    uint256 debt2 = shareDebtToken0.balanceOf(e, borrower2);
+    require debt2 >= debt1;
+
+    storage initState = lastStorage;
+    repay(e, amount, borrower1);
+    repay@withrevert(e, amount, borrower2) at initState;
+
+
+    // The repaid amount is less than the borrower's debt, hence the operation must succeed.
+    assert !lastReverted;
+}
+
+//////////////////////////////////
+//      IN DEVELOPMENT   
+//////////////////////////////////
+//      rules bellow are not done
+//////////////////////////////////
 
 /// @title The repay action of a borrower is not discriminated
 /// @property user-access
@@ -203,29 +210,4 @@ rule RA_repay_borrower_is_not_restricted(
     // If the repaid amount is less than the borrower's debt then the operation
     // must succeed.
     assert (amount <= borrower2_debt) => !reverted;
-}
-
-
-/// @title The repay action of a borrower is not discriminated (by shares)
-/// @property user-access
-rule RA_repay_borrower_is_not_restricted_by_shares(
-    address borrower1,
-    address borrower2,
-    uint256 amount
-) {
-    env e;
-    require borrower2 != 0;
-
-    // Get the borrowers debts
-    uint256 debt1 = shareDebtToken0.balanceOf(e, borrower1);
-    uint256 debt2 = shareDebtToken0.balanceOf(e, borrower2);
-    require debt2 >= debt1;
-
-    storage initState = lastStorage;
-    repay(e, amount, borrower1);
-    repay@withrevert(e, amount, borrower2) at initState;
-
-
-    // The repaid amount is less than the borrower's debt, hence the operation must succeed.
-    assert !lastReverted;
 }

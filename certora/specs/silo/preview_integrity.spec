@@ -1,16 +1,13 @@
 /* Integrity of preview functions */
 
-import "../requirements/two_silos_tokens_requirements.spec";
-import "../summaries/two_silos_summaries.spec";
-import "../summaries/siloconfig_dispatchers.spec";
-import "../summaries/config_for_two_in_cvl.spec";
-import "../summaries/safe-approximations.spec";
-import "../summaries/interest_rate_model_v2.spec";
+import "../setup/CompleteSiloSetup.spec";
+import "unresolved.spec";
+import "../setup/summaries/interest_rate_model_v2.spec";
 
 // ---- Methods and Invariants -------------------------------------------------
 
 // This invariant is required for some of the rules above,
-// and should be proved elsewhere (TODO indicate where)
+// and should be proved elsewhere
 invariant assetsZeroInterestRateTimestampZero(env e)
     silo0.getCollateralAssets(e) > 0 || silo0.getDebtAssets(e) > 0 =>
     silo0.getSiloDataInterestRateTimestamp(e) > 0 ;
