@@ -34,9 +34,9 @@ methods {
 
 // Check that the owner has more power than the guardian.
 rule ownerIsGuardian(method f, calldataarg args)
-filtered {
-    f -> (!f.isView && f.contract == currentContract)
-}
+    filtered {
+        f -> (!f.isView && f.contract == currentContract)
+    }
 {
     storage initial = lastStorage;
 
@@ -62,9 +62,9 @@ filtered {
 
 // Check that the owner has more power than the curator.
 rule ownerIsCurator(method f, calldataarg args)
-filtered {
-    f -> (!f.isView && f.contract == currentContract)
-}
+    filtered {
+        f -> (!f.isView && f.contract == currentContract)
+    }
 {
     storage initial = lastStorage;
 
@@ -90,9 +90,9 @@ filtered {
 
 // Check that the curator has more power than allocators.
 rule curatorIsAllocator(method f, calldataarg args)
-filtered {
-    f -> (!f.isView && f.contract == currentContract)
-}
+    filtered {
+        f -> (!f.isView && f.contract == currentContract)
+    }
 {
     storage initial = lastStorage;
 
