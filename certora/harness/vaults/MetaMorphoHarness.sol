@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {
     MetaMorpho, PendingUint192, PendingAddress, IERC4626, MarketConfig, ConstantsLib, Math
-} from "silo-vaults/contracts/MetaMorpho.sol";
+} from "./contracts/MetaMorpho.sol";
 
 contract MetaMorphoHarness is MetaMorpho {
     constructor(

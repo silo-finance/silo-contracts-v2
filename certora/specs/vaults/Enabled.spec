@@ -4,7 +4,7 @@ import "DistinctIdentifiers.spec";
 function isInWithdrawQueueIsEnabled(uint256 i) returns bool {
     if(i >= withdrawQueueLength()) return true;
 
-    MetaMorphoHarness.Id id = withdrawQueue(i);
+    address id = withdrawQueue(i);
 
     return config_(id).enabled;
 }
@@ -24,7 +24,7 @@ rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue(env e, uint256 i, uint
 
     updateWithdrawQueue(e, indexes);
 
-    MetaMorphoHarness.Id id = withdrawQueue(i);
+    address id = withdrawQueue(i);
     // Safe require because j is not otherwise constrained.
     // The ghost variable deletedAt is useful to make sure that markets are not permuted and deleted at the same time in updateWithdrawQueue.
     require j == deletedAt(id);
@@ -32,7 +32,7 @@ rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue(env e, uint256 i, uint
     assert isInWithdrawQueueIsEnabled(i);
 }
 
-function isWithdrawRankCorrect(MetaMorphoHarness.Id id) returns bool {
+function isWithdrawRankCorrect(address id) returns bool {
     uint256 rank = withdrawRank(id);
 
     if (rank == 0) return true;
@@ -41,15 +41,15 @@ function isWithdrawRankCorrect(MetaMorphoHarness.Id id) returns bool {
 }
 
 // Checks that the withdraw rank of a market is given by the withdrawRank ghost variable.
-invariant withdrawRankCorrect(MetaMorphoHarness.Id id)
+invariant withdrawRankCorrect(address id)
     isWithdrawRankCorrect(id);
 
 // Checks that enabled markets have a positive withdraw rank, according to the withdrawRank ghost variable.
-invariant enabledHasPositiveRank(MetaMorphoHarness.Id id)
+invariant enabledHasPositiveRank(address id)
     config_(id).enabled => withdrawRank(id) > 0;
 
 // Check that enabled markets are in the withdraw queue.
-rule enabledIsInWithdrawQueue(MetaMorphoHarness.Id id) {
+rule enabledIsInWithdrawQueue(address id) {
     require config_(id).enabled;
 
     requireInvariant enabledHasPositiveRank(id);

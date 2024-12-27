@@ -42,3 +42,4 @@ crytic-export
 
 # certora
 .certora_internal
+certora/harness/vaults/contracts

@@ -24,6 +24,10 @@ methods {
     function maxTimelock() external returns(uint256) envfree;
     function maxQueueLength() external returns(uint256) envfree;
     function maxFee() external returns(uint256) envfree;
+
+    // HARNESS
+    function withdrawRank(address) external returns(uint256) envfree;
+    function deletedAt(address) external returns(uint256) envfree;
 }
 
 function isPendingTimelockInRange() returns bool {

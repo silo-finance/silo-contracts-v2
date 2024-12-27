@@ -1,0 +1,64 @@
+diff --git a/certora/harness/vaults/contracts/MetaMorpho.sol b/certora/harness/vaults/contracts/MetaMorpho.sol
+index 955da96b..c104cdbb 100644
+--- a/certora/harness/vaults/contracts/MetaMorpho.sol
++++ b/certora/harness/vaults/contracts/MetaMorpho.sol
+@@ -88,6 +88,19 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+     /// @inheritdoc IMetaMorphoBase
+     uint256 public lastTotalAssets;
+ 
++    // HARNESS
++    // The index of the identifier of the last market withdrawn.
++    uint256 public lastIndexWithdraw;
++
++    // HARNESS
++    // The rank of a market identifier in the withdraw queue.
++    // Returns 0 if the corresponding market is not in the withdraw queue.
++    mapping(address => uint256) public withdrawRank;
++
++    // HARNESS
++    // The last index at which a market identifier has been removed from the withdraw queue.
++    mapping(address => uint256) public deletedAt;
++
+     /* CONSTRUCTOR */
+ 
+     /// @dev Initializes the contract.
+@@ -312,6 +325,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+             seen[prevIndex] = true;
+ 
+             newWithdrawQueue[i] = market;
++
++            // HARNESS
++            withdrawRank[address(market)] = i + 1;
+         }
+ 
+         for (uint256 i; i < currLength; ++i) {
+@@ -329,6 +345,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+                     }
+                 }
+ 
++                // HARNESS
++                deletedAt[address(market)] = i;
++                delete withdrawRank[address(market)];
++
+                 delete config[market];
+             }
+         }
+@@ -720,6 +740,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+ 
+         if (supplyCap > 0) {
+             if (!marketConfig.enabled) {
++                // HARNESS
++                withdrawRank[address(market)] = withdrawQueue.length + 1;
++
+                 withdrawQueue.push(market);
+ 
+                 if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
+@@ -777,6 +800,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+     /// @dev Withdraws `assets` from Morpho.
+     function _withdrawMorpho(uint256 assets) internal virtual {
+         for (uint256 i; i < withdrawQueue.length; ++i) {
++            // HARNESS
++            lastIndexWithdraw = i;
+             IERC4626 market = withdrawQueue[i];
+ 
+             // original implementation were using `_accruedSupplyBalance` which does not care about liquidity
