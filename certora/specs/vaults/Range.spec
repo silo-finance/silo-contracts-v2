@@ -2,20 +2,17 @@
 methods {
     function multicall(bytes[]) external returns(bytes[]) => NONDET DELETE;
 
-    function MORPHO() external returns(address) envfree;
     function asset() external returns(address) envfree;
     function timelock() external returns(uint256) envfree;
     function pendingTimelock_() external returns(MetaMorphoHarness.PendingUint192) envfree;
     function guardian() external returns(address) envfree;
     function pendingGuardian_() external returns(MetaMorphoHarness.PendingAddress) envfree;
-    function config_(MetaMorphoHarness.Id) external returns(MetaMorphoHarness.MarketConfig) envfree;
-    function pendingCap_(MetaMorphoHarness.Id) external returns(MetaMorphoHarness.PendingUint192) envfree;
+    function config_(address) external returns(MetaMorphoHarness.MarketConfig) envfree;
+    function pendingCap_(address) external returns(MetaMorphoHarness.PendingUint192) envfree;
     function supplyQueueLength() external returns(uint256) envfree;
-    function supplyQueue(uint256) external returns(MetaMorphoHarness.Id) envfree;
+    function supplyQueue(uint256) external returns(address) envfree;
     function withdrawQueueLength() external returns(uint256) envfree;
-    function withdrawQueue(uint256) external returns(MetaMorphoHarness.Id) envfree;
-    function withdrawRank(MetaMorphoHarness.Id) external returns(uint256) envfree;
-    function deletedAt(MetaMorphoHarness.Id) external returns(uint256) envfree;
+    function withdrawQueue(uint256) external returns(address) envfree;
     function fee() external returns(uint96) envfree;
     function feeRecipient() external returns(address) envfree;
     function owner() external returns(address) envfree;
