@@ -10,7 +10,11 @@ hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint r
 }
 
 // Check that the contract is truly immutable.
-rule noDelegateCalls(method f, env e, calldataarg data) {
+rule noDelegateCalls(method f, env e, calldataarg data)
+    filtered {
+        f -> (f.contract == currentContract)
+    }
+{
     // Set up the initial state.
     require !delegateCall;
     f(e,data);
