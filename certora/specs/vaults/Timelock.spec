@@ -2,12 +2,12 @@
 import "Enabled.spec";
 
 methods {
-    function _.supplyShares(MetaMorphoHarness.Id id, address user) external => summarySupplyshares(id, user) expect uint256;
+    function _.supplyShares(address id, address user) external => summarySupplyshares(id, user) expect uint256;
 }
 
-ghost lastSupplyShares(MetaMorphoHarness.Id, address) returns uint256;
+ghost lastSupplyShares(address, address) returns uint256;
 
-function summarySupplyshares(MetaMorphoHarness.Id id, address user) returns uint256 {
+function summarySupplyshares(address id, address user) returns uint256 {
     uint256 res;
     require lastSupplyShares(id, user) == res;
     return res;
@@ -65,7 +65,7 @@ rule guardianUpdateTime(env e_next, method f, calldataarg args) {
 }
 
 // Show that nextCapIncreaseTime does not revert.
-rule nextCapIncreaseTimeDoesNotRevert(MetaMorphoHarness.Id id) {
+rule nextCapIncreaseTimeDoesNotRevert(address id) {
     // The environment e yields the current time.
     env e;
     require e.msg.value == 0;
@@ -83,7 +83,7 @@ rule capIncreaseTime(env e_next, method f, calldataarg args) {
     // The environment e yields the current time.
     env e;
 
-    MetaMorphoHarness.Id id;
+    address id;
 
     requireInvariant timelockInRange();
 
@@ -145,7 +145,7 @@ rule timelockDecreaseTime(env e_next, method f, calldataarg args) {
 }
 
 // Show that nextRemovableTime does not revert.
-rule nextRemovableTimeDoesNotRevert(MetaMorphoHarness.Id id) {
+rule nextRemovableTimeDoesNotRevert(address id) {
     // The environment e yields the current time.
     env e;
     require e.msg.value == 0;
@@ -165,7 +165,7 @@ rule removableTime(env e_next, method f, calldataarg args) {
     // Safe require as it corresponds to some time very far into the future.
     require e.block.timestamp < 2^63;
 
-    MetaMorphoHarness.Id id;
+    address id;
 
     requireInvariant timelockInRange();
 
