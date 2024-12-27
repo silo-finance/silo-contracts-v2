@@ -6,6 +6,7 @@ methods {
     function mint(uint256, address) external returns(uint256) => NONDET DELETE;
     function withdraw(uint256, address, address) external returns(uint256) => NONDET DELETE;
     function redeem(uint256, address, address) external returns(uint256) => NONDET DELETE;
+    function transferFrom(address, address, uint256) external returns(bool) => NONDET DELETE;
 
     function owner() external returns(address) envfree;
     function pendingOwner() external returns(address) envfree;
@@ -13,15 +14,14 @@ methods {
     function guardian() external returns(address) envfree;
     function isAllocator(address target) external returns(bool) envfree;
 
-    // Summarize Morpho external calls, as they don't depend on the authorization system of MetaMorpho.
-    function _.idToMarketParams(MetaMorphoHarness.Id) external => CONSTANT;
-    function _.supplyShares(MetaMorphoHarness.Id, address) external => CONSTANT;
-    function _.accrueInterest(MetaMorphoHarness.MarketParams) external => CONSTANT;
-    function _.expectedSupplyAssets(MetaMorphoHarness.MarketParams, address) external => CONSTANT;
-    function _.lastUpdate(MetaMorphoHarness.Id) external => CONSTANT;
-    function _.market(MetaMorphoHarness.Id) external => CONSTANT;
-    function _.supply(MetaMorphoHarness.MarketParams, uint256, uint256, address, bytes) external => CONSTANT;
-    function _.withdraw(MetaMorphoHarness.MarketParams, uint256, uint256, address, address) external => CONSTANT;
+    function _.deposit(uint256, address) external => CONSTANT;
+    function _.mint(uint256, address) external => CONSTANT;
+    function _.withdraw(uint256, address, address) external => CONSTANT;
+    function _.redeem(uint256, address, address) external => CONSTANT;
+    function _.convertToAssets(uint256) external => CONSTANT;
+    function _.approve(address, uint256) external => CONSTANT;
+    function _.transferFrom(address, address, uint256) external => CONSTANT;
+    function _.asset() external => CONSTANT;
 
     // Summarize MetaMorpho seen as a token, useful for `transferFrom`.
     function allowance(address, address) internal returns(uint256) => CONSTANT;
@@ -35,7 +35,7 @@ methods {
 // Check that the owner has more power than the guardian.
 rule ownerIsGuardian(method f, calldataarg args)
 filtered {
-    f -> !f.isView
+    f -> (!f.isView && f.contract == currentContract)
 }
 {
     storage initial = lastStorage;
@@ -63,7 +63,7 @@ filtered {
 // Check that the owner has more power than the curator.
 rule ownerIsCurator(method f, calldataarg args)
 filtered {
-    f -> !f.isView
+    f -> (!f.isView && f.contract == currentContract)
 }
 {
     storage initial = lastStorage;
@@ -91,7 +91,7 @@ filtered {
 // Check that the curator has more power than allocators.
 rule curatorIsAllocator(method f, calldataarg args)
 filtered {
-    f -> !f.isView
+    f -> (!f.isView && f.contract == currentContract)
 }
 {
     storage initial = lastStorage;
