@@ -2,54 +2,49 @@
 import "ConsistentState.spec";
 
 methods {
-    function _.supply(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, bytes data) external => summarySupply(marketParams, assets, shares, onBehalf, data) expect (uint256, uint256) ALL;
-    function _.withdraw(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, address receiver) external => summaryWithdraw(marketParams, assets, shares, onBehalf, receiver) expect (uint256, uint256) ALL;
-    function _.idToMarketParams(MetaMorphoHarness.Id id) external => summaryIdToMarketParams(id) expect MetaMorphoHarness.MarketParams ALL;
-
+    function _.deposit(uint256 assets, address receiver) external => summaryDeposit(calledContract, assets, receiver) expect (uint256) ALL;
+    function _.redeem(uint256 shares, address receiver, address spender) external => summaryRedeem(calledContract, shares, receiver, spender) expect (uint256) ALL;
+    function _.withdraw(uint256 assets, address receiver, address spender) external => summaryWithdraw(calledContract, assets, receiver, spender) expect (uint256) ALL;
     function lastIndexWithdraw() external returns(uint256) envfree;
 }
 
-function summaryIdToMarketParams(MetaMorphoHarness.Id id) returns MetaMorphoHarness.MarketParams {
-    MetaMorphoHarness.MarketParams marketParams;
-
-    // Safe require because:
-    // - markets in the supply/withdraw queue have positive lastUpdate (see LastUpdated.spec)
-    // - lastUpdate(id) > 0 => marketParams.id() == id is a verified invariant in Morpho Blue.
-    require Util.libId(marketParams) == id;
-
-    return marketParams;
-}
-
-function summarySupply(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, bytes data) returns(uint256, uint256) {
-    assert shares == 0;
+function summaryDeposit(address id, uint256 assets, address receiver) returns uint256 {
     assert assets != 0;
-    assert onBehalf == currentContract;
-    assert data.length == 0;
+    assert receiver == currentContract;
 
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
     requireInvariant supplyCapIsEnabled(id);
 
-    // Check that all markets on which MetaMorpho supplies are enabled markets.
     assert config_(id).enabled;
 
     // NONDET summary, which is sound because all non view functions in Morpho Blue are abstracted away.
-    return (_, _);
+    return (_);
 }
 
-function summaryWithdraw(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, address receiver) returns (uint256, uint256) {
-    assert shares == 0 <=> assets != 0;
-    assert onBehalf == currentContract;
+function summaryWithdraw(address id, uint256 assets, address receiver, address spender) returns uint256 {
+    assert assets != 0;
     assert receiver == currentContract;
+    assert spender == currentContract;
 
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
     uint256 index = lastIndexWithdraw();
     requireInvariant inWithdrawQueueIsEnabled(index);
 
-    // Check that all markets from which MetaMorpho withdraws are enabled markets.
     assert config_(id).enabled;
 
+    return (_);
+}
+
+function summaryRedeem(address id, uint256 shares, address receiver, address spender) returns uint256 {
+    assert shares != 0;
+    assert receiver == currentContract;
+    assert spender == currentContract;
+
+    uint256 index = lastIndexWithdraw();
+    requireInvariant inWithdrawQueueIsEnabled(index);
+
+    assert config_(id).enabled;
+    
     // NONDET summary, which is sound because all non view functions in Morpho Blue are abstracted away.
-    return (_, _);
+    return (_);
 }
 
 // Check assertions in the summaries.
