@@ -4,6 +4,8 @@ import "LastUpdated.spec";
 methods {
     function _.transfer(address, uint256) external => DISPATCHER(true);
     function _.balanceOf(address) external => DISPATCHER(true);
+
+    function _.approve(address, uint256) external => CONSTANT;
 }
 
 // Check all the revert conditions of the setCurator function.
@@ -97,12 +99,9 @@ rule submitGuardianRevertCondition(env e, address newGuardian) {
 }
 
 // Check all the revert conditions of the submitCap function.
-rule submitCapRevertCondition(env e, MetaMorphoHarness.MarketParams marketParams, uint256 newSupplyCap) {
-    MorphoHarness.Id id = Util.libId(marketParams);
-
+rule submitCapRevertCondition(env e, address id, uint256 newSupplyCap) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
     address asset = asset();
-    uint256 lastUpdate = Morpho.lastUpdate(id);
     uint256 pendingCapValidAt = pendingCap_(id).validAt;
     MetaMorphoHarness.MarketConfig config = config_(id);
 
@@ -111,13 +110,12 @@ rule submitCapRevertCondition(env e, MetaMorphoHarness.MarketParams marketParams
     require e.block.timestamp < 2^63;
     requireInvariant supplyCapIsEnabled(id);
 
-    submitCap@withrevert(e, marketParams, newSupplyCap);
+    submitCap@withrevert(e, id, newSupplyCap);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
         !hasCuratorRole ||
-        marketParams.loanToken != asset ||
-        lastUpdate == 0 ||
+        getVaultAsset(id) != asset ||
         pendingCapValidAt != 0 ||
         config.removableAt != 0 ||
         newSupplyCap == assert_uint256(config.cap) ||
@@ -125,9 +123,7 @@ rule submitCapRevertCondition(env e, MetaMorphoHarness.MarketParams marketParams
 }
 
 // Check all the revert conditions of the submitMarketRemoval function.
-rule submitMarketRemovalRevertCondition(env e, MetaMorphoHarness.MarketParams marketParams) {
-    MorphoHarness.Id id = Util.libId(marketParams);
-
+rule submitMarketRemovalRevertCondition(env e, address id) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
     uint256 pendingCapValidAt = pendingCap_(id).validAt;
     MetaMorphoHarness.MarketConfig config = config_(id);
@@ -136,7 +132,7 @@ rule submitMarketRemovalRevertCondition(env e, MetaMorphoHarness.MarketParams ma
     // Safe require as it corresponds to some time very far into the future.
     require e.block.timestamp < 2^63;
 
-    submitMarketRemoval@withrevert(e, marketParams);
+    submitMarketRemoval@withrevert(e, id);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
@@ -149,7 +145,7 @@ rule submitMarketRemovalRevertCondition(env e, MetaMorphoHarness.MarketParams ma
 
 // Check the input validation conditions under which the setSupplyQueue function reverts.
 // There are no other condition under which this function reverts, but it cannot be expressed easily because of the encoding of the universal quantifier chosen.
-rule setSupplyQueueInputValidation(env e, MorphoHarness.Id[] newSupplyQueue) {
+rule setSupplyQueueInputValidation(env e, address[] newSupplyQueue) {
     bool hasAllocatorRole = hasAllocatorRole(e.msg.sender);
     uint256 maxQueueLength = maxQueueLength();
     uint256 i;
@@ -224,7 +220,7 @@ rule revokePendingGuardianRevertCondition(env e) {
 }
 
 // Check all the revert conditions of the revokePendingCap function.
-rule revokePendingCapRevertCondition(env e, MorphoHarness.Id id) {
+rule revokePendingCapRevertCondition(env e, address id) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
 
@@ -236,7 +232,7 @@ rule revokePendingCapRevertCondition(env e, MorphoHarness.Id id) {
 }
 
 // Check all the revert conditions of the revokePendingMarketRemoval function.
-rule revokePendingMarketRemovalRevertCondition(env e, MorphoHarness.Id id) {
+rule revokePendingMarketRemovalRevertCondition(env e, address id) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
 
@@ -273,12 +269,10 @@ rule acceptGuardianRevertCondition(env e) {
 
 // Check the input validation conditions under which the acceptCap function reverts.
 // This function can also revert if interest accrual reverts or if it would lead to growing the withdraw queue past the max length.
-rule acceptCapInputValidation(env e, MetaMorphoHarness.MarketParams marketParams) {
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
-
+rule acceptCapInputValidation(env e, address id) {
     uint256 pendingCapValidAt = pendingCap_(id).validAt;
 
-    acceptCap@withrevert(e, marketParams);
+    acceptCap@withrevert(e, id);
 
     assert e.msg.value != 0 ||
            pendingCapValidAt == 0 ||
@@ -298,5 +292,3 @@ rule skimRevertCondition(env e, address token) {
         e.msg.value != 0 ||
         skimRecipient == 0;
 }
-
-// The mint, deposit, withdraw and redeem functions do not require to validate their input.
