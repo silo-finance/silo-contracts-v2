@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import "LastUpdated.spec";
 
+methods {
+    function _.approve(address, uint256) external => CONSTANT;
+}
+
 // Check that having the allocator role allows to pause supply on the vault.
 rule canPauseSupply() {
-    env e1; MetaMorphoHarness.Id[] newSupplyQueue;
+    env e1; address[] newSupplyQueue;
     require e1.msg.value == 0;
     require hasAllocatorRole(e1.msg.sender);
     require newSupplyQueue.length == 0;
@@ -24,11 +28,9 @@ rule canPauseSupply() {
     assert lastReverted;
 }
 
-rule canForceRemoveMarket(MetaMorphoHarness.MarketParams marketParams) {
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
-
+rule canForceRemoveMarket(address id) {
     requireInvariant supplyCapIsEnabled(id);
-    requireInvariant enabledHasConsistentAsset(marketParams);
+    requireInvariant enabledHasConsistentAsset(id);
     // Safe require because this holds as an invariant.
     require hasPositiveSupplyCapIsUpdated(id);
 
@@ -49,14 +51,14 @@ rule canForceRemoveMarket(MetaMorphoHarness.MarketParams marketParams) {
     assert !lastReverted;
 
     require e2.msg.value == 0;
-    submitCap@withrevert(e2, marketParams, 0);
+    submitCap@withrevert(e2, id, 0);
     assert !lastReverted;
 
     require e3.msg.value == 0;
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
     require e3.block.timestamp < 2^63;
-    submitMarketRemoval@withrevert(e3, marketParams);
+    submitMarketRemoval@withrevert(e3, id);
     assert !lastReverted;
 
     env e4; uint256[] newWithdrawQueue;
