@@ -4,11 +4,7 @@ methods {
 
     function asset() external returns(address) envfree;
     function timelock() external returns(uint256) envfree;
-    function pendingTimelock_() external returns(MetaMorphoHarness.PendingUint192) envfree;
     function guardian() external returns(address) envfree;
-    function pendingGuardian_() external returns(MetaMorphoHarness.PendingAddress) envfree;
-    function config_(address) external returns(MetaMorphoHarness.MarketConfig) envfree;
-    function pendingCap_(address) external returns(MetaMorphoHarness.PendingUint192) envfree;
     function supplyQueueLength() external returns(uint256) envfree;
     function supplyQueue(uint256) external returns(address) envfree;
     function withdrawQueueLength() external returns(uint256) envfree;
@@ -20,12 +16,18 @@ methods {
     function isAllocator(address) external returns(bool) envfree;
     function skimRecipient() external returns(address) envfree;
 
+    // HARNESS
+    function pendingTimelock_() external returns(MetaMorphoHarness.PendingUint192) envfree;
+    function getVaultAsset(address) external returns(address) envfree;
+    function pendingGuardian_() external returns(MetaMorphoHarness.PendingAddress) envfree;
+    function config_(address) external returns(MetaMorphoHarness.MarketConfig) envfree;
+    function pendingCap_(address) external returns(MetaMorphoHarness.PendingUint192) envfree;
     function minTimelock() external returns(uint256) envfree;
     function maxTimelock() external returns(uint256) envfree;
     function maxQueueLength() external returns(uint256) envfree;
     function maxFee() external returns(uint256) envfree;
 
-    // HARNESS
+    // PATCH
     function withdrawRank(address) external returns(uint256) envfree;
     function deletedAt(address) external returns(uint256) envfree;
 }

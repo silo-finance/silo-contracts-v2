@@ -84,4 +84,8 @@ contract MetaMorphoHarness is MetaMorpho {
         uint256 removableAt = config[id].removableAt;
         if (removableAt != 0) nextTime = Math.min(nextTime, removableAt);
     }
+
+    function getVaultAsset(IERC4626 id) external view returns (address asset) {
+        return id.asset();
+    }
 }
