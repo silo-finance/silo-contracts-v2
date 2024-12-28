@@ -1,5 +1,6 @@
 # TODO failing rules:
-# Timelock: https://prover.certora.com/output/40302/1de674d806dd40839e5f99ee6dafd325?anonymousKey=541f9a1fd8d34f2b6f6bbca1110bac56c68d73b3
+# ? Timelock: https://prover.certora.com/output/40302/1de674d806dd40839e5f99ee6dafd325?anonymousKey=541f9a1fd8d34f2b6f6bbca1110bac56c68d73b3
+# zero assets withdraw is possible on reallocate (MarketInteractions): https://prover.certora.com/output/40302/f691740242bb40bf9038484d70855aa9?anonymousKey=4218ebdab3fd49d95388c29c610fd2dcce8cbbb7
 
 # copy all contracts to harness folder
 cp -r silo-vaults/contracts certora/harness/vaults
