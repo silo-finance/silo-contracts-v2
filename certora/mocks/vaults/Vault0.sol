@@ -7,4 +7,8 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 
 contract Vault0 is ERC4626 {
    constructor(IERC20 asset) ERC4626(asset) ERC20("Vault0", "VLT0") {}
+
+   function getTotalSupply(address vault) external view returns (uint256) {
+      return IERC20(vault).totalSupply();
+   }
 }
