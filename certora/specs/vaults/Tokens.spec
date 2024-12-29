@@ -6,83 +6,76 @@ methods {
     function _.transferFrom(address, address, uint256) external => DISPATCHER(true);
     function _.balanceOf(address) external => DISPATCHER(true);
 
-    function _.supply(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, bytes data) external => summarySupply(marketParams, assets, shares, onBehalf, data) expect (uint256, uint256) ALL;
-    function _.withdraw(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, address receiver) external => summaryWithdraw(marketParams, assets, shares, onBehalf, receiver) expect (uint256, uint256) ALL;
-    function _.idToMarketParams(MetaMorphoHarness.Id id) external => summaryIdToMarketParams(id) expect MetaMorphoHarness.MarketParams ALL;
-
-    function _.expectedSupplyAssets(MetaMorphoHarness.MarketParams, address) external => NONDET;
-    function _.borrowRate(MetaMorphoHarness.MarketParams, MetaMorphoHarness.Market) external => NONDET;
+    function _.deposit(uint256 assets, address receiver) external => summaryDeposit(calledContract, assets, receiver) expect (uint256) ALL;
+    function _.withdraw(uint256 assets, address receiver, address spender) external => summaryWithdraw(calledContract, assets, receiver, spender) expect (uint256) ALL;
+    function _.redeem(uint256 shares, address receiver, address spender) external => summaryRedeem(calledContract, shares, receiver, spender) expect (uint256) ALL;
+    
+    function vault0.getConvertToShares(address vault, uint256 assets) external returns(uint256) envfree;
+    function vault0.getConvertToAssets(address vault, uint256 shares) external returns(uint256) envfree;
 }
 
-function summaryIdToMarketParams(MetaMorphoHarness.Id id) returns MetaMorphoHarness.MarketParams {
-    MetaMorphoHarness.MarketParams marketParams;
-    uint256 lastUpdated = Morpho.lastUpdate(id);
-
-    // Safe require because markets in the supply/withdraw queue have positive last update (see LastUpdated.spec).
-    require lastUpdated > 0;
-    // Safe require because it is a verified invariant in Morpho Blue.
-    require lastUpdated > 0 => Util.libId(marketParams) == id;
-
-    return marketParams;
-}
-
-function summarySupply(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, bytes data) returns (uint256, uint256) {
-    assert shares == 0;
-    assert onBehalf == currentContract;
-    assert data.length == 0;
-
-    requireInvariant supplyCapIsEnabled(Util.libId(marketParams));
-    requireInvariant enabledHasConsistentAsset(marketParams);
-
-    // Summarize supply as just a transfer for the purpose of this specification file, which is sound because only the properties about tokens are verified in this file.
-    ERC20.safeTransferFrom(marketParams.loanToken, currentContract, MORPHO(), assets);
-
-    return (assets, shares);
-}
-
-function summaryWithdraw(MetaMorphoHarness.MarketParams marketParams, uint256 assets, uint256 shares, address onBehalf, address receiver) returns (uint256, uint256) {
-    assert onBehalf == currentContract;
+function summaryDeposit(address id, uint256 assets, address receiver) returns uint256 {
+    assert assets != 0;
     assert receiver == currentContract;
 
-    MetaMorphoHarness.Id id = Util.libId(marketParams);
+    requireInvariant supplyCapIsEnabled(id);
+    requireInvariant enabledHasConsistentAsset(id);
+    
+    ERC20.safeTransferFrom(asset(), currentContract, id, assets);
+    return vault0.getConvertToShares(id, assets);
+}
+
+function summaryWithdraw(address id, uint256 assets, address receiver, address spender) returns uint256 {
+    assert receiver == currentContract;
+    assert spender == currentContract;
 
     // Safe require because it is verified in MarketInteractions.
     require config_(id).enabled;
-    requireInvariant enabledHasConsistentAsset(marketParams);
+    requireInvariant enabledHasConsistentAsset(id);
 
-    // Use effective withdrawn assets if shares are given as input.
-    uint256 withdrawn;
-    if (shares == 0) {
-        require withdrawn == assets;
-    } else {
-        uint256 totalAssets = Morpho.virtualTotalSupplyAssets(id);
-        uint256 totalShares = Morpho.virtualTotalSupplyShares(id);
-        require withdrawn == Util.libMulDivDown(shares, totalAssets, totalShares);
-    }
-    // Summarize withdraw as just a transfer for the purpose of this specification file, which is sound because only the properties about tokens are verified in this file.
-    ERC20.safeTransferFrom(marketParams.loanToken, MORPHO(), currentContract, withdrawn);
+    address asset = asset();
 
-    return (withdrawn, shares);
+    ERC20.safeTransferFrom(asset, id, currentContract, assets);
+
+    return vault0.getConvertToShares(id, assets);
+}
+
+function summaryRedeem(address id, uint256 shares, address receiver, address spender) returns uint256 {
+    assert receiver == currentContract;
+    assert spender == currentContract;
+
+    // Safe require because it is verified in MarketInteractions.
+    require config_(id).enabled;
+    requireInvariant enabledHasConsistentAsset(id);
+
+    address asset = asset();
+    uint256 assets = vault0.getConvertToAssets(id, shares);
+
+    ERC20.safeTransferFrom(asset, id, currentContract, assets);
+
+    return assets;
 }
 
 // Check balances change on deposit.
-rule depositTokenChange(env e, uint256 assets, address receiver) {
+rule depositTokenChange(env e, uint256 assets, address receiver, address id) {
     address asset = asset();
-    address morpho = MORPHO();
 
     // Trick to require that all the following addresses are different.
-    require morpho == 0x10;
     require asset == 0x11;
     require currentContract == 0x12;
     require e.msg.sender == 0x13;
+    require id == 0x14;
 
-    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, morpho);
+    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, id);
     uint256 balanceMetaMorphoBefore = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderBefore = ERC20.balanceOf(asset, e.msg.sender);
     deposit(e, assets, receiver);
-    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, morpho);
+    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, id);
     uint256 balanceMetaMorphoAfter = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderAfter = ERC20.balanceOf(asset, e.msg.sender);
+
+    require balanceMorphoAfter > balanceMorphoBefore;
+    require balanceSenderBefore > balanceSenderAfter;
 
     assert assert_uint256(balanceMorphoAfter - balanceMorphoBefore) == assets;
     assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
@@ -90,23 +83,25 @@ rule depositTokenChange(env e, uint256 assets, address receiver) {
 }
 
 // Check balance changes on withdraw.
-rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner) {
+rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner, address id) {
     address asset = asset();
-    address morpho = MORPHO();
 
     // Trick to require that all the following addresses are different.
-    require morpho == 0x10;
     require asset == 0x11;
     require currentContract == 0x12;
     require receiver == 0x13;
+    require id == 0x14;
 
-    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, morpho);
+    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, id);
     uint256 balanceMetaMorphoBefore = ERC20.balanceOf(asset, currentContract);
     uint256 balanceReceiverBefore = ERC20.balanceOf(asset, receiver);
     withdraw(e, assets, receiver, owner);
-    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, morpho);
+    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, id);
     uint256 balanceMetaMorphoAfter = ERC20.balanceOf(asset, currentContract);
     uint256 balanceReceiverAfter = ERC20.balanceOf(asset, receiver);
+
+    require balanceMorphoBefore > balanceMorphoAfter;
+    require balanceReceiverAfter > balanceReceiverBefore;
 
     assert assert_uint256(balanceMorphoBefore - balanceMorphoAfter) == assets;
     assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
@@ -114,24 +109,22 @@ rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner)
 }
 
 // Check that balances do not change on reallocate.
-rule reallocateTokenChange(env e, MetaMorphoHarness.MarketAllocation[] allocations) {
+rule reallocateTokenChange(env e, MetaMorphoHarness.MarketAllocation[] allocations, address id) {
     address asset = asset();
-    address morpho = MORPHO();
 
     // Trick to require that all the following addresses are different.
-    require morpho == 0x10;
+    require id == 0x10;
     require asset == 0x11;
     require currentContract == 0x12;
 
-    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, morpho);
+    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, id);
     uint256 balanceMetaMorphoBefore = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderBefore = ERC20.balanceOf(asset, e.msg.sender);
     reallocate(e, allocations);
-    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, morpho);
+    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, id);
     uint256 balanceMetaMorphoAfter = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderAfter = ERC20.balanceOf(asset, e.msg.sender);
 
-    assert balanceMorphoAfter == balanceMorphoAfter;
     assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
     assert balanceSenderAfter == balanceSenderBefore;
 }
