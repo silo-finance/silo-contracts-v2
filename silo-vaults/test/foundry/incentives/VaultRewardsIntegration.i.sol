@@ -105,15 +105,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_onDeposit -vv
     */
     function test_vaults_rewards_onDeposit() public {
-        vm.prank(OWNER);
-        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
-
-        SiloIncentivesControllerCL cl = new SiloIncentivesControllerCL(
-            address(vaultIncentivesController), address(siloIncentivesController)
-        );
-
-        vm.prank(OWNER);
-        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
+        _setupIncentives();
 
         uint256 rewardsPerSec = 3210;
 
@@ -203,15 +195,7 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_calculations -vv
     */
     function test_vaults_rewards_calculations() public {
-        vm.prank(OWNER);
-        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
-
-        SiloIncentivesControllerCL cl = new SiloIncentivesControllerCL(
-            address(vaultIncentivesController), address(siloIncentivesController)
-        );
-
-        vm.prank(OWNER);
-        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
+        _setupIncentives();
 
         uint256 rewardsPerSec = 3210;
 
@@ -270,5 +254,50 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
 
         vaultIncentivesController.claimRewards(address(this));
         assertEq(reward1.balanceOf(address(this)), rewardsPerSec * 2, "claimed rewards");
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_calculations -vv
+    */
+    function test_1secondDistribution() public {
+        _setupIncentives();
+
+        uint256 rewardsPerSec = 1e18;
+
+        // TODO why different rewards?
+//        uint256 depositAmount = 1e5; // reward: 2419202000000000000000000
+//        uint256 depositAmount = _cap(); // reward 2381976568446569244243622
+        uint256 depositAmount = _cap() * 30; // reward 2381976568446569244243622
+
+        vault.deposit(depositAmount, address(this));
+
+        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: "program1",
+            rewardToken: address(reward1),
+            emissionPerSecond: uint104(rewardsPerSec),
+            distributionEnd: uint40(block.timestamp + 1)
+        }));
+
+        vm.warp(block.timestamp + 100);
+
+        string memory programName1 = Strings.toHexString(address(reward1));
+
+        assertEq(
+            siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202_000000000000000000 ??
+            rewardsPerSec,
+            "expected rewards for silo for 1s"
+        );
+    }
+
+    function _setupIncentives() private {
+        vm.prank(OWNER);
+        vaultIncentivesModule.addNotificationReceiver(INotificationReceiver(address(vaultIncentivesController)));
+
+        SiloIncentivesControllerCL cl = new SiloIncentivesControllerCL(
+            address(vaultIncentivesController), address(siloIncentivesController)
+        );
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
     }
 }
