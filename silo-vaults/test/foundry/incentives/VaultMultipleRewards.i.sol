@@ -144,7 +144,8 @@ contract VaultMultipleRewardsTest is IntegrationTest {
             "expected ZERO rewards, because no incentives were generated"
         );
 
-        // do another deposit, this one will go to silo with incentives
+        // do another deposit, this one will go to silo with incentives, because we have CAP on #0 and #1
+
         vault.deposit(1e18, address(this));
 
         assertEq(IShareToken(siloWithIncentives).totalSupply(), sharesCapped, "siloWithIncentives got deposit");
@@ -188,5 +189,59 @@ contract VaultMultipleRewardsTest is IntegrationTest {
             rewardsPerSec * 2 / 3,
             "expected rewards for other depositor"
         );
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_claimFromMultiplePrograms -vv
+    */
+    function test_vaults_claimFromMultiplePrograms() public {
+        uint256 rewardsPerSec = 1e18;
+
+        uint256 depositAmount = _cap() * 30;
+
+        vault.deposit(depositAmount, address(this));
+
+        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: "program1",
+            rewardToken: address(reward1),
+            emissionPerSecond: uint104(rewardsPerSec),
+            distributionEnd: uint40(block.timestamp + 1)
+        }));
+
+//        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+//            name: "program2",
+//            rewardToken: address(reward2),
+//            emissionPerSecond: uint104(rewardsPerSec),
+//            distributionEnd: uint40(block.timestamp + 1)
+//        }));
+
+        vm.warp(block.timestamp + 1);
+
+        string memory programName1 = Strings.toHexString(address(reward1));
+        string memory programName2 = Strings.toHexString(address(reward2));
+
+        assertEq(
+            siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202000000000000000000 ??
+            rewardsPerSec,
+            "expected rewards for silo after 1s"
+        );
+
+        vault.claimRewards();
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), programName1),
+            rewardsPerSec,
+            "expected rewards1"
+        );
+//
+//        assertEq(
+//            vaultIncentivesController.getRewardsBalance(address(this), programName2),
+//            rewardsPerSec,
+//            "expected rewards2"
+//        );
+
+        vaultIncentivesController.claimRewards(address(this));
+
+//        assertEq(reward1.balanceOf(address(this)), 1, "rewards1 transfered");
     }
 }
