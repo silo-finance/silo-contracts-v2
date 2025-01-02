@@ -264,7 +264,8 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
 
         uint256 rewardsPerSec = 1e18;
 
-        // TODO why different rewards?
+        // TODO why different rewards if we only changed deposit amount?
+        // is it precision error?
 //        uint256 depositAmount = 1e5; // reward: 2419202000000000000000000
 //        uint256 depositAmount = _cap(); // reward 2381976568446569244243622
         uint256 depositAmount = _cap() * 30; // reward 2381976568446569244243622
