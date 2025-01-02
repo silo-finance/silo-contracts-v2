@@ -268,7 +268,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         string memory programName1 = Strings.toHexString(address(reward1));
 
         assertEq(
-            // TODO why we getting such a huge reward if rewardsPerSec = 1e18 and we ditributed only for 1s
+            // TODO ISSUE: why we getting such a huge reward if rewardsPerSec = 1e18 and we ditributed only for 1s
             siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202_000000000000000000 ??
             rewardsPerSec,
             "expected rewards for silo for 1s"
