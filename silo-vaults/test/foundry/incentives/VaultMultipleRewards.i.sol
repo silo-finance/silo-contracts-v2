@@ -126,7 +126,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
             name: "x",
             rewardToken: address(reward1),
             emissionPerSecond: uint104(rewardsPerSec),
-            distributionEnd: uint40(block.timestamp + 1)
+            distributionEnd: uint40(block.timestamp + 10)
         }));
 
         vm.warp(block.timestamp + 1);
@@ -144,7 +144,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
             "expected ZERO rewards, because no incentives were generated"
         );
 
-        // do another deposit, this one will go to silo with incentives, because we have CAP on #0 and #1
+        // do another deposit, this one will go to silo with incentives
 
         vault.deposit(1e18, address(this));
 
@@ -195,9 +195,8 @@ contract VaultMultipleRewardsTest is IntegrationTest {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_claimFromMultiplePrograms -vv
     */
     function test_vaults_claimFromMultiplePrograms() public {
-        uint256 rewardsPerSec = 1e18;
-
-        uint256 depositAmount = _cap() * 30;
+        uint256 rewardsPerSec = 12345678e8;
+        uint256 depositAmount = _cap() * 30; // must be enough to get to incentivise silo as #2
 
         vault.deposit(depositAmount, address(this));
 
@@ -205,98 +204,50 @@ contract VaultMultipleRewardsTest is IntegrationTest {
             name: "program1",
             rewardToken: address(reward1),
             emissionPerSecond: uint104(rewardsPerSec),
-            distributionEnd: uint40(block.timestamp + 1)
+            distributionEnd: uint40(block.timestamp + 3)
         }));
 
-//        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-//            name: "program2",
-//            rewardToken: address(reward2),
-//            emissionPerSecond: uint104(rewardsPerSec),
-//            distributionEnd: uint40(block.timestamp + 1)
-//        }));
+        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: "program2",
+            rewardToken: address(reward2),
+            emissionPerSecond: uint104(rewardsPerSec),
+            distributionEnd: uint40(block.timestamp + 3)
+        }));
 
         vm.warp(block.timestamp + 1);
 
-        string memory programName1 = Strings.toHexString(address(reward1));
-        string memory programName2 = Strings.toHexString(address(reward2));
+        assertEq(
+            siloIncentivesController.getRewardsBalance(address(vault), "program1"),
+            rewardsPerSec,
+            "[program1] expected rewards for silo after 1s"
+        );
 
         assertEq(
-            siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202000000000000000000 ??
+            siloIncentivesController.getRewardsBalance(address(vault), "program2"),
             rewardsPerSec,
-            "expected rewards for silo after 1s"
+            "[program2] expected rewards for silo after 1s"
         );
 
         vault.claimRewards();
+
+        string memory programName1 = Strings.toHexString(address(reward1));
+        string memory programName2 = Strings.toHexString(address(reward2));
 
         assertEq(
             vaultIncentivesController.getRewardsBalance(address(this), programName1),
             rewardsPerSec,
             "expected rewards1"
         );
-//
-//        assertEq(
-//            vaultIncentivesController.getRewardsBalance(address(this), programName2),
-//            rewardsPerSec,
-//            "expected rewards2"
-//        );
+
+        assertEq(
+            vaultIncentivesController.getRewardsBalance(address(this), programName2),
+            rewardsPerSec,
+            "expected rewards2"
+        );
 
         vaultIncentivesController.claimRewards(address(this));
 
-//        assertEq(reward1.balanceOf(address(this)), 1, "rewards1 transfered");
-    }
-
-
-    /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_debugWeirdCase -vv
-    */
-    function test_debugWeirdCase() public {
-        uint256 rewardsPerSec = 1e18;
-
-        uint256 depositAmount = _cap() * 30;
-
-        vault.deposit(depositAmount, address(this));
-
-        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: "program1",
-            rewardToken: address(reward1),
-            emissionPerSecond: uint104(rewardsPerSec),
-            distributionEnd: uint40(block.timestamp + 1)
-        }));
-
-        vm.warp(block.timestamp + 100);
-
-        string memory programName1 = Strings.toHexString(address(reward1));
-
-        assertEq(
-            // TODO ISSUE: why we getting such a huge reward if rewardsPerSec = 1e18 and we ditributed only for 1s
-            siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202_000000000000000000 ??
-            rewardsPerSec,
-            "expected rewards for silo for 1s"
-        );
-    }
-
-    function test_1sDistribution() public {
-        uint256 rewardsPerSec = 1e18;
-
-        uint256 depositAmount = _cap() * 30;
-
-        vault.deposit(depositAmount, address(this));
-
-        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: "program1",
-            rewardToken: address(reward1),
-            emissionPerSecond: uint104(rewardsPerSec),
-            distributionEnd: uint40(block.timestamp + 1)
-        }));
-
-        vm.warp(block.timestamp + 100);
-
-        string memory programName1 = Strings.toHexString(address(reward1));
-
-        assertEq(
-            siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202_000000000000000000 ??
-            rewardsPerSec,
-            "expected rewards for silo for 1s"
-        );
+        assertEq(reward1.balanceOf(address(this)), rewardsPerSec, "rewards1 transferred");
+        assertEq(reward2.balanceOf(address(this)), rewardsPerSec, "rewards2 transferred");
     }
 }
