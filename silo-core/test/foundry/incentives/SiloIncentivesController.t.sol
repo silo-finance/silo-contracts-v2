@@ -121,8 +121,12 @@ contract SiloIncentivesControllerTest is Test {
 
         IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
 
+        uint256 lastUpdateTimestamp = detailsBefore.lastUpdateTimestamp == 0
+            ? block.timestamp
+            : detailsBefore.lastUpdateTimestamp;
+
         uint256 expectedIndex =
-            emissionPerSecond * (block.timestamp - detailsBefore.lastUpdateTimestamp) * _PRECISION / _TOTAL_SUPPLY;
+            emissionPerSecond * (block.timestamp - lastUpdateTimestamp) * _PRECISION / _TOTAL_SUPPLY;
 
         assertEq(details.rewardToken, _rewardToken, "invalid rewardToken");
         assertEq(details.distributionEnd, distributionEnd, "invalid distributionEnd");
