@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
@@ -276,6 +278,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 reserveIndex,
         uint256 userIndex
     ) internal pure virtual returns (uint256 rewards) {
+//        rewards = principalUserBalance * (userIndex == 0 ? 1 seconds : reserveIndex - userIndex);
         rewards = principalUserBalance * (reserveIndex - userIndex);
         unchecked { rewards /= TEN_POW_PRECISION; }
     }
@@ -306,12 +309,20 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
             return currentIndex;
         }
 
+        console2.log("currentTimestamp = %s > %s ? %s : block.timestamp", block.timestamp, distributionEnd, distributionEnd);
         uint256 currentTimestamp = block.timestamp > distributionEnd ? distributionEnd : block.timestamp;
+        console2.log("timeDelta = %s - %s", currentTimestamp, lastUpdateTimestamp);
         uint256 timeDelta = currentTimestamp - (lastUpdateTimestamp == 0 ? currentTimestamp : lastUpdateTimestamp);
 
+        console2.log("newIndex = %s * %s * %s", emissionPerSecond, timeDelta, TEN_POW_PRECISION);
         newIndex = emissionPerSecond * timeDelta * TEN_POW_PRECISION;
+        console2.log("newIndex /= %s", totalBalance);
         unchecked { newIndex /= totalBalance; }
+        console2.log("newIndex += %s", currentIndex);
         newIndex += currentIndex;
+        console2.log("prevIndex => %s", currentIndex);
+        console2.log(" newIndex => %s", newIndex);
+        console2.log("        diff %s", newIndex - currentIndex);
     }
 
     function _shareToken() internal view virtual returns (IERC20 shareToken) {
