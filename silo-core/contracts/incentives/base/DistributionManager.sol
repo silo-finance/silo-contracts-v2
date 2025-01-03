@@ -307,7 +307,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         }
 
         uint256 currentTimestamp = block.timestamp > distributionEnd ? distributionEnd : block.timestamp;
-        uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
+        uint256 timeDelta = currentTimestamp - (lastUpdateTimestamp == 0 ? currentTimestamp : lastUpdateTimestamp);
 
         newIndex = emissionPerSecond * timeDelta * TEN_POW_PRECISION;
         unchecked { newIndex /= totalBalance; }
