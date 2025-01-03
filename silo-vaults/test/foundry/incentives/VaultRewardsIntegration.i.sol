@@ -257,19 +257,23 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_calculations -vv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution -vv --mc VaultRewardsIntegrationTest
     */
     function test_1secondDistribution() public {
         _setupIncentives();
 
-        uint256 rewardsPerSec = 1e18;
+        uint256 rewardsPerSec = 3210;
 
         // TODO ISSUE: why different rewards if we only changed deposit amount?
         // is it precision error?
-//        uint256 depositAmount = 1e5; // reward: 2419202000000000000000000
+        uint256 depositAmount = 1e5; // reward: 2419202000000000000000000
 //        uint256 depositAmount = _cap(); // reward 2381976568446569244243622
-        uint256 depositAmount = _cap() * 30; // reward 2381976568446569244243622
+        // looks that this is precision error, with higher amount IncentivesProgramIndex is lower
+        // and we getting rewards beased on index
+        // TODO create a test that proves, that thi precision error will generate lower amounts, not higher
+//        uint256 depositAmount = _cap() * 30; // reward 2381976568446569244243622
 
+        // ISSUE #2, why we getting 2419202000000000000000000 if rewardsPerSec = 1e18 ??
         vault.deposit(depositAmount, address(this));
 
         siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -279,9 +283,27 @@ contract VaultRewardsIntegrationTest is IntegrationTest {
             distributionEnd: uint40(block.timestamp + 1)
         }));
 
-        vm.warp(block.timestamp + 100);
+        vm.warp(block.timestamp + 1);
 
         string memory programName1 = Strings.toHexString(address(reward1));
+
+
+        /*
+
+        1e18:
+        VM::warp(2419301)
+        incentivesProgram: "program1", newIndex: 24192020000000000000000000000000000
+
+        _cap() * 30:
+
+        0xeba7c14174f7022B0Fc784d18cfF8A67d280d4C5::balanceOf(SiloVault: [0xa0Cb889707d426A7A386870A03bc70d1b0697598]
+            340282366920938463463374607431768211455000
+
+        incentivesProgram: "program1", newIndex: 7
+
+
+        */
+//        vault.claimRewards();
 
         assertEq(
             siloIncentivesController.getRewardsBalance(address(vault), "program1"), // 2419202_000000000000000000 ??
