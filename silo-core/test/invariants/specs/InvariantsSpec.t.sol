@@ -51,7 +51,7 @@ abstract contract InvariantsSpec {
 
     string constant SILO_INVARIANT_C = "SILO_INVARIANT_C: debtAssetsWithInterest >= _debtAssets"; // TODO
 
-    string constant SILO_INVARIANT_D = "SILO_INVARIANT_D: collateralConfig.silo is equal borrowerCollateralSilo[_depositOwner] if there is debt"; // TODO
+    string constant SILO_INVARIANT_D = "SILO_INVARIANT_D: collateralConfig.silo is equal borrowerCollateralSilo[_depositOwner] if there is debt";
 
     string constant SILO_INVARIANT_E = "SILO_INVARIANT_E: if debtConfig.silo is not zero then collateralConfig.silo is not zero";
 

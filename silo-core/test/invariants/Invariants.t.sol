@@ -48,6 +48,7 @@ abstract contract Invariants is BaseInvariants, SiloMarketInvariants, LendingBor
             assert_SILO_INVARIANT_A(silos[i]);
         }
         for (uint256 j = 0; j < actorAddresses.length; j++) {
+            assert_SILO_INVARIANT_D(actorAddresses[j]);
             assert_SILO_INVARIANT_E(actorAddresses[j]);
             assert_SILO_INVARIANT_F(actorAddresses[j]);
         }

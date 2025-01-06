@@ -101,7 +101,7 @@ contract CryticToFoundry is Invariants, Setup {
         _delay(563776);
         this.borrowSameAsset(6761450672746141936113668479670284573524169850700252331526405092555618758321, 2, 10);
         _delay(385872 + 456951);
-        this.setDaoFee(2877132025);
+        this.setDaoFee(0,2877132025);
         _delay(31082);
         this.repayShares(32472179111736603803505870944287, 4, 22);
         _delay(174548);
@@ -292,16 +292,14 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                          BROKEN POSTCONDITIONS: FINAL REVISION                            //
+    //                                 POSTCONDITIONS: FINAL REVISION                            //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function test_replayflashLoan() public {
-        // @audit-issue Issue 1: 0 amount flashloan should make the the transaction fail like the other actions
         Tester.flashLoan(0, 0, 0, 0);
     }
 
     function test_replayrepay() public {
-        // @audit-issue Issue 2: User can over repay
         _setUpActor(0x0000000000000000000000000000000000010000);
         _delay(415353);
         Tester.deposit(6061261593023587147818, 7, 10, 81);
@@ -343,7 +341,6 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_replayassertBORROWING_HSPOST_F() public {
-        // @audit-issue Issue 3: user trying to borrow maxBorrow on the same transaction reverts by 1 wei
         Tester.setOraclePrice(10526380859944180462329986180594915923664232381716724045, 0);
         Tester.setOraclePrice(0, 1);
         Tester.deposit(3378525105089190668364100193, 0, 1, 1);
@@ -352,7 +349,6 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_replayassert_LENDING_INVARIANT_B() public {
-        // @audit-issue Issue 4: maxWithdraw() used as input to withdraw() should never revert -> revert by 1 wei
         _setUpActor(0x0000000000000000000000000000000000010000);
         _delay(326792);
         Tester.mint(340282423155723237052512385577070742059, 30, 112, 137);
@@ -460,7 +456,6 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_replaytransitionCollateral3() public {
-        //@audit-issue Issue 5: transitionCollateral TransitionCollateral should not increase users assets
         Tester.mint(1, 0, 0, 1);
         Tester.deposit(1, 0, 0, 1);
         Tester.mint(1, 0, 0, 0);

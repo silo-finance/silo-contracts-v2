@@ -77,6 +77,12 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    function _hasDebt(address user) internal returns (bool) {
+        for (uint256 i; i < debtTokens.length; i++) {
+            if (IERC20(debtTokens[i]).balanceOf(user) > 0) return true;
+        }
+    }
+
     function _getUserAssets(address silo, address user) internal view returns (uint256) {
         (address protectedShareToken,) =
             siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Protected);

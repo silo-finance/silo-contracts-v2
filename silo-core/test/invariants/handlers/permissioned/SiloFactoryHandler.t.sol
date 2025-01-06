@@ -22,8 +22,8 @@ contract SiloFactoryHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setDaoFee(uint256 _newDaoFee) external {
-        siloFactory.setDaoFee(_newDaoFee);
+    function setDaoFee(uint128 _minFee, uint128 _maxFee) external {
+        siloFactory.setDaoFee(_minFee, _maxFee);
     }
 
     function setMaxDeployerFee(uint256 _newMaxDeployerFee) internal {

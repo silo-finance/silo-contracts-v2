@@ -180,8 +180,8 @@ contract Setup is BaseTest {
         uint256 daoFee = 0.15e18;
         address daoFeeReceiver = feeReceiver == address(0) ? address(0) : feeReceiver;
 
-        siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
-        siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
+        siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
+        siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
     }
 
     function core_deployInterestRateConfigFactory() internal {
@@ -196,7 +196,9 @@ contract Setup is BaseTest {
                 kcrit: 317097919838,
                 klow: 105699306613,
                 klin: 4439370878,
-                beta: 69444444444444
+                beta: 69444444444444,
+                ri: 0,
+                Tcrit: 0
             })
         );
     }
@@ -243,7 +245,11 @@ contract Setup is BaseTest {
         ISiloConfig.ConfigData memory configData1;
 
         (configData0, configData1) = Views.copySiloConfig(
-            _siloInitData, siloFactory.maxDeployerFee(), siloFactory.maxFlashloanFee(), siloFactory.maxLiquidationFee()
+            _siloInitData,
+            siloFactory.daoFeeRange(),
+            siloFactory.maxDeployerFee(),
+            siloFactory.maxFlashloanFee(),
+            siloFactory.maxLiquidationFee()
         );
 
         configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
@@ -285,25 +291,28 @@ contract Setup is BaseTest {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: address(this),
-            deployerFee: 0.1e18,
+            daoFee: 0.15e18,
+            deployerFee: 0.1000e18,
             token0: address(_asset0),
             solvencyOracle0: oracle0,
             maxLtvOracle0: oracle0,
             interestRateModel0: address(interestRateModelV2),
-            maxLtv0: 0.75e18,
-            lt0: 0.85e18,
-            liquidationFee0: 0.05e18,
-            flashloanFee0: 0.01e18,
+            maxLtv0: 0.7500e18,
+            lt0: 0.8500e18,
+            liquidationTargetLtv0: 0.8500e18 * 0.9e18 / 1e18,
+            liquidationFee0: 0.0500e18,
+            flashloanFee0: 0.0100e18,
             callBeforeQuote0: true,
             hookReceiver: address(liquidationModule),
             token1: address(_asset1),
             solvencyOracle1: oracle1,
             maxLtvOracle1: oracle1,
             interestRateModel1: address(interestRateModelV2),
-            maxLtv1: 0.85e18,
-            lt1: 0.95e18,
-            liquidationFee1: 0.025e18,
-            flashloanFee1: 0.01e18,
+            maxLtv1: 0.8500e18,
+            lt1: 0.9500e18,
+            liquidationTargetLtv1: 0.9500e18 * 0.9e18 / 1e18,
+            liquidationFee1: 0.0250e18,
+            flashloanFee1: 0.0100e18,
             callBeforeQuote1: true
         });
 

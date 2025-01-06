@@ -16,25 +16,23 @@ import "forge-std/console.sol";
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
 abstract contract SiloMarketInvariants is HandlerAggregator {
     function assert_SILO_INVARIANT_A(address silo) internal {
-        try ISilo(silo).accrueInterest()  {} catch {
+        try ISilo(silo).accrueInterest() {}
+        catch {
             assertTrue(false, SILO_INVARIANT_A);
         }
     }
 
-    /*     function assert_SILO_INVARIANT_D(address silo, address user) internal { TODO wait for response
-        (ISiloConfig.ConfigData memory collateralConfig, ) = siloConfig
-            .getConfigs(user);
+    function assert_SILO_INVARIANT_D(address user) internal {
+        if (_hasDebt(user)) {
+            (ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigsForSolvency(user);
 
-        if ()
-
-        assertTrue(false, SILO_INVARIANT_D);
-    } */
+            assertEq(collateralConfig.silo, siloConfig.borrowerCollateralSilo(user), SILO_INVARIANT_D);
+        }
+    }
 
     function assert_SILO_INVARIANT_E(address user) internal {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForSolvency(user);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            siloConfig.getConfigsForSolvency(user);
 
         if (debtConfig.silo != address(0)) {
             assertFalse(collateralConfig.silo == address(0), SILO_INVARIANT_E);
@@ -42,14 +40,9 @@ abstract contract SiloMarketInvariants is HandlerAggregator {
     }
 
     function assert_SILO_INVARIANT_F(address user) internal {
-        if (
-            IERC20(debtTokens[0]).balanceOf(user) == 0 &&
-            IERC20(debtTokens[1]).balanceOf(user) == 0
-        ) {
-            (
-                ISiloConfig.ConfigData memory collateralConfig,
-                ISiloConfig.ConfigData memory debtConfig
-            ) = siloConfig.getConfigsForSolvency(user);
+        if (IERC20(debtTokens[0]).balanceOf(user) == 0 && IERC20(debtTokens[1]).balanceOf(user) == 0) {
+            (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+                siloConfig.getConfigsForSolvency(user);
 
             assertEq(debtConfig.silo, address(0), SILO_INVARIANT_F);
             assertEq(collateralConfig.silo, address(0), SILO_INVARIANT_F);

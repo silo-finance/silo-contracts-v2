@@ -84,7 +84,6 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
     function _setSiloValues(address silo, DefaultVars storage _defaultVars) internal {
         _defaultVars.totalSupply = ISilo(silo).totalSupply();
-        // TODO add exchange rate
         _defaultVars.totalAssets = ISilo(silo).totalAssets();
         _defaultVars.debtAssets = ISilo(silo).getDebtAssets();
         _defaultVars.collateralAssets = ISilo(silo).getCollateralAssets();
