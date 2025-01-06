@@ -300,7 +300,6 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         if (
             emissionPerSecond == 0 ||
             totalBalance == 0 ||
-            lastUpdateTimestamp == 0 ||
             lastUpdateTimestamp == block.timestamp ||
             lastUpdateTimestamp >= distributionEnd
         ) {
