@@ -70,7 +70,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function updateHooks() external {
+    function updateHooks() external virtual {
         (uint24 hooksBefore, uint24 hooksAfter) = Actions.updateHooks();
         emit HooksUpdated(hooksBefore, hooksAfter);
     }
@@ -109,6 +109,7 @@ contract Silo is ISilo, ShareCollateralToken {
     function getSiloStorage()
         external
         view
+        virtual
         returns (
             uint192 daoAndDeployerRevenue,
             uint64 interestRateTimestamp,
@@ -470,13 +471,14 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowSameAsset(address _borrower) external view returns (uint256 maxAssets) {
+    function maxBorrowSameAsset(address _borrower) external view virtual returns (uint256 maxAssets) {
         (maxAssets,) = Views.maxBorrow({_borrower: _borrower, _sameAsset: true});
     }
 
     /// @inheritdoc ISilo
     function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
         external
+        virtual
         returns (uint256 shares)
     {
         uint256 assets;
@@ -608,7 +610,6 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IERC3156FlashLender
-    /// @notice Protected deposits are not available for a flash loan.
     function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amount, bytes calldata _data)
         external
         virtual

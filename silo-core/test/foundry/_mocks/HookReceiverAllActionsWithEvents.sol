@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";

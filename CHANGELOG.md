@@ -6,6 +6,81 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.17.3] - 2024-12-20
+### Fixed
+- allow LiquidationHelper to accept ETH
+
+## [0.17.2] - 2024-12-16
+### Added
+- new markets for v0.17: `wstETH/WETH`, `gmETH/WETH`, `solvBTC/wBTC`, `ETHPlus/WETH`
+
+## [0.17.1] - 2024-12-14
+### Updated
+- redeployment of silo-vault with `MIN_TIMELOCK` set to 1 minute for QA purposes
+
+## [0.17.0] - 2024-12-14
+### Updated
+- redepoy of whole protocol
+
+## [0.16.0] - 2024-12-12
+### Added
+- add support for custom oracle setup
+
+## [0.15.1] - 2024-12-03
+### Added
+- add initial setup for IRM params: `ri` and `Tcrit`
+
+### Fixed
+- fix `maxBorrow` estimation
+
+## [0.15.0] - 2024-12-02
+### Added
+- `PublicAllocator` contract for vaults
+- add reentrancy for `withdrawFees`
+
+### Fixed
+- ensure transition deposit not fail when user insolvent
+
+## [0.14.0] - 2024-11-25
+### Added
+- Vault functionality based on MetaMorpho
+  - MetaMorpho was adjusted to work with ERC4626 standard
+  - Concept of Idle market needs to be replaced with additional vault. By default, in Silo `IdleVault` is used. 
+
+## [0.13.0] - 2024-11-19
+### Added
+- `LiquidationHelper` and `Tower`
+
+## [0.12.1] - 2024-11-04
+### Added
+- LICENSE
+
+### Changed
+- modified license for some solidity files
+
+### Fixed
+- SiloLens redeployment
+
+## [0.12.0] - 2024-11-01
+### Added
+- solvBTC/wBTC market Arbitrum
+- gmETH/WETH market Arbitrum
+- wstETH/WETH market Arbitrum
+- ETH+/WETH market Arbitrum
+- SiloRouter with preview methods instead of convertToAssets
+
+## [0.11.0] - 2024-10-30
+### Changed
+- dao fee can be set based on range
+
+## [0.10.1] - 2024-10-29
+### Added
+- optimism deployment
+
+## [0.10.0] - 2024-10-28
+### Changed
+- make target LTV after liquidation configurable
+
 ## [0.9.1] - 2024-10-25
 ### Fixed
 - SiloRouter with convertToAssets

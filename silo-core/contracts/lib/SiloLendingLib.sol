@@ -43,16 +43,31 @@ library SiloLendingLib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
+        (uint256 debtSharesBalance, uint256 totalDebtShares) = _debtShareToken.balanceOfAndTotalSupply(_borrower);
 
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
-            _assets,
-            _shares,
-            totalDebtAssets,
-            _debtShareToken.totalSupply(),
-            Rounding.REPAY_TO_ASSETS,
-            Rounding.REPAY_TO_SHARES,
-            ISilo.AssetType.Debt
-        );
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
+            _assets: _assets,
+            _shares: _shares,
+            _totalAssets: totalDebtAssets,
+            _totalShares: totalDebtShares,
+            _roundingToAssets: Rounding.REPAY_TO_ASSETS,
+            _roundingToShares: Rounding.REPAY_TO_SHARES,
+            _assetType: ISilo.AssetType.Debt
+        });
+
+        if (shares > debtSharesBalance) {
+            shares = debtSharesBalance;
+
+            (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
+                _assets: 0,
+                _shares: shares,
+                _totalAssets: totalDebtAssets,
+                _totalShares: totalDebtShares,
+                _roundingToAssets: Rounding.REPAY_TO_ASSETS,
+                _roundingToShares: Rounding.REPAY_TO_SHARES,
+                _assetType: ISilo.AssetType.Debt
+            });
+        }
 
         require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
 
@@ -83,14 +98,14 @@ library SiloLendingLib {
 
         uint64 lastTimestamp = $.interestRateTimestamp;
 
-        // This is the first time, so we can return early and save some gas
-        if (lastTimestamp == 0) {
-            $.interestRateTimestamp = uint64(block.timestamp);
+        // Interest has already been accrued this block
+        if (lastTimestamp == block.timestamp) {
             return 0;
         }
 
-        // Interest has already been accrued this block
-        if (lastTimestamp == block.timestamp) {
+        // This is the first time, so we can return early and save some gas
+        if (lastTimestamp == 0) {
+            $.interestRateTimestamp = uint64(block.timestamp);
             return 0;
         }
 
@@ -98,11 +113,21 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
-            totalCollateralAssets,
-            totalDebtAssets,
-            lastTimestamp
-        );
+        uint256 rcomp;
+
+        try
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+                totalCollateralAssets,
+                totalDebtAssets,
+                lastTimestamp
+            )
+            returns (uint256 interestRate)
+        {
+            rcomp = interestRate;
+        } catch {
+            // do not lock silo on interest calculation
+            emit IInterestRateModel.InterestRateModelError();
+        }
 
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
@@ -236,11 +261,6 @@ library SiloLendingLib {
                 ISilo.AssetType.Debt
             );
         }
-
-        if (assets != 0) {
-            // sometimes even with rounding down, we need to do -1 wei to not revert on borrow
-            unchecked { assets--; }
-        }
     }
 
     function maxBorrow(address _borrower, bool _sameAsset)
@@ -335,6 +355,13 @@ library SiloLendingLib {
         // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
         shares = SiloMathLib.convertToShares(
             assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
+        );
+
+        // we need to recalculate assets, because what we did above is assets => shares with rounding down, but when
+        // we input assets, they will generate more shares, so we need to calculate assets based on final shares
+        // not based on borrow value
+        assets = SiloMathLib.convertToAssets(
+            shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
         );
     }
 }

@@ -19,7 +19,6 @@ forge test -vv --ffi --mc GetFeesAndFeeReceiversWithAssetTest
 contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTest {
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.LOCAL_DEPLOYER;
 
-    ISiloFactory siloFactory;
     ISiloConfig siloConfig;
     SiloConfigData siloData;
 
@@ -50,7 +49,8 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
 
         (uint256 daoFee, uint256 deployerFee,, address asset) = siloConfig.getFeesWithAsset(silo0);
 
-        assertEq(daoFee, siloFactory.daoFee(), "daoFee");
+        assertGe(daoFee, siloFactory.daoFeeRange().min, "min.daoFee");
+        assertLe(daoFee, siloFactory.daoFeeRange().max, "max.daoFee");
         assertEq(deployerFee, initData.deployerFee, "deployerFee");
         assertEq(asset, address(token0), "asset");
 

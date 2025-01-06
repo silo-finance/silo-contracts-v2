@@ -1,0 +1,18 @@
+{
+  "name": "silo-vaults",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:silo-finance/silo-contracts-v2.git"
+  },
+  "license": "BUSL-1.1",
+  "devDependencies": {
+    "solhint": "~3.4.1"
+  },
+  "scripts": {
+    "lint:sol": "solhint \"contracts/**/*.sol\" --ignore-path .solhintignore --max-warnings=0"
+  }
+}

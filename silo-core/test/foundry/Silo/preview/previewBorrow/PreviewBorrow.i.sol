@@ -86,7 +86,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewBorrow_max_fuzz
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_previewBorrow_max_fuzz
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_previewBorrow_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
@@ -100,9 +100,9 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
 
         uint256 maxPreview = _getBorrowPreview(maxInput);
 
-        emit log_named_uint("_assetsOrShares", _assetsOrShares);
-        emit log_named_uint("maxInput", maxInput);
-        emit log_named_uint("maxPreview", maxPreview);
+        emit log_named_uint("initial _assetsOrShares", _assetsOrShares);
+        emit log_named_uint(string.concat("maxBorrow of ", _borrowShares() ? "shares" : "assets"), maxInput);
+        emit log_named_uint(string.concat("maxPreview borrow ", _borrowShares() ? "shares" : "assets"), maxPreview);
 
         _assertPreviewBorrow(maxPreview, maxInput);
     }

@@ -81,6 +81,7 @@ contract SiloDeployer is ISiloDeployer {
 
         (configData0, configData1) = Views.copySiloConfig(
             _siloInitData,
+            SILO_FACTORY.daoFeeRange(),
             SILO_FACTORY.maxDeployerFee(),
             SILO_FACTORY.maxFlashloanFee(),
             SILO_FACTORY.maxLiquidationFee()
@@ -115,11 +116,6 @@ contract SiloDeployer is ISiloDeployer {
             nextSiloId,
             address(SILO_FACTORY)
         );
-
-        uint256 daoFee = SILO_FACTORY.daoFee();
-
-        configData0.daoFee = daoFee;
-        configData1.daoFee = daoFee;
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
@@ -164,6 +160,8 @@ contract SiloDeployer is ISiloDeployer {
     /// @notice Create an oracle
     /// @param _txData Oracle creation details (factory and creation tx input)
     function _createOracle(OracleCreationTxData memory _txData) internal returns (address _oracle) {
+        if (_txData.deployed != address(0)) return _txData.deployed;
+
         address factory = _txData.factory;
 
         if (factory == address(0)) return address(0);

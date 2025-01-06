@@ -33,21 +33,41 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
 
     function test_get_exists_optimism() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.OPTIMISM_ALIAS);
-        assertEq(addr, 0x4D43E78E669eD90bb125eF161F530E173f03834b, "expect valid address Optimism");
+        assertEq(addr, 0x55a4983949f8a3156Ad483c4003218a7F33D466b, "expect valid address Optimism");
     }
 
     function test_get_exists_arbitrum_one() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.ARBITRUM_ONE_ALIAS);
-        assertEq(addr, 0xe376888fD6E5D5Afc12FEa0a8C18f283051c23aD, "expect valid address on Arbitrum");
+        assertEq(addr, 0x621Eacb756c7fa8bC0EA33059B881055d1693a33, "expect valid address on Arbitrum");
     }
 
-   function test_get_contractNotExists() public {
+    function test_get_contractNotExists() public {
        address addr = SiloCoreDeployments.get("not.exist", ChainsLib.OPTIMISM_ALIAS);
        assertEq(addr, address(0), "expect to return 0");
-   }
+    }
 
-   function test_get_invalidNetwork() public {
+    function test_get_invalidNetwork() public {
        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "abcd");
        assertEq(addr, address(0), "expect to return 0");
-   }
+    }
+
+    /*
+    forge test -vv --ffi --mt test_parseAddress
+    */
+    function test_parseAddress() public {
+        assertEq(SiloCoreDeployments.parseAddress(""), address(0), "empty string");
+        assertEq(SiloCoreDeployments.parseAddress("0x"), address(0), "0x string");
+
+        assertEq(
+            SiloCoreDeployments.parseAddress("0xb720078680Dc65B54568673410aBb81195E0812"),
+            address(0),
+            "not an address"
+        );
+
+        assertEq(
+            SiloCoreDeployments.parseAddress("0xb720078680Dc65B54568673410aBb81195E08122"),
+            address(0xb720078680Dc65B54568673410aBb81195E08122),
+            "0x string"
+        );
+    }
 }

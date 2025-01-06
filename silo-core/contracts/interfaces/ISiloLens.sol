@@ -34,6 +34,21 @@ interface ISiloLens {
         view
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
 
+    /// @notice Retrieves the interest rate model
+    /// @param _silo Address of the silo
+    /// @return irm InterestRateModel contract address
+    function getInterestRateModel(ISilo _silo) external view returns (address irm);
+    
+    /// @notice Calculates current borrow interest rate
+    /// @param _silo Address of the silo
+    /// @return borrowAPR The interest rate value in 18 decimals points. 10**18 is equal to 100% per year
+    function getBorrowAPR(ISilo _silo) external view returns (uint256 borrowAPR);
+
+    /// @notice Calculates current deposit interest rate.
+    /// @param _silo Address of the silo
+    /// @return depositAPR The interest rate value in 18 decimals points. 10**18 is equal to 100% per year.
+    function getDepositAPR(ISilo _silo) external view returns (uint256 depositAPR);
+
     /// @notice Get underlying balance of all deposits of given token of given user including "collateralOnly"
     /// deposits
     /// @dev It reads directly from storage so interest generated between last update and now is not taken for account

@@ -271,7 +271,8 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
                 _SENDER_BAL,
                 _recipient,
                 _RECIPIENT_BAL,
-                _TS
+                _TS,
+                _AMOUNT
             )
         );
 

@@ -171,8 +171,8 @@ return;
 
         _printBorrowRatio();
 
-//        uint256 moneySpend;
-        uint256 _initial = 1e10; // changing initial amount does not affect ratio
+        // uint256 moneySpend;
+        // uint256 _initial = 1e10; // changing initial amount does not affect ratio
 
         uint256 withdrawBefore = silo1.maxWithdraw(makeAddr("depositor"));
         uint256 repayBefore = silo1.maxRepay(makeAddr("borrower"));
@@ -254,7 +254,7 @@ return;
     }
 
     function _printBorrowRatio() internal {
-        (address collateralShare,, address debtShare) = siloConfig.getShareTokens(address(silo1));
+        (,, address debtShare) = siloConfig.getShareTokens(address(silo1));
         emit log("---------");
         emit log_named_uint("[silo1] debt share totalSupply ", IShareToken(debtShare).totalSupply());
         emit log_named_uint("[silo1] debt asset total ", silo1.getDebtAssets());

@@ -11,19 +11,17 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloFactoryDeploy.s.sol:SiloFactoryDeploy \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
  */
 contract SiloFactoryDeploy is CommonDeploy {
-    uint256 public constant DAO_FEE = 0.15e18;
     function run() public returns (ISiloFactory siloFactory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        uint256 daoFee = 0.15e18;
         address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, getChainAlias());
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloFactory = ISiloFactory(address(new SiloFactory(daoFee, daoFeeReceiver)));
+        siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
 
         vm.stopBroadcast();
 

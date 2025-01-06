@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -15,6 +15,7 @@ library PartialLiquidationLib {
         address debtConfigAsset;
         uint256 maxDebtToCover;
         uint256 liquidationFee;
+        uint256 liquidationTargetLtv;
     }
 
     /// @dev this is basically LTV == 100%
@@ -26,10 +27,6 @@ library PartialLiquidationLib {
     /// liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
     /// this two conversions are rounding down and can create 2 wai difference
     uint256 internal constant _UNDERESTIMATION = 2;
-
-    /// @dev when user is insolvent with some LT, we will allow to liquidate to some minimal level of ltv
-    /// eg. LT=80%, allowance to liquidate 10% below LT, then min ltv will be: LT80% * 90% = 72%
-    uint256 internal constant _LT_LIQUIDATION_MARGIN = 0.9e18; // 90%
 
     /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the 
     /// _DEBT_DUST_LEVEL threshold, a full liquidation is triggered.
@@ -45,8 +42,8 @@ library PartialLiquidationLib {
         uint256 _sumOfCollateralValue,
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
-        uint256 _lt,
-        uint256 _liquidityFee
+        uint256 _liquidationTargetLTV,
+        uint256 _liquidationFee
     )
         internal
         pure
@@ -57,8 +54,8 @@ library PartialLiquidationLib {
         ) = maxLiquidationPreview(
             _sumOfCollateralValue,
             _borrowerDebtValue,
-            minAcceptableLTV(_lt),
-            _liquidityFee
+            _liquidationTargetLTV,
+            _liquidationFee
         );
 
         collateralToLiquidate = valueToAssetsByRatio(
@@ -107,7 +104,7 @@ library PartialLiquidationLib {
             uint256 maxRepayValue = estimateMaxRepayValue(
                 _borrowerDebtValue,
                 _sumOfCollateralValue,
-                minAcceptableLTV(_params.collateralLt),
+                _params.liquidationTargetLtv,
                 _params.liquidationFee
             );
 
@@ -151,12 +148,6 @@ library PartialLiquidationLib {
         assets = _value * _totalAssets / _totalValue;
     }
 
-    /// @param _lt LT liquidation threshold for asset
-    /// @return minimalAcceptableLTV min acceptable LTV after liquidation
-    function minAcceptableLTV(uint256 _lt) internal pure returns (uint256 minimalAcceptableLTV) {
-        minimalAcceptableLTV = _lt.mulDiv(_LT_LIQUIDATION_MARGIN, _PRECISION_DECIMALS, Rounding.LTV);
-    }
-
     /// @notice this function never reverts
     /// @dev in case there is not enough collateral to liquidate, whole collateral is returned, no revert
     /// @param  _totalBorrowerCollateralValue can not be 0, otherwise revert
@@ -192,26 +183,26 @@ library PartialLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidityFee
+        uint256 _liquidationFee
     ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue(
-            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidityFee
+            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidationFee
         );
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
-            repayValue, _totalBorrowerCollateralValue, _liquidityFee
+            repayValue, _totalBorrowerCollateralValue, _liquidationFee
         );
     }
 
     /// @param _maxDebtToCover assets or value, but must be in sync with `_totalCollateral`
     /// @param _sumOfCollateral assets or value, but must be in sync with `_maxDebtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidityFee)
+    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidationFee)
         internal
         pure
         returns (uint256 toLiquidate)
     {
-        uint256 fee = _maxDebtToCover * _liquidityFee / _PRECISION_DECIMALS;
+        uint256 fee = _maxDebtToCover * _liquidationFee / _PRECISION_DECIMALS;
 
         toLiquidate = _maxDebtToCover + fee;
 
@@ -220,9 +211,14 @@ library PartialLiquidationLib {
         }
     }
 
-    /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LT
-    /// where Dv: debt value, Cv: collateral value, LT: expected LT, f: liquidation fee, x: is value we looking for
-    /// x = (Dv - LT * Cv) / (DP - LT - LT * f)
+    /// @dev the math is based on: (Dv - x)/(Cv - (x + xf)) = LTV
+    /// where 
+    ///    Dv: debt value,
+    ///    Cv: collateral value,
+    ///    LTV: expected LTV after liquidation,
+    ///    f: liquidation fee,
+    ///    x: is value we looking for
+    /// x = (Dv - LTV * Cv) / (DP - LTV - LTV * f)
     /// result also take into consideration the dust
     /// @notice protocol does not uses this method, because in protocol our input is debt to cover in assets
     /// however this is useful to figure out what is max debt to cover.
@@ -234,31 +230,31 @@ library PartialLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidityFee
+        uint256 _liquidationFee
     ) internal pure returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
-        if (_liquidityFee >= _PRECISION_DECIMALS) return 0;
+        if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
         if (_ltvAfterLiquidation == 0) return _totalBorrowerDebtValue; // full liquidation
 
-        // x = (Dv - LT * Cv) / (DP - LT - LT * f) ==> (Dv - LT * Cv) / (DP - (LT + LT * f))
+        // x = (Dv - LTV * Cv) / (DP - LTV - LTV * f) ==> (Dv - LTV * Cv) / (DP - (LTV + LTV * f))
         uint256 ltCv = _ltvAfterLiquidation * _totalBorrowerCollateralValue;
         // to lose as low precision as possible, instead of `ltCv/1e18`, we increase precision of DebtValue
         _totalBorrowerDebtValue *= _PRECISION_DECIMALS;
 
-        // negative value means our current LT is lower than _ltvAfterLiquidation
+        // negative value means our current LTV is lower than _ltvAfterLiquidation
         if (ltCv >= _totalBorrowerDebtValue) return 0;
 
-        uint256 dividerR; // LT + LT * f
+        uint256 dividerR; // LTV + LTV * f
 
         unchecked {
             // safe because of above `LTCv >= _totalBorrowerDebtValue`
             repayValue = _totalBorrowerDebtValue - ltCv;
-            // we checked at begin `_liquidityFee >= _PRECISION_DECIMALS`
+            // we checked at begin `_liquidationFee >= _PRECISION_DECIMALS`
             // mul on DP will not overflow on uint256, div is safe
-            dividerR = _ltvAfterLiquidation + _ltvAfterLiquidation * _liquidityFee / _PRECISION_DECIMALS;
+            dividerR = _ltvAfterLiquidation + _ltvAfterLiquidation * _liquidationFee / _PRECISION_DECIMALS;
         }
 
         // now we can go back to proper precision

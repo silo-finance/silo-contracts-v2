@@ -69,6 +69,15 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         _;
     }
 
+    modifier onlyHookReceiver() {
+        require(
+            msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
+            ISilo.OnlyHookReceiver()
+        );
+
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -86,7 +95,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     function forwardTransferFromNoChecks(address _from, address _to, uint256 _amount)
         external
         virtual
-        onlySilo
+        onlyHookReceiver
     {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
 
@@ -139,7 +148,12 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOffReentrancyProtection();
     }
 
-    function approve(address spender, uint256 value) public override(ERC20Upgradeable, IERC20) returns (bool result) {
+    function approve(address spender, uint256 value)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20)
+        returns (bool result)
+    {
         NonReentrantLib.nonReentrant(_getSiloConfig());
 
         result = ERC20Upgradeable.approve(spender, value);

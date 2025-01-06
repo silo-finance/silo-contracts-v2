@@ -4,26 +4,11 @@
 libs = [
     'gitmodules',
     'node_modules',
-    'silo-amm/node_modules',
-    'silo-core/node_modules',
-    'silo-vaults/node_modules'
+    'silo-amm/node_modules'
 ]
 out = 'cache/foundry/out'
 evm_version = 'cancun'
 gas_limit = '40000000000'
-
-[profile.amm-periphery]
-src = 'silo-amm-periphery/contracts'
-out = 'silo-amm-periphery/artifacts'
-test = 'silo-amm-periphery/test/foundry'
-broadcast = 'silo-amm-periphery/broadcast'
-
-[profile.amm-core]
-src = 'silo-amm-core/contracts'
-out = 'silo-amm-core/artifacts'
-test = 'silo-amm-core/test/foundry'
-broadcast = 'silo-amm-core/broadcast'
-fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"}]
 
 [profile.core]
 src = 'silo-core/contracts'
@@ -89,9 +74,24 @@ evm_version = 'paris'
 [profile.vaults]
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
-test = 'silo-vaults/test/foundry'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.vaults-tests]
+src = 'silo-vaults/test/foundry'
+out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-vaults/broadcast'
-fs_permissions = [{ access = "read", path = "./silo-vaults/test/foundry/data/"}]
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
 
 [profile.oracles]
 src = 'silo-oracles/contracts'

@@ -9,11 +9,23 @@ import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {PartialLiquidationDeploy} from "./PartialLiquidationDeploy.s.sol";
 import {GaugeHookReceiverDeploy} from "./GaugeHookReceiverDeploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
+import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
+import {TowerDeploy} from "./TowerDeploy.s.sol";
+import {SiloLensDeploy} from "./SiloLensDeploy.s.sol";
 
 /**
-    FOUNDRY_PROFILE=core \
+    script to deploy whole silo-core
+
+    Note: for deploying without ve-silo, we need adjustment:
+
+    git apply silo-core/deploy/withoutVeSilo.patch
+
+    this patch was created with `git diff > withoutVeSilo.patch`
+
+
+    ETHERSCAN_API_KEY=$OPTIMISM_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
  */
 contract MainnetDeploy is CommonDeploy {
     function run() public {
@@ -24,6 +36,9 @@ contract MainnetDeploy is CommonDeploy {
         PartialLiquidationDeploy siloLiquidationDeploy = new PartialLiquidationDeploy();
         GaugeHookReceiverDeploy gaugeHookReceiverDeploy = new GaugeHookReceiverDeploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
+        LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
+        SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
+        TowerDeploy towerDeploy = new TowerDeploy();
 
         siloFactoryDeploy.run();
         interestRateModelV2ConfigFactoryDeploy.run();
@@ -31,5 +46,8 @@ contract MainnetDeploy is CommonDeploy {
         siloLiquidationDeploy.run();
         gaugeHookReceiverDeploy.run();
         siloDeployerDeploy.run();
+        liquidationHelperDeploy.run();
+        siloLensDeploy.run();
+        towerDeploy.run();
     }
 }

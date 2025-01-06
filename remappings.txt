@@ -8,6 +8,7 @@ silo-vaults/=silo-vaults/
 ve-silo/=ve-silo/
 
 @openzeppelin/=gitmodules/openzeppelin-contracts-5/contracts
+morpho-blue/=gitmodules/morpho-blue/src
 openzeppelin5/=gitmodules/openzeppelin-contracts-5/contracts
 openzeppelin5-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable-5/contracts
 chainlink/=gitmodules/chainlink/contracts/src

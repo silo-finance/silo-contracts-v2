@@ -1,0 +1,22 @@
+{
+  "address": "0x50967dC1beB0DDCc9d5a2a911f7A0c288340B687",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b50607480601a5f395ff3fe6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063313ce56714602a575b5f5ffd5b604080516008815290519081900360200190f3fea2646970667358221220fbc7399b849df61edf80e19f9f9eb6781d3d853baf04bb2d64de5836aefa3bb164736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063313ce56714602a575b5f5ffd5b604080516008815290519081900360200190f3fea2646970667358221220fbc7399b849df61edf80e19f9f9eb6781d3d853baf04bb2d64de5836aefa3bb164736f6c634300081c0033",
+  "language": "Solidity",
+  "compiler": "0.8.28+commit.7893614a"
+}

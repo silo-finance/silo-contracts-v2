@@ -9,9 +9,9 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {UniswapV3OracleFactory} from "silo-oracles/contracts/uniswapV3/UniswapV3OracleFactory.sol";
 
 /**
-FOUNDRY_PROFILE=oracles \
+ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/uniswap-v3-oracle/UniswapV3OracleFactoryDeploy.s.sol \
-    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+    --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
  */
 contract UniswapV3OracleFactoryDeploy is CommonDeploy {
     function run() public returns (UniswapV3OracleFactory factory) {

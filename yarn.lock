@@ -10904,6 +10904,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"silo-vaults@workspace:silo-vaults":
+  version: 0.0.0-use.local
+  resolution: "silo-vaults@workspace:silo-vaults"
+  dependencies:
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
+
 "simple-concat@npm:^1.0.0":
   version: 1.0.1
   resolution: "simple-concat@npm:1.0.1"

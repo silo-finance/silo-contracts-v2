@@ -225,11 +225,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         // we want cases where we doing liquidation
         vm.assume(collateralToLiquidate != 0);
 
-        if (success) {
-            // there is nothing to check here
-        } else {
-            assertTrue(bytes4(errorType) == IPartialLiquidation.LiquidationTooBig.selector, "expect no other errors");
-        }
+        assertEq(bytes4(errorType), bytes4(0), "expect no other errors");
     }
 
     function _tryGetExactLiquidationAmounts(
@@ -243,7 +239,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             _collateralUserBalanceOf,
             _debtUserBalanceOf,
             _liquidationFee
-        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 customError) {
+        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 /* customError */) {
             collateralToLiquidate = fromCollateral + fromProtected;
             success = true;
 

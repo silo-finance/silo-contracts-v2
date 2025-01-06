@@ -41,10 +41,10 @@ contract DepositTest is SiloLittleHelper, Test {
         ISilo.CollateralType _type;
         address depositor = makeAddr("Depositor");
 
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
         silo0.deposit(_assets, depositor);
 
-        vm.expectRevert(ISilo.InputZeroAssetsOrShares.selector);
+        vm.expectRevert(ISilo.InputZeroShares.selector);
         silo0.deposit(_assets, depositor, _type);
     }
 

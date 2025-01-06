@@ -52,7 +52,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         // collateral
 
         uint256 maxWithdraw = collateralSilo.maxWithdraw(address(this));
-        assertEq(maxWithdraw, 2e18 - 1, "maxWithdraw, because we have protected (-1 for underestimation)");
+        assertEq(maxWithdraw, 2e18, "maxWithdraw, because we have protected (-1 for underestimation)");
 
         uint256 previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw);
         uint256 gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Collateral);
@@ -60,7 +60,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
         // you can withdraw more because interest are smaller
-        uint256 expectedProtectedWithdraw = 882352941176470587;
+        uint256 expectedProtectedWithdraw = 882352941176470588;
         uint256 expectedCollateralLeft = 1e18 - expectedProtectedWithdraw;
         assertLe(0.1e18 * 1e18 / expectedCollateralLeft, 0.85e18, "LTV holds");
 

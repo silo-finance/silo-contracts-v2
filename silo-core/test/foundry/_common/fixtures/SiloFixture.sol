@@ -24,7 +24,7 @@ struct SiloConfigOverride {
 }
 
 contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
-    bytes32 public constant NO_HOOK_RECEIVER_KEY = keccak256(bytes("NO_HOOK_RECEIVER"));
+    bytes32 public constant CLONE_IMPLEMENTATION_KEY = keccak256(bytes("CLONE_IMPLEMENTATION"));
 
     SiloConfigOverride internal siloConfigOverride;
 

@@ -1,5 +1,6 @@
 node_modules
 .idea
+.editorconfig
 .vscode
 .env
 cache
@@ -23,9 +24,6 @@ deployments/31337
 **/deployments/anvil
 **/deployments/31337
 
-# forge broadcast
-broadcast
-**/broadcast
 **/build/
 **/artifacts/
 

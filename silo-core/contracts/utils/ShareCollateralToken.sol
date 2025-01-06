@@ -4,15 +4,12 @@ pragma solidity 0.8.28;
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
 import {ShareCollateralTokenLib} from "../lib/ShareCollateralTokenLib.sol";
-import {SiloLensLib} from "../lib/SiloLensLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 
 /// @title ShareCollateralToken
 /// @notice ERC20 compatible token representing collateral in Silo
 /// @custom:security-contact security@silo.finance
 abstract contract ShareCollateralToken is ShareToken {
-    using SiloLensLib for ISilo;
-
     /// @inheritdoc IShareToken
     function mint(address _owner, address /* _spender */, uint256 _amount) external virtual override onlySilo {
         _mint(_owner, _amount);

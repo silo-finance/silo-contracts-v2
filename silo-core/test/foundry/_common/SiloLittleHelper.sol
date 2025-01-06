@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
 import {CommonBase} from "forge-std/Base.sol";
@@ -8,6 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 
@@ -27,6 +28,7 @@ abstract contract SiloLittleHelper is CommonBase {
     ISilo silo0;
     ISilo silo1;
     IPartialLiquidation partialLiquidation;
+    ISiloFactory siloFactory;
 
     constructor() {
         siloLens = new SiloLens();
@@ -268,6 +270,14 @@ abstract contract SiloLittleHelper is CommonBase {
         (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
+        siloFactory = silo0.factory();
+
+        vm.label(address(siloFactory), "SiloFactory");
+        vm.label(address(silo0), "Silo0");
+        vm.label(address(silo1), "Silo1");
+        vm.label(address(token0), "Token0");
+        vm.label(address(token1), "Token1");
+        vm.label(address(partialLiquidation), "PartialLiquidation");
     }
 
     function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage _sharedStorage) {
