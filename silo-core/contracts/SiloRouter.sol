@@ -43,7 +43,5 @@ contract SiloRouter {
             (bool success,) = msg.sender.call{value: address(this).balance}("");
             require(success, EthTransferFailed());
         }
-
-        return results;
     }
 }
