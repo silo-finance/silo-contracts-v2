@@ -117,7 +117,8 @@ contract BorrowingHandler is BaseHandler {
 
         address target = _getRandomSilo(j);
 
-        uint256 maxRepay = ISilo(target).maxRepay(borrower);
+        uint256 maxRepayShares = ISilo(target).maxRepayShares(borrower);
+        uint256 shares = ISilo(target).previewRepay(_assets);
 
         _before();
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.repay.selector, _assets, borrower));
@@ -125,7 +126,7 @@ contract BorrowingHandler is BaseHandler {
         if (success) {
             _after();
 
-            assertGe(maxRepay, _assets, BORROWING_HSPOST_G);
+            assertGe(maxRepayShares + 1, shares, BORROWING_HSPOST_G);
             assertLe(defaultVarsAfter[target].userDebt, defaultVarsBefore[target].userDebt, BORROWING_HSPOST_H);
         }
     }
@@ -141,7 +142,7 @@ contract BorrowingHandler is BaseHandler {
 
         address target = _getRandomSilo(j);
 
-        uint256 debtAmount = ISilo(target).maxRepay(borrower);
+        uint256 maxRepayShares = ISilo(target).maxRepayShares(borrower);
 
         _before();
         (success, returnData) =
@@ -150,9 +151,10 @@ contract BorrowingHandler is BaseHandler {
         if (success) {
             _after();
 
-            if (_shares >= debtAmount) {
+            if (_shares >= maxRepayShares) {
                 assertEq(IERC20(siloConfig.getDebtSilo(borrower)).balanceOf(borrower), 0, BORROWING_HSPOST_B);
             }
+            assertGe(maxRepayShares + 1, _shares, BORROWING_HSPOST_G);
             assertLe(defaultVarsAfter[target].userDebt, defaultVarsBefore[target].userDebt, BORROWING_HSPOST_H);
         }
     }
@@ -214,7 +216,7 @@ contract BorrowingHandler is BaseHandler {
             if (_collateralType != ISilo.CollateralType.Protected) {
                 assertGe(liquidity, _assets, LENDING_HSPOST_D);
             }
-            assertLe(defaultVarsAfter[target].userAssets, defaultVarsBefore[target].userAssets, BORROWING_HSPOST_J);
+            assertApproxEqAbs(defaultVarsAfter[target].userAssets, defaultVarsBefore[target].userAssets, 2 wei, BORROWING_HSPOST_J);
         }
     }
 

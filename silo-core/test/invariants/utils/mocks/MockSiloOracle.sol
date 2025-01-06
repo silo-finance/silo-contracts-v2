@@ -37,7 +37,7 @@ contract MockSiloOracle is ISiloOracle {
         if (_baseToken == quoteToken) revert("quote: wrong base token");
         if (_oracleBroken) revert("quote: oracle is broken");
 
-        return _baseAmount * price / baseTokenDecimals;
+        return _baseAmount * price / 10 ** baseTokenDecimals;
     }
 
     function setPrice(uint256 _price) external {
