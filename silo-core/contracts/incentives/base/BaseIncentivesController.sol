@@ -259,6 +259,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         incentivesPrograms[programId].rewardToken = _incentivesProgramInput.rewardToken;
         incentivesPrograms[programId].distributionEnd = _incentivesProgramInput.distributionEnd;
         incentivesPrograms[programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
+        incentivesPrograms[programId].lastUpdateTimestamp = uint40(block.timestamp);
 
         _updateAssetStateInternal(programId, _shareToken().totalSupply());
 
