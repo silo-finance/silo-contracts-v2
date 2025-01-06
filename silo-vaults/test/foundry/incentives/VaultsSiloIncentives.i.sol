@@ -12,9 +12,9 @@ import {CAP} from "../helpers/BaseTest.sol";
 
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc SiloVaultIncentivesTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc VaultsSiloIncentivesTest -vvv
 */
-contract SiloVaultIncentivesTest is IntegrationTest {
+contract VaultsSiloIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
 
     SiloIncentivesController vaultIncentivesController;

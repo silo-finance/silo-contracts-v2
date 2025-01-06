@@ -25,6 +25,8 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
         address _notifier,
         address _siloShareToken
     ) SiloIncentivesController(_owner, _notifier) {
+        require(_siloShareToken != address(0), EmptyShareToken());
+
         SHARE_TOKEN = _siloShareToken;
     }
 
