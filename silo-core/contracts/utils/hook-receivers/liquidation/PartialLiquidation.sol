@@ -84,8 +84,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         // we do not allow dust so full liquidation is required
         require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
 
-        emit LiquidationCall(msg.sender, _receiveSToken);
-
         {
             IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
             IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
@@ -162,6 +160,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
                 }
             }
         }
+
+        emit LiquidationCall(msg.sender, debtConfig.silo, repayDebtAssets, withdrawCollateral, _receiveSToken);
     }
 
     function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {
