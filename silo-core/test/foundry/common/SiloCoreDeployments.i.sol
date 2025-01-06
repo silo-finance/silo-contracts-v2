@@ -54,7 +54,7 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_parseAddress
     */
-    function test_parseAddress() public {
+    function test_parseAddress() public pure {
         assertEq(SiloCoreDeployments.parseAddress(""), address(0), "empty string");
         assertEq(SiloCoreDeployments.parseAddress("0x"), address(0), "0x string");
 

@@ -76,13 +76,13 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         _setupIncentivesContracts();
     }
 
-    function _overrideTestAddresses() internal returns (address siloWithIncentives) {
-        siloWithIncentives = address(allMarkets[2]);
-        silo1 = ISilo(siloWithIncentives);
-        silo0 = ISilo(address(collateralMarkets[IERC4626(siloWithIncentives)]));
+    function _overrideTestAddresses() internal returns (address incentiviseSilo) {
+        incentiviseSilo = address(allMarkets[2]);
+        silo1 = ISilo(incentiviseSilo);
+        silo0 = ISilo(address(collateralMarkets[IERC4626(incentiviseSilo)]));
 
-        siloConfig = ISilo(siloWithIncentives).config();
-        ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(siloWithIncentives);
+        siloConfig = ISilo(incentiviseSilo).config();
+        ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(incentiviseSilo);
         // TODO add test with missconfiguration
         partialLiquidation = IPartialLiquidation(cfg.hookReceiver);
     }
@@ -121,7 +121,6 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         assertEq(IShareToken(siloWithIncentives).totalSupply(), 0, "deposit did not reached silo");
 
         // standard program for silo users
-        // TODO test for distributionEnd: current and past
         siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "x",
             rewardToken: address(reward1),

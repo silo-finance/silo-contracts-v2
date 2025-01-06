@@ -5,6 +5,8 @@ interface IGaugeLike {
     event GaugeKilled();
     event GaugeUnKilled();
 
+    error EmptyShareToken();
+
     function afterTokenTransfer(
         address _sender,
         uint256 _senderBalance,
@@ -22,6 +24,7 @@ interface IGaugeLike {
 
     // solhint-disable func-name-mixedcase
     function share_token() external view returns (address);
+
     function is_killed() external view returns (bool);
     // solhint-enable func-name-mixedcase
 }

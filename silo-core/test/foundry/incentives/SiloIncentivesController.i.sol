@@ -42,7 +42,8 @@ contract HookContract {
         return notifierToken.balanceOf(_user);
     }
 
-    function hookReceiverConfig(address) external view returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address) external pure returns (uint24 hooksBefore, uint24 hooksAfter) {
+        hooksBefore = 0;
         hooksAfter = uint24(Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN);
     }
 
@@ -431,8 +432,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         vm.prank(user1);
         _controller.claimRewards(user1);
-
-        uint256 totalRewards = emissionPerSecond * 100 + immediateDistribution;
 
         assertEq(
             _rewardToken.balanceOf(user1),

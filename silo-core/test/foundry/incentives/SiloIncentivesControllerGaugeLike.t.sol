@@ -54,6 +54,14 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
+     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createGaugeLike_zeroShares
+     */
+    function test_createGaugeLike_zeroShares() public {
+        vm.expectRevert(IGauge.EmptyShareToken.selector);
+        _factory.createGaugeLike(_owner, _notifier, address(0));
+    }
+
+    /**
      FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_killGauge_onlyOwner
      */
     function test_killGauge_onlyOwner() public {
