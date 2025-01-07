@@ -107,7 +107,6 @@ contract TryCatchForOOGTest is Test {
             return;
         }
 
-        // regular catch should work for standardRevert
         assert(false);
     }
 
@@ -120,7 +119,6 @@ contract TryCatchForOOGTest is Test {
             return;
         }
 
-        // regular catch should work for standardRevert
         assert(false);
     }
 
@@ -133,7 +131,6 @@ contract TryCatchForOOGTest is Test {
             return;
         }
 
-        // regular catch should work for standardRevert
         assert(false);
     }
 }
