@@ -13,7 +13,7 @@ import {
     IPublicAllocatorStaticTyping,
     IPublicAllocatorBase
 } from "./interfaces/IPublicAllocator.sol";
-import {IMetaMorpho, MarketAllocation} from "./interfaces/IMetaMorpho.sol";
+import {ISiloVault, MarketAllocation} from "./interfaces/ISiloVault.sol";
 
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
@@ -21,26 +21,26 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @title PublicAllocator
 /// @author Forked with gratitude from Morpho Labs.
 /// @custom:contact security@morpho.org
-/// @notice Publicly callable allocator for MetaMorpho vaults.
+/// @notice Publicly callable allocator for SiloVault vaults.
 contract PublicAllocator is IPublicAllocatorStaticTyping {
     using UtilsLib for uint256;
     
     /* STORAGE */
 
     /// @inheritdoc IPublicAllocatorBase
-    mapping(IMetaMorpho => address) public admin;
+    mapping(ISiloVault => address) public admin;
     /// @inheritdoc IPublicAllocatorBase
-    mapping(IMetaMorpho => uint256) public fee;
+    mapping(ISiloVault => uint256) public fee;
     /// @inheritdoc IPublicAllocatorBase
-    mapping(IMetaMorpho => uint256) public accruedFee;
+    mapping(ISiloVault => uint256) public accruedFee;
     /// @inheritdoc IPublicAllocatorStaticTyping
-    mapping(IMetaMorpho => mapping(IERC4626 => FlowCaps)) public flowCaps;
+    mapping(ISiloVault => mapping(IERC4626 => FlowCaps)) public flowCaps;
 
     /* MODIFIER */
 
     /// @dev Reverts if the caller is not the admin nor the owner of this vault.
-    modifier onlyAdminOrVaultOwner(IMetaMorpho vault) {
-        if (msg.sender != admin[vault] && msg.sender != IMetaMorpho(vault).owner()) {
+    modifier onlyAdminOrVaultOwner(ISiloVault vault) {
+        if (msg.sender != admin[vault] && msg.sender != ISiloVault(vault).owner()) {
             revert ErrorsLib.NotAdminNorVaultOwner();
         }
         _;
@@ -49,21 +49,25 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     /* ADMIN OR VAULT OWNER ONLY */
 
     /// @inheritdoc IPublicAllocatorBase
-    function setAdmin(IMetaMorpho vault, address newAdmin) external onlyAdminOrVaultOwner(vault) {
+    function setAdmin(ISiloVault vault, address newAdmin) external virtual onlyAdminOrVaultOwner(vault) {
         if (admin[vault] == newAdmin) revert ErrorsLib.AlreadySet();
         admin[vault] = newAdmin;
         emit EventsLib.SetAdmin(msg.sender, vault, newAdmin);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFee(IMetaMorpho vault, uint256 newFee) external onlyAdminOrVaultOwner(vault) {
+    function setFee(ISiloVault vault, uint256 newFee) external virtual onlyAdminOrVaultOwner(vault) {
         if (fee[vault] == newFee) revert ErrorsLib.AlreadySet();
         fee[vault] = newFee;
         emit EventsLib.SetFee(msg.sender, vault, newFee);
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function setFlowCaps(IMetaMorpho vault, FlowCapsConfig[] calldata config) external onlyAdminOrVaultOwner(vault) {
+    function setFlowCaps(ISiloVault vault, FlowCapsConfig[] calldata config)
+        external
+        virtual
+        onlyAdminOrVaultOwner(vault)
+    {
         for (uint256 i = 0; i < config.length; i++) {
             FlowCapsConfig memory cfg = config[i];
             IERC4626 market = cfg.market;
@@ -82,7 +86,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     }
 
     /// @inheritdoc IPublicAllocatorBase
-    function transferFee(IMetaMorpho vault, address payable feeRecipient) external onlyAdminOrVaultOwner(vault) {
+    function transferFee(ISiloVault vault, address payable feeRecipient) external virtual onlyAdminOrVaultOwner(vault) {
         uint256 claimed = accruedFee[vault];
         accruedFee[vault] = 0;
         feeRecipient.transfer(claimed);
@@ -92,9 +96,10 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     /* PUBLIC */
 
     /// @inheritdoc IPublicAllocatorBase
-    function reallocateTo(IMetaMorpho vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
+    function reallocateTo(ISiloVault vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)
         external
         payable
+        virtual
     {
         if (msg.value != fee[vault]) revert ErrorsLib.IncorrectFee();
         if (msg.value > 0) accruedFee[vault] += msg.value;

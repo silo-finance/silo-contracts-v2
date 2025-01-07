@@ -10,19 +10,6 @@ out = 'cache/foundry/out'
 evm_version = 'cancun'
 gas_limit = '40000000000'
 
-[profile.amm-periphery]
-src = 'silo-amm-periphery/contracts'
-out = 'silo-amm-periphery/artifacts'
-test = 'silo-amm-periphery/test/foundry'
-broadcast = 'silo-amm-periphery/broadcast'
-
-[profile.amm-core]
-src = 'silo-amm-core/contracts'
-out = 'silo-amm-core/artifacts'
-test = 'silo-amm-core/test/foundry'
-broadcast = 'silo-amm-core/broadcast'
-fs_permissions = [{ access = "read", path = "./silo-amm-core/test/foundry/data/"}]
-
 [profile.core]
 src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
@@ -115,5 +102,9 @@ sepolia = "${RPC_SEPOLIA}"
 arbitrum_one = "${RPC_ARBITRUM}"
 optimism = "${RPC_OPTIMISM}"
 anvil = "${RPC_ANVIL}"
+sonic = "${RPC_SONIC}"
+
+[etherscan]
+sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

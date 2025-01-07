@@ -30,7 +30,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     function testDecimals(uint8 decimals) public {
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
-        vault = createMetaMorpho(OWNER, TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV");
+        vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
     }

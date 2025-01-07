@@ -9,5 +9,8 @@
   },
   "optimism": {
     "UniswapV3-WETH-USDC-Silo": "0x34A40A76823838a22AE42cB5B62F83580900061d"
+  },
+  "sonic": {
+    "stS_S_Silo": "0x16775bA977e48a67819b302bA5E1D2E9c954F421"
   }
 }

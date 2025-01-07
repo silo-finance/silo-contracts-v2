@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
-import {MarketAllocation} from "../../contracts/interfaces/IMetaMorpho.sol";
+import {MarketAllocation} from "../../contracts/interfaces/ISiloVault.sol";
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 

@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.18.0] - 2025-01-07
+### Added
+- Sonic and Arbitrum deployments
+- new market for Sonic: `stS/S`
+- Silo Incentives controller
+- Silo vaults incentives module and incentives claiming logic
+- Renaming of 'MetaMorpho' to 'SiloVaults'
+- Extended LiquidationCall event
+
 ## [0.17.3] - 2024-12-20
 ### Fixed
 - allow LiquidationHelper to accept ETH
@@ -20,7 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.17.0] - 2024-12-14
 ### Updated
-- redepoy of whole protocol
+- redeployment of whole protocol
 
 ## [0.16.0] - 2024-12-12
 ### Added

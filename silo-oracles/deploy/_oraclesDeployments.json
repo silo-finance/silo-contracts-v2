@@ -10,5 +10,8 @@
   },
   "optimism": {
     "UniswapV3-WETH-USDC-0.05-optimism": "0x5B176280777494fb659a8110EEa80Ae7fd99F8fb"
+  },
+  "sonic": {
+    "REDSTONE_stS_S": "0xBDc15b6aaC4e7b4685A2d199bBfa8876730982F2"
   }
 }

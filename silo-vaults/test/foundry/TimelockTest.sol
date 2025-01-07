@@ -75,18 +75,18 @@ contract TimelockTest is IntegrationTest {
         vault.submitTimelock(timelock);
     }
 
-    function testDeployMetaMorphoAboveMaxTimelock(uint256 timelock) public {
+    function testDeploySiloVaultAboveMaxTimelock(uint256 timelock) public {
         timelock = bound(timelock, ConstantsLib.MAX_TIMELOCK + 1, type(uint256).max);
 
         vm.expectRevert(ErrorsLib.AboveMaxTimelock.selector);
-        createMetaMorpho(OWNER,timelock, address(loanToken), "MetaMorpho Vault", "MMV");
+        createSiloVault(OWNER,timelock, address(loanToken), "SiloVault Vault", "MMV");
     }
 
-    function testDeployMetaMorphoBelowMinTimelock(uint256 timelock) public {
+    function testDeploySiloVaultBelowMinTimelock(uint256 timelock) public {
         timelock = bound(timelock, 0, ConstantsLib.MIN_TIMELOCK - 1);
 
         vm.expectRevert(ErrorsLib.BelowMinTimelock.selector);
-        createMetaMorpho(OWNER, timelock, address(loanToken), "MetaMorpho Vault", "MMV");
+        createSiloVault(OWNER, timelock, address(loanToken), "SiloVault Vault", "MMV");
     }
 
     function testSubmitTimelockAboveMaxTimelock(uint256 timelock) public {

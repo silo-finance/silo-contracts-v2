@@ -25,23 +25,24 @@ struct PendingAddress {
 }
 
 /// @title PendingLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @dev Forked with gratitude from Morpho Labs.
+/// @author Silo Labs
+/// @custom:contact security@silo.finance
 /// @notice Library to manage pending values and their validity timestamp.
 library PendingLib {
-    /// @dev Updates `pending`'s value to `newValue` and its corresponding `validAt` timestamp.
+    /// @dev Updates `_pending`'s value to `_newValue` and its corresponding `validAt` timestamp.
     /// @dev Assumes `timelock` <= `MAX_TIMELOCK`.
-    function update(PendingUint192 storage pending, uint184 newValue, uint256 timelock) internal {
-        pending.value = newValue;
+    function update(PendingUint192 storage _pending, uint184 _newValue, uint256 _timelock) internal {
+        _pending.value = _newValue;
         // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
-        pending.validAt = uint64(block.timestamp + timelock);
+        _pending.validAt = uint64(block.timestamp + _timelock);
     }
 
-    /// @dev Updates `pending`'s value to `newValue` and its corresponding `validAt` timestamp.
+    /// @dev Updates `_pending`'s value to `_newValue` and its corresponding `validAt` timestamp.
     /// @dev Assumes `timelock` <= `MAX_TIMELOCK`.
-    function update(PendingAddress storage pending, address newValue, uint256 timelock) internal {
-        pending.value = newValue;
+    function update(PendingAddress storage _pending, address _newValue, uint256 _timelock) internal {
+        _pending.value = _newValue;
         // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
-        pending.validAt = uint64(block.timestamp + timelock);
+        _pending.validAt = uint64(block.timestamp + _timelock);
     }
 }

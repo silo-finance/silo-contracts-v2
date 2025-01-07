@@ -1,0 +1,10 @@
+{
+    "REDSTONE_stS_S": {
+        "baseToken": "stS",
+        "quoteToken": "wS",
+        "primaryAggregator": "REDSTONE_stS_S_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0
+    }
+}
