@@ -924,7 +924,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }) {
                 // notification send
             } catch (bytes memory lowLevelData) {
-                // we not accepting OutOfGas reverts
+                // prevent 63/64 attack with OutOfGas revert
                 require(lowLevelData.length != 0, ErrorsLib.PossibleOutOfGas());
                 // do not revert on invalid notification
             }
