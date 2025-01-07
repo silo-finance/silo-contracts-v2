@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Sonic and Arbitrum deployments
 - new market for Sonic: `stS/S`
 - Silo Incentives controller
+- Silo vaults incentives module and incentives claiming logic
+- Renaming of 'MetaMorpho' to 'SiloVaults'
+- Extended LiquidationCall event
 
 ## [0.17.3] - 2024-12-20
 ### Fixed
