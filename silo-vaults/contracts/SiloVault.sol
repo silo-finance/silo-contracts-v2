@@ -98,15 +98,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     bool transient _lock;
 
-    modifier nonReentrant() {
-        require(!_lock, ErrorsLib.ClaimingRewardsError());
-        _lock = true;
-
-        _;
-
-        _lock = false;
-    }
-
     /* CONSTRUCTOR */
 
     /// @dev Initializes the contract.
@@ -494,7 +485,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ISiloVaultBase
-    function claimRewards() public virtual nonReentrant {
+    function claimRewards() public virtual {
+        _nonReentrantOn();
+
         address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
         bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
 
@@ -502,6 +495,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             logics[i].delegatecall(data);
             // result of call is ignored
         }
+
+        _nonReentrantOff();
     }
 
     /* ERC4626 (PUBLIC) */
@@ -908,7 +903,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _afterTokenTransfer(_from, _to, _value);
     }
 
-    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual nonReentrant {
+    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
+        _nonReentrantOn();
         if (_value == 0) return;
 
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
@@ -933,5 +929,16 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // do not revert on invalid notification
             }
         }
+
+        _nonReentrantOff();
+    }
+
+    function _nonReentrantOn() private {
+        require(!_lock, ErrorsLib.ClaimingRewardsError());
+        _lock = true;
+    }
+
+    function _nonReentrantOff() private {
+        _lock = false;
     }
 }
