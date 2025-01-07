@@ -17,17 +17,19 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 /*
     ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --broadcast --rpc-url $RPC_ARBITRUM \
+        --ffi --broadcast --rpc-url $RPC_SONIC\
         --verify
 
     NOTICE: remember to register it in Tower
 */
 contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
+    address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
 
     address payable constant GNOSIS_SAFE_MAINNET = payable(0); // placeholder for integration tests
-    address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9) ;
-    address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d) ;
+    address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
+    address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d);
+    address payable constant GNOSIS_SAFE_SONIC = payable(0x7461d8c0fDF376c847b651D882DEa4C73fad2e4B);
 
     function run() public returns (ILiquidationHelper liquidationHelper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
@@ -56,6 +58,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);
 
         revert(string.concat("can not find native token for ", getChainAlias()));
     }
@@ -67,6 +70,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
+        if (chainId == ChainsLib.SONIC_CHAIN_ID) return ODOS_ROUTER_SONIC;
 
         revert(string.concat("exchangeProxy not set for ", getChainAlias()));
     }
@@ -77,6 +81,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return GNOSIS_SAFE_OP;
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return GNOSIS_SAFE_ARB;
+        if (chainId == ChainsLib.SONIC_CHAIN_ID) return GNOSIS_SAFE_SONIC;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) {
             console2.log("[LiquidationHelperDeploy] TODO set _tokenReceiver for ", getChainAlias());
             return GNOSIS_SAFE_MAINNET;

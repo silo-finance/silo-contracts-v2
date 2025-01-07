@@ -16,4 +16,5 @@ library AddrKey {
     string constant public L2_MULTISIG = "L2_MULTISIG";
     string constant public WUSD_PLUS = "wUSD+";
     string constant public CHAINLINK_USDPlus_USD_aggregator = "CHAINLINK_USDPlus_USD_aggregator";
+    string constant public wS = "wS";
 }

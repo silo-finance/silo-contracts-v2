@@ -8,8 +8,8 @@ import {ISiloIncentivesControllerGaugeLikeFactory} from "silo-core/contracts/inc
 
 /**
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/SiloIncentivesControllerGaugeLikeFactoryDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+        forge script silo-core/deploy/SiloIncentivesControllerGaugeLikeFactoryDeploy.sol \
+        --ffi --broadcast --rpc-url $RPC_ARBITRUM --verify
  */
 contract SiloIncentivesControllerGaugeLikeFactoryDeploy is CommonDeploy {
     function run() public returns (ISiloIncentivesControllerGaugeLikeFactory factory) {

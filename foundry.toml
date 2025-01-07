@@ -102,5 +102,9 @@ sepolia = "${RPC_SEPOLIA}"
 arbitrum_one = "${RPC_ARBITRUM}"
 optimism = "${RPC_OPTIMISM}"
 anvil = "${RPC_ANVIL}"
+sonic = "${RPC_SONIC}"
+
+[etherscan]
+sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
