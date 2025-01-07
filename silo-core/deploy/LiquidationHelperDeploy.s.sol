@@ -17,7 +17,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 /*
     ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --broadcast --rpc-url $RPC_ARBITRUM \
+        --ffi --broadcast --rpc-url $RPC_SONIC\
         --verify
 
     NOTICE: remember to register it in Tower
@@ -58,7 +58,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
-        if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);
 
         revert(string.concat("can not find native token for ", getChainAlias()));
     }
