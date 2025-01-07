@@ -802,9 +802,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) {
                     _assets -= toSupply;
-                } catch (bytes memory lowLevelData) {
-                    // we not accepting OutOfGas reverts
-                    require(lowLevelData.length != 0, ErrorsLib.PossibleOutOfGas());
+                } catch {
                 }
             }
 
@@ -827,9 +825,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
-                } catch (bytes memory lowLevelData) {
-                    // we not accepting OutOfGas reverts
-                    require(lowLevelData.length != 0, ErrorsLib.PossibleOutOfGas());
+                } catch {
                 }
             }
 
