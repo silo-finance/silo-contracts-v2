@@ -113,6 +113,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         if (_liquidation.collateralAsset == _debtAsset) {
             uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
+            require(flashLoanWithFee <= balance, UnableToRepayFlashloan());
+
             // bad debt is not supported, we will get underflow on bad debt
             _transferToReceiver(_liquidation.collateralAsset, balance - flashLoanWithFee);
         } else {
@@ -130,6 +132,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                     // safe because of `if (flashLoanWithFee < debtBalance)`
                     _transferToReceiver(_debtAsset, debtBalance - flashLoanWithFee);
                 }
+            } else if (flashLoanWithFee > debtBalance) {
+                revert UnableToRepayFlashloan();
             }
         }
 
