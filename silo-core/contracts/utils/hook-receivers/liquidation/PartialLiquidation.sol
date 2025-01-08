@@ -161,7 +161,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             }
         }
 
-        emit LiquidationCall(msg.sender, debtConfig.silo, repayDebtAssets, withdrawCollateral, _receiveSToken);
+        emit LiquidationCall(
+            msg.sender, debtConfig.silo, _borrower, repayDebtAssets, withdrawCollateral, _receiveSToken
+        );
     }
 
     function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {
