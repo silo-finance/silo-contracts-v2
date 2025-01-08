@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.19.0] - 2025-01-08
+### Added
+- Redeployment market for Sonic: `stS/S`
+- Redeployment GaugeHookReceiver
+- Extended LiquidationCall event
+- silo vaults catch 63/64 gas attack
+
 ## [0.18.0] - 2025-01-07
 ### Added
 - Sonic and Arbitrum deployments
