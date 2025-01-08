@@ -27,6 +27,15 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
     ISiloConfig public siloConfig;
 
+    struct LiquidationCallParams {
+        address liquidator;
+        address silo;
+        address borrower;
+        uint256 repayDebtAssets;
+        uint256 withdrawCollateral;
+        bool receiveSToken;
+    }
+
     function initialize(ISiloConfig _siloConfig, bytes calldata) external virtual {
         _initialize(_siloConfig);
     }
@@ -161,7 +170,25 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             }
         }
 
-        emit LiquidationCall(msg.sender, debtConfig.silo, repayDebtAssets, withdrawCollateral, _receiveSToken);
+        { // stack too deep
+            LiquidationCallParams memory params = LiquidationCallParams({
+                liquidator: msg.sender,
+                silo: debtConfig.silo,
+                borrower: _borrower,
+                repayDebtAssets: repayDebtAssets,
+                withdrawCollateral: withdrawCollateral,
+                receiveSToken: _receiveSToken
+            });
+
+            emit LiquidationCall(
+                params.liquidator,
+                params.silo,
+                params.borrower,
+                params.repayDebtAssets,
+                params.withdrawCollateral,
+                params.receiveSToken
+            );
+        }
     }
 
     function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {

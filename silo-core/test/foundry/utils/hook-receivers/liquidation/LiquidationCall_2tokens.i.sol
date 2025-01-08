@@ -263,7 +263,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
             vm.expectEmit(true, true, true, true, address(partialLiquidation));
             emit IPartialLiquidation.LiquidationCall(
-                address(this), address(silo1), 6_413645132946301397, 6_734327389593616466, false
+                address(this), address(silo1), BORROWER, 6_413645132946301397, 6_734327389593616466, false
             );
 
             (
