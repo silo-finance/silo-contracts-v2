@@ -6,6 +6,8 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
+import {ILiquidationHelper} from "silo-core/contracts/interfaces/ILiquidationHelper.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
 
@@ -21,6 +23,8 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     LiquidationHelper liquidationHelper;
     SiloLens lens;
+    ISilo flashLoanFrom;
+    address hookReceiver;
 
     address payable public constant REWARD_COLLECTOR = payable(address(123456789));
     address public constant ODOS_ROUTER = address(0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D);
@@ -36,9 +40,8 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         SiloConfigOverride memory configOverride;
         configOverride.token0 = ODOS_WS;
         configOverride.token1 = ODOS_WETH;
-//        configOverride.configName = "stS_S_Silo";
 
-        (, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
+        (, silo0, silo1,,,hookReceiver ) = siloFixture.deploy_local(configOverride);
 
         vm.label(address(silo0), "silo0");
         vm.label(address(silo1), "silo1");
@@ -49,9 +52,12 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         vm.label(address(token0), "wS");
         vm.label(address(token1), "WETH");
 
-
         liquidationHelper = new LiquidationHelper(ODOS_WS, ODOS_ROUTER, REWARD_COLLECTOR);
         lens = new SiloLens();
+
+        // another deployment so we have silo for flashloan
+        (,, flashLoanFrom,,,) = siloFixture.deploy_local(configOverride);
+        vm.label(address(flashLoanFrom), "flashLoanFrom");
     }
 
     function test_skip_odos_liquidationCall() public {
@@ -59,13 +65,38 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
 
         address borrower = makeAddr("borrower");
 
-        emit log_named_decimal_uint("maxBorrow", lens.getLtv(address(silo1), borrower), 16);
+        emit log_named_decimal_uint("getLtv", lens.getLtv(silo1, borrower), 16);
         assertFalse(silo1.isSolvent(borrower), "user should be insolvent");
+        assertGt(lens.getLtv(silo1, borrower), 0.99e18, "we want full liquidation");
+        assertLt(lens.getLtv(silo1, borrower), 1e18, "we want healthy position");
 
         // seller address in swap data: 5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
-//        bytes memory swapCallData = hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000150c42deacd8fc9773493ed674b675be577f2634b0902b5e3af16b188000007257ed11a78e51e028f5c00018e7591e2919157A6BBE9E3defe0F1Ff793e65Ec1000000015615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f000000000301020300060101010201ff000000000000000000000000000000000000000000e45a270b10cfed62ba586d3f1b72b36989a623ba039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000";
-//        dex.fillQuote(address(sellToken), allowanceTarget, swapCallData);
-//
+        // SWAP sW => WETH
+        bytes memory swapCallData = hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000150c42deacd8fc9773493ed674b675be577f2634b0902b5e3af16b188000007257ed11a78e51e028f5c00018e7591e2919157A6BBE9E3defe0F1Ff793e65Ec1000000015615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f000000000301020300060101010201ff000000000000000000000000000000000000000000e45a270b10cfed62ba586d3f1b72b36989a623ba039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000";
+
+        ILiquidationHelper.DexSwapInput[] memory swapsInputs0x = new ILiquidationHelper.DexSwapInput[](1);
+        swapsInputs0x[0].sellToken = ODOS_WS;
+        swapsInputs0x[0].allowanceTarget = ODOS_ROUTER;
+        swapsInputs0x[0].swapCallData = swapCallData;
+
+        ILiquidationHelper.LiquidationData memory liquidation;
+        liquidation.hook = IPartialLiquidation(hookReceiver);
+        liquidation.collateralAsset = ODOS_WS;
+        liquidation.user = borrower;
+
+//        assertEq(IERC20());
+
+        (uint256 withdrawCollateral, uint256 repayDebtAssets) = liquidationHelper.executeLiquidation(
+            flashLoanFrom,
+            ODOS_WETH,
+            type(uint256).max,
+            liquidation,
+            swapsInputs0x
+        );
+
+//        assertEq(lens.getLtv(silo1, borrower), 0, "user should be fully liquidated");
+
+
 //        assertEq(buyToken.balanceOf(address(dex)), 10535913188180254, "expect to have WETH");
 //        assertEq(sellToken.allowance(address(dex), allowanceTarget), 0, "allowance should be reset to 0");
     }
@@ -87,11 +118,14 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         IERC20(ODOS_WS).transfer(borrower,assets);
 
         vm.prank(wethWhale);
-        IERC20(ODOS_WETH).transfer(depositor,deposit);
+        IERC20(ODOS_WETH).transfer(depositor,deposit * 2);
 
         vm.startPrank(depositor);
-        IERC20(ODOS_WETH).approve(address(silo1), assets);
+        IERC20(ODOS_WETH).approve(address(silo1), deposit);
         silo1.deposit(deposit, depositor, ISilo.CollateralType.Collateral);
+
+        IERC20(ODOS_WETH).approve(address(flashLoanFrom), deposit);
+        flashLoanFrom.deposit(deposit, depositor, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
         vm.startPrank(borrower);
@@ -99,10 +133,11 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         silo0.deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         emit log_named_decimal_uint("maxBorrow", silo1.maxBorrow(borrower), 18);
+
         silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
         silo0.withdraw(silo0.maxWithdraw(borrower), borrower, borrower, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
-        vm.warp(block.timestamp + 10 days);
+        vm.warp(block.timestamp + 4 days + 2 hours);
     }
 }
