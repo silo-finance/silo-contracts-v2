@@ -55,10 +55,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         router = deploy.run();
 
-        address siloConfig = SiloDeployments.get(
-            ARBITRUM_ONE_ALIAS,
-            SiloConfigsNames.ETH_USDC_UNI_V3_SILO
-        );
+        address siloConfig = 0xE78A0E8319Ef75B3e381026F93A84330656DDEE8;
 
         (silo0, silo1) = ISiloConfig(siloConfig).getSilos();
 
