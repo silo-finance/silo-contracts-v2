@@ -31,7 +31,7 @@ interface AggregatorV3Interface {
 }
 
 /*
- forge test --ffi --gas-price 1 -vv --mc LiquidationHelperOdosTest
+ forge test --ffi --mc LiquidationHelperOdosTest -vv
 */
 contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     LiquidationHelper liquidationHelper;
@@ -103,7 +103,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     }
 
     /*
-     forge test --ffi --gas-price 1 -vv --mt test_odos_liquidationCall_full
+     forge test --ffi --mt test_odos_liquidationCall_full -vv
     */
     function test_odos_liquidationCall_full() public {
         uint256 jump = 1;
