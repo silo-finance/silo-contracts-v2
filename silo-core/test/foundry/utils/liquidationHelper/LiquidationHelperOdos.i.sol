@@ -127,7 +127,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         liquidation.collateralAsset = ODOS_STS;
         liquidation.user = borrower;
 
-        assertEq(IERC20(ODOS_WS).balanceOf(REWARD_COLLECTOR), 0, "empty wallet before liquidation");
+        assertEq(REWARD_COLLECTOR.balance, 0, "empty wallet before liquidation");
 
         (uint256 withdrawCollateral, uint256 repayDebtAssets) = liquidationHelper.executeLiquidation(
             flashLoanFrom,
@@ -142,11 +142,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         assertLe(lens.getLtv(silo1, borrower), 0.95e18, "user should be partially liquidated");
         assertTrue(silo1.isSolvent(borrower), "user should be solvent");
 
-        assertEq(IERC20(ODOS_WS).balanceOf(REWARD_COLLECTOR), 1, "got profit");
-
-
-//        assertEq(buyToken.balanceOf(address(dex)), 10535913188180254, "expect to have WETH");
-//        assertEq(sellToken.allowance(address(dex), allowanceTarget), 0, "allowance should be reset to 0");
+        assertGt(REWARD_COLLECTOR.balance, 0, "got profit");
     }
 
     function _mockOracleCall(bool _priceCrash, uint256 _timeJump) internal {
