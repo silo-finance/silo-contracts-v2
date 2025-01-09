@@ -18,34 +18,16 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 
 interface AggregatorV3Interface {
-    function decimals() external view returns (uint8);
-
-    function description() external view returns (string memory);
-
-    function version() external view returns (uint256);
-    function latestAnswer() external view returns (uint256);
-
-    function getRoundData(uint80 _roundId)
-    external
-    view
-    returns (
-        uint80 roundId,
-        int256 answer,
-        uint256 startedAt,
-        uint256 updatedAt,
-        uint80 answeredInRound
-    );
-
     function latestRoundData()
-    external
-    view
-    returns (
-        uint80 roundId,
-        int256 answer,
-        uint256 startedAt,
-        uint256 updatedAt,
-        uint80 answeredInRound
-    );
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        );
 }
 
 /*
@@ -106,7 +88,57 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         assertLt(lens.getLtv(silo1, borrower), 0.98e18, "we want healthy position");
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
-        assertLt(collateralToLiquidate, 50e18, "we want FULL");
+        assertLt(debtToRepay, silo1.maxRepay(borrower), "we want partial liquidation");
+
+        assertEq(REWARD_COLLECTOR.balance, 0, "empty wallet before liquidation");
+
+        _executeLiquidation();
+
+        vm.clearMockedCalls();
+
+        assertLe(lens.getLtv(silo1, borrower), 0.95e18, "user should be partially liquidated");
+        assertTrue(silo1.isSolvent(borrower), "user should be solvent");
+
+        assertGt(REWARD_COLLECTOR.balance, 0, "got profit");
+    }
+
+    /*
+     forge test --ffi --gas-price 1 -vv --mt test_odos_liquidationCall_full
+    */
+    function test_odos_liquidationCall_full() public {
+        uint256 jump = 1;
+
+        _createPositionToliquidate(block.timestamp + jump);
+        _mockOracleCall(true, jump);
+
+        address borrower = makeAddr("borrower");
+
+        emit log_named_decimal_uint("getLtv", lens.getLtv(silo1, borrower), 16);
+
+        assertFalse(silo1.isSolvent(borrower), "user should be insolvent");
+        assertLt(lens.getLtv(silo1, borrower), 1e18, "we want healthy position");
+
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
+        assertEq(debtToRepay, silo1.maxRepay(borrower), "we want FULL");
+
+        assertEq(REWARD_COLLECTOR.balance, 0, "empty wallet before liquidation");
+
+        _executeLiquidation();
+
+        vm.clearMockedCalls();
+
+        assertLe(lens.getLtv(silo1, borrower), 0.95e18, "user should be partially liquidated");
+        assertTrue(silo1.isSolvent(borrower), "user should be solvent");
+
+        assertGt(REWARD_COLLECTOR.balance, 0, "got profit");
+    }
+
+    function _executeLiquidation() internal {
+        address borrower = makeAddr("borrower");
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay,
+        ) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
 
         // note: this is swap data for stS => sW with 50% slippage allowance
         bytes memory swapCallData = abi.encodePacked(
@@ -127,8 +159,6 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         liquidation.collateralAsset = ODOS_STS;
         liquidation.user = borrower;
 
-        assertEq(REWARD_COLLECTOR.balance, 0, "empty wallet before liquidation");
-
         (uint256 withdrawCollateral, uint256 repayDebtAssets) = liquidationHelper.executeLiquidation(
             flashLoanFrom,
             ODOS_WS,
@@ -136,13 +166,6 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
             liquidation,
             swapsInputs0x
         );
-
-        vm.clearMockedCalls();
-
-        assertLe(lens.getLtv(silo1, borrower), 0.95e18, "user should be partially liquidated");
-        assertTrue(silo1.isSolvent(borrower), "user should be solvent");
-
-        assertGt(REWARD_COLLECTOR.balance, 0, "got profit");
     }
 
     function _mockOracleCall(bool _priceCrash, uint256 _timeJump) internal {
@@ -154,7 +177,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
             uint80 answeredInRound
         ) = AggregatorV3Interface(0x65d0F14f7809CdC4f90c3978c753C4671b6B815b).latestRoundData();
 
-        answer = _priceCrash ? answer / 10 : answer * 9995 / 10000;
+        answer = _priceCrash ? answer * 9700001 / 10000000 : answer * 9995 / 10000;
 
         vm.mockCall(
             0xb4fe9028A4D4D8B3d00e52341F2BB0798860532C,
