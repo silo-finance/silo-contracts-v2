@@ -63,7 +63,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     address public constant ODOS_WS = address(0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38);
 
     function setUp() public {
-        uint256 blockToFork = 3046130;
+        uint256 blockToFork = 3087867;
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);
 
         SiloFixture siloFixture = new SiloFixture();
@@ -92,26 +92,11 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         vm.label(address(flashLoanFrom), "flashLoanFrom");
     }
 
-    function test_odos_liquidationCall() public {
-        uint256 jump = 5 days + 10 hours;
-
-        {
-            (
-                uint80 roundId,
-                int256 answer,
-                uint256 startedAt,
-                uint256 updatedAt,
-                uint80 answeredInRound
-            ) = AggregatorV3Interface(0x65d0F14f7809CdC4f90c3978c753C4671b6B815b).latestRoundData();
-
-            vm.mockCall(
-                0xb4fe9028A4D4D8B3d00e52341F2BB0798860532C,
-                abi.encodePacked(AggregatorV3Interface.latestRoundData.selector),
-                abi.encode(roundId, answer, startedAt, uint256(block.timestamp + jump), answeredInRound)
-            );
-        }
+    function test_odos_liquidationCall_partial() public {
+        uint256 jump = 1;
 
         _createPositionToliquidate(block.timestamp + jump);
+        _mockOracleCall(false, jump);
 
         address borrower = makeAddr("borrower");
 
@@ -123,18 +108,13 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
         assertLt(collateralToLiquidate, 50e18, "we want FULL");
 
-        // 0x83bd37f90001e5da20f15420ad15de0fa650600afc998bbe39550001039e2fb66102314ce7b64ce5ce3e5183bc94ad3809
-        // 02b5e3af16b1880000
-        // 0902b7ea52ab788fc00019999900019b99e9c620b2E2f09E0b9Fced8F679eEcF2653FE00000001
-        // 7a111C75EfE7C6A05991514E4363531a143521E9
-        // 000000000301020300060101010200ff000000000000000000000000000000000000000000d760791b29e7894fb827a94ca433254bb5afb653e5da20f15420ad15de0fa650600afc998bbe3955000000000000000000000000000000000000000000000000
-
+        // note: this is swap data for stS => sW with 50% slippage allowance
         bytes memory swapCallData = abi.encodePacked(
             hex"83bd37f90001e5da20f15420ad15de0fa650600afc998bbe39550001039e2fb66102314ce7b64ce5ce3e5183bc94ad3809",
             uint72(collateralToLiquidate), // amount in
-            hex"0902b7ea52ab788fc00019999900019b99e9c620b2E2f09E0b9Fced8F679eEcF2653FE00000001",
+            hex"0902b7ffaaafdba980007fffff00019b99e9c620b2E2f09E0b9Fced8F679eEcF2653FE00000001",
             address(liquidationHelper), // seller address in swap data
-            hex"000000000301020300060101010200ff000000000000000000000000000000000000000000d760791b29e7894fb827a94ca433254bb5afb653e5da20f15420ad15de0fa650600afc998bbe3955000000000000000000000000000000000000000000000000"
+            hex"000000000301020300060101010200ff000000000000000000000000000000000000000000de861c8fc9ab78fe00490c5a38813d26e2d09c95e5da20f15420ad15de0fa650600afc998bbe3955000000000000000000000000000000000000000000000000"
         );
 
         ILiquidationHelper.DexSwapInput[] memory swapsInputs0x = new ILiquidationHelper.DexSwapInput[](1);
@@ -157,12 +137,34 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
             swapsInputs0x
         );
 
-        assertEq(lens.getLtv(silo1, borrower), 0, "user should be fully liquidated");
+        vm.clearMockedCalls();
+
+        assertLe(lens.getLtv(silo1, borrower), 0.95e18, "user should be partially liquidated");
+        assertTrue(silo1.isSolvent(borrower), "user should be solvent");
+
         assertEq(IERC20(ODOS_WS).balanceOf(REWARD_COLLECTOR), 1, "got profit");
 
 
 //        assertEq(buyToken.balanceOf(address(dex)), 10535913188180254, "expect to have WETH");
 //        assertEq(sellToken.allowance(address(dex), allowanceTarget), 0, "allowance should be reset to 0");
+    }
+
+    function _mockOracleCall(bool _priceCrash, uint256 _timeJump) internal {
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        ) = AggregatorV3Interface(0x65d0F14f7809CdC4f90c3978c753C4671b6B815b).latestRoundData();
+
+        answer = _priceCrash ? answer / 10 : answer * 9995 / 10000;
+
+        vm.mockCall(
+            0xb4fe9028A4D4D8B3d00e52341F2BB0798860532C,
+            abi.encodePacked(AggregatorV3Interface.latestRoundData.selector),
+            abi.encode(roundId, answer, startedAt, uint256(block.timestamp + _timeJump), answeredInRound)
+        );
     }
 
     function _createPositionToliquidate(uint256 _jumpTime) internal {
