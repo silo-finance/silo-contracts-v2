@@ -8,7 +8,6 @@ import {AcceptOwnershipReentrancyTest} from "../methods/gauge-hook-receiver/Acce
 import {AfterActionReentrancyTest} from "../methods/gauge-hook-receiver/AfterActionReentrancyTest.sol";
 import {BeforeActionReentrancyTest} from "../methods/gauge-hook-receiver/BeforeActionReentrancyTest.sol";
 import {ConfiguredGaugesReentrancyTest} from "../methods/gauge-hook-receiver/ConfiguredGaugesReentrancyTest.sol";
-import {GaugeReentrancyTest} from "../methods/gauge-hook-receiver/GaugeReentrancyTest.sol";
 import {HookReceiverConfigReentrancyTest} from "../methods/gauge-hook-receiver/HookReceiverConfigReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/gauge-hook-receiver/InitializeReentrancyTest.sol";
 import {MaxLiquidationReentrancyTest} from "../methods/gauge-hook-receiver/MaxLiquidationReentrancyTest.sol";
@@ -31,7 +30,6 @@ contract GaugeHookReceiverMethodsRegistry is IMethodsRegistry {
         _registerMethod(new AfterActionReentrancyTest());
         _registerMethod(new BeforeActionReentrancyTest());
         _registerMethod(new ConfiguredGaugesReentrancyTest());
-        _registerMethod(new GaugeReentrancyTest());
         _registerMethod(new HookReceiverConfigReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());
         _registerMethod(new MaxLiquidationReentrancyTest());

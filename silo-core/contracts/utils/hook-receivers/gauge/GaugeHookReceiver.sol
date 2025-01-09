@@ -20,7 +20,6 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
 
     uint24 internal constant _HOOKS_BEFORE_NOT_CONFIGURED = 0;
 
-    IGauge public gauge;
     IShareToken public shareToken;
 
     mapping(IShareToken => IGauge) public configuredGauges;
@@ -66,7 +65,7 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
 
         configuredGauges[_shareToken] = _gauge;
 
-        emit GaugeConfigured(address(gauge), address(_shareToken));
+        emit GaugeConfigured(address(_gauge), address(_shareToken));
     }
 
     /// @inheritdoc IGaugeHookReceiver
