@@ -16,7 +16,7 @@ library PartialLiquidationExecLib {
         uint256 _maxDebtToCover,
         uint256 _liquidationFee
     )
-        internal
+        external
         view
         returns (
             uint256 withdrawAssetsFromCollateral,
@@ -61,7 +61,7 @@ library PartialLiquidationExecLib {
     /// because actual max can be only higher
     // solhint-disable-next-line function-max-lines
     function maxLiquidation(ISiloConfig _siloConfig, address _borrower)
-        internal
+        external
         view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
     {
