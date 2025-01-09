@@ -74,7 +74,10 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         vm.label(address(flashLoanFrom), "flashLoanFrom");
     }
 
-    function test_odos_liquidationCall_partial() public {
+    /*
+         TODO this can must be skip because foundry do not support Sonic network yet
+    */
+    function test_skip_odos_liquidationCall_partial() public {
         _createPositionToliquidate();
         _mockOracleCall(false);
 
@@ -101,9 +104,11 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     }
 
     /*
-     forge test --ffi --mt test_odos_liquidationCall_full -vv
+     forge test --ffi --mt test_skip_odos_liquidationCall_full -vv
+
+     TODO this can must be skip because foundry do not support Sonic network yet
     */
-    function test_odos_liquidationCall_full() public {
+    function test_skip_odos_liquidationCall_full() public {
         _createPositionToliquidate();
         _mockOracleCall(true);
 
