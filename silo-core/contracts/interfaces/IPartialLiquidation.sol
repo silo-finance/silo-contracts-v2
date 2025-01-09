@@ -14,6 +14,7 @@ interface IPartialLiquidation {
     /// @dev Emitted when a borrower is liquidated.
     /// @param liquidator The address of the liquidator
     /// @param silo The address of the silo on which position was liquidated
+    /// @param borrower The address of the borrower
     /// @param repayDebtAssets Repay amount
     /// @param withdrawCollateral Total (collateral + protected) withdraw amount, in case `receiveSToken` is TRUE
     /// then this is estimated withdraw, and representation of this amount in sToken was transferred
@@ -22,6 +23,7 @@ interface IPartialLiquidation {
     event LiquidationCall(
         address indexed liquidator,
         address indexed silo,
+        address indexed borrower,
         uint256 repayDebtAssets,
         uint256 withdrawCollateral,
         bool receiveSToken

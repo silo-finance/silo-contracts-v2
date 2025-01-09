@@ -9,6 +9,9 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 /// @custom:contact security@silo.finance
 /// @notice Library exposing error messages.
 library ErrorsLib {
+    /// @notice Thrown on OutOfGas or revert() without any data
+    error PossibleOutOfGas();
+
     /// @notice Thrown on reentering token transfer while notification are being dispatched
     error NotificationDispatchError();
 
