@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -17,14 +18,25 @@ contract SiloRouterDeploy is CommonDeploy {
     function run() public returns (SiloRouter siloRouter) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address weth = AddrLib.getAddress(AddrKey.WETH);
+        address nativeToken = _nativeToken();
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloRouter = new SiloRouter(weth);
+        siloRouter = new SiloRouter(nativeToken);
 
         vm.stopBroadcast();
 
         _registerDeployment(address(siloRouter), SiloCoreContracts.SILO_ROUTER);
+    }
+
+    function _nativeToken() private returns (address) {
+        uint256 chainId = getChainId();
+
+        if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);
+
+        revert(string.concat("can not find native token for ", getChainAlias()));
     }
 }
