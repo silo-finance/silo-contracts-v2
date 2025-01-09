@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {console} from "forge-std/console.sol";
-
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -64,8 +62,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     ) external virtual returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
         require(_maxDebtToCover != 0, NoDebtToCover());
 
-        console.log("flashLoan", _maxDebtToCover);
-
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
         IERC20(_debtAsset).approve(address(_flashLoanFrom), 0);
 
@@ -92,9 +88,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         IERC20(_debtAsset).approve(address(_liquidation.hook), _maxDebtToCover);
 
-        console.log("_maxDebtToCover", _maxDebtToCover);
-        console.log("_fee", _fee);
-
         (
             _withdrawCollateral, _repayDebtAssets
         ) = _liquidation.hook.liquidationCall({
@@ -104,9 +97,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _maxDebtToCover: _maxDebtToCover,
             _receiveSToken: false
         });
-
-        console.log("liquidation successful with _withdrawCollateral", _withdrawCollateral);
-        console.log("_repayDebtAssets", _repayDebtAssets);
 
         IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
         uint256 flashLoanWithFee = _maxDebtToCover + _fee;
@@ -124,8 +114,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _executeSwap(_swapInputs);
 
             uint256 debtBalance = IERC20(_debtAsset).balanceOf(address(this));
-            console.log("debtBalance after swap", debtBalance);
-            console.log("flashLoanWithFee", flashLoanWithFee);
 
             if (flashLoanWithFee < debtBalance) {
                 unchecked {
