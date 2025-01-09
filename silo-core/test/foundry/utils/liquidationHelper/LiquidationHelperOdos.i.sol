@@ -75,10 +75,8 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     }
 
     function test_odos_liquidationCall_partial() public {
-        uint256 jump = 1;
-
-        _createPositionToliquidate(block.timestamp + jump);
-        _mockOracleCall(false, jump);
+        _createPositionToliquidate();
+        _mockOracleCall(false);
 
         address borrower = makeAddr("borrower");
 
@@ -106,10 +104,8 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
      forge test --ffi --mt test_odos_liquidationCall_full -vv
     */
     function test_odos_liquidationCall_full() public {
-        uint256 jump = 1;
-
-        _createPositionToliquidate(block.timestamp + jump);
-        _mockOracleCall(true, jump);
+        _createPositionToliquidate();
+        _mockOracleCall(true);
 
         address borrower = makeAddr("borrower");
 
@@ -168,7 +164,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         );
     }
 
-    function _mockOracleCall(bool _priceCrash, uint256 _timeJump) internal {
+    function _mockOracleCall(bool _priceCrash) internal {
         (
             uint80 roundId,
             int256 answer,
@@ -182,11 +178,11 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         vm.mockCall(
             0xb4fe9028A4D4D8B3d00e52341F2BB0798860532C,
             abi.encodePacked(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(roundId, answer, startedAt, uint256(block.timestamp + _timeJump), answeredInRound)
+            abi.encode(roundId, answer, startedAt, updatedAt, answeredInRound)
         );
     }
 
-    function _createPositionToliquidate(uint256 _jumpTime) internal {
+    function _createPositionToliquidate() internal {
         address stsWhale = 0xBB435A52EC1ED3945a636A8f0058ea3CB1e027E8;
         address wsWhale = 0x92928Fe008Ed635aA822A5CAdf0Cba340D754A66;
         vm.label(stsWhale, "stsWhale");
@@ -218,8 +214,6 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
         silo0.withdraw(silo0.maxWithdraw(borrower), borrower, borrower, ISilo.CollateralType.Collateral);
         vm.stopPrank();
-
-        vm.warp(_jumpTime);
 
         uint256 amountToRepay = silo1.maxRepay(borrower);
         amountToRepay += flashLoanFrom.flashFee(ODOS_WS, amountToRepay);
