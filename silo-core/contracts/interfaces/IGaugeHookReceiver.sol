@@ -45,9 +45,6 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// @param _shareToken Share token for which the gauge needs to be removed
     function removeGauge(IShareToken _shareToken) external;
 
-    /// @notice Get the gauge
-    function gauge() external view returns (IGauge);
-
     /// @notice Get the share token
     function shareToken() external view returns (IShareToken);
 
