@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+// TODO add reentrancy
+
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ERC4626, Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
@@ -114,7 +116,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         address _asset,
         string memory _name,
         string memory _symbol
-    ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
+    ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) { // TODO use 2stepOwnable
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
@@ -630,6 +632,24 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets -= _simulateWithdrawSilo(assets);
     }
 
+/**
+    /// @dev Returns the maximum amount of assets that the vault can supply on Morpho.
+        function _maxDeposit() internal view returns (uint256 totalSuppliable) {
+            for (uint256 i; i < supplyQueue.length; ++i) {
+                Id id = supplyQueue[i];
+
+                uint256 supplyCap = config[id].cap;
+                if (supplyCap == 0) continue;
+
+                uint256 supplyShares = MORPHO.supplyShares(id, address(this));
+                (uint256 totalSupplyAssets, uint256 totalSupplyShares,,) = MORPHO.expectedMarketBalances(_marketParams(id));
+                // `supplyAssets` needs to be rounded up for `totalSuppliable` to be rounded down.
+                uint256 supplyAssets = supplyShares.toAssetsUp(totalSupplyAssets, totalSupplyShares);
+
+                totalSuppliable += supplyCap.zeroFloorSub(supplyAssets);
+            }
+        }
+*/
     /// @dev Returns the maximum amount of assets that the vault can supply on Silo.
     function _maxDeposit() internal view virtual returns (uint256 totalSuppliable) {
         for (uint256 i; i < supplyQueue.length; ++i) {
@@ -638,7 +658,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyCap = config[market].cap;
             if (supplyCap == 0) continue;
 
-            totalSuppliable += UtilsLib.zeroFloorSub(supplyCap, market.maxDeposit(address(this)));
+            // TODO this is a bug - check supply Silo
+//            uint256 shares = market.balanceOf(address(this));
+//            uint256 assets = market.convertToAsset(assets);
+//            uint256 maxDeposit = market.maxDeposit(address(this));
+            totalSuppliable +=  min(maxDeposit, supplyCap - assets);
         }
     }
 
@@ -766,11 +790,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }
 
             marketConfig.removableAt = 0;
+            // TODO change it to safeApproval, maybe this can be removed
             IERC20(asset()).approve(address(_market), 0);
         }
 
         marketConfig.cap = _supplyCap;
         // one time approval, so market can pull any amount of tokens from SiloVault in a future
+        // TODO change it to forceApproval (or safeApproval)
         IERC20(asset()).approve(address(_market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 
@@ -780,6 +806,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /* LIQUIDITY ALLOCATION */
 
     /// @dev Supplies `assets` to Silo.
+    // TODO rename _supplySilo => _supplyERC4626 and do it for all similar places
     function _supplySilo(uint256 _assets) internal virtual {
         for (uint256 i; i < supplyQueue.length; ++i) {
             IERC4626 market = supplyQueue[i];
@@ -905,6 +932,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
         _nonReentrantOn();
+        // TODO change order, move if before `_nonReentrantOn` use modifier if possible after we remove try/catch
+        // TODO remove this line because we have return in line 928
         if (_value == 0) return;
 
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
@@ -914,6 +943,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 recipientBalance = _to == address(0) ? 0 : balanceOf(_to);
 
         for(uint256 i; i < receivers.length; i++) {
+            // TODO make this external call
             try INotificationReceiver(receivers[i]).afterTokenTransfer({
                 _sender: _from,
                 _senderBalance: senderBalance,
@@ -924,6 +954,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }) {
                 // notification send
             } catch (bytes memory lowLevelData) {
+                emit ErrorSoem();
                 // prevent 63/64 attack with OutOfGas revert
                 require(lowLevelData.length != 0, ErrorsLib.PossibleOutOfGas());
                 // do not revert on invalid notification
