@@ -1,10 +1,9 @@
 {
-  "arbitrum_one": {
-  },
+  "arbitrum_one": {},
   "optimism": {
     "UniswapV3-WETH-USDC-Silo": "0x34A40A76823838a22AE42cB5B62F83580900061d"
   },
   "sonic": {
-    "stS_S_Silo": "0x875bE2b0AeF69589A21C9eF73CD92D8E71b20043"
+    "stS_S_Silo": "0x78C246f67c8A6cE03a1d894d4Cf68004Bd55Deea"
   }
 }
