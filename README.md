@@ -14,18 +14,20 @@ $ git clone https://github.com/silo-finance/silo-contracts-v2.git
 # 3. Open folder
 $ cd silo-contracts-v2
 
-# 4. Create the file ".env" in a root of this folder. ".env.example" is an example. 
+# 4. Initialize submodules
+$ git submodule update --init --recursive
+
+# 5. Create the file ".env" in a root of this folder. ".env.example" is an example.
+# RPC_MAINNET, RPC_ARBITRUM, RPC_ANVIL, PRIVATE_KEY are required to run the tests.
 # Add your RPC URLs and private key if you are going to deploy a new Silo.
 
-# 5. Check if tutorial test can be executed. Packages will be installed automatically,
-# it will take some time. All test should pass.
-
-$ FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
-
-# 6. Build Silo foundry utils to prepare tools for Silo deployment
+# 6. Build Silo foundry utils to prepare tools for Silo deployment and testing
 $ cd ./gitmodules/silo-foundry-utils && cargo build --release && cp target/release/silo-foundry-utils ../../silo-foundry-utils && cd -
 
-# 7. You are ready to contribute to the protocol!
+# 7. Check if tests can be executed
+$ FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
+
+# 8. You are ready to contribute to the protocol!
 ```
 
 ### Test new Silo deployment locally
