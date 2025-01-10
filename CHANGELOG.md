@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.20.0] - 2025-01-10
+### Updated
+- Redeployment market for Sonic: `stS/S`
+- Redeployment SiloRouter
+- Redeployment GaugeHookReceiver with updated event and reduced contract size
+
 ## [0.19.0] - 2025-01-08
 ### Added
 - Redeployment market for Sonic: `stS/S`
