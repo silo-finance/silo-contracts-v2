@@ -120,7 +120,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                     // safe because of `if (flashLoanWithFee < debtBalance)`
                     _transferToReceiver(_debtAsset, debtBalance - flashLoanWithFee);
                 }
-            } else if (flashLoanWithFee > debtBalance) {
+            } else if (flashLoanWithFee != debtBalance) {
                 revert UnableToRepayFlashloan();
             }
         }
