@@ -390,7 +390,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMaxDeposit -vvv
     */
     function testMaxDeposit() public {
-        _setCap(allMarkets[0], 1 ether);
+        uint256 cap = 1 ether;
+
+        _setCap(allMarkets[0], cap);
 
         IERC4626[] memory supplyQueue = new IERC4626[](1);
         supplyQueue[0] = allMarkets[0];
@@ -408,10 +410,12 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         _forward(1_000);
 
-        vm.prank(SUPPLIER);
-        vault.deposit(1 ether, ONBEHALF);
+        uint256 vaultDepositAmount = 0.65 ether;
 
-        assertEq(vault.maxDeposit(SUPPLIER), 0, "maxDeposit should be 0");
+        vm.prank(SUPPLIER);
+        vault.deposit(vaultDepositAmount, ONBEHALF);
+
+        assertEq(vault.maxDeposit(SUPPLIER), cap - vaultDepositAmount, "maxDeposit should be 0");
     }
 
     function onFlashLoan(address, address, uint256, uint256, bytes calldata) external pure returns (bytes32) {
