@@ -22,15 +22,4 @@ contract SiloRouterDeploy is CommonDeploy {
 
         _registerDeployment(address(siloRouter), SiloCoreContracts.SILO_ROUTER);
     }
-
-    function _nativeToken() private returns (address) {
-        uint256 chainId = getChainId();
-
-        if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
-        if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
-        if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
-        if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);
-
-        revert(string.concat("can not find native token for ", getChainAlias()));
-    }
 }
