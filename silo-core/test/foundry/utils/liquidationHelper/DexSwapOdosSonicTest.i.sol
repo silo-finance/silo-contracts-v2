@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Test} from "forge-std/Test.sol";
+import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -10,27 +11,24 @@ import {DexSwap} from "silo-core/contracts/utils/liquidationHelper/DexSwap.sol";
 /*
  forge test --gas-price 1 -vv --mc DexSwapOdosSonicTest
 */
-contract DexSwapOdosSonicTest is Test {
+contract DexSwapOdosSonicTest is IntegrationTest {
     DexSwap dex; // solhint-disable-line var-name-mixedcase
-
-    address public constant ODOS_ROUTER = address(0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D);
 
     function setUp() public {
         uint256 blockToFork = 2838462;
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);
-
-        dex = new DexSwap(ODOS_ROUTER);
+        dex = new DexSwap(getAddress(AddrKey.ODOS_ROUTER));
     }
 
     function test_fillQuote_StoWETH() public {
         address whale = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
 
-        IERC20 sellToken = IERC20(0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38); // wS
+        IERC20 sellToken = IERC20(getAddress(AddrKey.wS));
         vm.prank(whale);
         sellToken.transfer(address(dex),50e18);
 
-        IERC20 buyToken = IERC20(0x50c42dEAcD8Fc9773493ED674b675bE577f2634b);
-        address allowanceTarget = ODOS_ROUTER;
+        IERC20 buyToken = IERC20(getAddress(AddrKey.WETH));
+        address allowanceTarget = getAddress(AddrKey.ODOS_ROUTER);
 
         uint256 wethBefore = buyToken.balanceOf(address(dex));
         assertEq(wethBefore, 0, "expect to have no WETH");

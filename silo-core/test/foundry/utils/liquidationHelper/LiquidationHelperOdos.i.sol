@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Test} from "forge-std/Test.sol";
+import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -23,16 +24,13 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 /*
  forge test --ffi --mc LiquidationHelperOdosTest -vv
 */
-contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
+contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
     LiquidationHelper liquidationHelper;
     SiloLens lens;
     ISilo flashLoanFrom;
     address hookReceiver;
 
     address payable public constant REWARD_COLLECTOR = payable(address(123456789));
-    address public constant ODOS_ROUTER = address(0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D);
-    address public constant ODOS_STS = address(0xE5DA20F15420aD15DE0fa650600aFc998bbE3955);
-    address public constant ODOS_WS = address(0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38);
 
     function setUp() public {
         uint256 blockToFork = 3087867;
@@ -41,8 +39,8 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         SiloFixture siloFixture = new SiloFixture();
 
         SiloConfigOverride memory configOverride;
-        configOverride.token0 = ODOS_STS;
-        configOverride.token1 = ODOS_WS;
+        configOverride.token0 = getAddress(AddrKey.stS);
+        configOverride.token1 = getAddress(AddrKey.wS);
         configOverride.configName = "stS_S_Silo";
 
         (, silo0, silo1,,,hookReceiver ) = siloFixture.deploy_local(configOverride);
@@ -50,13 +48,16 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         vm.label(address(silo0), "silo0");
         vm.label(address(silo1), "silo1");
 
-        token0 = MintableToken(ODOS_STS);
-        token1 = MintableToken(ODOS_WS);
+        token0 = MintableToken(getAddress(AddrKey.stS));
+        token1 = MintableToken(getAddress(AddrKey.wS));
 
         vm.label(address(token0), "wS");
         vm.label(address(token1), "stS");
 
-        liquidationHelper = new LiquidationHelper(ODOS_WS, ODOS_ROUTER, REWARD_COLLECTOR);
+        liquidationHelper = new LiquidationHelper(
+            getAddress(AddrKey.wS), getAddress(AddrKey.ODOS_ROUTER), REWARD_COLLECTOR
+        );
+
         lens = new SiloLens();
 
         // another deployment so we have silo for flashloan
@@ -78,7 +79,8 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         assertFalse(silo1.isSolvent(borrower), "user should be insolvent");
         assertLt(lens.getLtv(silo1, borrower), 0.98e18, "we want healthy position");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
+        (, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
+
         assertLt(debtToRepay, silo1.maxRepay(borrower), "we want partial liquidation");
 
         assertEq(REWARD_COLLECTOR.balance, 0, "empty wallet before liquidation");
@@ -109,7 +111,8 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         assertFalse(silo1.isSolvent(borrower), "user should be insolvent");
         assertLt(lens.getLtv(silo1, borrower), 1e18, "we want healthy position");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
+        (, uint256 debtToRepay,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
+
         assertEq(debtToRepay, silo1.maxRepay(borrower), "we want FULL");
 
         assertEq(REWARD_COLLECTOR.balance, 0, "empty wallet before liquidation");
@@ -127,9 +130,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
     function _executeLiquidation() internal {
         address borrower = makeAddr("borrower");
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay,
-        ) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
+        (uint256 collateralToLiquidate,,) = IPartialLiquidation(hookReceiver).maxLiquidation(borrower);
 
         // note: this is swap data for stS => sW with 50% slippage allowance
         bytes memory swapCallData = abi.encodePacked(
@@ -141,18 +142,18 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         );
 
         ILiquidationHelper.DexSwapInput[] memory swapsInputs0x = new ILiquidationHelper.DexSwapInput[](1);
-        swapsInputs0x[0].sellToken = ODOS_STS;
-        swapsInputs0x[0].allowanceTarget = ODOS_ROUTER;
+        swapsInputs0x[0].sellToken = getAddress(AddrKey.stS);
+        swapsInputs0x[0].allowanceTarget = getAddress(AddrKey.ODOS_ROUTER);
         swapsInputs0x[0].swapCallData = swapCallData;
 
         ILiquidationHelper.LiquidationData memory liquidation;
         liquidation.hook = IPartialLiquidation(hookReceiver);
-        liquidation.collateralAsset = ODOS_STS;
+        liquidation.collateralAsset = getAddress(AddrKey.stS);
         liquidation.user = borrower;
 
-        (uint256 withdrawCollateral, uint256 repayDebtAssets) = liquidationHelper.executeLiquidation(
+        liquidationHelper.executeLiquidation(
             flashLoanFrom,
-            ODOS_WS,
+            getAddress(AddrKey.wS),
             silo1.maxRepay(borrower),
             liquidation,
             swapsInputs0x
@@ -190,18 +191,18 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         uint256 deposit = 37.5e18;
 
         vm.prank(stsWhale);
-        IERC20(ODOS_STS).transfer(borrower,assets);
+        IERC20(getAddress(AddrKey.stS)).transfer(borrower,assets);
 
         vm.prank(wsWhale);
-        IERC20(ODOS_WS).transfer(depositor,deposit);
+        IERC20(getAddress(AddrKey.wS)).transfer(depositor,deposit);
 
         vm.startPrank(depositor);
-        IERC20(ODOS_WS).approve(address(silo1), deposit);
+        IERC20(getAddress(AddrKey.wS)).approve(address(silo1), deposit);
         silo1.deposit(deposit, depositor, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
         vm.startPrank(borrower);
-        IERC20(ODOS_STS).approve(address(silo0), assets);
+        IERC20(getAddress(AddrKey.stS)).approve(address(silo0), assets);
         silo0.deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         emit log_named_decimal_uint("maxBorrow", silo1.maxBorrow(borrower), 18);
@@ -211,14 +212,14 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, Test {
         vm.stopPrank();
 
         uint256 amountToRepay = silo1.maxRepay(borrower);
-        amountToRepay += flashLoanFrom.flashFee(ODOS_WS, amountToRepay);
+        amountToRepay += flashLoanFrom.flashFee(getAddress(AddrKey.wS), amountToRepay);
         emit log_named_decimal_uint("repay + flash fee", amountToRepay, 18);
 
         vm.prank(wsWhale);
-        IERC20(ODOS_WS).transfer(depositor,amountToRepay);
+        IERC20(getAddress(AddrKey.wS)).transfer(depositor,amountToRepay);
 
         vm.startPrank(depositor);
-        IERC20(ODOS_WS).approve(address(flashLoanFrom), amountToRepay);
+        IERC20(getAddress(AddrKey.wS)).approve(address(flashLoanFrom), amountToRepay);
         flashLoanFrom.deposit(amountToRepay , depositor, ISilo.CollateralType.Collateral);
         vm.stopPrank();
     }
