@@ -79,7 +79,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
 
             -   name: Run submodule update
                 run: git submodule update --init --recursive
