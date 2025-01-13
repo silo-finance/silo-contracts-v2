@@ -65,7 +65,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-02a6d540608367c9ee030fe4a22f2803e4ae1197
+          version: nightly
 
       - name: yarn install
         run: yarn install
