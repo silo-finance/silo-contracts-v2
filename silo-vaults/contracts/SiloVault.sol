@@ -359,7 +359,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         for (uint256 i; i < _allocations.length; ++i) {
             MarketAllocation memory allocation = _allocations[i];
 
-            // in original SiloVault, we are not checking liquidity, so this realocation will fail if not enough assets
+            // in original SiloVault, we are not checking liquidity, so this reallocation will fail if not enough assets
             (uint256 supplyAssets, uint256 supplyShares) = _supplyBalance(allocation.market);
             uint256 withdrawn = UtilsLib.zeroFloorSub(supplyAssets, allocation.assets);
 
@@ -627,10 +627,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         newTotalSupply = totalSupply() + feeShares;
 
         assets = _convertToAssetsWithTotals(balanceOf(_owner), newTotalSupply, newTotalAssets, Math.Rounding.Floor);
-        assets -= _simulateWithdrawSilo(assets);
+        assets -= _simulateWithdrawERC4626(assets);
     }
 
-    /// @dev Returns the maximum amount of assets that the vault can supply on Silo.
+    /// @dev Returns the maximum amount of assets that the vault can supply on ERC4626 vaults.
     function _maxDeposit() internal view virtual returns (uint256 totalSuppliable) {
         for (uint256 i; i < supplyQueue.length; ++i) {
             IERC4626 market = supplyQueue[i];
@@ -681,18 +681,18 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ERC4626
-    /// @dev Used in mint or deposit to deposit the underlying asset to Silo markets.
+    /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
         super._deposit(_caller, _receiver, _assets, _shares);
 
-        _supplySilo(_assets);
+        _supplyERC4626(_assets);
 
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(lastTotalAssets + _assets);
     }
 
     /// @inheritdoc ERC4626
-    /// @dev Used in redeem or withdraw to withdraw the underlying asset from Silo markets.
+    /// @dev Used in redeem or withdraw to withdraw the underlying asset from ERC4626 markets.
     /// @dev Depending on 3 cases, reverts when withdrawing "too much" with:
     /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
     /// 2. ERC20InsufficientAllowance when withdrawing more than `caller`'s allowance.
@@ -702,7 +702,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         override
     {
-        _withdrawSilo(_assets);
+        _withdrawERC4626(_assets);
 
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
@@ -779,8 +779,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* LIQUIDITY ALLOCATION */
 
-    /// @dev Supplies `assets` to Silo.
-    function _supplySilo(uint256 _assets) internal virtual {
+    /// @dev Supplies `assets` to ERC4626 vaults.
+    function _supplyERC4626(uint256 _assets) internal virtual {
         for (uint256 i; i < supplyQueue.length; ++i) {
             IERC4626 market = supplyQueue[i];
 
@@ -807,8 +807,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_assets != 0) revert ErrorsLib.AllCapsReached();
     }
 
-    /// @dev Withdraws `assets` from Silo.
-    function _withdrawSilo(uint256 _assets) internal virtual {
+    /// @dev Withdraws `assets` from ERC4626 vaults.
+    function _withdrawERC4626(uint256 _assets) internal virtual {
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
@@ -830,9 +830,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_assets != 0) revert ErrorsLib.NotEnoughLiquidity();
     }
 
-    /// @dev Simulates a withdraw of `assets` from Silo.
+    /// @dev Simulates a withdraw of `assets` from ERC4626 vault.
     /// @return The remaining assets to be withdrawn.
-    function _simulateWithdrawSilo(uint256 _assets) internal view virtual returns (uint256) {
+    function _simulateWithdrawERC4626(uint256 _assets) internal view virtual returns (uint256) {
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
