@@ -766,12 +766,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }
 
             marketConfig.removableAt = 0;
-            IERC20(asset()).approve(address(_market), 0);
         }
 
         marketConfig.cap = _supplyCap;
         // one time approval, so market can pull any amount of tokens from SiloVault in a future
-        IERC20(asset()).approve(address(_market), type(uint256).max);
+        IERC20(asset()).forceApprove(address(_market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 
         delete pendingCap[_market];
@@ -914,20 +913,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 recipientBalance = _to == address(0) ? 0 : balanceOf(_to);
 
         for(uint256 i; i < receivers.length; i++) {
-            try INotificationReceiver(receivers[i]).afterTokenTransfer({
+            INotificationReceiver(receivers[i]).afterTokenTransfer({
                 _sender: _from,
                 _senderBalance: senderBalance,
                 _recipient: _to,
                 _recipientBalance: recipientBalance,
                 _totalSupply: total,
                  _amount: _value
-            }) {
-                // notification send
-            } catch (bytes memory lowLevelData) {
-                // prevent 63/64 attack with OutOfGas revert
-                require(lowLevelData.length != 0, ErrorsLib.PossibleOutOfGas());
-                // do not revert on invalid notification
-            }
+            });
         }
 
         _nonReentrantOff();
