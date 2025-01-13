@@ -335,7 +335,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
                 if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
 
-                if (market.balanceOf(address(this)) != 0) {
+                if (_ERC20BalanceOf(address(market), address(this)) != 0) {
                     if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
 
                     if (block.timestamp < config[market].removableAt) {
@@ -477,7 +477,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function skim(address _token) external virtual {
         if (skimRecipient == address(0)) revert ErrorsLib.ZeroAddress();
 
-        uint256 amount = IERC20(_token).balanceOf(address(this));
+        uint256 amount = _ERC20BalanceOf(_token, address(this));
 
         IERC20(_token).safeTransfer(skimRecipient, amount);
 
@@ -638,7 +638,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyCap = config[market].cap;
             if (supplyCap == 0) continue;
 
-            totalSuppliable += UtilsLib.zeroFloorSub(supplyCap, market.maxDeposit(address(this)));
+            uint256 shares = _ERC20BalanceOf(address(market), address(this));
+            uint256 assets = market.convertToAssets(shares);
+            uint256 maxDeposit = market.maxDeposit(address(this));
+
+            totalSuppliable += Math.min(maxDeposit, UtilsLib.zeroFloorSub(supplyCap, assets));
         }
     }
 
@@ -718,7 +722,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        shares = _market.balanceOf(address(this));
+        shares = _ERC20BalanceOf(address(_market), address(this));
         // we assume here, that in case of any interest on IERC4626, convertToAssets returns assets with interest
         assets = _market.convertToAssets(shares);
     }
@@ -787,7 +791,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (supplyCap == 0) continue;
 
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-            uint256 supplyShares = market.balanceOf(address(this));
+            uint256 supplyShares = _ERC20BalanceOf(address(market), address(this));
             uint256 supplyAssets = market.convertToAssets(supplyShares);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
@@ -881,7 +885,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
     function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
-        assets = _market.convertToAssets(_market.balanceOf(_user));
+        assets = _market.convertToAssets(_ERC20BalanceOf(address(_market), _user));
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
@@ -932,5 +936,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     function _nonReentrantOff() private {
         _lock = false;
+    }
+
+    /// @dev to save code size ~500 B
+    function _ERC20BalanceOf(address _token, address _account) internal view returns (uint256 balance) {
+        balance = IERC20(_token).balanceOf(_account);
     }
 }
