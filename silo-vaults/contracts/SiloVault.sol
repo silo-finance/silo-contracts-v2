@@ -630,7 +630,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets -= _simulateWithdrawERC4626(assets);
     }
 
-    /// @dev Returns the maximum amount of assets that the vault can supply on ERC4626 vaults.
+    /// @dev Returns the maximum amount of assets that the vault can supply to ERC4626 vaults.
     function _maxDeposit() internal view virtual returns (uint256 totalSuppliable) {
         for (uint256 i; i < supplyQueue.length; ++i) {
             IERC4626 market = supplyQueue[i];
