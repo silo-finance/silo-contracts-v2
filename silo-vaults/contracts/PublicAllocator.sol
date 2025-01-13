@@ -63,6 +63,7 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     }
 
     /// @inheritdoc IPublicAllocatorBase
+    // TODO change Silo => ERC4626 in all places
     function setFlowCaps(ISiloVault vault, FlowCapsConfig[] calldata config)
         external
         virtual
