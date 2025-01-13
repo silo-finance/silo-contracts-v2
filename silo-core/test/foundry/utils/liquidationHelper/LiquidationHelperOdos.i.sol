@@ -17,18 +17,8 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 
-interface AggregatorV3Interface {
-    function latestRoundData()
-        external
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        );
-}
+import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+
 
 /*
  forge test --ffi --mc LiquidationHelperOdosTest -vv
