@@ -263,6 +263,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
+        _nonReentrantOn();
+ 
         if (_market.asset() != asset()) revert ErrorsLib.InconsistentAsset(_market);
         if (pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
         if (config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
@@ -276,6 +278,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             emit EventsLib.SubmitCap(_msgSender(), _market, _newSupplyCap);
         }
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
@@ -295,6 +299,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setSupplyQueue(IERC4626[] calldata _newSupplyQueue) external virtual onlyAllocatorRole {
+        _nonReentrantOn();
+
         uint256 length = _newSupplyQueue.length;
 
         if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
@@ -307,10 +313,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         supplyQueue = _newSupplyQueue;
 
         emit EventsLib.SetSupplyQueue(_msgSender(), _newSupplyQueue);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
     function updateWithdrawQueue(uint256[] calldata _indexes) external virtual onlyAllocatorRole {
+        _nonReentrantOn();
+
         uint256 newLength = _indexes.length;
         uint256 currLength = withdrawQueue.length;
 
@@ -350,6 +360,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         withdrawQueue = newWithdrawQueue;
 
         emit EventsLib.SetWithdrawQueue(_msgSender(), newWithdrawQueue);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
@@ -927,8 +939,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
-        // _nonReentrantOn();
-
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
 
         uint256 total = totalSupply();
@@ -945,16 +955,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                  _amount: _value
             });
         }
-
-        // _nonReentrantOff();
     }
-
-    // modifier nonReentrant() {
-    //     require(!_lock, ErrorsLib.ClaimingRewardsError());
-    //     _lock = true;
-    //     _;
-    //     _lock = false;
-    // }
 
     function _nonReentrantOn() private {
         require(!_lock, ErrorsLib.ClaimingRewardsError());
