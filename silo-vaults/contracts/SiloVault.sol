@@ -509,6 +509,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _nonReentrantOff();
     }
 
+    /// @inheritdoc ISiloVaultBase
+    function reentrancyGuardEntered() external view virtual returns (bool entered) {
+        entered = _lock;
+    }
+
     /* ERC4626 (PUBLIC) */
 
     /// @inheritdoc IERC20Metadata
@@ -961,12 +966,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
     }
 
-    function _nonReentrantOn() private {
+    function _nonReentrantOn() internal {
         require(!_lock, ErrorsLib.ReentrancyError());
         _lock = true;
     }
 
-    function _nonReentrantOff() private {
+    function _nonReentrantOff() internal {
         _lock = false;
     }
 
