@@ -264,7 +264,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
         _nonReentrantOn();
- 
+
         if (_market.asset() != asset()) revert ErrorsLib.InconsistentAsset(_market);
         if (pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
         if (config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
