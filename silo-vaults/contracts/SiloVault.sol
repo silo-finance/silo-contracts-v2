@@ -504,13 +504,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function claimRewards() public virtual {
         _nonReentrantOn();
 
-        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
-        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
-
-        for (uint256 i; i < logics.length; i++) {
-            logics[i].delegatecall(data);
-            // result of call is ignored
-        }
+        _claimRewards();
 
         _nonReentrantOff();
     }
@@ -929,7 +923,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // transfer shares is basically withdraw->deposit, so claiming rewards should be done before any state changes
 
-        claimRewards();
+        _claimRewards();
 
         super._update(_from, _to, _value);
 
@@ -957,8 +951,18 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
     }
 
+    function _claimRewards() internal virtual {
+        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
+        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
+
+        for (uint256 i; i < logics.length; i++) {
+            logics[i].delegatecall(data);
+            // result of call is ignored
+        }
+    }
+
     function _nonReentrantOn() private {
-        require(!_lock, ErrorsLib.ClaimingRewardsError());
+        require(!_lock, ErrorsLib.ReentrancyError());
         _lock = true;
     }
 
