@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -39,23 +40,20 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         SiloFixture siloFixture = new SiloFixture();
 
         SiloConfigOverride memory configOverride;
-        configOverride.token0 = getAddress(AddrKey.stS);
-        configOverride.token1 = getAddress(AddrKey.wS);
+        configOverride.token0 = AddrLib.getAddress(AddrKey.stS);
+        configOverride.token1 = AddrLib.getAddress(AddrKey.wS);
         configOverride.configName = "stS_S_Silo";
 
         (, silo0, silo1,,,hookReceiver ) = siloFixture.deploy_local(configOverride);
 
-        vm.label(address(silo0), "silo0");
-        vm.label(address(silo1), "silo1");
-
-        token0 = MintableToken(getAddress(AddrKey.stS));
-        token1 = MintableToken(getAddress(AddrKey.wS));
+        token0 = MintableToken(AddrLib.getAddress(AddrKey.stS));
+        token1 = MintableToken(AddrLib.getAddress(AddrKey.wS));
 
         vm.label(address(token0), "wS");
         vm.label(address(token1), "stS");
 
         liquidationHelper = new LiquidationHelper(
-            getAddress(AddrKey.wS), getAddress(AddrKey.ODOS_ROUTER), REWARD_COLLECTOR
+            AddrLib.getAddress(AddrKey.wS), AddrLib.getAddress(AddrKey.ODOS_ROUTER), REWARD_COLLECTOR
         );
 
         lens = new SiloLens();
@@ -142,18 +140,18 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         );
 
         ILiquidationHelper.DexSwapInput[] memory swapsInputs0x = new ILiquidationHelper.DexSwapInput[](1);
-        swapsInputs0x[0].sellToken = getAddress(AddrKey.stS);
-        swapsInputs0x[0].allowanceTarget = getAddress(AddrKey.ODOS_ROUTER);
+        swapsInputs0x[0].sellToken = AddrLib.getAddress(AddrKey.stS);
+        swapsInputs0x[0].allowanceTarget = AddrLib.getAddress(AddrKey.ODOS_ROUTER);
         swapsInputs0x[0].swapCallData = swapCallData;
 
         ILiquidationHelper.LiquidationData memory liquidation;
         liquidation.hook = IPartialLiquidation(hookReceiver);
-        liquidation.collateralAsset = getAddress(AddrKey.stS);
+        liquidation.collateralAsset = AddrLib.getAddress(AddrKey.stS);
         liquidation.user = borrower;
 
         liquidationHelper.executeLiquidation(
             flashLoanFrom,
-            getAddress(AddrKey.wS),
+            AddrLib.getAddress(AddrKey.wS),
             silo1.maxRepay(borrower),
             liquidation,
             swapsInputs0x
@@ -191,18 +189,18 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         uint256 deposit = 37.5e18;
 
         vm.prank(stsWhale);
-        IERC20(getAddress(AddrKey.stS)).transfer(borrower,assets);
+        IERC20(AddrLib.getAddress(AddrKey.stS)).transfer(borrower,assets);
 
         vm.prank(wsWhale);
-        IERC20(getAddress(AddrKey.wS)).transfer(depositor,deposit);
+        IERC20(AddrLib.getAddress(AddrKey.wS)).transfer(depositor,deposit);
 
         vm.startPrank(depositor);
-        IERC20(getAddress(AddrKey.wS)).approve(address(silo1), deposit);
+        IERC20(AddrLib.getAddress(AddrKey.wS)).approve(address(silo1), deposit);
         silo1.deposit(deposit, depositor, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
         vm.startPrank(borrower);
-        IERC20(getAddress(AddrKey.stS)).approve(address(silo0), assets);
+        IERC20(AddrLib.getAddress(AddrKey.stS)).approve(address(silo0), assets);
         silo0.deposit(assets, borrower, ISilo.CollateralType.Collateral);
 
         emit log_named_decimal_uint("maxBorrow", silo1.maxBorrow(borrower), 18);
@@ -212,14 +210,14 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         vm.stopPrank();
 
         uint256 amountToRepay = silo1.maxRepay(borrower);
-        amountToRepay += flashLoanFrom.flashFee(getAddress(AddrKey.wS), amountToRepay);
+        amountToRepay += flashLoanFrom.flashFee(AddrLib.getAddress(AddrKey.wS), amountToRepay);
         emit log_named_decimal_uint("repay + flash fee", amountToRepay, 18);
 
         vm.prank(wsWhale);
-        IERC20(getAddress(AddrKey.wS)).transfer(depositor,amountToRepay);
+        IERC20(AddrLib.getAddress(AddrKey.wS)).transfer(depositor,amountToRepay);
 
         vm.startPrank(depositor);
-        IERC20(getAddress(AddrKey.wS)).approve(address(flashLoanFrom), amountToRepay);
+        IERC20(AddrLib.getAddress(AddrKey.wS)).approve(address(flashLoanFrom), amountToRepay);
         flashLoanFrom.deposit(amountToRepay , depositor, ISilo.CollateralType.Collateral);
         vm.stopPrank();
     }
