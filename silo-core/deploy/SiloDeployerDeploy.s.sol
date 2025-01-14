@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
@@ -83,7 +85,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
  */
 contract SiloDeployerDeploy is CommonDeploy {
     function run() public returns (ISiloDeployer siloDeployer) {
-        string memory chainAlias = getChainAlias();
+        string memory chainAlias = ChainsLib.chainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         ISiloFactory siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));
