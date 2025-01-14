@@ -495,6 +495,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         for (uint256 i; i < logics.length; i++) {
             logics[i].delegatecall(data);
+            // TODO: revert if call fails (use RevertLib)
             // result of call is ignored
         }
 

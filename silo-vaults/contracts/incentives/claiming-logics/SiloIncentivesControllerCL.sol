@@ -8,8 +8,13 @@ import {
 
 import {IIncentivesClaimingLogic} from "../../interfaces/IIncentivesClaimingLogic.sol";
 
+// TODO: add natspec
+// @title Silo incentives controller claiming logic
 contract SiloIncentivesControllerCL is IIncentivesClaimingLogic {
+    // TODO: add natspec
+    // distributes rewards to vault depositors
     ISiloIncentivesController public immutable VAULT_INCENTIVES_CONTROLLER;
+    // distributes rewards to silo depositors
     ISiloIncentivesController public immutable SILO_INCENTIVES_CONTROLLER;
 
     constructor(
