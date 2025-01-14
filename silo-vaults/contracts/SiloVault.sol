@@ -354,6 +354,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function reallocate(MarketAllocation[] calldata _allocations) external virtual onlyAllocatorRole {
+        _nonReentrantOn();
+
         uint256 totalSupplied;
         uint256 totalWithdrawn;
         for (uint256 i; i < _allocations.length; ++i) {
@@ -409,6 +411,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
 
         if (totalWithdrawn != totalSupplied) revert ErrorsLib.InconsistentReallocation();
+
+        _nonReentrantOff();
     }
 
     /* REVOKE FUNCTIONS */
@@ -538,6 +542,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
@@ -547,10 +553,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         shares = _convertToSharesWithTotals(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         _deposit(_msgSender(), _receiver, _assets, shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) public virtual override returns (uint256 assets) {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
@@ -560,6 +570,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _convertToAssetsWithTotals(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         _deposit(_msgSender(), _receiver, assets, _shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -569,6 +581,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         override
         returns (uint256 shares)
     {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Do not call expensive `maxWithdraw` and optimistically withdraw assets.
@@ -579,6 +593,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, _assets));
 
         _withdraw(_msgSender(), _receiver, _owner, _assets, shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -587,6 +603,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         address _receiver,
         address _owner
     ) public virtual override returns (uint256 assets) {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Do not call expensive `maxRedeem` and optimistically redeem shares.
@@ -597,6 +615,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, assets));
 
         _withdraw(_msgSender(), _receiver, _owner, assets, _shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -907,7 +927,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
-        _nonReentrantOn();
+        // _nonReentrantOn();
 
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
 
@@ -926,8 +946,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             });
         }
 
-        _nonReentrantOff();
+        // _nonReentrantOff();
     }
+
+    // modifier nonReentrant() {
+    //     require(!_lock, ErrorsLib.ClaimingRewardsError());
+    //     _lock = true;
+    //     _;
+    //     _lock = false;
+    // }
 
     function _nonReentrantOn() private {
         require(!_lock, ErrorsLib.ClaimingRewardsError());
