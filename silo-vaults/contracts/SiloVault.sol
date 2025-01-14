@@ -263,8 +263,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
-        _nonReentrantOn();
-
         if (_market.asset() != asset()) revert ErrorsLib.InconsistentAsset(_market);
         if (pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
         if (config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
@@ -278,8 +276,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             emit EventsLib.SubmitCap(_msgSender(), _market, _newSupplyCap);
         }
-
-        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
@@ -485,8 +481,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         afterTimelock(pendingCap[_market].validAt)
     {
+        _nonReentrantOn();
+
         // Safe "unchecked" cast because pendingCap <= type(uint184).max.
         _setCap(_market, uint184(pendingCap[_market].value));
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
