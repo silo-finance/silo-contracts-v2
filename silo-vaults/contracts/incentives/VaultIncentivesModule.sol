@@ -12,10 +12,10 @@ import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
 contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    EnumerableSet.AddressSet private _markets;
-    EnumerableSet.AddressSet private _notificationReceivers;
+    EnumerableSet.AddressSet internal _markets;
+    EnumerableSet.AddressSet internal _notificationReceivers;
 
-    mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) private _claimingLogics;
+    mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
     constructor(address _owner) Ownable(_owner) {}
 
