@@ -33,3 +33,6 @@
 [submodule "morpho-blue"]
 	path = gitmodules/morpho-blue
 	url = https://github.com/morpho-org/morpho-blue/
+[submodule "pyth-sdk-solidity"]
+	path = gitmodules/pyth-sdk-solidity
+	url = https://github.com/pyth-network/pyth-crosschain.git

@@ -18,3 +18,4 @@ uniswap/=gitmodules/uniswap/
 balancer-labs/v2-solidity-utils/=external/balancer-v2-monorepo/pkg/solidity-utils/contracts
 balancer-labs/v2-interfaces/=external/balancer-v2-monorepo/pkg/interfaces/contracts
 balancer-labs/v2-liquidity-mining/=external/balancer-v2-monorepo/pkg/liquidity-mining/contracts
+pyth-sdk-solidity/=gitmodules/pyth-sdk-solidity/target_chains/ethereum/sdk/solidity
