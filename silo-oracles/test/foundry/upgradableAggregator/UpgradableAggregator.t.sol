@@ -43,9 +43,6 @@ contract UpgradableAggregatorTest is TokensGenerator {
         aggregator.changeUnderlyingFeed(new MockAggregatorV3(0, 0));
         assertEq(aggregator.decimals(), underlyingFeed.decimals(), "Decimals MUST NOT be updated");
         assertEq(aggregator.decimals(), aggregator.AGGREGATOR_DECIMALS());
-
-        aggregator.changeUnderlyingFeed(new MockAggregatorV3(0, 0));
-        assertEq(aggregator.decimals(), underlyingFeed.decimals(), "Decimals MUST NOT be updated");
     }
 
     function test_UpgradableAggregator_description() public {
