@@ -18,6 +18,9 @@ library ErrorsLib {
     /// @notice Thrown on reentering
     error ReentrancyError();
 
+    /// @notice Thrown when delegatecall on claiming rewards failed
+    error ClaimRewardsFailed();
+
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();
 
