@@ -13,13 +13,13 @@ contract SiloIncentivesControllerGaugeLike is SiloIncentivesController, IGauge {
     address public immutable SHARE_TOKEN;
 
     /// @notice Whether the gauge is killed
-    /// @dev This flag is not user in the SiloIncentivesController, but it is used in the Gauge hook receiver
-    /// it was added for a backward compatibility with gauges.
-    bool private _isKilled;
+    /// @dev This flag is not used in the SiloIncentivesController, but it is used in the Gauge hook receiver.
+    /// It was added for a backward compatibility with gauges.
+    bool internal _isKilled;
 
     /// @param _owner The owner of the incentives controller
     /// @param _notifier The notifier (expected to be a hook receiver address)
-    /// @param _siloShareToken The share token (one of the Silo share tokens)
+    /// @param _siloShareToken The share token that is incentivized
     constructor(
         address _owner,
         address _notifier,
