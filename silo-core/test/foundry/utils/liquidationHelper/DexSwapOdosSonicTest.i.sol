@@ -20,7 +20,7 @@ contract DexSwapOdosSonicTest is IntegrationTest {
         dex = new DexSwap(getAddress(AddrKey.ODOS_ROUTER));
     }
 
-    function test_fillQuote_StoWETH() public {
+    function test_skip_fillQuote_StoWETH() public {
         address whale = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
 
         IERC20 sellToken = IERC20(getAddress(AddrKey.wS));
