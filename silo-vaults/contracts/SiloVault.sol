@@ -961,8 +961,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
 
         for (uint256 i; i < logics.length; i++) {
-            logics[i].delegatecall(data);
-            // result of call is ignored
+            (bool success,) = logics[i].delegatecall(data);
+            if (!success) revert ErrorsLib.ClaimRewardsFailed();
         }
     }
 
