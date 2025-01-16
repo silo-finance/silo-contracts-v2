@@ -6,8 +6,6 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IOracleForwarder} from "silo-oracles/contracts/interfaces/IOracleForwarder.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 contract OracleForwarder is Ownable2Step, IOracleForwarder {
     address public immutable INITIAL_QUOTE_TOKEN;
 
