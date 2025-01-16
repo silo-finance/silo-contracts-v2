@@ -18,25 +18,25 @@ contract OracleForwarder is Ownable2Step, IOracleForwarder {
     }
 
     /// @inheritdoc IOracleForwarder
-    function setOracle(ISiloOracle _oracle) external onlyOwner {
+    function setOracle(ISiloOracle _oracle) external virtual onlyOwner {
         require(_oracle.quoteToken() == INITIAL_QUOTE_TOKEN, QuoteTokenMustBeTheSame());
 
         _setOracle(_oracle);
     }
 
-    function beforeQuote(address _baseToken) external {
+    function beforeQuote(address _baseToken) external virtual {
         oracle.beforeQuote(_baseToken);
     }
 
-    function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
         quoteAmount = oracle.quote(_baseAmount, _baseToken);
     }
 
-    function quoteToken() external view returns (address quoteToken) {
+    function quoteToken() external virtual view returns (address quoteToken) {
         quoteToken = oracle.quoteToken();
     }
 
-    function _setOracle(ISiloOracle _oracle) internal {
+    function _setOracle(ISiloOracle _oracle) internal virtual {
         oracle = _oracle;
 
         emit OracleSet(_oracle);
