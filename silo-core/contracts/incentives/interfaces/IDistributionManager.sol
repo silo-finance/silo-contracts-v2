@@ -73,6 +73,8 @@ interface IDistributionManager {
     /**
      * @dev Returns the program id for the given program name.
      * This method TRUNCATES the program name to 32 bytes.
+     * If provided strings only differ after the 32nd byte they would result in the same ProgramId.
+     * Ensure to use inputs that will result in 32 bytes or less.
      * @param _programName The incentives program name
      * @return programId
      */
