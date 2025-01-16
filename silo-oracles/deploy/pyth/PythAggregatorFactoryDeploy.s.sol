@@ -15,7 +15,7 @@ contract PythAggregatorFactoryDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
-        address pyth = AddrLib.getAddress("PYTH");
+        address pyth = AddrLib.getAddress("PYTH_PRICE_FEED");
         factory = address(new PythAggregatorFactory(pyth));
 
         vm.stopBroadcast();
