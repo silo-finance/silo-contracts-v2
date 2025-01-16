@@ -8,6 +8,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 interface IOracleForwarder {
     event OracleSet(ISiloOracle indexed oracle);
 
+    error QuoteTokenMustBeTheSame();
+
     /// @notice Set the oracle to be used by the forwarder
     /// @param _oracle The oracle to be used by the forwarder
     function setOracle(ISiloOracle _oracle) external;

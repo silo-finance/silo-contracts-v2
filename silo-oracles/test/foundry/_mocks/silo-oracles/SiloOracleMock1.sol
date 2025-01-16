@@ -7,7 +7,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract SiloOracleMock1 is StdCheatsSafe, ISiloOracle {
     uint256 public constant QUOTE_AMOUNT = 1000000000000000000;
-    address public tokenAsQuote = makeAddr("SiloOracleMock1.quoteToken");
+    address public tokenAsQuote = makeAddr("SiloOracleMock.quoteToken");
 
     event BeforeQuoteSiloOracleMock1();
 

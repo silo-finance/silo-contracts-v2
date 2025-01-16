@@ -13,6 +13,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {SiloOracleMock2} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock2.sol";
 
+// FOUNDRY_PROFILE=oracles forge test --mc OracleForwarderTest
 contract OracleForwarderTest is Test {
     address internal _owner = makeAddr("Owner");
 
@@ -60,6 +61,21 @@ contract OracleForwarderTest is Test {
         _oracleForwarder.setOracle(ISiloOracle(address(_oracleMock2)));
 
         assertEq(address(_oracleForwarder.oracle()), address(_oracleMock2));
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --mt test_OracleForwarder_setOracle_quoteTokenMustBeTheSame
+    function test_OracleForwarder_setOracle_quoteTokenMustBeTheSame() public {
+        address quoteToken = makeAddr("quoteToken");
+
+        vm.mockCall(
+            address(_oracleMock2),
+            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
+            abi.encode(quoteToken)
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(IOracleForwarder.QuoteTokenMustBeTheSame.selector));
+        vm.prank(_owner);
+        _oracleForwarder.setOracle(ISiloOracle(address(_oracleMock2)));
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_OracleForwarder_beforeQuote
