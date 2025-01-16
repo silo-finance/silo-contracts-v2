@@ -67,7 +67,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run tests
-                run: FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi
+                run: FOUNDRY_PROFILE=vaults-tests forge test -v --ffi
 
             -   name: Sizes
                 run: |
