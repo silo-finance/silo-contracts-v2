@@ -6,6 +6,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
+import {ISiloIncentivesController} from "../interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "../interfaces/IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 import {TokenHelper} from "../../lib/TokenHelper.sol";
@@ -49,6 +50,8 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         string calldata _incentivesProgram,
         uint40 _distributionEnd
     ) external virtual onlyOwner {
+        require(_distributionEnd >= block.timestamp, ISiloIncentivesController.InvalidDistributionEnd());
+
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         incentivesPrograms[incentivesProgramId].distributionEnd = _distributionEnd;
 
