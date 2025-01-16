@@ -24,14 +24,17 @@ contract OracleForwarder is Ownable2Step, IOracleForwarder {
         _setOracle(_oracle);
     }
 
+    // @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external virtual {
         oracle.beforeQuote(_baseToken);
     }
 
+    // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
         quoteAmount = oracle.quote(_baseAmount, _baseToken);
     }
 
+    // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address quoteToken) {
         quoteToken = oracle.quoteToken();
     }
