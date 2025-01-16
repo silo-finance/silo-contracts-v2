@@ -17,7 +17,9 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             AggregatorV3Interface(0x8c110B94C5f1d347fAcF5E1E938AB2db60E3c9a8),
             1 days + 10 minutes,
             AggregatorV3Interface(CHAINLINKV3_ETH_QUOTE_AGGREGATOR),
-            1 days + 10 minutes
+            1 days + 10 minutes,
+            1e18,
+            0
         );
     }
 
@@ -28,6 +30,8 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             AggregatorV3Interface(0x8c110B94C5f1d347fAcF5E1E938AB2db60E3c9a8),
             1 days + 10 minutes,
             AggregatorV3Interface(address(0)),
+            0,
+            1e18,
             0
         );
     }
@@ -39,6 +43,8 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             AggregatorV3Interface(0x478909D4D798f3a1F11fFB25E4920C959B4aDe0b),
             1 days + 10 minutes,
             AggregatorV3Interface(address(0)),
+            0,
+            1e18,
             0
         );
     }

@@ -15,7 +15,9 @@ abstract contract DIAConfigDefault is TokensGenerator {
             IERC20Metadata(address(tokens["USDT"])),
             1 days,
             "RDPX/USD",
-            ""
+            "",
+            1e18,
+                0
         );
     }
 
@@ -26,6 +28,8 @@ abstract contract DIAConfigDefault is TokensGenerator {
         emit log_named_uint("heartbeat", _config.heartbeat);
         emit log_named_string("primaryKey", _config.primaryKey);
         emit log_named_string("secondaryKey", _config.secondaryKey);
+        emit log_named_uint("normalizationDivider", _config.normalizationDivider);
+        emit log_named_uint("normalizationMultiplier", _config.normalizationMultiplier);
     }
 
     function _printDIAConfig(IDIAOracle.DIAConfig memory _data) internal {

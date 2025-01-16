@@ -23,6 +23,8 @@ interface IDIAOracle {
         uint32 heartbeat;
         string primaryKey;
         string secondaryKey;
+        uint256 normalizationDivider;
+        uint256 normalizationMultiplier;
     }
 
     struct DIAConfig {

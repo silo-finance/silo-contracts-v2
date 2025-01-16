@@ -34,11 +34,7 @@ contract DIAOracleFactory is OracleFactory {
 
         bool convertToQuote = bytes(_config.secondaryKey).length != 0;
 
-        (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
-            _config.baseToken, _config.quoteToken, DIA_DECIMALS, convertToQuote ? DIA_DECIMALS : 0
-        );
-
-        oracleConfig = new DIAOracleConfig(_config, divider, multiplier);
+        oracleConfig = new DIAOracleConfig(_config, _config.normalizationDivider, _config.normalizationMultiplier);
 
         oracle = DIAOracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
