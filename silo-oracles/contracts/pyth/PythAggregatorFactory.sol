@@ -5,9 +5,8 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 import {IPythAggregatorFactory} from "silo-oracles/contracts/interfaces/IPythAggregatorFactory.sol";
 import {PythAggregatorV3} from "pyth-sdk-solidity/PythAggregatorV3.sol";
 
-/// @notice PythAggregatorFactory is an ownable contract which forwards AggregatorV3Interface calls to the underlying
-/// feed. Decimals are immutable and set to be equal to the initial aggregator decimals. If the underlying aggregator
-/// is updated, the price will be normalized and the decimals of this contract will not change.
+/// @notice PythAggregatorFactory is a factory to deploy PythAggregatorV3 contracts. Function for the deployment is
+/// permissionless. Duplicates of aggregators are not allowed. 
 contract PythAggregatorFactory is IPythAggregatorFactory {
     /// @inheritdoc IPythAggregatorFactory
     address public immutable override pyth;
