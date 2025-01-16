@@ -60,6 +60,19 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_invalidDistributionEnd
+    function test_createIncentivesProgram_invalidDistributionEnd() public {
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: address(0),
+            distributionEnd: uint40(block.timestamp - 1),
+            emissionPerSecond: 0
+        }));
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
     function test_createIncentivesProgram_InvalidIncentivesProgramName() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
@@ -68,7 +81,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "",
             rewardToken: address(0),
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 0
         }));
     }
@@ -81,7 +94,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: address(0),
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 0
         }));
     }
@@ -192,7 +205,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: _rewardToken,
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 1e18
         }));
 
@@ -257,7 +270,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: _rewardToken,
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: initialEmissionPerSecond
         }));
 
@@ -856,6 +869,13 @@ contract SiloIncentivesControllerTest is Test {
 
         rewards = _controller.getRewardsBalance(user1, programsNames2);
         assertEq(rewards, expectedRewards / 2, "expected rewards / 2");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setDistributionEnd_invalidDistributionEnd
+    function test_setDistributionEnd_invalidDistributionEnd() public {
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp - 1));
     }
 
     function _claimRewards(address _user, address _to, string memory _programName) internal {
