@@ -21,7 +21,7 @@ interface IPythAggregatorFactory {
     /// @dev Emitted when the aggregator is deployed.
     /// @param priceId Pyth feed price id.
     /// @param aggregator New aggregator address.
-    event AggregatorDeployed(bytes32 priceId, AggregatorV3Interface indexed aggregator);
+    event AggregatorDeployed(bytes32 indexed priceId, AggregatorV3Interface indexed aggregator);
 
     /// @dev Revert if the aggregator is already deployed for price id.
     error AggregatorAlreadyExists();
