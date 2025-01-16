@@ -13,9 +13,10 @@ import {PythAggregatorFactory} from "silo-oracles/contracts/pyth/PythAggregatorF
 contract PythAggregatorFactoryDeploy is CommonDeploy {
     function run() public returns (address factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address pyth = AddrLib.getAddress("PYTH_PRICE_FEED");
+
         vm.startBroadcast(deployerPrivateKey);
 
-        address pyth = AddrLib.getAddress("PYTH_PRICE_FEED");
         factory = address(new PythAggregatorFactory(pyth));
 
         vm.stopBroadcast();
