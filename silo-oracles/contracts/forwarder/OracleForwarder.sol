@@ -7,19 +7,19 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IOracleForwarder} from "silo-oracles/contracts/interfaces/IOracleForwarder.sol";
 
 contract OracleForwarder is Ownable2Step, IOracleForwarder {
-    address public immutable INITIAL_QUOTE_TOKEN;
+    address public immutable QUOTE_TOKEN;
 
     ISiloOracle public oracle;
 
     constructor(ISiloOracle _oracle, address _owner) Ownable(_owner) {
-        INITIAL_QUOTE_TOKEN = _oracle.quoteToken();
+        QUOTE_TOKEN = _oracle.quoteToken();
 
         _setOracle(_oracle);
     }
 
     /// @inheritdoc IOracleForwarder
     function setOracle(ISiloOracle _oracle) external virtual onlyOwner {
-        require(_oracle.quoteToken() == INITIAL_QUOTE_TOKEN, QuoteTokenMustBeTheSame());
+        require(_oracle.quoteToken() == QUOTE_TOKEN, QuoteTokenMustBeTheSame());
 
         _setOracle(_oracle);
     }
