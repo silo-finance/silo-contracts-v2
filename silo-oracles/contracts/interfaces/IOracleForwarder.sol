@@ -5,7 +5,7 @@ pragma solidity >=0.5.0;
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 /// @notice Forward all calls to the oracle
-interface IOracleForwarder {
+interface IOracleForwarder is ISiloOracle{
     event OracleSet(ISiloOracle indexed oracle);
 
     error QuoteTokenMustBeTheSame();
