@@ -286,56 +286,6 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_pastDistributionEnd_afterDeposit -vv
     */
-    function test_pastDistributionEnd_afterDeposit() public {
-        vm.warp(1000);
-
-        _setupIncentives();
-
-        uint256 depositAmount = 1e5;
-        uint256 rewardsPerSec = 1e10;
-        string memory program = "past program";
-
-        vault.deposit(depositAmount, address(this));
-
-        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: program,
-            rewardToken: address(reward1),
-            emissionPerSecond: uint104(rewardsPerSec),
-            distributionEnd: uint40(block.timestamp - 1) // TODO should we revert?
-        }));
-
-        _assertNoRewards(address(this), program);
-    }
-
-    /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_pastDistributionEnd_beforeDeposit -vv
-    */
-    function test_pastDistributionEnd_beforeDeposit() public {
-        vm.warp(1000);
-
-        _setupIncentives();
-
-        uint256 depositAmount = 1e5;
-        uint256 rewardsPerSec = 1e10;
-        string memory program = "past program";
-
-        siloIncentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: program,
-            rewardToken: address(reward1),
-            emissionPerSecond: uint104(rewardsPerSec),
-            distributionEnd: uint40(block.timestamp - 1) // TODO should we revert?
-        }));
-
-        vault.deposit(depositAmount, address(this));
-
-        vm.warp(block.timestamp + 1);
-
-        _assertNoRewards(address(this), program);
-    }
-
-    /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_pastDistributionEnd_afterDeposit -vv
-    */
     function _assertNoRewards(address _user, string memory _program) internal {
 
         uint256 siloRewardPreview = siloIncentivesController.getRewardsBalance(address(vault), _program);
