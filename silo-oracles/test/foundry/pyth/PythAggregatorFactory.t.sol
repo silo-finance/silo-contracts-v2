@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import "../../../constants/Sonic.sol";
-
 import {PythAggregatorFactory} from "silo-oracles/contracts/pyth/PythAggregatorFactory.sol";
 import {IPythAggregatorFactory} from "silo-oracles/contracts/interfaces/IPythAggregatorFactory.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -13,6 +11,7 @@ import {TokensGenerator} from "../_common/TokensGenerator.sol";
 */
 contract PythAggregatorFactoryTest is TokensGenerator {
     uint256 constant TEST_BLOCK = 4022009;
+    address constant PYTH = 0x2880aB155794e7179c9eE2e38200202908C17B43;
     bytes32 constant PYTH_S_USD_PRICE_ID = 0xf490b178d0c85683b7a0f2388b40af2e6f7c90cbe0f96b31f315f08d0e5a2d6d;
     bytes32 constant PYTH_ETH_USD_PRICE_ID = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
 

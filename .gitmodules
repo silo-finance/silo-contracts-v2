@@ -36,3 +36,4 @@
 [submodule "pyth-sdk-solidity"]
 	path = gitmodules/pyth-sdk-solidity
 	url = https://github.com/pyth-network/pyth-crosschain.git
+	branch = xc-admin-v0.6.11
