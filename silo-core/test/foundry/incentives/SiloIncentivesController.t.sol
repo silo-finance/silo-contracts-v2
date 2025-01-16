@@ -81,7 +81,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "",
             rewardToken: address(0),
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 0
         }));
     }
@@ -94,7 +94,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: address(0),
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 0
         }));
     }
@@ -205,7 +205,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: _rewardToken,
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 1e18
         }));
 
@@ -270,7 +270,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: _rewardToken,
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: initialEmissionPerSecond
         }));
 
