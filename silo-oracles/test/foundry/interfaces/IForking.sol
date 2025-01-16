@@ -3,5 +3,5 @@ pragma solidity >=0.7.6 <0.9.0;
 
 
 interface IForking {
-    enum BlockChain { LOCALHOST, ETHEREUM, ARBITRUM }
+    enum BlockChain { LOCALHOST, ETHEREUM, ARBITRUM, SONIC }
 }
