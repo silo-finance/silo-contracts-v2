@@ -61,5 +61,11 @@ contract DIAOracleFactory is OracleFactory {
 
         // heartbeat restrictions are arbitrary
         if (_config.heartbeat < 60 seconds || _config.heartbeat > 2 days) revert IDIAOracle.InvalidHeartbeat();
+
+        if (_config.normalizationDivider > 1e36) revert IDIAOracle.HugeDivider();
+        if (_config.normalizationMultiplier > 1e36) revert IDIAOracle.HugeMultiplier();
+        if (_config.normalizationDivider == 0 && _config.normalizationMultiplier == 0) {
+            revert IDIAOracle.MultiplierAndDividerZero();
+        }
     }
 }

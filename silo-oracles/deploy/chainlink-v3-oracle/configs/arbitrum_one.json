@@ -53,6 +53,8 @@
         "primaryAggregator": "WusdPlusUsdAdapter.sol",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "CHAINLINK_USDC_USD_aggregator",
-        "secondaryHeartbeat": 87001
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1,
+        "normalizationMultiplier": 1
     }
 }

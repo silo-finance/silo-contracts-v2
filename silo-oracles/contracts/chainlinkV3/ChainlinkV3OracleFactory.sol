@@ -68,6 +68,13 @@ contract ChainlinkV3OracleFactory is OracleFactory {
         if (address(_config.secondaryAggregator) != address(0)) {
             secondaryPriceDecimals = _config.secondaryAggregator.decimals();
         }
+
+        if (_config.normalizationDivider > 1e36) revert IChainlinkV3Oracle.HugeDivider();
+        if (_config.normalizationMultiplier > 1e36) revert IChainlinkV3Oracle.HugeMultiplier();
+
+        if (_config.normalizationDivider == 0 && _config.normalizationMultiplier == 0) {
+            revert IChainlinkV3Oracle.MultiplierAndDividerZero();
+        }
     }
 
     /// @dev heartbeat restrictions are arbitrary

@@ -34,6 +34,9 @@ library ChainlinkV3OraclesConfigsParser {
 
         require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
         require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
+        require(normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
+        require(normalizationMultiplier <= 1e36, "normalizationMultiplier is over 1e36");
+        require(normalizationDivider != 0 || normalizationMultiplier != 0, "normalization variables not set");
 
         AggregatorV3Interface secondaryAggregator = AggregatorV3Interface(address(0));
 

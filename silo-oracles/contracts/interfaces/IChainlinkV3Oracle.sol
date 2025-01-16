@@ -72,4 +72,7 @@ interface IChainlinkV3Oracle {
     error InvalidEthHeartbeat();
 
     error AssetNotSupported();
+    error HugeDivider();
+    error HugeMultiplier();
+    error MultiplierAndDividerZero();
 }

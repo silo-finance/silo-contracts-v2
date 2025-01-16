@@ -16,7 +16,7 @@ abstract contract DIAConfigDefault is TokensGenerator {
             1 days,
             "RDPX/USD",
             "",
-            0,
+            1,
                 0
         );
     }

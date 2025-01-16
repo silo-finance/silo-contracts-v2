@@ -51,4 +51,7 @@ interface IDIAOracle {
     error AssetNotSupported();
     error Overflow();
     error BaseAmountOverflow();
+    error HugeDivider();
+    error HugeMultiplier();
+    error MultiplierAndDividerZero();
 }

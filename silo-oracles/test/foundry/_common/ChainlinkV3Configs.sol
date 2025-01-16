@@ -10,7 +10,11 @@ import {TokensGenerator} from "./TokensGenerator.sol";
 import {IChainlinkV3Oracle} from "../../../contracts/interfaces/IChainlinkV3Oracle.sol";
 
 abstract contract ChainlinkV3Configs is TokensGenerator {
-    function _spellEthChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
+    function _spellEthChainlinkV3Config(uint256 _divider, uint256 _multiplier)
+        internal
+        view
+        returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory)
+    {
         return IChainlinkV3Oracle.ChainlinkV3DeploymentConfig(
             IERC20Metadata(address(tokens["SPELL"])),
             IERC20Metadata(address(tokens["WETH"])),
@@ -18,12 +22,16 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             1 days + 10 minutes,
             AggregatorV3Interface(CHAINLINKV3_ETH_QUOTE_AGGREGATOR),
             1 days + 10 minutes,
-            1e18,
-            0
+            _divider,
+            _multiplier
         );
     }
 
-    function _spellUsdChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
+    function _spellUsdChainlinkV3Config(uint256 _divider, uint256 _multiplier)
+        internal
+        view
+        returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory)
+    {
         return IChainlinkV3Oracle.ChainlinkV3DeploymentConfig(
             IERC20Metadata(address(tokens["SPELL"])),
             IERC20Metadata(address(tokens["USDC"])),
@@ -31,12 +39,12 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             1 days + 10 minutes,
             AggregatorV3Interface(address(0)),
             0,
-            1e18,
-            0
+            _divider,
+            _multiplier
         );
     }
 
-    function _dydxChainlinkV3Config() internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
+    function _dydxChainlinkV3Config(uint256 _divider, uint256 _multiplier) internal view returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory) {
         return IChainlinkV3Oracle.ChainlinkV3DeploymentConfig(
             IERC20Metadata(address(tokens["DYDX"])),
             IERC20Metadata(address(tokens["USDT"])),
@@ -44,8 +52,8 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             1 days + 10 minutes,
             AggregatorV3Interface(address(0)),
             0,
-            1e18,
-            0
+            _divider,
+            _multiplier
         );
     }
 

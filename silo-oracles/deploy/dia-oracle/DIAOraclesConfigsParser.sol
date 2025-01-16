@@ -31,6 +31,9 @@ library DIAOraclesConfigsParser {
         uint256 normalizationMultiplier = KV.getUint(configJson, _name, "normalizationMultiplier");
 
         require(heartbeat <= type(uint32).max, "heartbeat should be uint32");
+        require(normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
+        require(normalizationMultiplier <= 1e36, "normalizationMultiplier is over 1e36");
+        require(normalizationDivider != 0 || normalizationMultiplier != 0, "normalization variables not set");
 
         config = IDIAOracle.DIADeploymentConfig({
             diaOracle: IDIAOracleV2(AddrLib.getAddressSafe(_network, diaOracleKey)),
