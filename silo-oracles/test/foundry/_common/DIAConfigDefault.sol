@@ -16,8 +16,25 @@ abstract contract DIAConfigDefault is TokensGenerator {
             1 days,
             "RDPX/USD",
             "",
-            1e18,
+            0,
                 0
+        );
+    }
+
+    function _defaultDIAConfig(uint256 _divider, uint256 _multiplier)
+        internal
+        view
+        returns (IDIAOracle.DIADeploymentConfig memory)
+    {
+        return IDIAOracle.DIADeploymentConfig(
+            IDIAOracleV2(DIA_ORACLE_V2),
+            IERC20Metadata(address(tokens["RDPX"])),
+            IERC20Metadata(address(tokens["USDT"])),
+            1 days,
+            "RDPX/USD",
+            "",
+            _divider,
+            _multiplier
         );
     }
 
