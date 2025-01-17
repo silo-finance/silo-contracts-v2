@@ -7,14 +7,24 @@
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0
     },
-    "PYTH_S_USD": {
-        "baseToken": "wS",
+    "CHAINLINK_USDC.e_USD": {
+        "baseToken": "USDC.e",
         "quoteToken": "SILO_VIRTUAL_USD_8",
-        "primaryAggregator": "PYTH_S_USD_aggregator",
-        "primaryHeartbeat": 22201,
+        "primaryAggregator": "CHAINLINK_USDC.e_USD_aggregator",
+        "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
-        "normalizationDivider": 99999,
-        "normalizationMultiplier": 99999
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 10000
+    },
+    "CHAINLINK_S_USD": {
+        "baseToken": "wS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_S_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 100000000,
+        "normalizationMultiplier": 0
     }
 }
