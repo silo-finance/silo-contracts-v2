@@ -29,9 +29,14 @@ library ChainlinkV3OraclesConfigsParser {
         string memory secondaryAggregatorKey = KV.getString(configJson, _name, "secondaryAggregator");
         uint256 primaryHeartbeat = KV.getUint(configJson, _name, "primaryHeartbeat");
         uint256 secondaryHeartbeat = KV.getUint(configJson, _name, "secondaryHeartbeat");
+        uint256 normalizationDivider = KV.getUint(configJson, _name, "normalizationDivider");
+        uint256 normalizationMultiplier = KV.getUint(configJson, _name, "normalizationMultiplier");
 
         require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
         require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
+        require(normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
+        require(normalizationMultiplier <= 1e36, "normalizationMultiplier is over 1e36");
+        require(normalizationDivider != 0 || normalizationMultiplier != 0, "normalization variables not set");
 
         AggregatorV3Interface secondaryAggregator = AggregatorV3Interface(address(0));
 
@@ -45,7 +50,9 @@ library ChainlinkV3OraclesConfigsParser {
             primaryAggregator: AggregatorV3Interface(AddrLib.getAddressSafe(_network, primaryAggregatorKey)),
             primaryHeartbeat: uint32(primaryHeartbeat),
             secondaryAggregator: secondaryAggregator,
-            secondaryHeartbeat: uint32(secondaryHeartbeat)
+            secondaryHeartbeat: uint32(secondaryHeartbeat),
+            normalizationDivider: normalizationDivider,
+            normalizationMultiplier: normalizationMultiplier
         });
     }
 
