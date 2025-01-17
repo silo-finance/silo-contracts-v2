@@ -270,8 +270,22 @@ contract SiloIncentivesControllerTest is Test {
             emissionPerSecond: 1e18
         }));
 
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
         IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
-        uint256 indexAtTheBeginning = details.index;
 
         uint256 lastUpdateTimestamp = details.lastUpdateTimestamp;
         assertEq(lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
@@ -282,6 +296,8 @@ contract SiloIncentivesControllerTest is Test {
         _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 1000));
 
         details = _controller.incentivesProgram(_PROGRAM_NAME);
+        uint256 indexBefore = details.index;
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
         assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
 
         vm.warp(block.timestamp + 100);
@@ -291,7 +307,7 @@ contract SiloIncentivesControllerTest is Test {
 
         details = _controller.incentivesProgram(_PROGRAM_NAME);
         assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
-        assertEq(details.index, indexAtTheBeginning, "invalid index");
+        assertEq(details.index, indexBefore, "invalid index");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_decrease_rewards
