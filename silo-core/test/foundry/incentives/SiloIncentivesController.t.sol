@@ -293,7 +293,7 @@ contract SiloIncentivesControllerTest is Test {
         vm.warp(block.timestamp + 100);
 
         vm.prank(_owner);
-        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 1000));
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp));
 
         details = _controller.incentivesProgram(_PROGRAM_NAME);
         uint256 indexBefore = details.index;
@@ -303,7 +303,7 @@ contract SiloIncentivesControllerTest is Test {
         vm.warp(block.timestamp + 100);
 
         vm.prank(_owner);
-        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 1000));
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp));
 
         details = _controller.incentivesProgram(_PROGRAM_NAME);
         assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
