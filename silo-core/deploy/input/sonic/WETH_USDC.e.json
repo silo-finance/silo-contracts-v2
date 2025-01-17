@@ -11,7 +11,7 @@
     "interestRateModelConfig0": "bridgeETHv15",
     "maxLtv0": 7500,
     "lt0": 8000,
-    "liquidationTargetLtv0": 7500,
+    "liquidationTargetLtv0": 7800,
     "liquidationFee0": 750,
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
