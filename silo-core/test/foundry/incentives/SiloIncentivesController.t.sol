@@ -260,6 +260,56 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), 10e18, "invalid user2 balance");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setDistributionEnd_Success
+    function test_setDistributionEnd_Success() public {
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(block.timestamp + 100),
+            emissionPerSecond: 1e18
+        }));
+
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
+
+        uint256 lastUpdateTimestamp = details.lastUpdateTimestamp;
+        assertEq(lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+
+        vm.warp(block.timestamp + 100);
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp));
+
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        uint256 indexBefore = details.index;
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+
+        vm.warp(block.timestamp + 100);
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp));
+
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+        assertEq(details.index, indexBefore, "invalid index");
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_decrease_rewards
     function test_decrease_rewards() public {
         ERC20Mock(_rewardToken).mint(address(_controller), 11e18);
