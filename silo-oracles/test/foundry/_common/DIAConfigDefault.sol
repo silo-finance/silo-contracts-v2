@@ -15,26 +15,7 @@ abstract contract DIAConfigDefault is TokensGenerator {
             IERC20Metadata(address(tokens["USDT"])),
             1 days,
             "RDPX/USD",
-            "",
-            1,
-                0
-        );
-    }
-
-    function _defaultDIAConfig(uint256 _divider, uint256 _multiplier)
-        internal
-        view
-        returns (IDIAOracle.DIADeploymentConfig memory)
-    {
-        return IDIAOracle.DIADeploymentConfig(
-            IDIAOracleV2(DIA_ORACLE_V2),
-            IERC20Metadata(address(tokens["RDPX"])),
-            IERC20Metadata(address(tokens["USDT"])),
-            1 days,
-            "RDPX/USD",
-            "",
-            _divider,
-            _multiplier
+            ""
         );
     }
 
@@ -45,8 +26,6 @@ abstract contract DIAConfigDefault is TokensGenerator {
         emit log_named_uint("heartbeat", _config.heartbeat);
         emit log_named_string("primaryKey", _config.primaryKey);
         emit log_named_string("secondaryKey", _config.secondaryKey);
-        emit log_named_uint("normalizationDivider", _config.normalizationDivider);
-        emit log_named_uint("normalizationMultiplier", _config.normalizationMultiplier);
     }
 
     function _printDIAConfig(IDIAOracle.DIAConfig memory _data) internal {

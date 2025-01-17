@@ -23,8 +23,6 @@ interface IDIAOracle {
         uint32 heartbeat;
         string primaryKey;
         string secondaryKey;
-        uint256 normalizationDivider;
-        uint256 normalizationMultiplier;
     }
 
     struct DIAConfig {
@@ -51,7 +49,4 @@ interface IDIAOracle {
     error AssetNotSupported();
     error Overflow();
     error BaseAmountOverflow();
-    error HugeDivider();
-    error HugeMultiplier();
-    error MultiplierAndDividerZero();
 }

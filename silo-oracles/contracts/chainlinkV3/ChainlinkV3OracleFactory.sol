@@ -32,7 +32,11 @@ contract ChainlinkV3OracleFactory is OracleFactory {
         uint256 secondaryPriceDecimals = verifyConfig(_config);
         verifyHeartbeat(_config);
 
-        oracleConfig = new ChainlinkV3OracleConfig(_config);
+        (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
+            _config.baseToken, _config.quoteToken, _config.primaryAggregator.decimals(), secondaryPriceDecimals
+        );
+
+        oracleConfig = new ChainlinkV3OracleConfig(_config, divider, multiplier);
         oracle = ChainlinkV3Oracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
@@ -67,13 +71,6 @@ contract ChainlinkV3OracleFactory is OracleFactory {
 
         if (address(_config.secondaryAggregator) != address(0)) {
             secondaryPriceDecimals = _config.secondaryAggregator.decimals();
-        }
-
-        if (_config.normalizationDivider > 1e36) revert IChainlinkV3Oracle.HugeDivider();
-        if (_config.normalizationMultiplier > 1e36) revert IChainlinkV3Oracle.HugeMultiplier();
-
-        if (_config.normalizationDivider == 0 && _config.normalizationMultiplier == 0) {
-            revert IChainlinkV3Oracle.MultiplierAndDividerZero();
         }
     }
 

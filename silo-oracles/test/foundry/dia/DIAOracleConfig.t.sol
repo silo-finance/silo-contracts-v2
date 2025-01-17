@@ -20,7 +20,7 @@ contract DIAOracleConfigTest is DIAConfigDefault {
     constructor() TokensGenerator(BlockChain.ARBITRUM) {
         initFork(TEST_BLOCK);
 
-        CFG = new DIAOracleConfig(_defaultDIAConfig(10 ** (18 + 8 - 18), 0));
+        CFG = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 18), 0);
     }
 
     function test_DIAOracleConfig_getQuoteData() public {

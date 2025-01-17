@@ -42,7 +42,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quote_RDPXinUSDT
     */
     function test_DIAOracleFactory_quote_RDPXinUSDT() public {
-        DIAOracle oracle = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0));
+        DIAOracle oracle = ORACLE_FACTORY.create(_defaultDIAConfig());
 
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
         emit log_named_decimal_uint("RDPX/USD", price, 18);
@@ -53,7 +53,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quote_RDPXinTUSD
     */
     function test_DIAOracleFactory_quote_RDPXinTUSD() public {
-        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(1e8, 0);
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["TUSD"]));
 
         DIAOracle oracle = ORACLE_FACTORY.create(cfg);
@@ -80,7 +80,8 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         DIAOracle oracle = ORACLE_FACTORY.create(cfg);
         uint256 gasEnd = gasleft();
 
-        emit log_named_uint("gas for creation", gasStart - gasEnd);
+        emit log_named_uint("gas", gasStart - gasEnd);
+        assertEq(gasStart - gasEnd, 352506, "[DIAOracleFactory_quote_RDPXinETH] optimise gas for creation");
 
         gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));

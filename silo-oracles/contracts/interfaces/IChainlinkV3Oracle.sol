@@ -16,8 +16,6 @@ interface IChainlinkV3Oracle {
     /// @param quoteToken quote toke address, it must have decimals() method available
     /// @param primaryHeartbeat heartbeat of primary price
     /// @param secondaryHeartbeat heartbeat of secondary price
-    /// @param normalizationDivider divider that will be used in oracle to normalize price
-    /// @param normalizationMultiplier multiplier that will be used in oracle to normalize price
     struct ChainlinkV3DeploymentConfig {
         IERC20Metadata baseToken;
         IERC20Metadata quoteToken;
@@ -25,8 +23,6 @@ interface IChainlinkV3Oracle {
         uint32 primaryHeartbeat;
         AggregatorV3Interface secondaryAggregator;
         uint32 secondaryHeartbeat;
-        uint256 normalizationDivider;
-        uint256 normalizationMultiplier;
     }
 
     /// @dev config based on which new oracle will be deployed
@@ -60,7 +56,6 @@ interface IChainlinkV3Oracle {
 
     error AddressZero();
     error InvalidPrice();
-    error ZeroQuote();
     error InvalidSecondPrice();
     error BaseAmountOverflow();
     error TokensAreTheSame();
@@ -72,7 +67,4 @@ interface IChainlinkV3Oracle {
     error InvalidEthHeartbeat();
 
     error AssetNotSupported();
-    error HugeDivider();
-    error HugeMultiplier();
-    error MultiplierAndDividerZero();
 }
