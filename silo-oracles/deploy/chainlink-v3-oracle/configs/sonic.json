@@ -26,5 +26,15 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 100000000,
         "normalizationMultiplier": 0
+    },
+    "CHAINLINK_ETH_USD": {
+        "baseToken": "WETH",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_ETH_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 100000000,
+        "normalizationMultiplier": 0
     }
 }
