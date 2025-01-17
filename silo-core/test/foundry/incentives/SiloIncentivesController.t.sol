@@ -271,6 +271,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
 
         IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
+        uint256 indexAtTheBeginning = details.index;
 
         uint256 lastUpdateTimestamp = details.lastUpdateTimestamp;
         assertEq(lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
@@ -282,6 +283,15 @@ contract SiloIncentivesControllerTest is Test {
 
         details = _controller.incentivesProgram(_PROGRAM_NAME);
         assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+
+        vm.warp(block.timestamp + 100);
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp + 1000));
+
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+        assertEq(details.index, indexAtTheBeginning, "invalid index");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_decrease_rewards
