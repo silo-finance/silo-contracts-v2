@@ -179,4 +179,37 @@ contract OracleNormalizationTest is Test {
 
         assertEq(normalizedPrice, calculatedPriceInEth);
     }
+
+    /*
+        "PYTH_S_USD": {
+        "baseToken": "wS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "PYTH_S_USD_aggregator",
+
+        1 usdc (1e6) - 1000015770000000000
+        1 wS (1e18)  - 784949350000000000
+
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_OracleNormalization_normalizePrice_PYTH_S_USD
+    */
+    function test_OracleNormalization_normalizePrice_PYTH_S_USD() public {
+        address baseToken = makeAddr("wS");
+        address quoteToken = makeAddr("SILO_VIRTUAL_USD_8");
+
+        uint256 baseDecimals = 18;
+        uint256 quoteDecimals = 18; // is this our quote decimals we want for USD? 
+        uint256 priceDecimals = 8; // chainlink aggregator
+
+        vm.mockCall(baseToken, abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(baseDecimals));
+        vm.mockCall(quoteToken, abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(quoteDecimals));
+
+        (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
+            IERC20Metadata(baseToken), IERC20Metadata(quoteToken), priceDecimals, 0
+        );
+
+        emit log_named_uint("divider", divider);
+        emit log_named_uint("multiplier", multiplier);
+
+        assertEq(divider, 1e8);
+        assertEq(multiplier, 0);
+    }
 }

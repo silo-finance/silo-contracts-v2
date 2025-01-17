@@ -56,6 +56,7 @@ interface IChainlinkV3Oracle {
 
     error AddressZero();
     error InvalidPrice();
+    error ZeroQuote();
     error InvalidSecondPrice();
     error BaseAmountOverflow();
     error TokensAreTheSame();

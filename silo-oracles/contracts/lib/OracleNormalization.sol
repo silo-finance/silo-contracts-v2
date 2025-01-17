@@ -62,7 +62,7 @@ library OracleNormalization {
         bool useMultiplier = false;
 
         // below check prevents underflow on subtraction
-        if (quoteDecimals > baseDecimals + _primaryPriceDecimals) {
+        if (quoteDecimals > baseDecimals + _primaryPriceDecimals) { // 8 > 18 + 8
             // safe because of above `quoteDecimals > baseDecimals + _priceDecimals`
             unchecked { multiplier = quoteDecimals - (baseDecimals + _primaryPriceDecimals); }
             useMultiplier = true;
@@ -71,6 +71,10 @@ library OracleNormalization {
             if (baseDecimals > arbitraryMaxDecimals) revert Overflow();
 
             // safe because of above `quoteDecimals > baseDecimals + _priceDecimals`
+            // price will be calculated like this: baseAmount * price / divider = result in quote _primaryPriceDecimals
+            // baseDecimals + priceDecimals - dividerDecimals = quoteDecimals
+            // baseDecimals + priceDecimals - quoteDecimals = dividerDecimals
+            // baseDecimals + priceDecimals - quoteDecimals = dividerDecimals
             unchecked { divider = baseDecimals + _primaryPriceDecimals - quoteDecimals; }
         }
 
