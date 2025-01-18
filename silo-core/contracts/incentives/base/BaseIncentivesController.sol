@@ -222,17 +222,21 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         for (uint256 i = 0; i < accruedRewards.length; i++) {
             uint256 unclaimedRewards = _usersUnclaimedRewards[user][accruedRewards[i].programId];
 
-            accruedRewards[i].amount += unclaimedRewards;
+            uint256 amountToClaim = accruedRewards[i].amount + unclaimedRewards;
 
-            if (accruedRewards[i].amount != 0) {
-                emit RewardsAccrued(
-                    user,
-                    accruedRewards[i].rewardToken,
-                    getProgramName(accruedRewards[i].programId),
-                    accruedRewards[i].amount
-                );
+            if (amountToClaim != 0) {
+                if (accruedRewards[i].amount != 0) {
+                    emit RewardsAccrued(
+                        user,
+                        accruedRewards[i].rewardToken,
+                        getProgramName(accruedRewards[i].programId),
+                        accruedRewards[i].amount
+                    );
+                }
 
-                _transferRewards(accruedRewards[i].rewardToken, to, accruedRewards[i].amount);
+                _usersUnclaimedRewards[user][accruedRewards[i].programId] = 0;
+
+                _transferRewards(accruedRewards[i].rewardToken, to, amountToClaim);
 
                 emit RewardsClaimed(
                     user,
@@ -240,8 +244,11 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
                     accruedRewards[i].rewardToken,
                     accruedRewards[i].programId,
                     claimer,
-                    accruedRewards[i].amount
+                    amountToClaim
                 );
+
+                // updating the accrued rewards amount to include unclaimed rewards
+                accruedRewards[i].amount = amountToClaim;
             }
         }
     }
@@ -262,8 +269,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         incentivesPrograms[programId].distributionEnd = _incentivesProgramInput.distributionEnd;
         incentivesPrograms[programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
         incentivesPrograms[programId].lastUpdateTimestamp = uint40(block.timestamp);
-
-        _updateAssetStateInternal(programId, _shareToken().totalSupply());
 
         emit IncentivesProgramCreated(_incentivesProgramInput.name);
     }
