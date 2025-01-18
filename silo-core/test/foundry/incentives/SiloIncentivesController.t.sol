@@ -928,6 +928,26 @@ contract SiloIncentivesControllerTest is Test {
         _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp - 1));
     }
 
+    // FOUNDRY_PROFILE=core-test forge test --ffi --mt test_rescueRewards_onlyOwner -vvv
+    function test_rescueRewards_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        _controller.rescueRewards(_rewardToken);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test --ffi --mt test_rescueRewards_success -vvv
+    function test_rescueRewards_success() public {
+        uint256 amount = 1000e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), amount);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(address(_controller)), amount, "expected max balance");
+
+        vm.prank(_owner);
+        _controller.rescueRewards(_rewardToken);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(address(_controller)), 0, "to have no balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(_owner), amount, "owner must have max balance");
+    }
+
     function _claimRewards(address _user, address _to, string memory _programName) internal {
         uint256 snapshotId = vm.snapshot();
 

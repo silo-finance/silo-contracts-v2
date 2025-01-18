@@ -61,6 +61,10 @@ interface ISiloIncentivesController is IDistributionManager {
      */
     function immediateDistribution(address _tokenToDistribute, uint104 _amount) external;
 
+    /// @dev It will transfer all the reward token balance to the owner.
+    /// @param _rewardToken The reward token to rescue
+    function rescueRewards(address _rewardToken) external;
+
     /**
      * @dev Whitelists an address to claim the rewards on behalf of another address
      * @param _user The address of the user
