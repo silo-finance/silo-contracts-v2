@@ -10,9 +10,9 @@ import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/Chain
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_Demo_config \
+FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_ETH_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
-    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+    --ffi --broadcast --rpc-url $RPC_SONIC --verify
  */
 contract ChainlinkV3OracleDeploy is CommonDeploy {
     function run() public returns (ChainlinkV3Oracle oracle) {
