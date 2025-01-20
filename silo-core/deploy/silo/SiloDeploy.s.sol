@@ -34,9 +34,9 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
+FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
     forge script silo-core/deploy/silo/SiloDeploy.s.sol \
-    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract SiloDeploy is CommonDeploy {
     uint256 private constant _BYTES32_SIZE = 32;
