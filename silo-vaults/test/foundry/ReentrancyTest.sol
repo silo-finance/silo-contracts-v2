@@ -4,11 +4,13 @@ pragma solidity ^0.8.28;
 import {console2} from "forge-std/console2.sol";
 
 import {IERC1820Implementer} from "openzeppelin5/interfaces/IERC1820Implementer.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {SiloVault} from "../../contracts/SiloVault.sol";
-import {ISiloVault} from "../../contracts/interfaces/ISiloVault.sol";
+import {ISiloVault, MarketAllocation} from "../../contracts/interfaces/ISiloVault.sol";
 import {ERC1820Registry} from "../../contracts/mocks/ERC1820Registry.sol";
 import {ERC777Mock, IERC1820Registry} from "../../contracts/mocks/ERC777Mock.sol";
+import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {TIMELOCK} from "./helpers/BaseTest.sol";
@@ -22,9 +24,24 @@ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReentrancyTest -vvv
 */
 contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
     address internal attacker = makeAddr("attacker");
+    address internal someMarket = makeAddr("someMarket");
 
     ERC777Mock internal reentrantToken;
     ERC1820Registry internal registry;
+
+    /// @dev Protected methods against reentrancy.
+    enum ReenterMethod {
+        None, // 0
+        Redeem,
+        Withdraw,
+        Mint,
+        Deposit,
+        Reallocate,
+        ClaimRewards,
+        SetSupplyQueue,
+        UpdateWithdrawQueue,
+        AcceptCap
+    }
 
     function setUp() public override {
         super.setUp();
@@ -75,57 +92,88 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
 
     function test777Reentrancy() public {
         reentrantToken.setBalance(attacker, 100_000); // Mint 100_000 tokens to attacker.
-
-        console2.log("Attacker starting with %s tokens", reentrantToken.balanceOf(attacker));
-        console2.log("Fee recipient starting with %s tokens", reentrantToken.balanceOf(FEE_RECIPIENT));
+        reentrantToken.setBalance(address(this), 100_000); // Mint 100_000 tokens to the test contract.
 
         vm.startPrank(attacker);
 
         registry.setInterfaceImplementer(attacker, TOKENS_SENDER_INTERFACE_HASH, address(this)); // Set test contract
-            // to receive ERC-777 callbacks.
+        // to receive ERC-777 callbacks.
         registry.setInterfaceImplementer(attacker, TOKENS_RECIPIENT_INTERFACE_HASH, address(this)); // Required "hack"
-            // because done all in a single Foundry test.
+        // because done all in a single Foundry test.
 
         reentrantToken.approve(address(vault), 100_000);
 
-        vault.deposit(1, attacker); // Initial deposit of 1 token to be able to call withdraw(1) in the subcall
-            // before depositing(5000)
+        vm.stopPrank();
 
-        vault.deposit(5_000, attacker); // Deposit 5000, withdraw 1 in the subcall. Total deposited 4999,
-            // lastTotalAssets only updated by +1.
+        // The test will try to reenter on the deposit.
 
-        vm.startPrank(attacker); // Have to re-call startPrank because contract was reentered. Hacky but works.
-        vault.deposit(5_000, attacker); // Same as above. Accrue yield accrues 50% * (newTotalAssets -
-            // lastTotalAssets) = 50% * 4999 = ~2499. lastTotalAssets only updated by +1.
+        vault.deposit(uint256(ReenterMethod.Deposit), attacker);
+        vault.deposit(uint256(ReenterMethod.Withdraw), attacker);
+        vault.deposit(uint256(ReenterMethod.Mint), attacker);
+        vault.deposit(uint256(ReenterMethod.Reallocate), attacker);
+        vault.deposit(uint256(ReenterMethod.ClaimRewards), attacker);
+        vault.deposit(uint256(ReenterMethod.SetSupplyQueue), attacker);
+        vault.deposit(uint256(ReenterMethod.UpdateWithdrawQueue), attacker);
+        vault.deposit(uint256(ReenterMethod.Redeem), attacker);
 
-        vm.startPrank(attacker);
-        vault.deposit(5_000, attacker); // ~2499 tokens taken as fees.
+        vm.mockCall(
+            address(someMarket),
+            abi.encodeWithSelector(IERC4626.asset.selector),
+            abi.encode(address(reentrantToken))
+        );
 
-        vm.startPrank(attacker);
-        vault.deposit(5_000, attacker); // ~2499 tokens taken as fees.
+        vm.prank(OWNER);
+        vault.submitCap(IERC4626(someMarket), 100);
 
-        // Withdraw everything
+        vm.warp(block.timestamp + 1 weeks);
 
-        vm.startPrank(attacker);
-        vault.withdraw(vault.maxWithdraw(attacker), attacker, attacker); // Withdraw 99_999 tokens, cost of attack
-            // = 1 token
+        vault.deposit(uint256(ReenterMethod.AcceptCap), attacker);
 
-        vm.startPrank(FEE_RECIPIENT);
-        vault.withdraw(vault.maxWithdraw(FEE_RECIPIENT), FEE_RECIPIENT, FEE_RECIPIENT); // Fee recipient withdraws
-            // 9_999 tokens, stolen from `SUPPLIER`
+        // deposit some other amount to ensure the deposit works.
 
-        console2.log("Attacker ending with %s tokens", reentrantToken.balanceOf(attacker)); // 99_999
-        console2.log("Fee recipient ending with %s tokens", reentrantToken.balanceOf(FEE_RECIPIENT)); // 9_999
-
-        assertEq(reentrantToken.balanceOf(FEE_RECIPIENT), 0, "balanceOf(FEE_RECIPIENT)");
+        vm.prank(attacker);
+        vault.deposit(100, attacker);
     }
 
     function tokensToSend(address, address from, address to, uint256 amount, bytes calldata, bytes calldata) external {
-        if ((from == attacker) && (amount == 5000)) {
-            // Don't call back on first deposit(1)
-            vm.startPrank(attacker);
+        if ((from == attacker) && (amount == uint256(ReenterMethod.Deposit))) {
+            vm.prank(attacker);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.deposit(1, attacker);
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.Withdraw))) {
+            vm.prank(attacker);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
             ISiloVault(to).withdraw(1, attacker, attacker);
-            vm.stopPrank();
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.Mint))) {
+            vm.prank(attacker);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.mint(1, attacker);
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.Reallocate))) {
+            MarketAllocation[] memory allocations;
+            vm.prank(OWNER);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.reallocate(allocations);
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.ClaimRewards))) {
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.claimRewards();
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.SetSupplyQueue))) {
+            IERC4626[] memory newSupplyQueue;
+            vm.prank(OWNER);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.setSupplyQueue(newSupplyQueue);
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.UpdateWithdrawQueue))) {
+            uint256[] memory indexes;
+            vm.prank(OWNER);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.updateWithdrawQueue(indexes);
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.Redeem))) {
+            vm.prank(attacker);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.redeem(1, attacker, attacker);
+        } else if ((from == attacker) && (amount == uint256(ReenterMethod.AcceptCap))) {
+            vm.prank(OWNER);
+            vm.expectRevert(ErrorsLib.ReentrancyError.selector);
+            vault.acceptCap(IERC4626(someMarket));
         }
     }
 

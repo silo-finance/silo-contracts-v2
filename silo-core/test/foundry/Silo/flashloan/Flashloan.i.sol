@@ -100,10 +100,10 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
     forge test -vv --ffi --mt test_flashFee
     */
     function test_flashFee() public {
-        vm.expectRevert(ISilo.Unsupported.selector);
+        vm.expectRevert(ISilo.UnsupportedFlashloanToken.selector);
         silo0.flashFee(address(token1), 1e18);
 
-        vm.expectRevert(ISilo.Unsupported.selector);
+        vm.expectRevert(ISilo.UnsupportedFlashloanToken.selector);
         silo1.flashFee(address(token0), 1e18);
 
         assertEq(silo0.flashFee(address(token0), 0), 0);

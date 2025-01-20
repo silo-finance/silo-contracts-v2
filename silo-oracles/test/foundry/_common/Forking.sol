@@ -13,6 +13,7 @@ contract Forking is IForking, Test {
 
     string ARBITRUM_RPC_URL;
     string ETHEREUM_RPC_URL;
+    string SONIC_RPC_URL;
 
     /// @dev arbitrum checkpoints to ethereum, so block.number on Arbitrum is actually ethereum block.
     /// To handle this case and be able to add unit tests for expected block we will be using mapping
@@ -22,6 +23,7 @@ contract Forking is IForking, Test {
     constructor(BlockChain _chain) {
         ARBITRUM_RPC_URL = string(abi.encodePacked(vm.envString("RPC_ARBITRUM")));
         ETHEREUM_RPC_URL = string(abi.encodePacked(vm.envString("RPC_MAINNET")));
+        SONIC_RPC_URL = string(abi.encodePacked(vm.envString("RPC_SONIC")));
 
         FORKED_CHAIN = _chain;
     }
@@ -31,6 +33,8 @@ contract Forking is IForking, Test {
             FORK_ID = _createFork(ARBITRUM_RPC_URL);
         } else if (FORKED_CHAIN == BlockChain.ETHEREUM) {
             FORK_ID = _createFork(ETHEREUM_RPC_URL);
+        } else if (FORKED_CHAIN == BlockChain.SONIC) {
+            FORK_ID = _createFork(SONIC_RPC_URL);
         }
     }
 
@@ -41,6 +45,8 @@ contract Forking is IForking, Test {
             FORK_ID = _createFork(ARBITRUM_RPC_URL, _forkingBlockNumber);
         } else if (FORKED_CHAIN == BlockChain.ETHEREUM) {
             FORK_ID = _createFork(ETHEREUM_RPC_URL, _forkingBlockNumber);
+        } else if (FORKED_CHAIN == BlockChain.SONIC) {
+            FORK_ID = _createFork(SONIC_RPC_URL, _forkingBlockNumber);
         }
     }
 
@@ -60,6 +66,14 @@ contract Forking is IForking, Test {
         return _chain == BlockChain.ETHEREUM;
     }
 
+    function isSonic() public view returns (bool) {
+        return FORKED_CHAIN == BlockChain.SONIC;
+    }
+
+    function isSonic(BlockChain _chain) public pure returns (bool) {
+        return _chain == BlockChain.SONIC;
+    }
+
     function getBlockChainID() public view returns (uint256 id) {
         assembly {
             id := chainid()
@@ -74,7 +88,7 @@ contract Forking is IForking, Test {
         return vm.createSelectFork(_rpc, blockNumber);
     }
 
-    function _testExpectedBlockNumber(string memory _msg) internal {
+    function _testExpectedBlockNumber(string memory _msg) internal view {
         uint256 expectedBlock = isArbitrum() ? arbitrumToEthereumCheckout[forkedBlockNumber] : forkedBlockNumber;
         assertEq(block.number, expectedBlock, string(abi.encodePacked("forked block number is invalid: ", _msg)));
     }

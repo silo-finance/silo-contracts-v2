@@ -27,8 +27,13 @@ library DIAOraclesConfigsParser {
         string memory primaryKey = KV.getString(configJson, _name, "primaryKey");
         string memory secondaryKey = KV.getString(configJson, _name, "secondaryKey");
         uint256 heartbeat = KV.getUint(configJson, _name, "heartbeat");
+        uint256 normalizationDivider = KV.getUint(configJson, _name, "normalizationDivider");
+        uint256 normalizationMultiplier = KV.getUint(configJson, _name, "normalizationMultiplier");
 
         require(heartbeat <= type(uint32).max, "heartbeat should be uint32");
+        require(normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
+        require(normalizationMultiplier <= 1e36, "normalizationMultiplier is over 1e36");
+        require(normalizationDivider != 0 || normalizationMultiplier != 0, "normalization variables not set");
 
         config = IDIAOracle.DIADeploymentConfig({
             diaOracle: IDIAOracleV2(AddrLib.getAddressSafe(_network, diaOracleKey)),
@@ -36,7 +41,9 @@ library DIAOraclesConfigsParser {
             quoteToken: IERC20Metadata(AddrLib.getAddressSafe(_network, quoteTokenKey)),
             heartbeat: uint32(heartbeat),
             primaryKey: primaryKey,
-            secondaryKey: secondaryKey
+            secondaryKey: secondaryKey,
+            normalizationDivider: normalizationDivider,
+            normalizationMultiplier: normalizationMultiplier
         });
     }
 

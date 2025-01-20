@@ -25,9 +25,10 @@ library SiloStdLib {
 
         // all user set fees are in 18 decimals points
         (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
-        require(_token == asset, ISilo.Unsupported());
+        require(_token == asset, ISilo.UnsupportedFlashloanToken());
         if (flashloanFee == 0) return 0;
 
+        require(type(uint256).max / _amount >= flashloanFee, ISilo.FlashloanAmountTooBig());
         fee = _amount * flashloanFee / _PRECISION_DECIMALS;
 
         // round up

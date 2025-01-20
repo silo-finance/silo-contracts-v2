@@ -60,7 +60,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);
 
-        revert(string.concat("can not find native token for ", getChainAlias()));
+        revert(string.concat("can not find native token for ", ChainsLib.chainAlias()));
     }
 
     function _exchangeProxy() private returns (address) {
@@ -72,7 +72,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return ODOS_ROUTER_SONIC;
 
-        revert(string.concat("exchangeProxy not set for ", getChainAlias()));
+        revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
     }
 
     function _tokenReceiver() private returns (address payable) {
@@ -83,10 +83,10 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return GNOSIS_SAFE_ARB;
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return GNOSIS_SAFE_SONIC;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) {
-            console2.log("[LiquidationHelperDeploy] TODO set _tokenReceiver for ", getChainAlias());
+            console2.log("[LiquidationHelperDeploy] TODO set _tokenReceiver for ", ChainsLib.chainAlias());
             return GNOSIS_SAFE_MAINNET;
         }
 
-        revert(string.concat("tokenReceiver not set for ", getChainAlias()));
+        revert(string.concat("tokenReceiver not set for ", ChainsLib.chainAlias()));
     }
 }

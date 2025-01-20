@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.0.0] - 2025-01-20
+### Added
+- add rescue function to incentive controller
+
+### Updated
+- allow to restart incentive program after some time and ensure rewards are not calculated for a "gap"
+- ensure claim rewards reset state after claiming
+
 ## [0.20.0] - 2025-01-10
 ### Updated
 - Redeployment market for Sonic: `stS/S`

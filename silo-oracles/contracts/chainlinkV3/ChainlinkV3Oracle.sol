@@ -36,9 +36,12 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         if (!success) revert InvalidPrice();
 
         if (!config.convertToQuote) {
-            return OracleNormalization.normalizePrice(
+            quoteAmount = OracleNormalization.normalizePrice(
                 _baseAmount, price, config.normalizationDivider, config.normalizationMultiplier
             );
+
+            if (quoteAmount == 0) revert ZeroQuote();
+            return quoteAmount;
         }
 
         (
@@ -48,13 +51,16 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
 
         if (!secondSuccess) revert InvalidSecondPrice();
 
-        return OracleNormalization.normalizePrices(
+        quoteAmount = OracleNormalization.normalizePrices(
             _baseAmount,
             price,
             secondPrice,
             config.normalizationDivider,
             config.normalizationMultiplier
         );
+
+        if (quoteAmount == 0) revert ZeroQuote();
+        return quoteAmount;
     }
 
     /// @dev Returns price directly from aggregator, this method is mostly for debug purposes

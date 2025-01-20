@@ -22,17 +22,13 @@ contract ChainlinkV3OracleConfig is Layer1OracleConfig {
     bool internal immutable _CONVERT_TO_QUOTE; // solhint-disable-line var-name-mixedcase
 
     /// @dev all verification should be done by factory
-    constructor(
-        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,
-        uint256 _normalizationDivider,
-        uint256 _normalizationMultiplier
-    )
+    constructor(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config)
         Layer1OracleConfig(
             _config.baseToken,
             _config.quoteToken,
             _config.primaryHeartbeat,
-            _normalizationDivider,
-            _normalizationMultiplier
+            _config.normalizationDivider,
+            _config.normalizationMultiplier
         )
     {
         _AGGREGATOR = _config.primaryAggregator;

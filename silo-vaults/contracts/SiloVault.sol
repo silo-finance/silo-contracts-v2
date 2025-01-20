@@ -295,6 +295,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setSupplyQueue(IERC4626[] calldata _newSupplyQueue) external virtual onlyAllocatorRole {
+        _nonReentrantOn();
+
         uint256 length = _newSupplyQueue.length;
 
         if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
@@ -307,10 +309,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         supplyQueue = _newSupplyQueue;
 
         emit EventsLib.SetSupplyQueue(_msgSender(), _newSupplyQueue);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
     function updateWithdrawQueue(uint256[] calldata _indexes) external virtual onlyAllocatorRole {
+        _nonReentrantOn();
+
         uint256 newLength = _indexes.length;
         uint256 currLength = withdrawQueue.length;
 
@@ -335,7 +341,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
                 if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
 
-                if (market.balanceOf(address(this)) != 0) {
+                if (_ERC20BalanceOf(address(market), address(this)) != 0) {
                     if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
 
                     if (block.timestamp < config[market].removableAt) {
@@ -350,16 +356,20 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         withdrawQueue = newWithdrawQueue;
 
         emit EventsLib.SetWithdrawQueue(_msgSender(), newWithdrawQueue);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
     function reallocate(MarketAllocation[] calldata _allocations) external virtual onlyAllocatorRole {
+        _nonReentrantOn();
+
         uint256 totalSupplied;
         uint256 totalWithdrawn;
         for (uint256 i; i < _allocations.length; ++i) {
             MarketAllocation memory allocation = _allocations[i];
 
-            // in original SiloVault, we are not checking liquidity, so this realocation will fail if not enough assets
+            // in original SiloVault, we are not checking liquidity, so this reallocation will fail if not enough assets
             (uint256 supplyAssets, uint256 supplyShares) = _supplyBalance(allocation.market);
             uint256 withdrawn = UtilsLib.zeroFloorSub(supplyAssets, allocation.assets);
 
@@ -409,6 +419,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
 
         if (totalWithdrawn != totalSupplied) revert ErrorsLib.InconsistentReallocation();
+
+        _nonReentrantOff();
     }
 
     /* REVOKE FUNCTIONS */
@@ -469,15 +481,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         afterTimelock(pendingCap[_market].validAt)
     {
+        _nonReentrantOn();
+
         // Safe "unchecked" cast because pendingCap <= type(uint184).max.
         _setCap(_market, uint184(pendingCap[_market].value));
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc ISiloVaultBase
     function skim(address _token) external virtual {
         if (skimRecipient == address(0)) revert ErrorsLib.ZeroAddress();
 
-        uint256 amount = IERC20(_token).balanceOf(address(this));
+        uint256 amount = _ERC20BalanceOf(_token, address(this));
 
         IERC20(_token).safeTransfer(skimRecipient, amount);
 
@@ -488,15 +504,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function claimRewards() public virtual {
         _nonReentrantOn();
 
-        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
-        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
-
-        for (uint256 i; i < logics.length; i++) {
-            logics[i].delegatecall(data);
-            // result of call is ignored
-        }
+        _claimRewards();
 
         _nonReentrantOff();
+    }
+
+    /// @inheritdoc ISiloVaultBase
+    function reentrancyGuardEntered() external view virtual returns (bool entered) {
+        entered = _lock;
     }
 
     /* ERC4626 (PUBLIC) */
@@ -538,6 +553,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
@@ -547,10 +564,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         shares = _convertToSharesWithTotals(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         _deposit(_msgSender(), _receiver, _assets, shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) public virtual override returns (uint256 assets) {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Update `lastTotalAssets` to avoid an inconsistent state in a re-entrant context.
@@ -560,6 +581,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _convertToAssetsWithTotals(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         _deposit(_msgSender(), _receiver, assets, _shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -569,6 +592,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         override
         returns (uint256 shares)
     {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Do not call expensive `maxWithdraw` and optimistically withdraw assets.
@@ -579,6 +604,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, _assets));
 
         _withdraw(_msgSender(), _receiver, _owner, _assets, shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -587,6 +614,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         address _receiver,
         address _owner
     ) public virtual override returns (uint256 assets) {
+        _nonReentrantOn();
+
         uint256 newTotalAssets = _accrueFee();
 
         // Do not call expensive `maxRedeem` and optimistically redeem shares.
@@ -597,6 +626,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, assets));
 
         _withdraw(_msgSender(), _receiver, _owner, assets, _shares);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -627,10 +658,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         newTotalSupply = totalSupply() + feeShares;
 
         assets = _convertToAssetsWithTotals(balanceOf(_owner), newTotalSupply, newTotalAssets, Math.Rounding.Floor);
-        assets -= _simulateWithdrawSilo(assets);
+        assets -= _simulateWithdrawERC4626(assets);
     }
 
-    /// @dev Returns the maximum amount of assets that the vault can supply on Silo.
+    /// @dev Returns the maximum amount of assets that the vault can supply to ERC4626 vaults.
     function _maxDeposit() internal view virtual returns (uint256 totalSuppliable) {
         for (uint256 i; i < supplyQueue.length; ++i) {
             IERC4626 market = supplyQueue[i];
@@ -638,7 +669,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyCap = config[market].cap;
             if (supplyCap == 0) continue;
 
-            totalSuppliable += UtilsLib.zeroFloorSub(supplyCap, market.maxDeposit(address(this)));
+            uint256 shares = _ERC20BalanceOf(address(market), address(this));
+            uint256 assets = market.convertToAssets(shares);
+            uint256 maxDeposit = market.maxDeposit(address(this));
+
+            totalSuppliable += Math.min(maxDeposit, UtilsLib.zeroFloorSub(supplyCap, assets));
         }
     }
 
@@ -681,18 +716,18 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ERC4626
-    /// @dev Used in mint or deposit to deposit the underlying asset to Silo markets.
+    /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
         super._deposit(_caller, _receiver, _assets, _shares);
 
-        _supplySilo(_assets);
+        _supplyERC4626(_assets);
 
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(lastTotalAssets + _assets);
     }
 
     /// @inheritdoc ERC4626
-    /// @dev Used in redeem or withdraw to withdraw the underlying asset from Silo markets.
+    /// @dev Used in redeem or withdraw to withdraw the underlying asset from ERC4626 markets.
     /// @dev Depending on 3 cases, reverts when withdrawing "too much" with:
     /// 1. NotEnoughLiquidity when withdrawing more than available liquidity.
     /// 2. ERC20InsufficientAllowance when withdrawing more than `caller`'s allowance.
@@ -702,7 +737,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         override
     {
-        _withdrawSilo(_assets);
+        _withdrawERC4626(_assets);
 
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
     }
@@ -718,7 +753,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         returns (uint256 assets, uint256 shares)
     {
-        shares = _market.balanceOf(address(this));
+        shares = _ERC20BalanceOf(address(_market), address(this));
         // we assume here, that in case of any interest on IERC4626, convertToAssets returns assets with interest
         assets = _market.convertToAssets(shares);
     }
@@ -766,12 +801,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }
 
             marketConfig.removableAt = 0;
-            IERC20(asset()).approve(address(_market), 0);
         }
 
         marketConfig.cap = _supplyCap;
         // one time approval, so market can pull any amount of tokens from SiloVault in a future
-        IERC20(asset()).approve(address(_market), type(uint256).max);
+        IERC20(asset()).forceApprove(address(_market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 
         delete pendingCap[_market];
@@ -779,8 +813,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* LIQUIDITY ALLOCATION */
 
-    /// @dev Supplies `assets` to Silo.
-    function _supplySilo(uint256 _assets) internal virtual {
+    /// @dev Supplies `assets` to ERC4626 vaults.
+    function _supplyERC4626(uint256 _assets) internal virtual {
         for (uint256 i; i < supplyQueue.length; ++i) {
             IERC4626 market = supplyQueue[i];
 
@@ -788,7 +822,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (supplyCap == 0) continue;
 
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-            uint256 supplyShares = market.balanceOf(address(this));
+            uint256 supplyShares = _ERC20BalanceOf(address(market), address(this));
             uint256 supplyAssets = market.convertToAssets(supplyShares);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
@@ -807,8 +841,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_assets != 0) revert ErrorsLib.AllCapsReached();
     }
 
-    /// @dev Withdraws `assets` from Silo.
-    function _withdrawSilo(uint256 _assets) internal virtual {
+    /// @dev Withdraws `assets` from ERC4626 vaults.
+    function _withdrawERC4626(uint256 _assets) internal virtual {
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
@@ -830,9 +864,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_assets != 0) revert ErrorsLib.NotEnoughLiquidity();
     }
 
-    /// @dev Simulates a withdraw of `assets` from Silo.
+    /// @dev Simulates a withdraw of `assets` from ERC4626 vault.
     /// @return The remaining assets to be withdrawn.
-    function _simulateWithdrawSilo(uint256 _assets) internal view virtual returns (uint256) {
+    function _simulateWithdrawERC4626(uint256 _assets) internal view virtual returns (uint256) {
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
@@ -882,7 +916,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
     function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
-        assets = _market.convertToAssets(_market.balanceOf(_user));
+        assets = _market.convertToAssets(_ERC20BalanceOf(address(_market), _user));
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
@@ -894,7 +928,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // transfer shares is basically withdraw->deposit, so claiming rewards should be done before any state changes
 
-        claimRewards();
+        _claimRewards();
 
         super._update(_from, _to, _value);
 
@@ -904,9 +938,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
-        _nonReentrantOn();
-        if (_value == 0) return;
-
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
 
         uint256 total = totalSupply();
@@ -914,31 +945,38 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 recipientBalance = _to == address(0) ? 0 : balanceOf(_to);
 
         for(uint256 i; i < receivers.length; i++) {
-            try INotificationReceiver(receivers[i]).afterTokenTransfer({
+            INotificationReceiver(receivers[i]).afterTokenTransfer({
                 _sender: _from,
                 _senderBalance: senderBalance,
                 _recipient: _to,
                 _recipientBalance: recipientBalance,
                 _totalSupply: total,
                  _amount: _value
-            }) {
-                // notification send
-            } catch (bytes memory lowLevelData) {
-                // prevent 63/64 attack with OutOfGas revert
-                require(lowLevelData.length != 0, ErrorsLib.PossibleOutOfGas());
-                // do not revert on invalid notification
-            }
+            });
         }
-
-        _nonReentrantOff();
     }
 
-    function _nonReentrantOn() private {
-        require(!_lock, ErrorsLib.ClaimingRewardsError());
+    function _claimRewards() internal virtual {
+        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
+        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
+
+        for (uint256 i; i < logics.length; i++) {
+            (bool success,) = logics[i].delegatecall(data);
+            if (!success) revert ErrorsLib.ClaimRewardsFailed();
+        }
+    }
+
+    function _nonReentrantOn() internal {
+        require(!_lock, ErrorsLib.ReentrancyError());
         _lock = true;
     }
 
-    function _nonReentrantOff() private {
+    function _nonReentrantOff() internal {
         _lock = false;
+    }
+
+    /// @dev to save code size ~500 B
+    function _ERC20BalanceOf(address _token, address _account) internal view returns (uint256 balance) {
+        balance = IERC20(_token).balanceOf(_account);
     }
 }

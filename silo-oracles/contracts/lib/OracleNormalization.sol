@@ -35,69 +35,6 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 library OracleNormalization {
     error Overflow();
 
-    /// @param _primaryPriceDecimals decimals of "base price" eg. 8.
-    /// @param _secondaryPriceDecimals decimals of second price eg. 18. If set to 0, that means there is no second price
-    /// @return divider
-    /// @return multiplier max value for first price 10^36 and for ETH price 10^(36+36)
-    /// but this is assuming unreal decimals. TODO certora?
-    function normalizationNumbers( // solhint-disable-line code-complexity, function-max-lines
-        IERC20Metadata _baseToken,
-        IERC20Metadata _quoteToken,
-        uint256 _primaryPriceDecimals,
-        uint256 _secondaryPriceDecimals
-    )
-        internal
-        view
-        returns (uint256 divider, uint256 multiplier)
-    {
-        uint256 quoteDecimals = TokenHelper.assertAndGetDecimals(address(_quoteToken));
-
-        // this is arbitrary check, 36 is high enough
-        // anything above 36 might cause precision errors in price and it will make no sense to have it
-        // we can always create separate version of lib if we need
-        uint256 arbitraryMaxDecimals = 36;
-        if (quoteDecimals > arbitraryMaxDecimals) revert Overflow();
-
-        uint256 baseDecimals = TokenHelper.assertAndGetDecimals(address(_baseToken));
-        bool useMultiplier = false;
-
-        // below check prevents underflow on subtraction
-        if (quoteDecimals > baseDecimals + _primaryPriceDecimals) {
-            // safe because of above `quoteDecimals > baseDecimals + _priceDecimals`
-            unchecked { multiplier = quoteDecimals - (baseDecimals + _primaryPriceDecimals); }
-            useMultiplier = true;
-        } else {
-            // make no sense to support that weird base tokens
-            if (baseDecimals > arbitraryMaxDecimals) revert Overflow();
-
-            // safe because of above `quoteDecimals > baseDecimals + _priceDecimals`
-            unchecked { divider = baseDecimals + _primaryPriceDecimals - quoteDecimals; }
-        }
-
-        if (_secondaryPriceDecimals == 0) {
-            return (useMultiplier ? 0 : 10 ** divider, useMultiplier ? 10 ** multiplier : 0);
-        }
-
-        if (_secondaryPriceDecimals > arbitraryMaxDecimals) revert Overflow();
-
-        if (useMultiplier) {
-            // safe because we working on small decimals numbers < arbitraryMaxDecimals
-            unchecked { multiplier += _secondaryPriceDecimals; }
-        } else {
-            if (_secondaryPriceDecimals > divider) {
-                // safe to unchecked because of `_ethPriceDecimals > divider`
-                unchecked { multiplier = _secondaryPriceDecimals - divider; }
-                divider = 0;
-                useMultiplier = true;
-            } else {
-                // safe to unchecked because of `_ethPriceDecimals > divider`
-                unchecked { divider = divider - _secondaryPriceDecimals; }
-            }
-        }
-
-        return (useMultiplier ? 0 : 10 ** divider, useMultiplier ? 10 ** multiplier : 0);
-    }
-
     /// @notice if you call normalizePrice directly you can create overflow
     /// @param _baseAmount amount of base token (can not be higher than uint128!)
     /// @param _assetPrice price returned by oracle (can not be higher than uint128!)

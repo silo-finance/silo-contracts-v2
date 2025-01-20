@@ -36,6 +36,9 @@ interface ISiloVaultBase {
     /// @notice method for claiming and distributing incentives rewards for all vault users
     function claimRewards() external;
 
+    /// @notice Returns whether the reentrancy guard is entered.
+    function reentrancyGuardEntered() external view returns (bool);
+
     /// @notice The address of the curator.
     function curator() external view returns (address);
 

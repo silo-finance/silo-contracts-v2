@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
+import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 
 import {Tower} from "silo-core/contracts/utils/Tower.sol";
 
@@ -21,10 +23,11 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract TowerDeploy is CommonDeploy {
     function run() public returns (Tower tower) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        string memory chainAlias = ChainsLib.chainAlias();
 
-        address siloFactory = getDeployedAddress(SiloCoreContracts.SILO_FACTORY);
-        address liquidationHelper = getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER);
-        address siloLens = getDeployedAddress(SiloCoreContracts.SILO_LENS);
+        address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
+        address liquidationHelper = SiloCoreDeployments.get(SiloCoreContracts.LIQUIDATION_HELPER, chainAlias);
+        address siloLens = SiloCoreDeployments.get(SiloCoreContracts.SILO_LENS, chainAlias);
 
         vm.startBroadcast(deployerPrivateKey);
 

@@ -15,8 +15,11 @@ library ErrorsLib {
     /// @notice Thrown on reentering token transfer while notification are being dispatched
     error NotificationDispatchError();
 
-    /// @notice Thrown on reentering while claiming rewards
-    error ClaimingRewardsError();
+    /// @notice Thrown on reentering
+    error ReentrancyError();
+
+    /// @notice Thrown when delegatecall on claiming rewards failed
+    error ClaimRewardsFailed();
 
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();

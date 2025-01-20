@@ -46,7 +46,7 @@ contract SiloVaultInternalTest is InternalTest {
         silo1.borrow(silo1.maxBorrow(BORROWER), BORROWER, BORROWER);
         vm.stopPrank();
 
-        uint256 remaining = _simulateWithdrawSilo(assets);
+        uint256 remaining = _simulateWithdrawERC4626(assets);
         uint256 expectedWithdrawable = allMarkets[0].maxWithdraw(address(this));
         uint256 expectedRemaining = UtilsLib.zeroFloorSub(assets, expectedWithdrawable);
 

@@ -22,17 +22,17 @@ contract DIAOracleTest is DIAConfigDefault {
     constructor() TokensGenerator(BlockChain.ARBITRUM) {
         initFork(TEST_BLOCK);
 
-        DIAOracleConfig cfg = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 18), 0);
+        DIAOracleConfig cfg = new DIAOracleConfig(_defaultDIAConfig(10 ** (18 + 8 - 18), 0));
         DIA_ORACLE = DIAOracle(Clones.clone(address(new DIAOracle())));
         DIA_ORACLE.initialize(cfg, _defaultDIAConfig().primaryKey, _defaultDIAConfig().secondaryKey);
     }
 
     function test_DIAOracle_initialize_OldPrice() public {
         DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
-        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
 
         cfg.heartbeat = 1856;
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
 
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
@@ -42,14 +42,14 @@ contract DIAOracleTest is DIAConfigDefault {
 
     function test_DIAOracle_initialize_OldSecondaryPrice() public {
         DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
-        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
 
         // at the block from test, price is 1856s old
         // and ETH price is 6306s old
         cfg.heartbeat = 1857;
         cfg.secondaryKey = "ETH/USD";
 
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
         vm.expectRevert(IDIAOracle.OldSecondaryPrice.selector);
@@ -58,9 +58,9 @@ contract DIAOracleTest is DIAConfigDefault {
 
     function test_DIAOracle_initialize_pass() public {
         DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
-        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
 
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg, 10 ** (18 + 8 - 18), 0);
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
 
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
     }
@@ -80,7 +80,7 @@ contract DIAOracleTest is DIAConfigDefault {
     function test_DIAOracle_quote_inUSDC() public {
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["USDC"]));
-        DIAOracleConfig oracleConfig = new DIAOracleConfig(_defaultDIAConfig(), 10 ** (18 + 8 - 6), 0);
+        DIAOracleConfig oracleConfig = new DIAOracleConfig(_defaultDIAConfig(10 ** (18 + 8 - 6), 0));
         DIAOracle oracle = DIAOracle(Clones.clone(address(new DIAOracle())));
         oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
 
