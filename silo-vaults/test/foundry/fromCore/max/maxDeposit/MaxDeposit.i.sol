@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
-import {CAP, NB_MARKETS} from "../../../helpers/BaseTest.sol";
+import {CAP} from "../../../helpers/BaseTest.sol";
 
 /*
     FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc MaxDepositTest
