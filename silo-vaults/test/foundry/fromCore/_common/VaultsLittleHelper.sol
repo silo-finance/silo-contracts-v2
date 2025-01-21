@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {CommonBase} from "forge-std/Base.sol";
 import {console} from "forge-std/console.sol";
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+
 import {CAP} from "../../helpers/BaseTest.sol";
 import {IntegrationTest} from "../../helpers/IntegrationTest.sol";
 
@@ -13,6 +15,10 @@ abstract contract VaultsLittleHelper is IntegrationTest {
 
         _setCap(allMarkets[0], CAP);
         _sortSupplyQueueIdleLast();
+
+        // reset this, so when we porting tests we don't get unexpected results
+        silo0 = ISilo(address(0));
+        silo1 = ISilo(address(0));
     }
 
     function _deposit(uint256 _assets, address _depositor) internal override returns (uint256 shares) {
