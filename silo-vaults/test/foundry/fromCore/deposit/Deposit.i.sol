@@ -9,8 +9,6 @@ import {VaultsLittleHelper} from "../_common/VaultsLittleHelper.sol";
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc DepositTest -vv
 */
 contract DepositTest is VaultsLittleHelper {
-    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
-
     /*
     forge test -vv --ffi --mt test_deposit_revertsZeroAssets
     */

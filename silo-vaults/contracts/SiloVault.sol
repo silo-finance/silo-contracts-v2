@@ -671,9 +671,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             uint256 shares = _ERC20BalanceOf(address(market), address(this));
             uint256 assets = market.convertToAssets(shares);
-            uint256 maxDeposit = market.maxDeposit(address(this));
+            uint256 depositMax = market.maxDeposit(address(this));
 
-            totalSuppliable += Math.min(maxDeposit, UtilsLib.zeroFloorSub(supplyCap, assets));
+            totalSuppliable += Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
         }
     }
 
