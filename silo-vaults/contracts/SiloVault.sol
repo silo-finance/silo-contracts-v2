@@ -718,6 +718,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ERC4626
     /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
+        if (_shares == 0) revert ErrorsLib.InputZeroShares();
+
         super._deposit(_caller, _receiver, _assets, _shares);
 
         _supplyERC4626(_assets);
