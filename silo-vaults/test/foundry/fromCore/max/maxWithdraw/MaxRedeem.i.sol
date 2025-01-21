@@ -17,7 +17,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
     FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxRedeem_zero
     */
     function test_maxRedeem_zero() public view {
-        uint256 maxRedeem = silo1.maxRedeem(depositor);
+        uint256 maxRedeem = vault.maxRedeem(depositor);
         assertEq(maxRedeem, 0, "nothing to redeem");
     }
 
@@ -35,7 +35,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
         _deposit(_assets, depositor);
         _deposit(_assets2, address(1)); // any
 
-        uint256 maxRedeem = silo0.maxRedeem(depositor);
+        uint256 maxRedeem = vault.maxRedeem(depositor);
         assertEq(maxRedeem, _assets, "max withdraw == _assets/shares if no interest");
 
         _assertDepositorCanNotRedeemMore(maxRedeem);
@@ -58,7 +58,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
         uint256 maxRedeem = vault.maxRedeem(depositor);
         assertLt(maxRedeem, vault.balanceOf(depositor), "with debt you can not withdraw all");
 
-        _assertDepositorCanNotRedeemMore(maxRedeem, 0);
+        _assertDepositorCanNotRedeemMore(maxRedeem);
     }
 
     /*
@@ -79,13 +79,11 @@ contract MaxRedeemTest is VaultsLittleHelper {
         uint256 maxRedeem = vault.maxRedeem(depositor);
         assertLt(maxRedeem, vault.balanceOf(depositor), "with debt you can not withdraw all");
 
-        _assertDepositorCanNotRedeemMore(maxRedeem, 2);
+        _assertDepositorCanNotRedeemMore(maxRedeem, 3);
     }
 
     function _assertDepositorHasNothingToRedeem() internal view {
-        (, address collateralShareToken, ) = silo0.config().getShareTokens(address(silo0));
-
-        assertEq(silo0.maxRedeem(depositor), 0, "expect maxRedeem to be 0");
+        assertEq(vault.maxRedeem(depositor), 0, "expect maxRedeem to be 0");
         assertEq(vault.balanceOf(depositor), 0, "expect share balance to be 0");
     }
 
