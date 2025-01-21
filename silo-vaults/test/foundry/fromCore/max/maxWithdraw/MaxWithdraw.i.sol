@@ -8,11 +8,9 @@ import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
 */
 contract MaxWithdrawTest is VaultsLittleHelper {
     address immutable depositor;
-    address immutable borrower;
 
     constructor() {
         depositor = makeAddr("Depositor");
-        borrower = makeAddr("Borrower");
     }
     
     /*
@@ -106,9 +104,9 @@ contract MaxWithdrawTest is VaultsLittleHelper {
         uint256 counterExample = _underestimate;
         emit log_named_uint("=========== [counterexample] testing counterexample for maxWithdraw with", counterExample);
 
-        vm.prank(borrower);
+        vm.prank(depositor);
         vm.expectRevert();
-        vault.withdraw(counterExample, borrower, borrower);
+        vault.withdraw(counterExample, depositor, depositor);
     }
 
     function _assertMaxWithdrawIsZeroAtTheEnd() internal {
@@ -118,7 +116,7 @@ contract MaxWithdrawTest is VaultsLittleHelper {
     function _assertMaxWithdrawIsZeroAtTheEnd(uint256 _underestimate) internal {
         emit log_named_uint("================= _assertMaxWithdrawIsZeroAtTheEnd ================= +/-", _underestimate);
 
-        uint256 maxWithdraw = vault.maxWithdraw(borrower);
+        uint256 maxWithdraw = vault.maxWithdraw(depositor);
 
         assertLe(
             maxWithdraw,
@@ -129,6 +127,8 @@ contract MaxWithdrawTest is VaultsLittleHelper {
 
     function _reduceLiquidity(uint256 _depositAssets, uint256 _toBorrow) internal {
         _deposit(_depositAssets, depositor);
+
+        address borrower = makeAddr("Borrower");
 
         vm.startPrank(borrower);
         silo0.deposit(_toBorrow * 10, borrower);
