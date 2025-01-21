@@ -669,8 +669,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyCap = config[market].cap;
             if (supplyCap == 0) continue;
 
-            uint256 shares = _ERC20BalanceOf(address(market), address(this));
-            uint256 assets = market.convertToAssets(shares);
+            (uint256 assets,) = _supplyBalance(market);
             uint256 depositMax = market.maxDeposit(address(this));
 
             totalSuppliable += Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
@@ -824,8 +823,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (supplyCap == 0) continue;
 
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-            uint256 supplyShares = _ERC20BalanceOf(address(market), address(this));
-            uint256 supplyAssets = market.convertToAssets(supplyShares);
+            (uint256 supplyAssets, uint256 supplyShares) = _supplyBalance(market);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
