@@ -7,7 +7,6 @@ import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
  FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ERC4626ComplianceTest -vvv
- TODO apply for silo-core?
 */
 contract ERC4626ComplianceTest is IntegrationTest, ERC4626Test {
     function setUp() public override(IntegrationTest, ERC4626Test) {

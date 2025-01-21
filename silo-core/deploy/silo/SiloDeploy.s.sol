@@ -115,7 +115,7 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] deploy done");
 
-        SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
+        SiloDeployments.save(ChainsLib.chainAlias(), configName, address(siloConfig));
 
         _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
@@ -270,7 +270,7 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
-        contractAddress = getDeployedAddress(_name);
+        contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias());
         console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
     }
 

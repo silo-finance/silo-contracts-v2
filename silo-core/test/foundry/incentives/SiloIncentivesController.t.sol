@@ -60,6 +60,19 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_invalidDistributionEnd
+    function test_createIncentivesProgram_invalidDistributionEnd() public {
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: address(0),
+            distributionEnd: uint40(block.timestamp - 1),
+            emissionPerSecond: 0
+        }));
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
     function test_createIncentivesProgram_InvalidIncentivesProgramName() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
@@ -68,7 +81,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: "",
             rewardToken: address(0),
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 0
         }));
     }
@@ -81,7 +94,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: address(0),
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 0
         }));
     }
@@ -192,7 +205,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: _rewardToken,
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: 1e18
         }));
 
@@ -247,6 +260,56 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), 10e18, "invalid user2 balance");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setDistributionEnd_Success
+    function test_setDistributionEnd_Success() public {
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(block.timestamp + 100),
+            emissionPerSecond: 1e18
+        }));
+
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+        uint256 totalSupply = ERC20Mock(_notifier).totalSupply();
+
+        vm.prank(_notifier);
+        _controller.afterTokenTransfer({
+            _sender: address(0),
+            _senderBalance: 0,
+            _recipient: user1,
+            _recipientBalance: user1Deposit1,
+            _totalSupply: totalSupply,
+            _amount: user1Deposit1
+        });
+
+        IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
+
+        uint256 lastUpdateTimestamp = details.lastUpdateTimestamp;
+        assertEq(lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+
+        vm.warp(block.timestamp + 100);
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp));
+
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        uint256 indexBefore = details.index;
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+
+        vm.warp(block.timestamp + 100);
+
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp));
+
+        details = _controller.incentivesProgram(_PROGRAM_NAME);
+        assertEq(details.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
+        assertEq(details.index, indexBefore, "invalid index");
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_decrease_rewards
     function test_decrease_rewards() public {
         ERC20Mock(_rewardToken).mint(address(_controller), 11e18);
@@ -257,7 +320,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
             name: _PROGRAM_NAME,
             rewardToken: _rewardToken,
-            distributionEnd: 0,
+            distributionEnd: uint40(block.timestamp),
             emissionPerSecond: initialEmissionPerSecond
         }));
 
@@ -856,6 +919,33 @@ contract SiloIncentivesControllerTest is Test {
 
         rewards = _controller.getRewardsBalance(user1, programsNames2);
         assertEq(rewards, expectedRewards / 2, "expected rewards / 2");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setDistributionEnd_invalidDistributionEnd
+    function test_setDistributionEnd_invalidDistributionEnd() public {
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
+        vm.prank(_owner);
+        _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp - 1));
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test --ffi --mt test_rescueRewards_onlyOwner -vvv
+    function test_rescueRewards_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        _controller.rescueRewards(_rewardToken);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test --ffi --mt test_rescueRewards_success -vvv
+    function test_rescueRewards_success() public {
+        uint256 amount = 1000e18;
+        ERC20Mock(_rewardToken).mint(address(_controller), amount);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(address(_controller)), amount, "expected max balance");
+
+        vm.prank(_owner);
+        _controller.rescueRewards(_rewardToken);
+
+        assertEq(ERC20Mock(_rewardToken).balanceOf(address(_controller)), 0, "to have no balance");
+        assertEq(ERC20Mock(_rewardToken).balanceOf(_owner), amount, "owner must have max balance");
     }
 
     function _claimRewards(address _user, address _to, string memory _programName) internal {
