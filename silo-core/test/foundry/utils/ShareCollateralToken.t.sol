@@ -55,7 +55,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
 
     function _checkDecimals(ShareCollateralToken _share, IERC20 _token) private view {
         assertEq(
-            (10 ** IERC20Metadata(address(_share)).decimals()) / SiloMathLib._DECIMALS_OFFSET_POW,
+            (10 ** IERC20Metadata(address(_share)).decimals()),
             10 ** IERC20Metadata(address(_token)).decimals(),
             "expect valid collateral decimals"
         );
