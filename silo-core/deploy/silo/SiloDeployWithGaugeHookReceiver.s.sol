@@ -20,6 +20,7 @@ contract SiloDeployWithGaugeHookReceiver is SiloDeploy {
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
     {
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, ChainsLib.chainAlias());
+        // address timelock = AddrLib.getAddress(AddrKey.DAO);
 
         hookReceiver = ISiloDeployer.ClonableHookReceiver({
             implementation: _implementation,

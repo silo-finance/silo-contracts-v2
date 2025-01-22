@@ -179,3 +179,12 @@ forge script silo-core/deploy/MainnetDeploy.s.sol \
 
 In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeployWithGaugeHookReceiver` and set
 `daoFeeReceiver` and `timelock` addresses manually to eg. deployer address.
+
+### New market deploy
+
+- run `silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol` script
+
+### New Silo deployer with Silo, ProtectedShareToken, and DebtShareToken implementations
+
+- run `silo-core/deploy/SiloDeployerDeploy.s.sol` script
+- then deploy new market

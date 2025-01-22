@@ -361,6 +361,7 @@ contract SiloDeploy is CommonDeploy {
         );
 
         console2.log("\n");
+        console2.log("\tdecimals      ", IERC20Metadata(_silo).decimals());
 
         string memory icon;
         uint256 configValueUint256 = _siloInitData.daoFee;
