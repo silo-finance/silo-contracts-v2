@@ -15,7 +15,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 /**
 FOUNDRY_PROFILE=core CONFIG=0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab \
     forge script silo-core/deploy/silo/SiloVerifier.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC
  */
 contract SiloVerifier is Script, Test {
     function run() public {
