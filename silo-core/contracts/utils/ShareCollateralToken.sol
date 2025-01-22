@@ -21,11 +21,6 @@ abstract contract ShareCollateralToken is ShareToken {
         _burn(_owner, _amount);
     }
 
-    /// @dev decimals of share token
-    function decimals() public view virtual override(ShareToken) returns (uint8) {
-        return ShareTokenLib.decimals() + uint8(SiloMathLib._DECIMALS_OFFSET);
-    }
-
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
