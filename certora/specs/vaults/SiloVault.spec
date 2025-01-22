@@ -33,6 +33,8 @@ methods {
 
     function _.claimRewardsAndDistribute() external => claimRewardsAndDistribute_cvl() expect void;
 
+    function _.claimRewardsAndDistribute() external => claimRewardsAndDistribute_cvl() expect void;
+
     // no implementation around, I think, currently we have an empty dummy one -- summarize somehow?
     function _.afterTokenTransfer(address,uint256,address,uint256,uint256,uint256) external => 
         DISPATCHER(true);
