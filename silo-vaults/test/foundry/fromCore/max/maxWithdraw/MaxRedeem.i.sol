@@ -131,8 +131,8 @@ contract MaxRedeemTest is VaultsLittleHelper {
         address borrower = makeAddr("Borrower");
 
         vm.startPrank(borrower);
-        silo0.deposit(_toBorrow * 10, borrower);
-        silo1.borrow(_toBorrow, borrower, borrower);
+        _silo0().deposit(_toBorrow * 10, borrower);
+        _silo1().borrow(_toBorrow, borrower, borrower);
         vm.stopPrank();
     }
 }
