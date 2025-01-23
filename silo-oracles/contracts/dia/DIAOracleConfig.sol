@@ -43,5 +43,6 @@ contract DIAOracleConfig is Layer1OracleConfig {
         config.convertToQuote = _CONVERT_TO_QUOTE;
         config.normalizationDivider = _DECIMALS_NORMALIZATION_DIVIDER;
         config.normalizationMultiplier = _DECIMALS_NORMALIZATION_MULTIPLIER;
+        config.invertSecondPrice = _INVERT_SECONDARY_PRICE;
     }
 }

@@ -74,6 +74,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["WETH"]));
         cfg.secondaryKey = "ETH/USD";
+        cfg.invertSecondPrice = true;
 
         uint256 gasStart = gasleft();
         DIAOracle oracle = ORACLE_FACTORY.create(cfg);
