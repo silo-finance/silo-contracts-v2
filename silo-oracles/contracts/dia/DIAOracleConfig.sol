@@ -17,6 +17,9 @@ contract DIAOracleConfig is Layer1OracleConfig {
     /// @dev if set, we will use secondary price to convert to quote
     bool internal immutable _CONVERT_TO_QUOTE; // solhint-disable-line var-name-mixedcase
 
+    /// @dev If TRUE price will be 1/price
+    bool internal immutable _INVERT_SECONDARY_PRICE; // solhint-disable-line var-name-mixedcase
+
     /// @dev all verification should be done by factory
     constructor(IDIAOracle.DIADeploymentConfig memory _config)
         Layer1OracleConfig(
@@ -29,6 +32,7 @@ contract DIAOracleConfig is Layer1OracleConfig {
     {
         _DIA_ORACLEV2 = _config.diaOracle;
         _CONVERT_TO_QUOTE = bytes(_config.secondaryKey).length != 0;
+        _INVERT_SECONDARY_PRICE = _config.invertSecondPrice;
     }
 
     function getConfig() external view virtual returns (IDIAOracle.DIAConfig memory config) {

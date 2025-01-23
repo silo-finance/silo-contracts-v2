@@ -73,13 +73,15 @@ library OracleNormalization {
     /// (can not be higher than uint128!)
     /// @param _normalizationDivider constant that allows to translate output price to expected decimals
     /// @param _normalizationMultiplier constant that allows to translate output price to expected decimals
+    /// @param _invertSecondPrice if TRUE we have to 1/secondPrice
     /// @return assetPrice uint256 18 decimals price
     function normalizePrices(
         uint256 _baseAmount,
         uint256 _assetPrice,
         uint256 _secondPrice,
         uint256 _normalizationDivider,
-        uint256 _normalizationMultiplier
+        uint256 _normalizationMultiplier,
+        bool _invertSecondPrice
     )
         internal
         pure
@@ -92,17 +94,18 @@ library OracleNormalization {
             // however if you call normalizePrice directly (because it is open method) you can create overflow
             // div is safe
             unchecked {
-                return _baseAmount * _assetPrice / _normalizationDivider / _secondPrice;
+                assetPrice = _baseAmount * _assetPrice;
+                assetPrice = _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
+                assetPrice = assetPrice / _normalizationDivider;
             }
+
+            return assetPrice;
         }
 
-        uint256 mul;
         // this is save, check explanation above
-        unchecked { mul = _baseAmount * _assetPrice; }
+        unchecked { assetPrice = _baseAmount * _assetPrice; }
+        assetPrice = assetPrice * _normalizationMultiplier;
 
-        mul = mul * _normalizationMultiplier;
-
-        // div is safe
-        unchecked { return mul / _secondPrice; }
+        return _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
     }
 }

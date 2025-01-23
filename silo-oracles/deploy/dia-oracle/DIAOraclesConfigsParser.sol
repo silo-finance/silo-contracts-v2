@@ -29,6 +29,7 @@ library DIAOraclesConfigsParser {
         uint256 heartbeat = KV.getUint(configJson, _name, "heartbeat");
         uint256 normalizationDivider = KV.getUint(configJson, _name, "normalizationDivider");
         uint256 normalizationMultiplier = KV.getUint(configJson, _name, "normalizationMultiplier");
+        bool invertSecondPrice = KV.getBoolean(configJson, _name, "invertSecondPrice");
 
         require(heartbeat <= type(uint32).max, "heartbeat should be uint32");
         require(normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
@@ -43,7 +44,8 @@ library DIAOraclesConfigsParser {
             primaryKey: primaryKey,
             secondaryKey: secondaryKey,
             normalizationDivider: normalizationDivider,
-            normalizationMultiplier: normalizationMultiplier
+            normalizationMultiplier: normalizationMultiplier,
+            invertSecondPrice: invertSecondPrice
         });
     }
 
