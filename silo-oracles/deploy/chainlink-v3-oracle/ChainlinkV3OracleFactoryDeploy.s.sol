@@ -8,7 +8,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol";
 
 /**
-ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=oracles \
+ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
 

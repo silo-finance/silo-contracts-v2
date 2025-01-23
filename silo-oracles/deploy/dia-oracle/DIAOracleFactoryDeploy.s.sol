@@ -8,7 +8,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol";
 
 /**
-ETHERSCAN_API_KEY=$VERIFIER_URL_SONIC VERIFIER_URL_SONIC=$VERIFIER_URL_SONIC FOUNDRY_PROFILE=oracles \
+ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
     --ffi $RPC_SONIC --broadcast --verify
  */
