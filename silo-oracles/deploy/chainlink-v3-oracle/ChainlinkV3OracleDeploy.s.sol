@@ -12,7 +12,7 @@ import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=REDSTONE_solvBTC_USD \
+FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
@@ -72,11 +72,11 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         ChainlinkV3Oracle _oracle,
         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,
         uint256 _baseAmount
-    ) internal view returns (uint256) {
+    ) internal view returns (uint256 quote) {
          try _oracle.quote(_baseAmount, address(_config.baseToken)) returns (uint256 price) {
             require(price > 0, string.concat("Quote for ", vm.toString(_baseAmount), "wei is 0"));
             console2.log(string.concat("Quote for ", vm.toString(_baseAmount), "wei is ", vm.toString(price)));
-            return price;
+            quote = price;
         } catch {
             console2.log(string.concat("Failed to quote", vm.toString(_baseAmount), "wei"));
         }

@@ -17,7 +17,8 @@ abstract contract DIAConfigDefault is TokensGenerator {
             "RDPX/USD",
             "",
             1,
-                0
+            0,
+            false
         );
     }
 
@@ -34,7 +35,8 @@ abstract contract DIAConfigDefault is TokensGenerator {
             "RDPX/USD",
             "",
             _divider,
-            _multiplier
+            _multiplier,
+            false
         );
     }
 
