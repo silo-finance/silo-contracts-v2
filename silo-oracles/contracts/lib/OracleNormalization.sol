@@ -87,25 +87,20 @@ library OracleNormalization {
         pure
         returns (uint256 assetPrice)
     {
-        if (_normalizationMultiplier == 0) {
-            // `_baseAmount * _assetPrice` is safe because we multiply uint128 * uint128
-            // - _baseAmount is checked in `_quote`, that checks covers `*1e8`, so we sure it is up to uint128
-            // - _assetPrice is uint128
-            // however if you call normalizePrice directly (because it is open method) you can create overflow
-            // div is safe
-            unchecked {
-                assetPrice = _baseAmount * _assetPrice;
-                assetPrice = _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
-                assetPrice = assetPrice / _normalizationDivider;
-            }
+        // `_baseAmount * _assetPrice` is safe because we multiply uint128 * uint128
+        // - _baseAmount is checked in `_quote`, that checks covers `*1e8`, so we sure it is up to uint128
+        // - _assetPrice is uint128
+        // however if you call normalizePrice directly (because it is open method) you can create overflow
+        unchecked { assetPrice = _baseAmount * _assetPrice; }
 
+        if (_normalizationMultiplier == 0) {
+            assetPrice = _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
+            // div is safe
+            unchecked {    assetPrice = assetPrice / _normalizationDivider; }
             return assetPrice;
         }
 
-        // this is save, check explanation above
-        unchecked { assetPrice = _baseAmount * _assetPrice; }
         assetPrice = assetPrice * _normalizationMultiplier;
-
         return _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
     }
 }
