@@ -8,9 +8,15 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol";
 
 /**
-ETHERSCAN_API_KEY=$VERIFIER_URL_SONIC VERIFIER_URL_SONIC=$VERIFIER_URL_SONIC FOUNDRY_PROFILE=oracles \
+ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
+
+FOUNDRY_PROFILE=oracles forge verify-contract 0x17B0FD3eB9CFbdA5B46A0C896e28b3F0c5a7F61d \
+    ChainlinkV3OracleFactory \
+    --compiler-version 0.8.28 \
+    --rpc-url $RPC_SONIC \
+    --watch
  */
 contract ChainlinkV3OracleFactoryDeploy is CommonDeploy {
     function run() public returns (ChainlinkV3OracleFactory factory) {
