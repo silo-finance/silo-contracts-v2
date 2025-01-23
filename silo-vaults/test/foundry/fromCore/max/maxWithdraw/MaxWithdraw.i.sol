@@ -68,19 +68,15 @@ contract MaxWithdrawTest is VaultsLittleHelper {
     FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxWithdraw_whenInterest_
     */
     /// forge-config: vaults-tests.fuzz.runs = 1000
-    function test_maxWithdraw_whenInterest_fuzz(
-        uint128 _collateral,
-        uint128 _toBorrow
-    ) public {
-        vm.assume(_toBorrow > 0);
-        vm.assume(_toBorrow <= _collateral);
+    function test_maxWithdraw_whenInterest_fuzz(uint128 _collateral) public {
+        vm.assume(_collateral > 0);
 
-        _reduceLiquidity(_collateral, _toBorrow);
+        vault.deposit(_collateral, depositor);
 
-        vm.warp(block.timestamp + 100 days);
+        _createInterest();
 
         uint256 maxWithdraw = vault.maxWithdraw(depositor);
-        assertLt(maxWithdraw, _collateral, "with debt you can not withdraw all");
+        assertGt(maxWithdraw, _collateral, "expect to earn because we have interest in silo");
 
         _assertDepositorCanNotWithdrawMore(maxWithdraw, 3);
         _assertMaxWithdrawIsZeroAtTheEnd(1);
@@ -133,6 +129,25 @@ contract MaxWithdrawTest is VaultsLittleHelper {
         vm.startPrank(borrower);
         _silo0().deposit(_toBorrow * 10, borrower);
         _silo1().borrow(_toBorrow, borrower, borrower);
+        vm.stopPrank();
+    }
+
+    function _createInterest() internal {
+        vm.prank(depositor);
+        vault.deposit(type(uint128).max, depositor);
+
+        address borrower = makeAddr("Borrower");
+
+        vm.startPrank(borrower);
+        _silo0().deposit(type(uint128).max, borrower);
+        _silo1().borrow(type(uint64).max, borrower, borrower);
+
+        vm.warp(block.timestamp + 200 days);
+
+        _silo0().accrueInterest();
+        _silo1().accrueInterest();
+
+        _silo1().repay(_silo1().maxRepay(borrower), borrower);
         vm.stopPrank();
     }
 }
