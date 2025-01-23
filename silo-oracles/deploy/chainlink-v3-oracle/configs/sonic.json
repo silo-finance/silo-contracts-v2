@@ -64,7 +64,7 @@
         "primaryHeartbeat": 22001,
         "secondaryAggregator": "CHAINLINK_USDC.e_USD_aggregator",
         "secondaryHeartbeat": 87001,
-        "normalizationDivider": 1e16,
+        "normalizationDivider": 1e4,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     }
