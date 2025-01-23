@@ -16,6 +16,7 @@ interface IDIAOracle {
     /// @param secondaryKey if provided, price will be translated to quote using secondary price
     /// both keys must be present in `diaOracle` and we assuming both prices are denominated in same token eg:
     /// primary: ABC/USD, secondary: ETH/USD, result will be ABC/ETH.
+    /// @param invertSecondPrice in case we using second price, this flag will tell us if we need to 1/secondPrice
     struct DIADeploymentConfig {
         IDIAOracleV2 diaOracle;
         IERC20Metadata baseToken;
@@ -25,6 +26,7 @@ interface IDIAOracle {
         string secondaryKey;
         uint256 normalizationDivider;
         uint256 normalizationMultiplier;
+        bool invertSecondPrice;
     }
 
     struct DIAConfig {
@@ -35,6 +37,7 @@ interface IDIAOracle {
         bool convertToQuote;
         uint256 normalizationDivider;
         uint256 normalizationMultiplier;
+        bool invertSecondPrice;
     }
 
     event DIAConfigDeployed(DIAOracleConfig configAddress);

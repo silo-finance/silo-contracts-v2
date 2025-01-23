@@ -20,4 +20,5 @@ library AddrKey {
     string constant public stS = "stS";
     string constant public ODOS_ROUTER = "ODOS_ROUTER";
     string constant public DAO = "DAO";
+    string constant public scUSD = "scUSD";
 }
