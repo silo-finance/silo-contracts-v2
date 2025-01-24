@@ -50,8 +50,15 @@ Supporting the following scenarios:
 
 ## repay
 - repay token using SiloRouter.multicall
+    SiloRouter.transferFrom(IERC20 _token, address _to, uint256 _amount)
+    SiloRouter.approve(IERC20 _token, address _spender, uint256 _amount)
+    SiloRouter.repay(ISilo _silo, uint256 _assets, address _borrower)
 - repay native & wrap in a single tx using SiloRouter.multicall
+    SiloRouter.wrap(IWrappedNativeToken _native, uint256 _amount)
+    SiloRouter.approve(IERC20 _token, address _spender, uint256 _amount)
+    SiloRouter.repay(ISilo _silo, uint256 _assets, address _borrower)
 - full repay token using SiloRouter.multicall
+    SiloRouter.repayAll(ISilo _silo, address _borrower)
  */
 
 /// @title SiloRouter
@@ -176,5 +183,21 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
         address _receiver
     ) external payable whenNotPaused returns (uint256 shares) {
         shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
+    }
+
+    /// @inheritdoc ISiloRouter
+    function repay(ISilo _silo, uint256 _assets, address _borrower) external payable returns (uint256 shares) {
+        shares = _silo.repay(_assets, _borrower);
+    }
+
+    /// @inheritdoc ISiloRouter
+    function repayAll(ISilo _silo, address _borrower) external payable returns (uint256 shares) {
+        uint256 repayAmount = _silo.maxRepay(_borrower);
+        IERC20 asset = IERC20(_silo.asset());
+
+        asset.safeTransferFrom(msg.sender, address(this), repayAmount);
+        asset.approve(address(_silo), repayAmount);
+
+        shares = _silo.repay(repayAmount, _borrower);
     }
 }
