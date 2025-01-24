@@ -49,4 +49,5 @@ silo-core/deploy/input/_importFromCsv/
 !silo-core/deploy/input/_importFromCsv/marketImport.py
 
 **/broadcast/
+**/broadcast/*
 !silo-core/broadcast/SiloDeployerDeploy.s.sol/**/run-latest.json
