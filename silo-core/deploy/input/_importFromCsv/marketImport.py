@@ -98,6 +98,7 @@ json_structure = {
 
 with open(output_file, "w", encoding="utf-8") as jsonfile:
     json.dump(json_structure, jsonfile, indent=4, ensure_ascii=False)
+    jsonfile.write("\n")  # Add a newline at the end of the file
 
 print(f"Data has been saved to {output_file}")
 
