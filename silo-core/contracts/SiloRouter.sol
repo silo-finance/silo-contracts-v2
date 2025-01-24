@@ -31,10 +31,17 @@ Supporting the following scenarios:
 
 ## withdraw
 - withdraw token using Silo.withdraw
-    SiloRouter.withdraw(ISilo _silo, uint256 _amount, ISilo.CollateralType _collateral)
+    SiloRouter.withdraw(ISilo _silo, uint256 _amount, address _receiver, ISilo.CollateralType _collateral)
 - withdraw wrapped native token and unwrap in a single tx using SiloRouter.multicall
+    SiloRouter.withdraw(ISilo _silo, uint256 _amount, address _receiver, ISilo.CollateralType _collateral)
+    SiloRouter.unwrap(IWrappedNativeToken _native, uint256 _amount)
+    SiloRouter.sendValue(address payable _to, uint256 _amount)
 - full withdraw token using Silo.redeem
+    SiloRouter.withdrawAll(ISilo _silo, address _receiver, ISilo.CollateralType _collateral)
 - full withdraw wrapped native token and unwrap in a single tx using SiloRouter.multicall
+    SiloRouter.withdrawAll(ISilo _silo, address _receiver, ISilo.CollateralType _collateral)
+    SiloRouter.unwrap(IWrappedNativeToken _native, uint256 _amount)
+    SiloRouter.sendValue(address payable _to, uint256 _amount)
 
 ## repay
 - repay token using SiloRouter.multicall
@@ -92,9 +99,20 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
         _native.withdraw(_amount);
     }
 
+    function unwrapAll(IWrappedNativeToken _native) external payable virtual whenNotPaused {
+        uint256 balance = _native.balanceOf(address(this));
+        _native.withdraw(balance);
+    }
+
     /// @inheritdoc ISiloRouter
     function sendValue(address payable _to, uint256 _amount) external payable whenNotPaused {
         Address.sendValue(_to, _amount);
+    }
+
+    /// @inheritdoc ISiloRouter
+    function sendValueAll(address payable _to) external payable whenNotPaused {
+        uint256 balance = address(this).balance;
+        Address.sendValue(_to, balance);
     }
 
     /// @inheritdoc ISiloRouter
@@ -125,5 +143,15 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
         ISilo.CollateralType _collateral
     ) external payable whenNotPaused returns (uint256 assets) {
         assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
+    }
+
+    /// @inheritdoc ISiloRouter
+    function withdrawAll(
+        ISilo _silo,
+        address _receiver,
+        ISilo.CollateralType _collateral
+    ) external payable whenNotPaused returns (uint256 assets) {
+        uint256 sharesAmount = _silo.maxRedeem(msg.sender, _collateral);
+        assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
     }
 }
