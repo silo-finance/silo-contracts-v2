@@ -29,6 +29,9 @@ Supporting the following scenarios:
 - borrow token using Silo.borrow or Silo.borrowSameAsset
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
 - borrow wrapped native token and unwrap in a single tx using SiloRouter.multicall
+    SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
+    SiloRouter.unwrap(IWrappedNativeToken _native, uint256 _amount)
+    SiloRouter.sendValue(address payable _to, uint256 _amount)
 
 ## withdraw
 - withdraw token using Silo.withdraw
@@ -157,7 +160,20 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function borrow(ISilo _silo, uint256 _assets, address _receiver) external payable whenNotPaused returns (uint256 shares) {
+    function borrow(
+        ISilo _silo,
+        uint256 _assets,
+        address _receiver
+    ) external payable whenNotPaused returns (uint256 shares) {
         shares = _silo.borrow(_assets, _receiver, msg.sender);
+    }
+
+    /// @inheritdoc ISiloRouter
+    function borrowSameAsset(
+        ISilo _silo,
+        uint256 _assets,
+        address _receiver
+    ) external payable whenNotPaused returns (uint256 shares) {
+        shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
     }
 }

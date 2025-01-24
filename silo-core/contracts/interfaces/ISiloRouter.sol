@@ -90,4 +90,14 @@ interface ISiloRouter {
     /// @param _assets The amount of tokens to borrow
     /// @param _receiver The address of the receiver
     function borrow(ISilo _silo, uint256 _assets, address _receiver) external payable returns (uint256 shares);
+
+    /// @notice Borrow tokens from a silo using the same asset
+    /// @param _silo The address of the silo
+    /// @param _assets The amount of tokens to borrow
+    /// @param _receiver The address of the receiver
+    function borrowSameAsset(
+        ISilo _silo,
+        uint256 _assets,
+        address _receiver
+    ) external payable returns (uint256 shares);
 }

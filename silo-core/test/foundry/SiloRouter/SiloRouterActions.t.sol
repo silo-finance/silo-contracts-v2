@@ -397,4 +397,61 @@ contract SiloRouterActionsTest is IntegrationTest {
         assertNotEq(IERC20(debtToken1).balanceOf(borrower), 0, "Account should have debt tokens");
         assertEq(IERC20(token1).balanceOf(borrower), borrowAmount, "Account should have tokens");
     }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_borrowNativeAndUnwrapFlow
+    function test_siloRouter_borrowNativeAndUnwrapFlow() public {
+        vm.prank(wethWhale);
+        IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
+
+        vm.prank(borrower);
+        IERC20(token1).approve(address(silo1), _TOKEN1_AMOUNT);
+
+        vm.prank(borrower);
+        ISilo(silo1).deposit(_TOKEN1_AMOUNT, borrower);
+
+        assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
+
+        vm.prank(borrower);
+        IERC20(debtToken0).approve(address(router), type(uint256).max);
+
+        uint256 borrowAmount = ISilo(silo0).maxBorrow(borrower);
+
+        bytes[] memory data = new bytes[](3);
+        data[0] = abi.encodeCall(router.borrow, (ISilo(silo0), borrowAmount, address(router)));
+        data[1] = abi.encodeCall(router.unwrap, (IWrappedNativeToken(nativeToken), borrowAmount));
+        data[2] = abi.encodeCall(router.sendValue, (payable(borrower), borrowAmount));
+
+        vm.prank(borrower);
+        router.multicall(data);
+
+        assertNotEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should have debt tokens");
+        assertEq(borrower.balance, borrowAmount, "Account should have tokens");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_borrowSameAssetFlow
+    function test_siloRouter_borrowSameAssetFlow() public {
+        vm.prank(borrower);
+        IERC20(token0).approve(address(silo0), _TOKEN0_AMOUNT);
+
+        vm.prank(borrower);
+        ISilo(silo0).deposit(_TOKEN0_AMOUNT, borrower);
+
+        uint256 borrowAmount = ISilo(silo0).maxBorrowSameAsset(borrower);
+
+        assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
+
+        uint256 balanceBefore = IERC20(token0).balanceOf(borrower);
+
+        vm.prank(borrower);
+        IERC20(debtToken0).approve(address(router), type(uint256).max);
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeCall(router.borrowSameAsset, (ISilo(silo0), borrowAmount, address(borrower)));
+
+        vm.prank(borrower);
+        router.multicall(data);
+
+        assertNotEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should have debt tokens");
+        assertEq(IERC20(token0).balanceOf(borrower), balanceBefore + borrowAmount, "Account should have tokens");
+    }
 }
