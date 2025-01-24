@@ -1,3 +1,11 @@
+"""
+1. import data to `data.csv`
+2. run this script:
+python3 silo-core/deploy/input/_importFromCsv/marketImport.py
+
+3. copy data from `market.json` to your file and fill up missing fields
+"""
+
 import csv
 import json
 import os
