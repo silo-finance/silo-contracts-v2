@@ -31,6 +31,7 @@ Supporting the following scenarios:
 
 ## withdraw
 - withdraw token using Silo.withdraw
+    SiloRouter.withdraw(ISilo _silo, uint256 _amount, ISilo.CollateralType _collateral)
 - withdraw wrapped native token and unwrap in a single tx using SiloRouter.multicall
 - full withdraw token using Silo.redeem
 - full withdraw wrapped native token and unwrap in a single tx using SiloRouter.multicall
@@ -112,7 +113,17 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function deposit(ISilo _silo, uint256 _amount) external payable whenNotPaused {
-        _silo.deposit(_amount, msg.sender);
+    function deposit(ISilo _silo, uint256 _amount) external payable whenNotPaused returns (uint256 shares) {
+        shares = _silo.deposit(_amount, msg.sender);
+    }
+
+    /// @inheritdoc ISiloRouter
+    function withdraw(
+        ISilo _silo,
+        uint256 _amount,
+        address _receiver,
+        ISilo.CollateralType _collateral
+    ) external payable whenNotPaused returns (uint256 assets) {
+        assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
     }
 }

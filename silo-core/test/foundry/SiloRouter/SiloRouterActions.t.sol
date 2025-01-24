@@ -245,4 +245,54 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
     }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_withdrawFlow
+    function test_siloRouter_withdrawFlow() public {
+        uint256 depositorBalance = IERC20(token0).balanceOf(depositor);
+
+        vm.prank(depositor);
+        IERC20(token0).approve(address(silo0), _S_BALANCE);
+
+        vm.prank(depositor);
+        ISilo(silo0).deposit(_S_BALANCE, depositor);
+
+        assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
+
+        vm.prank(depositor);
+        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), _S_BALANCE, depositor, ISilo.CollateralType.Collateral));
+
+        vm.prank(depositor);
+        router.multicall(data);
+
+        assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have deposit");
+        assertEq(IERC20(token0).balanceOf(depositor), depositorBalance, "Account should have tokens");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_withdrawNativeAndUnwrapFlow
+    function test_siloRouter_withdrawNativeAndUnwrapFlow() public {
+        vm.prank(depositor);
+        IERC20(token0).approve(address(silo0), _S_BALANCE);
+
+        vm.prank(depositor);
+        ISilo(silo0).deposit(_S_BALANCE, depositor);
+
+        assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
+
+        vm.prank(depositor);
+        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+
+        bytes[] memory data = new bytes[](3);
+        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), _S_BALANCE, address(router), ISilo.CollateralType.Collateral));
+        data[1] = abi.encodeCall(router.unwrap, (IWrappedNativeToken(nativeToken), _S_BALANCE));
+        data[2] = abi.encodeCall(router.sendValue, (payable(depositor), _S_BALANCE));
+
+        vm.prank(depositor);
+        router.multicall(data);
+
+        assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have deposit");
+        assertEq(depositor.balance, _S_BALANCE, "Account should have tokens");
+    }
 }

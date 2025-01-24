@@ -53,5 +53,17 @@ interface ISiloRouter {
     /// @notice Deposit tokens into a silo
     /// @param _silo The address of the silo
     /// @param _amount The amount of tokens to deposit
-    function deposit(ISilo _silo, uint256 _amount) external payable;
+    function deposit(ISilo _silo, uint256 _amount) external payable returns (uint256 shares);
+
+    /// @notice Withdraw tokens from a silo
+    /// @param _silo The address of the silo
+    /// @param _amount The amount of tokens to withdraw
+    /// @param _receiver The address of the receiver
+    /// @param _collateral The address of the collateral token
+    function withdraw(
+        ISilo _silo,
+        uint256 _amount,
+        address _receiver,
+        ISilo.CollateralType _collateral
+    ) external payable returns (uint256 assets);
 }
