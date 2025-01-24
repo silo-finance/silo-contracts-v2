@@ -27,8 +27,7 @@ methods {
     // biggy for summarizing -- the Math.sol implementation is very expensive (because it does things at full precision, among other things)
     function _.mulDiv(uint256 x, uint256 y, uint256 denominator) internal => mulDiv_cvl(x, y, denominator) expect (uint256);
 
-    // this might introduce false counterexamples
-    function Strings.toHexString(uint256 value, uint256 length) internal returns (string memory) => NONDET;
+    // function Strings.toHexString(uint256 value, uint256 length) internal returns (string memory) => CONSTANT;
 }
 
 hook Sload address wQueue withdrawQueue[INDEX uint i] {
