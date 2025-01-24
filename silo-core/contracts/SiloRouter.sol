@@ -22,7 +22,6 @@ Supporting the following scenarios:
     SiloRouter.deposit(ISilo _silo, uint256 _amount)
 - deposit native & wrap in a single tx using SiloRouter.multicall
     SiloRouter.wrap(IWrappedNativeToken _native, uint256 _amount)
-    SiloRouter.transferFrom(IERC20 _token, address _to, uint256 _amount)
     SiloRouter.approve(IERC20 _token, address _spender, uint256 _amount)
     SiloRouter.deposit(ISilo _silo, uint256 _amount)
 
