@@ -160,7 +160,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         );
 
         data[1] = abi.encodeWithSelector(router.unwrap.selector, IWrappedNativeToken(nativeToken), _S_BALANCE);
-        data[2] = abi.encodeWithSelector(router.transferNative.selector, receiver, _S_BALANCE);
+        data[2] = abi.encodeWithSelector(router.sendValue.selector, receiver, _S_BALANCE);
 
         vm.prank(wsWhale);
         router.multicall(data);

@@ -30,7 +30,7 @@ interface ISiloRouter {
     /// @notice Transfer native token from the router to an address
     /// @param _to The address to transfer the native token to
     /// @param _amount The amount of native token to transfer
-    function transferNative(address _to, uint256 _amount) external payable;
+    function sendValue(address payable _to, uint256 _amount) external payable;
 
     /// @notice Transfer tokens
     /// @param _token The address of the token
