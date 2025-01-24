@@ -17,12 +17,12 @@ Supporting the following scenarios:
 
 ## deposit
 - deposit token using SiloRouter.multicall
-    SiloRouter.transferFrom(IERC20 _token, address _from, address _to, uint256 _amount)
+    SiloRouter.transferFrom(IERC20 _token, address _to, uint256 _amount)
     SiloRouter.approve(IERC20 _token, address _spender, uint256 _amount)
     SiloRouter.deposit(ISilo _silo, uint256 _amount)
 - deposit native & wrap in a single tx using SiloRouter.multicall
     SiloRouter.wrap(IWrappedNativeToken _native, uint256 _amount)
-    SiloRouter.transferFrom(IERC20 _token, address _from, address _to, uint256 _amount)
+    SiloRouter.transferFrom(IERC20 _token, address _to, uint256 _amount)
     SiloRouter.approve(IERC20 _token, address _spender, uint256 _amount)
     SiloRouter.deposit(ISilo _silo, uint256 _amount)
 
@@ -49,9 +49,6 @@ Supporting the following scenarios:
 /// @custom:security-contact security@silo.finance
 contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     using SafeERC20 for IERC20;
-
-    error EthTransferFailed();
-    error InsufficientNativeTokenBalance();
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -96,12 +93,8 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function transferNative(address _to, uint256 _amount) external payable whenNotPaused {
-        require(address(this).balance >= _amount, InsufficientNativeTokenBalance());
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success,) = _to.call{value: _amount}("");
-        require(success, EthTransferFailed());
+    function sendValue(address payable _to, uint256 _amount) external payable whenNotPaused {
+        Address.sendValue(_to, _amount);
     }
 
     /// @inheritdoc ISiloRouter
