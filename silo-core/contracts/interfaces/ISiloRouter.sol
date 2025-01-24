@@ -100,4 +100,15 @@ interface ISiloRouter {
         uint256 _assets,
         address _receiver
     ) external payable returns (uint256 shares);
+
+    /// @notice Repay debt
+    /// @param _silo The address of the silo
+    /// @param _assets The amount of tokens to repay
+    /// @param _borrower The address of the borrower
+    function repay(ISilo _silo, uint256 _assets, address _borrower) external payable returns (uint256 shares);
+
+    /// @notice Repay all debt
+    /// @param _silo The address of the silo
+    /// @param _borrower The address of the borrower
+    function repayAll(ISilo _silo, address _borrower) external payable returns (uint256 shares);
 }
