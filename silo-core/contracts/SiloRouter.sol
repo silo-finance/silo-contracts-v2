@@ -28,6 +28,7 @@ Supporting the following scenarios:
 ## borrow
 - borrow token using Silo.borrow or Silo.borrowSameAsset
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
+    SiloRouter.borrowSameAsset(ISilo _silo, uint256 _assets, address _receiver)
 - borrow wrapped native token and unwrap in a single tx using SiloRouter.multicall
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
     SiloRouter.unwrap(IWrappedNativeToken _native, uint256 _amount)
