@@ -155,7 +155,6 @@ contract SiloRouterActionsTest is IntegrationTest {
         data[0] = abi.encodeWithSelector(
             router.transferFrom.selector,
             IWrappedNativeToken(nativeToken),
-            wsWhale,
             address(router),
             _S_BALANCE
         );
