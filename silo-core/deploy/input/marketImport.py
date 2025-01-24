@@ -3,25 +3,32 @@ import json
 import os
 import argparse
 
-# Inicjalizacja parsera argumentów
-parser = argparse.ArgumentParser(description="Obsługa nazwanych parametrów w Pythonie.")
-parser.add_argument("--chain", type=str, required=True, help="Nazwa dla parametru 'chain'.")
 
-# Parsowanie argumentów
+def to_percent(percentage_string):
+    numeric_value = float(percentage_string.strip('%')) * 100
+    return int(round(numeric_value, 0))
+
+
+# Initialize argument parser
+parser = argparse.ArgumentParser(description="Handle named parameters in Python.")
+parser.add_argument("--chain", type=str, required=True, help="Name for the 'chain' parameter.")
+
+# Parse arguments
 args = parser.parse_args()
 
-# Pobranie wartości parametru
+# Retrieve the value of the --chain parameter
 chain = args.chain
 
-# Wyświetlenie odczytanej wartości
-print(f"Parametr --chain ustawiony na: {chain}")
+# Display the value of the parameter
+print(f"The --chain parameter is set to: {chain}")
 
-# Relatywne ścieżki
-script_dir = os.path.dirname(os.path.abspath(__file__))  # Lokalizacja skryptu
-input_file = os.path.join(script_dir, chain, "raw/data.csv")  # Relatywna ścieżka do pliku CSV
-output_file = os.path.join(script_dir, chain, "raw/market.json")  # Relatywna ścieżka do pliku JSON
+# Relative paths
+script_dir = os.path.dirname(os.path.abspath(__file__))  # Script's location
+input_file = os.path.join(script_dir, chain, "raw/data.csv")  # Relative path to the CSV file
+output_file = os.path.join(script_dir, chain, "raw/market.json")  # Relative path to the JSON file
+print(f"input_file: {input_file}")
 
-# Klucze JSON
+# JSON keys
 keys = [
  "LP",
  "Blockchain",
@@ -39,33 +46,64 @@ keys = [
  "ORacle Address",
  "daoFee",
  "DAO's fee recpient",
- "Deployer fee",
+ "deployerFee",
  "Deployer's fee recpient",
- "_1",
+ "flashloanFee",
  "_2",
 ]
 
-# Sprawdzenie, czy plik wejściowy istnieje
+# Check if the input file exists
 if not os.path.isfile(input_file):
-    print(f"Plik {input_file} nie istnieje!")
+    print(f"The file {input_file} does not exist!")
     exit(1)
 
-# Wczytanie CSV i zapis do JSON
-with open(input_file, "r", newline="\n", encoding="utf-8") as csvfile:
-    reader = csv.reader(csvfile, delimiter=",")
+# Read the CSV file and write data to JSON
+with open(input_file, "r", newline="", encoding="utf-8") as csvfile:
+    reader = csv.reader(csvfile)
     data = []
 
     for row in reader:
         if len(row) != len(keys):
-            print("Liczba kolumn w pliku CSV nie zgadza się z liczbą kluczy.")
+            print("The number of columns in the CSV file does not match the number of keys.")
             print("cols:", len(row), "keys:", len(keys))
             print(row)
             exit(1)
         data.append({keys[i]: row[i] for i in range(len(keys))})
 
-print("sample:", data[1]["_1"])
+json_structure = {
+    "deployer": "",
+    "hookReceiver": "CLONE_IMPLEMENTATION",
+    "hookReceiverImplementation": "GaugeHookReceiver.sol",
+    "daoFee": to_percent(data[0]["daoFee"]),
+    "deployerFee": to_percent(data[0]["deployerFee"]),
+    "token0": data[0]["token"],
+    "solvencyOracle0": "",
+    "maxLtvOracle0": "",
+    "interestRateModel0": "InterestRateModelV2.sol",
+    "interestRateModelConfig0": data[0]["interestRateModelConfig"],
+    "maxLtv0": to_percent(data[0]["maxLtv"]),
+    "lt0": to_percent(data[0]["lt"]),
+    "liquidationTargetLtv0": to_percent(data[0]["liquidationTargetLtv"]),
+    "liquidationFee0": to_percent(data[0]["liquidationFee"]),
+    "flashloanFee0": to_percent(data[0]["flashloanFee"]),
+    "callBeforeQuote0": False,
+
+    "token1": data[1]["token"],
+    "solvencyOracle1": "",
+    "maxLtvOracle1": "",
+    "interestRateModel1": "InterestRateModelV2.sol",
+    "interestRateModelConfig1": data[1]["interestRateModelConfig"],
+    "maxLtv1": to_percent(data[1]["maxLtv"]),
+    "lt1": to_percent(data[1]["lt"]),
+    "liquidationTargetLtv1": to_percent(data[1]["liquidationTargetLtv"]),
+    "liquidationFee1": to_percent(data[1]["liquidationFee"]),
+    "flashloanFee1": to_percent(data[1]["flashloanFee"]),
+    "callBeforeQuote1": False
+}
 
 with open(output_file, "w", encoding="utf-8") as jsonfile:
-    json.dump(data, jsonfile, indent=4, ensure_ascii=False)
+    json.dump(json_structure, jsonfile, indent=4, ensure_ascii=False)
 
-print(f"Dane zostały zapisane w pliku {output_file}")
+print(f"Data has been saved to {output_file}")
+
+
