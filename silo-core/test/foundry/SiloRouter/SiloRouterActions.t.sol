@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 
 import {SiloRouterDeploy} from "silo-core/deploy/SiloRouterDeploy.s.sol";
 import {SiloRouter} from "silo-core/contracts/SiloRouter.sol";
@@ -563,5 +564,126 @@ contract SiloRouterActionsTest is IntegrationTest {
         router.multicall(data);
 
         assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions
+    function test_siloRouter_pause_allActions() public {
+        vm.prank(routerOwner);
+        router.pause();
+        assertTrue(router.paused(), "Router should be paused");
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.wrap(IWrappedNativeToken(nativeToken), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.unwrap(IWrappedNativeToken(nativeToken), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.unwrapAll(IWrappedNativeToken(nativeToken));
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.sendValue(payable(borrower), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.sendValueAll(payable(borrower));
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.transferFrom(IERC20(token0), address(router), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.transfer(IERC20(token0), address(router), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.approve(IERC20(token0), address(router), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.deposit(ISilo(silo0), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.withdraw(ISilo(silo0), 1, address(router), ISilo.CollateralType.Collateral);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.withdrawAll(ISilo(silo0), address(router), ISilo.CollateralType.Collateral);
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.borrow(ISilo(silo0), 1, address(router));
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.borrowSameAsset(ISilo(silo0), 1, address(router));
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.repay(ISilo(silo0), 1, address(router));
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.repayAll(ISilo(silo0), address(router));
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions_viaMulticall
+    function test_siloRouter_pause_allActions_viaMulticall() public {
+        vm.prank(routerOwner);
+        router.pause();
+        assertTrue(router.paused(), "Router should be paused");
+
+        bytes[] memory data = new bytes[](1);
+
+        data[0] = abi.encodeCall(router.wrap, (IWrappedNativeToken(nativeToken), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.unwrap, (IWrappedNativeToken(nativeToken), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.unwrapAll, (IWrappedNativeToken(nativeToken)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.sendValue, (payable(borrower), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.sendValueAll, (payable(borrower)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.transferFrom, (IERC20(token0), address(router), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.transfer, (IERC20(token0), address(router), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.approve, (IERC20(token0), address(router), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.deposit, (ISilo(silo0), 1));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), 1, address(router), ISilo.CollateralType.Collateral));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.withdrawAll, (ISilo(silo0), address(router), ISilo.CollateralType.Collateral));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.borrow, (ISilo(silo0), 1, address(router)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.borrowSameAsset, (ISilo(silo0), 1, address(router)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.repay, (ISilo(silo0), 1, address(router)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(router.repayAll, (ISilo(silo0), address(router)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
     }
 }
