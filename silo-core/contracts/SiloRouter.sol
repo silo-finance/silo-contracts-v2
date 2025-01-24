@@ -186,12 +186,16 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function repay(ISilo _silo, uint256 _assets, address _borrower) external payable returns (uint256 shares) {
+    function repay(
+        ISilo _silo,
+        uint256 _assets,
+        address _borrower
+    ) external payable whenNotPaused returns (uint256 shares) {
         shares = _silo.repay(_assets, _borrower);
     }
 
     /// @inheritdoc ISiloRouter
-    function repayAll(ISilo _silo, address _borrower) external payable returns (uint256 shares) {
+    function repayAll(ISilo _silo, address _borrower) external payable whenNotPaused returns (uint256 shares) {
         uint256 repayAmount = _silo.maxRepay(_borrower);
         IERC20 asset = IERC20(_silo.asset());
 
