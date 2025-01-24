@@ -9,23 +9,10 @@ def to_percent(percentage_string):
     return int(round(numeric_value, 0))
 
 
-# Initialize argument parser
-parser = argparse.ArgumentParser(description="Handle named parameters in Python.")
-parser.add_argument("--chain", type=str, required=True, help="Name for the 'chain' parameter.")
-
-# Parse arguments
-args = parser.parse_args()
-
-# Retrieve the value of the --chain parameter
-chain = args.chain
-
-# Display the value of the parameter
-print(f"The --chain parameter is set to: {chain}")
-
 # Relative paths
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Script's location
-input_file = os.path.join(script_dir, chain, "raw/data.csv")  # Relative path to the CSV file
-output_file = os.path.join(script_dir, chain, "raw/market.json")  # Relative path to the JSON file
+input_file = os.path.join(script_dir, "data.csv")  # Relative path to the CSV file
+output_file = os.path.join(script_dir, "market.json")  # Relative path to the JSON file
 print(f"input_file: {input_file}")
 
 # JSON keys
