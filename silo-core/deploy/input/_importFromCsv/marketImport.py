@@ -1,5 +1,6 @@
 """
-1. import data to `data.csv`
+1. import data to `data.csv` for one market (only two rows from spreadsheet),
+   note that csv file can have more lines, because cells can have new lines inside
 2. run this script:
 python3 silo-core/deploy/input/_importFromCsv/marketImport.py
 
