@@ -105,8 +105,8 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function transferFrom(IERC20 _token, address _from, address _to, uint256 _amount) external payable whenNotPaused {
-        _token.safeTransferFrom(_from, _to, _amount);
+    function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable whenNotPaused {
+        _token.safeTransferFrom(msg.sender, _to, _amount);
     }
 
     /// @inheritdoc ISiloRouter

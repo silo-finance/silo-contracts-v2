@@ -40,10 +40,9 @@ interface ISiloRouter {
 
     /// @notice Transfer tokens from one address to another
     /// @param _token The address of the token
-    /// @param _from The address of the sender
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to transfer
-    function transferFrom(IERC20 _token, address _from, address _to, uint256 _amount) external payable;
+    function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable;
 
     /// @notice Approve tokens for a specific spender
     /// @param _token The address of the token
