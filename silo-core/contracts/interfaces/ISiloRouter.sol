@@ -20,6 +20,10 @@ interface ISiloRouter {
     /// @param _amount The amount of wrapped native token to unwrap
     function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable;
 
+    /// @notice Unwrap all wrapped native token to native token
+    /// @param _native The address of the native token
+    function unwrapAll(IWrappedNativeToken _native) external payable;
+
     /// @notice Pause the router
     /// @dev Pausing the router will prevent any actions from being executed
     function pause() external;
@@ -31,6 +35,10 @@ interface ISiloRouter {
     /// @param _to The address to transfer the native token to
     /// @param _amount The amount of native token to transfer
     function sendValue(address payable _to, uint256 _amount) external payable;
+
+    /// @notice Transfer all native token from the router to an address
+    /// @param _to The address to transfer the native token to
+    function sendValueAll(address payable _to) external payable;
 
     /// @notice Transfer tokens
     /// @param _token The address of the token
@@ -63,6 +71,16 @@ interface ISiloRouter {
     function withdraw(
         ISilo _silo,
         uint256 _amount,
+        address _receiver,
+        ISilo.CollateralType _collateral
+    ) external payable returns (uint256 assets);
+
+    /// @notice Withdraw all tokens from a silo
+    /// @param _silo The address of the silo
+    /// @param _receiver The address of the receiver
+    /// @param _collateral The address of the collateral token
+    function withdrawAll(
+        ISilo _silo,
         address _receiver,
         ISilo.CollateralType _collateral
     ) external payable returns (uint256 assets);
