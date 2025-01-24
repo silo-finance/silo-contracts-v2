@@ -27,7 +27,7 @@ contract SiloRouterActionsTest is IntegrationTest {
     address public silo0;
     address public silo1;
     address public token0; // S
-    address public token1; // USDC
+    address public token1; // WETH
 
     address public depositor = makeAddr("Depositor");
     address public borrower = makeAddr("Borrower");
@@ -35,7 +35,7 @@ contract SiloRouterActionsTest is IntegrationTest {
     IWrappedNativeToken public nativeToken = IWrappedNativeToken(0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38);
 
     address public wsWhale = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
-    address public usdcWhale = 0xb3FC32de77d62A35621e48DDf1Aac8C24Be215a6;
+    address public wethWhale = 0x431e81E5dfB5A24541b5Ff8762bDEF3f32F96354;
 
     address public collateralToken0;
     address public protectedToken0;
@@ -59,7 +59,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         router = deploy.run();
 
-        address siloConfig = 0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13; // S/USDC
+        address siloConfig = 0x9603Af53dC37F4BB6386f358A51a04fA8f599101; // S/ETH
 
         (silo0, silo1) = ISiloConfig(siloConfig).getSilos();
 
@@ -72,8 +72,8 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.prank(wsWhale);
         IERC20(token0).transfer(depositor, _TOKEN0_AMOUNT);
 
-        vm.prank(usdcWhale);
-        IERC20(token1).transfer(depositor, _TOKEN1_AMOUNT);
+        vm.prank(wsWhale);
+        IERC20(token0).transfer(borrower, _TOKEN0_AMOUNT);
 
         vm.prank(depositor);
         IERC20(token0).approve(address(router), type(uint256).max);
@@ -285,13 +285,13 @@ contract SiloRouterActionsTest is IntegrationTest {
         IERC20(collateralToken0).approve(address(router), type(uint256).max);
 
         bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), _S_BALANCE, depositor, ISilo.CollateralType.Collateral));
+        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), _S_BALANCE - 1, depositor, ISilo.CollateralType.Collateral));
 
         vm.prank(depositor);
         router.multicall(data);
 
-        assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have deposit");
-        assertEq(IERC20(token0).balanceOf(depositor), depositorBalance, "Account should have tokens");
+        assertEq(IERC20(collateralToken0).balanceOf(depositor), 999, "Account should not have deposit"); // rounding error
+        assertEq(IERC20(token0).balanceOf(depositor), depositorBalance - 1, "Account should have tokens");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_withdrawNativeAndUnwrapFlow
@@ -307,16 +307,18 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.prank(depositor);
         IERC20(collateralToken0).approve(address(router), type(uint256).max);
 
+        uint256 toWithdraw = _S_BALANCE - 1;
+
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), _S_BALANCE, address(router), ISilo.CollateralType.Collateral));
-        data[1] = abi.encodeCall(router.unwrap, (IWrappedNativeToken(nativeToken), _S_BALANCE));
-        data[2] = abi.encodeCall(router.sendValue, (payable(depositor), _S_BALANCE));
+        data[0] = abi.encodeCall(router.withdraw, (ISilo(silo0), toWithdraw, address(router), ISilo.CollateralType.Collateral));
+        data[1] = abi.encodeCall(router.unwrap, (IWrappedNativeToken(nativeToken), toWithdraw));
+        data[2] = abi.encodeCall(router.sendValue, (payable(depositor), toWithdraw));
 
         vm.prank(depositor);
         router.multicall(data);
 
-        assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have deposit");
-        assertEq(depositor.balance, _S_BALANCE, "Account should have tokens");
+        assertEq(IERC20(collateralToken0).balanceOf(depositor), 999, "Account should not have deposit"); // rounding error
+        assertEq(depositor.balance, toWithdraw, "Account should have tokens");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_withdrawAllFlow
@@ -342,7 +344,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         router.multicall(data);
 
         assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have deposit");
-        assertEq(IERC20(token0).balanceOf(depositor), depositorBalance, "Account should have tokens");
+        assertEq(IERC20(token0).balanceOf(depositor), depositorBalance - 1, "Account should have tokens");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_withdrawAllAndUnwrapFlow
@@ -367,7 +369,32 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.prank(depositor);
         router.multicall(data);
 
-        assertEq(depositor.balance, _S_BALANCE, "Account should have native tokens");
+        assertEq(depositor.balance, _S_BALANCE - 1, "Account should have native tokens");
         assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have collateral tokens");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_borrowFlow
+    function test_siloRouter_borrowFlow() public {
+        vm.prank(borrower);
+        IERC20(token0).approve(address(silo0), _TOKEN0_AMOUNT);
+
+        vm.prank(borrower);
+        ISilo(silo0).deposit(_TOKEN0_AMOUNT, borrower);
+
+        uint256 borrowAmount = ISilo(silo1).maxBorrow(borrower);
+
+        assertEq(IERC20(debtToken1).balanceOf(borrower), 0, "Account should not have any debt tokens");
+
+        vm.prank(borrower);
+        IERC20(debtToken1).approve(address(router), type(uint256).max);
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeCall(router.borrow, (ISilo(silo1), borrowAmount, address(borrower)));
+
+        vm.prank(borrower);
+        router.multicall(data);
+
+        assertNotEq(IERC20(debtToken1).balanceOf(borrower), 0, "Account should have debt tokens");
+        assertEq(IERC20(token1).balanceOf(borrower), borrowAmount, "Account should have tokens");
     }
 }

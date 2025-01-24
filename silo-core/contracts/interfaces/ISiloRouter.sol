@@ -84,4 +84,10 @@ interface ISiloRouter {
         address _receiver,
         ISilo.CollateralType _collateral
     ) external payable returns (uint256 assets);
+
+    /// @notice Borrow tokens from a silo
+    /// @param _silo The address of the silo
+    /// @param _assets The amount of tokens to borrow
+    /// @param _receiver The address of the receiver
+    function borrow(ISilo _silo, uint256 _assets, address _receiver) external payable returns (uint256 shares);
 }
