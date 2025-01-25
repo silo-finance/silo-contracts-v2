@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {IERC3156FlashBorrower} from "../../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 import {ILiquidationHelper} from "../../interfaces/ILiquidationHelper.sol";
 
+import {ISiloLens} from "../../interfaces/ISiloLens.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {IWrappedNativeToken} from "../../interfaces/IWrappedNativeToken.sol";
@@ -27,6 +31,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     /// @dev address of wrapped native blockchain token eg. WETH on Ethereum
     address public immutable NATIVE_TOKEN;
 
+    ISiloLens public immutable SILO_LENS;
+
     uint256 private transient _withdrawCollateral;
     uint256 private transient _repayDebtAssets;
 
@@ -43,6 +49,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     ) DexSwap(_exchangeProxy) {
         NATIVE_TOKEN = _nativeToken;
         EXCHANGE_PROXY = _exchangeProxy;
+        SILO_LENS = ISiloLens(0xB6AdBb29f2D8ae731C7C72036A7FD5A7E970B198);
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
@@ -61,6 +68,28 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         DexSwapInput[] calldata _swapsInputs0x
     ) external virtual returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
         require(_maxDebtToCover != 0, NoDebtToCover());
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
+        ) = _liquidation.hook.maxLiquidation(_liquidation.user);
+
+        console2.log("debtToRepay", debtToRepay);
+
+        if (sTokenRequired) {
+            ISilo _siloWithDebt = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df);
+            uint256 ltv = SILO_LENS.getLtv(_siloWithDebt, _liquidation.user);
+            require(ltv > 1e18, STokenNotSupported());
+
+            // bad debt, try to liquidate chunk
+            debtToRepay = debtToRepay * 0.95e18 / ltv;
+            console2.log("bad debt recalculation", debtToRepay);
+        }
+
+        console2.log("_maxDebtToCover", _maxDebtToCover);
+        // why??
+        console2.log("sTokenRequired", sTokenRequired ? "yesy" : "no");
+
+        _maxDebtToCover = Math.min(debtToRepay, _maxDebtToCover);
 
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
         IERC20(_debtAsset).approve(address(_flashLoanFrom), 0);
@@ -86,6 +115,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             DexSwapInput[] memory _swapInputs
         ) = abi.decode(_data, (LiquidationData, DexSwapInput[]));
 
+        console2.log("_fee", _fee);
+
         IERC20(_debtAsset).approve(address(_liquidation.hook), _maxDebtToCover);
 
         (
@@ -98,7 +129,11 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _receiveSToken: false
         });
 
-        IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
+    console2.log("_withdrawCollateral", _withdrawCollateral);
+    console2.log("_repayDebtAssets", _repayDebtAssets);
+
+
+    IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
         uint256 flashLoanWithFee = _maxDebtToCover + _fee;
 
         if (_liquidation.collateralAsset == _debtAsset) {
@@ -113,7 +148,9 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             // once we will liquidate "oposite" position
             _executeSwap(_swapInputs);
 
+
             uint256 debtBalance = IERC20(_debtAsset).balanceOf(address(this));
+            console2.log("after swap:", debtBalance);
 
             if (flashLoanWithFee < debtBalance) {
                 unchecked {
@@ -121,7 +158,9 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                     _transferToReceiver(_debtAsset, debtBalance - flashLoanWithFee);
                 }
             } else if (flashLoanWithFee != debtBalance) {
-                revert UnableToRepayFlashloan();
+    console2.log("missing:", flashLoanWithFee - debtBalance);
+
+    revert UnableToRepayFlashloan();
             }
         }
 
