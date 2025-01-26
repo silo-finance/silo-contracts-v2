@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {
-SiloVault, PendingUint192, PendingAddress, IERC4626, MarketConfig, ConstantsLib, Math, IVaultIncentivesModule
+    SiloVault, PendingUint192, PendingAddress, IERC4626, MarketConfig, ConstantsLib, Math, IVaultIncentivesModule
 } from "./contracts/SiloVault.sol";
 
 contract MetaMorphoHarness is SiloVault {
