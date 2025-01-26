@@ -15,5 +15,3 @@ for configName in certora/config/vaults/*; do
 echo "Certora is executing $configName ..."
 python3 $CERTORA_PATH $configName --solc /Library/Frameworks/Python.framework/Versions/3.10/bin/solc | grep "Follow your job"
 done
-
-
