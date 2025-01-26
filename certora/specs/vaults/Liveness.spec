@@ -3,10 +3,15 @@ import "LastUpdated.spec";
 
 methods {
     function _.approve(address, uint256) external => CONSTANT;
+    function SafeERC20.forceApprove(address, address, uint256) internal => CONSTANT;
+
+    function lock() external returns (bool) envfree;
 }
 
 // Check that having the allocator role allows to pause supply on the vault.
 rule canPauseSupply() {
+    require !lock();
+
     env e1; address[] newSupplyQueue;
     require e1.msg.value == 0;
     require hasAllocatorRole(e1.msg.sender);
@@ -29,6 +34,8 @@ rule canPauseSupply() {
 }
 
 rule canForceRemoveMarket(address id) {
+    require !lock();
+
     requireInvariant supplyCapIsEnabled(id);
     requireInvariant enabledHasConsistentAsset(id);
     // Safe require because this holds as an invariant.

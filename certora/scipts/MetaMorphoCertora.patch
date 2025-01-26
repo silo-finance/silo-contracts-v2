@@ -1,20 +1,18 @@
-diff --git a/certora/harness/vaults/contracts/MetaMorpho.sol b/certora/harness/vaults/contracts/MetaMorpho.sol
-index 955da96b..c104cdbb 100644
---- a/certora/harness/vaults/contracts/MetaMorpho.sol
-+++ b/certora/harness/vaults/contracts/MetaMorpho.sol
-@@ -88,6 +88,19 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
-     /// @inheritdoc IMetaMorphoBase
-     uint256 public lastTotalAssets;
+diff --git a/certora/harness/vaults/contracts/SiloVault.sol b/certora/harness/vaults/contracts/SiloVault.sol
+index 37b1500f..306db26c 100644
+--- a/certora/harness/vaults/contracts/SiloVault.sol
++++ b/certora/harness/vaults/contracts/SiloVault.sol
+@@ -98,6 +98,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+ 
+     bool transient _lock;
  
 +    // HARNESS
 +    // The index of the identifier of the last market withdrawn.
 +    uint256 public lastIndexWithdraw;
-+
 +    // HARNESS
 +    // The rank of a market identifier in the withdraw queue.
 +    // Returns 0 if the corresponding market is not in the withdraw queue.
 +    mapping(address => uint256) public withdrawRank;
-+
 +    // HARNESS
 +    // The last index at which a market identifier has been removed from the withdraw queue.
 +    mapping(address => uint256) public deletedAt;
@@ -22,7 +20,7 @@ index 955da96b..c104cdbb 100644
      /* CONSTRUCTOR */
  
      /// @dev Initializes the contract.
-@@ -312,6 +325,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -332,6 +343,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
              seen[prevIndex] = true;
  
              newWithdrawQueue[i] = market;
@@ -32,11 +30,11 @@ index 955da96b..c104cdbb 100644
          }
  
          for (uint256 i; i < currLength; ++i) {
-@@ -321,7 +337,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -341,7 +355,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                  if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
                  if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
  
--                if (market.balanceOf(address(this)) != 0) {
+-                if (_ERC20BalanceOf(address(market), address(this)) != 0) {
 +                // HARNESS
 +                uint256 harnessShares;
 +                (, harnessShares) = _supplyBalance(market);
@@ -44,7 +42,7 @@ index 955da96b..c104cdbb 100644
                      if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
  
                      if (block.timestamp < config[market].removableAt) {
-@@ -329,6 +348,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -349,6 +366,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                      }
                  }
  
@@ -55,19 +53,19 @@ index 955da96b..c104cdbb 100644
                  delete config[market];
              }
          }
-@@ -720,6 +743,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -789,6 +810,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
  
-         if (supplyCap > 0) {
+         if (_supplyCap > 0) {
              if (!marketConfig.enabled) {
 +                // HARNESS
-+                withdrawRank[address(market)] = withdrawQueue.length + 1;
++                withdrawRank[address(_market)] = withdrawQueue.length + 1;
 +
-                 withdrawQueue.push(market);
+                 withdrawQueue.push(_market);
  
                  if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
-@@ -777,6 +803,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
-     /// @dev Withdraws `assets` from Morpho.
-     function _withdrawMorpho(uint256 assets) internal virtual {
+@@ -844,6 +868,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+     /// @dev Withdraws `assets` from ERC4626 vaults.
+     function _withdrawERC4626(uint256 _assets) internal virtual {
          for (uint256 i; i < withdrawQueue.length; ++i) {
 +            // HARNESS
 +            lastIndexWithdraw = i;

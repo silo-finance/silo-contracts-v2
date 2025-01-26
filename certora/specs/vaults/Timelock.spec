@@ -2,7 +2,7 @@
 import "Enabled.spec";
 
 methods {
-    function MetaMorpho._supplyBalance(address id) internal returns (uint256,uint256) => summarySupplyshares(id);
+    function SiloVault._supplyBalance(address id) internal returns (uint256,uint256) => summarySupplyshares(id);
 }
 
 ghost lastSupplyShares(address) returns uint256;
@@ -12,7 +12,7 @@ function summarySupplyshares(address id) returns (uint256, uint256) {
     uint256 shares;
     require lastSupplyShares(id) == shares;
     require assets == 0 <=> shares == 0;
-    return (assets,shares);
+    return (assets, shares);
 }
 
 persistent ghost uint256 lastTimestamp;

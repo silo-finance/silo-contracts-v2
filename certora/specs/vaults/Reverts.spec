@@ -6,6 +6,20 @@ methods {
     function _.balanceOf(address) external => DISPATCHER(true);
 
     function _.approve(address, uint256) external => CONSTANT;
+    function SafeERC20.forceApprove(address, address, uint256) internal => CONSTANT;
+
+    function lock() external returns (bool) envfree;
+}
+
+// Check that vault can't have reentrancy lock on after interaction
+rule reentrancyLockFalseAfterInteraction (method f, env e, calldataarg args)
+    filtered {
+        f -> (f.contract == currentContract)
+    }
+{
+    require !lock();
+    f(e, args);
+    assert !lock();
 }
 
 // Check all the revert conditions of the setCurator function.

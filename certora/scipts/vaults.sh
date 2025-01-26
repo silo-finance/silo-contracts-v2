@@ -4,7 +4,7 @@ if [[ $CERTORA_PATH -eq "" ]]; then
 fi
 
 # remove all existing contracts from harness folder
-rm -r certora/harness/vaults/contracts/*
+rm -rf certora/harness/vaults/contracts/*
 # copy all contracts to harness folder
 cp -r silo-vaults/contracts certora/harness/vaults
 # apply patch to add useful state variables
@@ -12,8 +12,8 @@ git apply certora/scipts/MetaMorphoCertora.patch
 
 # run Certora for every config
 for configName in certora/config/vaults/*; do 
-echo "Bash script is running Certora for $configName"
-python3 $CERTORA_PATH $configName --solc /Library/Frameworks/Python.framework/Versions/3.10/bin/solc
+echo "Certora is executing $configName ..."
+python3 $CERTORA_PATH $configName --solc /Library/Frameworks/Python.framework/Versions/3.10/bin/solc | grep "Follow your job"
 done
 
 
