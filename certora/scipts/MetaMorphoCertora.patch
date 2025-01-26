@@ -32,7 +32,19 @@ index 955da96b..c104cdbb 100644
          }
  
          for (uint256 i; i < currLength; ++i) {
-@@ -329,6 +345,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -321,7 +337,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+                 if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
+                 if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
+ 
+-                if (market.balanceOf(address(this)) != 0) {
++                // HARNESS
++                uint256 harnessShares;
++                (, harnessShares) = _supplyBalance(market);
++                if (harnessShares != 0) {
+                     if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
+ 
+                     if (block.timestamp < config[market].removableAt) {
+@@ -329,6 +348,10 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
                      }
                  }
  
@@ -43,7 +55,7 @@ index 955da96b..c104cdbb 100644
                  delete config[market];
              }
          }
-@@ -720,6 +740,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -720,6 +743,9 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
  
          if (supplyCap > 0) {
              if (!marketConfig.enabled) {
@@ -53,7 +65,7 @@ index 955da96b..c104cdbb 100644
                  withdrawQueue.push(market);
  
                  if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
-@@ -777,6 +800,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
+@@ -777,6 +803,8 @@ contract MetaMorpho is ERC4626, ERC20Permit, Ownable2Step, Multicall, IMetaMorph
      /// @dev Withdraws `assets` from Morpho.
      function _withdrawMorpho(uint256 assets) internal virtual {
          for (uint256 i; i < withdrawQueue.length; ++i) {

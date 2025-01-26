@@ -3,6 +3,8 @@ if [[ $CERTORA_PATH -eq "" ]]; then
     exit 127
 fi
 
+# remove all existing contracts from harness folder
+rm -r certora/harness/vaults/contracts/*
 # copy all contracts to harness folder
 cp -r silo-vaults/contracts certora/harness/vaults
 # apply patch to add useful state variables

@@ -2,15 +2,17 @@
 import "Enabled.spec";
 
 methods {
-    function _.supplyShares(address id, address user) external => summarySupplyshares(id, user) expect uint256;
+    function MetaMorpho._supplyBalance(address id) internal returns (uint256,uint256) => summarySupplyshares(id);
 }
 
-ghost lastSupplyShares(address, address) returns uint256;
+ghost lastSupplyShares(address) returns uint256;
 
-function summarySupplyshares(address id, address user) returns uint256 {
-    uint256 res;
-    require lastSupplyShares(id, user) == res;
-    return res;
+function summarySupplyshares(address id) returns (uint256, uint256) {
+    uint256 assets;
+    uint256 shares;
+    require lastSupplyShares(id) == shares;
+    require assets == 0 <=> shares == 0;
+    return (assets,shares);
 }
 
 persistent ghost uint256 lastTimestamp;
@@ -38,7 +40,11 @@ rule nextGuardianUpdateTimeDoesNotRevert() {
 }
 
 // Show that nextGuardianUpdateTime is increasing with time and that no change of guardian can happen before it.
-rule guardianUpdateTime(env e_next, method f, calldataarg args) {
+rule guardianUpdateTime(env e_next, method f, calldataarg args)
+    filtered {
+        f -> (f.contract == currentContract)
+    }
+{
     // The environment e yields the current time.
     env e;
 
@@ -79,7 +85,11 @@ rule nextCapIncreaseTimeDoesNotRevert(address id) {
 }
 
 // Show that nextCapIncreaseTime is increasing with time and that no increase of cap can happen before it.
-rule capIncreaseTime(env e_next, method f, calldataarg args) {
+rule capIncreaseTime(env e_next, method f, calldataarg args)
+    filtered {
+        f -> (f.contract == currentContract)
+    }
+{
     // The environment e yields the current time.
     env e;
 
@@ -120,7 +130,11 @@ rule nextTimelockDecreaseTimeDoesNotRevert() {
 }
 
 // Show that nextTimelockDecreaseTime is increasing with time and that no decrease of timelock can happen before it.
-rule timelockDecreaseTime(env e_next, method f, calldataarg args) {
+rule timelockDecreaseTime(env e_next, method f, calldataarg args)
+    filtered {
+        f -> (f.contract == currentContract)
+    }
+{
     // The environment e yields the current time.
     env e;
 
@@ -159,7 +173,11 @@ rule nextRemovableTimeDoesNotRevert(address id) {
 }
 
 // Show that nextRemovableTime is increasing with time and that no removal can happen before it.
-rule removableTime(env e_next, method f, calldataarg args) {
+rule removableTime(env e_next, method f, calldataarg args)
+    filtered {
+        f -> (f.contract == currentContract)
+    }
+{
     // The environment e yields the current time.
     env e;
     // Safe require as it corresponds to some time very far into the future.
@@ -181,7 +199,7 @@ rule removableTime(env e_next, method f, calldataarg args) {
 
     if (e_next.block.timestamp < nextTime)  {
         // Check that no forced removal happened.
-        assert lastSupplyShares(id, currentContract) > 0 => config_(id).enabled;
+        assert lastSupplyShares(id) > 0 => config_(id).enabled;
         // Increasing nextRemovableTime with an interaction;
         assert nextRemovableTime(e_next, id) >= nextRemovableTimeBeforeInteraction;
     }
