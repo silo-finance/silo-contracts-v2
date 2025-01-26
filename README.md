@@ -14,18 +14,20 @@ $ git clone https://github.com/silo-finance/silo-contracts-v2.git
 # 3. Open folder
 $ cd silo-contracts-v2
 
-# 4. Create the file ".env" in a root of this folder. ".env.example" is an example. 
+# 4. Initialize submodules
+$ git submodule update --init --recursive
+
+# 5. Create the file ".env" in a root of this folder. ".env.example" is an example.
+# RPC_MAINNET, RPC_ARBITRUM, RPC_ANVIL, PRIVATE_KEY are required to run the tests.
 # Add your RPC URLs and private key if you are going to deploy a new Silo.
 
-# 5. Check if tutorial test can be executed. Packages will be installed automatically,
-# it will take some time. All test should pass.
-
-$ FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
-
-# 6. Build Silo foundry utils to prepare tools for Silo deployment
+# 6. Build Silo foundry utils to prepare tools for Silo deployment and testing
 $ cd ./gitmodules/silo-foundry-utils && cargo build --release && cp target/release/silo-foundry-utils ../../silo-foundry-utils && cd -
 
-# 7. You are ready to contribute to the protocol!
+# 7. Check if tests can be executed
+$ FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
+
+# 8. You are ready to contribute to the protocol!
 ```
 
 ### Test new Silo deployment locally
@@ -48,13 +50,24 @@ forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 ```shell
 # 1. Test your config by deploying the Silo in the local fork as described above.
 
+$ anvil --fork-url $RPC_ARBITRUM --fork-block-number 284045200 & 
+
+# in case of issues, deploy contracts locally, so you can retreive errors
+FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/InterestRateModelV2FactoryDeploy.s.sol:InterestRateModelV2FactoryDeploy \
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 
+        
+FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
+        --ffi --broadcast --rpc-url 127.0.0.1:8545
+        
 # 2. Execute the script to deploy a Silo. This script will sign and send real on-chain transaction. Smart
 # contract will be verified on Etherscan. Standard Foundry --verifier-url parameter can be provided for other
 # verification providers, including Arbiscan. 
 
 $ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME_WITHOUT_JSON_EXTENSION \
 forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
---ffi --verify --broadcast --rpc-url $YOUR_RPC_URL
+--ffi --broadcast --rpc-url 127.0.0.1:8545 --verify
 
 # 3. Silo is deployed on-chain. Address is saved to silo-core/deploy/silo/_siloDeployments.json. 
 # You can create a PR to merge config and deployed address to develop branch.

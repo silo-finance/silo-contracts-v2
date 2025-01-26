@@ -1,0 +1,71 @@
+{
+    "REDSTONE_stS_S": {
+        "baseToken": "stS",
+        "quoteToken": "wS",
+        "primaryAggregator": "REDSTONE_stS_S_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0
+    },
+    "REDSTONE_solvBTC.BNN_USD": {
+        "baseToken": "solvBTC.BNN",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_solvBTC.BNN_USD_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 100000000,
+        "normalizationMultiplier": 0
+    },
+    "REDSTONE_solvBTC_USD": {
+        "baseToken": "solvBTC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_solvBTC_USD_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 100000000,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_USDC.e_USD": {
+        "baseToken": "USDC.e",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_USDC.e_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 10000
+    },
+    "CHAINLINK_S_USD": {
+        "baseToken": "wS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_S_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 100000000,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_ETH_USD": {
+        "baseToken": "WETH",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_ETH_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 100000000,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_scUSD_USDC_USD": {
+        "baseToken": "scUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_scUSD_USDC_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "CHAINLINK_USDC.e_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e4,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    }
+}

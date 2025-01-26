@@ -80,6 +80,8 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 contract SiloFixture is StdCheats, CommonBase {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
+    bool internal _mainNetDeployed;
+
     function deploy_ETH_USDC()
         external
         returns (
@@ -137,10 +139,14 @@ contract SiloFixture is StdCheats, CommonBase {
             address hookReceiver
         )
     {
-        MainnetDeploy mainnetDeploy = new MainnetDeploy();
-        mainnetDeploy.disableDeploymentsSync();
-        mainnetDeploy.run();
-        console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
+        if (!_mainNetDeployed) {
+            MainnetDeploy mainnetDeploy = new MainnetDeploy();
+            mainnetDeploy.disableDeploymentsSync();
+            mainnetDeploy.run();
+            console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
+
+            _mainNetDeployed = true;
+        }
 
         siloConfig = _siloDeploy.useConfig(_configName).run();
         console2.log("[SiloFixture] _deploy: _siloDeploy(", _configName, ").run() done.");
@@ -161,5 +167,35 @@ contract SiloFixture is StdCheats, CommonBase {
 
         hookReceiver = siloConfig0.hookReceiver;
         if (hookReceiver == address(0)) revert("hookReceiver address is empty");
+
+        _labelSiloMarketContracts(siloConfig, createdSilo0, createdSilo1);
+    }
+
+    function _labelSiloMarketContracts(ISiloConfig _siloConfig, address _silo0, address _silo1) internal {
+        _labelSiloContracts(_siloConfig, _silo0, "Silo0:");
+        _labelSiloContracts(_siloConfig, _silo1, "Silo1:");
+
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(_silo0);
+
+        vm.label(config.hookReceiver, "HookReceiver");
+        vm.label(address(_siloConfig), "SiloConfig");
+    }
+
+    function _labelSiloContracts(ISiloConfig _siloConfig, address _silo, string memory _prefix) internal {
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(_silo);
+
+        vm.label(config.token, string.concat(_prefix, "asset"));
+        vm.label(config.protectedShareToken, string.concat(_prefix, "protectedShareToken"));
+        vm.label(config.collateralShareToken, string.concat(_prefix, "collateralShareToken"));
+        vm.label(config.debtShareToken, string.concat(_prefix, "debtShareToken"));
+        vm.label(config.interestRateModel, string.concat(_prefix, "interestRateModel"));
+
+        if (config.solvencyOracle != address(0)) {
+            vm.label(config.solvencyOracle, string.concat(_prefix, "solvencyOracle"));
+        }
+
+        if (config.maxLtvOracle != address(0)) {
+            vm.label(config.maxLtvOracle, string.concat(_prefix, "maxLtvOracle"));
+        }
     }
 }

@@ -8,6 +8,7 @@ import {ISiloConfig} from "./ISiloConfig.sol";
 interface ISiloDeployer {
     /// @dev Details of the oracle creation transaction
     struct OracleCreationTxData {
+        address deployed; // if oracle is already deployed, this will be the address to use
         address factory; // oracle factory (chainlinkV3, uniswapV3, etc)
         bytes txInput; // fn input `abi.encodeCall(fn, params...)`
     }

@@ -21,24 +21,24 @@ contract ChainlinkV3OracleConfig is Layer1OracleConfig {
     /// assuming that both AGGREGATORS providing price in the same token
     bool internal immutable _CONVERT_TO_QUOTE; // solhint-disable-line var-name-mixedcase
 
+    /// @dev If TRUE price will be 1/price
+    bool internal immutable _INVERT_SECONDARY_PRICE; // solhint-disable-line var-name-mixedcase
+
     /// @dev all verification should be done by factory
-    constructor(
-        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,
-        uint256 _normalizationDivider,
-        uint256 _normalizationMultiplier
-    )
+    constructor(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config)
         Layer1OracleConfig(
             _config.baseToken,
             _config.quoteToken,
             _config.primaryHeartbeat,
-            _normalizationDivider,
-            _normalizationMultiplier
+            _config.normalizationDivider,
+            _config.normalizationMultiplier
         )
     {
         _AGGREGATOR = _config.primaryAggregator;
         _SECONDARY_AGGREGATOR = _config.secondaryAggregator;
         _SECONDARY_HEARTBEAT = _config.secondaryHeartbeat;
         _CONVERT_TO_QUOTE = address(_config.secondaryAggregator) != address(0);
+        _INVERT_SECONDARY_PRICE = _config.invertSecondPrice;
     }
 
     function getConfig() external view virtual returns (IChainlinkV3Oracle.ChainlinkV3Config memory config) {
@@ -51,5 +51,6 @@ contract ChainlinkV3OracleConfig is Layer1OracleConfig {
         config.baseToken = _BASE_TOKEN;
         config.quoteToken = _QUOTE_TOKEN;
         config.convertToQuote = _CONVERT_TO_QUOTE;
+        config.invertSecondPrice = _INVERT_SECONDARY_PRICE;
     }
 }

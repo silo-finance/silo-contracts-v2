@@ -16,6 +16,9 @@ interface IChainlinkV3Oracle {
     /// @param quoteToken quote toke address, it must have decimals() method available
     /// @param primaryHeartbeat heartbeat of primary price
     /// @param secondaryHeartbeat heartbeat of secondary price
+    /// @param normalizationDivider divider that will be used in oracle to normalize price
+    /// @param normalizationMultiplier multiplier that will be used in oracle to normalize price
+    /// @param invertSecondPrice in case we using second price, this flag will tell us if we need to 1/secondPrice
     struct ChainlinkV3DeploymentConfig {
         IERC20Metadata baseToken;
         IERC20Metadata quoteToken;
@@ -23,6 +26,9 @@ interface IChainlinkV3Oracle {
         uint32 primaryHeartbeat;
         AggregatorV3Interface secondaryAggregator;
         uint32 secondaryHeartbeat;
+        uint256 normalizationDivider;
+        uint256 normalizationMultiplier;
+        bool invertSecondPrice;
     }
 
     /// @dev config based on which new oracle will be deployed
@@ -35,6 +41,7 @@ interface IChainlinkV3Oracle {
     /// @param quoteToken quote toke address, it must have decimals() method available
     /// @param primaryHeartbeat heartbeat of primary price
     /// @param secondaryHeartbeat heartbeat of secondary price
+    /// @param invertSecondPrice in case we using second price, this flag will tell us if we need to 1/secondPrice
     struct ChainlinkV3Config {
         AggregatorV3Interface primaryAggregator;
         AggregatorV3Interface secondaryAggregator;
@@ -45,6 +52,7 @@ interface IChainlinkV3Oracle {
         IERC20Metadata baseToken;
         IERC20Metadata quoteToken;
         bool convertToQuote;
+        bool invertSecondPrice;
     }
 
     event ChainlinkV3ConfigDeployed(ChainlinkV3OracleConfig configAddress);
@@ -56,6 +64,7 @@ interface IChainlinkV3Oracle {
 
     error AddressZero();
     error InvalidPrice();
+    error ZeroQuote();
     error InvalidSecondPrice();
     error BaseAmountOverflow();
     error TokensAreTheSame();
@@ -67,4 +76,7 @@ interface IChainlinkV3Oracle {
     error InvalidEthHeartbeat();
 
     error AssetNotSupported();
+    error HugeDivider();
+    error HugeMultiplier();
+    error MultiplierAndDividerZero();
 }

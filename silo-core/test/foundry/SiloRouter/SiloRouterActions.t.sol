@@ -55,10 +55,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         router = deploy.run();
 
-        address siloConfig = SiloDeployments.get(
-            ARBITRUM_ONE_ALIAS,
-            SiloConfigsNames.ETH_USDC_UNI_V3_SILO
-        );
+        address siloConfig = 0xE78A0E8319Ef75B3e381026F93A84330656DDEE8;
 
         (silo0, silo1) = ISiloConfig(siloConfig).getSilos();
 
@@ -97,56 +94,80 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.label(debtToken1, "debtToken1");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositViaRouter
-    function testDepositViaRouter() public {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositViaMulticallRouter
+    function testDepositViaMulticallRouter() public {
         uint256 snapshotId = vm.snapshot();
 
-        uint256 depositToken0 = _TOKEN0_AMOUNT;
-        uint256 depositToken1 = _TOKEN1_AMOUNT;
+        // actions to be executed via router
+        // 1. pull assets to the router
+        // 2. approve assets to the silo
+        // 3. deposit assets to the silo
 
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken0,
-            assetType: ISilo.CollateralType.Collateral
-        });
+        bytes[] memory data = new bytes[](6);
+        address[] memory targets = new address[](6);
+        uint256[] memory values = new uint256[](6);
 
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options0)
-        });
+        targets[0] = address(IERC20(token0));
+        data[0] = abi.encodeWithSelector(
+            IERC20.transferFrom.selector,
+            depositor,
+            address(router),
+            _TOKEN0_AMOUNT
+        );
 
-        SiloRouter.AnyAction memory options1 = SiloRouter.AnyAction({
-            amount: depositToken1,
-            assetType: ISilo.CollateralType.Protected
-        });
+        targets[1] = address(IERC20(token0));
+        data[1] = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            address(silo0),
+            _TOKEN0_AMOUNT
+        );
 
-        SiloRouter.Action memory action1 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo1),
-            asset: IERC20(token1),
-            options: abi.encode(options1)
-        });
+        targets[2] = address(ISilo(silo0));
+        data[2] = abi.encodeWithSelector(
+            ISilo.deposit.selector,
+            _TOKEN0_AMOUNT,
+            depositor,
+            ISilo.CollateralType.Collateral
+        );
 
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](2);
-        actions[0] = action0;
-        actions[1] = action1;
+        targets[3] = address(IERC20(token1));
+        data[3] = abi.encodeWithSelector(
+            IERC20.transferFrom.selector,
+            depositor,
+            address(router),
+            _TOKEN1_AMOUNT
+        );
+
+        targets[4] = address(IERC20(token1));
+        data[4] = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            address(silo1),
+            _TOKEN1_AMOUNT
+        );
+
+        targets[5] = address(ISilo(silo1));
+        data[5] = abi.encodeWithSelector(
+            ISilo.deposit.selector,
+            _TOKEN1_AMOUNT,
+            depositor,
+            ISilo.CollateralType.Protected
+        );
 
         vm.prank(depositor);
-        router.execute(actions);
+        router.multicall(targets, data, values);
 
         uint256 collateralBalanceViaRouter = IERC20(collateralToken0).balanceOf(depositor);
         uint256 protectedBalanceViaRouter = IERC20(protectedToken1).balanceOf(depositor);
 
         assertEq(
             collateralBalanceViaRouter,
-            depositToken0.decimalsOffsetPow(),
+            _TOKEN0_AMOUNT.decimalsOffsetPow(),
             "Collateral share token balance mismatch"
         );
 
         assertEq(
             protectedBalanceViaRouter,
-            depositToken1.decimalsOffsetPow(),
+            _TOKEN1_AMOUNT.decimalsOffsetPow(),
             "Protected share token balance mismatch"
         );
 
@@ -160,10 +181,10 @@ contract SiloRouterActionsTest is IntegrationTest {
         IERC20(token1).approve(silo1, type(uint256).max);
 
         vm.prank(depositor);
-        ISilo(silo0).deposit(depositToken0, depositor, ISilo.CollateralType.Collateral);
+        ISilo(silo0).deposit(_TOKEN0_AMOUNT, depositor, ISilo.CollateralType.Collateral);
 
         vm.prank(depositor);
-        ISilo(silo1).deposit(depositToken1, depositor, ISilo.CollateralType.Protected);
+        ISilo(silo1).deposit(_TOKEN1_AMOUNT, depositor, ISilo.CollateralType.Protected);
 
         uint256 collateralBalanceDirect = IERC20(collateralToken0).balanceOf(depositor);
         uint256 protectedBalanceDirect = IERC20(protectedToken1).balanceOf(depositor);
@@ -172,258 +193,28 @@ contract SiloRouterActionsTest is IntegrationTest {
         assertEq(protectedBalanceViaRouter, protectedBalanceDirect, "Protected share token balance mismatch");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testMintViaRouter
-    function testMintViaRouter() public {
-        uint256 snapshotId = vm.snapshot();
-
-        uint256 depositToken0 = _TOKEN0_AMOUNT;
-        uint256 depositToken1 = _TOKEN1_AMOUNT;
-
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken0,
-            assetType: ISilo.CollateralType.Collateral
-        });
-
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Mint,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options0)
-        });
-
-        SiloRouter.AnyAction memory options1 = SiloRouter.AnyAction({
-            amount: depositToken1,
-            assetType: ISilo.CollateralType.Protected
-        });
-
-        SiloRouter.Action memory action1 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Mint,
-            silo: ISilo(silo1),
-            asset: IERC20(token1),
-            options: abi.encode(options1)
-        });
-
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](2);
-        actions[0] = action0;
-        actions[1] = action1;
-
-        vm.prank(depositor);
-        router.execute(actions);
-
-        uint256 collateralBalanceViaRouter = IERC20(collateralToken0).balanceOf(depositor);
-        uint256 protectedBalanceViaRouter = IERC20(protectedToken1).balanceOf(depositor);
-
-        assertEq(collateralBalanceViaRouter, depositToken0, "Collateral share token balance mismatch");
-        assertEq(protectedBalanceViaRouter, depositToken1, "Protected share token balance mismatch");
-
-        // Reset to the original state to verify results with direct silo deposits.
-        vm.revertTo(snapshotId);
-
-        vm.prank(depositor);
-        IERC20(token0).approve(silo0, type(uint256).max);
-
-        vm.prank(depositor);
-        IERC20(token1).approve(silo1, type(uint256).max);
-
-        vm.prank(depositor);
-        ISilo(silo0).mint(depositToken0, depositor, ISilo.CollateralType.Collateral);
-
-        vm.prank(depositor);
-        ISilo(silo1).mint(depositToken1, depositor, ISilo.CollateralType.Protected);
-
-        uint256 collateralBalanceDirect = IERC20(collateralToken0).balanceOf(depositor);
-        uint256 protectedBalanceDirect = IERC20(protectedToken1).balanceOf(depositor);
-
-        assertEq(collateralBalanceViaRouter, collateralBalanceDirect, "Collateral share token balance mismatch");
-        assertEq(protectedBalanceViaRouter, protectedBalanceDirect, "Protected share token balance mismatch");
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRepayViaRouter
-    function testRepayViaRouter() public {
-        _borrow();
-
-        uint256 debtShares = IERC20(debtToken0).balanceOf(borrower);
-        assertNotEq(debtShares, 0, "Expect to have debt shares");
-
-        uint256 snapshotId = vm.snapshot();
-
-        SiloRouter.AnyAction memory options = SiloRouter.AnyAction({
-            amount: debtShares,
-            assetType: ISilo.CollateralType.Collateral // doesn't matter
-        });
-
-        SiloRouter.Action memory actionRepay = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Repay,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options)
-        });
-
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](1);
-        actions[0] = actionRepay;
-
-        vm.prank(borrower);
-        router.execute(actions);
-
-        uint256 debtSharesAfterRepay = IERC20(debtToken0).balanceOf(borrower);
-
-        assertEq(debtSharesAfterRepay, 0, "Debt repay failed");
-
-        vm.revertTo(snapshotId);
-
-        debtShares = IERC20(debtToken0).balanceOf(borrower);
-        assertNotEq(debtShares, 0, "Expect to have debt shares");
-
-        SiloRouter.Action memory actionRepayShares = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.RepayShares,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options)
-        });
-
-        actions[0] = actionRepayShares;
-
-        vm.prank(borrower);
-        router.execute(actions);
-
-        uint256 debtSharesAfterRepayShares = IERC20(debtToken0).balanceOf(borrower);
-
-        assertEq(debtSharesAfterRepayShares, 0, "Debt repayShares failed");
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSendAssetsBackFromTheRouter
-    function testSendAssetsBackFromTheRouter() public {
-        uint256 depositToken0 = _TOKEN0_AMOUNT;
-        uint256 depositToken1 = _TOKEN1_AMOUNT;
-
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken0,
-            assetType: ISilo.CollateralType.Collateral
-        });
-
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options0)
-        });
-
-        SiloRouter.AnyAction memory options1 = SiloRouter.AnyAction({
-            amount: depositToken1,
-            assetType: ISilo.CollateralType.Protected
-        });
-
-        SiloRouter.Action memory action1 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo1),
-            asset: IERC20(token1),
-            options: abi.encode(options1)
-        });
-
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](2);
-        actions[0] = action0;
-        actions[1] = action1;
-
-        assertEq(IERC20(token0).balanceOf(address(router)), 0, "Expect to have 0 balance");
-        assertEq(IERC20(token1).balanceOf(address(router)), 0, "Expect to have 0 balance");
-
-        uint256 routerToken0Balance = 1000e18;
-        uint256 routerToken1Balance = 1000e6;
-
-        // send assets to the router (only for the test purposes)
-        vm.prank(wethWhale);
-        IERC20(token0).transfer(address(router), routerToken0Balance);
-
-        vm.prank(usdcWhale);
-        IERC20(token1).transfer(address(router), routerToken1Balance);
-
-        assertEq(IERC20(token0).balanceOf(address(router)), routerToken0Balance, "Expect to have balance");
-        assertEq(IERC20(token1).balanceOf(address(router)), routerToken1Balance, "Expect to have balance");
-
-        uint256 depositorBalanceBeforeToken0 = IERC20(token0).balanceOf(depositor);
-        uint256 depositorBalanceBeforeToken1 = IERC20(token1).balanceOf(depositor);
-
-        vm.prank(depositor);
-        router.execute(actions);
-
-        uint256 depositorBalanceAfterToken0 = IERC20(token0).balanceOf(depositor);
-        uint256 depositorBalanceAfterToken1 = IERC20(token1).balanceOf(depositor);
-
-        uint256 depositorExpectedBalanceToken1 = depositorBalanceBeforeToken1 - depositToken1 + routerToken1Balance;
-
-        assertEq(depositorBalanceAfterToken0, depositorBalanceBeforeToken0, "Depositor balance mismatch");
-        assertEq(depositorBalanceAfterToken1, depositorExpectedBalanceToken1, "Depositor balance mismatch");
-        assertEq(address(depositor).balance, routerToken0Balance - depositToken0, "Depositor balance mismatch");
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSendAssetsFailedTransfer
-    function testSendAssetsFailedTransfer() public {
-        uint256 depositToken0 = _TOKEN0_AMOUNT;
-
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken0,
-            assetType: ISilo.CollateralType.Collateral
-        });
-
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options0)
-        });
-
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](1);
-        actions[0] = action0;
-
-        assertEq(IERC20(token0).balanceOf(address(router)), 0, "Expect to have 0 balance");
-
-        uint256 routerToken0Balance = 1000e18;
-
-        // send assets to the router (only for the test purposes)
-        vm.prank(wethWhale);
-        IERC20(token0).transfer(address(router), routerToken0Balance);
-
-        assertEq(IERC20(token0).balanceOf(address(router)), routerToken0Balance, "Expect to have balance");
-
-        vm.expectRevert(SiloRouter.ERC20TransferFailed.selector);
-        router.execute(actions);
-    }
-
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testEthTransferFailed
-    function testEthTransferFailed() public {
-        uint256 depositToken1 = _TOKEN1_AMOUNT;
-
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken1,
-            assetType: ISilo.CollateralType.Collateral
-        });
-
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo1),
-            asset: IERC20(token1),
-            options: abi.encode(options0)
-        });
-
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](1);
-        actions[0] = action0;
-
-        uint256 balanceBefore = address(this).balance;
-
-        assertNotEq(balanceBefore, 0, "Expect to have balance before");
-
-        vm.prank(usdcWhale);
-        IERC20(token1).transfer(address(this), _TOKEN1_AMOUNT);
-
-        vm.prank(address(this));
-        IERC20(token1).approve(address(router), type(uint256).max);
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testMulticallEthTransferFailed
+    function testMulticallEthTransferFailed() public {
+        assertNotEq(address(this).balance, 0, "Expect to have no balance before");
+
+        bytes[] memory data = new bytes[](1);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+
+        targets[0] = address(IERC20(token0));
+        data[0] = abi.encodeWithSelector(
+            IERC20.transferFrom.selector,
+            depositor,
+            address(router),
+            _TOKEN0_AMOUNT
+        );
 
         vm.expectRevert(SiloRouter.EthTransferFailed.selector);
-        router.execute{value: balanceBefore}(actions);
+        router.multicall{value: address(this).balance}(targets, data, values);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWrapNativeTokenOnDeposit
-    function testWrapNativeTokenOnDeposit() public {
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testMulticallWrapNativeTokenOnDeposit
+    function testMulticallWrapNativeTokenOnDeposit() public {
         uint256 depositToken0 = address(this).balance;
         assertNotEq(depositToken0, 0, "Expect to have balance before");
 
@@ -433,22 +224,30 @@ contract SiloRouterActionsTest is IntegrationTest {
         uint256 token0Balance = IERC20(token0).balanceOf(address(this));
         assertEq(token0Balance, 0, "Expect to have no token0");
 
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken0,
-            assetType: ISilo.CollateralType.Collateral
-        });
+        bytes[] memory data = new bytes[](3);
+        address[] memory targets = new address[](3);
+        uint256[] memory values = new uint256[](3);
 
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo0),
-            asset: IERC20(token0),
-            options: abi.encode(options0)
-        });
+        targets[0] = address(IERC20(token0));
+        data[0] = abi.encodeWithSelector(IWrappedNativeToken.deposit.selector);
+        values[0] = address(this).balance;
 
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](1);
-        actions[0] = action0;
+        targets[1] = address(IERC20(token0));
+        data[1] = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            address(silo0),
+            address(this).balance
+        );
 
-        router.execute{value: depositToken0}(actions);
+        targets[2] = address(ISilo(silo0));
+        data[2] = abi.encodeWithSelector(
+            ISilo.deposit.selector,
+            address(this).balance,
+            address(this),
+            ISilo.CollateralType.Collateral
+        );
+
+        router.multicall{value: address(this).balance}(targets, data, values);
 
         collateralBalance = IERC20(collateralToken0).balanceOf(address(this));
 
@@ -456,63 +255,51 @@ contract SiloRouterActionsTest is IntegrationTest {
         assertEq(address(this).balance, 0, "Expect to have 0 balance after");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testEthTransferFailed
-    function testApproveFailed() public {
-        uint256 depositToken1 = _TOKEN1_AMOUNT;
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testMulticallSendBackEthLeftover
+    function testMulticallSendBackEthLeftover() public {
+        // transfer eth to the depositor
+        payable(depositor).transfer(address(this).balance);
 
-        SiloRouter.AnyAction memory options0 = SiloRouter.AnyAction({
-            amount: depositToken1,
-            assetType: ISilo.CollateralType.Collateral
-        });
+        uint256 depositToken0 = address(depositor).balance;
+        assertNotEq(depositToken0, 0, "Expect to have balance before");
 
-        SiloRouter.Action memory action0 = SiloRouter.Action({
-            actionType: SiloRouter.ActionType.Deposit,
-            silo: ISilo(silo1),
-            asset: IERC20(token1),
-            options: abi.encode(options0)
-        });
+        uint256 collateralBalance = IERC20(collateralToken0).balanceOf(address(this));
+        assertEq(collateralBalance, 0, "Expect to have no deposits before");
 
-        SiloRouter.Action[] memory actions = new SiloRouter.Action[](1);
-        actions[0] = action0;
+        uint256 token0Balance = IERC20(token0).balanceOf(address(this));
+        assertEq(token0Balance, 0, "Expect to have no token0");
 
-        vm.prank(usdcWhale);
-        IERC20(token1).transfer(address(this), _TOKEN1_AMOUNT);
+        uint256 expectedLeftover = 100;
 
-        vm.prank(address(this));
-        IERC20(token1).approve(address(router), type(uint256).max);
+        bytes[] memory data = new bytes[](3);
+        address[] memory targets = new address[](3);
+        uint256[] memory values = new uint256[](3);
 
-        vm.mockCall(
-            token1,
-            abi.encodeWithSelector(IERC20.approve.selector, address(silo1), type(uint256).max),
-            abi.encode(false)
+        targets[0] = address(IERC20(token0));
+        data[0] = abi.encodeWithSelector(IWrappedNativeToken.deposit.selector);
+        values[0] = depositToken0 - expectedLeftover;
+
+        targets[1] = address(IERC20(token0));
+        data[1] = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            address(silo0),
+            type(uint256).max
         );
 
-        vm.expectRevert(SiloRouter.ApprovalFailed.selector);
-        router.execute(actions);
-    }
-
-    function _borrow() internal {
-        uint256 depositLiquidity = _TOKEN0_AMOUNT;
-        uint256 depositCollateral = 100000e6;
-
-        vm.prank(usdcWhale);
-        IERC20(token1).transfer(borrower, depositCollateral);
+        targets[2] = address(ISilo(silo0));
+        data[2] = abi.encodeWithSelector(
+            ISilo.deposit.selector,
+            depositToken0 - expectedLeftover,
+            address(this),
+            ISilo.CollateralType.Collateral
+        );
 
         vm.prank(depositor);
-        IERC20(token0).approve(silo0, type(uint256).max);
+        router.multicall{value: depositToken0}(targets, data, values);
 
-        vm.prank(borrower);
-        IERC20(token1).approve(silo1, type(uint256).max);
+        collateralBalance = IERC20(collateralToken0).balanceOf(address(this));
 
-        vm.prank(depositor);
-        ISilo(silo0).deposit(depositLiquidity, depositor, ISilo.CollateralType.Collateral);
-
-        vm.prank(borrower);
-        ISilo(silo1).deposit(depositCollateral, borrower, ISilo.CollateralType.Protected);
-
-        uint256 borrowAmount = _TOKEN1_AMOUNT;
-
-        vm.prank(borrower);
-        ISilo(silo0).borrow(borrowAmount, borrower, borrower);
+        assertNotEq(collateralBalance, 0, "Expect to have deposits after");
+        assertEq(address(depositor).balance, expectedLeftover, "Expect to have balance after");
     }
 }

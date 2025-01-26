@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
@@ -12,9 +14,9 @@ import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProt
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 /**
-    FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+        --ffi --broadcast --rpc-url $RPC_ARBITRUM --verify
 
     Lib verification:
 
@@ -83,7 +85,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
  */
 contract SiloDeployerDeploy is CommonDeploy {
     function run() public returns (ISiloDeployer siloDeployer) {
-        string memory chainAlias = getChainAlias();
+        string memory chainAlias = ChainsLib.chainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         ISiloFactory siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));

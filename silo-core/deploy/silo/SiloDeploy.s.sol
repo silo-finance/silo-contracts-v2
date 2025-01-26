@@ -7,7 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
-import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
+import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
@@ -34,9 +34,9 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
+FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
     forge script silo-core/deploy/silo/SiloDeploy.s.sol \
-    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract SiloDeploy is CommonDeploy {
     uint256 private constant _BYTES32_SIZE = 32;
@@ -76,9 +76,14 @@ contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] IRM configs prepared");
         
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
+        // TODO we might want to resolve oracle deployments it in better way in a future,
+        // atm we have some data for it in `oracles` and some in siloInitData
+        siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
+        siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
+        siloInitData.solvencyOracle1 = oracles.solvencyOracle1.deployed;
+        siloInitData.maxLtvOracle1 = oracles.maxLtvOracle1.deployed;
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-
 
         console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
         console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
@@ -110,7 +115,7 @@ contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] deploy done");
 
-        SiloDeployments.save(getChainAlias(), configName, address(siloConfig));
+        SiloDeployments.save(ChainsLib.chainAlias(), configName, address(siloConfig));
 
         _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
@@ -188,6 +193,22 @@ contract SiloDeploy is CommonDeploy {
             return _diaTxData(_oracleConfigName);
         }
 
+        address deployed = SiloCoreDeployments.parseAddress(_oracleConfigName);
+
+        if (deployed != address(0)) {
+            txData.deployed = deployed;
+            console2.log("using already deployed oracle with fixed address: %s", _oracleConfigName, deployed);
+            return txData;
+        }
+
+        deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
+
+        if (deployed != address(0)) {
+            txData.deployed = deployed;
+            console2.log("using already deployed oracle %s: %s", _oracleConfigName, deployed);
+            return txData;
+        }
+
         revert("[_getOracleTxData] unknown oracle type");
     }
 
@@ -249,7 +270,7 @@ contract SiloDeploy is CommonDeploy {
     }
 
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
-        contractAddress = getDeployedAddress(_name);
+        contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias());
         console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
     }
 
@@ -340,6 +361,7 @@ contract SiloDeploy is CommonDeploy {
         );
 
         console2.log("\n");
+        console2.log("\tdecimals      ", IERC20Metadata(_silo).decimals());
 
         string memory icon;
         uint256 configValueUint256 = _siloInitData.daoFee;

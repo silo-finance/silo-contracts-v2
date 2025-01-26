@@ -4,12 +4,12 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {BaseTest} from "./BaseTest.sol";
-import {MetaMorpho, ConstantsLib} from "../../../contracts/MetaMorpho.sol";
+import {SiloVault, ConstantsLib} from "../../../contracts/SiloVault.sol";
 
-contract InternalTest is BaseTest, MetaMorpho {
+contract InternalTest is BaseTest, SiloVault {
 
     constructor()
-        MetaMorpho(OWNER, ConstantsLib.MIN_TIMELOCK, address(loanToken), "MetaMorpho Vault", "MM")
+        SiloVault(OWNER, ConstantsLib.MIN_TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MM")
     {
 
     }
@@ -34,7 +34,7 @@ contract InternalTest is BaseTest, MetaMorpho {
     function _expectedSupplyAssets(IERC4626 _market, address _user)
         internal
         view
-        override(BaseTest, MetaMorpho)
+        override(BaseTest, SiloVault)
         returns (uint256 assets)
     {
         assets = BaseTest._expectedSupplyAssets(_market, _user);

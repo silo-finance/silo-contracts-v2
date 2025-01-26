@@ -46,6 +46,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
+    receive() external payable {}
+
     /// @inheritdoc ILiquidationHelper
     /// @dev entry point for liquidation
     /// @notice for now we does not support liquidation with sTokens.
@@ -57,7 +59,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         uint256 _maxDebtToCover,
         LiquidationData calldata _liquidation,
         DexSwapInput[] calldata _swapsInputs0x
-    ) external returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
+    ) external virtual returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
         require(_maxDebtToCover != 0, NoDebtToCover());
 
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
@@ -76,6 +78,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         bytes calldata _data
     )
         external
+        virtual
         returns (bytes32)
     {
         (
@@ -100,6 +103,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         if (_liquidation.collateralAsset == _debtAsset) {
             uint256 balance = IERC20(_liquidation.collateralAsset).balanceOf(address(this));
+            require(flashLoanWithFee <= balance, UnableToRepayFlashloan());
+
             // bad debt is not supported, we will get underflow on bad debt
             _transferToReceiver(_liquidation.collateralAsset, balance - flashLoanWithFee);
         } else {
@@ -115,6 +120,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
                     // safe because of `if (flashLoanWithFee < debtBalance)`
                     _transferToReceiver(_debtAsset, debtBalance - flashLoanWithFee);
                 }
+            } else if (flashLoanWithFee != debtBalance) {
+                revert UnableToRepayFlashloan();
             }
         }
 
@@ -122,13 +129,13 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         return _FLASHLOAN_CALLBACK;
     }
 
-    function _executeSwap(DexSwapInput[] memory _swapInputs) internal {
+    function _executeSwap(DexSwapInput[] memory _swapInputs) internal virtual {
         for (uint256 i; i < _swapInputs.length; i++) {
             fillQuote(_swapInputs[i].sellToken, _swapInputs[i].allowanceTarget, _swapInputs[i].swapCallData);
         }
     }
 
-    function _transferToReceiver(address _asset, uint256 _amount) internal {
+    function _transferToReceiver(address _asset, uint256 _amount) internal virtual {
         if (_amount == 0) return;
 
         if (_asset == NATIVE_TOKEN) {
@@ -139,7 +146,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
     }
 
     /// @notice We assume that quoteToken is wrapped native token
-    function _transferNative(uint256 _amount) internal {
+    function _transferNative(uint256 _amount) internal virtual {
         IWrappedNativeToken(address(NATIVE_TOKEN)).withdraw(_amount);
         TOKENS_RECEIVER.sendValue(_amount);
     }

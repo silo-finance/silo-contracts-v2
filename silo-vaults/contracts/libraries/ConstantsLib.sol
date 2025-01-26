@@ -2,8 +2,9 @@
 pragma solidity ^0.8.28;
 
 /// @title ConstantsLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @dev Forked with gratitude from Morpho Labs.
+/// @author Silo Labs
+/// @custom:contact security@silo.finance
 /// @notice Library exposing constants.
 library ConstantsLib {
     /// @dev The maximum delay of a timelock.

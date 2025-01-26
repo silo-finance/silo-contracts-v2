@@ -4,10 +4,26 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 /// @title ErrorsLib
-/// @author Morpho Labs
-/// @custom:contact security@morpho.org
+/// @dev Forked with gratitude from Morpho Labs.
+/// @author Silo Labs
+/// @custom:contact security@silo.finance
 /// @notice Library exposing error messages.
 library ErrorsLib {
+    /// @notice Thrown when deposit generates zero shares
+    error InputZeroShares();
+
+    /// @notice Thrown on OutOfGas or revert() without any data
+    error PossibleOutOfGas();
+
+    /// @notice Thrown on reentering token transfer while notification are being dispatched
+    error NotificationDispatchError();
+
+    /// @notice Thrown on reentering
+    error ReentrancyError();
+
+    /// @notice Thrown when delegatecall on claiming rewards failed
+    error ClaimRewardsFailed();
+
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();
 

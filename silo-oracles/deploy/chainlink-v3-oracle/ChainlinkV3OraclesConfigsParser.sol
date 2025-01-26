@@ -27,11 +27,24 @@ library ChainlinkV3OraclesConfigsParser {
         string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
         string memory primaryAggregatorKey = KV.getString(configJson, _name, "primaryAggregator");
         string memory secondaryAggregatorKey = KV.getString(configJson, _name, "secondaryAggregator");
-        uint256 primaryHeartbeat = KV.getUint(configJson, _name, "primaryHeartbeat");
-        uint256 secondaryHeartbeat = KV.getUint(configJson, _name, "secondaryHeartbeat");
 
-        require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
-        require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
+        {
+            uint256 primaryHeartbeat = KV.getUint(configJson, _name, "primaryHeartbeat");
+            require(primaryHeartbeat <= type(uint32).max, "primaryHeartbeat should be uint32");
+            config.primaryHeartbeat = uint32(primaryHeartbeat);
+
+            uint256 secondaryHeartbeat = KV.getUint(configJson, _name, "secondaryHeartbeat");
+            require(secondaryHeartbeat <= type(uint32).max, "secondaryHeartbeat should be uint32");
+            config.secondaryHeartbeat = uint32(secondaryHeartbeat);
+        }
+
+        config.normalizationDivider = KV.getUint(configJson, _name, "normalizationDivider");
+        config.normalizationMultiplier = KV.getUint(configJson, _name, "normalizationMultiplier");
+        config.invertSecondPrice = KV.getBoolean(configJson, _name, "invertSecondPrice");
+
+        require(config.normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
+        require(config.normalizationMultiplier <= 1e36, "normalizationMultiplier is over 1e36");
+        require(config.normalizationDivider != 0 || config.normalizationMultiplier != 0, "normalization variables not set");
 
         AggregatorV3Interface secondaryAggregator = AggregatorV3Interface(address(0));
 
@@ -39,14 +52,10 @@ library ChainlinkV3OraclesConfigsParser {
             secondaryAggregator = AggregatorV3Interface(AddrLib.getAddressSafe(_network, secondaryAggregatorKey));
         }
 
-        config = IChainlinkV3Oracle.ChainlinkV3DeploymentConfig({
-            baseToken: IERC20Metadata(AddrLib.getAddressSafe(_network, baseTokenKey)),
-            quoteToken: IERC20Metadata(AddrLib.getAddressSafe(_network, quoteTokenKey)),
-            primaryAggregator: AggregatorV3Interface(AddrLib.getAddressSafe(_network, primaryAggregatorKey)),
-            primaryHeartbeat: uint32(primaryHeartbeat),
-            secondaryAggregator: secondaryAggregator,
-            secondaryHeartbeat: uint32(secondaryHeartbeat)
-        });
+        config.baseToken = IERC20Metadata(AddrLib.getAddressSafe(_network, baseTokenKey));
+        config.quoteToken = IERC20Metadata(AddrLib.getAddressSafe(_network, quoteTokenKey));
+        config.primaryAggregator = AggregatorV3Interface(AddrLib.getAddressSafe(_network, primaryAggregatorKey));
+        config.secondaryAggregator = secondaryAggregator;
     }
 
     function configFile() internal view returns (string memory file) {

@@ -8,6 +8,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
@@ -15,11 +16,12 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
-import {MetaMorpho} from "../../../contracts/MetaMorpho.sol";
+import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
 
-import {IMetaMorpho} from "../../../contracts/interfaces/IMetaMorpho.sol";
+import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
+import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
 
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
@@ -40,40 +42,45 @@ contract BaseTest is SiloLittleHelper, Test {
     address internal GUARDIAN = makeAddr("Guardian");
     address internal FEE_RECIPIENT = makeAddr("FeeRecipient");
     address internal SKIM_RECIPIENT = makeAddr("SkimRecipient");
-    address internal MORPHO_OWNER = makeAddr("MorphoOwner");
-    address internal MORPHO_FEE_RECIPIENT = makeAddr("MorphoFeeRecipient");
 
     MintableToken internal loanToken = new MintableToken(18);
     MintableToken internal collateralToken = new MintableToken(18);
+    VaultIncentivesModule internal vaultIncentivesModule = new VaultIncentivesModule(OWNER);
 
     IERC4626[] internal allMarkets;
     mapping (IERC4626 collateral => IERC4626) internal collateralMarkets;
 
     IERC4626 internal idleMarket;
 
-    IMetaMorpho internal vault;
+    ISiloVault internal vault;
 
     function setUp() public virtual {
-        _createNewMarkets();
+        assertEq(allMarkets.length, 0, "allMarkets is fresh");
 
         collateralToken.setOnDemand(true);
         loanToken.setOnDemand(true);
 
         emit log_named_address("loanToken", address(loanToken));
 
-        vault = IMetaMorpho(address(new MetaMorpho(OWNER, TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV")));
+        vault = ISiloVault(address(
+            new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV")
+        ));
 
         idleMarket = new IdleVault(address(vault), address(loanToken), "idle vault", "idle");
+
+        _createNewMarkets();
     }
 
-    function createMetaMorpho(
+    function createSiloVault(
         address owner,
         uint256 initialTimelock,
         address asset,
         string memory name,
         string memory symbol
-    ) public returns (IMetaMorpho) {
-        return IMetaMorpho(address(new MetaMorpho(owner, initialTimelock, asset, name, symbol)));
+    ) public returns (ISiloVault) {
+        return ISiloVault(address(
+            new SiloVault(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
+        ));
     }
 
     function _createNewMarkets() public virtual {
@@ -84,10 +91,10 @@ contract BaseTest is SiloLittleHelper, Test {
 
         _override.token0 = address(collateralToken);
         _override.token1 = address(loanToken);
-        _override.configName = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
+        _override.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
 
-        for (uint256 i; i < NB_MARKETS; ++i) {
-            (, ISilo silo0_, ISilo silo1_,,,) = siloFixture.deploy_local(_override);
+        for (uint256 i; i < NB_MARKETS; i++) {
+            (, ISilo silo0_, ISilo silo1_,,, address hook) = siloFixture.deploy_local(_override);
             vm.label(address(silo0_), string.concat("Market#", Strings.toString(i)));
 
             allMarkets.push(silo1_);
@@ -97,6 +104,7 @@ contract BaseTest is SiloLittleHelper, Test {
                 // setup default values for silo fixture
                 silo0 = silo0_;
                 silo1 = silo1_;
+                partialLiquidation = IPartialLiquidation(hook);
             }
         }
 

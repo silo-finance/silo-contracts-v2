@@ -373,6 +373,36 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         }
     }
 
+    /// @dev this method is to detect possible overflow in math for provided config in next 50 years
+    function configOverflowCheck(IInterestRateModelV2.Config calldata _config) external pure virtual {
+        int256 YEAR = 365 days;
+        int256 MAX_TIME = 50 * 365 days;
+        int256 DP = int256(_DP);
+
+        int256 rcur_max;
+
+        {
+            int256 Tcrit_max = _config.Tcrit + _config.beta * MAX_TIME;
+            int256 rp_max = _config.kcrit * (DP + Tcrit_max) / DP * (DP - _config.ucrit) / DP;
+            int256 rp_min = -_config.klow * _config.ulow / DP;
+            int256 rlin_max = _config.klin * DP / DP;
+            int256 ri_max = _max(_config.ri, rlin_max) +_config.ki * (DP - _config.uopt) * MAX_TIME / DP;
+            int256 ri_min = -_config.ki * _config.uopt * MAX_TIME / DP;
+            rcur_max = ri_max + rp_max;
+            int256 rcur_min = ri_min + rp_min;
+            int256 rcur_ann_max = rcur_max * YEAR;
+        }
+
+        {
+            int256 slopei_max = _config.ki * (DP - _config.uopt) / DP;
+            int256 slopei_min = - _config.ki * _config.uopt / DP;
+            int256 slope_max = slopei_max + _config.kcrit * _config.beta / DP * (DP - _config.ucrit) / DP;
+            int256 slope_min = slopei_min;
+
+            int256 x_max = rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;
+        }
+    }
+
     /// @dev checks for the overflow in rcomp calculations, accruedInterest, totalDeposits and totalBorrowedAmount.
     /// In case of the overflow, rcomp is reduced to make totalDeposits and totalBorrowedAmount <= 2**196.
     function _calculateRComp(

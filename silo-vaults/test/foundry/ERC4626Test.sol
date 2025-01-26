@@ -30,7 +30,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     function testDecimals(uint8 decimals) public {
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
-        vault = createMetaMorpho(OWNER, TIMELOCK, address(loanToken), "MetaMorpho Vault", "MMV");
+        vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
     }
@@ -390,7 +390,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMaxDeposit -vvv
     */
     function testMaxDeposit() public {
-        _setCap(allMarkets[0], 1 ether);
+        uint256 cap = 1 ether;
+
+        _setCap(allMarkets[0], cap);
 
         IERC4626[] memory supplyQueue = new IERC4626[](1);
         supplyQueue[0] = allMarkets[0];
@@ -408,15 +410,20 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         _forward(1_000);
 
-        vm.prank(SUPPLIER);
-        vault.deposit(1 ether, ONBEHALF);
+        uint256 vaultDepositAmount = 0.65 ether;
 
-        assertEq(vault.maxDeposit(SUPPLIER), 0, "maxDeposit should be 0");
+        vm.prank(SUPPLIER);
+        vault.deposit(vaultDepositAmount, ONBEHALF);
+
+        assertEq(vault.maxDeposit(SUPPLIER), cap - vaultDepositAmount, "maxDeposit should be 0");
     }
 
-    function onFlashLoan(address, address, uint256, uint256, bytes calldata) external pure returns (bytes32) {
-        // TODO this is where silo implementation differs, on silo flashloan does not change state of silo
-        // assertEq(vault.maxWithdraw(ONBEHALF), 0, "onFlashLoan assertion");
+    function onFlashLoan(address, address, uint256, uint256, bytes calldata) external view returns (bytes32) {
+        // this is where silo implementation differs, on silo flashloan state of silo does not change
+        // so liquidity stays the same (however not correct during flashloan)
+        assertGe(vault.maxWithdraw(ONBEHALF), MIN_TEST_ASSETS, "onFlashLoan assertion MIN_TEST_ASSETS");
+        assertLe(vault.maxWithdraw(ONBEHALF), MAX_TEST_ASSETS, "onFlashLoan assertion MAX_TEST_ASSETS");
+
         return keccak256("ERC3156FlashBorrower.onFlashLoan");
     }
 }

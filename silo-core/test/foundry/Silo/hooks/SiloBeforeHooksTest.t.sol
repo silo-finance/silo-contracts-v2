@@ -63,7 +63,7 @@ contract HookReceiver is IHookReceiver, Test {
         imIn = false;
     }
 
-    function afterAction(address, uint256, bytes calldata) external {
+    function afterAction(address, uint256, bytes calldata) external pure {
         revert("not in use");
     }
 

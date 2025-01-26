@@ -69,6 +69,9 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
 
         require(_config.ri >= 0, IInterestRateModelV2.InvalidRi());
         require(_config.Tcrit >= 0, IInterestRateModelV2.InvalidTcrit());
+
+        // overflow check
+        InterestRateModelV2(IRM).configOverflowCheck(_config);
     }
 
     /// @inheritdoc IInterestRateModelV2Factory

@@ -5,6 +5,58 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- use underlying token decimals in collateral share token
+
+## [1.0.0] - 2025-01-20
+### Added
+- add rescue function to incentive controller
+
+### Updated
+- allow to restart incentive program after some time and ensure rewards are not calculated for a "gap"
+- ensure claim rewards reset state after claiming
+
+## [0.20.0] - 2025-01-10
+### Updated
+- Redeployment market for Sonic: `stS/S`
+- Redeployment SiloRouter
+- Redeployment GaugeHookReceiver with updated event and reduced contract size
+
+## [0.19.0] - 2025-01-08
+### Added
+- Redeployment market for Sonic: `stS/S`
+- Redeployment GaugeHookReceiver
+- Extended LiquidationCall event
+- silo vaults catch 63/64 gas attack
+
+## [0.18.0] - 2025-01-07
+### Added
+- Sonic and Arbitrum deployments
+- new market for Sonic: `stS/S`
+- Silo Incentives controller
+- Silo vaults incentives module and incentives claiming logic
+- Renaming of 'MetaMorpho' to 'SiloVaults'
+- Extended LiquidationCall event
+
+## [0.17.3] - 2024-12-20
+### Fixed
+- allow LiquidationHelper to accept ETH
+
+## [0.17.2] - 2024-12-16
+### Added
+- new markets for v0.17: `wstETH/WETH`, `gmETH/WETH`, `solvBTC/wBTC`, `ETHPlus/WETH`
+
+## [0.17.1] - 2024-12-14
+### Updated
+- redeployment of silo-vault with `MIN_TIMELOCK` set to 1 minute for QA purposes
+
+## [0.17.0] - 2024-12-14
+### Updated
+- redeployment of whole protocol
+
+## [0.16.0] - 2024-12-12
+### Added
+- add support for custom oracle setup
 
 ## [0.15.1] - 2024-12-03
 ### Added

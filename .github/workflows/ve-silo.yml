@@ -62,10 +62,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
 
       - name: yarn install
         run: yarn install
