@@ -219,6 +219,7 @@ contract SiloVerifier is Script, Test {
 
         if (_solvencyOracle1 == address(0)) {
             (, oraclesPriceRatio) = _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
+            oraclesPriceRatio = oraclesPriceRatio * precisionDecimals / (10**uint256(IERC20Metadata(_token0).decimals()));
         } else {
             (bool success0, uint256 price0) = 
                 _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
