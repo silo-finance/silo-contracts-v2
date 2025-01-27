@@ -73,6 +73,7 @@ contract SiloVerifier is Script, Test {
 
         console2.log(_DELIMITER);
         console2.log("3/3. find and print IRM config name by on-chain state");
+        
         if (!_checkIRMConfig(configData0, silo0, true)) {
             errorsCounter++;
         }
@@ -186,41 +187,42 @@ contract SiloVerifier is Script, Test {
         if (externalPrice0 == 0 || externalPrice1 == 0) {
             console2.log("Optional external prices are not provided to check oracles");
             return true;
+        }
+
+        console2.log("\nExternal price checks:");
+
+        (bool success0, uint256 price0) = 
+            _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
+
+        (bool success1, uint256 price1) = 
+            _quote(ISiloOracle(_solvencyOracle1), _token1, (10**uint256(IERC20Metadata(_token1).decimals())));
+
+        if (!success0 || !success1) {
+            console2.log(_FAIL_SYMBOL, "can't validate external prices, oracles revert");
+            return false;
+        }
+
+        uint256 precisionDecimals = 10**18;
+
+        // price0 / price1 from external source
+        uint256 externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1;
+        console2.log("externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1", externalPricesRatio);
+        // price0 / price1 from our oracles
+        uint256 oraclesPriceRatio = price0 * precisionDecimals / price1;
+        console2.log("oraclesPriceRatio = price0 * precisionDecimals / price1", externalPricesRatio);
+
+        uint256 maxRatio = externalPricesRatio > oraclesPriceRatio ? externalPricesRatio : oraclesPriceRatio;
+        uint256 minRatio = externalPricesRatio > oraclesPriceRatio ? oraclesPriceRatio : externalPricesRatio;
+
+        uint256 ratioDiff = maxRatio - minRatio;
+
+        // deviation from ratios is more than 1%
+        if (minRatio == 0 || ratioDiff * precisionDecimals / maxRatio > precisionDecimals / 100) {
+            console2.log(_FAIL_SYMBOL, "external prices have >1% deviation with oracles");
+            success = false;
         } else {
-            console2.log("\nExternal price checks:");
-
-            (bool success0, uint256 price0) = 
-                _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
-
-            (bool success1, uint256 price1) = 
-                _quote(ISiloOracle(_solvencyOracle1), _token1, (10**uint256(IERC20Metadata(_token1).decimals())));
-
-            if (!success0 || !success1) {
-                console2.log(_FAIL_SYMBOL, "can't validate external prices, oracles revert");
-                return false;
-            }
-
-            uint256 precisionDecimals = 10**18;
-
-            // price0 / price1 from external source
-            uint256 externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1;
-            console2.log("externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1", externalPricesRatio);
-            // price0 / price1 from our oracles
-            uint256 oraclesPriceRatio = price0 * precisionDecimals / price1;
-            console2.log("oraclesPriceRatio = price0 * precisionDecimals / price1", externalPricesRatio);
-
-            uint256 maxRatio = externalPricesRatio > oraclesPriceRatio ? externalPricesRatio : oraclesPriceRatio;
-            uint256 minRatio = externalPricesRatio > oraclesPriceRatio ? oraclesPriceRatio : externalPricesRatio;
-
-            uint256 ratioDiff = maxRatio - minRatio;
-
-            // deviation from ratios is more than 1%
-            if (minRatio == 0 || ratioDiff * precisionDecimals / maxRatio > precisionDecimals / 100) {
-                console2.log(_FAIL_SYMBOL, "external prices have >1% deviation with oracles");
-            } else {
-                console2.log(_SUCCESS_SYMBOL, "external prices have <1% deviation with oracles");
-                success = true;
-            }
+            console2.log(_SUCCESS_SYMBOL, "external prices have <1% deviation with oracles");
+            success = true;
         }
     }
 
