@@ -202,7 +202,7 @@ contract SiloVerifier is Script, Test {
         uint256 _externalPrice1
     ) internal view returns (bool success) {
         if (_externalPrice0 == 0 || _externalPrice1 == 0) {
-            console2.log("External prices are not provided to check oracles");
+            console2.log(_FAIL_SYMBOL, "External prices are not provided to check oracles");
             return false;
         }
 
