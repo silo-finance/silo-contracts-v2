@@ -183,7 +183,10 @@ contract SiloVerifier is Script, Test {
         uint256 externalPrice0 = vm.envOr("EXTERNAL_PRICE_0", uint256(0));
         uint256 externalPrice1 = vm.envOr("EXTERNAL_PRICE_1", uint256(0));
 
-        if (externalPrice0 != 0 && externalPrice1 != 0) {
+        if (externalPrice0 == 0 || externalPrice1 == 0) {
+            console2.log("Optional external prices are not provided to check oracles");
+            return true;
+        } else {
             console2.log("\nExternal price checks:");
 
             (bool success0, uint256 price0) = 
