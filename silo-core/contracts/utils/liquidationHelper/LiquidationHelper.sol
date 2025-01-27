@@ -78,15 +78,15 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         if (sTokenRequired) {
             ISilo _siloWithDebt = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df);
             uint256 ltv = SILO_LENS.getLtv(_siloWithDebt, _liquidation.user);
-            require(ltv > 1e18, STokenNotSupported());
+            console2.log("ltv in helper", ltv);
+            // require(ltv > 1e18, STokenNotSupported());
 
             // bad debt, try to liquidate chunk
-            debtToRepay = debtToRepay * 0.95e18 / ltv;
-            console2.log("bad debt recalculation", debtToRepay);
+//            debtToRepay = debtToRepay * 0.95e18 / ltv;
+//            console2.log("bad debt recalculation", debtToRepay);
         }
 
         console2.log("_maxDebtToCover", _maxDebtToCover);
-        // why??
         console2.log("sTokenRequired", sTokenRequired ? "yesy" : "no");
 
         _maxDebtToCover = Math.min(debtToRepay, _maxDebtToCover);
