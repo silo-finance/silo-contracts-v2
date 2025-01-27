@@ -1,0 +1,74 @@
+diff --git a/certora/harness/vaults/contracts/SiloVault.sol b/certora/harness/vaults/contracts/SiloVault.sol
+index 37b1500f..306db26c 100644
+--- a/certora/harness/vaults/contracts/SiloVault.sol
++++ b/certora/harness/vaults/contracts/SiloVault.sol
+@@ -98,6 +98,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+ 
+     bool transient _lock;
+ 
++    // HARNESS
++    // The index of the identifier of the last market withdrawn.
++    uint256 public lastIndexWithdraw;
++    // HARNESS
++    // The rank of a market identifier in the withdraw queue.
++    // Returns 0 if the corresponding market is not in the withdraw queue.
++    mapping(address => uint256) public withdrawRank;
++    // HARNESS
++    // The last index at which a market identifier has been removed from the withdraw queue.
++    mapping(address => uint256) public deletedAt;
++
+     /* CONSTRUCTOR */
+ 
+     /// @dev Initializes the contract.
+@@ -332,6 +343,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+             seen[prevIndex] = true;
+ 
+             newWithdrawQueue[i] = market;
++
++            // HARNESS
++            withdrawRank[address(market)] = i + 1;
+         }
+ 
+         for (uint256 i; i < currLength; ++i) {
+@@ -341,7 +355,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+                 if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
+                 if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
+ 
+-                if (_ERC20BalanceOf(address(market), address(this)) != 0) {
++                // HARNESS
++                uint256 harnessShares;
++                (, harnessShares) = _supplyBalance(market);
++                if (harnessShares != 0) {
+                     if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
+ 
+                     if (block.timestamp < config[market].removableAt) {
+@@ -349,6 +366,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+                     }
+                 }
+ 
++                // HARNESS
++                deletedAt[address(market)] = i;
++                delete withdrawRank[address(market)];
++
+                 delete config[market];
+             }
+         }
+@@ -789,6 +810,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+ 
+         if (_supplyCap > 0) {
+             if (!marketConfig.enabled) {
++                // HARNESS
++                withdrawRank[address(_market)] = withdrawQueue.length + 1;
++
+                 withdrawQueue.push(_market);
+ 
+                 if (withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
+@@ -844,6 +868,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+     /// @dev Withdraws `assets` from ERC4626 vaults.
+     function _withdrawERC4626(uint256 _assets) internal virtual {
+         for (uint256 i; i < withdrawQueue.length; ++i) {
++            // HARNESS
++            lastIndexWithdraw = i;
+             IERC4626 market = withdrawQueue[i];
+ 
+             // original implementation were using `_accruedSupplyBalance` which does not care about liquidity
