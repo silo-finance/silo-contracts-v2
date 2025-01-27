@@ -17,17 +17,36 @@ FOUNDRY_PROFILE=core CONFIG=0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab \
     forge script silo-core/deploy/silo/SiloVerifier.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
+
 contract SiloVerifier is Script, Test {
-    function run() public {
-        ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
-
-        (address silo0, address silo1) = siloConfig.getSilos();
-
-        _printSilo(siloConfig, silo0);
-        _printSilo(siloConfig, silo1);
+    // used to generate quote amounts and names to log
+    struct QuoteNamedAmount {
+        uint256 amount;
+        string name;
     }
 
-    function _printSilo(ISiloConfig _siloConfig, address _silo) internal {
+    string constant internal _SUCCESS_SYMBOL = unicode"✅";
+    string constant internal _FAIL_SYMBOL = unicode"❌";
+
+    function run() public {
+        ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
+        uint256 errorsCounter = _checkConfig(siloConfig);
+        
+        if (errorsCounter == 0) {
+            console2.log(_SUCCESS_SYMBOL, "Config checks are done with 0 errors");
+        } else {
+            console2.log("%s Config checks are done with %s errors", _FAIL_SYMBOL, errorsCounter);
+        }
+    }
+
+    function _checkConfig(ISiloConfig _siloConfig) internal returns (uint256 errorsCounter) {
+        (address silo0, address silo1) = _siloConfig.getSilos();
+
+        errorsCounter += _checkSilo(_siloConfig, silo0);
+        errorsCounter += _checkSilo(_siloConfig, silo1);
+    }
+
+    function _checkSilo(ISiloConfig _siloConfig, address _silo) internal returns (uint256 errorsCounter) {
         emit log_named_address("\nsiloConfig", address(_siloConfig));
 
         ISiloConfig.ConfigData memory configData = ISiloConfig(_siloConfig).getConfig(_silo);
@@ -51,25 +70,144 @@ contract SiloVerifier is Script, Test {
         emit log_named_address("solvencyOracle", configData.solvencyOracle);
         emit log_named_address("maxLtvOracle", configData.maxLtvOracle);
 
-        _printOracleInfo(configData.solvencyOracle, configData.token);
+        errorsCounter += _checkOracle(ISiloOracle(configData.solvencyOracle), configData.token);
     }
 
-    function _printOracleInfo(address _oracle, address _baseToken) internal {
-        ISiloOracle oracle = ISiloOracle(_oracle);
-
-        address quoteToken = oracle.quoteToken();
+    function _checkOracle(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCounter) {
+        address quoteToken = _oracle.quoteToken();
         uint256 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
 
-        console2.log("\nOracle:", _oracle);
+        console2.log("\nOracle:", address(_oracle));
         console2.log("Token name:", IERC20Metadata(_baseToken).name());
         console2.log("Token symbol:", IERC20Metadata(_baseToken).symbol());
         console2.log("Token decimals:", IERC20Metadata(_baseToken).decimals());
-        console2.log("Quote token:", quoteToken);
+        console2.log("Quote token name:", _tryGetTokenName(IERC20Metadata(quoteToken)));
+        console2.log("Quote token symbol:", _tryGetTokenSymbol(IERC20Metadata(quoteToken)));
         console2.log("Quote token decimals:", quoteTokenDecimals);
+        console2.log("Quote token:", quoteToken);
 
-        uint256 quote = oracle.quote(10 ** IERC20Metadata(_baseToken).decimals(), _baseToken);
+        (QuoteNamedAmount[] memory amountsToQuote) = _getAmountsToQuote(IERC20Metadata(_baseToken).decimals());
 
-        emit log_named_uint("Quote for 1 base token:", quote);
-        emit log_named_decimal_uint("Quote for 1 base token (18 decimals):", quote, 18);
+        for (uint i; i < amountsToQuote.length; i++) {
+            errorsCounter += _printPrice(_oracle, _baseToken, amountsToQuote[i]);
+        }
+
+        errorsCounter += _priceSanityChecks(_oracle, _baseToken);
+    }
+
+    function _getAmountsToQuote(uint8 _baseTokenDecimals) internal pure returns (QuoteNamedAmount[] memory amountsToQuote) {
+        amountsToQuote = new QuoteNamedAmount[](9);
+        uint256 oneToken = (10 ** uint256(_baseTokenDecimals));
+
+        amountsToQuote[0] = QuoteNamedAmount({
+            amount: 1,
+            name: "1 wei (lowest amount)"
+        });
+
+        amountsToQuote[1] = QuoteNamedAmount({
+            amount: 10,
+            name: "10 wei"
+        });
+
+        amountsToQuote[2] = QuoteNamedAmount({
+            amount: oneToken / 10,
+            name: "0.1 token"
+        });
+
+        amountsToQuote[3] = QuoteNamedAmount({
+            amount: oneToken / 2,
+            name: "0.5 token"
+        });
+
+        amountsToQuote[4] = QuoteNamedAmount({
+            amount: oneToken,
+            name: "1 token (10 ^ decimals)"
+        });
+
+        amountsToQuote[5] = QuoteNamedAmount({
+            amount: 100 * oneToken,
+            name: "100 tokens"
+        });
+
+        amountsToQuote[6] = QuoteNamedAmount({
+            amount: 10_000 * oneToken,
+            name: "10,000 tokens"
+        });
+
+        amountsToQuote[7] = QuoteNamedAmount({
+            amount: 10**36,
+            name: "10**36 wei"
+        });
+
+        amountsToQuote[8] = QuoteNamedAmount({
+            amount: 10**20 * oneToken,
+            name: "10**20 tokens (More than USA GDP if the token worth at least 0.001 cent)"
+        });
+    }
+
+    function _priceSanityChecks(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCount) {
+        (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
+
+        if (!success || price == 0) {
+            console2.log(_FAIL_SYMBOL, "quote (1 wei) reverts or zero");
+            errorsCount++;
+        } else {
+            console2.log(_SUCCESS_SYMBOL, "quote (1 wei) is not zero");
+        }
+
+        uint256 largestAmount = 10**36 + 10**20 * (10**uint256(IERC20Metadata(_baseToken).decimals()));
+        (success, price) = _quote(_oracle, _baseToken, largestAmount);
+
+        if (!success) {
+            console2.log("%s quote (%e) reverts", _FAIL_SYMBOL, largestAmount);
+            errorsCount++;
+        } else {
+            console2.log("%s quote (%e) do not revert", _SUCCESS_SYMBOL, largestAmount);
+        }
+    }
+
+    function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
+        internal
+        view
+        returns (uint256 errorsCounter)
+    {
+        (bool success, uint256 price) = _quote(_oracle, _baseToken, _quoteNamedAmount.amount);
+
+        if (success) {
+            console2.log("Price for %s = %e", _quoteNamedAmount.name, price);
+        } else {
+            console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
+            errorsCounter++;
+        }
+    }
+
+    function _quote(ISiloOracle _oracle, address _baseToken, uint256 _amount)
+        internal
+        view
+        returns (bool success, uint256 price)
+    {
+        try _oracle.quote(_amount, _baseToken) returns (uint256 priceFromOracle) {
+            success = true;
+            price = priceFromOracle;
+        } catch {
+            success = false;
+            price = 0;
+        }
+    }
+
+    function _tryGetTokenSymbol(IERC20Metadata _token) internal view returns (string memory) {
+        try _token.symbol() returns (string memory symbol) {
+            return symbol;
+        } catch {
+            return "Symbol reverted";
+        }
+    }
+
+    function _tryGetTokenName(IERC20Metadata _token) internal view returns (string memory) {
+        try _token.name() returns (string memory name) {
+            return name;
+        } catch {
+            return "Name reverted";
+        }
     }
 }
