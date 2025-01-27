@@ -77,4 +77,13 @@ interface ISiloLens {
 
     /// @dev this method is to keep interface backwards compatible
     function debtBalanceOfUnderlying(ISilo _silo, address _asset, address _borrower) external view returns (uint256);
+
+    /// @param _silo silo where borrower has debt
+    /// @param _hook hook for silo with debt
+    /// @param _borrower borrower address
+    function maxLiquidation(ISilo _silo, IPartialLiquidation _hook, address _borrower)
+        external
+        view
+        virtual
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool maxLiquidation);
 }

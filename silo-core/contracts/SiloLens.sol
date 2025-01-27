@@ -89,9 +89,7 @@ contract SiloLens is ISiloLens {
         return _silo.maxRepay(_borrower);
     }
 
-    /// @param _silo silo where borrower has debt
-    /// @param _hook hook for silo with debt
-    /// @param _borrower borrower address
+    /// @inheritdoc ISiloLens
     function maxLiquidation(ISilo _silo, IPartialLiquidation _hook, address _borrower)
         external
         view
