@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxLiquidationTest
 
     this tests are for "normal" case,
     where user became insolvent and we can partially liquidate
@@ -77,6 +77,9 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
 
+        (,,, bool fullLiquidation) = siloLens.maxLiquidation(silo1, partialLiquidation, borrower);
+        assertFalse(fullLiquidation, "[MaxLiquidation] fullLiquidation flag is DOWN on partial liquidation");
+
         _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
@@ -114,13 +117,18 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
 
+        (,,, bool fullLiquidation) = siloLens.maxLiquidation(silo1, partialLiquidation, borrower);
+
         _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
 
         _assertBorrowerIsSolvent();
 
         // 12 case allow for full liquidation and when done with chunks it stays at LTV 100 till the end
         if (_collateral == 12) _ensureBorrowerHasNoDebt();
-        else _ensureBorrowerHasDebt();
+        else {
+            assertFalse(fullLiquidation, "[MaxLiquidation] fullLiquidation flag is DOWN on partial liquidation");
+            _ensureBorrowerHasDebt();
+        }
     }
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)

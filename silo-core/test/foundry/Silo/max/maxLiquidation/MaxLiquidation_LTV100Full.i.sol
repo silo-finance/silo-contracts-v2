@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationLTV100FullTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxLiquidationLTV100FullTest
 
     cases where we go from solvent to 100% and we must do full liquidation
 */
@@ -119,12 +119,15 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
             uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
         ) = partialLiquidation.maxLiquidation(borrower);
 
+        (,,, bool fullLiquidation) = siloLens.maxLiquidation(silo1, partialLiquidation, borrower);
+        assertTrue(fullLiquidation, "[100FULL] fullLiquidation flag is UP when LTV is 100%");
+
         emit log_named_uint("[100FULL] collateralToLiquidate", collateralToLiquidate);
         uint256 ltv = silo0.getLtv(borrower);
         emit log_named_decimal_uint("[100FULL] ltv before", ltv, 16);
 
         if (collateralToLiquidate == 0) {
-            assertGe(ltv, 1e18, "if we don't have collateral we expect bad debt");
+            assertGe(ltv, 1e18, "[100FULL] if we don't have collateral we expect bad debt");
             return (0, 0);
         }
 
