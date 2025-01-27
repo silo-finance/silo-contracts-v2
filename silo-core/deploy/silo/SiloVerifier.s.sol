@@ -39,6 +39,7 @@ contract SiloVerifier is Script, Test {
         }
     }
 
+    // returns total amount of errors for SiloConfig address
     function _checkConfig(ISiloConfig _siloConfig) internal returns (uint256 errorsCounter) {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
@@ -46,6 +47,7 @@ contract SiloVerifier is Script, Test {
         errorsCounter += _checkSilo(_siloConfig, silo1);
     }
 
+    // returns total amount of errors for Silo address
     function _checkSilo(ISiloConfig _siloConfig, address _silo) internal returns (uint256 errorsCounter) {
         emit log_named_address("\nsiloConfig", address(_siloConfig));
 
@@ -70,9 +72,43 @@ contract SiloVerifier is Script, Test {
         emit log_named_address("solvencyOracle", configData.solvencyOracle);
         emit log_named_address("maxLtvOracle", configData.maxLtvOracle);
 
-        errorsCounter += _checkOracle(ISiloOracle(configData.solvencyOracle), configData.token);
+        if (configData.solvencyOracle != address(0)) {
+            errorsCounter += _checkOracle(ISiloOracle(configData.solvencyOracle), configData.token);
+        }
+
+        if (configData.maxLtvOracle != configData.solvencyOracle && configData.maxLtvOracle != address(0)) {
+            errorsCounter += _checkOracle(ISiloOracle(configData.maxLtvOracle), configData.token);
+        }
+
+        errorsCounter += _sanityCheckConfig(configData);
     }
 
+    // returns total amount of errors for numbers in ConfigData
+    function _sanityCheckConfig(ISiloConfig.ConfigData memory _configData) internal pure returns (uint256 errorsCounter) {
+        uint256 onePercent = 10**18 / 100;
+
+        if (_configData.daoFee > onePercent * 25 || _configData.daoFee < onePercent / 100) {
+            errorsCounter++;
+            console2.log(_FAIL_SYMBOL, "daoFee >25% or <0.01%");
+        }
+
+        if (_configData.deployerFee != 0) {
+            errorsCounter++;
+            console2.log(_FAIL_SYMBOL, "deployerFee != 0");
+        }
+
+        if (_configData.liquidationFee < onePercent / 100 || _configData.liquidationFee > onePercent * 15) {
+            errorsCounter++;
+            console2.log(_FAIL_SYMBOL, "liquidationFee >15% or <0.01%");
+        }
+
+        if (_configData.flashloanFee > onePercent) {
+            errorsCounter++;
+            console2.log(_FAIL_SYMBOL, "flashloanFee >1%");
+        }
+    }
+
+    // returns the total amount of errors for specific oracle
     function _checkOracle(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCounter) {
         address quoteToken = _oracle.quoteToken();
         uint256 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
@@ -145,12 +181,12 @@ contract SiloVerifier is Script, Test {
         });
     }
 
-    function _priceSanityChecks(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCount) {
+    function _priceSanityChecks(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCounter) {
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
 
         if (!success || price == 0) {
             console2.log(_FAIL_SYMBOL, "quote (1 wei) reverts or zero");
-            errorsCount++;
+            errorsCounter++;
         } else {
             console2.log(_SUCCESS_SYMBOL, "quote (1 wei) is not zero");
         }
@@ -160,7 +196,7 @@ contract SiloVerifier is Script, Test {
 
         if (!success) {
             console2.log("%s quote (%e) reverts", _FAIL_SYMBOL, largestAmount);
-            errorsCount++;
+            errorsCounter++;
         } else {
             console2.log("%s quote (%e) do not revert", _SUCCESS_SYMBOL, largestAmount);
         }
