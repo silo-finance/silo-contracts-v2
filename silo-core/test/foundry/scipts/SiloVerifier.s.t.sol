@@ -6,7 +6,7 @@ import {SiloVerifier} from "silo-core/deploy/silo/SiloVerifier.s.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 /*
-    FOUNDRY_PROFILE=core forge test -vv --match-contract SiloVerifierScriptTest
+    FOUNDRY_PROFILE=core-test forge test -vv --match-contract SiloVerifierScriptTest
 */
 contract SiloVerifierScriptTest is Test, SiloVerifier {
     ISiloConfig constant CONFIG_TWO_ORACLES = ISiloConfig(0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab);

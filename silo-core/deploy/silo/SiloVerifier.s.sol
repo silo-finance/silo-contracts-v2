@@ -11,9 +11,13 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab \
+    EXTERNAL_PRICE_0=992 EXTERNAL_PRICE_1=998 \
     forge script silo-core/deploy/silo/SiloVerifier.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
@@ -27,6 +31,7 @@ contract SiloVerifier is Script, Test {
 
     string constant internal _SUCCESS_SYMBOL = unicode"✅";
     string constant internal _FAIL_SYMBOL = unicode"❌";
+    string constant internal _DELIMITER = "\n---------------------------------------------------\n---------------------------------------------------";
 
     function run() public {
         ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
@@ -41,14 +46,44 @@ contract SiloVerifier is Script, Test {
 
     // returns total amount of errors for SiloConfig address
     function _checkConfig(ISiloConfig _siloConfig) internal returns (uint256 errorsCounter) {
+        console2.log(_DELIMITER);
+        console2.log("1/3. validate fees ranges, other numbers from ConfigData");
         (address silo0, address silo1) = _siloConfig.getSilos();
 
-        errorsCounter += _checkSilo(_siloConfig, silo0);
-        errorsCounter += _checkSilo(_siloConfig, silo1);
+        errorsCounter += _checkConfigData(_siloConfig, silo0);
+        errorsCounter += _checkConfigData(_siloConfig, silo1);
+
+        console2.log(_DELIMITER);
+        console2.log("2/3. validate oracles and return values");
+        ISiloConfig.ConfigData memory configData0 = ISiloConfig(_siloConfig).getConfig(silo0);
+        ISiloConfig.ConfigData memory configData1 = ISiloConfig(_siloConfig).getConfig(silo1);
+
+        errorsCounter += _checkOracles(
+            configData0.solvencyOracle,
+            configData0.maxLtvOracle,
+            configData0.token,
+            configData1.solvencyOracle,
+            configData1.maxLtvOracle,
+            configData1.token
+        );
+
+        if (!_checkExternalPrice(configData0.solvencyOracle, configData0.token, configData1.solvencyOracle, configData1.token)) {
+            errorsCounter++;
+        }
+
+        console2.log(_DELIMITER);
+        console2.log("3/3. find and print IRM config name by on-chain state");
+        if (!_checkIRMConfig(configData0, silo0, true)) {
+            errorsCounter++;
+        }
+
+        if (!_checkIRMConfig(configData1, silo1, false)) {
+            errorsCounter++;
+        }
     }
 
-    // returns total amount of errors for Silo address
-    function _checkSilo(ISiloConfig _siloConfig, address _silo) internal returns (uint256 errorsCounter) {
+    // returns total amount of errors for Silo address, including oracle checks
+    function _checkConfigData(ISiloConfig _siloConfig, address _silo) internal returns (uint256 errorsCounter) {
         emit log_named_address("\nsiloConfig", address(_siloConfig));
 
         ISiloConfig.ConfigData memory configData = ISiloConfig(_siloConfig).getConfig(_silo);
@@ -71,14 +106,6 @@ contract SiloVerifier is Script, Test {
         emit log_named_decimal_uint("liquidationTargetLtv", configData.liquidationTargetLtv, 18);
         emit log_named_address("solvencyOracle", configData.solvencyOracle);
         emit log_named_address("maxLtvOracle", configData.maxLtvOracle);
-
-        if (configData.solvencyOracle != address(0)) {
-            errorsCounter += _checkOracle(ISiloOracle(configData.solvencyOracle), configData.token);
-        }
-
-        if (configData.maxLtvOracle != configData.solvencyOracle && configData.maxLtvOracle != address(0)) {
-            errorsCounter += _checkOracle(ISiloOracle(configData.maxLtvOracle), configData.token);
-        }
 
         errorsCounter += _sanityCheckConfig(configData);
     }
@@ -105,6 +132,117 @@ contract SiloVerifier is Script, Test {
         if (_configData.flashloanFee > onePercent) {
             errorsCounter++;
             console2.log(_FAIL_SYMBOL, "flashloanFee >1%");
+        }
+    }
+
+    function _checkIRMConfig(
+        ISiloConfig.ConfigData memory _configData,
+        address _silo,
+        bool isSiloZero
+    ) internal returns (bool success) {
+        InterestRateModelConfigData.ConfigData[] memory allModels = (new InterestRateModelConfigData()).getAllConfigs();
+        IInterestRateModelV2.Config memory irmConfig = IInterestRateModelV2(_configData.interestRateModel).getConfig(_silo);
+
+        uint i;
+
+        for (; i < allModels.length; i++){
+            // ri and Tcrit are time sensitive
+            bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
+                allModels[i].config.ucrit == irmConfig.ucrit &&
+                allModels[i].config.ulow == irmConfig.ulow &&
+                allModels[i].config.ki == irmConfig.ki &&
+                allModels[i].config.kcrit == irmConfig.kcrit &&
+                allModels[i].config.klow == irmConfig.klow &&
+                allModels[i].config.klin == irmConfig.klin &&
+                allModels[i].config.beta == irmConfig.beta &&
+                allModels[i].config.ri <= irmConfig.ri &&
+                allModels[i].config.Tcrit <= irmConfig.Tcrit;
+
+            if (configIsMatching) {
+                break;
+            }
+        }
+
+        string memory siloName = isSiloZero ? "silo0" : "silo1";
+
+        if (i == allModels.length) {
+            console2.log(_FAIL_SYMBOL, "IRM config is not found", siloName);
+            return false;
+        } else {
+            console2.log(_SUCCESS_SYMBOL, "IRM config is found", allModels[i].name, siloName);
+            return true;
+        }
+    }
+
+    function _checkExternalPrice(
+        address _solvencyOracle0,
+        address _token0,
+        address _solvencyOracle1,
+        address _token1
+    ) internal view returns (bool success) {
+        uint256 externalPrice0 = vm.envOr("EXTERNAL_PRICE_0", uint256(0));
+        uint256 externalPrice1 = vm.envOr("EXTERNAL_PRICE_1", uint256(0));
+
+        if (externalPrice0 != 0 && externalPrice1 != 0) {
+            console2.log("\nExternal price checks:");
+
+            (bool success0, uint256 price0) = 
+                _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
+
+            (bool success1, uint256 price1) = 
+                _quote(ISiloOracle(_solvencyOracle1), _token1, (10**uint256(IERC20Metadata(_token1).decimals())));
+
+            if (!success0 || !success1) {
+                console2.log(_FAIL_SYMBOL, "can't validate external prices, oracles revert");
+                return false;
+            }
+
+            uint256 precisionDecimals = 10**18;
+
+            // price0 / price1 from external source
+            uint256 externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1;
+            console2.log("externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1", externalPricesRatio);
+            // price0 / price1 from our oracles
+            uint256 oraclesPriceRatio = price0 * precisionDecimals / price1;
+            console2.log("oraclesPriceRatio = price0 * precisionDecimals / price1", externalPricesRatio);
+
+            uint256 maxRatio = externalPricesRatio > oraclesPriceRatio ? externalPricesRatio : oraclesPriceRatio;
+            uint256 minRatio = externalPricesRatio > oraclesPriceRatio ? oraclesPriceRatio : externalPricesRatio;
+
+            uint256 ratioDiff = maxRatio - minRatio;
+
+            // deviation from ratios is more than 1%
+            if (minRatio == 0 || ratioDiff * precisionDecimals / maxRatio > precisionDecimals / 100) {
+                console2.log(_FAIL_SYMBOL, "external prices have >1% deviation with oracles");
+            } else {
+                console2.log(_SUCCESS_SYMBOL, "external prices have <1% deviation with oracles");
+                success = true;
+            }
+        }
+    }
+
+    function _checkOracles(
+        address _solvencyOracle0,
+        address _maxLtvOracle0,
+        address _token0,
+        address _solvencyOracle1,
+        address _maxLtvOracle1,
+        address _token1
+    ) internal view returns (uint256 errorsCounter) {
+        if (_solvencyOracle0 != address(0)) {
+            errorsCounter += _checkOracle(ISiloOracle(_solvencyOracle0), _token0);
+        }
+
+        if (_maxLtvOracle0 != _solvencyOracle0 && _maxLtvOracle0 != address(0)) {
+            errorsCounter += _checkOracle(ISiloOracle(_maxLtvOracle0), _token0);
+        }
+
+        if (_solvencyOracle1 != address(0)) {
+            errorsCounter += _checkOracle(ISiloOracle(_solvencyOracle1), _token1);
+        }
+
+        if (_maxLtvOracle1 != _solvencyOracle1 && _maxLtvOracle1 != address(0)) {
+            errorsCounter += _checkOracle(ISiloOracle(_maxLtvOracle1), _token1);
         }
     }
 
@@ -183,6 +321,21 @@ contract SiloVerifier is Script, Test {
         });
     }
 
+    function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
+        internal
+        view
+        returns (bool success)
+    {
+        uint256 price;
+        (success, price) = _quote(_oracle, _baseToken, _quoteNamedAmount.amount);
+
+        if (success) {
+            console2.log("Price for %s = %e", _quoteNamedAmount.name, price);
+        } else {
+            console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
+        }
+    }
+
     function _priceSanityChecks(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCounter) {
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
 
@@ -201,21 +354,6 @@ contract SiloVerifier is Script, Test {
             errorsCounter++;
         } else {
             console2.log("%s quote (%e) do not revert", _SUCCESS_SYMBOL, largestAmount);
-        }
-    }
-
-    function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
-        internal
-        view
-        returns (bool success)
-    {
-        uint256 price;
-        (success, price) = _quote(_oracle, _baseToken, _quoteNamedAmount.amount);
-
-        if (success) {
-            console2.log("Price for %s = %e", _quoteNamedAmount.name, price);
-        } else {
-            console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
         }
     }
 
