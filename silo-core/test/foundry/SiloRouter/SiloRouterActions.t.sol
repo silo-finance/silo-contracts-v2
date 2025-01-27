@@ -566,6 +566,48 @@ contract SiloRouterActionsTest is IntegrationTest {
         assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_repayAllNativeFlow
+    function test_siloRouter_repayAllNativeFlow() public {
+        vm.prank(wethWhale);
+        IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
+
+        vm.prank(borrower);
+        IERC20(token1).approve(address(silo1), _TOKEN1_AMOUNT);
+
+        vm.prank(borrower);
+        ISilo(silo1).deposit(_TOKEN1_AMOUNT, borrower);
+
+        assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
+
+        uint256 borrowAmount = ISilo(silo0).maxBorrow(borrower);
+
+        vm.prank(borrower);
+        ISilo(silo0).borrow(borrowAmount, borrower, borrower);
+
+        uint256 debtBalanceBefore = IERC20(debtToken0).balanceOf(borrower);
+
+        assertNotEq(debtBalanceBefore, 0, "Account should have debt tokens");
+        assertEq(borrower.balance, 0, "Account should not have any native tokens");
+
+        uint256 repayAmount = ISilo(silo0).maxRepay(borrower);
+        repayAmount += repayAmount * 3 / 100; // add 3% buffer
+
+        vm.prank(wsWhale);
+        nativeToken.withdraw(repayAmount);
+
+        vm.prank(wsWhale);
+        payable(borrower).transfer(repayAmount);
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeCall(router.repayAllNative, (IWrappedNativeToken(nativeToken), ISilo(silo0), borrower));
+
+        vm.prank(borrower);
+        router.multicall{value: repayAmount}(data);
+
+        assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
+        assertEq(address(router).balance, 0, "Router should not have any native tokens");
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions
     function test_siloRouter_pause_allActions() public {
         vm.prank(routerOwner);
