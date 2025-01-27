@@ -200,7 +200,7 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
         IERC20 asset = IERC20(_silo.asset());
 
         asset.safeTransferFrom(msg.sender, address(this), repayAmount);
-        asset.approve(address(_silo), repayAmount);
+        asset.forceApprove(address(_silo), repayAmount);
 
         shares = _silo.repay(repayAmount, _borrower);
     }
@@ -211,7 +211,7 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
 
         IWrappedNativeToken(_native).deposit{value: repayAmount}();
 
-        IERC20(address(_native)).approve(address(_silo), repayAmount);
+        IERC20(address(_native)).forceApprove(address(_silo), repayAmount);
 
         shares = _silo.repay(repayAmount, _borrower);
 
