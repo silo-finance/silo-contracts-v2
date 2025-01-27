@@ -244,7 +244,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeCall(router.transferFrom, (IERC20(token0), address(router), _S_BALANCE));
         data[1] = abi.encodeCall(router.approve, (IERC20(token0), address(silo0), _S_BALANCE));
-        data[2] = abi.encodeCall(router.deposit, (ISilo(silo0), _S_BALANCE));
+        data[2] = abi.encodeCall(router.deposit, (ISilo(silo0), _S_BALANCE, ISilo.CollateralType.Collateral));
 
         vm.prank(depositor);
         router.multicall(data);
@@ -262,7 +262,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeCall(router.wrap, (IWrappedNativeToken(nativeToken), _S_BALANCE));
         data[1] = abi.encodeCall(router.approve, (IERC20(token0), address(silo0), _S_BALANCE));
-        data[2] = abi.encodeCall(router.deposit, (ISilo(silo0), _S_BALANCE));
+        data[2] = abi.encodeCall(router.deposit, (ISilo(silo0), _S_BALANCE, ISilo.CollateralType.Collateral));
 
         vm.prank(depositor);
         router.multicall{value: _S_BALANCE}(data);
@@ -597,7 +597,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         router.approve(IERC20(token0), address(router), 1);
 
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.deposit(ISilo(silo0), 1);
+        router.deposit(ISilo(silo0), 1, ISilo.CollateralType.Collateral);
 
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.withdraw(ISilo(silo0), 1, address(router), ISilo.CollateralType.Collateral);
@@ -658,7 +658,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
 
-        data[0] = abi.encodeCall(router.deposit, (ISilo(silo0), 1));
+        data[0] = abi.encodeCall(router.deposit, (ISilo(silo0), 1, ISilo.CollateralType.Collateral));
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
 

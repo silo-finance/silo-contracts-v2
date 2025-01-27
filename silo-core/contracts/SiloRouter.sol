@@ -143,8 +143,8 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function deposit(ISilo _silo, uint256 _amount) external payable whenNotPaused returns (uint256 shares) {
-        shares = _silo.deposit(_amount, msg.sender);
+    function deposit(ISilo _silo, uint256 _amount, ISilo.CollateralType _collateral) external payable whenNotPaused returns (uint256 shares) {
+        shares = _silo.deposit(_amount, msg.sender, _collateral);
     }
 
     /// @inheritdoc ISiloRouter
