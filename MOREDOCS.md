@@ -134,6 +134,11 @@ rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.log
 cat coverage/silo-oracles-report.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
 genhtml -o coverage/silo-oracles/ lcov.info
+
+rm lcov.info
+FOUNDRY_PROFILE=vaults-with-tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000
+cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt
+genhtml --ignore-errors inconsistent -ignore-errors range -o  coverage/silo-vaults/ lcov.info
 ```
 
 ## Rounding policy
