@@ -113,6 +113,7 @@ contract LiquidationHelper20251224 is Test {
             vm.label(liquidationData.collateralAsset, "collateralAsset");
     //        uint256 debtToCover = 1447204;
             uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
+//            uint256 debtToCover = debtToRepay * (1e18 - flashFee - liquidationFee) / ltv;
 
             liquidationHelper.executeLiquidation(
                 flashLoanFrom,
