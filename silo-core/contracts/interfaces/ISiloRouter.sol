@@ -11,16 +11,22 @@ interface ISiloRouter {
     function multicall(bytes[] calldata _data) external payable returns (bytes[] memory results);
 
     /// @notice Wrap native token to wrapped native token
+    /// @dev Tokens are wrapped to the router's balance.
+    /// Caller is responsible to transfer the wrapped tokens to the desired address.
     /// @param _native The address of the native token
     /// @param _amount The amount of native token to wrap
     function wrap(IWrappedNativeToken _native, uint256 _amount) external payable;
 
     /// @notice Unwrap wrapped native token to native token
+    /// @dev Tokens are unwrapped to the router's balance.
+    /// Caller is responsible to transfer the unwrapped tokens to the desired address.
     /// @param _native The address of the native token
     /// @param _amount The amount of wrapped native token to unwrap
     function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable;
 
     /// @notice Unwrap all wrapped native token to native token
+    /// @dev Tokens are unwrapped to the router's balance.
+    /// Caller is responsible to transfer the unwrapped tokens to the desired address.
     /// @param _native The address of the native token
     function unwrapAll(IWrappedNativeToken _native) external payable;
 
@@ -41,6 +47,8 @@ interface ISiloRouter {
     function sendValueAll(address payable _to) external payable;
 
     /// @notice Transfer tokens
+    /// @dev Anyone can transfer any token on behalf of the router.
+    /// The caller is responsible for ensuring that the operation will not leave any leftovers on the router's balance.
     /// @param _token The address of the token
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to transfer
@@ -53,6 +61,8 @@ interface ISiloRouter {
     function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable;
 
     /// @notice Approve tokens for a specific spender
+    /// @dev Anyone can approve any token on behalf of the router.
+    /// The caller is responsible for ensuring that the operation will not leave any leftovers on the router's balance.
     /// @param _token The address of the token
     /// @param _spender The address of the spender
     /// @param _amount The amount of tokens to approve
