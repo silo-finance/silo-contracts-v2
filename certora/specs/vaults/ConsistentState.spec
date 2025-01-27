@@ -2,7 +2,7 @@
 import "Timelock.spec";
 
 methods {
-    function _.asset() external => CONSTANT;
+    function _.asset() external => PER_CALLEE_CONSTANT;
 }
 
 // Check that the fee cannot accrue to an unset fee recipient.
