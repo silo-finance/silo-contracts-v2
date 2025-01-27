@@ -42,6 +42,8 @@ contract SiloVerifier is Script, Test {
             vm.envOr("EXTERNAL_PRICE_1", uint256(0))
         );
         
+        console2.log(_DELIMITER);
+        console2.log("Result");
         if (errorsCounter == 0) {
             console2.log(_SUCCESS_SYMBOL, "Config checks are done with 0 errors");
         } else {
