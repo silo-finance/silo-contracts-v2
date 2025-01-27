@@ -204,4 +204,22 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
 
         shares = _silo.repay(repayAmount, _borrower);
     }
+
+    /// @inheritdoc ISiloRouter
+    function repayAllNative(IWrappedNativeToken _native, ISilo _silo, address _borrower) external payable whenNotPaused returns (uint256 shares) {
+        uint256 repayAmount = _silo.maxRepay(_borrower);
+
+        IWrappedNativeToken(_native).deposit{value: repayAmount}();
+
+        IERC20(address(_native)).approve(address(_silo), repayAmount);
+
+        shares = _silo.repay(repayAmount, _borrower);
+
+        uint256 balance = address(this).balance;
+
+        // send back any native token leftover
+        if (balance != 0) {
+            Address.sendValue(payable(msg.sender), balance);
+        }
+    }
 }

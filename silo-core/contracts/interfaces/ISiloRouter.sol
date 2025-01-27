@@ -116,4 +116,14 @@ interface ISiloRouter {
     /// @param _silo The address of the silo
     /// @param _borrower The address of the borrower
     function repayAll(ISilo _silo, address _borrower) external payable returns (uint256 shares);
+
+    /// @notice Repay all debt using native token
+    /// @param _native The address of the native token
+    /// @param _silo The address of the silo
+    /// @param _borrower The address of the borrower
+    function repayAllNative(
+        IWrappedNativeToken _native,
+        ISilo _silo,
+        address _borrower
+    ) external payable returns (uint256 shares);
 }
