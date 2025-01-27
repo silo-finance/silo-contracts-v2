@@ -35,7 +35,12 @@ contract SiloVerifier is Script, Test {
 
     function run() public {
         ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
-        uint256 errorsCounter = _checkConfig(siloConfig);
+
+        uint256 errorsCounter = _checkConfig(
+            siloConfig,
+            vm.envOr("EXTERNAL_PRICE_0", uint256(0)),
+            vm.envOr("EXTERNAL_PRICE_1", uint256(0))
+        );
         
         if (errorsCounter == 0) {
             console2.log(_SUCCESS_SYMBOL, "Config checks are done with 0 errors");
@@ -45,7 +50,11 @@ contract SiloVerifier is Script, Test {
     }
 
     // returns total amount of errors for SiloConfig address
-    function _checkConfig(ISiloConfig _siloConfig) internal returns (uint256 errorsCounter) {
+    function _checkConfig(
+        ISiloConfig _siloConfig,
+        uint256 _externalPrice0,
+        uint256 _externalPrice1
+    ) internal returns (uint256 errorsCounter) {
         console2.log(_DELIMITER);
         console2.log("1/3. validate fees ranges, other numbers from ConfigData");
         (address silo0, address silo1) = _siloConfig.getSilos();
@@ -67,13 +76,22 @@ contract SiloVerifier is Script, Test {
             configData1.token
         );
 
-        if (!_checkExternalPrice(configData0.solvencyOracle, configData0.token, configData1.solvencyOracle, configData1.token)) {
+        bool externalPriceValid = _checkExternalPrice(
+            configData0.solvencyOracle,
+            configData0.token,
+            _externalPrice0,
+            configData1.solvencyOracle,
+            configData1.token,
+            _externalPrice1
+        );
+
+        if (!externalPriceValid) {
             errorsCounter++;
         }
 
         console2.log(_DELIMITER);
         console2.log("3/3. find and print IRM config name by on-chain state");
-        
+
         if (!_checkIRMConfig(configData0, silo0, true)) {
             errorsCounter++;
         }
@@ -178,38 +196,45 @@ contract SiloVerifier is Script, Test {
     function _checkExternalPrice(
         address _solvencyOracle0,
         address _token0,
+        uint256 _externalPrice0,
         address _solvencyOracle1,
-        address _token1
+        address _token1,
+        uint256 _externalPrice1
     ) internal view returns (bool success) {
-        uint256 externalPrice0 = vm.envOr("EXTERNAL_PRICE_0", uint256(0));
-        uint256 externalPrice1 = vm.envOr("EXTERNAL_PRICE_1", uint256(0));
-
-        if (externalPrice0 == 0 || externalPrice1 == 0) {
-            console2.log("Optional external prices are not provided to check oracles");
-            return true;
+        if (_externalPrice0 == 0 || _externalPrice1 == 0) {
+            console2.log("External prices are not provided to check oracles");
+            return false;
         }
 
         console2.log("\nExternal price checks:");
 
-        (bool success0, uint256 price0) = 
-            _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
-
-        (bool success1, uint256 price1) = 
-            _quote(ISiloOracle(_solvencyOracle1), _token1, (10**uint256(IERC20Metadata(_token1).decimals())));
-
-        if (!success0 || !success1) {
-            console2.log(_FAIL_SYMBOL, "can't validate external prices, oracles revert");
-            return false;
-        }
-
         uint256 precisionDecimals = 10**18;
 
         // price0 / price1 from external source
-        uint256 externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1;
+        uint256 externalPricesRatio = _externalPrice0 * precisionDecimals / _externalPrice1;
         console2.log("externalPricesRatio = externalPrice0 * precisionDecimals / externalPrice1", externalPricesRatio);
+
         // price0 / price1 from our oracles
-        uint256 oraclesPriceRatio = price0 * precisionDecimals / price1;
-        console2.log("oraclesPriceRatio = price0 * precisionDecimals / price1", externalPricesRatio);
+        uint256 oraclesPriceRatio;
+
+        if (_solvencyOracle1 == address(0)) {
+            (, oraclesPriceRatio) = _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
+        } else {
+            (bool success0, uint256 price0) = 
+                _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
+
+            (bool success1, uint256 price1) = 
+                _quote(ISiloOracle(_solvencyOracle1), _token1, (10**uint256(IERC20Metadata(_token1).decimals())));
+
+            if (!success0 || !success1) {
+                console2.log(_FAIL_SYMBOL, "can't validate external prices, oracles revert");
+                return false;
+            }
+
+            oraclesPriceRatio = price0 * precisionDecimals / price1;
+        }
+
+        console2.log("oraclesPriceRatio = price0 * precisionDecimals / price1", oraclesPriceRatio);
 
         uint256 maxRatio = externalPricesRatio > oraclesPriceRatio ? externalPricesRatio : oraclesPriceRatio;
         uint256 minRatio = externalPricesRatio > oraclesPriceRatio ? oraclesPriceRatio : externalPricesRatio;

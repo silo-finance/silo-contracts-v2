@@ -17,10 +17,11 @@ contract SiloVerifierScriptTest is Test, SiloVerifier {
     }
 
     function test_SiloVerifierScript_worksForSingleOracleConfigs() public {
-       assertEq(_checkConfig(CONFIG_ONE_ORACLE), 0, "Should have no errors for single oracle configs");
+        assertEq(_checkConfig(CONFIG_ONE_ORACLE, 10066, 10000), 0, "Should have no errors for single oracle configs");
     }
 
      function test_SiloVerifierScript_worksForTwoOracleConfigs() public {
-       assertEq(_checkConfig(CONFIG_TWO_ORACLES), 0, "Should have no errors for two oracle configs");
+        // both assets are bitcoins close to 100k
+        assertEq(_checkConfig(CONFIG_TWO_ORACLES, 98_700, 99_200), 0, "Should have no errors for two oracle configs");
     }
 }
