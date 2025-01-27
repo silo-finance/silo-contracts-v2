@@ -669,11 +669,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyCap = config[market].cap;
             if (supplyCap == 0) continue;
 
-            uint256 shares = _ERC20BalanceOf(address(market), address(this));
-            uint256 assets = market.convertToAssets(shares);
-            uint256 maxDeposit = market.maxDeposit(address(this));
+            (uint256 assets,) = _supplyBalance(market);
+            uint256 depositMax = market.maxDeposit(address(this));
 
-            totalSuppliable += Math.min(maxDeposit, UtilsLib.zeroFloorSub(supplyCap, assets));
+            totalSuppliable += Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
         }
     }
 
@@ -718,6 +717,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ERC4626
     /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
+        if (_shares == 0) revert ErrorsLib.InputZeroShares();
+
         super._deposit(_caller, _receiver, _assets, _shares);
 
         _supplyERC4626(_assets);
@@ -822,8 +823,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (supplyCap == 0) continue;
 
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-            uint256 supplyShares = _ERC20BalanceOf(address(market), address(this));
-            uint256 supplyAssets = market.convertToAssets(supplyShares);
+            (uint256 supplyAssets,) = _supplyBalance(market);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 

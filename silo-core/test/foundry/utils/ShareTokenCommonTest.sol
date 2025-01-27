@@ -317,7 +317,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 assetDecimals = IShareToken(_siloAsset).decimals();
         uint256 collateralDecimals = _collateralToken.decimals();
 
-        assertEq(10 ** (collateralDecimals - assetDecimals), SiloMathLib._DECIMALS_OFFSET_POW, "invalid offset");
+        assertEq(collateralDecimals - assetDecimals, 0, "not using offset for share decimals() method");
     }
 
     /*

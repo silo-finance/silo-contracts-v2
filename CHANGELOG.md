@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.1.0] - 2025-01-27
+### Added
+- solvBTC.BNN/solvBTC market sonic
+- wS/scUSD market sonic
+- Redeployment SiloDeployer
+- silo-core: use underlying token decimals in collateral share token
+- silo-oracles: invert flag
+
 ## [1.0.0] - 2025-01-20
 ### Added
 - add rescue function to incentive controller

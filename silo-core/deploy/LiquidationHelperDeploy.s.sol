@@ -63,7 +63,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         revert(string.concat("can not find native token for ", ChainsLib.chainAlias()));
     }
 
-    function _exchangeProxy() private returns (address) {
+    function _exchangeProxy() private view returns (address) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(2);
@@ -75,7 +75,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
     }
 
-    function _tokenReceiver() private returns (address payable) {
+    function _tokenReceiver() private view returns (address payable) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));

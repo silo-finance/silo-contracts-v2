@@ -80,6 +80,8 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 contract SiloFixture is StdCheats, CommonBase {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
+    bool internal _mainNetDeployed;
+
     function deploy_ETH_USDC()
         external
         returns (
@@ -137,10 +139,14 @@ contract SiloFixture is StdCheats, CommonBase {
             address hookReceiver
         )
     {
-        MainnetDeploy mainnetDeploy = new MainnetDeploy();
-        mainnetDeploy.disableDeploymentsSync();
-        mainnetDeploy.run();
-        console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
+        if (!_mainNetDeployed) {
+            MainnetDeploy mainnetDeploy = new MainnetDeploy();
+            mainnetDeploy.disableDeploymentsSync();
+            mainnetDeploy.run();
+            console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
+
+            _mainNetDeployed = true;
+        }
 
         siloConfig = _siloDeploy.useConfig(_configName).run();
         console2.log("[SiloFixture] _deploy: _siloDeploy(", _configName, ").run() done.");

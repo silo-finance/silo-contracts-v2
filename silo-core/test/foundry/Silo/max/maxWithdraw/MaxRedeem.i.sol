@@ -106,10 +106,9 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     */
     /// forge-config: core-test.fuzz.runs = 1000
     function test_maxRedeem_bothSilosWithInterest_1token_fuzz(
-//        uint128 _collateral,
-//        uint128 _toBorrow
+        uint128 _collateral,
+        uint128 _toBorrow
     ) public {
-        (uint128 _collateral, uint128 _toBorrow) = (13423, 2010);
         _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow);
     }
 
