@@ -658,6 +658,9 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.repayAll(ISilo(silo0), address(router));
+
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.repayAllNative(IWrappedNativeToken(nativeToken), ISilo(silo0), address(router));
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions_viaMulticall
@@ -725,6 +728,14 @@ contract SiloRouterActionsTest is IntegrationTest {
         router.multicall(data);
 
         data[0] = abi.encodeCall(router.repayAll, (ISilo(silo0), address(router)));
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        router.multicall(data);
+
+        data[0] = abi.encodeCall(
+            router.repayAllNative,
+            (IWrappedNativeToken(nativeToken), ISilo(silo0), address(router))
+        );
+
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
     }
