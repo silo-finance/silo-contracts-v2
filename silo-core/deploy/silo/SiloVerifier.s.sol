@@ -125,7 +125,9 @@ contract SiloVerifier is Script, Test {
         (QuoteNamedAmount[] memory amountsToQuote) = _getAmountsToQuote(IERC20Metadata(_baseToken).decimals());
 
         for (uint i; i < amountsToQuote.length; i++) {
-            errorsCounter += _printPrice(_oracle, _baseToken, amountsToQuote[i]);
+            if (!_printPrice(_oracle, _baseToken, amountsToQuote[i])) {
+                errorsCounter++;
+            }
         }
 
         errorsCounter += _priceSanityChecks(_oracle, _baseToken);
@@ -205,15 +207,15 @@ contract SiloVerifier is Script, Test {
     function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
         internal
         view
-        returns (uint256 errorsCounter)
+        returns (bool success)
     {
-        (bool success, uint256 price) = _quote(_oracle, _baseToken, _quoteNamedAmount.amount);
+        uint256 price;
+        (success, price) = _quote(_oracle, _baseToken, _quoteNamedAmount.amount);
 
         if (success) {
             console2.log("Price for %s = %e", _quoteNamedAmount.name, price);
         } else {
             console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
-            errorsCounter++;
         }
     }
 
