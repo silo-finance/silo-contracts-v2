@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {ISilo} from "./ISilo.sol";
+import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 interface ISiloLens {
     /// @return liquidity based on contract state (without interest, fees)
