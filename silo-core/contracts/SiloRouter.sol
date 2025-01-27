@@ -111,6 +111,7 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
         _native.withdraw(_amount);
     }
 
+    /// @inheritdoc ISiloRouter
     function unwrapAll(IWrappedNativeToken _native) external payable virtual whenNotPaused {
         uint256 balance = _native.balanceOf(address(this));
         _native.withdraw(balance);
