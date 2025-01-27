@@ -143,7 +143,11 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function deposit(ISilo _silo, uint256 _amount, ISilo.CollateralType _collateral) external payable whenNotPaused returns (uint256 shares) {
+    function deposit(
+        ISilo _silo,
+        uint256 _amount,
+        ISilo.CollateralType _collateral
+    ) external payable whenNotPaused returns (uint256 shares) {
         shares = _silo.deposit(_amount, msg.sender, _collateral);
     }
 
@@ -206,7 +210,11 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
     }
 
     /// @inheritdoc ISiloRouter
-    function repayAllNative(IWrappedNativeToken _native, ISilo _silo, address _borrower) external payable whenNotPaused returns (uint256 shares) {
+    function repayAllNative(
+        IWrappedNativeToken _native,
+        ISilo _silo,
+        address _borrower
+    ) external payable whenNotPaused returns (uint256 shares) {
         uint256 repayAmount = _silo.maxRepay(_borrower);
 
         IWrappedNativeToken(_native).deposit{value: repayAmount}();
