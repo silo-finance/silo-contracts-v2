@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
@@ -606,6 +607,52 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
         assertEq(address(router).balance, 0, "Router should not have any native tokens");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_failsToTransferShareTokensViaRouter
+    function test_failsToTransferShareTokensViaRouter() public {
+        // some depositor approves router to transfer their share tokens
+        vm.prank(depositor);
+        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+
+        address someUser = makeAddr("someUser");
+
+        // `someUser` tries to transfer share tokens to itself
+        // expect revert as router has no share tokens on its balance
+        vm.prank(someUser);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(router), 0, 1));
+        router.transfer(IERC20(collateralToken0), someUser, 1);
+
+        // `someUser` tries to transfer via transferFrom
+        // expect revert as router is not approved to transfer share tokens for `someUser`
+        vm.prank(someUser);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(router), 0, 1));
+        router.transferFrom(IERC20(collateralToken0), someUser, 1);
+
+        // `someUser` tries to withdraw somehow with different himself as receiver
+        // expect revert as `someUser` has no approval for router
+        vm.prank(someUser);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector, address(router), 0, 1000
+            )
+        );
+
+        router.withdraw(ISilo(silo0), 1, someUser, ISilo.CollateralType.Collateral);
+
+        // `someUser` tries to withdraw somehow with `depositor` as receiver
+        // expect revert as `someUser` has no approval for router
+        // no matter what receiver is, msg.sender should approve router to transfer share tokens
+        vm.prank(someUser);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector, address(router), 0, 1000
+            )
+        );
+
+        router.withdraw(ISilo(silo0), 1, depositor, ISilo.CollateralType.Collateral);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions
