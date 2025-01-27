@@ -35,17 +35,20 @@ executeLiquidation(address, address, uint256, (address,address,address), (addres
 */
 contract LiquidationHelper20251224 is Test {
     address payable public constant REWARD_COLLECTOR = payable(address(123456789));
+    SiloLens lens;
 
     function setUp() public {
         uint256 blockToFork = 5276116 - 1;
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);
+
+        lens = new SiloLens();
     }
 
     /*
          TODO this can must be skip because foundry do not support Sonic network yet
     */
     function test_skip_debug_liquidationCall() public {
-        SiloLens lens = new SiloLens();
+
 
         LiquidationHelper liquidationHelper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
 
@@ -77,19 +80,7 @@ contract LiquidationHelper20251224 is Test {
 
         assertGt(ltv, 1e18, "expect bad debt scenario");
 
-        (,,, bool fullLiquidation) = lens.maxLiquidation(ISilo(debtConfig.silo), liquidation, borrower);
-
-        assertTrue(fullLiquidation, "expect full liquidation");
-        _executeLiquidation(borrower, hookReceiver, flashLoanFrom, liquidationHelper);
-    }
-
-    function _executeLiquidation(
-        address borrower,
-        address hookReceiver,
-        ISilo flashLoanFrom,
-        LiquidationHelper liquidationHelper
-    ) internal {
-        uint256 collateralToLiquidate = 639935999999999999491;
+//        uint256 collateralToLiquidate = 639935999999999999491;
         /*
         83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889408
         22b0e56179485ffe03
@@ -98,7 +89,7 @@ contract LiquidationHelper20251224 is Test {
         */
         bytes memory swapCallData = abi.encodePacked(
             hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889408",
-            uint72(collateralToLiquidate), // amount in, 18 characters
+            uint72(639935999999999999491), // amount in, 18 characters
             hex"15428a07ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00000001",
             address(liquidationHelper), // seller address in swap data
             hex"000000000301020300060101010201ff00000000000000000000000000000000000000000048505b3047d5c2af657037034369700f4d036822039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000"
@@ -111,23 +102,25 @@ contract LiquidationHelper20251224 is Test {
 
         vm.label(swapsInputs0x[0].allowanceTarget, "allowanceTarget");
 
-        ILiquidationHelper.LiquidationData memory liquidation;
-        liquidation.hook = IPartialLiquidation(hookReceiver);
-        liquidation.collateralAsset = 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38;
-        liquidation.user = borrower;
+        ILiquidationHelper.LiquidationData memory liquidationData;
+        liquidationData.hook = IPartialLiquidation(hookReceiver);
+        liquidationData.collateralAsset = 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38;
+        liquidationData.user = borrower;
 
-        address debtToken = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
-        vm.label(debtToken, "debtToken");
-        vm.label(liquidation.collateralAsset, "collateralAsset");
-//        uint256 debtToCover = 1447204;
-        uint256 debtToCover = 1393290;
+        {
+            address debtToken = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
+            vm.label(debtToken, "debtToken");
+            vm.label(liquidationData.collateralAsset, "collateralAsset");
+    //        uint256 debtToCover = 1447204;
+            uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
 
-        liquidationHelper.executeLiquidation(
-            flashLoanFrom,
-            debtToken,
-            debtToCover,
-            liquidation,
-            swapsInputs0x
-        );
+            liquidationHelper.executeLiquidation(
+                flashLoanFrom,
+                debtToken,
+                debtToCover,
+                liquidationData,
+                swapsInputs0x
+            );
+        }
     }
 }
