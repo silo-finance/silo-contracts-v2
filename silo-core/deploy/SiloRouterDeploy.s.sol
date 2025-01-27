@@ -13,10 +13,11 @@ import {SiloRouter} from "silo-core/contracts/SiloRouter.sol";
 contract SiloRouterDeploy is CommonDeploy {
     function run() public returns (SiloRouter siloRouter) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address deployer = vm.addr(deployerPrivateKey);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloRouter = new SiloRouter();
+        siloRouter = new SiloRouter(deployer);
 
         vm.stopBroadcast();
 
