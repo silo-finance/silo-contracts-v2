@@ -94,11 +94,11 @@ contract SiloLens is ISiloLens {
         external
         view
         virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool maxLiquidation)
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool fullLiquidation)
     {
         (collateralToLiquidate, debtToRepay, sTokenRequired) = _hook.maxLiquidation(_borrower);
 
         uint256 maxRepay = _silo.maxRepay(_borrower);
-        maxLiquidation = maxRepay == debtToRepay;
+        fullLiquidation = maxRepay == debtToRepay;
     }
 }
