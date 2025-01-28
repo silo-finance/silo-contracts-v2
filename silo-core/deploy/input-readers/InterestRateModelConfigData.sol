@@ -42,6 +42,10 @@ contract InterestRateModelConfigData {
         );
     }
 
+    function getAllConfigs() public view returns (ConfigData[] memory) {
+        return _readDataFromJson();
+    }
+
     function getConfigData(string memory _name) public view returns (IInterestRateModelV2.Config memory modelConfig) {
         ConfigData[] memory configs = _readDataFromJson();
 
