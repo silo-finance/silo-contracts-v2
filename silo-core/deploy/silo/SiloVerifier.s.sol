@@ -38,8 +38,6 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
 // both oracles are zero
 // invalidate if the oracle is our oracle
 
-// chainlink description
-
 contract SiloVerifier is Script, Test {
     // used to generate quote amounts and names to log
     struct QuoteNamedAmount {
@@ -666,11 +664,10 @@ contract SiloVerifier is Script, Test {
 
         if (isOurImplementation) {
             console2.log(_SUCCESS_SYMBOL, "Silo implementation is our deployment");
-            return true;
         } else {
             console2.log(_FAIL_SYMBOL, "Silo implementation is NOT our deployment");
-            return false;
         }
 
+        return isOurImplementation;
     }
 }
