@@ -24,23 +24,17 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
  */
 
 // TODO:
- // price is linear by quoted amounts
+// fetch chainlink feeds from API and verify the heartbeat
+// split checks into files
+
  // oracle 0 is zero, oracle 1 is not zero
  // both oracles are zero
  // find a minimal price we don't revert
 
- // check silo implementation in a list log it silo-core/deploy/silo/_siloImplementations.json
- // verify the silo deployment is a latest
+ // check silo implementation in a list log it silo-core/deploy/silo/_siloImplementations.json verify the silo deployment is a latest
  // description for silo implementation
 
- // chainlink heartbeats, chainlink feeds, etc.
  // chainlink decstiption
- // we can save json from price-feeds/
- // 2 descriptions
-
- // 1) fetch any language
- // 2) clean it up 
- // 
 
 contract SiloVerifier is Script, Test {
     // used to generate quote amounts and names to log
@@ -426,6 +420,7 @@ contract SiloVerifier is Script, Test {
         view
         returns (uint256 errorsCounter) 
     {
+        // 1. 1 wei do not revert
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
 
         if (!success || price == 0) {
@@ -435,6 +430,7 @@ contract SiloVerifier is Script, Test {
             console2.log(_SUCCESS_SYMBOL, "quote (1 wei) is not zero");
         }
 
+        // 2. large amount do not revert
         uint256 largestAmount = 10**36 + 10**20 * (10**uint256(IERC20Metadata(_baseToken).decimals()));
         (success, price) = _quote(_oracle, _baseToken, largestAmount);
 
@@ -443,6 +439,45 @@ contract SiloVerifier is Script, Test {
             errorsCounter++;
         } else {
             console2.log("%s quote (%e) do not revert", _SUCCESS_SYMBOL, largestAmount);
+        }
+
+        // 3. quote() is a linear function.
+        uint256 previousQuote;
+        uint256 maxAmountToQuote = 10**36;
+        uint amountToQuote = 1;
+
+        for (; amountToQuote <= maxAmountToQuote; amountToQuote *= 10) {
+            // init previous quote with the first element
+            if (previousQuote == 0) {
+                (success, previousQuote) = _quote(_oracle, _baseToken, amountToQuote);
+
+                if (!success) {
+                    console2.log("%s quote for linear function check reverts", _FAIL_SYMBOL);
+                    break;
+                }
+
+                continue;
+            }
+
+            // check linear property
+            uint256 currentQuote;
+            (success, currentQuote) = _quote(_oracle, _baseToken, amountToQuote);
+
+            if (currentQuote / 10 != previousQuote) {
+                console2.log("%s Function is not linear. Property breaks at amount %s", _FAIL_SYMBOL, amountToQuote);
+                console2.log("%s Function is not linear. quote(%e) = %e", _FAIL_SYMBOL, amountToQuote/10, previousQuote);
+                console2.log("%s Function is not linear. quote(%e) = %e instead of previous quote multiplied x10", _FAIL_SYMBOL, amountToQuote, currentQuote);
+                break;
+            }
+
+            previousQuote = currentQuote;
+        }
+
+        // loop condition holds, so we breaked because of error
+        if (amountToQuote <= maxAmountToQuote) {
+            errorsCounter++;
+        } else {
+            console2.log("%s quote() is a linear function. For x in 1..10**36, quote(x) * 10 = quote(10x)", _SUCCESS_SYMBOL);
         }
     }
 
