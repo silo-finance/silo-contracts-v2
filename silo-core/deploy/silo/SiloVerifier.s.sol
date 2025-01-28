@@ -25,11 +25,11 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
 
 // TODO:
 // fetch chainlink feeds from API and verify the heartbeat
-// split checks into files
+// split checks into files: a check is a contract, unify them by contract interface.
+// if oracle reverts, find a minimal price we don't revert
 
  // oracle 0 is zero, oracle 1 is not zero
  // both oracles are zero
- // find a minimal price we don't revert
 
  // check silo implementation in a list log it silo-core/deploy/silo/_siloImplementations.json verify the silo deployment is a latest
  // description for silo implementation
