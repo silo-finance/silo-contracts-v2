@@ -15,6 +15,11 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
+import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
+import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
+import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
+
 
 /**
 FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
@@ -27,14 +32,11 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
 // fetch chainlink feeds from API and verify the heartbeat
 // split checks into files: a check is a contract, unify them by contract interface.
 // if oracle reverts, find a minimal price we don't revert
+// oracle 0 is zero, oracle 1 is not zero
+// both oracles are zero
+// invalidate if the oracle is our oracle
 
- // oracle 0 is zero, oracle 1 is not zero
- // both oracles are zero
-
- // check silo implementation in a list log it silo-core/deploy/silo/_siloImplementations.json verify the silo deployment is a latest
- // description for silo implementation
-
- // chainlink decstiption
+// chainlink description
 
 contract SiloVerifier is Script, Test {
     // used to generate quote amounts and names to log
@@ -44,8 +46,24 @@ contract SiloVerifier is Script, Test {
         bool logExponentialNotation; // will log 1e123 instead of 1000...0000
     }
 
+    struct OldChainlinkV3Config {
+        AggregatorV3Interface primaryAggregator;
+        AggregatorV3Interface secondaryAggregator;
+        uint256 primaryHeartbeat;
+        uint256 secondaryHeartbeat;
+        uint256 normalizationDivider;
+        uint256 normalizationMultiplier;
+        IERC20Metadata baseToken;
+        IERC20Metadata quoteToken;
+        bool convertToQuote;
+    }
+
+    uint256 constant internal _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
+    uint256 constant internal _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
+
     string constant internal _SUCCESS_SYMBOL = unicode"✅";
     string constant internal _FAIL_SYMBOL = unicode"❌";
+    string constant internal _WARNING_SYMBOL = unicode"🚨";
     string constant internal _DELIMITER = "\n---------------------------------------------------\n---------------------------------------------------";
 
     function run() public {
@@ -56,7 +74,7 @@ contract SiloVerifier is Script, Test {
             vm.envOr("EXTERNAL_PRICE_0", uint256(0)),
             vm.envOr("EXTERNAL_PRICE_1", uint256(0))
         );
-        
+
         console2.log(_DELIMITER);
         console2.log("Result");
         if (errorsCounter == 0) {
@@ -181,7 +199,7 @@ contract SiloVerifier is Script, Test {
     ) internal returns (bool success) {
         InterestRateModelConfigData.ConfigData[] memory allModels =
             (new InterestRateModelConfigData()).getAllConfigs();
-        
+
         IInterestRateModelV2Config irmV2Config = 
             InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
@@ -325,6 +343,10 @@ contract SiloVerifier is Script, Test {
         }
 
         errorsCounter += _priceSanityChecks(_oracle, _baseToken);
+        
+        if (!_checkChainlinkSetup(_oracle)) {
+            errorsCounter++;
+        }
     }
 
     function _getAmountsToQuote(uint8 _baseTokenDecimals)
@@ -479,6 +501,79 @@ contract SiloVerifier is Script, Test {
         } else {
             console2.log("%s quote() is a linear function. For x in 1..10**36, quote(x) * 10 = quote(10x)", _SUCCESS_SYMBOL);
         }
+    }
+
+    function _checkChainlinkSetup(ISiloOracle _oracle) internal view returns (bool success) {
+        try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
+            (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
+                ChainlinkV3OracleConfig.getConfig.selector
+            ));
+
+            if (data.length == _OLD_CHAINLINK_CONFIG_DATA_LEN) {
+                OldChainlinkV3Config memory config = abi.decode(data, (OldChainlinkV3Config));  
+
+                _printChainlinkOracleDetails(
+                    address(oracleConfig),
+                    address(config.primaryAggregator),
+                    address(config.secondaryAggregator),
+                    config.primaryHeartbeat,
+                    config.secondaryHeartbeat,
+                    config.normalizationDivider,
+                    config.normalizationMultiplier,
+                    config.convertToQuote,
+                    false
+                );
+            } else if (data.length == _NEW_CHAINLINK_CONFIG_DATA_LEN) {
+                IChainlinkV3Oracle.ChainlinkV3Config memory config = abi.decode(data, (IChainlinkV3Oracle.ChainlinkV3Config));
+
+                _printChainlinkOracleDetails(
+                    address(oracleConfig),
+                    address(config.primaryAggregator),
+                    address(config.secondaryAggregator),
+                    config.primaryHeartbeat,
+                    config.secondaryHeartbeat,
+                    config.normalizationDivider,
+                    config.normalizationMultiplier,
+                    config.convertToQuote,
+                    config.invertSecondPrice
+                );
+            } else {
+                console2.log(_FAIL_SYMBOL, "can't recognize Chainlink config: invalid return data len");
+                return false;
+            }
+        } catch {
+            console2.log(_WARNING_SYMBOL, "Oracle does not have a ChainlinkV3OracleConfig, may be expected");
+            return false;
+        }
+
+        return true;
+    }
+
+    function _printChainlinkOracleDetails(
+        address _oracleConfig,
+        address _primaryAggregator,
+        address _secondaryAggregator,
+        uint256 _primaryHeartbeat,
+        uint256 _secondaryHeartbeat,
+        uint256 _normalizationDivider,
+        uint256 _normalizationMultiplier,
+        bool _convertToQuote,
+        bool _invertSecondPrice
+    )
+        internal
+        pure
+    {
+        console2.log("----");
+      console2.log("Oracle config: ", _oracleConfig);
+        console2.log("Primary aggregator: ", _primaryAggregator);
+        console2.log("Secondary aggregator: ", _secondaryAggregator);
+        console2.log("Primary heartbeat: ", _primaryHeartbeat);
+        console2.log("Secondary heartbeat: ", _secondaryHeartbeat);
+        console2.log("Normalization divider: ", _normalizationDivider);
+        console2.log("Normalization multiplier: ", _normalizationMultiplier);
+        console2.log("Convert to quote: ", _convertToQuote);
+        console2.log("Invert second price: ", _invertSecondPrice);
+        console2.log("----");
     }
 
     function _quote(ISiloOracle _oracle, address _baseToken, uint256 _amount)
