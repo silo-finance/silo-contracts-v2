@@ -5,6 +5,7 @@ import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
+import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
 
 
 /// @title SiloLens is a helper contract for integrations and UI
@@ -86,5 +87,18 @@ contract SiloLens is ISiloLens {
         returns (uint256 borrowerDebt)
     {
         return _silo.maxRepay(_borrower);
+    }
+
+    /// @inheritdoc ISiloLens
+    function maxLiquidation(ISilo _silo, IPartialLiquidation _hook, address _borrower)
+        external
+        view
+        virtual
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool fullLiquidation)
+    {
+        (collateralToLiquidate, debtToRepay, sTokenRequired) = _hook.maxLiquidation(_borrower);
+
+        uint256 maxRepay = _silo.maxRepay(_borrower);
+        fullLiquidation = maxRepay == debtToRepay;
     }
 }

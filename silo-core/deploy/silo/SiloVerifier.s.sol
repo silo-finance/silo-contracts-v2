@@ -6,6 +6,8 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -161,11 +163,14 @@ contract SiloVerifier is Script, Test {
         emit log_named_address("solvencyOracle", configData.solvencyOracle);
         emit log_named_address("maxLtvOracle", configData.maxLtvOracle);
 
+        _verifySiloImplementation(_silo);
+
+        _printOracleInfo(configData.solvencyOracle, configData.token);
         errorsCounter += _sanityCheckConfig(configData);
     }
 
     // returns total amount of errors for numbers in ConfigData
-    function _sanityCheckConfig(ISiloConfig.ConfigData memory _configData) 
+    function _sanityCheckConfig(ISiloConfig.ConfigData memory _configData)
         internal
         pure
         returns (uint256 errorsCounter)
@@ -200,7 +205,7 @@ contract SiloVerifier is Script, Test {
         InterestRateModelConfigData.ConfigData[] memory allModels =
             (new InterestRateModelConfigData()).getAllConfigs();
 
-        IInterestRateModelV2Config irmV2Config = 
+        IInterestRateModelV2Config irmV2Config =
             InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
@@ -264,10 +269,10 @@ contract SiloVerifier is Script, Test {
             (, oraclesPriceRatio) =_quote(ISiloOracle(_solvencyOracle0), _token0, oneToken0);
             oraclesPriceRatio = oraclesPriceRatio * precisionDecimals / oneToken1;
         } else {
-            (bool success0, uint256 price0) = 
+            (bool success0, uint256 price0) =
                 _quote(ISiloOracle(_solvencyOracle0), _token0, oneToken0);
 
-            (bool success1, uint256 price1) = 
+            (bool success1, uint256 price1) =
                 _quote(ISiloOracle(_solvencyOracle1), _token1, oneToken1);
 
             if (!success0 || !success1) {
@@ -343,7 +348,7 @@ contract SiloVerifier is Script, Test {
         }
 
         errorsCounter += _priceSanityChecks(_oracle, _baseToken);
-        
+
         if (!_checkChainlinkSetup(_oracle)) {
             errorsCounter++;
         }
@@ -440,7 +445,7 @@ contract SiloVerifier is Script, Test {
     function _priceSanityChecks(ISiloOracle _oracle, address _baseToken)
         internal
         view
-        returns (uint256 errorsCounter) 
+        returns (uint256 errorsCounter)
     {
         // 1. 1 wei do not revert
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
@@ -510,7 +515,7 @@ contract SiloVerifier is Script, Test {
             ));
 
             if (data.length == _OLD_CHAINLINK_CONFIG_DATA_LEN) {
-                OldChainlinkV3Config memory config = abi.decode(data, (OldChainlinkV3Config));  
+                OldChainlinkV3Config memory config = abi.decode(data, (OldChainlinkV3Config));
 
                 _printChainlinkOracleDetails(
                     address(oracleConfig),
@@ -569,7 +574,7 @@ contract SiloVerifier is Script, Test {
         console2.log("Primary aggregator: ", _primaryAggregator);
         console2.log("Primary aggregator name: ", AggregatorV3Interface(_primaryAggregator).description());
         console2.log("Secondary aggregator: ", _secondaryAggregator);
-        
+
         if (_secondaryAggregator != address(0)) {
             console2.log("Secondary aggregator name: ", AggregatorV3Interface(_secondaryAggregator).description());
         }
@@ -611,5 +616,53 @@ contract SiloVerifier is Script, Test {
         } catch {
             return "Name reverted";
         }
+    }
+
+    function _verifySiloImplementation(address _silo) internal returns (uint256 errorsCounter) {
+        bytes memory bytecode = address(_silo).code;
+
+        if (bytecode.length != 45) {
+            emit log_string("Can't verify implementation");
+            return 1;
+        }
+
+        uint256 offset = 10;
+        uint256 length = 20;
+
+        bytes memory implBytes = new bytes(length);
+
+        for (uint256 i = offset; i < offset + length; i++) {
+            implBytes[i - offset] = bytecode[i];
+        }
+
+        address impl = address(bytes20(implBytes));
+
+        bool isOurImplementation = false;
+
+        string memory root = vm.projectRoot();
+        string memory abiPath = string.concat(root, "/silo-core/deploy/silo/_siloImplementations.json");
+        string memory json = vm.readFile(abiPath);
+
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        bytes memory chainData = vm.parseJson(json, string(abi.encodePacked(".", chainAlias)));
+
+        for (uint256 i = 0; i < chainData.length; i++) {
+            bytes memory implementationData = vm.parseJson(
+                json,
+                string(abi.encodePacked(".", chainAlias, "[", vm.toString(i), "].implementation"))
+            );
+
+            address implementationAddress = abi.decode(implementationData, (address));
+
+            if (impl == implementationAddress) {
+                isOurImplementation = true;
+                break;
+            }
+        }
+
+        emit log_named_address("Implementation", impl);
+
+        return isOurImplementation ? 0 : 1;
     }
 }

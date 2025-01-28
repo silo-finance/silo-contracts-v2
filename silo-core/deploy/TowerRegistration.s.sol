@@ -12,7 +12,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 /**
     FOUNDRY_PROFILE=core \
     forge script silo-core/deploy/TowerRegistration.s.sol:TowerRegistration \
-    --ffi --broadcast --rpc-url $RPC_OPTIMISM
+    --ffi --rpc-url $RPC_SONIC --broadcast
  */
 contract TowerRegistration is CommonDeploy {
     function run() public {
