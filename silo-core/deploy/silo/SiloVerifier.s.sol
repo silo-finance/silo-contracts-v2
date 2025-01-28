@@ -12,15 +12,36 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
-import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab \
+FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
     EXTERNAL_PRICE_0=101388 EXTERNAL_PRICE_1=102100 \
     forge script silo-core/deploy/silo/SiloVerifier.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
+
+// TODO:
+ // 18 decimals instead of e123
+ // Price for 1 token (10 ^ decimals) -> actual number of decimals
+ // price is linear by quoted amounts
+ // oracle 0 is zero, oracle 1 is not zero
+ // both oracles are zero
+ // find a minimal price we don't revert
+
+ // check silo implementation in a list log it silo-core/deploy/silo/_siloImplementations.json
+ // verify the silo deployment is a latest
+ // description for silo implementation
+
+ // chainlink heartbeats, chainlink feeds, etc.
+ // chainlink decstiption
+ // we can save json from price-feeds/
+ // 2 descriptions
+
+ // 1) fetch any language
+ // 2) clean it up 
+ // 
 
 contract SiloVerifier is Script, Test {
     // used to generate quote amounts and names to log
@@ -94,11 +115,11 @@ contract SiloVerifier is Script, Test {
         console2.log(_DELIMITER);
         console2.log("3/3. find and print IRM config name by on-chain state");
 
-        if (!_checkIRMConfig(configData0, silo0, true)) {
+        if (!_checkIRMConfig(configData0, true)) {
             errorsCounter++;
         }
 
-        if (!_checkIRMConfig(configData1, silo1, false)) {
+        if (!_checkIRMConfig(configData1, false)) {
             errorsCounter++;
         }
     }
@@ -162,19 +183,19 @@ contract SiloVerifier is Script, Test {
 
     function _checkIRMConfig(
         ISiloConfig.ConfigData memory _configData,
-        address _silo,
         bool isSiloZero
     ) internal returns (bool success) {
         InterestRateModelConfigData.ConfigData[] memory allModels =
             (new InterestRateModelConfigData()).getAllConfigs();
         
-        IInterestRateModelV2.Config memory irmConfig = 
-            IInterestRateModelV2(_configData.interestRateModel).getConfig(_silo);
+        IInterestRateModelV2Config irmV2Config = 
+            InterestRateModelV2(_configData.interestRateModel).irmConfig();
+
+        IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
 
         uint i;
 
         for (; i < allModels.length; i++){
-            // ri and Tcrit are time sensitive
             bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
                 allModels[i].config.ucrit == irmConfig.ucrit &&
                 allModels[i].config.ulow == irmConfig.ulow &&
@@ -183,8 +204,8 @@ contract SiloVerifier is Script, Test {
                 allModels[i].config.klow == irmConfig.klow &&
                 allModels[i].config.klin == irmConfig.klin &&
                 allModels[i].config.beta == irmConfig.beta &&
-                allModels[i].config.ri <= irmConfig.ri &&
-                allModels[i].config.Tcrit <= irmConfig.Tcrit;
+                allModels[i].config.ri == irmConfig.ri &&
+                allModels[i].config.Tcrit == irmConfig.Tcrit;
 
             if (configIsMatching) {
                 break;
