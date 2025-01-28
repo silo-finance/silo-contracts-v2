@@ -5,6 +5,8 @@ import {Script} from "forge-std/Script.sol";
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -51,6 +53,8 @@ contract SiloVerifier is Script, Test {
         emit log_named_address("solvencyOracle", configData.solvencyOracle);
         emit log_named_address("maxLtvOracle", configData.maxLtvOracle);
 
+        _verifySiloImplementation(_silo);
+
         _printOracleInfo(configData.solvencyOracle, configData.token);
     }
 
@@ -71,5 +75,53 @@ contract SiloVerifier is Script, Test {
 
         emit log_named_uint("Quote for 1 base token:", quote);
         emit log_named_decimal_uint("Quote for 1 base token (18 decimals):", quote, 18);
+    }
+
+    function _verifySiloImplementation(address _silo) internal returns (uint256 errorsCounter) {
+        bytes memory bytecode = address(_silo).code;
+
+        if (bytecode.length != 45) {
+            emit log_string("Can't verify implementation");
+            return 1;
+        }
+
+        uint256 offset = 10;
+        uint256 length = 20;
+
+        bytes memory implBytes = new bytes(length);
+
+        for (uint256 i = offset; i < offset + length; i++) {
+            implBytes[i - offset] = bytecode[i];
+        }
+
+        address impl = address(bytes20(implBytes));
+
+        bool isOurImplementation = false;
+
+        string memory root = vm.projectRoot();
+        string memory abiPath = string.concat(root, "/silo-core/deploy/silo/_siloImplementations.json");
+        string memory json = vm.readFile(abiPath);
+
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        bytes memory chainData = vm.parseJson(json, string(abi.encodePacked(".", chainAlias)));
+
+        for (uint256 i = 0; i < chainData.length; i++) {
+            bytes memory implementationData = vm.parseJson(
+                json,
+                string(abi.encodePacked(".", chainAlias, "[", vm.toString(i), "].implementation"))
+            );
+
+            address implementationAddress = abi.decode(implementationData, (address));
+
+            if (impl == implementationAddress) {
+                isOurImplementation = true;
+                break;
+            }
+        }
+
+        emit log_named_address("Implementation", impl);
+
+        return isOurImplementation ? 0 : 1;
     }
 }
