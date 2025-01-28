@@ -564,7 +564,7 @@ contract SiloVerifier is Script, Test {
         pure
     {
         console2.log("----");
-      console2.log("Oracle config: ", _oracleConfig);
+        console2.log("Oracle config: ", _oracleConfig);
         console2.log("Primary aggregator: ", _primaryAggregator);
         console2.log("Secondary aggregator: ", _secondaryAggregator);
         console2.log("Primary heartbeat: ", _primaryHeartbeat);
