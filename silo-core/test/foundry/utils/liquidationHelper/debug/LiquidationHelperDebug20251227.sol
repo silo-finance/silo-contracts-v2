@@ -90,7 +90,10 @@ contract LiquidationHelper20251227 is Test {
 
         */
         bytes memory swapCallData = abi.encodePacked(
-            hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889408",
+            hex"83bd37f9",
+            hex"0001039e2fb66102314ce7b64ce5ce3e5183bc94ad38",
+            hex"000129219dd400f2bf60e5a23d13be72b486d4038894",
+            hex"08",
             uint72(0x22b0e56179485ffe03), // amount in, 18 characters
             hex"126a7a07ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00000001",
             address(liquidationHelper), // seller address in swap data

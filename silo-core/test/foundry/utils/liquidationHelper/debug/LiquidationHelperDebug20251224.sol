@@ -48,8 +48,6 @@ contract LiquidationHelper20251224 is Test {
          TODO this can must be skip because foundry do not support Sonic network yet
     */
     function test_skip_debug_liquidationCall() public {
-
-
         LiquidationHelper liquidationHelper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
 
 //        liquidationHelper = new LiquidationHelper(
@@ -88,7 +86,10 @@ contract LiquidationHelper20251224 is Test {
 
         */
         bytes memory swapCallData = abi.encodePacked(
-            hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889408",
+            hex"83bd37f9",
+            hex"0001039e2fb66102314ce7b64ce5ce3e5183bc94ad38", // sell token
+            hex"000129219dd400f2bf60e5a23d13be72b486d4038894", // buy token
+            hex"08",
             uint72(639935999999999999491), // amount in, 18 characters
             hex"15428a07ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00000001",
             address(liquidationHelper), // seller address in swap data
