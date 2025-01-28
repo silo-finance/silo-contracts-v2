@@ -163,10 +163,11 @@ contract SiloVerifier is Script, Test {
         emit log_named_address("solvencyOracle", configData.solvencyOracle);
         emit log_named_address("maxLtvOracle", configData.maxLtvOracle);
 
-        _verifySiloImplementation(_silo);
-
-        _printOracleInfo(configData.solvencyOracle, configData.token);
         errorsCounter += _sanityCheckConfig(configData);
+
+        if (!_verifySiloImplementation(_silo)) {
+            errorsCounter++;
+        }
     }
 
     // returns total amount of errors for numbers in ConfigData
@@ -618,12 +619,12 @@ contract SiloVerifier is Script, Test {
         }
     }
 
-    function _verifySiloImplementation(address _silo) internal returns (uint256 errorsCounter) {
+    function _verifySiloImplementation(address _silo) internal returns (bool success) {
         bytes memory bytecode = address(_silo).code;
 
         if (bytecode.length != 45) {
-            emit log_string("Can't verify implementation");
-            return 1;
+            console2.log(_FAIL_SYMBOL, "Can't verify Silo implementation");
+            return false;
         }
 
         uint256 offset = 10;
@@ -663,6 +664,13 @@ contract SiloVerifier is Script, Test {
 
         emit log_named_address("Implementation", impl);
 
-        return isOurImplementation ? 0 : 1;
+        if (isOurImplementation) {
+            console2.log(_SUCCESS_SYMBOL, "Silo implementation is our deployment");
+            return true;
+        } else {
+            console2.log(_FAIL_SYMBOL, "Silo implementation is NOT our deployment");
+            return false;
+        }
+
     }
 }
