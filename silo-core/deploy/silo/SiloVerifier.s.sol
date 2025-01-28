@@ -132,7 +132,11 @@ contract SiloVerifier is Script, Test {
     }
 
     // returns total amount of errors for numbers in ConfigData
-    function _sanityCheckConfig(ISiloConfig.ConfigData memory _configData) internal pure returns (uint256 errorsCounter) {
+    function _sanityCheckConfig(ISiloConfig.ConfigData memory _configData) 
+        internal
+        pure
+        returns (uint256 errorsCounter)
+    {
         uint256 onePercent = 10**18 / 100;
 
         if (_configData.daoFee > onePercent * 25 || _configData.daoFee < onePercent / 100) {
@@ -161,8 +165,11 @@ contract SiloVerifier is Script, Test {
         address _silo,
         bool isSiloZero
     ) internal returns (bool success) {
-        InterestRateModelConfigData.ConfigData[] memory allModels = (new InterestRateModelConfigData()).getAllConfigs();
-        IInterestRateModelV2.Config memory irmConfig = IInterestRateModelV2(_configData.interestRateModel).getConfig(_silo);
+        InterestRateModelConfigData.ConfigData[] memory allModels =
+            (new InterestRateModelConfigData()).getAllConfigs();
+        
+        IInterestRateModelV2.Config memory irmConfig = 
+            IInterestRateModelV2(_configData.interestRateModel).getConfig(_silo);
 
         uint i;
 
@@ -209,8 +216,9 @@ contract SiloVerifier is Script, Test {
         }
 
         console2.log("\nExternal price checks:");
-
         uint256 precisionDecimals = 10**18;
+        uint256 oneToken0 = (10**uint256(IERC20Metadata(_token0).decimals()));
+        uint256 oneToken1 = (10**uint256(IERC20Metadata(_token1).decimals()));
 
         // price0 / price1 from external source
         uint256 externalPricesRatio = _externalPrice0 * precisionDecimals / _externalPrice1;
@@ -220,14 +228,14 @@ contract SiloVerifier is Script, Test {
         uint256 oraclesPriceRatio;
 
         if (_solvencyOracle1 == address(0)) {
-            (, oraclesPriceRatio) = _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
-            oraclesPriceRatio = oraclesPriceRatio * precisionDecimals / (10**uint256(IERC20Metadata(_token1).decimals()));
+            (, oraclesPriceRatio) =_quote(ISiloOracle(_solvencyOracle0), _token0, oneToken0);
+            oraclesPriceRatio = oraclesPriceRatio * precisionDecimals / oneToken1;
         } else {
             (bool success0, uint256 price0) = 
-                _quote(ISiloOracle(_solvencyOracle0), _token0, (10**uint256(IERC20Metadata(_token0).decimals())));
+                _quote(ISiloOracle(_solvencyOracle0), _token0, oneToken0);
 
             (bool success1, uint256 price1) = 
-                _quote(ISiloOracle(_solvencyOracle1), _token1, (10**uint256(IERC20Metadata(_token1).decimals())));
+                _quote(ISiloOracle(_solvencyOracle1), _token1, oneToken1);
 
             if (!success0 || !success1) {
                 console2.log(_FAIL_SYMBOL, "can't validate external prices, oracles revert");
@@ -304,7 +312,11 @@ contract SiloVerifier is Script, Test {
         errorsCounter += _priceSanityChecks(_oracle, _baseToken);
     }
 
-    function _getAmountsToQuote(uint8 _baseTokenDecimals) internal pure returns (QuoteNamedAmount[] memory amountsToQuote) {
+    function _getAmountsToQuote(uint8 _baseTokenDecimals)
+        internal
+        pure
+        returns (QuoteNamedAmount[] memory amountsToQuote)
+    {
         amountsToQuote = new QuoteNamedAmount[](9);
         uint256 oneToken = (10 ** uint256(_baseTokenDecimals));
 
@@ -369,7 +381,11 @@ contract SiloVerifier is Script, Test {
         }
     }
 
-    function _priceSanityChecks(ISiloOracle _oracle, address _baseToken) internal view returns (uint256 errorsCounter) {
+    function _priceSanityChecks(ISiloOracle _oracle, address _baseToken)
+        internal
+        view
+        returns (uint256 errorsCounter) 
+    {
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
 
         if (!success || price == 0) {
