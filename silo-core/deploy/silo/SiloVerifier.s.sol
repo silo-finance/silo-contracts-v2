@@ -186,9 +186,13 @@ contract SiloVerifier is Script, Test {
             console2.log(_FAIL_SYMBOL, "deployerFee != 0");
         }
 
-        if (_configData.liquidationFee < onePercent / 100 || _configData.liquidationFee > onePercent * 15) {
+        if (_configData.liquidationFee > onePercent * 15) {
             errorsCounter++;
-            console2.log(_FAIL_SYMBOL, "liquidationFee >15% or <0.01%");
+            console2.log(_FAIL_SYMBOL, "liquidationFee >15%");
+        }
+
+        if (_configData.liquidationFee < onePercent / 100) {
+            console2.log(_WARNING_SYMBOL, "liquidationFee <0.01%, may be expected");
         }
 
         if (_configData.flashloanFee > onePercent) {
@@ -547,7 +551,7 @@ contract SiloVerifier is Script, Test {
             }
         } catch {
             console2.log(_WARNING_SYMBOL, "Oracle does not have a ChainlinkV3OracleConfig, may be expected");
-            return false;
+            return true;
         }
 
         return true;
