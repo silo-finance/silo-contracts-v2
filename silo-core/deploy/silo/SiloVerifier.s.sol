@@ -17,7 +17,7 @@ import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IIntere
 
 /**
 FOUNDRY_PROFILE=core CONFIG=0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab \
-    EXTERNAL_PRICE_0=992 EXTERNAL_PRICE_1=998 \
+    EXTERNAL_PRICE_0=101388 EXTERNAL_PRICE_1=102100 \
     forge script silo-core/deploy/silo/SiloVerifier.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
@@ -103,7 +103,7 @@ contract SiloVerifier is Script, Test {
         }
     }
 
-    // returns total amount of errors for Silo address, including oracle checks
+    // returns total amount of errors for Silo address
     function _checkConfigData(ISiloConfig _siloConfig, address _silo) internal returns (uint256 errorsCounter) {
         emit log_named_address("\nsiloConfig", address(_siloConfig));
 
