@@ -73,9 +73,6 @@ contract ERC4626OracleTest is Test {
 
         // should not revert
         oracle.beforeQuote(address(vault));
-
-        // revert with wrong base token
-        vm.expectRevert(ERC4626Oracle.AssetNotSupported.selector);
         oracle.beforeQuote(address(1));
     }
 }

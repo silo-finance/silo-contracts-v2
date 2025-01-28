@@ -19,7 +19,6 @@ contract ERC4626Oracle is ISiloOracle {
     /// @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external view {
         // only for an ISiloOracle interface implementation
-        if (_baseToken != address(VAULT)) revert AssetNotSupported();
     }
 
     /// @inheritdoc ISiloOracle
