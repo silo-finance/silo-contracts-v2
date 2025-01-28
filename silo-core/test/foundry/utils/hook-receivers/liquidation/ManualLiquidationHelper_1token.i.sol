@@ -74,7 +74,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     FOUNDRY_PROFILE=core-test forge test  --ffi --mt test_executeLiquidation_1_token_BadDebt -vv
     */
     /// forge-config: core-test.fuzz.runs = 1000
-    function test_executeLiquidation_1_token_BadDebt_fuxx(
+    function test_executeLiquidation_1_token_BadDebt_fuzz(
         uint32 _addTimestamp
     ) public {
         vm.warp(block.timestamp + _addTimestamp);
