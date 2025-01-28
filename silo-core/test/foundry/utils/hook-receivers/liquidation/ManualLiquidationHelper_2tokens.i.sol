@@ -8,47 +8,46 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ManualLiquidationHelperCommon} from "./ManualLiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ManualLiquidationHelper1TokenTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ManualLiquidationHelper2TokensTest
 */
-contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
-    uint256 constant LIQUIDATION_UNDERESTIMATION = 1;
+contract ManualLiquidationHelper2TokensTest is ManualLiquidationHelperCommon {
+    uint256 constant LIQUIDATION_UNDERESTIMATION = 2;
 
     function setUp() public {
         vm.label(BORROWER, "BORROWER");
         siloConfig = _setUpLocalFixture();
 
-        _depositCollateral(COLLATERAL, BORROWER, SAME_ASSET);
-        _borrow(DEBT, BORROWER, SAME_ASSET);
+        _depositForBorrow(DEBT + COLLATERAL, makeAddr("depositor"));
+        _depositCollateral(COLLATERAL, BORROWER, TWO_ASSETS);
+        _borrow(DEBT, BORROWER, TWO_ASSETS);
 
-        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo1));
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
 
-        assertEq(collateralConfig.liquidationFee, 0.025e18, "liquidationFee");
+        assertEq(collateralConfig.liquidationFee, 0.05e18, "liquidationFee");
 
-        _debtAsset = address(token1);
+       _debtAsset = address(token1);
     }
 
     /*
-    forge test --ffi --mt test_executeLiquidation_1_token -vvv
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
-    function test_executeLiquidation_1_token(
-        uint32 _addTimestamp
-    ) public {
+    function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
         vm.warp(block.timestamp + _addTimestamp);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
-        vm.assume(debtToRepay != 0);
 
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
         emit log_named_decimal_uint("          debtToRepay", debtToRepay, 18);
+        vm.assume(debtToRepay != 0);
 
         token1.mint(address(this), debtToRepay);
         token1.approve(address(LIQUIDATION_HELPER), debtToRepay);
 
-        assertEq(token1.balanceOf(TOKENS_RECEIVER), 0, "no token1 before liquidation");
+        assertEq(token0.balanceOf(TOKENS_RECEIVER), 0, "no collateral before liquidation");
 
         _executeLiquidation();
 
-        uint256 withdrawCollateral = token1.balanceOf(TOKENS_RECEIVER);
+        uint256 withdrawCollateral = token0.balanceOf(TOKENS_RECEIVER);
 
         assertEq(
             collateralToLiquidate,
@@ -56,7 +55,9 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
             "collateralToLiquidate == withdrawCollateral"
         );
 
-        _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
+        emit log_named_decimal_uint("token0.balanceOf(TOKENS_RECEIVER)", token0.balanceOf(TOKENS_RECEIVER), 18);
+        emit log_named_decimal_uint("token1.balanceOf(TOKENS_RECEIVER)", token1.balanceOf(TOKENS_RECEIVER), 18);
+
         _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);
         _assertAddressHasNoSTokens(silo1, TOKENS_RECEIVER);
 
