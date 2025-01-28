@@ -43,7 +43,7 @@ contract ManualLiquidationHelper is TokenRescuer {
 
     /// @dev entry point for manual liquidation
     /// @notice you need to approve ManualLiquidationHelper to be able to transfer from you tokens for repay
-    /// liquidated collateral will be transfer to `TOKENS_RECEIVER`.
+    /// liquidated collateral will be transfer to `TOKENS_RECEIVER`. Bad Debt is supported.
     function executeLiquidation(ISilo _siloWithDebt, address _borrower) external virtual {
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -70,7 +70,6 @@ contract ManualLiquidationHelper is TokenRescuer {
 
         debtAsset.forceApprove(debtConfig.hookReceiver, 0);
 
-        // bad debt is not supported, we will get underflow on bad debt
         _transferToReceiver(collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));
     }
 
