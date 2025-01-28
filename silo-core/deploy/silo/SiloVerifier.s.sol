@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -23,8 +24,6 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
  */
 
 // TODO:
- // 18 decimals instead of e123
- // Price for 1 token (10 ^ decimals) -> actual number of decimals
  // price is linear by quoted amounts
  // oracle 0 is zero, oracle 1 is not zero
  // both oracles are zero
@@ -48,6 +47,7 @@ contract SiloVerifier is Script, Test {
     struct QuoteNamedAmount {
         uint256 amount;
         string name;
+        bool logExponentialNotation; // will log 1e123 instead of 1000...0000
     }
 
     string constant internal _SUCCESS_SYMBOL = unicode"✅";
@@ -338,52 +338,67 @@ contract SiloVerifier is Script, Test {
         pure
         returns (QuoteNamedAmount[] memory amountsToQuote)
     {
-        amountsToQuote = new QuoteNamedAmount[](9);
+        amountsToQuote = new QuoteNamedAmount[](10);
         uint256 oneToken = (10 ** uint256(_baseTokenDecimals));
 
         amountsToQuote[0] = QuoteNamedAmount({
             amount: 1,
-            name: "1 wei (lowest amount)"
+            name: "1 wei (lowest amount)",
+            logExponentialNotation: false
         });
 
         amountsToQuote[1] = QuoteNamedAmount({
             amount: 10,
-            name: "10 wei"
+            name: "10 wei",
+            logExponentialNotation: false
         });
 
         amountsToQuote[2] = QuoteNamedAmount({
             amount: oneToken / 10,
-            name: "0.1 token"
+            name: "0.1 token",
+            logExponentialNotation: true
         });
 
         amountsToQuote[3] = QuoteNamedAmount({
             amount: oneToken / 2,
-            name: "0.5 token"
+            name: "0.5 token",
+            logExponentialNotation: true
         });
 
         amountsToQuote[4] = QuoteNamedAmount({
             amount: oneToken,
-            name: "1 token (10 ^ decimals)"
+            name: string.concat("1 token in own decimals (10^", Strings.toString(_baseTokenDecimals), ")"),
+            logExponentialNotation: false
         });
 
         amountsToQuote[5] = QuoteNamedAmount({
-            amount: 100 * oneToken,
-            name: "100 tokens"
+            amount: oneToken,
+            name: string.concat("1 token in own decimals (10^", Strings.toString(_baseTokenDecimals), ") exp format"),
+            logExponentialNotation: true
         });
 
         amountsToQuote[6] = QuoteNamedAmount({
-            amount: 10_000 * oneToken,
-            name: "10,000 tokens"
+            amount: 100 * oneToken,
+            name: "100 tokens",
+            logExponentialNotation: true
         });
 
         amountsToQuote[7] = QuoteNamedAmount({
-            amount: 10**36,
-            name: "10**36 wei"
+            amount: 10_000 * oneToken,
+            name: "10,000 tokens",
+            logExponentialNotation: true
         });
 
         amountsToQuote[8] = QuoteNamedAmount({
+            amount: 10**36,
+            name: "10**36 wei",
+            logExponentialNotation: true
+        });
+
+        amountsToQuote[9] = QuoteNamedAmount({
             amount: 10**20 * oneToken,
-            name: "10**20 tokens (More than USA GDP if the token worth at least 0.001 cent)"
+            name: "10**20 tokens (More than USA GDP if the token worth at least 0.001 cent)",
+            logExponentialNotation: true
         });
     }
 
@@ -396,7 +411,11 @@ contract SiloVerifier is Script, Test {
         (success, price) = _quote(_oracle, _baseToken, _quoteNamedAmount.amount);
 
         if (success) {
-            console2.log("Price for %s = %e", _quoteNamedAmount.name, price);
+            if (_quoteNamedAmount.logExponentialNotation) {
+                console2.log("Price for %s = %e", _quoteNamedAmount.name, price);
+            } else {
+                console2.log("Price for %s = %s", _quoteNamedAmount.name, price);
+            }
         } else {
             console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
         }
