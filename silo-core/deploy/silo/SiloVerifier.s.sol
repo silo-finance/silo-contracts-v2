@@ -561,12 +561,19 @@ contract SiloVerifier is Script, Test {
         bool _invertSecondPrice
     )
         internal
-        pure
+        view
     {
         console2.log("----");
+        console2.log("ChainlinkV3 underlying feed setup");
         console2.log("Oracle config: ", _oracleConfig);
         console2.log("Primary aggregator: ", _primaryAggregator);
+        console2.log("Primary aggregator name: ", AggregatorV3Interface(_primaryAggregator).description());
         console2.log("Secondary aggregator: ", _secondaryAggregator);
+        
+        if (_secondaryAggregator != address(0)) {
+            console2.log("Secondary aggregator name: ", AggregatorV3Interface(_secondaryAggregator).description());
+        }
+
         console2.log("Primary heartbeat: ", _primaryHeartbeat);
         console2.log("Secondary heartbeat: ", _secondaryHeartbeat);
         console2.log("Normalization divider: ", _normalizationDivider);
