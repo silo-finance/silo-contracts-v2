@@ -19,14 +19,14 @@ contract ERC4626Oracle is ISiloOracle {
     /// @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external view {
         // only for an ISiloOracle interface implementation
-        if (_baseToken != UNDERLYING) revert AssetNotSupported();
+        if (_baseToken != address(VAULT)) revert AssetNotSupported();
     }
 
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
-        if (_baseToken != UNDERLYING) revert AssetNotSupported();
+        if (_baseToken != address(VAULT)) revert AssetNotSupported();
 
-        quoteAmount = VAULT.previewRedeem(_baseAmount);
+        quoteAmount = VAULT.convertToAssets(_baseAmount);
     }
 
     /// @inheritdoc ISiloOracle

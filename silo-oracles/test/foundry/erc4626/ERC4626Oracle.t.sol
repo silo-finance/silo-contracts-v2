@@ -41,9 +41,9 @@ contract ERC4626OracleTest is Test {
 
         ISiloOracle oracle = _factory.createERC4626Oracle(vault);
 
-        uint256 quote = oracle.quote(1 ether, address(vault.asset()));
+        uint256 quote = oracle.quote(1 ether, address(vault));
 
-        assertEq(quote, vault.previewRedeem(1 ether));
+        assertEq(quote, vault.convertToAssets(1 ether));
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_quote_wrongBaseToken -vvv
@@ -72,7 +72,7 @@ contract ERC4626OracleTest is Test {
         ISiloOracle oracle = _factory.createERC4626Oracle(vault);
 
         // should not revert
-        oracle.beforeQuote(address(vault.asset()));
+        oracle.beforeQuote(address(vault));
 
         // revert with wrong base token
         vm.expectRevert(ERC4626Oracle.AssetNotSupported.selector);
