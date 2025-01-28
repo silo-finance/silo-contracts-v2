@@ -8,6 +8,7 @@ library SiloOraclesFactoriesContracts {
     string public constant CHAINLINK_V3_ORACLE_FACTORY = "ChainlinkV3OracleFactory.sol";
     string public constant DIA_ORACLE_FACTORY = "DIAOracleFactory.sol";
     string public constant ORACLE_FORWARDER_FACTORY = "OracleForwarderFactory.sol";
+    string public constant ERC4626_ORACLE_FACTORY = "ERC4626OracleFactory.sol";
 }
 
 library SiloOraclesFactoriesDeployments {
