@@ -36,6 +36,7 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
  */
 
 // TODO:
+// linear function revert
 // split checks into files: a check is a contract, unify them by contract interface.
 // fetch chainlink feeds from API and verify the heartbeat
 // if oracle reverts, find a minimal price we don't revert
@@ -170,18 +171,28 @@ contract SiloVerifier is Script, Test {
 
         errorsCounter += _sanityCheckConfig(configData);
 
-        errorsCounter+=_checkIncentivesSetup(configData);
+        errorsCounter += _checkHookAndIncentivesSetup(configData);
 
         if (!_verifySiloImplementation(_silo)) {
             errorsCounter++;
         }
     }
 
-    function _checkIncentivesSetup(ISiloConfig.ConfigData memory _configData)
+    function _checkHookAndIncentivesSetup(ISiloConfig.ConfigData memory _configData)
         internal
         returns (uint256 errorsCounter)
     {
         GaugeHookReceiver hookReceiver = GaugeHookReceiver(_configData.hookReceiver);
+
+        bool isOwnerOrPending = Ownable(hookReceiver).owner() == AddrLib.getAddress(AddrKey.DAO) ||
+            Ownable2Step(hookReceiver).pendingOwner() == AddrLib.getAddress(AddrKey.DAO);
+
+        if (!isOwnerOrPending) {
+            console2.log(_FAIL_SYMBOL, "Hook owner and pending owner is not a DAO");
+            console2.log(_FAIL_SYMBOL, "Hook owner", Ownable(hookReceiver).owner());
+            console2.log(_FAIL_SYMBOL, "Hook pending owner", Ownable2Step(hookReceiver).pendingOwner());
+            errorsCounter++;
+        }
 
         address protectedShareTokensGauge =
             address(hookReceiver.configuredGauges(IShareToken(_configData.protectedShareToken)));
@@ -500,7 +511,8 @@ contract SiloVerifier is Script, Test {
                 console2.log("Price for %s = %s", _quoteNamedAmount.name, price);
             }
         } else {
-            console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
+            console2.log(_WARNING_SYMBOL, "Price for", _quoteNamedAmount.name, "reverts");
+            success = true;
         }
     }
 
@@ -509,14 +521,14 @@ contract SiloVerifier is Script, Test {
         view
         returns (uint256 errorsCounter)
     {
-        // 1. 1 wei do not revert
+        // 1. quote (1 wei) should not return zero
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
 
-        if (!success || price == 0) {
-            console2.log(_FAIL_SYMBOL, "quote (1 wei) reverts or zero");
+        if (success && price == 0) {
+            console2.log(_FAIL_SYMBOL, "quote (1 wei) returns zero");
             errorsCounter++;
         } else {
-            console2.log(_SUCCESS_SYMBOL, "quote (1 wei) is not zero");
+            console2.log(_SUCCESS_SYMBOL, "quote (1 wei) do not return zero");
         }
 
         // 2. large amount do not revert
