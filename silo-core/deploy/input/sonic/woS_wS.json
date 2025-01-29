@@ -19,7 +19,7 @@
     "solvencyOracle1": "NO_ORACLE",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2.sol",
-    "interestRateModelConfig1": "bridgeETHv15",
+    "interestRateModelConfig1": "bridgeETHv11",
     "maxLtv1": 0,
     "lt1": 0,
     "liquidationTargetLtv1": 0,
