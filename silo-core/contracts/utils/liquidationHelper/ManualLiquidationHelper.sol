@@ -14,7 +14,8 @@ import {IWrappedNativeToken} from "../../interfaces/IWrappedNativeToken.sol";
 
 import {TokenRescuer} from "../TokenRescuer.sol";
 
-/// @notice ManualLiquidationHelper is a utility contract that can be changed and replaced at any point. It is not considered a part of Silo protocol. Use at your own risk.
+/// @notice ManualLiquidationHelper is a utility contract that can be changed and replaced at any point.
+/// It is not considered a part of Silo protocol. Use at your own risk.
 contract ManualLiquidationHelper is TokenRescuer {
     using Address for address payable;
     using SafeERC20 for IERC20;
