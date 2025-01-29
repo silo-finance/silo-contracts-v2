@@ -111,6 +111,11 @@ contract SiloIncentivesController is BaseIncentivesController {
         program.emissionPerSecond = emissionPerSecondBefore;
     }
 
+    /// @inheritdoc ISiloIncentivesController
+    function rescueRewards(address _rewardToken) external onlyOwner {
+        IERC20(_rewardToken).safeTransfer(msg.sender, IERC20(_rewardToken).balanceOf(address(this)));
+    }
+
     /// @dev Creates a new immediate distribution program if it does not exist.
     /// @param _tokenToDistribute The address of the token to distribute.
     /// @return programId The ID of the created or existing program.
@@ -121,10 +126,11 @@ contract SiloIncentivesController is BaseIncentivesController {
     {
         programId = keccak256(abi.encode(_tokenToDistribute)); // munge
 
+
         if (incentivesPrograms[programId].lastUpdateTimestamp == 0) {
             DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput;
 
-            _incentivesProgramInput.name = "bla"; // munge 
+            _incentivesProgramInput.name = "dummy"; // munge
             _incentivesProgramInput.rewardToken = _tokenToDistribute;
             _incentivesProgramInput.emissionPerSecond = 0;
             _incentivesProgramInput.distributionEnd = 0;
