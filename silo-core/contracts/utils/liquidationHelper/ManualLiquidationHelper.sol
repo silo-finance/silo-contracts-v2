@@ -49,7 +49,7 @@ contract ManualLiquidationHelper is TokenRescuer {
     /// @param _siloWithDebt silo address where user has debt
     /// @param _borrower user to liquidate
     function executeLiquidation(ISilo _siloWithDebt, address _borrower) external virtual {
-        _executeLiquidation(_siloWithDebt, _borrower, type(uint256).max, false);
+        _executeLiquidation(_siloWithDebt, _borrower, type(uint256).max, false, TOKENS_RECEIVER);
     }
 
     /// @dev entry point for manual liquidation
@@ -63,10 +63,37 @@ contract ManualLiquidationHelper is TokenRescuer {
         external
         virtual
     {
-        _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken);
+        _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken, TOKENS_RECEIVER);
     }
 
-    function _executeLiquidation(ISilo _siloWithDebt, address _borrower, uint256 _maxDebtToCover, bool _receiveSToken)
+    /// @dev entry point for manual liquidation
+    /// @notice you need to approve ManualLiquidationHelper to be able to transfer from you tokens for repay
+    /// liquidated collateral will be transfer to `TOKENS_RECEIVER`. Bad Debt is supported.
+    /// @param _siloWithDebt silo address where user has debt
+    /// @param _borrower user to liquidate
+    /// @param _maxDebtToCover maximum amount of debt you want to repay
+    /// @param _receiveSToken if TRUE, collateral will be send as sToken
+    /// @param _receiver of liquidated collateral
+    function executeLiquidation(
+        ISilo _siloWithDebt,
+        address _borrower,
+        uint256 _maxDebtToCover,
+        bool _receiveSToken,
+        address payable _receiver
+    )
+        external
+        virtual
+    {
+        _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken, _receiver);
+    }
+
+    function _executeLiquidation(
+        ISilo _siloWithDebt,
+        address _borrower,
+        uint256 _maxDebtToCover,
+        bool _receiveSToken,
+        address payable _receiver
+    )
         internal
         virtual
     {
@@ -98,32 +125,34 @@ contract ManualLiquidationHelper is TokenRescuer {
         debtAsset.forceApprove(debtConfig.hookReceiver, 0);
 
         if (_receiveSToken) {
-            _transferToReceiver(
+            _transferToken(
+                _receiver,
                 collateralConfig.protectedShareToken,
                 IERC20(collateralConfig.protectedShareToken).balanceOf(address(this))
             );
-            _transferToReceiver(
+            _transferToken(
+                _receiver,
                 collateralConfig.collateralShareToken,
                 IERC20(collateralConfig.collateralShareToken).balanceOf(address(this))
             );
         } else {
-            _transferToReceiver(collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));
+            _transferToken(_receiver, collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));
         }
     }
 
-    function _transferToReceiver(address _asset, uint256 _amount) internal virtual {
+    function _transferToken(address payable _receiver, address _asset, uint256 _amount) internal virtual {
         if (_amount == 0) return;
 
         if (_asset == NATIVE_TOKEN) {
-            _transferNative(_amount);
+            _transferNative(_receiver, _amount);
         } else {
-            IERC20(_asset).safeTransfer(TOKENS_RECEIVER, _amount);
+            IERC20(_asset).safeTransfer(_receiver, _amount);
         }
     }
 
     /// @notice We assume that quoteToken is wrapped native token
-    function _transferNative(uint256 _amount) internal virtual {
+    function _transferNative(address payable _receiver, uint256 _amount) internal virtual {
         IWrappedNativeToken(address(NATIVE_TOKEN)).withdraw(_amount);
-        TOKENS_RECEIVER.sendValue(_amount);
+        _receiver.sendValue(_amount);
     }
 }
