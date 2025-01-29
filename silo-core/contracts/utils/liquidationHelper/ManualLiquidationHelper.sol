@@ -102,7 +102,7 @@ contract ManualLiquidationHelper is TokenRescuer {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _siloWithDebt.config(). getConfigsForSolvency(_borrower);
+        ) = _siloWithDebt.config().getConfigsForSolvency(_borrower);
 
         IPartialLiquidation liquidation = IPartialLiquidation(debtConfig.hookReceiver);
         IERC20 debtAsset = IERC20(debtConfig.token);
