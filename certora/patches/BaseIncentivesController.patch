@@ -1,0 +1,11 @@
+--- silo-core/contracts/incentives/base/BaseIncentivesController.sol	2025-01-29 16:55:57.732085831 +0100
++++ certora/patches/BaseIncentivesController.sol	2025-01-29 16:53:14.476260652 +0100
+@@ -260,7 +260,7 @@
+     function _createIncentiveProgram(
+         DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput
+     ) internal virtual {
+-        bytes32 programId = getProgramId(_incentivesProgramInput.name);
++        bytes32 programId = keccak256(abi.encode(_incentivesProgramInput.rewardToken)); // munge
+ 
+         require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
+         require(_incentivesProgramIds.add(programId), IncentivesProgramAlreadyExists());

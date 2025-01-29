@@ -1,6 +1,18 @@
---- silo-core/contracts/incentives/SiloIncentivesController.sol	2025-01-29 11:11:37.906110086 +0100
-+++ certora/patches/SiloIncentivesController.sol	2025-01-29 11:07:56.046072723 +0100
-@@ -119,13 +119,12 @@
+--- silo-core/contracts/incentives/SiloIncentivesController.sol	2025-01-29 16:55:39.083530905 +0100
++++ certora/patches/SiloIncentivesController.sol	2025-01-29 12:32:19.201711523 +0100
+@@ -111,11 +111,6 @@
+         program.emissionPerSecond = emissionPerSecondBefore;
+     }
+ 
+-    /// @inheritdoc ISiloIncentivesController
+-    function rescueRewards(address _rewardToken) external onlyOwner {
+-        IERC20(_rewardToken).safeTransfer(msg.sender, IERC20(_rewardToken).balanceOf(address(this)));
+-    }
+-
+     /// @dev Creates a new immediate distribution program if it does not exist.
+     /// @param _tokenToDistribute The address of the token to distribute.
+     /// @return programId The ID of the created or existing program.
+@@ -124,13 +119,12 @@
          virtual
          returns (bytes32 programId)
      {
