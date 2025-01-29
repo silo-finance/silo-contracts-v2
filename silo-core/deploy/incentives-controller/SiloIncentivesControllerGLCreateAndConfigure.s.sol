@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloIncentivesControllerGLCreate} from "./SiloIncentivesControllerGLCreate.s.sol";
@@ -40,5 +41,10 @@ contract SiloIncentivesControllerGLCreateAndConfigure is CommonDeploy {
         IGaugeHookReceiver(hookReceiver).setGauge(IGauge(incentivesControllerGaugeLike), IShareToken(shareToken));
 
         vm.stopBroadcast();
+
+        // hook receiver ownership acceptance data
+        console2.log("\nHook receiver ownership acceptance data");
+        console2.log("HookReceiver:", hookReceiver);
+        console2.log("Data: ", vm.toString(abi.encodePacked(Ownable2Step.acceptOwnership.selector)));
     }
 }
