@@ -11,13 +11,6 @@ using Token0 as Token0;
 methods {
     function _.balanceOf(address a) external => DISPATCHER(true); 
 
-    function _.convertToAssets(uint256 shares) external => convertToAssetDispatchCVL(shares, calledContract) expect (uint256);
-//    unresolved external in _._ => DISPATCH [
-//        Vault0.convertToAssets(uint256),
-//        Vault2.convertToAssets(uint256),
-//    ] default NONDET;
-    function SiloVault._ERC20BalanceOf(address _token, address _account) internal returns (uint256) => CONSTANT;
-
     function Vault0.convertToAssets(uint256 shares) external returns (uint256) envfree;
     function Vault2.convertToAssets(uint256 shares) external returns (uint256) envfree;
 
@@ -30,16 +23,20 @@ methods {
     function _.transfer(address,uint256) external => DISPATCHER(true);
     function _.maxDeposit(address) external => DISPATCHER(true);
     function _.maxWithdraw(address) external => DISPATCHER(true);
-
-    function DistributionManager._shareToken() internal returns (address) => token0();
     function _.totalSupply() external => DISPATCHER(true);
 
-    // function _.claimRewardsAndDistribute() external => DISPATCHER(true); // claimRewardsAndDistribute_cvl() expect void;
+    function _.convertToAssets(uint256 shares) external => convertToAssetDispatchCVL(shares, calledContract) expect (uint256);
+
+    function SiloVault._ERC20BalanceOf(address _token, address _account) internal returns (uint256) => CONSTANT;
+
+    function DistributionManager._shareToken() internal returns (address) => token0();
 
     // no implementation around, I think, currently we have an empty dummy one -- summarize somehow?
-    function _.afterTokenTransfer(address,uint256,address,uint256,uint256,uint256) external => DISPATCHER(true);
+    function _.afterTokenTransfer(address,uint256,address,uint256,uint256,uint256) external => 
+        DISPATCHER(true);
 
-    // biggy for summarizing -- the Math.sol implementation is very expensive (because it does things at full precision, among other things)
+    // the Math.sol implementation is very expensive (because it does things at 
+    // full precision with EVM limits, among other things)
     function _.mulDiv(uint256 x, uint256 y, uint256 denominator) internal => mulDiv_cvl(x, y, denominator) expect (uint256);
 
     function Strings.toHexString(uint256 value, uint256 length) internal returns (string memory) => toHexString_cvl(value, length);
@@ -72,7 +69,6 @@ function token0() returns address {
     return Token0;
 }
 
-
 function _getIncentivesProgramIndexCVL(uint256 currentIndex) returns uint256 {
     uint256 res;
     require res >= currentIndex;
@@ -96,11 +92,6 @@ function assume2Vaults() {
     // require currentContract.supplyQueue[1] == Vault3;
 }
 
-// function claimRewardsAndDistribute_cvl() {
-//     env e;
-//     SiloIncentivesControllerCL.claimRewardsAndDistribute(e);
-// }
-
 /*
  * model gitmodules/openzeppelin-contracts-5/contracts/utils/math/Math.sol
  * full precision (using mathints)
@@ -111,41 +102,28 @@ function mulDiv_cvl(uint256 x, uint256 y, uint256 denominator) returns uint256 {
     return require_uint256((x * y) / denominator);
 }
 
-// ghost toHex(uint256, uint256) returns uint;
-// 
-
-
-// ghost toHex(uint256, uint256) returns string;
-
-// toHexString is rather expensive; e.g. leads to a loop of length 40, also plenty of shifts
-// this summary is at least a little more precise than just a constant
-// TODO -- discuss what to do here (what are these strings used for?)
+/**
+ * `toHexString` is rather expensive; e.g. leads to a loop of length 40, also 
+ * plenty of shifts.
+ * This summary overapproximates the behavior while keeping injectivity with 
+ * respect to `value`.
+ *  (in the default usage of `toHexString`, `length` adds no extra information, 
+ *   but is just the number of non-0 digits of `value`.)
+ */
 function toHexString_cvl(uint256 value, uint256 length) returns string {
     string word;
     require keccak256(word) == keccak256(value);
     return word;
-//     if (length == 0) {
-//         return "";
-//     } else if (length == 1) {
-//         return "b"; 
-//     } else if (length == 2) {
-//         return "bl"; 
-//     } else {
-        // return "bla"; 
-    //}
 }
 
-// use builtin rule sanity filtered { f -> f.contract == currentContract }
-
-
-// rule sanity(method f) filtered { f -> f.contract == currentContract } {
-//     assume2Vaults();
-//     env e;
-//     calldataarg args;
-//     f(e, args);
-//     assert true;
-//     satisfy true;
-// }
+rule sanityVault(method f) filtered { f -> f.contract == currentContract } {
+    assume2Vaults();
+    env e;
+    calldataarg args;
+    f(e, args);
+    assert true;
+    satisfy true;
+}
 
 rule sanityCL(method f) filtered { f -> f.contract == SiloIncentivesControllerCL } {
     assume2Vaults();
