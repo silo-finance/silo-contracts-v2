@@ -1,4 +1,4 @@
---- silo-core/contracts/incentives/base/BaseIncentivesController.sol	2025-01-29 16:55:57.732085831 +0100
+--- silo-core/contracts/incentives/base/BaseIncentivesController.sol	2025-01-29 17:11:12.719264728 +0100
 +++ certora/patches/BaseIncentivesController.sol	2025-01-29 16:53:14.476260652 +0100
 @@ -260,7 +260,7 @@
      function _createIncentiveProgram(
