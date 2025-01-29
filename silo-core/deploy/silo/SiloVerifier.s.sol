@@ -12,6 +12,8 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
@@ -21,7 +23,7 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
-
+import {GaugeHookReceiver, IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
@@ -31,8 +33,9 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
  */
 
 // TODO:
-// fetch chainlink feeds from API and verify the heartbeat
 // split checks into files: a check is a contract, unify them by contract interface.
+// wallets from global constants
+// fetch chainlink feeds from API and verify the heartbeat
 // if oracle reverts, find a minimal price we don't revert
 // oracle 0 is zero, oracle 1 is not zero
 // both oracles are zero
@@ -57,6 +60,9 @@ contract SiloVerifier is Script, Test {
         IERC20Metadata quoteToken;
         bool convertToQuote;
     }
+
+    address constant internal _DEV_WALLET = 0x6d228Fa4daD2163056A48Fc2186d716f5c65E89A;
+    address constant internal _GROWTH_MULTISIG = 0x4d62b6E166767988106cF7Ee8fE23E480E76FF1d;
 
     uint256 constant internal _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
     uint256 constant internal _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
@@ -163,8 +169,54 @@ contract SiloVerifier is Script, Test {
 
         errorsCounter += _sanityCheckConfig(configData);
 
+        errorsCounter+=_checkIncentivesSetup(configData, IERC20Metadata(configData.token).symbol());
+
         if (!_verifySiloImplementation(_silo)) {
             errorsCounter++;
+        }
+    }
+
+    function _checkIncentivesSetup(ISiloConfig.ConfigData memory _configData, string memory _siloAssetName)
+        internal
+        view
+        returns (uint256 errorsCounter)
+    {
+        GaugeHookReceiver hookReceiver = GaugeHookReceiver(_configData.hookReceiver);
+        IGauge protectedShareTokensGauge = hookReceiver.configuredGauges(IShareToken(_configData.protectedShareToken));
+        IGauge collateralShareTokensGauge = hookReceiver.configuredGauges(IShareToken(_configData.collateralShareToken));
+        IGauge debtShareTokensGauge = hookReceiver.configuredGauges(IShareToken(_configData.debtShareToken));
+
+        if (!_checkGauge(protectedShareTokensGauge, string.concat(_siloAssetName, " protected share token"))){
+            errorsCounter++;
+        }
+
+        if (!_checkGauge(collateralShareTokensGauge, string.concat(_siloAssetName, " collateral share token"))){
+            errorsCounter++;
+        }
+
+         if (!_checkGauge(debtShareTokensGauge, string.concat(_siloAssetName, " debt share token"))){
+            errorsCounter++;
+        }
+    }
+
+    function _checkGauge(IGauge _gauge, string memory _tokenNameToLog) internal view returns (bool success) {
+        if (address(_gauge) == address(0)) {
+            console2.log("Incentives are not set for", _tokenNameToLog);
+            return true;
+        }
+
+        address owner = Ownable(address(_gauge)).owner();
+        console2.log(_SUCCESS_SYMBOL, "Incentives are set for", _tokenNameToLog);
+
+        if (owner == _DEV_WALLET) {
+            console2.log(_WARNING_SYMBOL,"Incentives owner is a dev wallet for",_tokenNameToLog);
+            return true;
+        } else if (owner == _GROWTH_MULTISIG) {
+            console2.log(_SUCCESS_SYMBOL,"Incentives owner is a growth multisig wallet for",_tokenNameToLog);
+            return true;
+        } else {
+            console2.log(_FAIL_SYMBOL,"Incentives owner is a unknown wallet for",_tokenNameToLog);
+            return false;
         }
     }
 
