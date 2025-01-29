@@ -1,0 +1,18 @@
+--- silo-core/contracts/incentives/SiloIncentivesController.sol	2025-01-29 11:11:37.906110086 +0100
++++ certora/patches/SiloIncentivesController.sol	2025-01-29 11:07:56.046072723 +0100
+@@ -119,13 +119,12 @@
+         virtual
+         returns (bytes32 programId)
+     {
+-        string memory programName = Strings.toHexString(_tokenToDistribute);
+-        programId = getProgramId(programName);
++        programId = keccak256(abi.encode(_tokenToDistribute)); // munge
+ 
+         if (incentivesPrograms[programId].lastUpdateTimestamp == 0) {
+             DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput;
+ 
+-            _incentivesProgramInput.name = programName;
++            _incentivesProgramInput.name = "bla"; // munge 
+             _incentivesProgramInput.rewardToken = _tokenToDistribute;
+             _incentivesProgramInput.emissionPerSecond = 0;
+             _incentivesProgramInput.distributionEnd = 0;
