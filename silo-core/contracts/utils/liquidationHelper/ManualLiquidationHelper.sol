@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 
@@ -24,6 +25,7 @@ contract ManualLiquidationHelper is TokenRescuer {
     /// @dev address of wrapped native blockchain token eg. WETH on Ethereum
     address public immutable NATIVE_TOKEN;
 
+    error MaxDebtToCoverZero();
     error UserSolvent();
 
     /// @param _nativeToken address of wrapped native blockchain token eg. WETH on Ethereum
@@ -38,13 +40,38 @@ contract ManualLiquidationHelper is TokenRescuer {
 
     /// @dev open method to rescue tokens, tokens will be transferred to `TOKENS_RECEIVER`
     function rescueTokens(IERC20 _token) external virtual {
-        _rescueTokens(TOKENS_RECEIVER, _token);
+        _rescueTokens(TOKENS_RECEIVER, _token, type(uint256).max, false);
     }
 
     /// @dev entry point for manual liquidation
     /// @notice you need to approve ManualLiquidationHelper to be able to transfer from you tokens for repay
     /// liquidated collateral will be transfer to `TOKENS_RECEIVER`. Bad Debt is supported.
+    /// @param _siloWithDebt silo address where user has debt
+    /// @param _borrower user to liquidate
     function executeLiquidation(ISilo _siloWithDebt, address _borrower) external virtual {
+        _executeLiquidation(_siloWithDebt, _borrower);
+    }
+
+    /// @dev entry point for manual liquidation
+    /// @notice you need to approve ManualLiquidationHelper to be able to transfer from you tokens for repay
+    /// liquidated collateral will be transfer to `TOKENS_RECEIVER`. Bad Debt is supported.
+    /// @param _siloWithDebt silo address where user has debt
+    /// @param _borrower user to liquidate
+    /// @param _maxDebtToCover maximum amount of debt you want to repay
+    /// @param _receiveSToken if TRUE, collateral will be send as sToken
+    function executeLiquidation(ISilo _siloWithDebt, address _borrower, uint256 _maxDebtToCover, bool _receiveSToken)
+        external
+        virtual
+    {
+        _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken);
+    }
+
+    function _executeLiquidation(ISilo _siloWithDebt, address _borrower, uint256 _maxDebtToCover, bool _receiveSToken)
+        internal
+        virtual
+    {
+        require(_maxDebtToCover != 0, MaxDebtToCoverZero());
+
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
@@ -64,13 +91,24 @@ contract ManualLiquidationHelper is TokenRescuer {
             _collateralAsset: collateralConfig.token,
             _debtAsset: debtConfig.token,
             _user: _borrower,
-            _maxDebtToCover: debtToRepay,
-            _receiveSToken: false
+            _maxDebtToCover: Math.min(debtToRepay, _maxDebtToCover),
+            _receiveSToken: _receiveSToken
         });
 
         debtAsset.forceApprove(debtConfig.hookReceiver, 0);
 
-        _transferToReceiver(collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));
+        if (_receiveSToken) {
+            _transferToReceiver(
+                collateralConfig.protectedShareToken,
+                IERC20(collateralConfig.protectedShareToken).balanceOf(address(this))
+            );
+            _transferToReceiver(
+                collateralConfig.collateralShareToken,
+                IERC20(collateralConfig.collateralShareToken).balanceOf(address(this))
+            );
+        } else {
+            _transferToReceiver(collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));
+        }
     }
 
     function _transferToReceiver(address _asset, uint256 _amount) internal virtual {
