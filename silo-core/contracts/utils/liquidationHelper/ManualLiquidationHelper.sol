@@ -40,7 +40,7 @@ contract ManualLiquidationHelper is TokenRescuer {
 
     /// @dev open method to rescue tokens, tokens will be transferred to `TOKENS_RECEIVER`
     function rescueTokens(IERC20 _token) external virtual {
-        _rescueTokens(TOKENS_RECEIVER, _token, type(uint256).max, false);
+        _rescueTokens(TOKENS_RECEIVER, _token);
     }
 
     /// @dev entry point for manual liquidation
@@ -49,7 +49,7 @@ contract ManualLiquidationHelper is TokenRescuer {
     /// @param _siloWithDebt silo address where user has debt
     /// @param _borrower user to liquidate
     function executeLiquidation(ISilo _siloWithDebt, address _borrower) external virtual {
-        _executeLiquidation(_siloWithDebt, _borrower);
+        _executeLiquidation(_siloWithDebt, _borrower, type(uint256).max, false);
     }
 
     /// @dev entry point for manual liquidation
