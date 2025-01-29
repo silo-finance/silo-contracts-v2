@@ -50,6 +50,18 @@ methods {
         uint256 distributionEnd,
         uint256 totalBalance
     ) internal returns (uint256) => _getIncentivesProgramIndexCVL(currentIndex);
+
+
+    function _.claimRewards(address _to) external => NONDET;
+
+    // this function is being used is a bad sign, since we're trying to bypass it, since the strings make things expensive
+    function DistributionManager.getProgramId(string memory _programName) internal returns (bytes32) => assertFalse();
+
+}
+
+function assertFalse() returns bytes32 {
+    assert false, "reaching some place that our spec should not allow reaching";
+    return to_bytes32(0);
 }
 
 
