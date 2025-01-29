@@ -43,11 +43,11 @@ contract ManualLiquidationHelper2TokensTest is ManualLiquidationHelperCommon {
         token1.mint(address(this), debtToRepay);
         token1.approve(address(LIQUIDATION_HELPER), debtToRepay);
 
-        assertEq(token0.balanceOf(TOKENS_RECEIVER), 0, "no collateral before liquidation");
+        assertEq(token0.balanceOf(_tokenReceiver()), 0, "no collateral before liquidation");
 
         _executeLiquidation();
 
-        uint256 withdrawCollateral = token0.balanceOf(TOKENS_RECEIVER);
+        uint256 withdrawCollateral = token0.balanceOf(_tokenReceiver());
 
         assertEq(
             collateralToLiquidate,
@@ -55,11 +55,11 @@ contract ManualLiquidationHelper2TokensTest is ManualLiquidationHelperCommon {
             "collateralToLiquidate == withdrawCollateral"
         );
 
-        emit log_named_decimal_uint("token0.balanceOf(TOKENS_RECEIVER)", token0.balanceOf(TOKENS_RECEIVER), 18);
-        emit log_named_decimal_uint("token1.balanceOf(TOKENS_RECEIVER)", token1.balanceOf(TOKENS_RECEIVER), 18);
+        emit log_named_decimal_uint("token0.balanceOf(_tokenReceiver())", token0.balanceOf(_tokenReceiver()), 18);
+        emit log_named_decimal_uint("token1.balanceOf(_tokenReceiver())", token1.balanceOf(_tokenReceiver()), 18);
 
-        _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);
-        _assertAddressHasNoSTokens(silo1, TOKENS_RECEIVER);
+        _assertAddressHasNoSTokens(silo0, _tokenReceiver());
+        _assertAddressHasNoSTokens(silo1, _tokenReceiver());
 
         assertTrue(silo0.isSolvent(BORROWER), "borrower must be solvent after manual liquidation");
     }

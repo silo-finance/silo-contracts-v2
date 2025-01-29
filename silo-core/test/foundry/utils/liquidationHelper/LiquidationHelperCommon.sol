@@ -5,31 +5,43 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ManualLiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/ManualLiquidationHelper.sol";
+import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ILiquidationHelper} from "silo-core/contracts/interfaces/ILiquidationHelper.sol";
 
-import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
-abstract contract ManualLiquidationHelperCommon is SiloLittleHelper, Test {
+abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
     address payable public constant TOKENS_RECEIVER = payable(address(123));
     address constant BORROWER = address(0x123);
     uint256 constant COLLATERAL = 10e18;
     uint256 constant DEBT = 7.5e18;
 
-    ManualLiquidationHelper immutable LIQUIDATION_HELPER;
+    LiquidationHelper immutable LIQUIDATION_HELPER;
 
     ISiloConfig siloConfig;
 
+    ILiquidationHelper.LiquidationData liquidationData;
+    // TODO write at least one tests with swap
+    LiquidationHelper.DexSwapInput[] dexSwapInput;
+
+    ISilo _flashLoanFrom;
     address _debtAsset;
 
     constructor() {
-        LIQUIDATION_HELPER = new ManualLiquidationHelper(makeAddr("nativeToken"), TOKENS_RECEIVER);
+        LIQUIDATION_HELPER = new LiquidationHelper(
+            makeAddr("nativeToken"), makeAddr("DEXSWAP"), TOKENS_RECEIVER
+        );
     }
 
-    function _executeLiquidation() internal {
-        LIQUIDATION_HELPER.executeLiquidation(silo1, BORROWER);
+    function _executeLiquidation(
+        uint256 _maxDebtToCover
+    ) internal returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
+        return LIQUIDATION_HELPER.executeLiquidation(
+            _flashLoanFrom, _debtAsset, _maxDebtToCover, liquidationData, dexSwapInput
+        );
     }
 
     function _assertAddressDoesNotHaveTokens(address _address) internal view {

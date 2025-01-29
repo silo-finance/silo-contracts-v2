@@ -49,14 +49,14 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
         token1.mint(address(this), debtToRepay);
         token1.approve(address(LIQUIDATION_HELPER), debtToRepay);
 
-        assertEq(token1.balanceOf(TOKENS_RECEIVER), 0, "no token1 before liquidation");
+        assertEq(token1.balanceOf(_tokenReceiver()), 0, "no token1 before liquidation");
 
         _executeLiquidation();
 
         _assertAddressDoesNotHaveTokens(address(this));
         _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
 
-        uint256 withdrawCollateral = token1.balanceOf(TOKENS_RECEIVER);
+        uint256 withdrawCollateral = token1.balanceOf(_tokenReceiver());
 
         assertEq(
             withdrawCollateral - LIQUIDATION_UNDERESTIMATION,
@@ -64,8 +64,8 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
             "you should not get less than what was estimated"
         );
 
-        _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);
-        _assertAddressHasNoSTokens(silo1, TOKENS_RECEIVER);
+        _assertAddressHasNoSTokens(silo0, _tokenReceiver());
+        _assertAddressHasNoSTokens(silo1, _tokenReceiver());
 
         assertTrue(silo0.isSolvent(BORROWER), "borrower must be solvent after manual liquidation");
     }
@@ -93,14 +93,14 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
         token1.mint(address(this), debtToRepay);
         token1.approve(address(LIQUIDATION_HELPER), debtToRepay);
 
-        assertEq(token1.balanceOf(TOKENS_RECEIVER), 0, "no token1 before liquidation");
+        assertEq(token1.balanceOf(_tokenReceiver()), 0, "no token1 before liquidation");
 
         _executeLiquidation();
 
         _assertAddressDoesNotHaveTokens(address(this));
         _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
 
-        uint256 withdrawCollateral = token1.balanceOf(TOKENS_RECEIVER);
+        uint256 withdrawCollateral = token1.balanceOf(_tokenReceiver());
 
         assertGe(
             withdrawCollateral,
@@ -108,8 +108,8 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
             "on bad debt estimation should work as well"
         );
 
-        _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);
-        _assertAddressHasNoSTokens(silo1, TOKENS_RECEIVER);
+        _assertAddressHasNoSTokens(silo0, _tokenReceiver());
+        _assertAddressHasNoSTokens(silo1, _tokenReceiver());
 
         assertTrue(silo0.isSolvent(BORROWER), "borrower must be solvent after manual liquidation");
     }
