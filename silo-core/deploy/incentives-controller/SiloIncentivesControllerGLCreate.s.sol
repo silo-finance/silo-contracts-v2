@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";

@@ -3,8 +3,6 @@ pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
-import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloIncentivesControllerGLCreate} from "./SiloIncentivesControllerGLCreate.s.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
