@@ -24,6 +24,9 @@ import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/Chainl
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
 import {GaugeHookReceiver, IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
@@ -34,7 +37,6 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
 
 // TODO:
 // split checks into files: a check is a contract, unify them by contract interface.
-// wallets from global constants
 // fetch chainlink feeds from API and verify the heartbeat
 // if oracle reverts, find a minimal price we don't revert
 // oracle 0 is zero, oracle 1 is not zero
@@ -61,9 +63,6 @@ contract SiloVerifier is Script, Test {
         bool convertToQuote;
     }
 
-    address constant internal _DEV_WALLET = 0x6d228Fa4daD2163056A48Fc2186d716f5c65E89A;
-    address constant internal _GROWTH_MULTISIG = 0x4d62b6E166767988106cF7Ee8fE23E480E76FF1d;
-
     uint256 constant internal _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
     uint256 constant internal _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
 
@@ -73,6 +72,8 @@ contract SiloVerifier is Script, Test {
     string constant internal _DELIMITER = "\n---------------------------------------------------\n---------------------------------------------------";
 
     function run() public {
+        AddrLib.init();
+
         ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
 
         uint256 errorsCounter = _checkConfig(
@@ -169,53 +170,59 @@ contract SiloVerifier is Script, Test {
 
         errorsCounter += _sanityCheckConfig(configData);
 
-        errorsCounter+=_checkIncentivesSetup(configData, IERC20Metadata(configData.token).symbol());
+        errorsCounter+=_checkIncentivesSetup(configData);
 
         if (!_verifySiloImplementation(_silo)) {
             errorsCounter++;
         }
     }
 
-    function _checkIncentivesSetup(ISiloConfig.ConfigData memory _configData, string memory _siloAssetName)
+    function _checkIncentivesSetup(ISiloConfig.ConfigData memory _configData)
         internal
-        view
         returns (uint256 errorsCounter)
     {
         GaugeHookReceiver hookReceiver = GaugeHookReceiver(_configData.hookReceiver);
-        IGauge protectedShareTokensGauge = hookReceiver.configuredGauges(IShareToken(_configData.protectedShareToken));
-        IGauge collateralShareTokensGauge = hookReceiver.configuredGauges(IShareToken(_configData.collateralShareToken));
-        IGauge debtShareTokensGauge = hookReceiver.configuredGauges(IShareToken(_configData.debtShareToken));
 
-        if (!_checkGauge(protectedShareTokensGauge, string.concat(_siloAssetName, " protected share token"))){
-            errorsCounter++;
-        }
+        address protectedShareTokensGauge =
+            address(hookReceiver.configuredGauges(IShareToken(_configData.protectedShareToken)));
 
-        if (!_checkGauge(collateralShareTokensGauge, string.concat(_siloAssetName, " collateral share token"))){
-            errorsCounter++;
-        }
+        if (!_checkGauge(protectedShareTokensGauge, IShareToken(_configData.protectedShareToken))) errorsCounter++;
+        
+        address collateralShareTokensGauge =
+            address(hookReceiver.configuredGauges(IShareToken(_configData.collateralShareToken)));
 
-         if (!_checkGauge(debtShareTokensGauge, string.concat(_siloAssetName, " debt share token"))){
-            errorsCounter++;
-        }
+        if (!_checkGauge(collateralShareTokensGauge, IShareToken(_configData.collateralShareToken))) errorsCounter++;
+
+        address debtShareTokensGauge =
+            address(hookReceiver.configuredGauges(IShareToken(_configData.debtShareToken)));
+
+        if (!_checkGauge(debtShareTokensGauge, IShareToken(_configData.debtShareToken))) errorsCounter++;
     }
 
-    function _checkGauge(IGauge _gauge, string memory _tokenNameToLog) internal view returns (bool success) {
-        if (address(_gauge) == address(0)) {
-            console2.log("Incentives are not set for", _tokenNameToLog);
+    function _checkGauge(address _gauge, IShareToken _shareToken) internal returns (bool success) {
+        string memory _shareTokenName = _shareToken.name();
+
+        if (_gauge == address(0)) {
+            console2.log("Incentives are not set for", _shareTokenName);
             return true;
         }
 
-        address owner = Ownable(address(_gauge)).owner();
-        console2.log(_SUCCESS_SYMBOL, "Incentives are set for", _tokenNameToLog);
+        if (address(IGaugeLike(_gauge).share_token()) != address(_shareToken)) {
+            console2.log(_FAIL_SYMBOL, "Share token misconfiguration in Gauge", _shareTokenName);
+            return false;
+        }
 
-        if (owner == _DEV_WALLET) {
-            console2.log(_WARNING_SYMBOL,"Incentives owner is a dev wallet for",_tokenNameToLog);
+        address owner = Ownable(_gauge).owner();
+        console2.log(_SUCCESS_SYMBOL, "Incentives are set for", _shareTokenName);
+
+        if (owner == AddrLib.getAddress(AddrKey.DEV_WALLET)) {
+            console2.log(_WARNING_SYMBOL,"Incentives owner is a dev wallet for",_shareTokenName);
             return true;
-        } else if (owner == _GROWTH_MULTISIG) {
-            console2.log(_SUCCESS_SYMBOL,"Incentives owner is a growth multisig wallet for",_tokenNameToLog);
+        } else if (owner == AddrLib.getAddress(AddrKey.GROWTH_MULTISIG)) {
+            console2.log(_SUCCESS_SYMBOL,"Incentives owner is a growth multisig wallet for",_shareTokenName);
             return true;
         } else {
-            console2.log(_FAIL_SYMBOL,"Incentives owner is a unknown wallet for",_tokenNameToLog);
+            console2.log(_FAIL_SYMBOL,"Incentives owner is a unknown wallet for",_shareTokenName);
             return false;
         }
     }
@@ -267,7 +274,7 @@ contract SiloVerifier is Script, Test {
 
         uint i;
 
-        for (; i < allModels.length; i++){
+        for (; i < allModels.length; i++) {
             bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
                 allModels[i].config.ucrit == irmConfig.ucrit &&
                 allModels[i].config.ulow == irmConfig.ulow &&
