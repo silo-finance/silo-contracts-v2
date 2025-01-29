@@ -14,11 +14,9 @@ import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/Liq
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 
 /*
- FOUNDRY_PROFILE=core-test forge test --ffi --mc LiquidationHelperDebug20251228_0xa2532e -vv
+ FOUNDRY_PROFILE=core-test forge test --ffi --mc LiquidationHelperDebug20251228_0xaa489b -vv
 
-https://sonicscan.org/tx/0xa2532e7a991796330726ed61390d7db2b3217087774c7a73cd43e75283b6977c
-
-OUT OF GAS
+https://sonicscan.org/tx/0xaa489b045ea7fc36d0033f7655fcb4e53e031c1ca25f94f1b51aa255dcfa0130
 
 
 executeLiquidation(address, address, uint256, (address,address,address), (address,address,bytes)[])
@@ -26,23 +24,23 @@ executeLiquidation(address, address, uint256, (address,address,address), (addres
 1	_flashLoanFrom	address	0x4E216C15697C1392fE59e1014B009505E05810Df
 2	_debtAsset	address	0x29219dd400f2Bf60E5a23d13Be72B486D4038894
 3	_maxDebtToCover	uint256
-12388
+1447964
 3	_liquidation.hook	address	0xB01e62Ba9BEc9Cfa24b2Ee321392b8Ce726D2A09
 3	_liquidation.collateralAsset	address	0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38
-3	_liquidation.user	address	0x1946a1DD383FE3c3cd9ae3066C638EF6ed7E35e5
+3	_liquidation.user	address	0x748e6AC25025758612507CEFeeD7987Db2dBDd8b
 4	_swapsInputs0x.sellToken	address	0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38
 4	_swapsInputs0x.allowanceTarget	address	0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D
 4	_swapsInputs0x.swapCallData	bytes
-0x83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d40388940765978850b45a3302346f07ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00016cc7e9bb6c020cf18a44b0593cf110a16df32c0c0001f363c6d369888f5367e9f1ad7b6a7dae133e87400000000003010203000301010001020114ff000000000000000000000000000000000000006cc7e9bb6c020cf18a44b0593cf110a16df32c0c039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000
+0x83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d40388940822b0e56179485ffe0311e6e207ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00000001f363c6d369888f5367e9f1ad7b6a7dae133e8740000000000301020300060101010201ff0000000000000000000000000000000000000000009f46dd8f2a4016c26c1cf1f4ef90e5e1928d756b039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000
 
 
 */
-contract LiquidationHelperDebug20251228_0xa2532e is Test {
+contract LiquidationHelperDebug20251228_0xaa489b is Test {
     address payable public constant REWARD_COLLECTOR = payable(address(123456789));
     SiloLens lens;
 
     function setUp() public {
-        uint256 blockToFork = 5692565;
+        uint256 blockToFork = 5769896;
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);
 
         lens = new SiloLens();
@@ -61,7 +59,7 @@ contract LiquidationHelperDebug20251228_0xa2532e is Test {
 //        );
 
         address hookReceiver = 0xB01e62Ba9BEc9Cfa24b2Ee321392b8Ce726D2A09;
-        address borrower = 0x1946a1DD383FE3c3cd9ae3066C638EF6ed7E35e5;
+        address borrower = 0x748e6AC25025758612507CEFeeD7987Db2dBDd8b;
 
         ISilo flashLoanFrom = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df);
         PartialLiquidation liquidation = PartialLiquidation(hookReceiver);
