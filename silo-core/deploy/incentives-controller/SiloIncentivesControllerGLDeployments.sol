@@ -60,6 +60,7 @@ library SiloIncentivesControllerGLDeployments {
         bool isSilo0 = isSilo0Asset(siloConfig, _shareToken);
 
         name = string.concat(
+            "SIC "
             silo0AssetSymbol,
             "/",
             silo1AssetSymbol,
