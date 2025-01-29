@@ -119,12 +119,13 @@ contract SiloIncentivesController is BaseIncentivesController {
         virtual
         returns (bytes32 programId)
     {
-        programId = keccak256(abi.encode(_tokenToDistribute)); // munge
+        string memory programName = Strings.toHexString(_tokenToDistribute);
+        programId = getProgramId(programName);
 
         if (incentivesPrograms[programId].lastUpdateTimestamp == 0) {
             DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput;
 
-            _incentivesProgramInput.name = "bla"; // munge 
+            _incentivesProgramInput.name = programName;
             _incentivesProgramInput.rewardToken = _tokenToDistribute;
             _incentivesProgramInput.emissionPerSecond = 0;
             _incentivesProgramInput.distributionEnd = 0;
