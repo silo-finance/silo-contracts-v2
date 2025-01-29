@@ -6,22 +6,23 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
-    forge script silo-core/deploy/silo/SiloDeployWithDaoOwner.s.sol \
+FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC HOOK_RECEIVER_OWNER=DAO \
+    forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
-contract SiloDeployWithDaoOwner is SiloDeploy {
+contract SiloDeployWithHookReceiverOwner is SiloDeploy {
     function _getClonableHookReceiverConfig(address _implementation)
         internal
-        view
         override
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
     {
-        address dao = AddrLib.getAddress(AddrKey.DAO);
+        string memory hookReceiverOwnerKey = vm.envString("HOOK_RECEIVER_OWNER");
+
+        address hookReceiverOwner = AddrLib.getAddress(hookReceiverOwnerKey);
 
         hookReceiver = ISiloDeployer.ClonableHookReceiver({
             implementation: _implementation,
-            initializationData: abi.encode(dao)
+            initializationData: abi.encode(hookReceiverOwner)
         });
     }
 }
