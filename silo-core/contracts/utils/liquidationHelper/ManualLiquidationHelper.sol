@@ -66,7 +66,7 @@ contract ManualLiquidationHelper is TokenRescuer {
         _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken, TOKENS_RECEIVER);
     }
 
-    /// @dev entry point for manual liquidation
+    /// @dev entry point for manual liquidation for external users (because you can provide recipient)
     /// @notice you need to approve ManualLiquidationHelper to be able to transfer from you tokens for repay
     /// liquidated collateral will be transfer to `TOKENS_RECEIVER`. Bad Debt is supported.
     /// @param _siloWithDebt silo address where user has debt
