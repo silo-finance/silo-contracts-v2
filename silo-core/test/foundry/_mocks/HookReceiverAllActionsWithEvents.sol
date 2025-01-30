@@ -12,6 +12,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceiver {
     using Hook for uint256;
 
+    ISiloConfig public siloConfig;
+
     bool internal constant _IS_BEFORE = true;
     bool internal constant _IS_AFTER = false;
     bool internal constant _SAME_ASSET = true;
@@ -164,8 +166,8 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     }
 
     /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _siloConfig, bytes calldata) external override (IHookReceiver, PartialLiquidation) {
-        siloConfig = _siloConfig;
+    function initialize(ISiloConfig _config, bytes calldata) external {
+        siloConfig = _config;
 
         (address silo0, address silo1) = siloConfig.getSilos();
 
@@ -178,7 +180,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
         external
         view
         virtual
-        override (IHookReceiver, PartialLiquidation)
         returns (uint24 hooksBefore, uint24 hooksAfter)
     {
         return _hookReceiverConfig(_silo);
@@ -199,7 +200,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
-        override (IHookReceiver, PartialLiquidation)
     {
         if (revertAllActions || revertOnlyBeforeAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
@@ -208,7 +208,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
-        override (IHookReceiver, PartialLiquidation)
+        override
     {
         if (revertAllActions || revertOnlyAfterAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
@@ -443,5 +443,9 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
             Hook.AfterTransitionCollateralInput memory input = Hook.afterTransitionCollateralDecode(_inputAndOutput);
             emit TransitionCollateralHA(_silo, input.shares, input.owner, input.assets, _isBefore);
         }
+    }
+
+    function _siloConfig() internal view override returns (ISiloConfig) {
+        return siloConfig;
     }
 }

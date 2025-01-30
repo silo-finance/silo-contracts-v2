@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 
@@ -22,6 +22,6 @@ contract SiloConfigReentrancyTest is MethodReentrancyTest {
 
     function _ensureItWillNotRevert() internal view {
         address hookReceiver = TestStateLib.hookReceiver();
-        PartialLiquidation(hookReceiver).siloConfig();
+        SiloHookV1(hookReceiver).siloConfig();
     }
 }

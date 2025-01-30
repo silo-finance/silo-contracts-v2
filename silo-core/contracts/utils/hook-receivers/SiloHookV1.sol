@@ -6,29 +6,29 @@ import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
-import {GaugeHookReceiverCopy} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiverCopy.sol";
-import {PartialLiquidationCopy} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidationCopy.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloHookReceiver} from "./_common/SiloHookReceiver.sol";
 
-contract SiloHookV1 is GaugeHookReceiverCopy, PartialLiquidationCopy, SiloHookReceiver, Initializable {
+contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation, SiloHookReceiver, Initializable {
     ISiloConfig public siloConfig;
 
-    constructor() GaugeHookReceiverCopy() {
+    constructor() GaugeHookReceiver() {
         _disableInitializers();
     }
 
     /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _siloConfig, bytes calldata _data)
+    function initialize(ISiloConfig _config, bytes calldata _data)
         public
         virtual
         initializer
     {
-        require(address(_siloConfig) != address(0), EmptySiloConfig());
+        require(address(_config) != address(0), EmptySiloConfig());
         require(address(siloConfig) == address(0), AlreadyConfigured());
 
-        siloConfig = _siloConfig;
+        siloConfig = _config;
 
-        GaugeHookReceiverCopy._initialize(_data);
+        GaugeHookReceiver._initialize(_data);
 
         // do your initialization here
     }
@@ -48,9 +48,9 @@ contract SiloHookV1 is GaugeHookReceiverCopy, PartialLiquidationCopy, SiloHookRe
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
-        override(GaugeHookReceiverCopy, IHookReceiver)
+        override(GaugeHookReceiver, IHookReceiver)
     {
-        GaugeHookReceiverCopy.afterAction(_silo, _action, _inputAndOutput);
+        GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
 
         // implement your logic here if needed
     }
@@ -68,7 +68,7 @@ contract SiloHookV1 is GaugeHookReceiverCopy, PartialLiquidationCopy, SiloHookRe
     /// @inheritdoc SiloHookReceiver
     function _setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter)
         internal
-        override(GaugeHookReceiverCopy, SiloHookReceiver)
+        override(GaugeHookReceiver, SiloHookReceiver)
     {
         SiloHookReceiver._setHookConfig(_silo, _hooksBefore, _hooksAfter);
     }
@@ -77,13 +77,13 @@ contract SiloHookV1 is GaugeHookReceiverCopy, PartialLiquidationCopy, SiloHookRe
     function _getHooksAfter(address _silo)
         internal
         view
-        override(GaugeHookReceiverCopy, SiloHookReceiver)
+        override(GaugeHookReceiver, SiloHookReceiver)
         returns (uint256 hooksAfter)
     {
         hooksAfter = SiloHookReceiver._getHooksAfter(_silo);
     }
 
-    function _siloConfig() internal override(PartialLiquidationCopy, GaugeHookReceiverCopy) view returns (ISiloConfig) {
+    function _siloConfig() internal override(PartialLiquidation, GaugeHookReceiver) view returns (ISiloConfig) {
         return siloConfig;
     }
 }

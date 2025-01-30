@@ -25,6 +25,8 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
     using Hook for uint256;
     using SafeERC20 for IERC20;
 
+    ISiloConfig public siloConfig;
+
     bool afterActionExecuted;
 
     function setUp() public {
@@ -42,6 +44,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         partialLiquidation = this;
 
         silo0.updateHooks();
+    }
+
+    function initialize(ISiloConfig, bytes calldata) external override {
     }
 
     function hookReceiverConfig(address _silo) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
@@ -103,5 +108,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
 
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent after transition of collateral");
         assertTrue(debt.silo != address(0), "borrower has debt");
+    }
+
+    function _siloConfig() internal view override returns (ISiloConfig) {
+        return siloConfig;
     }
 }

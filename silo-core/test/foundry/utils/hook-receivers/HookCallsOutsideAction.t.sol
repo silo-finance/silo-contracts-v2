@@ -25,6 +25,8 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
     using Hook for uint256;
     using SiloLensLib for ISilo;
 
+    ISiloConfig public siloConfig;
+
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     uint24 public configuredHooksBefore;
@@ -238,4 +240,8 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
     }
 
     function _tryReenter() internal virtual {}
+
+    function _siloConfig() internal view override returns (ISiloConfig) {
+        return siloConfig;
+    }
 }
