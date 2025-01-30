@@ -29,8 +29,6 @@ contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation, SiloHookReceiver, 
         siloConfig = _config;
 
         GaugeHookReceiver._initialize(_data);
-
-        // do your initialization here
     }
 
     /// @inheritdoc IHookReceiver
@@ -40,8 +38,6 @@ contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation, SiloHookReceiver, 
     {
         // Do not expect any actions.
         revert RequestNotSupported();
-
-        // implement your logic here if needed and remove the revert
     }
 
     /// @inheritdoc IHookReceiver
@@ -51,8 +47,6 @@ contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation, SiloHookReceiver, 
         override(GaugeHookReceiver, IHookReceiver)
     {
         GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
-
-        // implement your logic here if needed
     }
 
     /// @inheritdoc IHookReceiver
