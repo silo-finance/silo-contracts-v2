@@ -146,6 +146,13 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
+    function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256) {
+        require(_silo.asset() == _asset, InvalidAsset());
+
+        return SiloLensLib.totalBorrowShare(_silo);
+    }
+
+    /// @inheritdoc ISiloLens
     function protocolFees(ISilo _silo, address _asset) external view returns (uint256 daoAndDeployerRevenue) {
         require(_silo.asset() == _asset, InvalidAsset());
 

@@ -93,4 +93,10 @@ library SiloLensLib {
             borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
         }
     }
+
+    function totalBorrowShare(ISilo _silo) internal view returns (uint256) {
+        (, address debtShareToken,) = _silo.config().getShareTokens(address(_silo));
+
+        return IShareToken(debtShareToken).totalSupply();
+    }
 }
