@@ -118,4 +118,11 @@ contract SiloLens is ISiloLens {
         uint256 maxRepay = _silo.maxRepay(_borrower);
         fullLiquidation = maxRepay == debtToRepay;
     }
+
+    /// @inheritdoc ISiloLens
+    function totalDeposits(ISilo _silo, address _asset) external view returns (uint256) {
+        require(_silo.asset() == _asset, InvalidAsset());
+
+        return _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+    }
 }
