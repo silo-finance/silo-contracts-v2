@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
-import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
@@ -20,7 +18,6 @@ contract SiloDeployWithGaugeHookReceiver is SiloDeploy {
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
     {
         address timelock = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, ChainsLib.chainAlias());
-        // address timelock = AddrLib.getAddress(AddrKey.DAO);
 
         hookReceiver = ISiloDeployer.ClonableHookReceiver({
             implementation: _implementation,

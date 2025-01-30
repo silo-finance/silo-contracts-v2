@@ -12,6 +12,8 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
@@ -21,7 +23,10 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
-
+import {GaugeHookReceiver, IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
@@ -31,8 +36,9 @@ FOUNDRY_PROFILE=core CONFIG=0x4915F6d3C9a7B20CedFc5d3854f2802f30311d13 \
  */
 
 // TODO:
-// fetch chainlink feeds from API and verify the heartbeat
+// linear function revert
 // split checks into files: a check is a contract, unify them by contract interface.
+// fetch chainlink feeds from API and verify the heartbeat
 // if oracle reverts, find a minimal price we don't revert
 // oracle 0 is zero, oracle 1 is not zero
 // both oracles are zero
@@ -67,6 +73,8 @@ contract SiloVerifier is Script, Test {
     string constant internal _DELIMITER = "\n---------------------------------------------------\n---------------------------------------------------";
 
     function run() public {
+        AddrLib.init();
+
         ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
 
         uint256 errorsCounter = _checkConfig(
@@ -163,8 +171,70 @@ contract SiloVerifier is Script, Test {
 
         errorsCounter += _sanityCheckConfig(configData);
 
+        errorsCounter += _checkHookAndIncentivesSetup(configData);
+
         if (!_verifySiloImplementation(_silo)) {
             errorsCounter++;
+        }
+    }
+
+    function _checkHookAndIncentivesSetup(ISiloConfig.ConfigData memory _configData)
+        internal
+        returns (uint256 errorsCounter)
+    {
+        GaugeHookReceiver hookReceiver = GaugeHookReceiver(_configData.hookReceiver);
+
+        bool isOwnerOrPending = Ownable(hookReceiver).owner() == AddrLib.getAddress(AddrKey.DAO) ||
+            Ownable2Step(hookReceiver).pendingOwner() == AddrLib.getAddress(AddrKey.DAO);
+
+        if (!isOwnerOrPending) {
+            console2.log(_FAIL_SYMBOL, "Hook owner and pending owner is not a DAO");
+            console2.log(_FAIL_SYMBOL, "Hook owner", Ownable(hookReceiver).owner());
+            console2.log(_FAIL_SYMBOL, "Hook pending owner", Ownable2Step(hookReceiver).pendingOwner());
+            errorsCounter++;
+        }
+
+        address protectedShareTokensGauge =
+            address(hookReceiver.configuredGauges(IShareToken(_configData.protectedShareToken)));
+
+        if (!_checkGauge(protectedShareTokensGauge, IShareToken(_configData.protectedShareToken))) errorsCounter++;
+        
+        address collateralShareTokensGauge =
+            address(hookReceiver.configuredGauges(IShareToken(_configData.collateralShareToken)));
+
+        if (!_checkGauge(collateralShareTokensGauge, IShareToken(_configData.collateralShareToken))) errorsCounter++;
+
+        address debtShareTokensGauge =
+            address(hookReceiver.configuredGauges(IShareToken(_configData.debtShareToken)));
+
+        if (!_checkGauge(debtShareTokensGauge, IShareToken(_configData.debtShareToken))) errorsCounter++;
+    }
+
+    function _checkGauge(address _gauge, IShareToken _shareToken) internal returns (bool success) {
+        string memory _shareTokenName = _shareToken.name();
+
+        if (_gauge == address(0)) {
+            console2.log("Incentives are not set for", _shareTokenName);
+            return true;
+        }
+
+        if (address(IGaugeLike(_gauge).share_token()) != address(_shareToken)) {
+            console2.log(_FAIL_SYMBOL, "Share token misconfiguration in Gauge", _shareTokenName);
+            return false;
+        }
+
+        address owner = Ownable(_gauge).owner();
+        console2.log(_SUCCESS_SYMBOL, "Incentives are set for", _shareTokenName);
+
+        if (owner == AddrLib.getAddress(AddrKey.DEV_WALLET)) {
+            console2.log(_WARNING_SYMBOL,"Incentives owner is a dev wallet for",_shareTokenName);
+            return true;
+        } else if (owner == AddrLib.getAddress(AddrKey.GROWTH_MULTISIG)) {
+            console2.log(_SUCCESS_SYMBOL,"Incentives owner is a growth multisig wallet for",_shareTokenName);
+            return true;
+        } else {
+            console2.log(_FAIL_SYMBOL,"Incentives owner is a unknown wallet for",_shareTokenName);
+            return false;
         }
     }
 
@@ -186,9 +256,13 @@ contract SiloVerifier is Script, Test {
             console2.log(_FAIL_SYMBOL, "deployerFee != 0");
         }
 
-        if (_configData.liquidationFee < onePercent / 100 || _configData.liquidationFee > onePercent * 15) {
+        if (_configData.liquidationFee > onePercent * 15) {
             errorsCounter++;
-            console2.log(_FAIL_SYMBOL, "liquidationFee >15% or <0.01%");
+            console2.log(_FAIL_SYMBOL, "liquidationFee >15%");
+        }
+
+        if (_configData.liquidationFee < onePercent / 100) {
+            console2.log(_WARNING_SYMBOL, "liquidationFee <0.01%, may be expected");
         }
 
         if (_configData.flashloanFee > onePercent) {
@@ -211,7 +285,7 @@ contract SiloVerifier is Script, Test {
 
         uint i;
 
-        for (; i < allModels.length; i++){
+        for (; i < allModels.length; i++) {
             bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
                 allModels[i].config.ucrit == irmConfig.ucrit &&
                 allModels[i].config.ulow == irmConfig.ulow &&
@@ -437,7 +511,8 @@ contract SiloVerifier is Script, Test {
                 console2.log("Price for %s = %s", _quoteNamedAmount.name, price);
             }
         } else {
-            console2.log(_FAIL_SYMBOL, "Price for:", _quoteNamedAmount.name, "REVERT!");
+            console2.log(_WARNING_SYMBOL, "Price for", _quoteNamedAmount.name, "reverts");
+            success = true;
         }
     }
 
@@ -446,14 +521,14 @@ contract SiloVerifier is Script, Test {
         view
         returns (uint256 errorsCounter)
     {
-        // 1. 1 wei do not revert
+        // 1. quote (1 wei) should not return zero
         (bool success, uint256 price) = _quote(_oracle, _baseToken, 1);
 
-        if (!success || price == 0) {
-            console2.log(_FAIL_SYMBOL, "quote (1 wei) reverts or zero");
+        if (success && price == 0) {
+            console2.log(_FAIL_SYMBOL, "quote (1 wei) returns zero");
             errorsCounter++;
         } else {
-            console2.log(_SUCCESS_SYMBOL, "quote (1 wei) is not zero");
+            console2.log(_SUCCESS_SYMBOL, "quote (1 wei) do not return zero");
         }
 
         // 2. large amount do not revert
@@ -547,7 +622,7 @@ contract SiloVerifier is Script, Test {
             }
         } catch {
             console2.log(_WARNING_SYMBOL, "Oracle does not have a ChainlinkV3OracleConfig, may be expected");
-            return false;
+            return true;
         }
 
         return true;

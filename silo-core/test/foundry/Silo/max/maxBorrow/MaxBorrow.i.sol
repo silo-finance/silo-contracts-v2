@@ -28,7 +28,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     function setUp() public virtual {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*

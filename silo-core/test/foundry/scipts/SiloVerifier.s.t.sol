@@ -4,9 +4,10 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {SiloVerifier} from "silo-core/deploy/silo/SiloVerifier.s.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --match-contract SiloVerifierScriptTest
+    FOUNDRY_PROFILE=core-test forge test -vv --match-contract SiloVerifierScriptTest --ffi
 */
 contract SiloVerifierScriptTest is Test, SiloVerifier {
     ISiloConfig constant CONFIG_TWO_ORACLES = ISiloConfig(0xC1F3d4F5f734d6Dc9E7D4f639EbE489Acd4542ab);
@@ -14,6 +15,7 @@ contract SiloVerifierScriptTest is Test, SiloVerifier {
 
     function setUp() public {
         vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 5599060);
+        AddrLib.init();
     }
 
     function test_SiloVerifierScript_worksForSingleOracleConfigs() public {
