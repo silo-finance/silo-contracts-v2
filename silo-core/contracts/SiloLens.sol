@@ -53,6 +53,11 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
+    function getUserLTV(ISilo _silo, address _borrower) external view returns (uint256 userLTV) {
+        return SiloLensLib.getLtv(_silo, _borrower);
+    }
+
+    /// @inheritdoc ISiloLens
     function getLtv(ISilo _silo, address _borrower) external view virtual returns (uint256 ltv) {
         return SiloLensLib.getLtv(_silo, _borrower);
     }

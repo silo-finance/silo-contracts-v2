@@ -34,6 +34,13 @@ interface ISiloLens {
     /// @return lt The LT value in 18 decimals points
     function getLt(ISilo _silo) external view returns (uint256 lt);
 
+    /// @notice Returns Loan-To-Value for an account
+    /// @dev [v1 compatible], same
+    /// @param _silo Silo address from which to read data
+    /// @param _borrower wallet address for which LTV is calculated
+    /// @return userLTV user current LTV with 18 decimals
+    function getUserLTV(ISilo _silo, address _borrower) external view returns (uint256 userLTV);
+
     /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
     /// @param _silo Address of the silo
     /// @param _borrower Address of the borrower
