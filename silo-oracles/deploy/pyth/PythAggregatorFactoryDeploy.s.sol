@@ -2,6 +2,7 @@
 pragma solidity >=0.7.6;
 
 import {CommonDeploy} from "../CommonDeploy.sol";
+import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {PythAggregatorFactory} from "silo-oracles/contracts/pyth/PythAggregatorFactory.sol";
 
@@ -26,5 +27,7 @@ contract PythAggregatorFactoryDeploy is CommonDeploy {
         factory = address(new PythAggregatorFactory(pyth));
 
         vm.stopBroadcast();
+
+        _registerDeployment(factory, SiloOraclesFactoriesContracts.PYTH_AGGREGATOR_FACTORY);
     }
 }
