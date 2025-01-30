@@ -16,6 +16,13 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
+    function liquidity(ISilo _silo, address _asset) external view returns (uint256) {
+        require(_silo.asset() == _asset, InvalidAsset());
+
+        return _silo.getLiquidity();
+    }
+
+    /// @inheritdoc ISiloLens
     function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
         return SiloLensLib.getRawLiquidity(_silo);
     }

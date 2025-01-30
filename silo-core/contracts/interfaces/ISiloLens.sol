@@ -5,11 +5,21 @@ import {ISilo} from "./ISilo.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 interface ISiloLens {
+    error InvalidAsset();
+
     /// @dev calculates solvency
+    /// @notice this is backwards compatible method, you can use `_silo.isSolvent(_user)` directly.
     /// @param _silo Silo address from which to read data
     /// @param _user wallet address
     /// @return true if solvent, false otherwise
     function isSolvent(ISilo _silo, address _user) external view returns (bool);
+
+    /// @dev Amount of token that is available for borrowing.
+    /// @notice this is backwards compatible method, you can use `_silo.getLiquidity()`
+    /// @param _silo Silo address from which to read data
+    /// @param _asset borrowable asset
+    /// @return Silo liquidity
+    function liquidity(ISilo _silo, address _asset) external view returns (uint256);
 
     /// @return liquidity based on contract state (without interest, fees)
     function getRawLiquidity(ISilo _silo) external view returns (uint256 liquidity);
