@@ -95,8 +95,12 @@ library SiloLensLib {
     }
 
     function totalBorrowShare(ISilo _silo) internal view returns (uint256) {
-        (, address debtShareToken,) = _silo.config().getShareTokens(address(_silo));
-
+        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
         return IShareToken(debtShareToken).totalSupply();
+    }
+
+    function borrowShare(ISilo _silo, address _borrower) external view returns (uint256) {
+        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        return IShareToken(debtShareToken).balanceOf(_borrower);
     }
 }

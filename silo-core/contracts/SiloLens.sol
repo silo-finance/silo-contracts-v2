@@ -17,7 +17,7 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function liquidity(ISilo _silo, address _asset) external view returns (uint256) {
-        require(_silo.asset() == _asset, InvalidAsset());
+        _requireAsset(_asset);
 
         return _silo.getLiquidity();
     }
@@ -126,36 +126,48 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function totalDeposits(ISilo _silo, address _asset) external view returns (uint256) {
-        require(_silo.asset() == _asset, InvalidAsset());
+        _requireAsset(_asset);
 
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     }
 
     /// @inheritdoc ISiloLens
     function collateralOnlyDeposits(ISilo _silo, address _asset) external view returns (uint256) {
-        require(_silo.asset() == _asset, InvalidAsset());
+        _requireAsset(_asset);
 
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Protected);
     }
 
     /// @inheritdoc ISiloLens
     function totalBorrowAmount(ISilo _silo, address _asset) external view returns (uint256) {
-        require(_silo.asset() == _asset, InvalidAsset());
+        _requireAsset(_asset);
 
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
     }
 
     /// @inheritdoc ISiloLens
     function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256) {
-        require(_silo.asset() == _asset, InvalidAsset());
+        _requireAsset(_asset);
 
         return SiloLensLib.totalBorrowShare(_silo);
     }
 
+
+    /// @inheritdoc ISiloLens
+    function borrowShare(ISilo _silo, address _asset, address _borrower) external view returns (uint256) {
+        _requireAsset(_asset);
+
+        return SiloLensLib.borrowShare(_silo, _borrower);
+    }
+
     /// @inheritdoc ISiloLens
     function protocolFees(ISilo _silo, address _asset) external view returns (uint256 daoAndDeployerRevenue) {
-        require(_silo.asset() == _asset, InvalidAsset());
+        _requireAsset(_asset);
 
         (daoAndDeployerRevenue,,,,) = _silo.getSiloStorage();
+    }
+    
+    function _requireAsset(address _asset) internal view {
+        require(_silo.asset() == _asset, InvalidAsset());
     }
 }

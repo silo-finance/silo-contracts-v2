@@ -152,6 +152,16 @@ interface ISiloLens {
     /// @return totalSupply of debt token
     function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256);
 
+
+    /// @notice Get debt token balance of a user
+    /// @dev [v1 compatible] Debt token represents a share in total debt of given asset.
+    /// This method calls balanceOf(_borrower) on that token.
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset address for which to read data
+    /// @param _borrower wallet address for which to read data
+    /// @return balance of debt token of given user
+    function borrowShare(ISilo _silo, address _asset, address _borrower) external view returns (uint256);
+
     /// @notice Get amount of fees earned by protocol to date
     /// @dev [v1 NOT compatible] It reads directly from storage so interest generated between last update and now is not
     /// taken for account. In SiloLens v1 this was total (ever growing) amount, in this one is since last withdraw.
