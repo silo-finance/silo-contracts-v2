@@ -29,10 +29,6 @@ interface IPartialLiquidation {
         bool receiveSToken
     );
 
-    /// @dev Revert if provided silo configuration during initialization is empty
-    error EmptySiloConfig();
-    /// @dev Revert if the hook receiver is already configured/initialized
-    error AlreadyConfigured();
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();
     error NoDebtToCover();
