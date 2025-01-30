@@ -69,6 +69,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
         idleMarket = factory.createIdleVault(vault);
+        vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
     }
