@@ -11,6 +11,11 @@ import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
 /// @title SiloLens is a helper contract for integrations and UI
 contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
+    function isSolvent(ISilo _silo, address _user) external view returns (bool) {
+        return _silo.isSolvent(_user);
+    }
+
+    /// @inheritdoc ISiloLens
     function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
         return SiloLensLib.getRawLiquidity(_silo);
     }

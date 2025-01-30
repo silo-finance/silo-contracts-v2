@@ -5,6 +5,12 @@ import {ISilo} from "./ISilo.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 interface ISiloLens {
+    /// @dev calculates solvency
+    /// @param _silo Silo address from which to read data
+    /// @param _user wallet address
+    /// @return true if solvent, false otherwise
+    function isSolvent(ISilo _silo, address _user) external view returns (bool);
+
     /// @return liquidity based on contract state (without interest, fees)
     function getRawLiquidity(ISilo _silo) external view returns (uint256 liquidity);
 
