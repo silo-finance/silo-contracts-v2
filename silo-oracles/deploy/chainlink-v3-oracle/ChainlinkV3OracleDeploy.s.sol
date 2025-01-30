@@ -12,7 +12,7 @@ import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=PYTH_REDSTONE_wstkscUSD_USDC \
+FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
