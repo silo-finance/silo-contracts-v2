@@ -11,9 +11,15 @@ import {PythAggregatorFactory} from "silo-oracles/contracts/pyth/PythAggregatorF
         --ffi --rpc-url $RPC_URL --broadcast --verify
  */
 contract PythAggregatorFactoryDeploy is CommonDeploy {
+    error PythAddressNotFound();
+
     function run() public returns (address factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        address pyth = AddrLib.getAddress("PYTH_PRICE_FEED");
+        address pyth = AddrLib.getAddress("PYTH_PRICE_AGGREGATOR");
+
+        if (pyth == address(0)) {
+            revert PythAddressNotFound();
+        }
 
         vm.startBroadcast(deployerPrivateKey);
 

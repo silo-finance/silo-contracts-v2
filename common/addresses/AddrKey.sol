@@ -23,4 +23,5 @@ library AddrKey {
     string constant public GROWTH_MULTISIG = "GROWTH_MULTISIG";
     string constant public DEV_WALLET = "DEV_WALLET";
     string constant public scUSD = "scUSD";
+    string constant public PYTH_PRICE_AGGREGATOR = "PYTH_PRICE_AGGREGATOR";
 }
