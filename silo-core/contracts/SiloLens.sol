@@ -139,4 +139,11 @@ contract SiloLens is ISiloLens {
 
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
     }
+
+    /// @inheritdoc ISiloLens
+    function protocolFees(ISilo _silo, address _asset) external view returns (uint256 daoAndDeployerRevenue) {
+        require(_silo.asset() == _asset, InvalidAsset());
+
+        (daoAndDeployerRevenue,,,,) = _silo.getSiloStorage();
+    }
 }

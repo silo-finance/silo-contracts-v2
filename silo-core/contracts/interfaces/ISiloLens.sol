@@ -138,4 +138,12 @@ interface ISiloLens {
     /// @return amount of asset that has been borrowed
     function totalBorrowAmount(ISilo _silo, address _asset) external view returns (uint256);
 
-}
+    /// @notice Get amount of fees earned by protocol to date
+    /// @dev [v1 NOT compatible] It reads directly from storage so interest generated between last update and now is not
+    /// taken for account. In SiloLens v1 this was total (ever growing) amount, in this one is since last withdraw.
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset address for which to read data
+    /// @return amount of fees earned by protocol to date since last withdraw
+    function protocolFees(ISilo _silo, address _asset) external view returns (uint256);
+
+    }
