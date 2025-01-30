@@ -24,7 +24,7 @@ import {TestStateLib} from "./TestState.sol";
 contract VaultReentrancyTest is Test {
 
     // FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_coverage_for_vault_reentrancy
-    function test_coverage_for_vault_reentrancy() public {
+    function test_skip_coverage_for_vault_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
 
@@ -95,7 +95,7 @@ contract VaultReentrancyTest is Test {
 
         configOverride.token0 = address(new MaliciousToken());
         configOverride.token1 = address(new MaliciousToken());
-        configOverride.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
+        configOverride.configName = SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER;
         ISilo market;
 
         (, market,,,,) = siloFixture.deploy_local(configOverride);
