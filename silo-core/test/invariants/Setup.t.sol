@@ -111,7 +111,6 @@ contract Setup is BaseTest {
 
         // Deploy and initialize the liquidation module & mock flashloan receiver
         liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
-        liquidationModule.initialize(siloConfig, "");
 
         flashLoanReceiver = address(new MockFlashLoanReceiver());
     }

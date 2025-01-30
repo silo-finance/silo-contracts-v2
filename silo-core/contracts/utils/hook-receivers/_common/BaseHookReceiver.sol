@@ -1,11 +1,42 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "../../../interfaces/IHookReceiver.sol";
+import {ISiloConfig} from "../../../interfaces/ISiloConfig.sol";
 
-abstract contract SiloHookReceiver is IHookReceiver {
+abstract contract BaseHookReceiver is IHookReceiver, Initializable {
+    ISiloConfig public siloConfig;
+
     mapping(address silo => HookConfig) private _hookConfig;
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @inheritdoc IHookReceiver
+    function initialize(ISiloConfig _config, bytes calldata)
+        public
+        virtual
+        initializer
+    {
+        require(address(_config) != address(0), EmptySiloConfig());
+        require(address(siloConfig) == address(0), AlreadyConfigured());
+
+        siloConfig = _config;
+    }
+
+    /// @inheritdoc IHookReceiver
+    function hookReceiverConfig(address _silo)
+        external
+        view
+        virtual
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
+        (hooksBefore, hooksAfter) = _hookReceiverConfig(_silo);
+    }
 
     function _setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter) internal virtual {
         _hookConfig[_silo] = HookConfig(uint24(_hooksBefore), uint24(_hooksAfter));

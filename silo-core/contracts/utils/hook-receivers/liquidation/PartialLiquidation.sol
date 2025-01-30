@@ -17,10 +17,11 @@ import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
+import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-abstract contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
+abstract contract PartialLiquidation is BaseHookReceiver, IPartialLiquidation {
     using SafeERC20 for IERC20;
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
@@ -45,7 +46,7 @@ abstract contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        ISiloConfig siloConfigCached = _siloConfig();
+        ISiloConfig siloConfigCached = siloConfig;
 
         require(address(siloConfigCached) != address(0), EmptySiloConfig());
         require(_maxDebtToCover != 0, NoDebtToCover());
@@ -166,7 +167,7 @@ abstract contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
     {
-        return PartialLiquidationExecLib.maxLiquidation(_siloConfig(), _borrower);
+        return PartialLiquidationExecLib.maxLiquidation(siloConfig, _borrower);
     }
 
     function _fetchConfigs(
@@ -219,6 +220,4 @@ abstract contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
     }
-
-    function _siloConfig() internal virtual view returns (ISiloConfig) {}
 }

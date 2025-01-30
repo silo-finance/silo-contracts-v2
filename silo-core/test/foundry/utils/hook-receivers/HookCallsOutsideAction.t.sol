@@ -10,6 +10,7 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {BaseHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/BaseHookReceiver.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
@@ -24,8 +25,6 @@ FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
 contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
     using SiloLensLib for ISilo;
-
-    ISiloConfig public siloConfig;
 
     bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -157,7 +156,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         silo1.withdrawFees();
     }
 
-    function initialize(ISiloConfig _config, bytes calldata) external view override {
+    function initialize(ISiloConfig _config, bytes calldata) public view override {
         assertEq(address(siloConfig), address(_config), "SiloConfig addresses should match");
     }
 
@@ -240,8 +239,4 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
     }
 
     function _tryReenter() internal virtual {}
-
-    function _siloConfig() internal view override returns (ISiloConfig) {
-        return siloConfig;
-    }
 }

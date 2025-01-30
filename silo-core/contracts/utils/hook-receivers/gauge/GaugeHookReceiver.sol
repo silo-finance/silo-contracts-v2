@@ -9,10 +9,11 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {IGaugeLike as IGauge} from "../../../interfaces/IGaugeLike.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "../../../interfaces/IGaugeHookReceiver.sol";
+import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
-abstract contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2Step {
+abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Ownable2Step {
     using Hook for uint256;
     using Hook for bytes;
 
@@ -104,7 +105,7 @@ abstract contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2Step {
             address protectedShareToken,
             address collateralShareToken,
             address debtShareToken
-        ) = _siloConfig().getShareTokens(_silo);
+        ) = siloConfig.getShareTokens(_silo);
 
         if (_shareToken == collateralShareToken) return Hook.COLLATERAL_TOKEN;
         if (_shareToken == protectedShareToken) return Hook.PROTECTED_TOKEN;
@@ -123,8 +124,4 @@ abstract contract GaugeHookReceiver is IGaugeHookReceiver, Ownable2Step {
 
         _transferOwnership(owner);
     }
-
-    function _setHookConfig(address, uint256, uint256) internal virtual {}
-    function _getHooksAfter(address) internal virtual returns (uint256) {}
-    function _siloConfig() internal virtual view returns (ISiloConfig) {}
 }
