@@ -16,13 +16,7 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 contract IdleVaultsFactory {
     mapping(address => bool) public isIdleVault;
 
-    function createIdleVault(
-        IERC4626 _vault,
-        uint256 initialTimelock,
-        address asset,
-        string memory name,
-        string memory symbol
-    ) external virtual returns (IdleVault idleVault) {
+    function createIdleVault(IERC4626 _vault) external virtual returns (IdleVault idleVault) {
         idleVault = new IdleVault(
             address(_vault),
             _vault.asset(),
