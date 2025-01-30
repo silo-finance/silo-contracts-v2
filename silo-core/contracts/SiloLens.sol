@@ -125,4 +125,18 @@ contract SiloLens is ISiloLens {
 
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     }
+
+    /// @inheritdoc ISiloLens
+    function collateralOnlyDeposits(ISilo _silo, address _asset) external view returns (uint256) {
+        require(_silo.asset() == _asset, InvalidAsset());
+
+        return _silo.getTotalAssetsStorage(ISilo.AssetType.Protected);
+    }
+
+    /// @inheritdoc ISiloLens
+    function totalBorrowAmount(ISilo _silo, address _asset) external view returns (uint256) {
+        require(_silo.asset() == _asset, InvalidAsset());
+
+        return _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
+    }
 }

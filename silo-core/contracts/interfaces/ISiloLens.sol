@@ -7,14 +7,14 @@ import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 interface ISiloLens {
     error InvalidAsset();
 
-    /// @dev calculates solvency
+    /// @dev [v1 compatible] calculates solvency
     /// @notice this is backwards compatible method, you can use `_silo.isSolvent(_user)` directly.
     /// @param _silo Silo address from which to read data
     /// @param _user wallet address
     /// @return true if solvent, false otherwise
     function isSolvent(ISilo _silo, address _user) external view returns (bool);
 
-    /// @dev Amount of token that is available for borrowing.
+    /// @dev [v1 compatible] Amount of token that is available for borrowing.
     /// @notice this is backwards compatible method, you can use `_silo.getLiquidity()`
     /// @param _silo Silo address from which to read data
     /// @param _asset borrowable asset
@@ -115,9 +115,27 @@ interface ISiloLens {
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool fullLiquidation);
 
     /// @notice Get amount of underlying asset that has been deposited to Silo
-    /// @dev It reads directly from storage so interest generated between last update and now is not taken for account
+    /// @dev [v1 compatible] It reads directly from storage so interest generated between last update and now is not
+    /// taken for account
     /// @param _silo Silo address from which to read data
     /// @param _asset asset address for which to read data
     /// @return amount of all deposits made for given asset
     function totalDeposits(ISilo _silo, address _asset) external view returns (uint256);
+
+    /// @notice Get amount of protected asset token that has been deposited to Silo
+    /// @dev [v1 compatible] It reads directly from storage so interest generated between last update and now is not
+    /// taken for account
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset address for which to read data
+    /// @return amount of all "collateralOnly" deposits made for given asset
+    function collateralOnlyDeposits(ISilo _silo, address _asset) external view returns (uint256);
+
+    /// @notice Get amount of asset that has been borrowed
+    /// @dev [v1 compatible] It reads directly from storage so interest generated between last update and now is not
+    /// taken for account
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset address for which to read data
+    /// @return amount of asset that has been borrowed
+    function totalBorrowAmount(ISilo _silo, address _asset) external view returns (uint256);
+
 }
