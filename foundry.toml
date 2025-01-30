@@ -81,6 +81,18 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
+[profile.vaults-with-invariants]
+src = 'silo-vaults/contracts'
+test = 'silo-vaults/test/enigma-dark-invariants/'
+out = 'cache/foundry/out/silo-vaults'
+broadcast = 'silo-vaults/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
 [profile.oracles]
 src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'
