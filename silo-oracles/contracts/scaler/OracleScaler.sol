@@ -18,7 +18,7 @@ contract OracleScaler is ISiloOracle {
     /// @dev scale factor will be multiplied with base token's amount to calculate the scaled value.
     uint256 public immutable SCALE_FACTOR; // solhint-disable-line var-name-mixedcase
 
-    /// @dev revert if the original token decimals is more than 18
+    /// @dev revert if the original token decimals is more or equal 18
     error TokenDecimalsTooLarge();
 
     /// @dev revert if the baseToken to quote is not equal to QUOTE_TOKEN
@@ -26,7 +26,7 @@ contract OracleScaler is ISiloOracle {
 
     constructor(address _quoteToken) {
         uint8 quoteTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_quoteToken));
-        require(quoteTokenDecimals <= DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
+        require(quoteTokenDecimals < DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
 
         SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - quoteTokenDecimals);
 
