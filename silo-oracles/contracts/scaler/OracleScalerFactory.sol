@@ -5,10 +5,9 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {OracleScaler} from "silo-oracles/contracts/scaler/OracleScaler.sol";
 import {IOracleScalerFactory} from "silo-oracles/contracts/interfaces/IOracleScalerFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {IOracleScaler} from "silo-oracles/contracts/interfaces/IOracleScaler.sol";
 
 contract OracleScalerFactory is IOracleScalerFactory {
-    mapping(address => bool) public createdInFactory;
+    mapping(ISiloOracle => bool) public createdInFactory;
 
     /// @inheritdoc IOracleScalerFactory
     function createOracleScaler(
@@ -16,8 +15,8 @@ contract OracleScalerFactory is IOracleScalerFactory {
     ) external returns (ISiloOracle oracleScaler) {
         oracleScaler = new OracleScaler(_quoteToken);
 
-        createdInFactory[address(OracleScaler)] = true;
+        createdInFactory[oracleScaler] = true;
 
-        emit OracleScalerCreated(address(OracleScaler));
+        emit OracleScalerCreated(oracleScaler);
     }
 }
