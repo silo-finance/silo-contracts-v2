@@ -8,6 +8,7 @@ import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {OracleScalerFactory} from "silo-oracles/contracts/scaler/OracleScalerFactory.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**

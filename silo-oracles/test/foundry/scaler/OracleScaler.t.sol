@@ -1,42 +1,56 @@
 // // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
+import {Test} from "forge-std/Test.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+
 import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {OracleScaler} from "silo-oracles/contracts/scaler/OracleScaler.sol";
 import {IOracleScalerFactory} from "silo-oracles/contracts/interfaces/IOracleScalerFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OracleScalerFactory} from "silo-oracles/contracts/scaler/OracleScalerFactory.sol";
-
-import {TokensGenerator} from "../_common/TokensGenerator.sol";
+import {OracleScalerDeploy} from "silo-oracles/deploy/oracle-scaler/OracleScalerDeploy.s.sol";
+import {OracleScalerFactoryDeploy} from "silo-oracles/deploy/oracle-scaler/OracleScalerFactoryDeploy.s.sol";
 
 /*
-    FOUNDRY_PROFILE=oracles forge test -vv --match-contract OracleScalerTest
+    FOUNDRY_PROFILE=oracles forge test -vv --match-contract OracleScalerTest --ffi
 */
-contract OracleScalerTest is TokensGenerator {
-    uint256 constant TEST_BLOCK = 6013512;
+contract OracleScalerTest is Test {
+    OracleScalerDeploy oracleDeployer;
+    OracleScalerFactory factory;
+
     address constant USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
-    OracleScalerFactory immutable factory; 
 
     event OracleScalerCreated(ISiloOracle indexed oracleScaler);
 
-    constructor() TokensGenerator(BlockChain.SONIC) {
-        initFork(TEST_BLOCK);
+    function setUp() public {
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 6013512);
+        AddrLib.init();
 
-        factory = new OracleScalerFactory();
+        OracleScalerFactoryDeploy oracleFactoryDeploy = new OracleScalerFactoryDeploy();
+        oracleFactoryDeploy.disableDeploymentsSync();
+
+        factory = OracleScalerFactory(oracleFactoryDeploy.run());
+
+        oracleDeployer = new OracleScalerDeploy();
+        oracleDeployer.setQuoteTokenKey("USDC.e");
     }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_OracleScalerFactory_createOracleScaler --ffi
+    */
     function test_OracleScalerFactory_createOracleScaler() public {
         vm.expectEmit(false, false, false, false);
         emit OracleScalerCreated(ISiloOracle(address(0)));
 
-        ISiloOracle scaler = factory.createOracleScaler(USDC);
+        ISiloOracle scaler = ISiloOracle(oracleDeployer.run());
 
         assertTrue(factory.createdInFactory(scaler));
     }
 
     function test_OracleScaler_constructorVars() public {
-        OracleScaler scaler = OracleScaler(address(factory.createOracleScaler(USDC)));
+        OracleScaler scaler = OracleScaler(address(oracleDeployer.run()));
 
         assertEq(scaler.DECIMALS_TO_SCALE(), 18, "18 decimals are set right as constant");
         assertEq(scaler.QUOTE_TOKEN(), USDC, "quote token is set correctly");
