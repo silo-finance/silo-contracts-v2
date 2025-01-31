@@ -79,10 +79,18 @@ interface ISiloLens {
     function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv);
 
     /// @notice Check if user has position in any asset in a market
+    /// @dev [v1 compatible]
     /// @param _silo Silo address from market (can be silo0 or silo1)
     /// @param _borrower wallet address for which to read data
     /// @return TRUE if user has position in any asset
     function hasPosition(ISilo _silo, address _borrower) external view returns (bool);
+
+    /// @notice Check if user is in debt
+    /// @dev [v1 compatible]
+    /// @param _silo Silo address from which to read data
+    /// @param _borrower wallet address for which to read data
+    /// @return TRUE if user borrowed any amount of any asset, otherwise FALSE
+    function inDebt(ISilo _silo, address _borrower) external view returns (bool);
 
     /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
     /// @param _silo Address of the silo

@@ -78,7 +78,12 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function hasPosition(ISilo _silo, address _borrower) external view virtual returns (bool has) {
-        return SiloLensLib.hasPosition(_silo, _borrower);
+        has = SiloLensLib.hasPosition(_silo, _borrower);
+    }
+
+    /// @inheritdoc ISiloLens
+    function inDebt(ISilo _silo, address _borrower) external view returns (bool hasDebt) {
+        hasDebt = SiloLensLib.hasPosition(_silo, _borrower);
     }
 
     /// @inheritdoc ISiloLens
