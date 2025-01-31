@@ -32,16 +32,10 @@ contract OracleScaler is ISiloOracle {
 
     constructor(address _baseToken, address _quoteToken) {
         uint8 quoteDecimals = uint8(TokenHelper.assertAndGetDecimals(_quoteToken));
-
-        if (quoteDecimals > DECIMALS_TO_SCALE) {
-            revert QuoteTokenDecimalsTooLarge();
-        }
+        require(quoteDecimals <= DECIMALS_TO_SCALE, QuoteTokenDecimalsTooLarge());
 
         uint8 baseTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_baseToken));
-
-        if (baseTokenDecimals > DECIMALS_TO_SCALE) {
-            revert TokenDecimalsTooLarge();
-        }
+        require(baseTokenDecimals <= DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
 
         SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - baseTokenDecimals);
 
