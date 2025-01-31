@@ -3,12 +3,13 @@ pragma solidity 0.8.28;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {SiloRouter} from "silo-core/contracts/SiloRouter.sol";
+import {SiloRouter} from "silo-core/contracts/silo-router/SiloRouter.sol";
+import {SiloRouterImplementation} from "silo-core/contracts/silo-router/SiloRouterImplementation.sol";
 
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloRouterDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+        --ffi --rpc-url http://127.0.0.1:8545 --broadcast --verify
  */
 contract SiloRouterDeploy is CommonDeploy {
     function run() public returns (SiloRouter siloRouter) {
@@ -17,7 +18,9 @@ contract SiloRouterDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloRouter = new SiloRouter(deployer);
+        SiloRouterImplementation implementation = new SiloRouterImplementation();
+
+        siloRouter = new SiloRouter(deployer, address(implementation));
 
         vm.stopBroadcast();
 

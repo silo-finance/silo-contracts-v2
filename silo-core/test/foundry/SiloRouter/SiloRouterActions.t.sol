@@ -655,61 +655,6 @@ contract SiloRouterActionsTest is IntegrationTest {
         router.withdraw(ISilo(silo0), 1, depositor, ISilo.CollateralType.Collateral);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions
-    function test_siloRouter_pause_allActions() public {
-        vm.prank(routerOwner);
-        router.pause();
-        assertTrue(router.paused(), "Router should be paused");
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.wrap(IWrappedNativeToken(nativeToken), 1);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.unwrap(IWrappedNativeToken(nativeToken), 1);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.unwrapAll(IWrappedNativeToken(nativeToken));
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.sendValue(payable(borrower), 1);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.sendValueAll(payable(borrower));
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.transferFrom(IERC20(token0), address(router), 1);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.transfer(IERC20(token0), address(router), 1);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.approve(IERC20(token0), address(router), 1);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.deposit(ISilo(silo0), 1, ISilo.CollateralType.Collateral);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.withdraw(ISilo(silo0), 1, address(router), ISilo.CollateralType.Collateral);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.withdrawAll(ISilo(silo0), address(router), ISilo.CollateralType.Collateral);
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.borrow(ISilo(silo0), 1, address(router));
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.borrowSameAsset(ISilo(silo0), 1, address(router));
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.repay(ISilo(silo0), 1, address(router));
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.repayAll(ISilo(silo0), address(router));
-
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.repayAllNative(IWrappedNativeToken(nativeToken), ISilo(silo0), address(router));
-    }
-
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_pause_allActions_viaMulticall
     function test_siloRouter_pause_allActions_viaMulticall() public {
         vm.prank(routerOwner);

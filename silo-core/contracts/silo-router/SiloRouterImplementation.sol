@@ -3,14 +3,11 @@ pragma solidity 0.8.28;
 
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
-import {Multicall} from "openzeppelin5/utils/Multicall.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
-import {ISilo} from "./interfaces/ISilo.sol";
-import {ISiloRouter} from "./interfaces/ISiloRouter.sol";
-import {IWrappedNativeToken} from "./interfaces/IWrappedNativeToken.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
+import {ISiloRouterImplementation} from "../interfaces/ISiloRouterImplementation.sol";
+import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 
 /**
 Supporting the following scenarios:
@@ -60,147 +57,115 @@ Supporting the following scenarios:
 - full repay token using SiloRouter.multicall
     SiloRouter.repayAll(ISilo _silo, address _borrower)
  */
-
-/// @title SiloRouter
-/// @notice Silo Router is a utility contract that aims to improve UX. It can batch any number or combination
-/// of actions (Deposit, Withdraw, Borrow, Repay) and execute them in a single transaction.
-/// @dev SiloRouter requires only first action asset to be approved
-/// @custom:security-contact security@silo.finance
-contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
+contract SiloRouterImplementation is ISiloRouterImplementation {
     using SafeERC20 for IERC20;
 
-    constructor (address _initialOwner) Ownable(_initialOwner) {}
-
-    /// @dev needed for unwrapping native tokens
-    receive() external payable {
-        // `execute` method calls `IWrappedNativeToken.withdraw()`
-        // and we need to receive the withdrawn native token unconditionally
-    }
-
-    /// @inheritdoc ISiloRouter
-    function multicall(bytes[] calldata data) external virtual payable returns (bytes[] memory results) {
-        bytes memory context = msg.sender == _msgSender()
-            ? new bytes(0)
-            : msg.data[msg.data.length - _contextSuffixLength():];
-
-        results = new bytes[](data.length);
-        for (uint256 i = 0; i < data.length; i++) {
-            results[i] = Address.functionDelegateCall(address(this), bytes.concat(data[i], context));
-        }
-
-        return results;
-    }
-
-    /// @inheritdoc ISiloRouter
-    function pause() external virtual onlyOwner {
-        _pause();
-    }
-
-    /// @inheritdoc ISiloRouter
-    function unpause() external virtual onlyOwner {
-        _unpause();
-    }
-
-    /// @inheritdoc ISiloRouter
-    function wrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function wrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
         IWrappedNativeToken(_native).deposit{value: _amount}();
     }
 
-    /// @inheritdoc ISiloRouter
-    function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
         _native.withdraw(_amount);
     }
 
-    /// @inheritdoc ISiloRouter
-    function unwrapAll(IWrappedNativeToken _native) external payable virtual whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function unwrapAll(IWrappedNativeToken _native) external payable virtual {
         uint256 balance = _native.balanceOf(address(this));
         _native.withdraw(balance);
     }
 
-    /// @inheritdoc ISiloRouter
-    function sendValue(address payable _to, uint256 _amount) external payable whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function sendValue(address payable _to, uint256 _amount) external payable virtual {
         Address.sendValue(_to, _amount);
     }
 
-    /// @inheritdoc ISiloRouter
-    function sendValueAll(address payable _to) external payable whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function sendValueAll(address payable _to) external payable virtual {
         uint256 balance = address(this).balance;
         Address.sendValue(_to, balance);
     }
 
-    /// @inheritdoc ISiloRouter
-    function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable whenNotPaused {
-        _token.safeTransferFrom(msg.sender, _to, _amount);
-    }
-
-    /// @inheritdoc ISiloRouter
-    function transfer(IERC20 _token, address _to, uint256 _amount) external payable whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function transfer(IERC20 _token, address _to, uint256 _amount) external payable virtual {
         _token.safeTransfer(_to, _amount);
     }
 
-    /// @inheritdoc ISiloRouter
-    function approve(IERC20 _token, address _spender, uint256 _amount) external payable whenNotPaused {
+    /// @inheritdoc ISiloRouterImplementation
+    function transferAll(IERC20 _token, address _to) external payable virtual {
+        uint256 balance = _token.balanceOf(address(this));
+        _token.safeTransfer(_to, balance);
+    }
+
+    /// @inheritdoc ISiloRouterImplementation
+    function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable virtual {
+        _token.safeTransferFrom(msg.sender, _to, _amount);
+    }
+
+    /// @inheritdoc ISiloRouterImplementation
+    function approve(IERC20 _token, address _spender, uint256 _amount) external payable virtual {
         _token.forceApprove(_spender, _amount);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function deposit(
         ISilo _silo,
         uint256 _amount,
         ISilo.CollateralType _collateral
-    ) external payable whenNotPaused returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.deposit(_amount, msg.sender, _collateral);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function withdraw(
         ISilo _silo,
         uint256 _amount,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) external payable whenNotPaused returns (uint256 assets) {
+    ) external payable virtual returns (uint256 assets) {
         assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function withdrawAll(
         ISilo _silo,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) external payable whenNotPaused returns (uint256 assets) {
+    ) external payable virtual returns (uint256 assets) {
         uint256 sharesAmount = _silo.maxRedeem(msg.sender, _collateral);
         assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function borrow(
         ISilo _silo,
         uint256 _assets,
         address _receiver
-    ) external payable whenNotPaused returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.borrow(_assets, _receiver, msg.sender);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function borrowSameAsset(
         ISilo _silo,
         uint256 _assets,
         address _receiver
-    ) external payable whenNotPaused returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function repay(
         ISilo _silo,
         uint256 _assets,
         address _borrower
-    ) external payable whenNotPaused returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.repay(_assets, _borrower);
     }
 
-    /// @inheritdoc ISiloRouter
-    function repayAll(ISilo _silo, address _borrower) external payable whenNotPaused returns (uint256 shares) {
+    /// @inheritdoc ISiloRouterImplementation
+    function repayAll(ISilo _silo, address _borrower) external payable virtual returns (uint256 shares) {
         uint256 repayAmount = _silo.maxRepay(_borrower);
         IERC20 asset = IERC20(_silo.asset());
 
@@ -210,12 +175,12 @@ contract SiloRouter is Pausable, Ownable2Step, ISiloRouter {
         shares = _silo.repay(repayAmount, _borrower);
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterImplementation
     function repayAllNative(
         IWrappedNativeToken _native,
         ISilo _silo,
         address _borrower
-    ) external payable whenNotPaused returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         uint256 repayAmount = _silo.maxRepay(_borrower);
 
         IWrappedNativeToken(_native).deposit{value: repayAmount}();
