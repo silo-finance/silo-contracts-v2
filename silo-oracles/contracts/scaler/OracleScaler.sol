@@ -1,31 +1,51 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 /// @notice OracleScaler is an oracle, which scales the token amounts to 18 decimals instead of original decimals.
 /// For example, USDC decimals are 6. 1 USDC is 10**6. This oracle will scale this amount to 10**18. If the token
-/// decimals >= 18, this oracle will revert.
+/// decimals > 18, this oracle will revert.
 /// This oracle was created to increase the precision for LTV calculation of low decimal tokens.
 contract OracleScaler is ISiloOracle {
     /// @dev the amounts will be scaled to 18 decimals.
-    uint8 public constant QUOTE_DECIMALS = 18;
+    uint8 public constant DECIMALS_TO_SCALE = 18;
 
     /// @dev quote token address to represent scaled amounts.
-    IERC20Metadata public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
+    address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
-    /// @dev revert if the quote token decimals is not 18
-    error InvalidQuoteTokenDecimals();
+    /// @dev base token address to use for a quote.
+    address public immutable BASE_TOKEN; // solhint-disable-line var-name-mixedcase
+
+    /// @dev scale factor will be multiplied with base token's amount to calculate the scaled value.
+    uint256 public immutable SCALE_FACTOR; // solhint-disable-line var-name-mixedcase
+
+    /// @dev revert if the quote token decimals is more than 18
+    error QuoteTokenDecimalsTooLarge();
     
-    /// @dev revert if the original token decimals is 18 or more
+    /// @dev revert if the original token decimals is more than 18
     error TokenDecimalsTooLarge();
 
-    constructor(IERC20Metadata _quoteToken) {
-        if (_quoteToken.decimals() != QUOTE_DECIMALS) {
-            revert InvalidQuoteTokenDecimals();
+    /// @dev revert if the baseToken to quote is not equal to BASE_TOKEN
+    error TokenUnsupported();
+
+    constructor(address _baseToken, address _quoteToken) {
+        uint8 quoteDecimals = uint8(TokenHelper.assertAndGetDecimals(_quoteToken));
+
+        if (quoteDecimals > DECIMALS_TO_SCALE) {
+            revert QuoteTokenDecimalsTooLarge();
         }
 
+        uint8 baseTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_baseToken));
+
+        if (baseTokenDecimals > DECIMALS_TO_SCALE) {
+            revert TokenDecimalsTooLarge();
+        }
+
+        SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - baseTokenDecimals);
+
+        BASE_TOKEN = _baseToken;
         QUOTE_TOKEN = _quoteToken;
     }
 
@@ -34,13 +54,11 @@ contract OracleScaler is ISiloOracle {
 
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
-        uint8 decimals = IERC20Metadata(_baseToken).decimals();
-
-        if (decimals >= QUOTE_DECIMALS) {
-            revert TokenDecimalsTooLarge();
+        if (_baseToken != BASE_TOKEN) {
+            revert TokenUnsupported();
         }
 
-        quoteAmount = _baseAmount * (10**uint256(QUOTE_DECIMALS - decimals));
+        quoteAmount = _baseAmount * SCALE_FACTOR;
     }
 
     // @inheritdoc ISiloOracle
