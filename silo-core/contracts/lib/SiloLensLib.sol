@@ -68,7 +68,22 @@ library SiloLensLib {
     }
 
     function hasPosition(ISilo _silo, address _borrower) internal view returns (bool has) {
-        (, ISiloConfig.ConfigData memory debtConfig) = _silo.config().getConfigsForSolvency(_borrower);
+        (ISiloConfig.ConfigData memory cfg0, ISiloConfig.ConfigData memory cfg1) = _silo.config().getConfigs(_borrower);
+
+        if (IShareToken(cfg0.collateralShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg0.protectedShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg1.collateralShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg1.protectedShareToken).balanceOf(_borrower) != 0) return true;
+
+        if (IShareToken(cfg0.debtShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg1.debtShareToken).balanceOf(_borrower) != 0) return true;
+
+        return false;
+      }
+
+    function inDebt(ISilo _silo, address _borrower) internal view returns (bool has) {
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _silo.config().getConfigsForSolvency(_borrower);
+
         has = debtConfig.debtShareToken != address(0)
             && IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) != 0;
     }

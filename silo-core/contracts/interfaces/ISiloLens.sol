@@ -2,18 +2,14 @@
 pragma solidity >=0.5.0;
 
 import {ISilo} from "./ISilo.sol";
+import {IInterestRateModel} from "./IInterestRateModel.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 /*
-    function getUtilization(ISilo _silo, address _asset) external view returns (uint256) {}
-    function depositAPY(ISilo _silo, address _asset) external view returns (uint256) {}
-    function calcFee(uint256 _amount) external view returns (uint256) {}
-    function lensPing() external pure returns (bytes4) {}
     function borrowAPY(ISilo _silo, address _asset) public view returns (uint256) {}
-    function totalDepositsWithInterest(ISilo _silo, address _asset) public view returns (uint256 _totalDeposits) {}
-    function getDepositAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp) public view returns (uint256 totalUserDeposits){}
+    function getDepositAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp) public view returns (uint256 totalUserDeposits){}
     function totalBorrowAmountWithInterest(ISilo _silo, address _asset) public view returns (uint256 _totalBorrowAmount){}
-    function balanceOfUnderlying(uint256 _assetTotalDeposits, IShareToken _shareToken, address _user){}
+    function balanceOfUnderlying(uint256 _assetTotalDeposits, IShareToken _shareToken, address _borrower){}
     function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel) {}
 }
 */
@@ -21,11 +17,11 @@ interface ISiloLens {
     error InvalidAsset();
 
     /// @dev [v1 compatible] calculates solvency
-    /// @notice this is backwards compatible method, you can use `_silo.isSolvent(_user)` directly.
+    /// @notice this is backwards compatible method, you can use `_silo.isSolvent(_borrower)` directly.
     /// @param _silo Silo address from which to read data
-    /// @param _user wallet address
+    /// @param _borrower wallet address
     /// @return true if solvent, false otherwise
-    function isSolvent(ISilo _silo, address _user) external view returns (bool);
+    function isSolvent(ISilo _silo, address _borrower) external view returns (bool);
 
     /// @dev [v1 compatible] Amount of token that is available for borrowing.
     /// @notice this is backwards compatible method, you can use `_silo.getLiquidity()`
@@ -48,7 +44,7 @@ interface ISiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _borrower ignored
     /// @return maximumLTV Maximum Loan-To-Value for silo
-    function getUserMaximumLTV(ISilo _silo, address _user) external view returns (uint256 maximumLTV);
+    function getUserMaximumLTV(ISilo _silo, address _borrower) external view returns (uint256 maximumLTV);
 
     /// @notice Retrieves the LT value
     /// @param _silo Address of the silo
@@ -78,7 +74,7 @@ interface ISiloLens {
     /// @return ltv The LTV for the borrower in 18 decimals points
     function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv);
 
-    /// @notice Check if user has position in any asset in a market
+    /// @notice Check if user has position (collateral, protected or debt) in any asset in a market
     /// @dev [v1 compatible]
     /// @param _silo Silo address from market (can be silo0 or silo1)
     /// @param _borrower wallet address for which to read data
@@ -168,6 +164,26 @@ interface ISiloLens {
     /// @return amount of all deposits made for given asset
     function totalDeposits(ISilo _silo, address _asset) external view returns (uint256);
 
+    /// @notice returns total deposits with interest dynamically calculated at current block timestamp
+    /// @param _asset asset address
+    /// @return totalDeposits total deposits amount with interest
+    function totalDepositsWithInterest(ISilo _silo, address _asset) public view returns (uint256 totalDeposits);
+
+    /// @notice Calculates current deposit (with interest) for user
+    /// Collateral only deposits are not counted here. To get collateral only deposit call:
+    /// `_silo.assetStorage(_asset).collateralOnlyDeposits`
+    /// @dev [v1 NOT compatible] Interest is calculated based on the provided timestamp with is expected to be current time.
+    ///
+    /// @param _silo Silo address from which to read data
+    /// @param _asset token address for which calculation are done
+    /// @param _borrower account for which calculation are done
+    /// @param _timestamp ignored, it is always current time??
+    /// @return totalUserDeposits amount of asset user posses
+    function getDepositAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp)
+        external
+        view
+        returns (uint256 totalUserDeposits);
+    
     /// @notice Get amount of protected asset token that has been deposited to Silo
     /// @dev [v1 compatible] It reads directly from storage so interest generated between last update and now is not
     /// taken for account
@@ -195,10 +211,10 @@ interface ISiloLens {
     /// @dev [v1 compatible] Interest is calculated based on the provided timestamp with is expected to be current time.
     /// @param _silo Silo address from which to read data
     /// @param _asset token address for which calculation are done
-    /// @param _user account for which calculation are done
+    /// @param _borrower account for which calculation are done
     /// @param _timestamp timestamp used for interest calculations
     /// @return total amount of asset user needs to repay at provided timestamp
-    function getBorrowAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp)
+    function getBorrowAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp)
         external
         view
         returns (uint256);
@@ -238,4 +254,33 @@ interface ISiloLens {
     /// @return value of debt denominated in quote token, decimal depends on oracle setup.
     function calculateBorrowValue(ISilo _silo, address _borrower, address _asset) external view returns (uint256);
 
-}
+    /// @notice Calculates fraction between borrowed amount and the current liquidity of tokens for given asset
+    /// denominated in percentage
+    /// @dev [v1 NOT compatible] Utilization is calculated current values in storage so it does not take for account
+    /// earned interest and ever-increasing total borrow amount. It assumes `Model.DP()` = 100%.
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset address
+    /// @return utilization value
+    function getUtilization(ISilo _silo, address _asset) external view returns (uint256);
+
+    /// @notice Yearly interest rate for depositing asset token, dynamically calculated for current block timestamp
+    /// @dev [v1 compatible]
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset address
+    /// @return APY with 18 decimals
+    function depositAPY(ISilo _silo, address _asset) external view returns (uint256);
+
+    /// @dev gets interest rates model object
+    /// @param _silo Silo address from which to read data
+    /// @param _asset asset for which to calculate interest rate
+    /// @return IInterestRateModel interest rates model object
+    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel);
+
+    /// @notice Calculate amount of entry fee for given amount
+    /// @param _amount amount for which to calculate fee
+    /// @return Amount of token fee to be paid
+    // TODO we have fees apply on interest so I think I will not include this.
+    function calcFee(uint256 _amount) external view returns (uint256);
+
+
+    }
