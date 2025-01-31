@@ -12,7 +12,7 @@ contract OracleScalerFactory is IOracleScalerFactory {
     /// @inheritdoc IOracleScalerFactory
     function createOracleScaler(
         IERC20Metadata _quoteToken
-    ) external returns (ISiloOracle oracleScaler) {
+    ) external virtual returns (ISiloOracle oracleScaler) {
         oracleScaler = new OracleScaler(_quoteToken);
 
         createdInFactory[oracleScaler] = true;
