@@ -5,7 +5,6 @@ import {ISilo} from "./ISilo.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 /*
-    function hasPosition(ISilo _silo, address _user) external view returns (bool) {}
     function getUtilization(ISilo _silo, address _asset) external view returns (uint256) {}
     function depositAPY(ISilo _silo, address _asset) external view returns (uint256) {}
     function calcFee(uint256 _amount) external view returns (uint256) {}
