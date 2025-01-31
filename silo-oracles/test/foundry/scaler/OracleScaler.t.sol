@@ -20,13 +20,13 @@ contract OracleScalerTest is Test {
     OracleScalerDeploy oracleDeployer;
     OracleScalerFactory factory;
 
-    address constant USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
+    address USDC = address(new TestERC20("", "", 6));
 
     event OracleScalerCreated(ISiloOracle indexed oracleScaler);
 
     function setUp() public {
-        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 6013512);
         AddrLib.init();
+        AddrLib.setAddress("USDC.e", USDC);
 
         OracleScalerFactoryDeploy oracleFactoryDeploy = new OracleScalerFactoryDeploy();
         oracleFactoryDeploy.disableDeploymentsSync();
