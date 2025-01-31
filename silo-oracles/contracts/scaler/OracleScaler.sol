@@ -12,35 +12,25 @@ contract OracleScaler is ISiloOracle {
     /// @dev the amounts will be scaled to 18 decimals.
     uint8 public constant DECIMALS_TO_SCALE = 18;
 
-    /// @dev quote token address to represent scaled amounts.
-    address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
-
     /// @dev base token address to use for a quote.
     address public immutable BASE_TOKEN; // solhint-disable-line var-name-mixedcase
 
     /// @dev scale factor will be multiplied with base token's amount to calculate the scaled value.
     uint256 public immutable SCALE_FACTOR; // solhint-disable-line var-name-mixedcase
 
-    /// @dev revert if the quote token decimals is more than 18
-    error QuoteTokenDecimalsTooLarge();
-    
     /// @dev revert if the original token decimals is more than 18
     error TokenDecimalsTooLarge();
 
     /// @dev revert if the baseToken to quote is not equal to BASE_TOKEN
     error TokenUnsupported();
 
-    constructor(address _baseToken, address _quoteToken) {
-        uint8 quoteDecimals = uint8(TokenHelper.assertAndGetDecimals(_quoteToken));
-        require(quoteDecimals <= DECIMALS_TO_SCALE, QuoteTokenDecimalsTooLarge());
-
+    constructor(address _baseToken) {
         uint8 baseTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_baseToken));
         require(baseTokenDecimals <= DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
 
         SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - baseTokenDecimals);
 
         BASE_TOKEN = _baseToken;
-        QUOTE_TOKEN = _quoteToken;
     }
 
     // @inheritdoc ISiloOracle
@@ -57,6 +47,6 @@ contract OracleScaler is ISiloOracle {
 
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
-        return address(QUOTE_TOKEN);
+        return address(BASE_TOKEN);
     }
 }
