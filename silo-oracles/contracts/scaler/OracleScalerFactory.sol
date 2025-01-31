@@ -10,9 +10,9 @@ contract OracleScalerFactory is IOracleScalerFactory {
 
     /// @inheritdoc IOracleScalerFactory
     function createOracleScaler(
-        address _baseToken
+        address _quoteToken
     ) external virtual returns (ISiloOracle oracleScaler) {
-        oracleScaler = new OracleScaler(_baseToken);
+        oracleScaler = new OracleScaler(_quoteToken);
 
         createdInFactory[oracleScaler] = true;
 

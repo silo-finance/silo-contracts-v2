@@ -7,9 +7,9 @@ interface IOracleScalerFactory {
     event OracleScalerCreated(ISiloOracle indexed oracleScaler);
 
     /// @notice Create a new oracle scaler
-    /// @param _baseToken The base token for this oracle to support.
+    /// @param _quoteToken The quote token for this oracle to support.
     /// @return oracleScaler The oracle scaler created
     function createOracleScaler(
-        address _baseToken
+        address _quoteToken
     ) external returns (ISiloOracle oracleScaler);
 }

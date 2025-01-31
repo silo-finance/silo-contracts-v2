@@ -12,8 +12,8 @@ contract OracleScaler is ISiloOracle {
     /// @dev the amounts will be scaled to 18 decimals.
     uint8 public constant DECIMALS_TO_SCALE = 18;
 
-    /// @dev base token address to use for a quote.
-    address public immutable BASE_TOKEN; // solhint-disable-line var-name-mixedcase
+    /// @dev token address to use for a quote.
+    address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
     /// @dev scale factor will be multiplied with base token's amount to calculate the scaled value.
     uint256 public immutable SCALE_FACTOR; // solhint-disable-line var-name-mixedcase
@@ -21,16 +21,16 @@ contract OracleScaler is ISiloOracle {
     /// @dev revert if the original token decimals is more than 18
     error TokenDecimalsTooLarge();
 
-    /// @dev revert if the baseToken to quote is not equal to BASE_TOKEN
+    /// @dev revert if the baseToken to quote is not equal to QUOTE_TOKEN
     error AssetNotSupported();
 
-    constructor(address _baseToken) {
-        uint8 baseTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_baseToken));
-        require(baseTokenDecimals <= DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
+    constructor(address _quoteToken) {
+        uint8 quoteTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_quoteToken));
+        require(quoteTokenDecimals <= DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
 
-        SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - baseTokenDecimals);
+        SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - quoteTokenDecimals);
 
-        BASE_TOKEN = _baseToken;
+        QUOTE_TOKEN = _quoteToken;
     }
 
     // @inheritdoc ISiloOracle
@@ -38,7 +38,7 @@ contract OracleScaler is ISiloOracle {
 
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
-        if (_baseToken != BASE_TOKEN) {
+        if (_baseToken != QUOTE_TOKEN) {
             revert AssetNotSupported();
         }
 
@@ -47,6 +47,6 @@ contract OracleScaler is ISiloOracle {
 
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
-        return address(BASE_TOKEN);
+        return address(QUOTE_TOKEN);
     }
 }
