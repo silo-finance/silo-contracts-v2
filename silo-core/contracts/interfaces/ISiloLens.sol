@@ -34,6 +34,16 @@ interface ISiloLens {
     /// @return lt The LT value in 18 decimals points
     function getLt(ISilo _silo) external view returns (uint256 lt);
 
+    /// @notice Get liquidation threshold
+    /// @dev [v1 compatible] In V2 LT is constant, so you can use `getLt(silo)` directly.
+    /// @param _silo Silo address from which to read data
+    /// @param _borrower ignored
+    /// @return liquidationThreshold liquidation threshold for silo
+    function getUserLiquidationThreshold(ISilo _silo, address _borrower)
+        external
+        view
+        returns (uint256 liquidationThreshold);
+
     /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
     /// @dev [v1 compatible]
     /// @param _silo Address of the silo
@@ -91,7 +101,7 @@ interface ISiloLens {
         view
         returns (uint256);
 
-    /// @dev this method is to keep interface backwards compatible
+    /// @dev [v1 compatible] this method is to keep interface backwards compatible
     function collateralBalanceOfUnderlying(ISilo _silo, address _asset, address _borrower)
         external
         view
@@ -105,7 +115,7 @@ interface ISiloLens {
     /// @return balance of underlying token owed
     function debtBalanceOfUnderlying(ISilo _silo, address _borrower) external view returns (uint256);
 
-    /// @dev this method is to keep interface backwards compatible
+    /// @dev [v1 compatible] this method is to keep interface backwards compatible
     function debtBalanceOfUnderlying(ISilo _silo, address _asset, address _borrower) external view returns (uint256);
 
     /// @param _silo silo where borrower has debt
@@ -170,4 +180,21 @@ interface ISiloLens {
     /// @return amount of fees earned by protocol to date since last withdraw
     function protocolFees(ISilo _silo, address _asset) external view returns (uint256);
 
-    }
+    /// @notice Calculate value of collateral asset for user
+    /// @dev [v1 NOT compatible] It dynamically adds interest earned. Takes for account protected deposits as well.
+    /// In v1 result is always in 18 decimals, here it depends on oracle setup.
+    /// @param _silo Silo address from which to read data
+    /// @param _borrower account for which calculation are done
+    /// @param _asset token address for which calculation are done
+    /// @return value of collateral denominated in quote token, decimal depends on oracle setup.
+    function calculateCollateralValue(ISilo _silo, address _borrower, address _asset) external view returns (uint256);
+
+    /// @notice Calculate value of borrowed asset by user
+    /// @dev [v1 NOT compatible] It dynamically adds interest earned to borrowed amount
+    /// In v1 result is always in 18 decimals, here it depends on oracle setup.
+    /// @param _silo Silo address from which to read data
+    /// @param _borrower account for which calculation are done
+    /// @param _asset token address for which calculation are done
+    /// @return value of debt denominated in quote token, decimal depends on oracle setup.
+    function calculateBorrowValue(ISilo _silo, address _borrower, address _asset) external view returns (uint256);
+}
