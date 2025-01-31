@@ -48,6 +48,11 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
+    function getUserMaximumLTV(ISilo _silo, address) external view returns (uint256 maximumLTV) {
+        maximumLTV = SiloLensLib.getMaxLtv(_silo);
+    }
+
+    /// @inheritdoc ISiloLens
     function getLt(ISilo _silo) external view virtual returns (uint256 lt) {
         lt = SiloLensLib.getLt(_silo);
     }
@@ -161,6 +166,14 @@ contract SiloLens is ISiloLens {
         return SiloLensLib.totalBorrowShare(_silo);
     }
 
+    /// @inheritdoc ISiloLens
+    function getBorrowAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp)
+        external
+        view
+        returns (uint256)
+    {
+        return 1; // tODO
+    }
 
     /// @inheritdoc ISiloLens
     function borrowShare(ISilo _silo, address _asset, address _borrower) external view returns (uint256) {

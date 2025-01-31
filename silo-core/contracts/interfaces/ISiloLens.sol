@@ -4,6 +4,20 @@ pragma solidity >=0.5.0;
 import {ISilo} from "./ISilo.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
+/*
+    function hasPosition(ISilo _silo, address _user) external view returns (bool) {}
+    function getUtilization(ISilo _silo, address _asset) external view returns (uint256) {}
+    function depositAPY(ISilo _silo, address _asset) external view returns (uint256) {}
+    function calcFee(uint256 _amount) external view returns (uint256) {}
+    function lensPing() external pure returns (bytes4) {}
+    function borrowAPY(ISilo _silo, address _asset) public view returns (uint256) {}
+    function totalDepositsWithInterest(ISilo _silo, address _asset) public view returns (uint256 _totalDeposits) {}
+    function getDepositAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp) public view returns (uint256 totalUserDeposits){}
+    function totalBorrowAmountWithInterest(ISilo _silo, address _asset) public view returns (uint256 _totalBorrowAmount){}
+    function balanceOfUnderlying(uint256 _assetTotalDeposits, IShareToken _shareToken, address _user){}
+    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel) {}
+}
+*/
 interface ISiloLens {
     error InvalidAsset();
 
@@ -28,6 +42,14 @@ interface ISiloLens {
     /// @param _silo Address of the silo
     /// @return maxLtv The maximum LTV ratio configured for the silo in 18 decimals points
     function getMaxLtv(ISilo _silo) external view returns (uint256 maxLtv);
+
+    /// @notice Get combined maximum Loan-To-Value for a user
+    /// @dev [v1 compatible] In V1 LTV was per _borrower, that's why we have _borrower in arguments, but it is ignored.
+    /// You can simply use getMaxLtv(_silo).
+    /// @param _silo Silo address from which to read data
+    /// @param _borrower ignored
+    /// @return maximumLTV Maximum Loan-To-Value for silo
+    function getUserMaximumLTV(ISilo _silo, address _user) external view returns (uint256 maximumLTV);
 
     /// @notice Retrieves the LT value
     /// @param _silo Address of the silo
@@ -162,6 +184,17 @@ interface ISiloLens {
     /// @return totalSupply of debt token
     function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256);
 
+    /// @notice Calculates current borrow amount for user with interest
+    /// @dev [v1 compatible] Interest is calculated based on the provided timestamp with is expected to be current time.
+    /// @param _silo Silo address from which to read data
+    /// @param _asset token address for which calculation are done
+    /// @param _user account for which calculation are done
+    /// @param _timestamp timestamp used for interest calculations
+    /// @return total amount of asset user needs to repay at provided timestamp
+    function getBorrowAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp)
+        external
+        view
+        returns (uint256);
 
     /// @notice Get debt token balance of a user
     /// @dev [v1 compatible] Debt token represents a share in total debt of given asset.
@@ -197,4 +230,5 @@ interface ISiloLens {
     /// @param _asset token address for which calculation are done
     /// @return value of debt denominated in quote token, decimal depends on oracle setup.
     function calculateBorrowValue(ISilo _silo, address _borrower, address _asset) external view returns (uint256);
+
 }

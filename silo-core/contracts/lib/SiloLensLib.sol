@@ -103,4 +103,48 @@ library SiloLensLib {
         (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
         return IShareToken(debtShareToken).balanceOf(_borrower);
     }
+
+    function calculateValues(ISilo _silo, address _borrower)
+        internal
+        view
+        returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue)
+    {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _silo.config().getConfigsForSolvency(_borrower);
+
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+        );
+
+        (sumOfBorrowerCollateralValue, totalBorrowerDebtValue,) = SiloSolvencyLib.calculateLtv(ltvData, collateralConfig.token, debtConfig.token);
+    }
+
+    function calculateBorrowValue(
+        ISilo _silo,
+        address _borrower,
+        ISilo.OracleType _oracleType
+    ) internal view returns (uint256 ltvInDp) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _silo.config().getConfigsForSolvency(_borrower);
+
+        uint256 _debtShareBalance = 1;
+        if (_debtShareBalance == 0) return 0;
+
+        LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            _collateralConfig, _debtConfig, _borrower, _oracleType, ISilo.AccrueInterestInMemory.Yes, _debtShareBalance
+        );
+
+        if (ltvData.borrowerDebtAssets == 0) return 0;
+
+        (,, ltvInDp) = SiloSolvencyLib.calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
+    }
 }
