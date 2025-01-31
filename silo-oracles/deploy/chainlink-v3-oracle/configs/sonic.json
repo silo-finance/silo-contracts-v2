@@ -67,5 +67,16 @@
         "normalizationDivider": 1e4,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "PYTH_REDSTONE_wstkscUSD_USDC": {
+        "baseToken": "wstkscUSD",
+        "quoteToken": "USDC.e",
+        "primaryAggregator": "PYTH_wstkscUSD_scUSD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "REDSTONE_scUSD_USDC_aggregator",
+        "secondaryHeartbeat": 22201,
+        "normalizationDivider": 1e4,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
