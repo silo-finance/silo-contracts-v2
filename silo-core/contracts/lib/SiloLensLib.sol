@@ -69,7 +69,8 @@ library SiloLensLib {
 
     function hasPosition(ISilo _silo, address _borrower) internal view returns (bool has) {
         (, ISiloConfig.ConfigData memory debtConfig) = _silo.config().getConfigsForSolvency(_borrower);
-        has = IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) != 0;
+        has = debtConfig.debtShareToken != address(0)
+            && IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) != 0;
     }
 
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
