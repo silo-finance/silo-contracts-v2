@@ -7,7 +7,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 
 /**
 FOUNDRY_PROFILE=oracles \
-    forge script silo-oracles/deploy/oracle-scaler/OracleScalerFactoryDeploy.sol \
+    forge script silo-oracles/deploy/oracle-scaler/OracleScalerFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract OracleScalerFactoryDeploy is CommonDeploy {
