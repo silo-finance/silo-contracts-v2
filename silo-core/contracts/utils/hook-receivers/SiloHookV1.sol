@@ -9,16 +9,16 @@ import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liqui
 import {BaseHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/BaseHookReceiver.sol";
 
 contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation {
-    constructor() GaugeHookReceiver() {}
-
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data)
         public
+        initializer
         virtual
-        override(BaseHookReceiver, IHookReceiver)
     {
-        super.initialize(_config, _data);
-        GaugeHookReceiver._initialize(_data);
+        (address owner) = abi.decode(_data, (address));
+
+        BaseHookReceiver._setSiloConfig(_config);
+        GaugeHookReceiver._setOwner(owner);
     }
 
     /// @inheritdoc IHookReceiver

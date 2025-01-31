@@ -22,6 +22,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
     mapping(IShareToken => IGauge) public configuredGauges;
 
     constructor() Ownable(msg.sender) {
+        // lock implementation
         _transferOwnership(address(0));
     }
 
@@ -114,14 +115,15 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
         revert InvalidShareToken();
     }
 
-    function _initialize(bytes calldata _data)
+    /// @notice Set the owner of the hook receiver
+    /// @param _owner Owner address
+    function _setOwner(address _owner)
         internal
+        onlyInitializing
         virtual
     {
-        (address owner) = abi.decode(_data, (address));
+        require(_owner != address(0), OwnerIsZeroAddress());
 
-        require(owner != address(0), OwnerIsZeroAddress());
-
-        _transferOwnership(owner);
+        _transferOwnership(_owner);
     }
 }
