@@ -22,7 +22,7 @@ contract OracleScaler is ISiloOracle {
     error TokenDecimalsTooLarge();
 
     /// @dev revert if the baseToken to quote is not equal to BASE_TOKEN
-    error TokenUnsupported();
+    error AssetNotSupported();
 
     constructor(address _baseToken) {
         uint8 baseTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_baseToken));
@@ -39,7 +39,7 @@ contract OracleScaler is ISiloOracle {
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
         if (_baseToken != BASE_TOKEN) {
-            revert TokenUnsupported();
+            revert AssetNotSupported();
         }
 
         quoteAmount = _baseAmount * SCALE_FACTOR;
