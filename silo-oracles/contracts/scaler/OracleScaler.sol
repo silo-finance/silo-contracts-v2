@@ -34,7 +34,7 @@ contract OracleScaler is ISiloOracle {
     }
 
     // @inheritdoc ISiloOracle
-    function beforeQuote(address _baseToken) external virtual {}
+    function beforeQuote(address) external virtual {}
 
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
