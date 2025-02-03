@@ -61,50 +61,50 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
     using SafeERC20 for IERC20;
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function wrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
+    function wrap(IWrappedNativeToken _native, uint256 _amount) public payable virtual {
         _native.deposit{value: _amount}();
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
+    function unwrap(IWrappedNativeToken _native, uint256 _amount) public payable virtual {
         _native.withdraw(_amount);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function unwrapAll(IWrappedNativeToken _native) external payable virtual {
+    function unwrapAll(IWrappedNativeToken _native) public payable virtual {
         uint256 balance = _native.balanceOf(address(this));
         _native.withdraw(balance);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function sendValue(address payable _to, uint256 _amount) external payable virtual {
+    function sendValue(address payable _to, uint256 _amount) public payable virtual {
         Address.sendValue(_to, _amount);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function sendValueAll(address payable _to) external payable virtual {
+    function sendValueAll(address payable _to) public payable virtual {
         uint256 balance = address(this).balance;
         Address.sendValue(_to, balance);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function transfer(IERC20 _token, address _to, uint256 _amount) external payable virtual {
+    function transfer(IERC20 _token, address _to, uint256 _amount) public payable virtual {
         _token.safeTransfer(_to, _amount);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function transferAll(IERC20 _token, address _to) external payable virtual {
+    function transferAll(IERC20 _token, address _to) public payable virtual {
         uint256 balance = _token.balanceOf(address(this));
         _token.safeTransfer(_to, balance);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable virtual {
+    function transferFrom(IERC20 _token, address _to, uint256 _amount) public payable virtual {
         _token.safeTransferFrom(msg.sender, _to, _amount);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
-    function approve(IERC20 _token, address _spender, uint256 _amount) external payable virtual {
+    function approve(IERC20 _token, address _spender, uint256 _amount) public payable virtual {
         _token.forceApprove(_spender, _amount);
     }
 
@@ -113,7 +113,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         ISilo _silo,
         uint256 _amount,
         ISilo.CollateralType _collateral
-    ) external payable virtual returns (uint256 shares) {
+    ) public payable virtual returns (uint256 shares) {
         shares = _silo.deposit(_amount, msg.sender, _collateral);
     }
 
@@ -123,7 +123,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         uint256 _amount,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) external payable virtual returns (uint256 assets) {
+    ) public payable virtual returns (uint256 assets) {
         assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
     }
 
@@ -132,7 +132,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         ISilo _silo,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) external payable virtual returns (uint256 assets) {
+    ) public payable virtual returns (uint256 assets) {
         uint256 sharesAmount = _silo.maxRedeem(msg.sender, _collateral);
         assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
     }
@@ -142,7 +142,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         ISilo _silo,
         uint256 _assets,
         address _receiver
-    ) external payable virtual returns (uint256 shares) {
+    ) public payable virtual returns (uint256 shares) {
         shares = _silo.borrow(_assets, _receiver, msg.sender);
     }
 
@@ -151,7 +151,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         ISilo _silo,
         uint256 _assets,
         address _receiver
-    ) external payable virtual returns (uint256 shares) {
+    ) public payable virtual returns (uint256 shares) {
         shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
     }
 
@@ -160,7 +160,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         ISilo _silo,
         uint256 _assets,
         address _borrower
-    ) external payable virtual returns (uint256 shares) {
+    ) public payable virtual returns (uint256 shares) {
         shares = _silo.repay(_assets, _borrower);
     }
 
@@ -169,10 +169,10 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         uint256 repayAmount = _silo.maxRepay(_borrower);
         IERC20 asset = IERC20(_silo.asset());
 
-        asset.safeTransferFrom(msg.sender, address(this), repayAmount);
-        asset.forceApprove(address(_silo), repayAmount);
+        transferFrom(asset, address(this), repayAmount);
+        approve(asset, address(_silo), repayAmount);
 
-        shares = _silo.repay(repayAmount, _borrower);
+        shares = repay(_silo, repayAmount, _borrower);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
@@ -183,11 +183,10 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
     ) external payable virtual returns (uint256 shares) {
         uint256 repayAmount = _silo.maxRepay(_borrower);
 
-        IWrappedNativeToken(_native).deposit{value: repayAmount}();
+        wrap(_native, repayAmount);
+        approve(IERC20(address(_native)), address(_silo), repayAmount);
 
-        IERC20(address(_native)).forceApprove(address(_silo), repayAmount);
-
-        shares = _silo.repay(repayAmount, _borrower);
+        shares = repay(_silo, repayAmount, _borrower);
 
         uint256 balance = address(this).balance;
 
