@@ -619,6 +619,7 @@ contract SiloRouterActionsTest is IntegrationTest {
 
         bytes[] memory data = new bytes[](1);
 
+        // testing multicall with pause with a few actions calls
         data[0] = abi.encodeCall(SiloRouterImplementation.wrap, (IWrappedNativeToken(nativeToken), 1));
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
@@ -627,64 +628,16 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
 
-        data[0] = abi.encodeCall(SiloRouterImplementation.unwrapAll, (IWrappedNativeToken(nativeToken)));
+        // unresisting action
+        data[0] = abi.encodeCall(Ownable.owner, ());
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
 
-        data[0] = abi.encodeCall(SiloRouterImplementation.sendValue, (payable(borrower), 1));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.sendValueAll, (payable(borrower)));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.transferFrom, (IERC20(token0), address(router), 1));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.transfer, (IERC20(token0), address(router), 1));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.approve, (IERC20(token0), address(router), 1));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.deposit, (ISilo(silo0), 1, ISilo.CollateralType.Collateral));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.withdraw, (ISilo(silo0), 1, address(router), ISilo.CollateralType.Collateral));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.withdrawAll, (ISilo(silo0), address(router), ISilo.CollateralType.Collateral));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.borrow, (ISilo(silo0), 1, address(router)));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.borrowSameAsset, (ISilo(silo0), 1, address(router)));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.repay, (ISilo(silo0), 1, address(router)));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(SiloRouterImplementation.repayAll, (ISilo(silo0), address(router)));
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
-
-        data[0] = abi.encodeCall(
-            SiloRouterImplementation.repayAllNative,
-            (IWrappedNativeToken(nativeToken), ISilo(silo0), address(router))
-        );
+        vm.prank(wsWhale);
+        nativeToken.withdraw(_S_BALANCE);
 
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        router.multicall(data);
+        vm.prank(wsWhale);
+        payable(router).transfer(_S_BALANCE);
     }
 }
