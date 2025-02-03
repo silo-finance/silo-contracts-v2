@@ -62,7 +62,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
 
     /// @inheritdoc ISiloRouterImplementation
     function wrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
-        IWrappedNativeToken(_native).deposit{value: _amount}();
+        _native.deposit{value: _amount}();
     }
 
     /// @inheritdoc ISiloRouterImplementation

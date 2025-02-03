@@ -27,7 +27,7 @@ contract SiloRouter is PausableUpgradeable, Ownable2StepUpgradeable, ReentrancyG
     }
 
     /// @dev needed for unwrapping native tokens
-    receive() external payable {
+    receive() external whenNotPaused payable {
         // `execute` method calls `IWrappedNativeToken.withdraw()`
         // and we need to receive the withdrawn native token unconditionally
     }
