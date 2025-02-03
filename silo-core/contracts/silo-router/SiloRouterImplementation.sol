@@ -9,6 +9,8 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {ISiloRouterImplementation} from "../interfaces/ISiloRouterImplementation.sol";
 import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 
+// solhint-disable ordering
+
 /**
 Supporting the following scenarios:
 
@@ -23,8 +25,9 @@ Supporting the following scenarios:
     SiloRouter.deposit(ISilo _silo, uint256 _amount)
 
 ## borrow
-- borrow token using Silo.borrow or Silo.borrowSameAsset
+- borrow token Silo.borrow or Silo.borrowSameAsset
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
+- borrow same asset Silo.borrowSameAsset
     SiloRouter.borrowSameAsset(ISilo _silo, uint256 _assets, address _receiver)
 - borrow wrapped native token and unwrap in a single tx using SiloRouter.multicall
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
@@ -43,7 +46,7 @@ Supporting the following scenarios:
 - full withdraw wrapped native token and unwrap in a single tx using SiloRouter.multicall
     SiloRouter.withdrawAll(ISilo _silo, address _receiver, ISilo.CollateralType _collateral)
     SiloRouter.unwrapAll(IWrappedNativeToken _native)
-    SiloRouter.sendValue(address payable _to, uint256 _amount)
+    SiloRouter.sendValueAll(address payable _to)
 
 ## repay
 - repay token using SiloRouter.multicall
@@ -56,7 +59,12 @@ Supporting the following scenarios:
     SiloRouter.repay(ISilo _silo, uint256 _assets, address _borrower)
 - full repay token using SiloRouter.multicall
     SiloRouter.repayAll(ISilo _silo, address _borrower)
+    SiloRouter.sendValueAll(address payable _to)
  */
+
+/// @dev This contract should never use `msg.value` as `SiloRouter` contract executes multicall with a delegatecall.
+/// @dev This contract should not work with storage. If needed, update SiloRouter accordingly.
+/// @dev Caller should ensure that the router balance is empty after multicall.
 contract SiloRouterImplementation is ISiloRouterImplementation {
     using SafeERC20 for IERC20;
 
@@ -71,7 +79,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
     }
 
     /// @inheritdoc ISiloRouterImplementation
-    function unwrapAll(IWrappedNativeToken _native) public payable virtual {
+    function unwrapAll(IWrappedNativeToken _native) external payable virtual {
         uint256 balance = _native.balanceOf(address(this));
         unwrap(_native, balance);
     }
@@ -82,10 +90,10 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
     }
 
     /// @inheritdoc ISiloRouterImplementation
-    function sendValueAll(address payable _to) public payable virtual {
+    function sendValueAll(address payable _to) external payable virtual {
         uint256 balance = address(this).balance;
 
-        if (balance != 0) {
+        if (balance != 0) { // expect this fn to be used as a sanity check at the end of the multicall
             sendValue(_to, balance);
         }
     }
@@ -96,9 +104,12 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
     }
 
     /// @inheritdoc ISiloRouterImplementation
-    function transferAll(IERC20 _token, address _to) public payable virtual {
+    function transferAll(IERC20 _token, address _to) external payable virtual {
         uint256 balance = _token.balanceOf(address(this));
-        transfer(_token, _to, balance);
+
+        if (balance != 0) { // expect this fn to be used as a sanity check at the end of the multicall
+            transfer(_token, _to, balance);
+        }
     }
 
     /// @inheritdoc ISiloRouterImplementation
@@ -116,7 +127,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         ISilo _silo,
         uint256 _amount,
         ISilo.CollateralType _collateral
-    ) public payable virtual returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.deposit(_amount, msg.sender, _collateral);
     }
 
@@ -126,7 +137,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         uint256 _amount,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) public payable virtual returns (uint256 assets) {
+    ) external payable virtual returns (uint256 assets) {
         assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
     }
 
@@ -135,7 +146,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         ISilo _silo,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) public payable virtual returns (uint256 assets) {
+    ) external payable virtual returns (uint256 assets) {
         uint256 sharesAmount = _silo.maxRedeem(msg.sender, _collateral);
         assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
     }
@@ -145,7 +156,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         ISilo _silo,
         uint256 _assets,
         address _receiver
-    ) public payable virtual returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.borrow(_assets, _receiver, msg.sender);
     }
 
@@ -154,7 +165,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         ISilo _silo,
         uint256 _assets,
         address _receiver
-    ) public payable virtual returns (uint256 shares) {
+    ) external payable virtual returns (uint256 shares) {
         shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
     }
 
@@ -164,7 +175,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         uint256 _assets,
         address _borrower
     ) public payable virtual returns (uint256 shares) {
-        shares = _silo.repay(_assets, _borrower);
+        shares = _silo.repay(_assets, _borrower); // TODO: remove _borrower and use msg.sender, the same for repayAll and repayAllNative
     }
 
     /// @inheritdoc ISiloRouterImplementation
@@ -190,8 +201,5 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         approve(IERC20(address(_native)), address(_silo), repayAmount);
 
         shares = repay(_silo, repayAmount, _borrower);
-
-        // send back any native token leftover
-        sendValueAll(payable(msg.sender));
     }
 }

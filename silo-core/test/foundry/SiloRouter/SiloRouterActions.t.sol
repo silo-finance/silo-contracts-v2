@@ -602,8 +602,9 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.prank(wsWhale);
         payable(borrower).transfer(repayAmount);
 
-        bytes[] memory data = new bytes[](1);
+        bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeCall(SiloRouterImplementation.repayAllNative, (IWrappedNativeToken(nativeToken), ISilo(silo0), borrower));
+        data[1] = abi.encodeCall(SiloRouterImplementation.sendValueAll, (payable(borrower)));
 
         vm.prank(borrower);
         router.multicall{value: repayAmount}(data);
