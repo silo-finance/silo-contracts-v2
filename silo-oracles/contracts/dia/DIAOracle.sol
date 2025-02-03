@@ -77,7 +77,8 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
             assetPrice,
             secondaryPrice,
             data.normalizationDivider,
-            data.normalizationMultiplier
+            data.normalizationMultiplier,
+            data.invertSecondPrice
         );
     }
 

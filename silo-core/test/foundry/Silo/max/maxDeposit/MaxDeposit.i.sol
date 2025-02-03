@@ -14,7 +14,7 @@ contract MaxDepositTest is SiloLittleHelper, Test {
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
 
     function setUp() public {
-        _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*

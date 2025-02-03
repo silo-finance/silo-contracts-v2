@@ -35,7 +35,7 @@ contract SiloIntegrationTest is VeSiloFeatures {
         deal(address(_siloToken), _bob, siloTokens);
 
         _getVotingPower(_bob, siloTokens);
-        ISiloConfig siloConfig = ISiloConfig(SiloDeployments.get(getChainAlias(), SiloConfigsNames.FULL_CONFIG_TEST));
+        ISiloConfig siloConfig = ISiloConfig(SiloDeployments.get(getChainAlias(), SiloConfigsNames.SILO_FULL_CONFIG_TEST));
         _activeteBlancerTokenAdmin();
         (address hookReceiver, address shareToken) = _getHookReceiverForCollateralToken(siloConfig);
         address gauge = _createGauge(shareToken);

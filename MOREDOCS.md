@@ -134,6 +134,11 @@ rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.log
 cat coverage/silo-oracles-report.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
 genhtml -o coverage/silo-oracles/ lcov.info
+
+rm lcov.info
+FOUNDRY_PROFILE=vaults-with-tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000
+cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt
+genhtml --ignore-errors inconsistent -ignore-errors range -o  coverage/silo-vaults/ lcov.info
 ```
 
 ## Rounding policy
@@ -179,3 +184,12 @@ forge script silo-core/deploy/MainnetDeploy.s.sol \
 
 In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeployWithGaugeHookReceiver` and set
 `daoFeeReceiver` and `timelock` addresses manually to eg. deployer address.
+
+### New market deploy
+
+- run `silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol` script
+
+### New Silo deployer with Silo, ProtectedShareToken, and DebtShareToken implementations
+
+- run `silo-core/deploy/SiloDeployerDeploy.s.sol` script
+- then deploy new market

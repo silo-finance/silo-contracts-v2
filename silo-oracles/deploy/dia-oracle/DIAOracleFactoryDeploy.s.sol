@@ -10,7 +10,7 @@ import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol"
 /**
 ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
-    --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+    --ffi $RPC_SONIC --broadcast --verify
  */
 contract DIAOracleFactoryDeploy is CommonDeploy {
     function run() public returns (DIAOracleFactory factory) {
