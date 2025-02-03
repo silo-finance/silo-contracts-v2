@@ -4,10 +4,7 @@ pragma solidity 0.8.28;
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {PausableUpgradeable} from "openzeppelin5-upgradeable/utils/PausableUpgradeable.sol";
 import {Ownable2StepUpgradeable} from "openzeppelin5-upgradeable//access/Ownable2StepUpgradeable.sol";
-
-import {
-    ReentrancyGuardTransientUpgradeable
-} from "openzeppelin5-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "openzeppelin5-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 import {ISiloRouter} from "../interfaces/ISiloRouter.sol";
 
@@ -16,7 +13,7 @@ import {ISiloRouter} from "../interfaces/ISiloRouter.sol";
 /// of actions (Deposit, Withdraw, Borrow, Repay) and execute them in a single transaction.
 /// @dev SiloRouter requires only first action asset to be approved
 /// @custom:security-contact security@silo.finance
-contract SiloRouter is PausableUpgradeable, Ownable2StepUpgradeable, ReentrancyGuardTransientUpgradeable, ISiloRouter {
+contract SiloRouter is PausableUpgradeable, Ownable2StepUpgradeable, ReentrancyGuardUpgradeable, ISiloRouter {
     /// @notice The address of the implementation contract
     address public immutable IMPLEMENTATION;
 
@@ -24,7 +21,7 @@ contract SiloRouter is PausableUpgradeable, Ownable2StepUpgradeable, ReentrancyG
     /// @param _initialOwner The address of the initial owner
     /// @param _implementation The address of the implementation contract
     constructor (address _initialOwner, address _implementation) {
-        __Ownable_init(_initialOwner);
+        _transferOwnership(_initialOwner);
 
         IMPLEMENTATION = _implementation;
     }
