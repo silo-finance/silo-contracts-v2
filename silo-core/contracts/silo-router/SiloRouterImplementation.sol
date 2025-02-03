@@ -84,7 +84,10 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
     /// @inheritdoc ISiloRouterImplementationV1
     function sendValueAll(address payable _to) public payable virtual {
         uint256 balance = address(this).balance;
-        Address.sendValue(_to, balance);
+
+        if (balance != 0) {
+            Address.sendValue(_to, balance);
+        }
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
@@ -188,11 +191,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
 
         shares = repay(_silo, repayAmount, _borrower);
 
-        uint256 balance = address(this).balance;
-
         // send back any native token leftover
-        if (balance != 0) {
-            Address.sendValue(payable(msg.sender), balance);
-        }
+        sendValueAll(payable(msg.sender));
     }
 }
