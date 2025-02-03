@@ -6,6 +6,7 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+import {ReentrancyGuardUpgradeable} from "openzeppelin5-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 import {SiloRouterDeploy} from "silo-core/deploy/SiloRouterDeploy.s.sol";
 import {SiloRouter} from "silo-core/contracts/silo-router/SiloRouter.sol";
@@ -628,7 +629,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
 
-        // unresisting action
+        // un existing action
         data[0] = abi.encodeCall(Ownable.owner, ());
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         router.multicall(data);
@@ -639,5 +640,23 @@ contract SiloRouterActionsTest is IntegrationTest {
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vm.prank(wsWhale);
         payable(router).transfer(_S_BALANCE);
+    }
+
+    /// @dev only to test reentrancy
+    function transfer(address, uint256) external {
+        bytes[] memory data = new bytes[](1);
+        // un existing action
+        data[0] = abi.encodeCall(Ownable.owner, ());
+        router.multicall(data);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouter_multicall_reentrancy
+    function test_siloRouter_multicall_reentrancy() public {
+        bytes[] memory data = new bytes[](1);
+
+        // testing multicall with pause with a few actions calls
+        data[0] = abi.encodeCall(SiloRouterImplementation.transfer, (IERC20(address(this)), address(0), 0));
+        vm.expectRevert(abi.encodeWithSelector(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector));
+        router.multicall(data);
     }
 }
