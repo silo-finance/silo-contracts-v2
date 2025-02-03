@@ -16,7 +16,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     using SiloLensLib for ISilo;
 
     function setUp() public {
-        _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*

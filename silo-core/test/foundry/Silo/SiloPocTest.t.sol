@@ -34,7 +34,7 @@ contract SiloPocTest is Test {
         // If any specific config is needed, it can be overridden here.
         // The config file should be created in the silo-core/deploy/input/anvil folder.
         // For more config examples, see the silo-core/deploy/input folder.
-        configOverride.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
+        configOverride.configName = SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER;
 
         // Deploy the silo with the overrides
         (_siloConfig,,,,,) = siloFixture.deploy_local(configOverride);

@@ -11,7 +11,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILiquidationHelper} from "silo-core/contracts/interfaces/ILiquidationHelper.sol";
 
-import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
     address payable public constant TOKENS_RECEIVER = payable(address(123));

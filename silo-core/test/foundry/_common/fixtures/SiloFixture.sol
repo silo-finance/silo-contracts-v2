@@ -93,7 +93,7 @@ contract SiloFixture is StdCheats, CommonBase {
             address hookReceiver
         )
     {
-        return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
+        return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
     }
 
     function deploy_local(string memory _configName)
@@ -124,7 +124,7 @@ contract SiloFixture is StdCheats, CommonBase {
     {
         return _deploy(
             new SiloDeploy_Local(_override),
-            bytes(_override.configName).length == 0 ? SiloConfigsNames.LOCAL_NO_ORACLE_SILO : _override.configName
+            bytes(_override.configName).length == 0 ? SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO : _override.configName
         );
     }
 

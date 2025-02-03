@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
-import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationWrongSiloTest
