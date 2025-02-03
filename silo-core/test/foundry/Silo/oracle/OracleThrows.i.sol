@@ -44,7 +44,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         overrides.token1 = address(token1);
         overrides.solvencyOracle0 = address(solvencyOracle0);
         overrides.maxLtvOracle0 = address(maxLtvOracle0);
-        overrides.configName = SiloConfigsNames.SILO_LOCAL_BEFORE_CALL;
+        overrides.configName = SiloConfigsNames.LOCAL_BEFORE_CALL;
 
         SiloFixture siloFixture = new SiloFixture();
 

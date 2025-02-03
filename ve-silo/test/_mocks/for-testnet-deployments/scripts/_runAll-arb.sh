@@ -15,7 +15,7 @@ FOUNDRY_PROFILE=oracles \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
 
 # Deploy silo
-FOUNDRY_PROFILE=core CONFIG=Silo_ETH-USDC_UniswapV3 \
+FOUNDRY_PROFILE=core CONFIG=ETH-USDC_UniswapV3_Silo \
     forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
     --ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<_key_>
 

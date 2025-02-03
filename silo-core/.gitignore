@@ -8,7 +8,3 @@ out/
 
 # Dotenv file
 .env
-
-# invariants
-_corpus/
-crytic-export/

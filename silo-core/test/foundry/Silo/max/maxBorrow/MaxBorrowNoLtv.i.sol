@@ -10,6 +10,6 @@ import {MaxBorrowTest} from "./MaxBorrow.i.sol";
 */
 contract MaxBorrowNoLtvTest is MaxBorrowTest {
     function setUp() public override {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NO_ORACLE_NO_LTV_SILO);
+        siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 }

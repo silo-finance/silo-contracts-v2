@@ -28,7 +28,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     }
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture("Silo_Echidna_MOCK");
+        siloConfig = _setUpLocalFixture("Echidna_MOCK");
 
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
 

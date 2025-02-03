@@ -56,8 +56,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
             price,
             secondPrice,
             config.normalizationDivider,
-            config.normalizationMultiplier,
-            config.invertSecondPrice
+            config.normalizationMultiplier
         );
 
         if (quoteAmount == 0) revert ZeroQuote();

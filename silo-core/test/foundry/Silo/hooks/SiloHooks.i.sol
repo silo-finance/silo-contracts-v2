@@ -51,7 +51,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         configOverride.token0 = makeAddr("token0");
         configOverride.token1 = makeAddr("token1");
         configOverride.hookReceiver = _hookReceiverAddr;
-        configOverride.configName = SiloConfigsNames.SILO_LOCAL_DEPLOYER;
+        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         (_siloConfig, silo0, silo1,,,) = _siloFixture.deploy_local(configOverride);
     }
@@ -182,6 +182,6 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMisconfiguration
     function testHooksMisconfiguration() public {
         vm.expectRevert(ISiloDeployer.HookReceiverMisconfigured.selector);
-        _siloFixture.deploy_local(SiloConfigsNames.SILO_LOCAL_HOOKS_MISCONFIGURATION);
+        _siloFixture.deploy_local(SiloConfigsNames.LOCAL_HOOKS_MISCONFIGURATION);
     }
 }

@@ -9,9 +9,6 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 /// @custom:contact security@silo.finance
 /// @notice Library exposing error messages.
 library ErrorsLib {
-    /// @notice Thrown when deposit generates zero shares
-    error InputZeroShares();
-
     /// @notice Thrown on OutOfGas or revert() without any data
     error PossibleOutOfGas();
 

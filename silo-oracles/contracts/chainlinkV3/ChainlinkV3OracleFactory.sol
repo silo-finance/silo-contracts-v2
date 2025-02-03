@@ -29,7 +29,7 @@ contract ChainlinkV3OracleFactory is OracleFactory {
             return ChainlinkV3Oracle(getOracleAddress[address(oracleConfig)]);
         }
 
-        verifyConfig(_config);
+        uint256 secondaryPriceDecimals = verifyConfig(_config);
         verifyHeartbeat(_config);
 
         oracleConfig = new ChainlinkV3OracleConfig(_config);

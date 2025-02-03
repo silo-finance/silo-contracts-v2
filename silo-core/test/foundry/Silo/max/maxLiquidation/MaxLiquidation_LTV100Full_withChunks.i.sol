@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationLTV100FullTest} from "./MaxLiquidation_LTV100Full.i.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxLiquidationLTV100FullWithChunksTest
+    forge test -vv --ffi --mc MaxLiquidationLTV100FullWithChunksTest
 
     this tests are MaxLiquidationLTV100FullWith cases, difference is, we splitting max liquidation in chunks
 */
@@ -33,9 +33,6 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
             (uint256 collateralToLiquidate, uint256 maxDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
             emit log_named_uint("[LTV100FullWithChunks] collateralToLiquidate", collateralToLiquidate);
             if (maxDebtToCover == 0) continue;
-
-            (,,, bool fullLiquidation) = siloLens.maxLiquidation(silo1, partialLiquidation, borrower);
-            assertTrue(fullLiquidation, "[LTV100FullWithChunks] fullLiquidation flag is UP when LTV is 100%");
 
             if (collateralToLiquidate == 0) {
                 assertGe(silo0.getLtv(borrower), 1e18, "if we don't have collateral we expect bad debt");

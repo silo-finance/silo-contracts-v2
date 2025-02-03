@@ -64,6 +64,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
 
         emit log_named_decimal_uint("RDPX/USD", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
+        assertEq(gasStart - gasEnd, 10544, "[DIAOracleFactory_quote_RDPXinTUSD] optimise gas");
         assertEq(price, 16_676184950000000000, ", RDPX/USD price is ~$16");
     }
 
@@ -74,7 +75,6 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig();
         cfg.quoteToken = IERC20Metadata(address(tokens["WETH"]));
         cfg.secondaryKey = "ETH/USD";
-        cfg.invertSecondPrice = true;
 
         uint256 gasStart = gasleft();
         DIAOracle oracle = ORACLE_FACTORY.create(cfg);
@@ -94,6 +94,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
 
         emit log_named_decimal_uint("RDPX/ETH", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
+        assertEq(gasStart - gasEnd, 15417, "[DIAOracleFactory_quote_RDPXinETH] optimise gas");
         assertEq(price, 10104984720670688, "RDPX/ETH price 0.01ETH");
     }
 }

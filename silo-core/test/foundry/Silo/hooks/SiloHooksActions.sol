@@ -1039,7 +1039,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         configOverride.token0 = address(new MintableToken(18));
         configOverride.token1 = address(new MintableToken(18));
         configOverride.hookReceiverImplementation = _hookReceiver;
-        configOverride.configName = SiloConfigsNames.SILO_LOCAL_DEPLOYER;
+        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         address hook;
         (_siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);

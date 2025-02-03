@@ -73,34 +73,36 @@ library OracleNormalization {
     /// (can not be higher than uint128!)
     /// @param _normalizationDivider constant that allows to translate output price to expected decimals
     /// @param _normalizationMultiplier constant that allows to translate output price to expected decimals
-    /// @param _invertSecondPrice if TRUE we have to 1/secondPrice
     /// @return assetPrice uint256 18 decimals price
     function normalizePrices(
         uint256 _baseAmount,
         uint256 _assetPrice,
         uint256 _secondPrice,
         uint256 _normalizationDivider,
-        uint256 _normalizationMultiplier,
-        bool _invertSecondPrice
+        uint256 _normalizationMultiplier
     )
         internal
         pure
         returns (uint256 assetPrice)
     {
-        // `_baseAmount * _assetPrice` is safe because we multiply uint128 * uint128
-        // - _baseAmount is checked in `_quote`, that checks covers `*1e8`, so we sure it is up to uint128
-        // - _assetPrice is uint128
-        // however if you call normalizePrice directly (because it is open method) you can create overflow
-        unchecked { assetPrice = _baseAmount * _assetPrice; }
-
         if (_normalizationMultiplier == 0) {
-            assetPrice = _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
+            // `_baseAmount * _assetPrice` is safe because we multiply uint128 * uint128
+            // - _baseAmount is checked in `_quote`, that checks covers `*1e8`, so we sure it is up to uint128
+            // - _assetPrice is uint128
+            // however if you call normalizePrice directly (because it is open method) you can create overflow
             // div is safe
-            unchecked {    assetPrice = assetPrice / _normalizationDivider; }
-            return assetPrice;
+            unchecked {
+                return _baseAmount * _assetPrice / _normalizationDivider / _secondPrice;
+            }
         }
 
-        assetPrice = assetPrice * _normalizationMultiplier;
-        return _invertSecondPrice ? assetPrice / _secondPrice : assetPrice * _secondPrice;
+        uint256 mul;
+        // this is save, check explanation above
+        unchecked { mul = _baseAmount * _assetPrice; }
+
+        mul = mul * _normalizationMultiplier;
+
+        // div is safe
+        unchecked { return mul / _secondPrice; }
     }
 }

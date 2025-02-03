@@ -21,7 +21,7 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 forge test -vv --ffi --mc SiloFactoryCreateSiloTest
 */
 contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
-    string public constant SILO_TO_DEPLOY = SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO;
+    string public constant SILO_TO_DEPLOY = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
 
     ISiloConfig siloConfig;
     SiloConfigData siloData;

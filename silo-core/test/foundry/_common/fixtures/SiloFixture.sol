@@ -80,8 +80,6 @@ contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
 contract SiloFixture is StdCheats, CommonBase {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
 
-    bool internal _mainNetDeployed;
-
     function deploy_ETH_USDC()
         external
         returns (
@@ -93,7 +91,7 @@ contract SiloFixture is StdCheats, CommonBase {
             address hookReceiver
         )
     {
-        return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
+        return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.ETH_USDC_UNI_V3_SILO);
     }
 
     function deploy_local(string memory _configName)
@@ -124,7 +122,7 @@ contract SiloFixture is StdCheats, CommonBase {
     {
         return _deploy(
             new SiloDeploy_Local(_override),
-            bytes(_override.configName).length == 0 ? SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO : _override.configName
+            bytes(_override.configName).length == 0 ? SiloConfigsNames.LOCAL_NO_ORACLE_SILO : _override.configName
         );
     }
 
@@ -139,14 +137,10 @@ contract SiloFixture is StdCheats, CommonBase {
             address hookReceiver
         )
     {
-        if (!_mainNetDeployed) {
-            MainnetDeploy mainnetDeploy = new MainnetDeploy();
-            mainnetDeploy.disableDeploymentsSync();
-            mainnetDeploy.run();
-            console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
-
-            _mainNetDeployed = true;
-        }
+        MainnetDeploy mainnetDeploy = new MainnetDeploy();
+        mainnetDeploy.disableDeploymentsSync();
+        mainnetDeploy.run();
+        console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
 
         siloConfig = _siloDeploy.useConfig(_configName).run();
         console2.log("[SiloFixture] _deploy: _siloDeploy(", _configName, ").run() done.");

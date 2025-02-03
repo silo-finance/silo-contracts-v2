@@ -251,7 +251,6 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     */
     function test_1secondDistribution_fuzz(uint128 _depositAmount, uint128 _rewardsPerSec) public {
         vm.assume(_rewardsPerSec > 1e3);
-        vm.assume(_depositAmount > 0);
 
         _setupIncentives();
 

@@ -49,7 +49,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
 
-        _siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);
+        _siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER);
 
         IHookReceiver hook = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 

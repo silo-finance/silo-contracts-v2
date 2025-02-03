@@ -15,7 +15,7 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 */
 contract BorrowNotPossibleTest is SiloLittleHelper, Test {
     function setUp() public {
-        _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NOT_BORROWABLE);
+        _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
 
         ISiloConfig.ConfigData memory cfg0 = silo0.config().getConfig(address(silo0));
         ISiloConfig.ConfigData memory cfg1 = silo0.config().getConfig(address(silo1));

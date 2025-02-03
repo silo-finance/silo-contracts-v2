@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IERC3156FlashBorrower} from "../../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
@@ -14,12 +13,10 @@ import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {IWrappedNativeToken} from "../../interfaces/IWrappedNativeToken.sol";
 
 import {DexSwap} from "./DexSwap.sol";
-import {TokenRescuer} from "../TokenRescuer.sol";
 
 /// @notice LiquidationHelper IS NOT PART OF THE PROTOCOL.
-contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap, TokenRescuer {
+contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap {
     using Address for address payable;
-    using SafeERC20 for IERC20;
 
     // solhint-disable-next-line var-name-mixedcase
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -51,11 +48,6 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
     receive() external payable {}
 
-    /// @dev open method to rescue tokens, tokens will be transferred to `TOKENS_RECEIVER`
-    function rescueTokens(IERC20 _token) external virtual {
-        _rescueTokens(TOKENS_RECEIVER, _token);
-    }
-
     /// @inheritdoc ILiquidationHelper
     /// @dev entry point for liquidation
     /// @notice for now we does not support liquidation with sTokens.
@@ -71,7 +63,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         require(_maxDebtToCover != 0, NoDebtToCover());
 
         _flashLoanFrom.flashLoan(this, _debtAsset, _maxDebtToCover, abi.encode(_liquidation, _swapsInputs0x));
-        IERC20(_debtAsset).forceApprove(address(_flashLoanFrom), 0);
+        IERC20(_debtAsset).approve(address(_flashLoanFrom), 0);
 
         withdrawCollateral = _withdrawCollateral;
         repayDebtAssets = _repayDebtAssets;
@@ -94,7 +86,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             DexSwapInput[] memory _swapInputs
         ) = abi.decode(_data, (LiquidationData, DexSwapInput[]));
 
-        IERC20(_debtAsset).forceApprove(address(_liquidation.hook), _maxDebtToCover);
+        IERC20(_debtAsset).approve(address(_liquidation.hook), _maxDebtToCover);
 
         (
             _withdrawCollateral, _repayDebtAssets
@@ -106,7 +98,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _receiveSToken: false
         });
 
-        IERC20(_debtAsset).forceApprove(address(_liquidation.hook), 0);
+        IERC20(_debtAsset).approve(address(_liquidation.hook), 0);
         uint256 flashLoanWithFee = _maxDebtToCover + _fee;
 
         if (_liquidation.collateralAsset == _debtAsset) {
@@ -133,7 +125,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             }
         }
 
-        IERC20(_debtAsset).forceApprove(msg.sender, flashLoanWithFee);
+        IERC20(_debtAsset).approve(msg.sender, flashLoanWithFee);
         return _FLASHLOAN_CALLBACK;
     }
 
@@ -149,7 +141,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         if (_asset == NATIVE_TOKEN) {
             _transferNative(_amount);
         } else {
-            IERC20(_asset).safeTransfer(TOKENS_RECEIVER, _amount);
+            IERC20(_asset).transfer(TOKENS_RECEIVER, _amount);
         }
     }
 

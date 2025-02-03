@@ -132,7 +132,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
 
-        ISiloConfig siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);
+        ISiloConfig siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER);
         (address silo0,) = siloConfig.getSilos();
 
         IGaugeHookReceiver gaugeHookReceiver = IGaugeHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);

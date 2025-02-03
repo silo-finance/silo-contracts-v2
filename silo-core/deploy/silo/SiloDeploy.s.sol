@@ -34,9 +34,9 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
+FOUNDRY_PROFILE=core CONFIG=USDC_UniswapV3_Silo \
     forge script silo-core/deploy/silo/SiloDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
 contract SiloDeploy is CommonDeploy {
     uint256 private constant _BYTES32_SIZE = 32;
@@ -50,7 +50,7 @@ contract SiloDeploy is CommonDeploy {
         return this;
     }
 
-    function run() public virtual returns (ISiloConfig siloConfig) {
+    function run() public returns (ISiloConfig siloConfig) {
         console2.log("[SiloCommonDeploy] run()");
 
         SiloConfigData siloData = new SiloConfigData();
@@ -361,7 +361,6 @@ contract SiloDeploy is CommonDeploy {
         );
 
         console2.log("\n");
-        console2.log("\tdecimals      ", IERC20Metadata(_silo).decimals());
 
         string memory icon;
         uint256 configValueUint256 = _siloInitData.daoFee;

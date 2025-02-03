@@ -36,7 +36,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         configOverride.token0 = address(token0);
         configOverride.token1 = address(token1);
         configOverride.hookReceiver = address(this);
-        configOverride.configName = SiloConfigsNames.SILO_LOCAL_DEPLOYER;
+        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
 
         (siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
         partialLiquidation = this;

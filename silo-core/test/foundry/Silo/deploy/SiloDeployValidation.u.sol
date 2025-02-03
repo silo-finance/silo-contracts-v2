@@ -20,7 +20,7 @@ contract SiloDeployValidation is IntegrationTest {
 
     function setUp() public {
         _siloDeploy = new SiloDeployWithGaugeHookReceiver();
-        _siloDeploy.useConfig(SiloConfigsNames.SILO_LOCAL_INVALID_CONTRACTS);
+        _siloDeploy.useConfig(SiloConfigsNames.LOCAL_INVALID_CONTRACTS);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_invalidHookReceiver

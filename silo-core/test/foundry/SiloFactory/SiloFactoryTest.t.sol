@@ -22,7 +22,7 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 forge test -vv --ffi --mc SiloFactoryTest
 */
 contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
-    string public constant SILO_TO_DEPLOY = SiloConfigsNames.SILO_ETH_USDC_UNI_V3;
+    string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
 
     ISiloConfig siloConfig;
     SiloConfigData siloData;

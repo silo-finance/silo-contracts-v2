@@ -14,7 +14,6 @@ library SiloCoreContracts {
     string public constant SILO = "Silo.sol";
     string public constant PARTIAL_LIQUIDATION = "PartialLiquidation.sol";
     string public constant LIQUIDATION_HELPER = "LiquidationHelper.sol";
-    string public constant MANUAL_LIQUIDATION_HELPER = "ManualLiquidationHelper.sol";
     string public constant TOWER = "Tower.sol";
     string public constant SHARE_PROTECTED_COLLATERAL_TOKEN = "ShareProtectedCollateralToken.sol";
     string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
