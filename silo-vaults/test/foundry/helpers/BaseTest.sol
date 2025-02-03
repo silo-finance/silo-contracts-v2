@@ -91,7 +91,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
         _override.token0 = address(collateralToken);
         _override.token1 = address(loanToken);
-        _override.configName = SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER;
+        _override.configName = SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER;
 
         for (uint256 i; i < NB_MARKETS; i++) {
             (, ISilo silo0_, ISilo silo1_,,, address hook) = siloFixture.deploy_local(_override);
@@ -117,7 +117,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
         _override.token0 = _collateralToken;
         _override.token1 = _loanToken;
-        _override.configName = SiloConfigsNames.LOCAL_NO_ORACLE_SILO;
+        _override.configName = SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO;
 
         (,, ISilo silo1_,,,) = siloFixture.deploy_local(_override);
         return silo1_;

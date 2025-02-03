@@ -18,12 +18,25 @@ broadcast = 'silo-core/broadcast'
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
-    { access = "read", path = "./silo-core/deploy/input/"}
+    { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
 [profile.core-with-test]
 src = 'silo-core/contracts'
 test = 'silo-core/test/foundry'
+out = 'cache/foundry/out/silo-core'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.core-with-invariants]
+src = 'silo-core/contracts'
+test = 'silo-core/test/invariants'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
@@ -41,7 +54,8 @@ broadcast = 'silo-core/broadcast'
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
-    { access = "read", path = "./silo-core/deploy/input/"}
+    { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
 [profile.default.fmt]
@@ -74,6 +88,18 @@ fs_permissions = [
 src = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-vaults/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.vaults-with-tests]
+src = 'silo-vaults/contracts'
+test = 'silo-vaults/test/foundry'
+out = 'cache/foundry/out/silo-vaults'
+broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},

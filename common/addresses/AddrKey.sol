@@ -19,4 +19,8 @@ library AddrKey {
     string constant public wS = "wS";
     string constant public stS = "stS";
     string constant public ODOS_ROUTER = "ODOS_ROUTER";
+    string constant public DAO = "DAO";
+    string constant public GROWTH_MULTISIG = "GROWTH_MULTISIG";
+    string constant public DEV_WALLET = "DEV_WALLET";
+    string constant public scUSD = "scUSD";
 }

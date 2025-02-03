@@ -6,6 +6,35 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.2.0] - 2025-02-03
+### Added
+- silo-coracle: silo virtual asset name and symbol
+- silo-core: add flag that informs about full liquidation
+- silo lens redeployment
+- silo-oracles: ERC4626 price oracle
+- silo-oracles: Pyth aggregator factory
+- silo-oracles: OracleScaler to normalize amounts for 18 decimal
+- silo-core: manual liquidation helper
+- wS/USDC.e borrowable S market sonic
+- woS/S market sonic
+- wstkscUSD/USDC.e market sonic
+
+## [1.1.0] - 2025-01-27
+### Added
+- solvBTC.BNN/solvBTC market sonic
+- wS/scUSD market sonic
+- Redeployment SiloDeployer
+- silo-core: use underlying token decimals in collateral share token
+- silo-oracles: invert flag
+
+## [1.0.0] - 2025-01-20
+### Added
+- add rescue function to incentive controller
+
+### Updated
+- allow to restart incentive program after some time and ensure rewards are not calculated for a "gap"
+- ensure claim rewards reset state after claiming
+
 ## [0.20.0] - 2025-01-10
 ### Updated
 - Redeployment market for Sonic: `stS/S`

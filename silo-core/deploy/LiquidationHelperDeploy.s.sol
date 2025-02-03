@@ -31,7 +31,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
     address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d);
     address payable constant GNOSIS_SAFE_SONIC = payable(0x7461d8c0fDF376c847b651D882DEa4C73fad2e4B);
 
-    function run() public returns (ILiquidationHelper liquidationHelper) {
+    function run() public virtual returns (address liquidationHelper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         address nativeToken = _nativeToken();
@@ -44,14 +44,14 @@ contract LiquidationHelperDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        liquidationHelper = new LiquidationHelper(nativeToken, exchangeProxy, tokenReceiver);
+        liquidationHelper = address(new LiquidationHelper(nativeToken, exchangeProxy, tokenReceiver));
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(liquidationHelper), SiloCoreContracts.LIQUIDATION_HELPER);
+        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER);
     }
 
-    function _nativeToken() private returns (address) {
+    function _nativeToken() internal returns (address) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(1);
@@ -63,7 +63,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         revert(string.concat("can not find native token for ", ChainsLib.chainAlias()));
     }
 
-    function _exchangeProxy() private returns (address) {
+    function _exchangeProxy() internal view returns (address) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(2);
@@ -75,7 +75,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
     }
 
-    function _tokenReceiver() private returns (address payable) {
+    function _tokenReceiver() internal view returns (address payable) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));

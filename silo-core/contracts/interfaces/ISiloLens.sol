@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {ISilo} from "./ISilo.sol";
+import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 interface ISiloLens {
     /// @return liquidity based on contract state (without interest, fees)
@@ -77,4 +78,17 @@ interface ISiloLens {
 
     /// @dev this method is to keep interface backwards compatible
     function debtBalanceOfUnderlying(ISilo _silo, address _asset, address _borrower) external view returns (uint256);
+
+    /// @param _silo silo where borrower has debt
+    /// @param _hook hook for silo with debt
+    /// @param _borrower borrower address
+    /// @return collateralToLiquidate underestimated amount of collateral liquidator will get
+    /// @return debtToRepay debt amount needed to be repay to get `collateralToLiquidate`
+    /// @return sTokenRequired TRUE, when liquidation with underlying asset is not possible because of not enough
+    /// liquidity
+    /// @return fullLiquidation TRUE if position has to be fully liquidated
+    function maxLiquidation(ISilo _silo, IPartialLiquidation _hook, address _borrower)
+        external
+        view
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool fullLiquidation);
 }

@@ -83,7 +83,6 @@ contract VaultMultipleRewardsTest is IntegrationTest {
 
         siloConfig = ISilo(incentiviseSilo).config();
         ISiloConfig.ConfigData memory cfg = siloConfig.getConfig(incentiviseSilo);
-        // TODO add test with missconfiguration
         partialLiquidation = IPartialLiquidation(cfg.hookReceiver);
     }
 
