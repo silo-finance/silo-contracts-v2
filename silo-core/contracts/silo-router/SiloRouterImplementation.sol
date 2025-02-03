@@ -73,7 +73,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
     /// @inheritdoc ISiloRouterImplementationV1
     function unwrapAll(IWrappedNativeToken _native) public payable virtual {
         uint256 balance = _native.balanceOf(address(this));
-        _native.withdraw(balance);
+        unwrap(_native, balance);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
@@ -86,7 +86,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
         uint256 balance = address(this).balance;
 
         if (balance != 0) {
-            Address.sendValue(_to, balance);
+            sendValue(_to, balance);
         }
     }
 
@@ -98,7 +98,7 @@ contract SiloRouterImplementation is ISiloRouterImplementationV1 {
     /// @inheritdoc ISiloRouterImplementationV1
     function transferAll(IERC20 _token, address _to) public payable virtual {
         uint256 balance = _token.balanceOf(address(this));
-        _token.safeTransfer(_to, balance);
+        transfer(_token, _to, balance);
     }
 
     /// @inheritdoc ISiloRouterImplementationV1
