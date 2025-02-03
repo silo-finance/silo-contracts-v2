@@ -17,8 +17,8 @@ contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation {
     {
         (address owner) = abi.decode(_data, (address));
 
-        BaseHookReceiver._setSiloConfig(_config);
-        GaugeHookReceiver._setOwner(owner);
+        BaseHookReceiver.__BaseHookReceiver_init(_config);
+        GaugeHookReceiver.__GaugeHookReceiver_init(owner);
     }
 
     /// @inheritdoc IHookReceiver

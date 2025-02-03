@@ -28,7 +28,7 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
 
     /// @notice Set the silo config
     /// @param _config Silo config
-    function _setSiloConfig(ISiloConfig _config)
+    function __BaseHookReceiver_init(ISiloConfig _config)
         internal
         onlyInitializing
         virtual

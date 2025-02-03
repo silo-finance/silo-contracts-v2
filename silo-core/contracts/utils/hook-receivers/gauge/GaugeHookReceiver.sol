@@ -117,7 +117,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
 
     /// @notice Set the owner of the hook receiver
     /// @param _owner Owner address
-    function _setOwner(address _owner)
+    function __GaugeHookReceiver_init(address _owner)
         internal
         onlyInitializing
         virtual
