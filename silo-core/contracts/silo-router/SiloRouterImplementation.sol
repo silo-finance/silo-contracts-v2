@@ -6,7 +6,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloRouterImplementation} from "../interfaces/ISiloRouterImplementation.sol";
+import {ISiloRouterImplementationV1} from "../interfaces/ISiloRouterImplementationV1.sol";
 import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 
 /**
@@ -57,58 +57,58 @@ Supporting the following scenarios:
 - full repay token using SiloRouter.multicall
     SiloRouter.repayAll(ISilo _silo, address _borrower)
  */
-contract SiloRouterImplementation is ISiloRouterImplementation {
+contract SiloRouterImplementation is ISiloRouterImplementationV1 {
     using SafeERC20 for IERC20;
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function wrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
         _native.deposit{value: _amount}();
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable virtual {
         _native.withdraw(_amount);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function unwrapAll(IWrappedNativeToken _native) external payable virtual {
         uint256 balance = _native.balanceOf(address(this));
         _native.withdraw(balance);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function sendValue(address payable _to, uint256 _amount) external payable virtual {
         Address.sendValue(_to, _amount);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function sendValueAll(address payable _to) external payable virtual {
         uint256 balance = address(this).balance;
         Address.sendValue(_to, balance);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function transfer(IERC20 _token, address _to, uint256 _amount) external payable virtual {
         _token.safeTransfer(_to, _amount);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function transferAll(IERC20 _token, address _to) external payable virtual {
         uint256 balance = _token.balanceOf(address(this));
         _token.safeTransfer(_to, balance);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function transferFrom(IERC20 _token, address _to, uint256 _amount) external payable virtual {
         _token.safeTransferFrom(msg.sender, _to, _amount);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function approve(IERC20 _token, address _spender, uint256 _amount) external payable virtual {
         _token.forceApprove(_spender, _amount);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function deposit(
         ISilo _silo,
         uint256 _amount,
@@ -117,7 +117,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         shares = _silo.deposit(_amount, msg.sender, _collateral);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function withdraw(
         ISilo _silo,
         uint256 _amount,
@@ -127,7 +127,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function withdrawAll(
         ISilo _silo,
         address _receiver,
@@ -137,7 +137,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function borrow(
         ISilo _silo,
         uint256 _assets,
@@ -146,7 +146,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         shares = _silo.borrow(_assets, _receiver, msg.sender);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function borrowSameAsset(
         ISilo _silo,
         uint256 _assets,
@@ -155,7 +155,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function repay(
         ISilo _silo,
         uint256 _assets,
@@ -164,7 +164,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         shares = _silo.repay(_assets, _borrower);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function repayAll(ISilo _silo, address _borrower) external payable virtual returns (uint256 shares) {
         uint256 repayAmount = _silo.maxRepay(_borrower);
         IERC20 asset = IERC20(_silo.asset());
@@ -175,7 +175,7 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         shares = _silo.repay(repayAmount, _borrower);
     }
 
-    /// @inheritdoc ISiloRouterImplementation
+    /// @inheritdoc ISiloRouterImplementationV1
     function repayAllNative(
         IWrappedNativeToken _native,
         ISilo _silo,

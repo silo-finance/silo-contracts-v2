@@ -6,7 +6,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {ISilo} from "./ISilo.sol";
 import {IWrappedNativeToken} from "./IWrappedNativeToken.sol";
 
-interface ISiloRouterImplementation {
+interface ISiloRouterImplementationV1 {
     /// @notice Wrap native token to wrapped native token
     /// @dev Tokens are wrapped to the router's balance.
     /// Caller is responsible to transfer the wrapped tokens to the desired address.
