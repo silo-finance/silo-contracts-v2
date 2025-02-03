@@ -20,8 +20,8 @@ contract SiloRouter is PausableUpgradeable, Ownable2StepUpgradeable, ReentrancyG
     /// @notice Constructor for the SiloRouter contract
     /// @param _initialOwner The address of the initial owner
     /// @param _implementation The address of the implementation contract
-    constructor (address _initialOwner, address _implementation) {
-        _transferOwnership(_initialOwner);
+    constructor (address _initialOwner, address _implementation) initializer {
+        __Ownable_init(_initialOwner);
 
         IMPLEMENTATION = _implementation;
     }
