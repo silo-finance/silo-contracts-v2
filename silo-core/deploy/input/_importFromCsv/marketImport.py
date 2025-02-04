@@ -69,7 +69,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as csvfile:
 json_structure = {
     "deployer": "",
     "hookReceiver": "CLONE_IMPLEMENTATION",
-    "hookReceiverImplementation": "GaugeHookReceiver.sol",
+    "hookReceiverImplementation": "SiloHookV1.sol",
     "daoFee": to_percent(data[0]["daoFee"]),
     "deployerFee": to_percent(data[0]["deployerFee"]),
     "token0": data[0]["token"],

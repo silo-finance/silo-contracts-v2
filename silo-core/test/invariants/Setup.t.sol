@@ -18,6 +18,7 @@ import {
     GaugeHookReceiver
 } from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
@@ -110,7 +111,6 @@ contract Setup is BaseTest {
 
         // Deploy and initialize the liquidation module & mock flashloan receiver
         liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
-        liquidationModule.initialize(siloConfig, "");
 
         flashLoanReceiver = address(new MockFlashLoanReceiver());
     }
@@ -208,11 +208,11 @@ contract Setup is BaseTest {
     }
 
     function core_deployGaugeHookReceiver() internal {
-        hookReceiver = IGaugeHookReceiver(address(new GaugeHookReceiver()));
+        hookReceiver = IGaugeHookReceiver(address(new SiloHookV1()));
     }
 
     function core_deploySiloLiquidation() internal {
-        liquidationModule = new PartialLiquidation();
+        liquidationModule = PartialLiquidation(address(new SiloHookV1()));
     }
 
     function core_deploySiloDeployer() internal {

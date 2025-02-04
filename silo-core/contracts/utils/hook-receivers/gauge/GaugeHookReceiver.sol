@@ -2,46 +2,28 @@
 pragma solidity 0.8.28;
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
-import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {PartialLiquidation} from "../liquidation/PartialLiquidation.sol";
 import {IGaugeLike as IGauge} from "../../../interfaces/IGaugeLike.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "../../../interfaces/IGaugeHookReceiver.sol";
-import {SiloHookReceiver} from "../_common/SiloHookReceiver.sol";
+import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
-contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookReceiver, Ownable2Step, Initializable {
+abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Ownable2Step {
     using Hook for uint256;
     using Hook for bytes;
 
     uint24 internal constant _HOOKS_BEFORE_NOT_CONFIGURED = 0;
 
-    IShareToken public shareToken;
-
     mapping(IShareToken => IGauge) public configuredGauges;
 
     constructor() Ownable(msg.sender) {
-        _disableInitializers();
+        // lock implementation
         _transferOwnership(address(0));
-    }
-
-    /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _siloConfig, bytes calldata _data)
-        external
-        virtual
-        initializer
-        override(IHookReceiver, PartialLiquidation)
-    {
-        (address owner) = abi.decode(_data, (address));
-
-        require(owner != address(0), OwnerIsZeroAddress());
-
-        _initialize(_siloConfig);
-        _transferOwnership(owner);
     }
 
     /// @inheritdoc IGaugeHookReceiver
@@ -90,20 +72,10 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
     }
 
     /// @inheritdoc IHookReceiver
-    function beforeAction(address, uint256, bytes calldata)
-        external
-        virtual
-        override(IHookReceiver, PartialLiquidation)
-    {
-        // Do not expect any actions.
-        revert RequestNotSupported();
-    }
-
-    /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
-        external
+        public
         virtual
-        override(IHookReceiver, PartialLiquidation)
+        override
     {
         IGauge theGauge = configuredGauges[IShareToken(msg.sender)];
 
@@ -124,16 +96,6 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         );
     }
 
-    function hookReceiverConfig(address _silo)
-        external
-        view
-        virtual
-        override(PartialLiquidation, IHookReceiver)
-        returns (uint24 hooksBefore, uint24 hooksAfter)
-    {
-        return _hookReceiverConfig(_silo);
-    }
-
     /// @notice Get the token type for the share token
     /// @param _silo Silo address for which tokens was deployed
     /// @param _shareToken Share token address
@@ -151,5 +113,17 @@ contract GaugeHookReceiver is PartialLiquidation, IGaugeHookReceiver, SiloHookRe
         if (_shareToken == debtShareToken) return Hook.DEBT_TOKEN;
 
         revert InvalidShareToken();
+    }
+
+    /// @notice Set the owner of the hook receiver
+    /// @param _owner Owner address
+    function __GaugeHookReceiver_init(address _owner)
+        internal
+        onlyInitializing
+        virtual
+    {
+        require(_owner != address(0), OwnerIsZeroAddress());
+
+        _transferOwnership(_owner);
     }
 }

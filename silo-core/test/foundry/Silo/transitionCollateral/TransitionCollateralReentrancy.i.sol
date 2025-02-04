@@ -44,6 +44,9 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         silo0.updateHooks();
     }
 
+    function initialize(ISiloConfig, bytes calldata) public override {
+    }
+
     function hookReceiverConfig(address _silo) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
         hooksBefore = 0;
         hooksAfter = _silo == address(silo0) ? uint24(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER) : 0;

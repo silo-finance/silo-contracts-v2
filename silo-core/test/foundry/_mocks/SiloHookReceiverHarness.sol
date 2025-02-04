@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {SiloHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/SiloHookReceiver.sol";
+import {BaseHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/BaseHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
-contract SiloHookReceiverHarness is SiloHookReceiver {
+contract SiloHookReceiverHarness is BaseHookReceiver {
     function setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter) external virtual {
         _setHookConfig(_silo, _hooksBefore, _hooksAfter);
     }
@@ -13,9 +13,9 @@ contract SiloHookReceiverHarness is SiloHookReceiver {
 
     function beforeAction(address _silo, uint256 _action, bytes calldata _input) external virtual {}
 
-    function initialize(ISiloConfig _siloConfig, bytes calldata _data) external virtual {}
+    function initialize(ISiloConfig _siloConfig, bytes calldata _data) public virtual override {}
 
-    function hookReceiverConfig(address _silo) external view virtual returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address _silo) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
         (hooksBefore, hooksAfter) = _hookReceiverConfig(_silo);
     }
 

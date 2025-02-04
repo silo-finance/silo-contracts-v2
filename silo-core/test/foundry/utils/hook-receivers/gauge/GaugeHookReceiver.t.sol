@@ -60,7 +60,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
     // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReInitialization
     function testReInitialization() public {
-        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.GAUGE_HOOK_RECEIVER);
+        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.SILO_HOOK_V1);
 
         bytes memory data = abi.encode(_dao);
 
