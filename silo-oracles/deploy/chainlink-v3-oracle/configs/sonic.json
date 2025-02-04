@@ -78,5 +78,27 @@
         "normalizationDivider": 1e4,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "PYTH_ANON_USD": {
+        "baseToken": "Anon",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "PYTH_ANON_USD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_USDC_USD": {
+        "baseToken": "USDC.e",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "PYTH_USDC_USD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
     }
 }
