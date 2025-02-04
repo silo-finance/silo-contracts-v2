@@ -491,7 +491,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeCall(SiloRouterImplementation.transferFrom, (IERC20(token0), address(router), repayAmount));
         data[1] = abi.encodeCall(SiloRouterImplementation.approve, (IERC20(token0), address(silo0), type(uint256).max));
-        data[2] = abi.encodeCall(SiloRouterImplementation.repay, (ISilo(silo0), repayAmount, borrower));
+        data[2] = abi.encodeCall(SiloRouterImplementation.repay, (ISilo(silo0), repayAmount));
 
         vm.prank(borrower);
         router.multicall(data);
@@ -530,7 +530,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeCall(SiloRouterImplementation.wrap, (IWrappedNativeToken(nativeToken), repayAmount));
         data[1] = abi.encodeCall(SiloRouterImplementation.approve, (IERC20(token0), address(silo0), repayAmount));
-        data[2] = abi.encodeCall(SiloRouterImplementation.repay, (ISilo(silo0), repayAmount, borrower));
+        data[2] = abi.encodeCall(SiloRouterImplementation.repay, (ISilo(silo0), repayAmount));
 
         vm.prank(borrower);
         router.multicall{value: repayAmount}(data);
@@ -562,7 +562,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         assertEq(borrower.balance, 0, "Account should not have any native tokens");
 
         bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeCall(SiloRouterImplementation.repayAll, (ISilo(silo0), borrower));
+        data[0] = abi.encodeCall(SiloRouterImplementation.repayAll, (ISilo(silo0)));
 
         vm.prank(borrower);
         router.multicall(data);
@@ -603,7 +603,7 @@ contract SiloRouterActionsTest is IntegrationTest {
         payable(borrower).transfer(repayAmount);
 
         bytes[] memory data = new bytes[](2);
-        data[0] = abi.encodeCall(SiloRouterImplementation.repayAllNative, (IWrappedNativeToken(nativeToken), ISilo(silo0), borrower));
+        data[0] = abi.encodeCall(SiloRouterImplementation.repayAllNative, (IWrappedNativeToken(nativeToken), ISilo(silo0)));
         data[1] = abi.encodeCall(SiloRouterImplementation.sendValueAll, (payable(borrower)));
 
         vm.prank(borrower);

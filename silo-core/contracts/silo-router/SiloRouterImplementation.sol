@@ -170,36 +170,31 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
     }
 
     /// @inheritdoc ISiloRouterImplementation
-    function repay(
-        ISilo _silo,
-        uint256 _assets,
-        address _borrower
-    ) public payable virtual returns (uint256 shares) {
-        shares = _silo.repay(_assets, _borrower); // TODO: remove _borrower and use msg.sender, the same for repayAll and repayAllNative
+    function repay(ISilo _silo, uint256 _assets) public payable virtual returns (uint256 shares) {
+        shares = _silo.repay(_assets, msg.sender);
     }
 
     /// @inheritdoc ISiloRouterImplementation
-    function repayAll(ISilo _silo, address _borrower) external payable virtual returns (uint256 shares) {
-        uint256 repayAmount = _silo.maxRepay(_borrower);
+    function repayAll(ISilo _silo) external payable virtual returns (uint256 shares) {
+        uint256 repayAmount = _silo.maxRepay(msg.sender);
         IERC20 asset = IERC20(_silo.asset());
 
         transferFrom(asset, address(this), repayAmount);
         approve(asset, address(_silo), repayAmount);
 
-        shares = repay(_silo, repayAmount, _borrower);
+        shares = repay(_silo, repayAmount);
     }
 
     /// @inheritdoc ISiloRouterImplementation
     function repayAllNative(
         IWrappedNativeToken _native,
-        ISilo _silo,
-        address _borrower
+        ISilo _silo
     ) external payable virtual returns (uint256 shares) {
-        uint256 repayAmount = _silo.maxRepay(_borrower);
+        uint256 repayAmount = _silo.maxRepay(msg.sender);
 
         wrap(_native, repayAmount);
         approve(IERC20(address(_native)), address(_silo), repayAmount);
 
-        shares = repay(_silo, repayAmount, _borrower);
+        shares = repay(_silo, repayAmount);
     }
 }
