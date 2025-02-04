@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.3.0] - 2025-02-04
+### Added
+- wanS/S market sonic
+
 ## [1.2.0] - 2025-02-03
 ### Added
 - silo-coracle: silo virtual asset name and symbol
