@@ -79,6 +79,17 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "PYTH_REDSTONE_wstkscETH_ETH": {
+        "baseToken": "wstkscETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "PYTH_wstkscETH_scETH_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "REDSTONE_scETH_ETH_aggregator",
+        "secondaryHeartbeat": 22201,
+        "normalizationDivider": 1e16,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "PYTH_ANON_USD": {
         "baseToken": "Anon",
         "quoteToken": "SILO_VIRTUAL_USD_8",
