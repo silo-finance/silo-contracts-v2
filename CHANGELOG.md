@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.3.2] - 2025-02-04
+### Added
+- Anon/USDC.e market sonic
+
 ## [1.3.1] - 2025-02-04
 ### Added
 - wstkscETH/ETH market sonic
