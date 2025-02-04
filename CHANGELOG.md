@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Router with multicall
 - Silo hooks refactoring
 
+## [1.3.1] - 2025-02-04
+### Added
+- wstkscETH/ETH market sonic
+
 ## [1.3.0] - 2025-02-04
 ### Added
 - wanS/S market sonic
