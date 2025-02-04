@@ -22,7 +22,7 @@ contract BeforeActionReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevert() internal {
         address hookReceiver = TestStateLib.hookReceiver();
 
-        // vm.expectRevert(IGaugeHookReceiver.RequestNotSupported.selector);
-        // IGaugeHookReceiver(hookReceiver).beforeAction(address(this), 0, "");
+        vm.expectRevert(IGaugeHookReceiver.RequestNotSupported.selector);
+        IGaugeHookReceiver(hookReceiver).beforeAction(address(this), 0, "");
     }
 }
