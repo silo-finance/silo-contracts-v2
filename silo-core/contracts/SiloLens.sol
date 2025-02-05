@@ -113,7 +113,7 @@ contract SiloLens is ISiloLens {
         rcur = irm.getCurrentInterestRate(address(_silo), block.timestamp);
     }
 
-    function getDepositAmount(ISilo _silo, address _user, uint256 _timestamp)
+    function getDepositAmount(ISilo _silo, address _user)
         public
         view
         returns (uint256 totalUserDeposits)
@@ -130,7 +130,7 @@ contract SiloLens is ISiloLens {
 
         IInterestRateModel irm = IInterestRateModel(getModel(_silo));
 
-        uint256 rcomp = irm.getCompoundInterestRate(address(_silo), _timestamp);
+        uint256 rcomp = irm.getCompoundInterestRate(address(_silo), block.timestamp);
 
         (,, uint256 daoFee, uint256 deployerFee,) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
@@ -140,7 +140,7 @@ contract SiloLens is ISiloLens {
     }
 
     function totalBorrowAmountWithInterest(ISilo _silo) public view returns (uint256 totalBorrowAmount) {
-        return _silo.getDebtAssets()
+        totalBorrowAmount = _silo.getDebtAssets();
     }
 
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
