@@ -140,13 +140,7 @@ contract SiloLens is ISiloLens {
     }
 
     function totalBorrowAmountWithInterest(ISilo _silo) public view returns (uint256 totalBorrowAmount) {
-        IInterestRateModel irm = IInterestRateModel(getModel(_silo));
-
-        uint256 rcomp = irm.getCompoundInterestRate(address(_silo), block.timestamp);
-
-        (,,,, uint256 debtAssets) = _silo.getSiloStorage();
-
-        totalBorrowAmount = _totalBorrowAmountWithInterest(debtAssets, rcomp);
+        return _silo.getDebtAssets()
     }
 
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
