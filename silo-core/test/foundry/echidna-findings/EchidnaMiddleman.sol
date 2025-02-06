@@ -241,7 +241,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             emit log("transition back");
 
-            // TODO here we using same value that we go, it will be nice to create another property, where we
             // using any value
             (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
                 _type == uint8(ISilo.CollateralType.Collateral)

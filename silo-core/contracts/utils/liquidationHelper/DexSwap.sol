@@ -15,7 +15,6 @@ contract DexSwap {
     /// @dev 0x ExchangeProxy address.
     /// See https://docs.0x.org/developer-resources/contract-addresses
     /// The `to` field from the API response, but at the same time,
-    /// TODO: maybe unit test that will check, if it does not changed?
     // solhint-disable-next-line var-name-mixedcase
     address public immutable EXCHANGE_PROXY;
 

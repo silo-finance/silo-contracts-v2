@@ -68,9 +68,12 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertGe(configData0.daoFee, siloFactory.daoFeeRange().min, "configData0.daoFee.min");
         assertLe(configData0.daoFee, siloFactory.daoFeeRange().max, "configData0.daoFee.max");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
-        // TODO check for both tokens
-        // assertEq(configData0.token, initData.token0, "configData0.token");
-        // assertEq(configData0.hookReceiver, initData.hookReceiver, "configData0.hookReceiver");
+        assertEq(configData0.token, address(token0), "configData0.token");
+        assertEq(configData1.token, address(token1), "configData0.token");
+
+        assertTrue(configData0.hookReceiver != address(0), "configData0.hookReceiver");
+        assertEq(configData0.hookReceiver, configData1.hookReceiver, "hookReceiver");
+
         assertTrue(configData0.silo != address(0), "configData0.silo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
         assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");
