@@ -3,16 +3,20 @@ pragma solidity 0.8.28;
 
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
+import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
+import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
+import {IInterestRateModelV2} from "./interfaces/IInterestRateModelV2.sol";
+
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
-import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
-
 
 /// @title SiloLens is a helper contract for integrations and UI
 contract SiloLens is ISiloLens {
+    uint256 public constant PRECISION = 1e18;
+
     /// @inheritdoc ISiloLens
-    function isSolvent(ISilo _silo, address _user) external view returns (bool) {
-        return _silo.isSolvent(_user);
+    function isSolvent(ISilo _silo, address _borrower) external view returns (bool) {
+        return _silo.isSolvent(_borrower);
     }
 
     /// @inheritdoc ISiloLens
@@ -121,6 +125,7 @@ contract SiloLens is ISiloLens {
         return _silo.maxRepay(_borrower);
     }
 
+    /// @inheritdoc ISiloLens
     function debtBalanceOfUnderlying(ISilo _silo, address _borrower)
         public
         view
@@ -165,7 +170,7 @@ contract SiloLens is ISiloLens {
     {
         _requireAsset(_silo, _asset);
 
-
+        SiloLensLib.collateralBalanceOfUnderlying(_silo, _borrower);
     }
 
     /// @inheritdoc ISiloLens
@@ -190,12 +195,14 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getBorrowAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp)
+    function getBorrowAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp)
         external
         view
-        returns (uint256)
+        returns (uint256 maxRepay)
     {
-        return 1; // tODO
+        _requireAsset(_silo, _asset);
+
+        maxRepay = _silo.maxRepay(_borrower);
     }
 
     /// @inheritdoc ISiloLens
@@ -213,7 +220,7 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function calculateCollateralValue(ISilo _silo, address _user, address _asset)
+    function calculateCollateralValue(ISilo _silo, address _borrower, address _asset)
         external
         view
         returns (uint256 collateralValue)
@@ -244,19 +251,23 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function depositAPY(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
-        // TODO
+        // amount of deposits in asset decimals
+        uint256 totalDepositsAmount = _silo.totalAssets();
+        if (totalDepositsAmount == 0) return 0;
+// TODO
+//        // amount of debt generated per year in asset decimals
+//        uint256 generatedDebtAmount = _silo.getDebtAssets() * borrowAPY(_silo, _asset) / PRECISION;
+//
+//        return generatedDebtAmount * PRECISION / totalDepositsAmount;
     }
 
     /// @inheritdoc ISiloLens
-    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel) {
+    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModelV2) {
         _requireAsset(_silo, _asset);
 
         ISiloConfig.ConfigData memory cfg = _silo.config().getConfig(address(_silo));
-        return IInterestRateModel(cfg.interestRateModel);
+        return IInterestRateModelV2(cfg.interestRateModel);
     }
-
 
     function _requireAsset(ISilo _silo, address _asset) internal view {
         require(_silo.asset() == _asset, InvalidAsset());

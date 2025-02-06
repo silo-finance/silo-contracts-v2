@@ -2,17 +2,9 @@
 pragma solidity >=0.5.0;
 
 import {ISilo} from "./ISilo.sol";
-import {IInterestRateModel} from "./IInterestRateModel.sol";
+import {IInterestRateModelV2} from "./IInterestRateModelV2.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
-/*
-    function borrowAPY(ISilo _silo, address _asset) public view returns (uint256) {}
-    function getDepositAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp) public view returns (uint256 totalUserDeposits){}
-    function totalBorrowAmountWithInterest(ISilo _silo, address _asset) public view returns (uint256 _totalBorrowAmount){}
-    function balanceOfUnderlying(uint256 _assetTotalDeposits, IShareToken _shareToken, address _borrower){}
-    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel) {}
-}
-*/
 interface ISiloLens {
     error InvalidAsset();
 
@@ -167,13 +159,12 @@ interface ISiloLens {
     /// @notice returns total deposits with interest dynamically calculated at current block timestamp
     /// @param _asset asset address
     /// @return totalDeposits total deposits amount with interest
-    function totalDepositsWithInterest(ISilo _silo, address _asset) public view returns (uint256 totalDeposits);
+    function totalDepositsWithInterest(ISilo _silo, address _asset) external view returns (uint256 totalDeposits);
 
     /// @notice Calculates current deposit (with interest) for user
     /// Collateral only deposits are not counted here. To get collateral only deposit call:
     /// `_silo.assetStorage(_asset).collateralOnlyDeposits`
-    /// @dev [v1 NOT compatible] Interest is calculated based on the provided timestamp with is expected to be current time.
-    ///
+    /// @dev [v1 NOT compatible] timestamp is ignored, it is always current time.
     /// @param _silo Silo address from which to read data
     /// @param _asset token address for which calculation are done
     /// @param _borrower account for which calculation are done
@@ -208,7 +199,7 @@ interface ISiloLens {
     function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256);
 
     /// @notice Calculates current borrow amount for user with interest
-    /// @dev [v1 compatible] Interest is calculated based on the provided timestamp with is expected to be current time.
+    /// @dev [v1 NOT compatible] timestamp is ignored, it is current time always
     /// @param _silo Silo address from which to read data
     /// @param _asset token address for which calculation are done
     /// @param _borrower account for which calculation are done
@@ -273,14 +264,6 @@ interface ISiloLens {
     /// @dev gets interest rates model object
     /// @param _silo Silo address from which to read data
     /// @param _asset asset for which to calculate interest rate
-    /// @return IInterestRateModel interest rates model object
-    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel);
-
-    /// @notice Calculate amount of entry fee for given amount
-    /// @param _amount amount for which to calculate fee
-    /// @return Amount of token fee to be paid
-    // TODO we have fees apply on interest so I think I will not include this.
-    function calcFee(uint256 _amount) external view returns (uint256);
-
-
-    }
+    /// @return IInterestRateModelV2 interest rates model object
+    function getModel(ISilo _silo, address _asset) external view returns (IInterestRateModelV2);
+}
