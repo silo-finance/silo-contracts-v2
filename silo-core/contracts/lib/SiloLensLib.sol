@@ -143,6 +143,8 @@ library SiloLensLib {
             IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
         );
 
-        (sumOfBorrowerCollateralValue, totalBorrowerDebtValue,) = SiloSolvencyLib.calculateLtv(ltvData, collateralConfig.token, debtConfig.token);
+        (
+            sumOfBorrowerCollateralValue, totalBorrowerDebtValue,
+        ) = SiloSolvencyLib.calculateLtv(ltvData, collateralConfig.token, debtConfig.token);
     }
 }
