@@ -28,7 +28,6 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
 
         reward1.setOnDemand(true);
 
-        // TODO add test when notifier will be wrong and expect no rewards (or revert?)
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
     }
 

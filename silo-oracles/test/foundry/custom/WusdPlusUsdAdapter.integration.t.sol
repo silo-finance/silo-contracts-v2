@@ -48,7 +48,7 @@ contract WusdPlusUsdAdapterTest is IntegrationTest {
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_wusdPlusUsdAdapterWithChainlinkV3Oracle --ffi -vvv
-    // TODOD this test must be skipped because factory changed and forked version does not match new code
+    // TODO this test must be skipped because factory changed and forked version does not match new code
     function test_skip_wusdPlusUsdAdapterWithChainlinkV3Oracle() public {
         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ChainlinkV3OraclesConfigsParser.getConfig(
             getChainAlias(),
