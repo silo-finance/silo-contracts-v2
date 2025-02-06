@@ -34,7 +34,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_just_deposit_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test__skip__dustPropagation_just_deposit_fuzz(uint128 _assets) public {
         uint256 loop = 1000;
         vm.assume(_assets / loop > 0);

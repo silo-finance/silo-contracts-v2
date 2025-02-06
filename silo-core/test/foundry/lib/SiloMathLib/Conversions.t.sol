@@ -42,7 +42,7 @@ contract ConversionsTest is Test {
     /*
     forge test -vv --mt test_SiloMathLib_conversions
     */
-    /// forge-config: core-test.fuzz.runs = 5000
+    /// forge-config: core_test.fuzz.runs = 5000
     function test_SiloMathLib_conversions_fuzz(
         uint256 _totalAssets, uint256 _totalShares, uint256 _assetsIn
     ) public pure {
