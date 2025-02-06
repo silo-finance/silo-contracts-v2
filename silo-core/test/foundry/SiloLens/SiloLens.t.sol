@@ -178,17 +178,11 @@ contract SiloLensTest is SiloLittleHelper, Test {
         uint256 borrowerCollateralSilo1 = siloLens.collateralBalanceOfUnderlying(silo1, _depositor);
         assertEq(borrowerCollateralSilo1, _AMOUNT_COLLATERAL + _AMOUNT_PROTECTED);
 
-        address ignoredAddress = makeAddr("Ignored");
-
-        uint256 borrowerCollateralSilo0Ignored = siloLens.collateralBalanceOfUnderlying(
-            silo0, ignoredAddress, _depositor
-        );
+        uint256 borrowerCollateralSilo0Ignored = siloLens.collateralBalanceOfUnderlying(silo0, _depositor);
 
         assertEq(borrowerCollateralSilo0Ignored, 0);
 
-        uint256 borrowerCollateralSilo1Ignored = siloLens.collateralBalanceOfUnderlying(
-            silo1, ignoredAddress, _depositor
-        );
+        uint256 borrowerCollateralSilo1Ignored = siloLens.collateralBalanceOfUnderlying(silo1, _depositor);
 
         assertEq(borrowerCollateralSilo1Ignored, _AMOUNT_COLLATERAL + _AMOUNT_PROTECTED);
     }
@@ -203,17 +197,11 @@ contract SiloLensTest is SiloLittleHelper, Test {
         uint256 borrowerDebtSilo1 = siloLens.debtBalanceOfUnderlying(silo1, _borrower);
         assertEq(borrowerDebtSilo1, _AMOUNT_BORROW);
 
-        address ignoredAddress = makeAddr("Ignored");
-
-        uint256 borrowerDebtSilo0Ignored = siloLens.debtBalanceOfUnderlying(
-            silo0, ignoredAddress, _borrower
-        );
+        uint256 borrowerDebtSilo0Ignored = siloLens.debtBalanceOfUnderlying(silo0, _borrower);
 
         assertEq(borrowerDebtSilo0Ignored, 0);
 
-        uint256 borrowerDebtSilo1Ignored = siloLens.debtBalanceOfUnderlying(
-            silo1, ignoredAddress, _borrower
-        );
+        uint256 borrowerDebtSilo1Ignored = siloLens.debtBalanceOfUnderlying(silo1, _borrower);
 
         assertEq(borrowerDebtSilo1Ignored, _AMOUNT_BORROW);
     }
