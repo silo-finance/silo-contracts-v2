@@ -106,7 +106,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getCollateralAmountsWithInterest_notRevert_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_getCollateralAmountsWithInterest_notRevert_fuzz(
         uint256 _collateralAssets,
         uint256 _debtAssets,
