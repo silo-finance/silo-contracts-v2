@@ -66,7 +66,8 @@ interface ISiloLens {
     /// @return ltv The LTV for the borrower in 18 decimals points
     function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv);
 
-    /// @notice Check if user has position (collateral, protected or debt) in any asset in a market
+    /// @notice Check if user has position (collateral, protected or debt)
+    /// in any asset in a market (both silos are checked)
     /// @dev [v1 compatible]
     /// @param _silo Silo address from market (can be silo0 or silo1)
     /// @param _borrower wallet address for which to read data
@@ -110,7 +111,7 @@ interface ISiloLens {
     /// deposits
     /// @dev It reads directly from storage so interest generated between last update and now is not taken for account
     /// there is another version of `collateralBalanceOfUnderlying` that matches Silo V1 interface
-    /// @param _silo Silo address from which to read data
+    /// @param _silo Silo address from which to read data (it can be silo0 or silo1)
     /// @param _borrower wallet address for which to read data
     /// @return balance of underlying tokens for the given `_borrower`
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
