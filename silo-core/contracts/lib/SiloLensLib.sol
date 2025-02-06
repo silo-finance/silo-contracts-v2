@@ -67,12 +67,10 @@ library SiloLensLib {
         }
     }
 
-    function hasPosition(ISilo _silo, address _borrower) internal view returns (bool has) {
-        ISiloConfig siloConfig = _silo.config();
-
-        (address silo0, address silo1) = siloConfig.getSilos();
-        ISiloConfig.ConfigData memory cfg0 = siloConfig.getConfig(silo0);
-        ISiloConfig.ConfigData memory cfg1 = siloConfig.getConfig(silo1);
+    function hasPosition(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
+        (address silo0, address silo1) = _siloConfig.getSilos();
+        ISiloConfig.ConfigData memory cfg0 = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory cfg1 = _siloConfig.getConfig(silo1);
 
         if (IShareToken(cfg0.collateralShareToken).balanceOf(_borrower) != 0) return true;
         if (IShareToken(cfg0.protectedShareToken).balanceOf(_borrower) != 0) return true;
@@ -85,8 +83,11 @@ library SiloLensLib {
         return false;
       }
 
-    function inDebt(ISilo _silo, address _borrower) internal view returns (bool has) {
-        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _silo.config().getConfigsForSolvency(_borrower);
+    function inDebt(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _siloConfig.getConfigsForSolvency(_borrower);
 
         has = debtConfig.debtShareToken != address(0)
             && IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) != 0;
@@ -123,7 +124,7 @@ library SiloLensLib {
         return IShareToken(debtShareToken).balanceOf(_borrower);
     }
 
-    function calculateValues(ISilo _silo, address _borrower)
+    function calculateValues(ISiloConfig _siloConfig, address _borrower)
         internal
         view
         returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue)
@@ -131,7 +132,7 @@ library SiloLensLib {
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _silo.config().getConfigsForSolvency(_borrower);
+        ) = _siloConfig.getConfigsForSolvency(_borrower);
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,

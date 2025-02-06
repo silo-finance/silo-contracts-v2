@@ -234,11 +234,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         vm.prank(makeAddr("frontrunner"));
         _deposit(1, borrower);
 
-        assertFalse(siloLens.hasPosition(silo0, borrower), "does not has position yet");
+        assertFalse(siloLens.hasPosition(siloConfig, borrower), "does not has position yet");
 
         _borrow(12345, borrower);
 
-        assertTrue(siloLens.hasPosition(silo0, borrower), "has position");
+        assertTrue(siloLens.hasPosition(siloConfig, borrower), "has position");
     }
 
     /*
@@ -319,11 +319,11 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         vm.prank(borrower);
         silo1.borrow(borrowToMuch, borrower, borrower);
 
-        assertFalse(siloLens.hasPosition(silo0, borrower), "does not has position yet");
+        assertFalse(siloLens.hasPosition(siloConfig, borrower), "does not has position yet");
 
         _borrow(maxBorrow, borrower);
 
-        assertTrue(siloLens.hasPosition(silo0, borrower), "has position");
+        assertTrue(siloLens.hasPosition(siloConfig, borrower), "has position");
 
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower to NOT have debt in collateral silo");
         assertEq(silo0.getDebtAssets(), 0, "expect collateral silo to NOT have debt");

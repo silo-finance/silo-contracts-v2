@@ -593,9 +593,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("borrower debt", maxRepay, 18);
 
-        uint256 collateralBalanceOfUnderlying = siloLens.collateralBalanceOfUnderlying(
-            silo0, address(token0), BORROWER
-        );
+        uint256 collateralBalanceOfUnderlying = siloLens.collateralBalanceOfUnderlying(silo0, BORROWER);
 
         emit log_named_decimal_uint("borrower collateral", collateralBalanceOfUnderlying, 18);
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);

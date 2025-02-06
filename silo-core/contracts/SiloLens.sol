@@ -20,9 +20,7 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function liquidity(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
+    function liquidity(ISilo _silo) external view returns (uint256) {
         return _silo.getLiquidity();
     }
 
@@ -52,22 +50,8 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getUserMaximumLTV(ISilo _silo, address) external view returns (uint256 maximumLTV) {
-        maximumLTV = SiloLensLib.getMaxLtv(_silo);
-    }
-
-    /// @inheritdoc ISiloLens
     function getLt(ISilo _silo) external view virtual returns (uint256 lt) {
         lt = SiloLensLib.getLt(_silo);
-    }
-
-    /// @inheritdoc ISiloLens
-    function getUserLiquidationThreshold(ISilo _silo, address)
-        external
-        view
-        returns (uint256 liquidationThreshold)
-    {
-        liquidationThreshold = SiloLensLib.getLt(_silo);
     }
 
     /// @inheritdoc ISiloLens
@@ -81,13 +65,13 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function hasPosition(ISilo _silo, address _borrower) external view virtual returns (bool has) {
-        has = SiloLensLib.hasPosition(_silo, _borrower);
+    function hasPosition(ISiloConfig _siloConfig, address _borrower) external view virtual returns (bool has) {
+        has = SiloLensLib.hasPosition(_siloConfig, _borrower);
     }
 
     /// @inheritdoc ISiloLens
-    function inDebt(ISilo _silo, address _borrower) external view returns (bool hasDebt) {
-        hasDebt = SiloLensLib.inDebt(_silo, _borrower);
+    function inDebt(ISiloConfig _siloConfig, address _borrower) external view returns (bool hasDebt) {
+        hasDebt = SiloLensLib.inDebt(_siloConfig, _borrower);
     }
 
     /// @inheritdoc ISiloLens
@@ -101,16 +85,6 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function collateralBalanceOfUnderlying(ISilo _silo, address, address _borrower)
-        external
-        view
-        virtual
-        returns (uint256 borrowerCollateral)
-    {
-        (borrowerCollateral,) = SiloLensLib.calculateValues(_silo, _borrower);
-    }
-
-    /// @inheritdoc ISiloLens
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
         external
         view
@@ -121,17 +95,7 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function debtBalanceOfUnderlying(ISilo _silo, address, address _borrower) external view virtual returns (uint256) {
-        return _silo.maxRepay(_borrower);
-    }
-
-    /// @inheritdoc ISiloLens
-    function debtBalanceOfUnderlying(ISilo _silo, address _borrower)
-        public
-        view
-        virtual
-        returns (uint256 borrowerDebt)
-    {
+    function debtBalanceOfUnderlying(ISilo _silo, address _borrower) external view virtual returns (uint256) {
         return _silo.maxRepay(_borrower);
     }
 
@@ -149,108 +113,84 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function totalDeposits(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
-        return _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+    function totalDeposits(ISilo _silo) external view returns (uint256 totalDeposits) {
+        totalDeposits = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     }
 
     /// @inheritdoc ISiloLens
-    function totalDepositsWithInterest(ISilo _silo, address _asset) external view returns (uint256 totalDeposits) {
-        _requireAsset(_silo, _asset);
-
+    function totalDepositsWithInterest(ISilo _silo) external view returns (uint256 totalDeposits) {
         totalDeposits = _silo.totalAssets();
     }
 
     /// @inheritdoc ISiloLens
-    function getDepositAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp)
-        external
-        view
-        returns (uint256 totalUserDeposits)
-    {
-        _requireAsset(_silo, _asset);
-
-        SiloLensLib.collateralBalanceOfUnderlying(_silo, _borrower);
-    }
-
-    /// @inheritdoc ISiloLens
-    function collateralOnlyDeposits(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
+    function collateralOnlyDeposits(ISilo _silo) external view returns (uint256) {
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Protected);
     }
 
     /// @inheritdoc ISiloLens
-    function totalBorrowAmount(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
+    function getDepositAmount(ISilo _silo, address _borrower)
+        external
+        view
+        returns (uint256 borrowerDeposits)
+    {
+        borrowerDeposits = _silo.previewRedeem(_silo.balanceOf(_borrower));
+    }
 
+    /// @inheritdoc ISiloLens
+    function totalBorrowAmount(ISilo _silo) external view returns (uint256) {
         return _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
     }
 
     /// @inheritdoc ISiloLens
-    function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
+    function totalBorrowShare(ISilo _silo) external view returns (uint256) {
         return SiloLensLib.totalBorrowShare(_silo);
     }
 
     /// @inheritdoc ISiloLens
-    function getBorrowAmount(ISilo _silo, address _asset, address _borrower, uint256 _timestamp)
+    function getBorrowAmount(ISilo _silo, address _borrower)
         external
         view
         returns (uint256 maxRepay)
     {
-        _requireAsset(_silo, _asset);
-
         maxRepay = _silo.maxRepay(_borrower);
     }
 
     /// @inheritdoc ISiloLens
-    function borrowShare(ISilo _silo, address _asset, address _borrower) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
+    function borrowShare(ISilo _silo, address _borrower) external view returns (uint256) {
         return SiloLensLib.borrowShare(_silo, _borrower);
     }
 
     /// @inheritdoc ISiloLens
-    function protocolFees(ISilo _silo, address _asset) external view returns (uint256 daoAndDeployerRevenue) {
-        _requireAsset(_silo, _asset);
-
+    function protocolFees(ISilo _silo) external view returns (uint256 daoAndDeployerRevenue) {
         (daoAndDeployerRevenue,,,,) = _silo.getSiloStorage();
     }
 
     /// @inheritdoc ISiloLens
-    function calculateCollateralValue(ISilo _silo, address _borrower, address _asset)
+    function calculateCollateralValue(ISiloConfig _siloConfig, address _borrower)
         external
         view
         returns (uint256 collateralValue)
     {
-        _requireAsset(_silo, _asset);
-
-        (collateralValue,) = SiloLensLib.calculateValues(_silo, _borrower);
+        (collateralValue,) = SiloLensLib.calculateValues(_siloConfig, _borrower);
     }
 
     /// @inheritdoc ISiloLens
-    function calculateBorrowValue(ISilo _silo, address _borrower, address _asset)
+    function calculateBorrowValue(ISiloConfig _siloConfig, address _borrower)
         external
         view
         returns (uint256 borrowValue)
     {
-        _requireAsset(_silo, _asset);
-
-        (, borrowValue) = SiloLensLib.calculateValues(_silo, _borrower);
+        (, borrowValue) = SiloLensLib.calculateValues(_siloConfig, _borrower);
     }
 
     /// @inheritdoc ISiloLens
-    function getUtilization(ISilo _silo, address _asset) external view returns (uint256) {
-        _requireAsset(_silo, _asset);
-
+    function getUtilization(ISilo _silo) external view returns (uint256) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
-        return data.debtAssets * 1e18 / data.collateralAssets;
+        return data.debtAssets * PRECISION / data.collateralAssets;
     }
 
     /// @inheritdoc ISiloLens
-    function depositAPY(ISilo _silo, address _asset) external view returns (uint256) {
+    function depositAPY(ISilo _silo) external view returns (uint256) {
         // amount of deposits in asset decimals
         uint256 totalDepositsAmount = _silo.totalAssets();
         if (totalDepositsAmount == 0) return 0;
@@ -262,14 +202,8 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModelV2) {
-        _requireAsset(_silo, _asset);
-
+    function getModel(ISilo _silo) public view returns (IInterestRateModelV2) {
         ISiloConfig.ConfigData memory cfg = _silo.config().getConfig(address(_silo));
         return IInterestRateModelV2(cfg.interestRateModel);
-    }
-
-    function _requireAsset(ISilo _silo, address _asset) internal view {
-        require(_silo.asset() == _asset, InvalidAsset());
     }
 }
