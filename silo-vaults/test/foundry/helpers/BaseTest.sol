@@ -18,6 +18,7 @@ import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/Sil
 
 import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
+import {IdleVaultsFactory} from "../../../contracts/IdleVaultsFactory.sol";
 
 import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
@@ -66,7 +67,9 @@ contract BaseTest is SiloLittleHelper, Test {
             new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV")
         ));
 
-        idleMarket = new IdleVault(address(vault), address(loanToken), "idle vault", "idle");
+        IdleVaultsFactory factory = new IdleVaultsFactory();
+        idleMarket = factory.createIdleVault(vault);
+        vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
     }
