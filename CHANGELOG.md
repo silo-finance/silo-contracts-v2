@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.3.3] - 2025-02-06
+### Updated
+- adjustment for coverage to work
+
 ## [1.3.2] - 2025-02-04
 ### Added
 - Anon/USDC.e market sonic
