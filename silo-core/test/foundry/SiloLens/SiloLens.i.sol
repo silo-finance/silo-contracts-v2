@@ -15,9 +15,9 @@ import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol"
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloLensTest
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloLensIntegrationTest
 */
-contract SiloLensTest is SiloLittleHelper, Test {
+contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
     using ShareTokenDecimalsPowLib for uint256;
 
@@ -61,6 +61,8 @@ contract SiloLensTest is SiloLittleHelper, Test {
         assertEq(siloLens.getRawLiquidity(silo0), deposit0 + collateral, "getRawLiquidity 0 before borrow");
         assertEq(siloLens.getRawLiquidity(silo1), deposit1, "getRawLiquidity 1 before borrow");
 
+        assertEq(siloLens.totalDeposits(silo1), deposit1, "totalDeposits before borrow");
+
         uint256 toBorrow = silo1.maxBorrow(borrower);
         _borrow(toBorrow, borrower);
 
@@ -80,10 +82,30 @@ contract SiloLensTest is SiloLittleHelper, Test {
             "collateralBalanceOfUnderlying after borrow"
         );
 
+        assertEq(
+            siloLens.debtBalanceOfUnderlying(silo0, borrower),
+            0,
+            "[debtBalanceOfUnderlying] no debt in silo0"
+        );
+
+        assertEq(
+            siloLens.debtBalanceOfUnderlying(silo1, borrower),
+            toBorrow,
+            "collateralBalanceOfUnderlying"
+        );
+
+        assertEq(siloLens.totalDeposits(silo1), deposit1, "totalDeposits after borrow are the same");
+
         vm.warp(block.timestamp + 65 days);
 
         assertFalse(siloLens.isSolvent(silo0, borrower), "borrower is NOT solvent @0");
         assertFalse(siloLens.isSolvent(silo1, borrower), "borrower is NOT solvent @1");
+
+        assertEq(
+            siloLens.totalDeposits(silo1),
+            deposit1,
+            "totalDeposits after borrow + time are the same, because we reading storage"
+        );
 
         assertEq(siloLens.liquidity(silo0), deposit0 + collateral, "liquidity in silo0 after borrow + time");
 
@@ -100,6 +122,20 @@ contract SiloLensTest is SiloLittleHelper, Test {
             siloLens.collateralBalanceOfUnderlying(silo0, borrower),
             collateral,
             "collateralBalanceOfUnderlying"
+        );
+
+        assertGt(
+            siloLens.debtBalanceOfUnderlying(silo1, borrower),
+            toBorrow,
+            "[debtBalanceOfUnderlying] with interest debt is higher"
+        );
+
+        silo1.accrueInterest();
+
+        assertGt(
+            siloLens.totalDeposits(silo1),
+            deposit1,
+            "totalDeposits after borrow + interest"
         );
 
         vm.warp(block.timestamp + 300 days);
