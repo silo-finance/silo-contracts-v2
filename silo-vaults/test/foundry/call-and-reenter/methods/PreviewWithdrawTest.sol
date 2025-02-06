@@ -5,7 +5,7 @@ import {MethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/metho
 import {TestStateLib} from "silo-vaults/test/foundry/call-and-reenter/TestState.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 
-contract DecimalsReentrancyTest is MethodReentrancyTest {
+contract PreviewWithdrawTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -16,12 +16,12 @@ contract DecimalsReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "decimals()";
+        description = "previewWithdraw(uint256)";
     }
 
     function _ensureItWillNotRevert() internal view {
         ISiloVault vault = TestStateLib.vault();
 
-        vault.decimals();
+        vault.previewWithdraw(0);
     }
 }
