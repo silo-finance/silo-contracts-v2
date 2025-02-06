@@ -192,7 +192,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     }
 
     // forge test -vv --mt test_IRM_calculateRComp
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_IRM_calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x) public {
         InterestRateModelV2Impl impl = new InterestRateModelV2Impl();
         InterestRateModelV2Checked implChecked = new InterestRateModelV2Checked();
@@ -215,7 +215,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     /*
     forge test -vv --mt test_IRM_configOverflowCheck_always_pass_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_IRM_configOverflowCheck_always_pass_fuzz(int112 _Tcrit, int112 _ri) public {
         vm.assume(_Tcrit > 0);
         vm.assume(_ri > 0);
@@ -251,7 +251,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     /*
     forge test -vv --mt test_IRM_configOverflowCheck_awalys_revert_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_IRM_configOverflowCheck_awalys_revert_fuzz(int112 _Tcrit, int112 _ri) public {
         vm.assume(_Tcrit > 0);
         vm.assume(_ri > 0);
@@ -285,7 +285,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
     /*
     forge test -vv --mt test_IRM_configOverflowCheck_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_IRM_configOverflowCheck_fuzz(int112 _Tcrit, int112 _ri) public {
         vm.assume(_Tcrit > 0);
         vm.assume(_ri > 0);
