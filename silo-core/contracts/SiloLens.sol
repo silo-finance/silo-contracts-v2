@@ -139,7 +139,11 @@ contract SiloLens is ISiloLens {
         totalUserDeposits = _totalDepositsWithInterest(collateralAssets, debtAssets, daoFee + deployerFee, rcomp);
     }
 
-    function totalBorrowAmountWithInterest(ISilo _silo, address _asset) public view returns (uint256 totalBorrowAmount) {
+    function totalBorrowAmountWithInterest(ISilo _silo, address _asset)
+        public
+        view
+        returns (uint256 totalBorrowAmount)
+    {
         _requireAsset(_silo, _asset);
 
         totalBorrowAmount = _silo.getDebtAssets();
