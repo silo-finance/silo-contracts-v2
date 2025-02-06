@@ -107,8 +107,8 @@ contract SiloLens is ISiloLens {
         fullLiquidation = maxRepay == debtToRepay;
     }
 
-    function borrowAPY(ISilo _silo) public view returns (uint256 rcur) {
-        IInterestRateModel irm = getModel(_silo);
+    function borrowAPY(ISilo _silo, address _asset) public view returns (uint256 rcur) {
+        IInterestRateModel irm = getModel(_silo, _asset);
 
         rcur = irm.getCurrentInterestRate(address(_silo), block.timestamp);
     }
@@ -118,8 +118,6 @@ contract SiloLens is ISiloLens {
         view
         returns (uint256 totalUserDeposits)
     {
-        _requireAsset(_silo, _asset);
-
         ISiloConfig _config = _silo.config();
 
         (, address collateralShareToken,) = _config.getShareTokens(address(_silo));
@@ -130,7 +128,7 @@ contract SiloLens is ISiloLens {
             return 0;
         }
 
-        IInterestRateModel irm = IInterestRateModel(getModel(_silo));
+        IInterestRateModel irm = IInterestRateModel(getModel(_silo, _asset));
 
         uint256 rcomp = irm.getCompoundInterestRate(address(_silo), block.timestamp);
 

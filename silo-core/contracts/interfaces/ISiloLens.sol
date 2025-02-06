@@ -5,7 +5,7 @@ import {ISilo} from "./ISilo.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 interface ISiloLens {
-    error InvalidSilo();
+    error InvalidAsset();
 
     /// @return liquidity based on contract state (without interest, fees)
     function getRawLiquidity(ISilo _silo) external view returns (uint256 liquidity);
