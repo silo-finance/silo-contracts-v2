@@ -113,11 +113,13 @@ contract SiloLens is ISiloLens {
         rcur = irm.getCurrentInterestRate(address(_silo), block.timestamp);
     }
 
-    function getDepositAmount(ISilo _silo, address _user)
+    function getDepositAmount(ISilo _silo, address _asset, address _user)
         public
         view
         returns (uint256 totalUserDeposits)
     {
+        _requireAsset(_silo, _asset);
+
         ISiloConfig _config = _silo.config();
 
         (, address collateralShareToken,) = _config.getShareTokens(address(_silo));
@@ -139,26 +141,16 @@ contract SiloLens is ISiloLens {
         totalUserDeposits = _totalDepositsWithInterest(collateralAssets, debtAssets, daoFee + deployerFee, rcomp);
     }
 
-    function totalBorrowAmountWithInterest(ISilo _silo) public view returns (uint256 totalBorrowAmount) {
+    function totalBorrowAmountWithInterest(ISilo _silo, address _asset) public view returns (uint256 totalBorrowAmount) {
+        _requireAsset(_silo, _asset);
+
         totalBorrowAmount = _silo.getDebtAssets();
     }
 
-    function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
-        ISiloConfig _config = _silo.config();
+    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel irm) {
+        _requireAsset(_silo, _asset);
 
-        (address silo0, address silo1) = _config.getSilos();
-
-        bool isSilo0;
-
-        if (address(_silo) == silo0) {
-            isSilo0 = true;
-        } else if (address(_silo) != silo1) {
-            revert InvalidSilo();
-        }
-
-        ISiloConfig.ConfigData memory _configData = isSilo0 ? _config.getConfig(silo0) : _config.getConfig(silo1);
-
-        irm = IInterestRateModel(_configData.interestRateModel);
+        irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
     }
 
     function _totalDepositsWithInterest(
@@ -183,5 +175,9 @@ contract SiloLens is ISiloLens {
         returns (uint256 totalBorrowAmountWithInterests)
     {
         totalBorrowAmountWithInterests = _totalBorrowAmount + _totalBorrowAmount * _rcomp / _PRECISION_DECIMALS;
+    }
+
+    function _requireAsset(ISilo _silo, address _asset) internal view {
+        require(_silo.asset() == _asset, InvalidAsset());
     }
 }
