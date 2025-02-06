@@ -188,17 +188,21 @@ contract SiloLens is ISiloLens {
         ISilo.UtilizationData memory data = _silo.utilizationData();
         return data.debtAssets * PRECISION / data.collateralAssets;
     }
+    function depositAPY(ISilo _silo) public view returns (uint256) {
+        // TODO form other PR
+        return 0;
+    }
 
     /// @inheritdoc ISiloLens
     function depositAPY(ISilo _silo) external view returns (uint256) {
         // amount of deposits in asset decimals
         uint256 totalDepositsAmount = _silo.totalAssets();
         if (totalDepositsAmount == 0) return 0;
-// TODO
-//        // amount of debt generated per year in asset decimals
-//        uint256 generatedDebtAmount = _silo.getDebtAssets() * borrowAPY(_silo, _asset) / PRECISION;
-//
-//        return generatedDebtAmount * PRECISION / totalDepositsAmount;
+
+        // amount of debt generated per year in asset decimals
+        uint256 generatedDebtAmount = _silo.getDebtAssets() * borrowAPY(_silo) / PRECISION;
+
+        return generatedDebtAmount * PRECISION / totalDepositsAmount;
     }
 
     /// @inheritdoc ISiloLens
