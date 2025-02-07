@@ -75,7 +75,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
             "expect full collateral to be swapped"
         );
 
-        // because we not swapping anything, we not transferring debt token
+        // because we are not swapping anything, we are not transferring debt token
         // this assertion can be turn on once we add swap to it
 //        assertEq(
 //            token1.balanceOf(TOKENS_RECEIVER),
