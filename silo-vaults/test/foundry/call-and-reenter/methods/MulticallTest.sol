@@ -5,23 +5,27 @@ import {MethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/metho
 import {TestStateLib} from "silo-vaults/test/foundry/call-and-reenter/TestState.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 
-contract AllowanceTest is MethodReentrancyTest {
+contract MulticallTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external view {
+    function verifyReentrancy() external {
         _ensureItWillNotRevert();
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "allowance(address,address)";
+        description = "multicall(bytes[])";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         ISiloVault vault = TestStateLib.vault();
 
-        vault.allowance(address(0), address(0));
+        bytes[] memory calls = new bytes[](2);
+        calls[0] = abi.encodeCall(vault.symbol, ());
+        calls[1] = abi.encodeCall(vault.name, ());
+
+        vault.multicall(calls);
     }
 }

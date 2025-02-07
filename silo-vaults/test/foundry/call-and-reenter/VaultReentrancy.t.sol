@@ -23,8 +23,8 @@ import {TestStateLib} from "./TestState.sol";
 // FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc VaultReentrancyTest
 contract VaultReentrancyTest is Test {
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_skip_coverage_for_vault_reentrancy
-    function test_skip_coverage_for_vault_reentrancy() public {
+    // FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_coverage_for_vault_reentrancy
+    function test_coverage_for_vault_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
 
