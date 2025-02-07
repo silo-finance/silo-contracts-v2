@@ -6,6 +6,8 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -76,6 +78,21 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getUserLTV(silo0, borrower), 0.75e18, "borrower LTV #0");
         assertEq(siloLens.getUserLTV(silo1, borrower), 0.75e18, "borrower LTV #1");
 
+        assertEq(siloLens.getUtilization(silo0), 0, "getUtilization #0");
+        assertEq(siloLens.getUtilization(silo1), 0.75e18, "getUtilization #1");
+
+        assertEq(
+            siloLens.calculateCollateralValue(siloConfig, borrower),
+            collateral,
+            "calculateCollateralValue (price is 1:1)"
+        );
+
+        assertEq(
+            siloLens.calculateBorrowValue(siloConfig, borrower),
+            toBorrow,
+            "calculateBorrowValue (price is 1:1)"
+        );
+
         assertEq(
             siloLens.collateralBalanceOfUnderlying(silo0, borrower),
             collateral,
@@ -98,6 +115,8 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         vm.warp(block.timestamp + 65 days);
 
+        assertEq(siloLens.getBorrowAPR(silo1), 2222, "getBorrowAPR after 65 days #1");
+
         assertFalse(siloLens.isSolvent(silo0, borrower), "borrower is NOT solvent @0");
         assertFalse(siloLens.isSolvent(silo1, borrower), "borrower is NOT solvent @1");
 
@@ -105,6 +124,36 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
             siloLens.totalDeposits(silo1),
             deposit1,
             "totalDeposits after borrow + time are the same, because we reading storage"
+        );
+
+        assertGt(
+            siloLens.totalDepositsWithInterest(silo1),
+            deposit1,
+            "totalDepositsWithInterest after borrow + time + interest"
+        );
+
+        assertEq(
+            siloLens.totalBorrowAmount(silo1),
+            toBorrow,
+            "totalBorrowAmount = toBorrow (no interest)"
+        );
+
+        assertGt(
+            siloLens.totalBorrowAmountWithInterest(silo1),
+            toBorrow,
+            "totalBorrowAmountWithInterest = toBorrow + interest on the fly"
+        );
+
+        assertEq(
+            siloLens.borrowShare(silo1, borrower),
+            toBorrow,
+            "borrowShare = toBorrow  (no offset)"
+        );
+
+        assertEq(
+            siloLens.totalBorrowShare(silo1),
+            toBorrow,
+            "totalBorrowShare = toBorrow  (no offset)"
         );
 
         assertEq(siloLens.liquidity(silo0), deposit0 + collateral, "liquidity in silo0 after borrow + time");
@@ -141,10 +190,10 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 300 days);
 
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR #0");
-        assertEq(siloLens.getBorrowAPR(silo1), 133, "getBorrowAPR #1");
+        assertEq(siloLens.getBorrowAPR(silo1), 2222, "getBorrowAPR #1");
 
         assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR #0");
-        assertEq(siloLens.getDepositAPR(silo0), 321, "getDepositAPR #1");
+        assertEq(siloLens.getDepositAPR(silo1), 3333, "getDepositAPR #1");
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "hasPosition");
     }
