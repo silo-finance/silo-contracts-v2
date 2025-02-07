@@ -87,7 +87,6 @@ contract BaseTest is SiloLittleHelper, Test {
     }
 
     function _createNewMarkets() public virtual {
-        // for deploying just new silo.
         SiloFixture siloFixture = new SiloFixtureWithVeSilo();
         SiloConfigOverride memory _override;
 

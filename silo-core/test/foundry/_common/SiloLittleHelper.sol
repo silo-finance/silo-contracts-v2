@@ -91,7 +91,6 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
-    // check if we can easily adopt some test to use protected collateral
     function _depositCollateral(uint256 _assets, address _depositor, bool _toSilo1)
         internal
         returns (uint256 shares)
