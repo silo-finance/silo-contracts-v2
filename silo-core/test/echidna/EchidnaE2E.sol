@@ -278,10 +278,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         actor.switchCollateralToThisSilo(_vaultZero);
     }
 
-    // TODO transfers s tokens
-
-    // TODO setReceiveApproval
-
     function flashLoan(uint8 _actorIndex, bool _vaultZero, uint256 _amount) public {
         emit LogUint256("[flashLoan] block.timestamp:", block.timestamp);
 
@@ -403,10 +399,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
                 emit LogUint256("debtShareBalance", debtShareBalance);
                 emit LogUint256("vault.getLiquidity()", vaultLiquidity);
                 emit LogUint256("ltv (is it close to LT?)", ltv);
-
-                // TODO turning off this condition because idk why it is happening
-                // we nee to go back to this, but for now I will add more new features
-                // assert(false); // why max withdraw is 0?
             }
         }
 

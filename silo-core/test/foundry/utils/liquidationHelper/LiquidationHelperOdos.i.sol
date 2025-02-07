@@ -64,7 +64,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
     }
 
     /*
-         TODO this can must be skip because foundry do not support Sonic network yet
+         this must be skip because foundry do not support Sonic network yet
     */
     function test_skip_odos_liquidationCall_partial() public {
         _createPositionToliquidate();
@@ -96,7 +96,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
     /*
      forge test --ffi --mt test_skip_odos_liquidationCall_full -vv
 
-     TODO this can must be skip because foundry do not support Sonic network yet
+     this must be skip because foundry do not support Sonic network yet
     */
     function test_skip_odos_liquidationCall_full() public {
         _createPositionToliquidate();

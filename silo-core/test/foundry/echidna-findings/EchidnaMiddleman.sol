@@ -241,7 +241,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             emit log("transition back");
 
-            // using any value
             (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
                 _type == uint8(ISilo.CollateralType.Collateral)
                     ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
