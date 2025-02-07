@@ -15,10 +15,10 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --broadcast --rpc-url $RPC_SONIC\
-        --verify
+        --ffi --rpc-url $RPC_SONIC \
+        --broadcast --verify
 
     NOTICE: remember to register it in Tower
 */
