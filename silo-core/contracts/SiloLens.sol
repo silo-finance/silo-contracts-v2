@@ -107,13 +107,13 @@ contract SiloLens is ISiloLens {
         fullLiquidation = maxRepay == debtToRepay;
     }
 
-    function borrowAPY(ISilo _silo, address _asset) public view returns (uint256 rcur) {
-        IInterestRateModel irm = getModel(_silo, _asset);
+    function borrowAPY(ISilo _silo) public view returns (uint256 rcur) {
+        IInterestRateModel irm = getModel(_silo);
 
         rcur = irm.getCurrentInterestRate(address(_silo), block.timestamp);
     }
 
-    function getDepositAmount(ISilo _silo, address _asset, address _user)
+    function getDepositAmount(ISilo _silo, address _user)
         public
         view
         returns (uint256 totalUserDeposits)
@@ -128,7 +128,7 @@ contract SiloLens is ISiloLens {
             return 0;
         }
 
-        IInterestRateModel irm = IInterestRateModel(getModel(_silo, _asset));
+        IInterestRateModel irm = IInterestRateModel(getModel(_silo));
 
         uint256 rcomp = irm.getCompoundInterestRate(address(_silo), block.timestamp);
 
@@ -139,19 +139,15 @@ contract SiloLens is ISiloLens {
         totalUserDeposits = _totalDepositsWithInterest(collateralAssets, debtAssets, daoFee + deployerFee, rcomp);
     }
 
-    function totalBorrowAmountWithInterest(ISilo _silo, address _asset)
+    function totalBorrowAmountWithInterest(ISilo _silo)
         public
         view
         returns (uint256 totalBorrowAmount)
     {
-        _requireAsset(_silo, _asset);
-
         totalBorrowAmount = _silo.getDebtAssets();
     }
 
-    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel irm) {
-        _requireAsset(_silo, _asset);
-
+    function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
         irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
     }
 
@@ -177,9 +173,5 @@ contract SiloLens is ISiloLens {
         returns (uint256 totalBorrowAmountWithInterests)
     {
         totalBorrowAmountWithInterests = _totalBorrowAmount + _totalBorrowAmount * _rcomp / _PRECISION_DECIMALS;
-    }
-
-    function _requireAsset(ISilo _silo, address _asset) internal view {
-        require(_silo.asset() == _asset, InvalidAsset());
     }
 }
