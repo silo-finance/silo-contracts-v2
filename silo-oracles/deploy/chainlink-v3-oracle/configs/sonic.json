@@ -5,7 +5,10 @@
         "primaryAggregator": "REDSTONE_stS_S_aggregator",
         "primaryHeartbeat": 22201,
         "secondaryAggregator": "",
-        "secondaryHeartbeat": 0
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     },
     "REDSTONE_solvBTC.BNN_USD": {
         "baseToken": "solvBTC.BNN",
