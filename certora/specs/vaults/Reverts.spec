@@ -117,7 +117,7 @@ rule submitCapRevertCondition(env e, address id, uint256 newSupplyCap) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
     address asset = asset();
     uint256 pendingCapValidAt = pendingCap_(id).validAt;
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(id);
 
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
@@ -140,7 +140,7 @@ rule submitCapRevertCondition(env e, address id, uint256 newSupplyCap) {
 rule submitMarketRemovalRevertCondition(env e, address id) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
     uint256 pendingCapValidAt = pendingCap_(id).validAt;
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(id);
 
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
@@ -201,7 +201,7 @@ rule updateWithdrawQueueInputValidation(env e, uint256[] indexes) {
 
 // Check the input validation conditions under which the reallocate function reverts.
 // This function can also revert for non enabled markets and if the total withdrawn differs from the total supplied.
-rule reallocateInputValidation(env e, MetaMorphoHarness.MarketAllocation[] allocations) {
+rule reallocateInputValidation(env e, SiloVaultHarness.MarketAllocation[] allocations) {
     bool hasAllocatorRole = hasAllocatorRole(e.msg.sender);
 
     reallocate@withrevert(e, allocations);

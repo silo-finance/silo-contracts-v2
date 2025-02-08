@@ -41,7 +41,7 @@ rule canForceRemoveMarket(address id) {
     // Safe require because this holds as an invariant.
     require hasPositiveSupplyCapIsUpdated(id);
 
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(id);
     require config.cap > 0;
     require config.removableAt == 0;
     // Assume that the withdraw queue is [X, id];

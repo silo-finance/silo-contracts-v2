@@ -10,7 +10,7 @@ invariant noFeeToUnsetFeeRecipient()
     feeRecipient() == 0 => fee() == 0;
 
 function hasSupplyCapIsEnabled(address id) returns bool {
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(id);
 
     return config.cap > 0 => config.enabled;
 }
@@ -42,7 +42,7 @@ invariant enabledHasConsistentAsset(address id)
 }
 
 function hasSupplyCapIsNotMarkedForRemoval(address id) returns bool {
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(id);
 
     return config.cap > 0 => config.removableAt == 0;
 }
@@ -52,7 +52,7 @@ invariant supplyCapIsNotMarkedForRemoval(address id)
     hasSupplyCapIsNotMarkedForRemoval(id);
 
 function isNotEnabledIsNotMarkedForRemoval(address id) returns bool {
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(id);
 
     return !config.enabled => config.removableAt == 0;
 }

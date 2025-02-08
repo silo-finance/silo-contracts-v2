@@ -109,7 +109,7 @@ rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner,
 }
 
 // Check that balances do not change on reallocate.
-rule reallocateTokenChange(env e, MetaMorphoHarness.MarketAllocation[] allocations, address id) {
+rule reallocateTokenChange(env e, SiloVaultHarness.MarketAllocation[] allocations, address id) {
     address asset = asset();
 
     // Trick to require that all the following addresses are different.

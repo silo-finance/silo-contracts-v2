@@ -2,7 +2,7 @@
 import "Range.spec";
 
 function hasNoBadPendingTimelock() returns bool {
-    MetaMorphoHarness.PendingUint192 pendingTimelock = pendingTimelock_();
+    SiloVaultHarness.PendingUint192 pendingTimelock = pendingTimelock_();
 
     return pendingTimelock.validAt == 0 <=> pendingTimelock.value == 0;
 }
@@ -29,7 +29,7 @@ invariant smallerPendingTimelock()
 }
 
 function hasNoBadPendingCap(address id) returns bool {
-    MetaMorphoHarness.PendingUint192 pendingCap = pendingCap_(id);
+    SiloVaultHarness.PendingUint192 pendingCap = pendingCap_(id);
 
     return pendingCap.validAt == 0 <=> pendingCap.value == 0;
 }
@@ -57,7 +57,7 @@ invariant greaterPendingCap(address id)
     isGreaterPendingCap(id);
 
 function hasNoBadPendingGuardian() returns bool {
-    MetaMorphoHarness.PendingAddress pendingGuardian = pendingGuardian_();
+    SiloVaultHarness.PendingAddress pendingGuardian = pendingGuardian_();
 
     // Notice that address(0) is a valid value for a new guardian.
     return pendingGuardian.validAt == 0 => pendingGuardian.value == 0;

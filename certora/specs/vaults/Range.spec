@@ -17,11 +17,11 @@ methods {
     function skimRecipient() external returns(address) envfree;
 
     // HARNESS
-    function pendingTimelock_() external returns(MetaMorphoHarness.PendingUint192) envfree;
+    function pendingTimelock_() external returns(SiloVaultHarness.PendingUint192) envfree;
     function getVaultAsset(address) external returns(address) envfree;
-    function pendingGuardian_() external returns(MetaMorphoHarness.PendingAddress) envfree;
-    function config_(address) external returns(MetaMorphoHarness.MarketConfig) envfree;
-    function pendingCap_(address) external returns(MetaMorphoHarness.PendingUint192) envfree;
+    function pendingGuardian_() external returns(SiloVaultHarness.PendingAddress) envfree;
+    function config_(address) external returns(SiloVaultHarness.MarketConfig) envfree;
+    function pendingCap_(address) external returns(SiloVaultHarness.PendingUint192) envfree;
     function minTimelock() external returns(uint256) envfree;
     function maxTimelock() external returns(uint256) envfree;
     function maxQueueLength() external returns(uint256) envfree;
@@ -33,7 +33,7 @@ methods {
 }
 
 function isPendingTimelockInRange() returns bool {
-    MetaMorphoHarness.PendingUint192 pendingTimelock = pendingTimelock_();
+    SiloVaultHarness.PendingUint192 pendingTimelock = pendingTimelock_();
 
     return pendingTimelock.validAt != 0 =>
         assert_uint256(pendingTimelock.value) <= maxTimelock() &&
