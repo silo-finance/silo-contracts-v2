@@ -51,6 +51,7 @@ interface ISiloFactory is IERC721 {
 
     error MissingHookReceiver();
     error ZeroAddress();
+    error DaoFeeReceiverZeroAddress();
     error EmptyToken0();
     error EmptyToken1();
     error MaxFeeExceeded();
@@ -66,7 +67,6 @@ interface ISiloFactory is IERC721 {
     error MaxDeployerFeeExceeded();
     error MaxFlashloanFeeExceeded();
     error MaxLiquidationFeeExceeded();
-    error InvalidIrmConfig();
     error InvalidCallBeforeQuote();
     error OracleMisconfiguration();
     error InvalidQuoteToken();

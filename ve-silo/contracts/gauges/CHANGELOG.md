@@ -1,4 +1,6 @@
 ### ethereum/SiloLiquidityGauge.vy
+- gauge afterTokenTransfer fn with _amount parameter ([ecb28c0](https://github.com/silo-finance/silo-contracts-v2/pull/856/commits/ecb28c0e294982701dff1496a8e50e7c70abfe2f))
+
 - Initialization via share token ([6850f85](https://github.com/silo-finance/silo-contracts-v2/pull/460/commits/6850f851e8800a63736f31abc504e37a31714ca6))
 
 - SiloLiquidityGauge implementation initialization ([507b11f](https://github.com/silo-finance/silo-contracts-v2/pull/270/commits/507b11f18a78096b77fbaac4835551832c1c1f3a))
@@ -58,6 +60,8 @@
 - Copy of Balancer's implementation of the LiquidityGaugeFactory.sol ([c2bc3d5](https://github.com/silo-finance/silo-contracts-v2/pull/34/commits/c2bc3d539244abee8e2cd9b13e70b931eb251735))
 
 ### l2-common/ChildChainGauge.vy
+- gauge afterTokenTransfer fn with _amount parameter ([a75fdcc](https://github.com/silo-finance/silo-contracts-v2/pull/856/commits/a75fdcc56638202b0fde30a44cda6f8e4b44ae66))
+
 - Initialization via share token ([e0da4d6](https://github.com/silo-finance/silo-contracts-v2/pull/460/commits/e0da4d60ce035724f71da672db2b33b32ee4a7ba))
 
 - ChildChainGauge implementation initialization ([507b11f](https://github.com/silo-finance/silo-contracts-v2/pull/270/commits/507b11f18a78096b77fbaac4835551832c1c1f3a))

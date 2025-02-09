@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -17,22 +17,22 @@ contract DIAOracleConfig is Layer1OracleConfig {
     /// @dev if set, we will use secondary price to convert to quote
     bool internal immutable _CONVERT_TO_QUOTE; // solhint-disable-line var-name-mixedcase
 
+    /// @dev If TRUE price will be 1/price
+    bool internal immutable _INVERT_SECONDARY_PRICE; // solhint-disable-line var-name-mixedcase
+
     /// @dev all verification should be done by factory
-    constructor(
-        IDIAOracle.DIADeploymentConfig memory _config,
-        uint256 _normalizationDivider,
-        uint256 _normalizationMultiplier
-    )
+    constructor(IDIAOracle.DIADeploymentConfig memory _config)
         Layer1OracleConfig(
             _config.baseToken,
             _config.quoteToken,
             _config.heartbeat,
-            _normalizationDivider,
-            _normalizationMultiplier
+            _config.normalizationDivider,
+            _config.normalizationMultiplier
         )
     {
         _DIA_ORACLEV2 = _config.diaOracle;
         _CONVERT_TO_QUOTE = bytes(_config.secondaryKey).length != 0;
+        _INVERT_SECONDARY_PRICE = _config.invertSecondPrice;
     }
 
     function getConfig() external view virtual returns (IDIAOracle.DIAConfig memory config) {
@@ -43,5 +43,6 @@ contract DIAOracleConfig is Layer1OracleConfig {
         config.convertToQuote = _CONVERT_TO_QUOTE;
         config.normalizationDivider = _DECIMALS_NORMALIZATION_DIVIDER;
         config.normalizationMultiplier = _DECIMALS_NORMALIZATION_MULTIPLIER;
+        config.invertSecondPrice = _INVERT_SECONDARY_PRICE;
     }
 }

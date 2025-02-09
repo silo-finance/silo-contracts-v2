@@ -1,0 +1,96 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: VAULTS Quality Test
+
+env:
+    RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+    RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+    RPC_SEPOLIA: ${{ secrets.RPC_SEPOLIA }}
+    RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+    RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+    PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
+
+on:
+    push:
+        branches: [ master, develop ]
+        paths:
+            - silo-vaults/**/*.sol
+            - silo-vaults/**/*.ts
+            - silo-vaults/**/*.js
+            - silo-vaults/**/*.json
+            - silo-core/contracts/incentives/**/*.sol
+            - package.json
+            - yarn.lock
+            - gitmodules/*
+            - .gitmodules
+            - .github/workflows/silo-vaults.yml
+
+    pull_request:
+        paths:
+            - silo-vaults/**/*.sol
+            - silo-vaults/**/*.ts
+            - silo-vaults/**/*.js
+            - silo-vaults/**/*.json
+            - silo-core/contracts/incentives/**/*.sol
+            - package.json
+            - yarn.lock
+            - gitmodules/*
+            - .gitmodules
+            - .github/workflows/silo-vaults.yml
+
+jobs:
+    silo-vaults-tests:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    submodules: recursive
+
+            -   name: Cache silo-vaults contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-vaults-contracts-cache-${{ hashFiles('./silo-vaults/**/*.sol') }}
+                    restore-keys: |
+                        silo-vaults-contracts-cache-${{ hashFiles('./silo-vaults/**/*.sol') }}
+                        silo-vaults-contracts-cache-
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: Run tests
+                run: FOUNDRY_PROFILE=vaults-tests forge test -v --ffi
+
+            -   name: Sizes
+                run: |
+                    git submodule
+                    forge --version
+                    FOUNDRY_PROFILE=vaults forge build --sizes
+
+    linters:
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout sources
+                uses: actions/checkout@v3
+
+            -   name: Set up Node.js
+                uses: actions/setup-node@v3
+                with:
+                    node-version: 20.x
+                    cache: 'yarn'
+
+            -   run: yarn install
+
+            -   name: Solidity Lint
+                run: yarn workspace silo-vaults lint:sol

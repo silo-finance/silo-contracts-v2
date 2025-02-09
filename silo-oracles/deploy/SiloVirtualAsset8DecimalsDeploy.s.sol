@@ -3,6 +3,7 @@ pragma solidity >=0.7.6;
 
 import {CommonDeploy} from "./CommonDeploy.sol";
 import {SiloVirtualAsset8Decimals} from "silo-oracles/contracts/silo-virtual-assets/SiloVirtualAsset8Decimals.sol";
+import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 
 /**
     FOUNDRY_PROFILE=oracles \
@@ -19,6 +20,6 @@ contract SiloVirtualAsset8DecimalsDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(asset, "SiloVirtualAsset8Decimals.sol");
+        _registerDeployment(asset, SiloOraclesContracts.SILO_VIRTUAL_ASSET_8_DECIMALS);
     }
 }

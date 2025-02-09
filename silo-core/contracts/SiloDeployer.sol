@@ -160,6 +160,8 @@ contract SiloDeployer is ISiloDeployer {
     /// @notice Create an oracle
     /// @param _txData Oracle creation details (factory and creation tx input)
     function _createOracle(OracleCreationTxData memory _txData) internal returns (address _oracle) {
+        if (_txData.deployed != address(0)) return _txData.deployed;
+
         address factory = _txData.factory;
 
         if (factory == address(0)) return address(0);

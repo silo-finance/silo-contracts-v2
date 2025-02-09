@@ -5,6 +5,139 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Updated
+- Router with multicall
+- Silo hooks refactoring
+
+## [1.3.5] - 2025-02-07
+### Updated
+- stS/S market with 18 decimals share token on Sonic
+
+## [1.3.4] - 2025-02-07
+### Updated
+- deploy new `LiquidationHelper` 
+
+## [1.3.3] - 2025-02-06
+### Updated
+- adjustment for coverage to work
+
+## [1.3.2] - 2025-02-04
+### Added
+- Anon/USDC.e market sonic
+
+## [1.3.1] - 2025-02-04
+### Added
+- wstkscETH/ETH market sonic
+
+## [1.3.0] - 2025-02-04
+### Added
+- wanS/S market sonic
+
+## [1.2.0] - 2025-02-03
+### Added
+- silo-coracle: silo virtual asset name and symbol
+- silo-core: add flag that informs about full liquidation
+- silo lens redeployment
+- silo-oracles: ERC4626 price oracle
+- silo-oracles: Pyth aggregator factory
+- silo-oracles: OracleScaler to normalize amounts for 18 decimal
+- silo-core: manual liquidation helper
+- wS/USDC.e borrowable S market sonic
+- woS/S market sonic
+- wstkscUSD/USDC.e market sonic
+
+## [1.1.0] - 2025-01-27
+### Added
+- solvBTC.BNN/solvBTC market sonic
+- wS/scUSD market sonic
+- Redeployment SiloDeployer
+- silo-core: use underlying token decimals in collateral share token
+- silo-oracles: invert flag
+
+## [1.0.0] - 2025-01-20
+### Added
+- add rescue function to incentive controller
+
+### Updated
+- allow to restart incentive program after some time and ensure rewards are not calculated for a "gap"
+- ensure claim rewards reset state after claiming
+
+## [0.20.0] - 2025-01-10
+### Updated
+- Redeployment market for Sonic: `stS/S`
+- Redeployment SiloRouter
+- Redeployment GaugeHookReceiver with updated event and reduced contract size
+
+## [0.19.0] - 2025-01-08
+### Added
+- Redeployment market for Sonic: `stS/S`
+- Redeployment GaugeHookReceiver
+- Extended LiquidationCall event
+- silo vaults catch 63/64 gas attack
+
+## [0.18.0] - 2025-01-07
+### Added
+- Sonic and Arbitrum deployments
+- new market for Sonic: `stS/S`
+- Silo Incentives controller
+- Silo vaults incentives module and incentives claiming logic
+- Renaming of 'MetaMorpho' to 'SiloVaults'
+- Extended LiquidationCall event
+
+## [0.17.3] - 2024-12-20
+### Fixed
+- allow LiquidationHelper to accept ETH
+
+## [0.17.2] - 2024-12-16
+### Added
+- new markets for v0.17: `wstETH/WETH`, `gmETH/WETH`, `solvBTC/wBTC`, `ETHPlus/WETH`
+
+## [0.17.1] - 2024-12-14
+### Updated
+- redeployment of silo-vault with `MIN_TIMELOCK` set to 1 minute for QA purposes
+
+## [0.17.0] - 2024-12-14
+### Updated
+- redeployment of whole protocol
+
+## [0.16.0] - 2024-12-12
+### Added
+- add support for custom oracle setup
+
+## [0.15.1] - 2024-12-03
+### Added
+- add initial setup for IRM params: `ri` and `Tcrit`
+
+### Fixed
+- fix `maxBorrow` estimation
+
+## [0.15.0] - 2024-12-02
+### Added
+- `PublicAllocator` contract for vaults
+- add reentrancy for `withdrawFees`
+
+### Fixed
+- ensure transition deposit not fail when user insolvent
+
+## [0.14.0] - 2024-11-25
+### Added
+- Vault functionality based on MetaMorpho
+  - MetaMorpho was adjusted to work with ERC4626 standard
+  - Concept of Idle market needs to be replaced with additional vault. By default, in Silo `IdleVault` is used. 
+
+## [0.13.0] - 2024-11-19
+### Added
+- `LiquidationHelper` and `Tower`
+
+## [0.12.1] - 2024-11-04
+### Added
+- LICENSE
+
+### Changed
+- modified license for some solidity files
+
+### Fixed
+- SiloLens redeployment
 
 ## [0.12.0] - 2024-11-01
 ### Added

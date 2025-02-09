@@ -40,17 +40,20 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
 
         INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
-        IInterestRateModelV2.ConfigWithState memory emptyConfig;
+        IInterestRateModelV2.Config memory emptyConfig;
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
         vm.mockCall(irmConfigAddress, encodedData, abi.encode(emptyConfig));
         vm.expectCall(irmConfigAddress, encodedData);
 
-        IInterestRateModelV2.ConfigWithState memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
+        IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
         assertEq(keccak256(abi.encode(emptyConfig)), keccak256(abi.encode(fullConfig)), "empty config");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_IRM_getConfig_withData
+    */
     function test_IRM_getConfig_withData() public {
         address silo = address(this);
         address irmConfigAddress = makeAddr("irmConfigAddress");
@@ -58,23 +61,57 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         INTEREST_RATE_MODEL.initialize(irmConfigAddress);
 
         bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
-        vm.mockCall(irmConfigAddress, encodedData, abi.encode(_configWithState()));
+        vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
         vm.expectCall(irmConfigAddress, encodedData);
 
-        IInterestRateModelV2.ConfigWithState memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
+        IInterestRateModelV2.Config memory fullConfig = INTEREST_RATE_MODEL.getConfig(silo);
 
-        assertEq(keccak256(abi.encode(_configWithState())), keccak256(abi.encode(fullConfig)), "config match");
+        assertEq(keccak256(abi.encode(_defaultConfig())), keccak256(abi.encode(fullConfig)), "config match");
 
         assertGt(fullConfig.beta, 0, "beta");
         assertGt(fullConfig.kcrit, 0, "kcrit");
         assertGt(fullConfig.ki, 0, "ki");
         assertGt(fullConfig.klin, 0, "klin");
         assertGt(fullConfig.klow, 0, "klow");
-        assertEq(fullConfig.ri, 0, "ri can be empty");
-        assertEq(fullConfig.Tcrit, 0, "Tcrit can be empty");
         assertGt(fullConfig.ucrit, 0, "ucrit");
         assertGt(fullConfig.ulow, 0, "ulow");
         assertGt(fullConfig.uopt, 0, "uopt");
+        assertEq(fullConfig.ri, 10, "ri");
+        assertEq(fullConfig.Tcrit, 1, "Tcrit");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_IRM_getSetup
+    */
+    function test_IRM_getSetup() public {
+        address silo = address(this);
+        address irmConfigAddress = makeAddr("irmConfigAddress");
+
+        INTEREST_RATE_MODEL.initialize(irmConfigAddress);
+
+        bytes memory encodedData = abi.encodeWithSelector(IInterestRateModelV2Config.getConfig.selector);
+        vm.mockCall(irmConfigAddress, encodedData, abi.encode(_defaultConfig()));
+        vm.expectCall(irmConfigAddress, encodedData);
+
+        (int112 ri, int112 Tcrit, bool initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+        assertFalse(initialized, "not initialized");
+        assertEq(ri, 0, "ri not initialized");
+        assertEq(Tcrit, 0, "Tcrit not initialized");
+
+        (ri, Tcrit, initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+
+        assertFalse(initialized, "not initialized yet");
+        assertEq(ri, 0, "ri not initialized yet");
+        assertEq(Tcrit, 0, "Tcrit not initialized yet");
+
+        vm.prank(silo);
+        INTEREST_RATE_MODEL.getCompoundInterestRateAndUpdate(0, 0, block.timestamp);
+
+        (ri, Tcrit, initialized) = INTEREST_RATE_MODEL.getSetup(silo);
+
+        assertTrue(initialized, "initialized");
+        assertEq(ri, 10, "ri initialized");
+        assertEq(Tcrit, 1, "Tcrit initialized");
     }
 
     function test_IRM_RcompData_Mock() public {
@@ -86,7 +123,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
-            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
@@ -169,7 +206,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         for (uint i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
-            IInterestRateModelV2.ConfigWithState memory cfg = _toConfigWithState(testCase);
+            IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
@@ -194,8 +231,9 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
                 testCase.input.lastTransactionTime
             );
 
-            (int256 storageRi, int256 storageTcrit)= IRMv2Impl.getSetup(silo);
+            (int112 storageRi, int112 storageTcrit, bool initialized) = IRMv2Impl.getSetup(silo);
 
+            assertTrue(initialized);
             assertEq(storageRi, ri, _concatMsg(i, "storageRi"));
             assertEq(storageTcrit, Tcrit, _concatMsg(i, "storageTcrit"));
         }

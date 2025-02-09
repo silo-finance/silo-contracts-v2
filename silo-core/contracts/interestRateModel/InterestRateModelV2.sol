@@ -114,13 +114,15 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             block.timestamp
         );
 
-        currentSetup.ri = ri > type(int128).max
-            ? type(int128).max
-            : ri < type(int128).min ? type(int128).min : int128(ri);
+        currentSetup.initialized = true;
 
-        currentSetup.Tcrit = Tcrit > type(int128).max
-            ? type(int128).max
-            : Tcrit < type(int128).min ? type(int128).min : int128(Tcrit);
+        currentSetup.ri = ri > type(int112).max
+            ? type(int112).max
+            : ri < type(int112).min ? type(int112).min : int112(ri);
+
+        currentSetup.Tcrit = Tcrit > type(int112).max
+            ? type(int112).max
+            : Tcrit < type(int112).min ? type(int112).min : int112(Tcrit);
     }
 
     /// @inheritdoc IInterestRateModel
@@ -185,25 +187,20 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         );
     }
 
-    function getConfig(address _silo) public view virtual returns (ConfigWithState memory fullConfig) {
-        Setup memory setup = getSetup[_silo];
-        Config memory config = irmConfig.getConfig();
+    function getConfig(address _silo) public view virtual returns (Config memory fullConfig) {
+        Setup memory siloSetup = getSetup[_silo];
+        fullConfig = irmConfig.getConfig();
 
-        fullConfig.uopt = config.uopt;
-        fullConfig.ucrit = config.ucrit;
-        fullConfig.ulow = config.ulow;
-        fullConfig.ki = config.ki;
-        fullConfig.kcrit = config.kcrit;
-        fullConfig.klow = config.klow;
-        fullConfig.klin = config.klin;
-        fullConfig.beta = config.beta;
-        fullConfig.ri = setup.ri;
-        fullConfig.Tcrit = setup.Tcrit;
+        // if initialized, read ri and Tcrit from storage. Otherwise use config values.
+        if (siloSetup.initialized) {
+            fullConfig.ri = siloSetup.ri;
+            fullConfig.Tcrit = siloSetup.Tcrit;
+        }
     }
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCurrentInterestRate(
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
@@ -257,7 +254,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRate(
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
@@ -278,7 +275,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
 
     /// @inheritdoc IInterestRateModelV2
     function calculateCompoundInterestRateWithOverflowDetection( // solhint-disable-line function-max-lines
-        ConfigWithState memory _c,
+        Config memory _c,
         uint256 _totalDeposits,
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
@@ -373,6 +370,36 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         if (overflow || capApplied) {
             ri = 0;
             Tcrit = 0;
+        }
+    }
+
+    /// @dev this method is to detect possible overflow in math for provided config in next 50 years
+    function configOverflowCheck(IInterestRateModelV2.Config calldata _config) external pure virtual {
+        int256 YEAR = 365 days;
+        int256 MAX_TIME = 50 * 365 days;
+        int256 DP = int256(_DP);
+
+        int256 rcur_max;
+
+        {
+            int256 Tcrit_max = _config.Tcrit + _config.beta * MAX_TIME;
+            int256 rp_max = _config.kcrit * (DP + Tcrit_max) / DP * (DP - _config.ucrit) / DP;
+            int256 rp_min = -_config.klow * _config.ulow / DP;
+            int256 rlin_max = _config.klin * DP / DP;
+            int256 ri_max = _max(_config.ri, rlin_max) +_config.ki * (DP - _config.uopt) * MAX_TIME / DP;
+            int256 ri_min = -_config.ki * _config.uopt * MAX_TIME / DP;
+            rcur_max = ri_max + rp_max;
+            int256 rcur_min = ri_min + rp_min;
+            int256 rcur_ann_max = rcur_max * YEAR;
+        }
+
+        {
+            int256 slopei_max = _config.ki * (DP - _config.uopt) / DP;
+            int256 slopei_min = - _config.ki * _config.uopt / DP;
+            int256 slope_max = slopei_max + _config.kcrit * _config.beta / DP * (DP - _config.ucrit) / DP;
+            int256 slope_min = slopei_min;
+
+            int256 x_max = rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;
         }
     }
 

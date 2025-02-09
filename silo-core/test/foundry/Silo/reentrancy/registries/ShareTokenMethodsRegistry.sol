@@ -10,6 +10,9 @@ import {ApproveReentrancyTest} from "../methods/share-token/ApproveReentrancyTes
 import {BalanceOfReentrancyTest} from "../methods/share-token/BalanceOfReentrancyTest.sol";
 import {BalanceOfAndTotalSupplyReentrancyTest} from "../methods/share-token/BalanceOfAndTotalSupplyReentrancyTest.sol";
 import {BurnReentrancyTest} from "../methods/share-token/BurnReentrancyTest.sol";
+import {
+    CallOnBehalfOfShareTokenReentrancyTest
+} from "../methods/share-token/CallOnBehalfOfShareTokenReentrancyTest.sol";
 import {DecimalsReentrancyTest} from "../methods/share-token/DecimalsReentrancyTest.sol";
 import {Eip712DomainReentrancyTest} from "../methods/share-token/Eip712DomainReentrancyTest.sol";
 import {
@@ -39,6 +42,7 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
         _registerMethod(new BalanceOfReentrancyTest());
         _registerMethod(new BalanceOfAndTotalSupplyReentrancyTest());
         _registerMethod(new BurnReentrancyTest());
+        _registerMethod(new CallOnBehalfOfShareTokenReentrancyTest());
         _registerMethod(new DecimalsReentrancyTest());
         _registerMethod(new Eip712DomainReentrancyTest());
         _registerMethod(new ForwardTransferFromNoChecksReentrancyTest());

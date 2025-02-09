@@ -317,7 +317,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 assetDecimals = IShareToken(_siloAsset).decimals();
         uint256 collateralDecimals = _collateralToken.decimals();
 
-        assertEq(10 ** (collateralDecimals - assetDecimals), SiloMathLib._DECIMALS_OFFSET_POW, "invalid offset");
+        assertEq(collateralDecimals - assetDecimals, 0, "not using offset for share decimals() method");
     }
 
     /*
@@ -393,7 +393,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     function _forwardTransferFromNoChecksPermissions(IShareToken _shareToken) internal {
-        vm.expectRevert(IShareToken.OnlySilo.selector);
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         _shareToken.forwardTransferFromNoChecks(address(0), address(0), 0);
     }
 
@@ -423,7 +423,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 balance = _shareToken.balanceOf(user);
         assertEq(balance, mintAmount, "expect valid balance for a user");
 
-        vm.prank(address(silo));
+        vm.prank(address(_shareToken.hookSetup().hookReceiver));
         _shareToken.forwardTransferFromNoChecks(user, otherUser, mintAmount);
 
         balance = _shareToken.balanceOf(otherUser);

@@ -30,7 +30,7 @@ contract CalculateCurrentInterestRateGasTest is Gas, Test {
     function test_gas_calculateCurrentInterestRate() public {
         ISiloConfig.ConfigData memory config = silo1.config().getConfig(address(silo1));
 
-        IInterestRateModelV2.ConfigWithState memory c = IInterestRateModelV2(config.interestRateModel).getConfig(address(silo1));
+        IInterestRateModelV2.Config memory c = IInterestRateModelV2(config.interestRateModel).getConfig(address(silo1));
         ISilo.UtilizationData memory data = ISilo(silo1).utilizationData();
 
         _action(
@@ -44,7 +44,7 @@ contract CalculateCurrentInterestRateGasTest is Gas, Test {
                 data.interestRateTimestamp + 30 days
             )),
             "CalculateCurrentInterestRate",
-            12788
+            13028
         );
     }
 }

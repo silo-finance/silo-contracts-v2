@@ -136,7 +136,8 @@ contract LiquidityGaugesTest is IntegrationTest {
             _BOB_BAL,
             _alice,
             _ALICE_BAL,
-            _TOTAL_SUPPLY
+            _TOTAL_SUPPLY,
+            0 // we don't use it in the gauge
         );
 
         integrateCheckpoint = gauge.integrate_checkpoint();
@@ -153,7 +154,7 @@ contract LiquidityGaugesTest is IntegrationTest {
         uint256 newBobBal = _BOB_BAL + 10e18;
         uint256 newSharesTokensTotalSupply = _TOTAL_SUPPLY + 10e18;
 
-        gauge.afterTokenTransfer(_bob, newBobBal, address(0), 0, newSharesTokensTotalSupply);
+        gauge.afterTokenTransfer(_bob, newBobBal, address(0), 0, newSharesTokensTotalSupply, 0);
 
         assertEq(gauge.working_balances(_bob), newBobBal, "After 2. An invalid working balance");
         assertEq(gauge.working_balances(_alice), _ALICE_BAL, "After 2. An invalid working balance for Alice");
@@ -171,7 +172,8 @@ contract LiquidityGaugesTest is IntegrationTest {
             _BOB_BAL,
             _alice,
             _ALICE_BAL,
-            _TOTAL_SUPPLY
+            _TOTAL_SUPPLY,
+            0 // we don't use it in the gauge
         );
     }
 

@@ -29,7 +29,6 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
-    event LiquidationCall(address indexed liquidator, bool receiveSToken);
     error SenderNotSolventAfterTransfer();
 
     event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
@@ -280,6 +279,11 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
             vm.expectCall(
                 address(token0),
                 abi.encodeWithSelector(IERC20.transfer.selector, address(this), 9_203873357727164866)
+            );
+
+            vm.expectEmit(true, true, true, true, address(partialLiquidation));
+            emit IPartialLiquidation.LiquidationCall(
+                address(this), address(silo0), BORROWER, 8_765593674025871302, 9_203873357727164866, false
             );
 
             (

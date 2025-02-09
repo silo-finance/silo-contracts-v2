@@ -126,16 +126,10 @@ interface ISiloConfig is ICrossReentrancyGuard {
 
     error OnlySilo();
     error OnlySiloOrTokenOrHookReceiver();
-    error OnlyShareToken();
-    error OnlySiloOrDebtShareToken();
     error WrongSilo();
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
-    error NoDebt();
-    error CollateralTypeDidNotChanged();
-    error InvalidConfigOrder();
     error FeeTooHigh();
-    error InvalidDebtShareToken();
 
     /// @dev It should be called on debt transfer (debt share token transfer).
     /// In the case if the`_recipient` doesn't have configured a collateral silo,
@@ -180,7 +174,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// `borrow` - always sets opposite silo as collateral.
     /// If Silo0 borrows, then Silo1 will be collateral and vice versa.
     /// `borrowSameAsset` - always sets the same silo as collateral.
-    /// `leverageSameAsset` - always sets the same silo as collateral.
     /// `switchCollateralToThisSilo` - always sets the same silo as collateral.
     /// @param _borrower The address of the borrower for which the collateral silo is being retrieved
     /// @return collateralSilo The address of the collateral silo for the specified borrower

@@ -15,7 +15,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     using SiloLensLib for ISilo;
 
     function setUp() public {
-        _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*
@@ -29,7 +29,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_deposit_
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_deposit_fuzz(
         uint112 _assets,
         uint16 _assets2
@@ -50,7 +50,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_withDebt_
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_withDebt_1token_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -75,7 +75,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_withDebtAndNotEnoughLiquidity_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_withDebtAndNotEnoughLiquidity_fuzz(
         uint128 _collateral,
         uint128 _toBorrow,
@@ -114,7 +114,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_whenInterest_
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_whenInterest_1token_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -141,7 +141,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     /*
     forge test -vv --ffi --mt test_maxWithdraw_bothSilosWithInterest_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_bothSilosWithInterest_fuzz(
         uint128 _collateral,
         uint128 _toBorrow

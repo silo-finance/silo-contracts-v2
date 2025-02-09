@@ -1,0 +1,24 @@
+{
+    "arbitrum_one": [
+        {
+            "implementation": "0x457D104a79995fB76CE582D06B02E7cB89aA2860",
+            "description": "original implementation"
+        }
+    ],
+    "sonic": [
+        {
+            "implementation": "0x85b0273b0B415F9e28B9ce820240F4aa097F2a29",
+            "description": "original implementation"
+        },
+        {
+            "implementation": "0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d",
+            "description": "Changed share token decimals to 18"
+        }
+    ],
+    "optimism": [
+        {
+            "implementation": "0xd483138B7e40bCBCa16654FE9AD4bC0E565736Da",
+            "description": "original implementation"
+        }
+    ]
+}

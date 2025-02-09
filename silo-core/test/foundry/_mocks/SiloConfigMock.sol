@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
@@ -50,6 +50,20 @@ contract SiloConfigMock is Test {
         bytes memory data = abi.encodeWithSelector(ICrossReentrancyGuard.reentrancyGuardEntered.selector);
 
         vm.mockCall(ADDRESS, data, abi.encode(_status));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function turnOnReentrancyProtectionMock() external {
+        bytes memory data = abi.encodeWithSelector(ICrossReentrancyGuard.turnOnReentrancyProtection.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(0));
+        vm.expectCall(ADDRESS, data);
+    }
+
+    function turnOffReentrancyProtectionMock() external {
+        bytes memory data = abi.encodeWithSelector(ICrossReentrancyGuard.turnOffReentrancyProtection.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(0));
         vm.expectCall(ADDRESS, data);
     }
 }

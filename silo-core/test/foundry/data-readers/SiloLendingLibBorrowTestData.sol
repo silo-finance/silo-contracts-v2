@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -58,7 +58,7 @@ contract SiloLendingLibBorrowTestData {
         uint256 i;
 
         _init(data[i], "#0 all zeros");
-        data[i].output.reverts = ISilo.InputZeroAssetsOrShares.selector;
+        data[i].output.reverts = ISilo.InputZeroShares.selector;
         data[i].mocks.debtSharesTotalSupplyMock = true;
 
         i++;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
@@ -101,6 +101,12 @@ contract ReentrancyOnRepayTest is Test {
             address(_debtShareToken),
             abi.encodePacked(IERC20.totalSupply.selector),
             abi.encode(1000)
+        );
+
+        vm.mockCall(
+            address(_debtShareToken),
+            abi.encodePacked(IShareToken.balanceOfAndTotalSupply.selector),
+            abi.encode(991, 1000)
         );
 
         vm.mockCall(

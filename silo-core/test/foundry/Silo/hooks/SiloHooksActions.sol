@@ -34,7 +34,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
 
     SiloFixture internal _siloFixture;
-    ISiloConfig internal _siloConfig;
+    ISiloConfig internal _config;
     HookMock internal _siloHookReceiver;
 
     address internal _depositor = makeAddr("Depositor");
@@ -971,6 +971,21 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
     ) internal {
         uint256 expectedWithdrawCollateral = 100000000000000000000;
 
+        if (_receiveSToken) {
+            vm.expectEmit(true, true, true, true);
+
+            emit ShareTokenAfterHA(
+                address(silo1),
+                _borrowerAddr,
+                address(this), // because we transfer collateral
+                expectedWithdrawCollateral.decimalsOffsetPow(),
+                0, // no balance for the sender
+                expectedWithdrawCollateral.decimalsOffsetPow(), // recipient balance
+                expectedWithdrawCollateral.decimalsOffsetPow(), // total supply
+                PROTECTED
+            );
+        }
+
         vm.expectEmit(true, true, true, true);
 
         emit DebtShareTokenAfterHA(
@@ -983,20 +998,9 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
             0 // total supply
         );
 
-        vm.expectEmit(true, true, true, true);
+        if (!_receiveSToken) {
+            vm.expectEmit(true, true, true, true);
 
-        if (_receiveSToken) {
-            emit ShareTokenAfterHA(
-                address(silo1),
-                _borrowerAddr,
-                address(this), // because we transfer collateral
-                expectedWithdrawCollateral.decimalsOffsetPow(),
-                0, // no balance for the sender
-                expectedWithdrawCollateral.decimalsOffsetPow(), // recipient balance
-                expectedWithdrawCollateral.decimalsOffsetPow(), // total supply
-                PROTECTED
-            );
-        } else {
             emit ShareTokenAfterHA(
                 address(silo1),
                 address(partialLiquidation),
@@ -1035,15 +1039,15 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         configOverride.token0 = address(new MintableToken(18));
         configOverride.token1 = address(new MintableToken(18));
         configOverride.hookReceiverImplementation = _hookReceiver;
-        configOverride.configName = SiloConfigsNames.LOCAL_DEPLOYER;
+        configOverride.configName = SiloConfigsNames.SILO_LOCAL_DEPLOYER;
 
         address hook;
-        (_siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);
+        (_config, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);
         partialLiquidation = IPartialLiquidation(hook);
 
         __init(MintableToken(configOverride.token0), MintableToken(configOverride.token1), silo0, silo1);
 
-        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory configData = _config.getConfig(address(silo0));
 
         _siloHookReceiver = HookMock(configData.hookReceiver);
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
 interface IPartialLiquidation {
@@ -13,28 +13,27 @@ interface IPartialLiquidation {
 
     /// @dev Emitted when a borrower is liquidated.
     /// @param liquidator The address of the liquidator
+    /// @param silo The address of the silo on which position was liquidated
+    /// @param borrower The address of the borrower
+    /// @param repayDebtAssets Repay amount
+    /// @param withdrawCollateral Total (collateral + protected) withdraw amount, in case `receiveSToken` is TRUE
+    /// then this is estimated withdraw, and representation of this amount in sToken was transferred
     /// @param receiveSToken True if the liquidators wants to receive the collateral sTokens, `false` if he wants
     /// to receive the underlying collateral asset directly
     event LiquidationCall(
         address indexed liquidator,
+        address indexed silo,
+        address indexed borrower,
+        uint256 repayDebtAssets,
+        uint256 withdrawCollateral,
         bool receiveSToken
     );
 
-    /// @dev Revert if provided silo configuration during initialization is empty
-    error EmptySiloConfig();
-    /// @dev Revert if the hook receiver is already configured/initialized
-    error AlreadyConfigured();
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();
-    error LiquidityFeeToHi();
-    error EmptyDebtToCover();
     error NoDebtToCover();
     error FullLiquidationRequired();
-    error OnlyDelegateCall();
-    error InvalidSiloForCollateral();
     error UserIsSolvent();
-    error InsufficientLiquidation();
-    error LiquidationTooBig();
     error UnknownRatio();
     error NoRepayAssets();
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
 import {CommonBase} from "forge-std/Base.sol";
@@ -8,6 +8,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 
@@ -27,6 +28,7 @@ abstract contract SiloLittleHelper is CommonBase {
     ISilo silo0;
     ISilo silo1;
     IPartialLiquidation partialLiquidation;
+    ISiloFactory siloFactory;
 
     constructor() {
         siloLens = new SiloLens();
@@ -78,11 +80,14 @@ abstract contract SiloLittleHelper is CommonBase {
         return _makeDeposit(silo1, token1, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
-    function _deposit(uint256 _assets, address _depositor, ISilo.CollateralType _type) internal returns (uint256 shares) {
+    function _deposit(uint256 _assets, address _depositor, ISilo.CollateralType _type)
+        internal
+        returns (uint256 shares)
+    {
         return _makeDeposit(silo0, token0, _assets, _depositor, _type);
     }
 
-    function _deposit(uint256 _assets, address _depositor) internal returns (uint256 shares) {
+    function _deposit(uint256 _assets, address _depositor) internal virtual returns (uint256 shares) {
         return _makeDeposit(silo0, token0, _assets, _depositor, ISilo.CollateralType.Collateral);
     }
 
@@ -178,12 +183,12 @@ abstract contract SiloLittleHelper is CommonBase {
         shares = silo1.repayShares(_shares, _borrower);
     }
 
-    function _redeem(uint256 _amount, address _depositor) internal returns (uint256 assets) {
+    function _redeem(uint256 _amount, address _depositor) internal virtual returns (uint256 assets) {
         vm.prank(_depositor);
         return silo0.redeem(_amount, _depositor, _depositor);
     }
 
-    function _withdraw(uint256 _amount, address _depositor) internal returns (uint256 shares) {
+    function _withdraw(uint256 _amount, address _depositor) internal virtual returns (uint256 shares) {
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor);
     }
@@ -268,6 +273,7 @@ abstract contract SiloLittleHelper is CommonBase {
         (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
+        siloFactory = silo0.factory();
     }
 
     function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage _sharedStorage) {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -29,14 +29,10 @@ contract ChainlinkV3OracleFactory is OracleFactory {
             return ChainlinkV3Oracle(getOracleAddress[address(oracleConfig)]);
         }
 
-        uint256 secondaryPriceDecimals = verifyConfig(_config);
+        verifyConfig(_config);
         verifyHeartbeat(_config);
 
-        (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
-            _config.baseToken, _config.quoteToken, _config.primaryAggregator.decimals(), secondaryPriceDecimals
-        );
-
-        oracleConfig = new ChainlinkV3OracleConfig(_config, divider, multiplier);
+        oracleConfig = new ChainlinkV3OracleConfig(_config);
         oracle = ChainlinkV3Oracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
@@ -71,6 +67,13 @@ contract ChainlinkV3OracleFactory is OracleFactory {
 
         if (address(_config.secondaryAggregator) != address(0)) {
             secondaryPriceDecimals = _config.secondaryAggregator.decimals();
+        }
+
+        if (_config.normalizationDivider > 1e36) revert IChainlinkV3Oracle.HugeDivider();
+        if (_config.normalizationMultiplier > 1e36) revert IChainlinkV3Oracle.HugeMultiplier();
+
+        if (_config.normalizationDivider == 0 && _config.normalizationMultiplier == 0) {
+            revert IChainlinkV3Oracle.MultiplierAndDividerZero();
         }
     }
 

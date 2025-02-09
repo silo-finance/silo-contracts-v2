@@ -6,7 +6,7 @@ import {SiloMethodsRegistry} from "./SiloMethodsRegistry.sol";
 import {SiloConfigMethodsRegistry} from "./SiloConfigMethodsRegistry.sol";
 import {CollateralShareTokenMethodsRegistry} from "./CollateralShareTokenMethodsRegistry.sol";
 import {DebtShareTokenMethodsRegistry} from "./DebtShareTokenMethodsRegistry.sol";
-import {GaugeHookReceiverMethodsRegistry} from "./GaugeHookReceiverMethodsRegistry.sol";
+import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
 contract Registries {
     IMethodsRegistry[] public registry;
@@ -16,7 +16,7 @@ contract Registries {
         registry.push(IMethodsRegistry(address(new SiloConfigMethodsRegistry())));
         registry.push(IMethodsRegistry(address(new CollateralShareTokenMethodsRegistry())));
         registry.push(IMethodsRegistry(address(new DebtShareTokenMethodsRegistry())));
-        registry.push(IMethodsRegistry(address(new GaugeHookReceiverMethodsRegistry())));
+        registry.push(IMethodsRegistry(address(new SiloHookV1MethodsRegistry())));
     }
 
     function list() external view returns (IMethodsRegistry[] memory) {

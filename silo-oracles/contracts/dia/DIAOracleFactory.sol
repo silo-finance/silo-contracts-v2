@@ -32,13 +32,7 @@ contract DIAOracleFactory is OracleFactory {
 
         verifyConfig(_config);
 
-        bool convertToQuote = bytes(_config.secondaryKey).length != 0;
-
-        (uint256 divider, uint256 multiplier) = OracleNormalization.normalizationNumbers(
-            _config.baseToken, _config.quoteToken, DIA_DECIMALS, convertToQuote ? DIA_DECIMALS : 0
-        );
-
-        oracleConfig = new DIAOracleConfig(_config, divider, multiplier);
+        oracleConfig = new DIAOracleConfig(_config);
 
         oracle = DIAOracle(Clones.clone(ORACLE_IMPLEMENTATION));
 
@@ -65,5 +59,11 @@ contract DIAOracleFactory is OracleFactory {
 
         // heartbeat restrictions are arbitrary
         if (_config.heartbeat < 60 seconds || _config.heartbeat > 2 days) revert IDIAOracle.InvalidHeartbeat();
+
+        if (_config.normalizationDivider > 1e36) revert IDIAOracle.HugeDivider();
+        if (_config.normalizationMultiplier > 1e36) revert IDIAOracle.HugeMultiplier();
+        if (_config.normalizationDivider == 0 && _config.normalizationMultiplier == 0) {
+            revert IDIAOracle.MultiplierAndDividerZero();
+        }
     }
 }

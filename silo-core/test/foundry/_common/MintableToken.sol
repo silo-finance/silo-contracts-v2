@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
@@ -47,6 +47,25 @@ contract MintableToken is ERC20 {
         mintOnDemand(sender, amount);
 
         _transfer(sender, recipient, amount);
+
+        // no allowance!
+
+        return true;
+    }
+
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        if (!onDemand) {
+            return super.transfer(recipient, amount);
+        }
+
+        // do whatever to be able to transfer from
+
+        mintOnDemand(msg.sender, amount);
+
+        _transfer(msg.sender, recipient, amount);
 
         // no allowance!
 

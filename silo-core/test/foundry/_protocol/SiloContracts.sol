@@ -86,7 +86,7 @@ contract SiloContracts {
     function _siloCoreSetUp() internal {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        gaugeHookReceiver = IGaugeHookReceiver(SiloCoreDeployments.get(SiloCoreContracts.GAUGE_HOOK_RECEIVER, chainAlias));
+        gaugeHookReceiver = IGaugeHookReceiver(SiloCoreDeployments.get(SiloCoreContracts.SILO_HOOK_V1, chainAlias));
         siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));
 
         interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(

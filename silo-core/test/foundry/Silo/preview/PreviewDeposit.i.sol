@@ -22,13 +22,13 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     }
 
     function setUp() public {
-        _setUpLocalFixture(SiloConfigsNames.LOCAL_NO_ORACLE_NO_LTV_SILO);
+        _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NO_ORACLE_NO_LTV_SILO);
     }
 
     /*
     forge test -vv --ffi --mt test_previewDeposit_beforeInterest_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
@@ -45,7 +45,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
@@ -68,7 +68,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_withInterest
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_previewDeposit_withInterest_1token_fuzz(uint256 _assets, bool _protected) public {
         _previewDeposit_withInterest(_assets, _protected);
     }
@@ -103,7 +103,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
 
         if (previewShares1 == 0) {
             // if preview is zero for `_assets`, then deposit should also reverts
-            _depositForBorrowRevert(_assets, depositor, cType, ISilo.InputZeroAssetsOrShares.selector);
+            _depositForBorrowRevert(_assets, depositor, cType, ISilo.InputZeroShares.selector);
         } else {
             assertEq(
                 previewShares1,
@@ -132,7 +132,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
         emit log_named_uint("previewShares1", previewShares1);
 
         if (previewShares1 == 0) {
-            _depositForBorrowRevert(_assets, depositor, cType, ISilo.InputZeroAssetsOrShares.selector);
+            _depositForBorrowRevert(_assets, depositor, cType, ISilo.InputZeroShares.selector);
         } else {
             assertEq(
                 previewShares1,

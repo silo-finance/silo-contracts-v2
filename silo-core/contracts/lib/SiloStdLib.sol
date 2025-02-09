@@ -15,8 +15,6 @@ library SiloStdLib {
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    error ZeroAmount();
-
     /// @notice Returns flash fee amount
     /// @param _config address of config contract for Silo
     /// @param _token for which fee is calculated
@@ -27,9 +25,10 @@ library SiloStdLib {
 
         // all user set fees are in 18 decimals points
         (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
-        require(_token == asset, ISilo.Unsupported());
+        require(_token == asset, ISilo.UnsupportedFlashloanToken());
         if (flashloanFee == 0) return 0;
 
+        require(type(uint256).max / _amount >= flashloanFee, ISilo.FlashloanAmountTooBig());
         fee = _amount * flashloanFee / _PRECISION_DECIMALS;
 
         // round up
@@ -104,7 +103,13 @@ library SiloStdLib {
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
-        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
+        uint256 rcomp;
+
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
+            rcomp = r;
+        } catch {
+            // do not lock silo
+        }
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
@@ -136,7 +141,13 @@ library SiloStdLib {
         view
         returns (uint256 totalDebtAssetsWithInterest)
     {
-        uint256 rcomp = IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp);
+        uint256 rcomp;
+
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
+            rcomp = r;
+        } catch {
+            // do not lock silo
+        }
 
         (
             totalDebtAssetsWithInterest,

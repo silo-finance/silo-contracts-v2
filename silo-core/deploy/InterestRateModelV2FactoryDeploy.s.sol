@@ -10,9 +10,15 @@ import {
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 /**
-    FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2FactoryDeploy.s.sol:InterestRateModelV2FactoryDeploy \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+
+    FOUNDRY_PROFILE=core forge verify-contract 0xDA91d956498d667f5DB71eEcd58Ba02C4B960a53 \
+    silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol:InterestRateModelV2Factory \
+    --compiler-version 0.8.28 \
+    --rpc-url $RPC_ARBITRUM \
+    --watch
  */
 contract InterestRateModelV2FactoryDeploy is CommonDeploy {
     function run() public returns (IInterestRateModelV2Factory interestRateModelV2ConfigFactory) {

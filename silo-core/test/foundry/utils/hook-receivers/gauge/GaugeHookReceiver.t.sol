@@ -49,7 +49,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
 
-        _siloConfig = _setUpLocalFixture(SiloConfigsNames.LOCAL_GAUGE_HOOK_RECEIVER);
+        _siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);
 
         IHookReceiver hook = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 
@@ -60,7 +60,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
     // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReInitialization
     function testReInitialization() public {
-        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.GAUGE_HOOK_RECEIVER);
+        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.SILO_HOOK_V1);
 
         bytes memory data = abi.encode(_dao);
 
@@ -271,7 +271,8 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
                 _SENDER_BAL,
                 _recipient,
                 _RECIPIENT_BAL,
-                _TS
+                _TS,
+                _AMOUNT
             )
         );
 

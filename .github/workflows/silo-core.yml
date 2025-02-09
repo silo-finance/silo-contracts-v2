@@ -4,12 +4,15 @@
 name: CORE Quality Test
 
 env:
-    RPC_MAINNET: ${{ vars.RPC_MAINNET }}
-    RPC_ARBITRUM: ${{ vars.RPC_ARBITRUM }}
-    RPC_SEPOLIA: ${{ vars.RPC_SEPOLIA }}
-    RPC_OPTIMISM: ${{ vars.RPC_OPTIMISM }}
-    RPC_ANVIL: ${{ vars.RPC_ANVIL }}
-    PRIVATE_KEY: ${{ vars.ANVIL_PRIVATE_KEY }}
+    RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+    RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+    RPC_SEPOLIA: ${{ secrets.RPC_SEPOLIA }}
+    RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+    RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+    RPC_SONIC: ${{ secrets.RPC_SONIC }}
+    PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
+    VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
+    VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
 
 on:
     push:
@@ -77,7 +80,10 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
+
+            -   name: Run submodule update
+                run: git submodule update --init --recursive
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -142,12 +148,12 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -197,7 +203,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -246,7 +252,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly
+                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
