@@ -191,14 +191,12 @@ contract SiloLens is ISiloLens {
 
     /// @inheritdoc ISiloLens
     function getBorrowAPR(ISilo _silo) external view virtual returns (uint256 borrowAPR) {
-        revert("not supported yet");
-        // return SiloLensLib.getBorrowAPR(_silo);
+        return SiloLensLib.getBorrowAPR(_silo);
     }
 
     /// @inheritdoc ISiloLens
     function getDepositAPR(ISilo _silo) external view virtual returns (uint256 depositAPR) {
-        revert("not supported yet");
-        // return SiloLensLib.getDepositAPR(_silo);
+        return SiloLensLib.getDepositAPR(_silo);
     }
 
     /// @inheritdoc ISiloLens
