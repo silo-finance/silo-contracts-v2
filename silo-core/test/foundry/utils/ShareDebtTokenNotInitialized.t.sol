@@ -44,11 +44,11 @@ contract ShareDebtTokenNotInitializedTest is Test {
     */
     function test_sToken_noInit_mint() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
-        sToken.mint(address(1), address(1), Hook.COLLATERAL_TOKEN);
+        sToken.mint(address(1), address(1), 3);
 
-        // counterexample
+        vm.expectRevert(Hook.InvalidTokenType.selector);
         vm.prank(address(0));
-        sToken.mint(address(1), address(1), Hook.COLLATERAL_TOKEN);
+        sToken.mint(address(1), address(1), 3);
     }
 
     /*
