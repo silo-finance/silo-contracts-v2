@@ -2,7 +2,7 @@
 import "Enabled.spec";
 
 methods {
-    function SiloVault._supplyBalance(address id) internal returns (uint256,uint256) => summarySupplyshares(id);
+    // function SiloVault._supplyBalance(address id) internal returns (uint256,uint256) => summarySupplyshares(id);
 }
 
 ghost lastSupplyShares(address) returns uint256;

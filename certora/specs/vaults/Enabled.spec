@@ -58,3 +58,29 @@ rule enabledIsInWithdrawQueue(address id) {
     uint256 witness = assert_uint256(withdrawRank(id) - 1);
     assert withdrawQueue(witness) == id;
 }
+
+// Checks that markets with nonzero cap have a positive withdraw rank, according to the withdrawRank ghost variable.
+invariant nonZeroCapHasPositiveRank(address id)
+    config_(id).cap > 0 => withdrawRank(id) > 0
+    {
+    preserved {
+        requireInvariant enabledHasPositiveRank(id); 
+    }
+}
+
+ghost mapping (address => bool) addedMarketIsInWithdrawQ;
+
+hook Sstore supplyQueue[INDEX uint i] address newMarket (address oldMarket) {
+    addedMarketIsInWithdrawQ[newMarket] = withdrawRank(newMarket) > 0;
+}
+
+invariant isInDepositQThenIsInWithdrawQ(address market)
+    addedMarketIsInWithdrawQ[market]
+    {
+        preserved {
+        requireInvariant nonZeroCapHasPositiveRank(market); 
+    }
+}
+
+
+

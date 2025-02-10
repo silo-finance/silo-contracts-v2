@@ -128,3 +128,15 @@ rule reallocateTokenChange(env e, SiloVaultHarness.MarketAllocation[] allocation
     assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
     assert balanceSenderAfter == balanceSenderBefore;
 }
+
+rule onlySpecicifeidMethodsCanDecreaseMarketBalance(env e, method f, address market)
+{ 
+    address asset = asset();
+    uint balanceBefore = ERC20.balanceOf(asset, currentContract);
+    //(balanceBefore, _) = supplyBalance(e, market);
+    calldataarg args;
+    f(e, args);
+    uint balanceAfter = ERC20.balanceOf(asset, currentContract);
+    //(balanceAfter, _) = supplyBalance(e, market);
+    assert balanceAfter >= balanceBefore;
+}

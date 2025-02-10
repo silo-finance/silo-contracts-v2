@@ -3,6 +3,9 @@ import "Timelock.spec";
 
 methods {
     function _.asset() external => PER_CALLEE_CONSTANT;
+    function _supplyBalance(address _market) internal returns (uint256, uint256);
+    function SiloVaultHarness.eip712Domain() external returns (bytes1, string, string, uint256, address, bytes32, uint256[]) => NONDET DELETE;
+
 }
 
 // Check that the fee cannot accrue to an unset fee recipient.
@@ -45,6 +48,25 @@ function hasSupplyCapIsNotMarkedForRemoval(address id) returns bool {
     SiloVaultHarness.MarketConfig config = config_(id);
 
     return config.cap > 0 => config.removableAt == 0;
+}
+
+// not in withdrawal queue => market has cap == 0
+function isNotInWwithdrawalQueueThenNoCap(address id) returns bool {
+    
+    SiloVaultHarness.MarketConfig config = config_(id);
+
+    return config.cap > 0 => config.removableAt == 0;
+}
+
+// Check that enabled markets are in the withdraw queue.
+rule notInWwithdrawalQueueThenNoCap(address id) {
+    require config_(id).enabled;
+
+    requireInvariant enabledHasPositiveRank(id);
+    requireInvariant withdrawRankCorrect(id);
+
+    uint256 witness = assert_uint256(withdrawRank(id) - 1);
+    assert withdrawQueue(witness) == id;
 }
 
 // Check that a market with a positive cap cannot be marked for removal.
