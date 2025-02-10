@@ -76,8 +76,6 @@ contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] IRM configs prepared");
         
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
-        // TODO we might want to resolve oracle deployments it in better way in a future,
-        // atm we have some data for it in `oracles` and some in siloInitData
         siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
         siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
         siloInitData.solvencyOracle1 = oracles.solvencyOracle1.deployed;
