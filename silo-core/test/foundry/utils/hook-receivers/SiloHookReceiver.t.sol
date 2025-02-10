@@ -10,8 +10,8 @@ import {SiloHookReceiverHarness} from "silo-core/test/foundry/_mocks/SiloHookRec
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloHookReceiverTest
 */
 contract SiloHookReceiverTest is Test {
-    uint256 public constant HOOKS_BEFORE = 100;
-    uint256 public constant HOOKS_AFTER = 200;
+    uint24 public constant HOOKS_BEFORE = 100;
+    uint24 public constant HOOKS_AFTER = 200;
 
     address public silo = makeAddr("silo");
     SiloHookReceiverHarness public hookReceiver;

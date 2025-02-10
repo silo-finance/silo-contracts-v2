@@ -5,7 +5,7 @@ import {BaseHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 contract SiloHookReceiverHarness is BaseHookReceiver {
-    function setHookConfig(address _silo, uint256 _hooksBefore, uint256 _hooksAfter) external virtual {
+    function setHookConfig(address _silo, uint24 _hooksBefore, uint24 _hooksAfter) external virtual {
         _setHookConfig(_silo, _hooksBefore, _hooksAfter);
     }
 
