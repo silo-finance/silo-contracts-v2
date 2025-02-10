@@ -185,6 +185,12 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
             "[debtBalanceOfUnderlying] with interest debt is higher"
         );
 
+        uint256 interestAPY = toBorrow * siloLens.getBorrowAPR(silo1) / 1e18;
+        emit log_named_decimal_uint("interest APY", interestAPY, 18);
+        emit log_named_decimal_uint("interest 65 days", interestAPY * 65 / 365, 18);
+        emit log_named_decimal_uint("maxRepay based on APY", toBorrow + interestAPY * 65 / 365, 18);
+        emit log_named_decimal_uint("maxRepay based on view method", silo1.maxRepay(borrower), 18);
+
         silo1.accrueInterest();
 
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after accrueInterest #0");
@@ -213,7 +219,6 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         uint256 maxRepayAfter = silo1.maxRepay(borrower);
         assertEq(maxRepayAfter, 1247.410613506809097866e18, "maxRepayAfter");
-
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "hasPosition");
     }
