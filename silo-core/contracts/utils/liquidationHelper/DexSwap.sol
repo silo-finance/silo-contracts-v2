@@ -27,7 +27,6 @@ contract DexSwap {
     }
 
     /// @dev Swaps ERC20->ERC20 tokens held by this contract using a 0x-API quote.
-    /// Must attach ETH equal to the `value` field from the API response.
     /// @param _sellToken The `sellTokenAddress` field from the API response.
     /// @param _spender The `allowanceTarget` field from the API response.
     /// @param _swapCallData The `data` field from the API response.

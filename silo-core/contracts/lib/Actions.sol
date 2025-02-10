@@ -33,6 +33,9 @@ library Actions {
     error FeeOverflow();
     error FlashLoanNotPossible();
 
+    /// @notice Initialize Silo
+    /// @param _siloConfig Address of ISiloConfig with full configuration for this Silo
+    /// @return hookReceiver Address of the hook receiver for the silo
     function initialize(ISiloConfig _siloConfig) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
@@ -45,6 +48,14 @@ library Actions {
         return configData.hookReceiver;
     }
 
+    /// @notice Implements IERC4626.deposit for protected (non-borrowable) and borrowable collateral
+    /// @dev Reverts for debt asset type
+    /// @param _assets Amount of assets to deposit (must be > 0)
+    /// @param _shares Minimum shares expected for the deposit (optional, can be 0)
+    /// @param _receiver Address to receive the deposit shares
+    /// @param _collateralType Type of collateral (Protected or Borrowable)
+    /// @return assets Amount of assets deposited
+    /// @return shares Amount of shares minted due to deposit
     function deposit(
         uint256 _assets,
         uint256 _shares,
@@ -80,6 +91,17 @@ library Actions {
         _hookCallAfterDeposit(_collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
+    /// @notice Implements IERC4626.withdraw for protected (non-borrowable) and borrowable collateral
+    /// @dev Reverts for debt asset type
+    /// @param _args Contains withdrawal parameters:
+    /// - `assets`: Amount of assets to withdraw (0 if `_shares` specified)
+    /// - `shares`: Amount of shares burnt for the withdrawal (0 if `_assets` specified)
+    /// - `receiver`: Address to receive withdrawn assets
+    /// - `owner`: Owner of the assets being withdrawn
+    /// - `spender`: Caller executing the withdrawal
+    /// - `collateralType`: Specifies whether withdrawal is protected or borrowable collateral
+    /// @return assets Amount of assets withdrawn
+    /// @return shares Amount of shares burnt during withdrawal
     function withdraw(ISilo.WithdrawArgs calldata _args)
         external
         returns (uint256 assets, uint256 shares)
@@ -115,6 +137,14 @@ library Actions {
         _hookCallAfterWithdraw(_args, assets, shares);
     }
 
+    /// @notice Allows an address to borrow a specified amount of assets
+    /// @param _args Contains the borrowing parameters:
+    /// - `assets`: Number of assets the borrower intends to borrow
+    /// - `shares`: Number of shares corresponding to the assets being borrowed
+    /// - `receiver`: Address receiving the borrowed assets
+    /// - `borrower`: Address of the borrower
+    /// @return assets Amount of assets borrowed
+    /// @return shares Amount of shares minted for the borrowed assets
     function borrow(ISilo.BorrowArgs memory _args)
         external
         returns (uint256 assets, uint256 shares)
@@ -148,6 +178,11 @@ library Actions {
         _hookCallAfterBorrow(_args, Hook.BORROW, assets, shares);
     }
 
+    /// @notice Allows an address to borrow a specified amount of assets that will be back up with deposit made with the
+    /// same asset
+    /// @param _args check ISilo.BorrowArgs for details
+    /// @return assets Amount of assets borrowed
+    /// @return shares Amount of shares minted for the borrowed assets
     function borrowSameAsset(ISilo.BorrowArgs memory _args)
         external
         returns (uint256 assets, uint256 shares)
@@ -179,6 +214,13 @@ library Actions {
         _hookCallAfterBorrow(_args, Hook.BORROW_SAME_ASSET, assets, shares);
     }
 
+    /// @notice Repays a given asset amount and returns the equivalent number of shares
+    /// @param _assets Amount of assets to be repaid
+    /// @param _borrower Address of the borrower whose debt is being repaid
+    /// @param _repayer Address of the repayer who repay debt
+    /// @return assets number of assets that had been repay
+    /// @return shares number of shares that had been repay
+    // solhint-disable-next-line function-max-lines
     function repay(
         uint256 _assets,
         uint256 _shares,
@@ -213,8 +255,14 @@ library Actions {
             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);
         }
     }
-
-    // solhint-disable-next-line function-max-lines
+    /// @notice Transitions assets between borrowable (collateral) and non-borrowable (protected) states
+    /// @dev This method allows assets to switch states without leaving the protocol
+    /// @param _args Contains the transition parameters:
+    /// - `shares`: Amount of shares to transition
+    /// - `owner`: Owner of the assets being transitioned
+    /// - `transitionFrom`: Specifies whether transitioning from collateral or protected
+    /// @return assets Amount of assets transitioned
+    /// @return toShares Equivalent shares gained from the transition
     function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
@@ -278,6 +326,8 @@ library Actions {
         _hookCallAfterTransitionCollateral(_args, toShares, assets);
     }
 
+    /// @notice Switches the collateral silo to this silo
+    /// @dev Revert if the collateral silo is already set
     function switchCollateralToThisSilo() external {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
@@ -423,6 +473,8 @@ library Actions {
         siloConfig.turnOffReentrancyProtection();
     }
 
+    /// @notice Update hooks configuration for Silo
+    /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter) {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
@@ -439,6 +491,11 @@ library Actions {
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }
 
+    /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @param _target address of the contract to call
+    /// @param _value amount of ETH to send
+    /// @param _callType type of the call (Call or Delegatecall)
+    /// @param _input calldata for the call
     function callOnBehalfOfSilo(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
         internal
         returns (bool success, bytes memory result)
