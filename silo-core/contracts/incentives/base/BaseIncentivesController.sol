@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
@@ -15,6 +16,7 @@ import {ISiloIncentivesController} from "../interfaces/ISiloIncentivesController
   */
 abstract contract BaseIncentivesController is DistributionManager, ISiloIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
+    using SafeERC20 for IERC20;
 
     mapping(address user => mapping(bytes32 programId => uint256 unclaimedRewards)) internal _usersUnclaimedRewards;
 
@@ -298,6 +300,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
      * @param amount Amount of rewards to transfer
      */
     function _transferRewards(address rewardToken, address to, uint256 amount) internal virtual {
-        IERC20(rewardToken).transfer(to, amount);
+        IERC20(rewardToken).safeTransfer(to, amount);
     }
 }
