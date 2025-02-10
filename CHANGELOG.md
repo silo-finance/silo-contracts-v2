@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Fixed
 - allow to burn NFT only by owner
+- revert on invalid token type in `Hook.shareTokenTransfer()`
 
 ### Updated
 - Router with multicall
