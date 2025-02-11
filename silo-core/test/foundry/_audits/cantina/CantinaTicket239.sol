@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
-
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    forge test -vv --ffi --mc CantinaTicket239
+    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket239
 */
 contract CantinaTicket239 is CantinaTicket {
     function test_repay_early_accrue_interest_rate() public {
