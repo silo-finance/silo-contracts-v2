@@ -10,7 +10,7 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 contract CantinaTicket is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
-    function setUp() public {
+    function setUp() public virtual {
         siloConfig = _setUpLocalFixture();
     }
 }
