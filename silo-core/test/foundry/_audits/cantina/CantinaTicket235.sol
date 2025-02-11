@@ -39,6 +39,6 @@ contract CantinaTicket235 is CantinaTicket {
         uint256 redeemedAssets = silo0.redeem(silo0.maxRedeem(attacker, ISilo.CollateralType.Protected), attacker, attacker, ISilo.CollateralType.Protected);
 
         // If rounding discrepancies have accumulated, redeemedAssets will exceed the initialDeposit.
-        assertLt(redeemedAssets, initialDeposit, "redeem amount must be less than initial because we sis rounding 2x");
+        assertEq(redeemedAssets, initialDeposit, "no gains");
     }
 }
