@@ -28,6 +28,8 @@ contract CantinaTicket239 is CantinaTicket {
 
         // 3: Bob accruing interest
         vm.warp(block.timestamp + 10 days);
+        // In PoC they check collateral
+        uint amountBeforeRepay = silo1.getCollateralAssets();  // get collat amount with interest
 
         // 4: Alice repays all debt
         _repayShares(silo1.maxRepay(alice), silo1.maxRepayShares(alice), alice);
@@ -35,6 +37,8 @@ contract CantinaTicket239 is CantinaTicket {
         assertEq(siloLens.getLtv(silo1, alice), 0, "LTV 0");
 
         uint amountAfterRepay = silo1.getCollateralAssets();  // get collat amount with interest
+        assertEq(amountBeforeRepay, amountAfterRepay, "incorrect interest calculation");
+
         uint debtAfterRepay = silo1.getDebtAssets();
 
         // but interest rate keeps accruing for Bob
