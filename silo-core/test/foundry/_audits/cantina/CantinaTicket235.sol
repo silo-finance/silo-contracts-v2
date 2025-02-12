@@ -18,8 +18,7 @@ contract CantinaTicket235 is CantinaTicket {
         uint256 initialDeposit = 100e18;
         uint256 initialShares = _deposit(initialDeposit, attacker, ISilo.CollateralType.Collateral);
         uint256 transitionShares = initialShares;
-        uint256 iterations = 1000;
-        uint256 sumOfDeposits;
+        // uint256 iterations = 1000;
 
         // SILO COMMENT: if round is invalid we will gain even after one iteration
 
