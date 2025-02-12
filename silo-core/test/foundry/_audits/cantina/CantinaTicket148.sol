@@ -3,17 +3,6 @@ pragma solidity ^0.8.28;
 
 import "forge-std/console.sol";
 
-import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
-
-import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
-import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
-import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
-
-import {SiloFixtureWithVeSilo as SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
-import {SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";

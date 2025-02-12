@@ -1,21 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
-
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
-import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
-
-import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
-import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
-import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
-import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
