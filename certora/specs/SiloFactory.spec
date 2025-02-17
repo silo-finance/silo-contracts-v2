@@ -1,0 +1,2 @@
+
+use builtin rule sanity;
