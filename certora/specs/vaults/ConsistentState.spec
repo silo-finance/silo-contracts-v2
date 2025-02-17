@@ -59,7 +59,7 @@ function isNotInWwithdrawalQueueThenNoCap(address id) returns bool {
 }
 
 // Check that enabled markets are in the withdraw queue.
-rule notInWwithdrawalQueueThenNoCap(address id) {
+rule enabledIsInWithdrawalQueue(address id) {
     require config_(id).enabled;
 
     requireInvariant enabledHasPositiveRank(id);
@@ -86,3 +86,4 @@ invariant notEnabledIsNotMarkedForRemoval(address id)
 // Check that a market with a pending cap cannot be marked for removal.
 invariant pendingCapIsNotMarkedForRemoval(address id)
     pendingCap_(id).validAt > 0 => config_(id).removableAt == 0;
+

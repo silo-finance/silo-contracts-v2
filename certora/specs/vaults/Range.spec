@@ -53,6 +53,9 @@ invariant timelockInRange()
     }
 }
 
+invariant pendingCapIsUint184(address market)
+    to_mathint(pendingCap_(market).value) < 2^184;
+
 // Check that the fee cannot go over the max fee.
 invariant feeInRange()
     assert_uint256(fee()) <= maxFee();

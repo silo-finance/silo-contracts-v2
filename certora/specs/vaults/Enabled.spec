@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import "DistinctIdentifiers.spec";
 
+methods
+{
+    function supplyQGetAt(uint256) external returns (address) envfree;
+    function supplyQLength() external returns (uint256) envfree;   
+}
+
 function isInWithdrawQueueIsEnabled(uint256 i) returns bool {
     if(i >= withdrawQueueLength()) return true;
 
@@ -68,7 +74,40 @@ invariant nonZeroCapHasPositiveRank(address id)
     }
 }
 
-ghost mapping (address => bool) addedMarketIsInWithdrawQ;
+function setSupplyQueueInputIsValid(address[] newSupplyQueue) returns bool
+{
+    uint256 i;
+    require i < newSupplyQueue.length;
+    uint184 someCap = config_(newSupplyQueue[i]).cap;
+    bool result;
+    require result == false => someCap == 0;
+    return result;
+}
+
+// https://prover.certora.com/output/6893/51445a2d85b8428a9dcda8062811847e?anonymousKey=aee1daaea5bf150b10060398b47d34d107150cf9
+rule setSupplyQueueRevertsOnInvalidInput(env e, address[] newSupplyQueue)
+{
+    setSupplyQueue@withrevert(e, newSupplyQueue);
+    bool reverted = lastReverted;
+    assert !setSupplyQueueInputIsValid(newSupplyQueue) => reverted;
+}
+
+invariant addedToSupplyQThenIsInWithdrawQ(uint256 supplyQIndex)
+    supplyQIndex < supplyQLength() => withdrawRank(supplyQGetAt(supplyQIndex)) > 0
+    filtered { f -> f.selector != sig:updateWithdrawQueue(uint256[]).selector /* the method allowed to break this */ }
+    {
+        preserved setSupplyQueue(address[] newSupplyQueue) with (env e) {
+            requireInvariant nonZeroCapHasPositiveRank(newSupplyQueue[supplyQIndex]); 
+            require setSupplyQueueInputIsValid(newSupplyQueue); //safe assumption. See setSupplyQueueRevertsOnInvalidInput
+        }
+        preserved {
+            requireInvariant nonZeroCapHasPositiveRank(supplyQGetAt(supplyQIndex)); 
+    }
+}
+
+// in progress ------------------
+
+persistent ghost mapping (address => bool) addedMarketIsInWithdrawQ;
 
 hook Sstore supplyQueue[INDEX uint i] address newMarket (address oldMarket) {
     addedMarketIsInWithdrawQ[newMarket] = withdrawRank(newMarket) > 0;
@@ -77,10 +116,11 @@ hook Sstore supplyQueue[INDEX uint i] address newMarket (address oldMarket) {
 invariant isInDepositQThenIsInWithdrawQ(address market)
     addedMarketIsInWithdrawQ[market]
     {
+        preserved setSupplyQueue(address[] newSupplyQueue) with (env e) {
+            requireInvariant nonZeroCapHasPositiveRank(market); 
+            require setSupplyQueueInputIsValid(newSupplyQueue); //safe assumption. See setSupplyQueueRevertsOnInvalidInput
+        }
         preserved {
-        requireInvariant nonZeroCapHasPositiveRank(market); 
+            requireInvariant nonZeroCapHasPositiveRank(market); 
     }
 }
-
-
-

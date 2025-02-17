@@ -52,7 +52,7 @@ function isGreaterPendingCap(address id) returns bool {
     return pendingCapValue != 0 => assert_uint256(pendingCapValue) > assert_uint256(currentCapValue);
 }
 
-// Check that the pending cap value is either 0 or strictly greater than the current timelock value.
+// Check that the pending cap value is either 0 or strictly greater than the current cap value.
 invariant greaterPendingCap(address id)
     isGreaterPendingCap(id);
 
