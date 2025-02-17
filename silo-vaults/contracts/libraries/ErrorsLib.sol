@@ -142,7 +142,4 @@ library ErrorsLib {
 
     /// @notice Thrown when attempting to skim tokens that is a share token for one of withdrawal market
     error TokenInWithdrawQueue();
-
-    /// @notice Thrown when attempting to skim tokens that is a share token for one of supply market
-    error TokenInSupplyQueue();
 }
