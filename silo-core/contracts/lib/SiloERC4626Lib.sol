@@ -27,7 +27,6 @@ library SiloERC4626Lib {
 
     /// @dev ERC4626: MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be
     ///      deposited. In our case, we want to limit this value in a way, that after max deposit we can do borrow.
-    ///      That's why we decided to go with type(uint128).max - which is anyway high enough to consume any totalSupply
     uint256 internal constant _VIRTUAL_DEPOSIT_LIMIT = type(uint256).max;
 
     /// @notice Deposit assets into the silo
@@ -52,8 +51,9 @@ library SiloERC4626Lib {
         ISilo.CollateralType _collateralType
     ) internal returns (uint256 assets, uint256 shares) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        ISilo.AssetType collateralType = ISilo.AssetType(uint256(_collateralType));
 
-        uint256 totalAssets = $.totalAssets[ISilo.AssetType(uint256(_collateralType))];
+        uint256 totalAssets = $.totalAssets[collateralType];
 
         (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
             _assets,
@@ -62,10 +62,10 @@ library SiloERC4626Lib {
             _collateralShareToken.totalSupply(),
             Rounding.DEPOSIT_TO_ASSETS,
             Rounding.DEPOSIT_TO_SHARES,
-            ISilo.AssetType(uint256(_collateralType))
+            collateralType
         );
 
-        $.totalAssets[ISilo.AssetType(uint256(_collateralType))] = totalAssets + assets;
+        $.totalAssets[collateralType] = totalAssets + assets;
 
         // Hook receiver is called after `mint` and can reentry but state changes are completed already,
         // and reentrancy protection is still enabled.
@@ -97,8 +97,10 @@ library SiloERC4626Lib {
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
+        ISilo.AssetType collateralType = ISilo.AssetType(uint256(_args.collateralType));
+
         { // Stack too deep
-            uint256 totalAssets = $.totalAssets[ISilo.AssetType(uint256(_args.collateralType))];
+            uint256 totalAssets = $.totalAssets[collateralType];
 
             (assets, shares) = SiloMathLib.convertToAssetsOrToShares(
                 _args.assets,
@@ -107,7 +109,7 @@ library SiloERC4626Lib {
                 shareTotalSupply,
                 Rounding.WITHDRAW_TO_ASSETS,
                 Rounding.WITHDRAW_TO_SHARES,
-                ISilo.AssetType(uint256(_args.collateralType))
+                collateralType
             );
 
             uint256 liquidity = _args.collateralType == ISilo.CollateralType.Collateral
@@ -117,7 +119,7 @@ library SiloERC4626Lib {
             // check liquidity
             require(assets <= liquidity, ISilo.NotEnoughLiquidity());
 
-            $.totalAssets[ISilo.AssetType(uint256(_args.collateralType))] = totalAssets - assets;
+            $.totalAssets[collateralType] = totalAssets - assets;
         }
 
         // `burn` checks if `_spender` is allowed to withdraw `_owner` assets. `burn` calls hook receiver

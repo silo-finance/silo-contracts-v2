@@ -217,7 +217,7 @@ library Hook {
     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, COLLATERAL_TOKEN) == true`
     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, WITHDRAW | COLLATERAL_TOKEN) == true`
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
-        return _action & _expectedHook == _expectedHook;
+        return (_action & _expectedHook) == _expectedHook;
     }
 
     /// @notice Adds a hook to an action
