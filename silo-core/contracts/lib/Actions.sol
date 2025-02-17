@@ -139,8 +139,8 @@ library Actions {
 
     /// @notice Allows an address to borrow a specified amount of assets
     /// @param _args Contains the borrowing parameters:
-    /// - `assets`: Number of assets the borrower intends to borrow
-    /// - `shares`: Number of shares corresponding to the assets being borrowed
+    /// - `assets`: Number of assets the borrower intends to borrow (0 if `_shares` specified)
+    /// - `shares`: Number of shares corresponding to the assets being borrowed (0 if `_assets` specified)
     /// - `receiver`: Address receiving the borrowed assets
     /// - `borrower`: Address of the borrower
     /// @return assets Amount of assets borrowed
