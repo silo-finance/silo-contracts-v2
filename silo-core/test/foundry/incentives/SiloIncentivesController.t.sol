@@ -819,6 +819,7 @@ contract SiloIncentivesControllerTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_inputsValidation
     function test_claimRewardsOnBehalf_inputsValidation() public {
         vm.prank(_owner);
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
         _controller.setClaimer(address(0), address(this));
 
         vm.prank(_owner);
@@ -826,9 +827,6 @@ contract SiloIncentivesControllerTest is Test {
 
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidUserAddress.selector));
-        _controller.claimRewardsOnBehalf(address(0), user2, programsNames);
 
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
         _controller.claimRewardsOnBehalf(user1, address(0), programsNames);
