@@ -7,7 +7,6 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
-import {VaultIncentivesModuleDeploy} from "silo-vaults/deploy/VaultIncentivesModuleDeploy.s.sol";
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 /*
@@ -25,7 +24,7 @@ contract VaultIncentivesModuleTest is Test {
     address internal _market1 = makeAddr("Market1");
     address internal _market2 = makeAddr("Market2");
 
-    address internal _deployer;
+    address internal _deployer = makeAddr("_deployer");
 
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
     event IncentivesClaimingLogicRemoved(address indexed market, address logic);
@@ -33,13 +32,12 @@ contract VaultIncentivesModuleTest is Test {
     event NotificationReceiverRemoved(address notificationReceiver);
 
     function setUp() public {
-        VaultIncentivesModuleDeploy deployer = new VaultIncentivesModuleDeploy();
-        deployer.disableDeploymentsSync();
+        incentivesModule = new VaultIncentivesModule(_deployer);
+    }
 
-        incentivesModule = deployer.run();
-
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        _deployer = vm.addr(deployerPrivateKey);
+    function test_init() public {
+        vm.expectRevert();
+        incentivesModule.__VaultIncentivesModule_init(address(1));
     }
 
     /*

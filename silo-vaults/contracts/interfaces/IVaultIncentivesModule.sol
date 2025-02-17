@@ -18,6 +18,7 @@ interface IVaultIncentivesModule {
     error NotificationReceiverNotFound();
     error MarketAlreadySet();
     error MarketNotConfigured();
+    error InvalidInitialization();
 
     /// @notice Add an incentives claiming logic for the vault.
     /// @param _market The market to add the logic for.
