@@ -19,6 +19,12 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     constructor(address _owner) Ownable(_owner) {}
 
+    function __VaultIncentivesModule_init(address _owner) external virtual {
+        require(owner() == address(0), InvalidInitialization());
+
+        _transferOwnership(_owner);
+    }
+
     /// @inheritdoc IVaultIncentivesModule
     function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyOwner {
         require(address(_logic) != address(0), AddressZero());
