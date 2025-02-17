@@ -56,7 +56,6 @@ interface ISiloLens {
     function hasPosition(ISiloConfig _siloConfig, address _borrower) external view returns (bool);
 
     /// @notice Check if user is in debt
-    /// @dev [v1 compatible]
     /// @param _siloConfig Market address (silo config address)
     /// @param _borrower wallet address for which to read data
     /// @return TRUE if user borrowed any amount of any asset, otherwise FALSE
