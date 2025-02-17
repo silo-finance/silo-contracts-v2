@@ -118,4 +118,14 @@ contract SiloVaultHarness is SiloVault {
     {
         return _supplyBalance(market);
     }
+
+    function supplyQGetAt(uint256 index) external view returns (IERC4626)
+    {
+        return supplyQueue[index];
+    }
+
+    function supplyQLength() external view returns (uint256)
+    {
+        return supplyQueue.length;
+    }
 }
