@@ -255,7 +255,7 @@ library Actions {
             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);
         }
     }
-    /// @notice Transitions assets between borrowable (collateral) and non-borrowable (protected) states
+    /// @notice Transitions assets between collateral (borrowable) and protected (non-borrowable) states
     /// @dev This method allows assets to switch states without leaving the protocol
     /// @param _args Contains the transition parameters:
     /// - `shares`: Amount of shares to transition
