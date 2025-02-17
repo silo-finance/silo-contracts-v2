@@ -497,10 +497,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             require(_token != address(withdrawQueue[i]), ErrorsLib.TokenInWithdrawQueue());
         }
 
-        for (uint256 i; i < supplyQueue.length; ++i) {
-            require(_token != address(supplyQueue[i]), ErrorsLib.TokenInSupplyQueue());
-        }
-
         uint256 amount = _ERC20BalanceOf(_token, address(this));
 
         IERC20(_token).safeTransfer(skimRecipient, amount);
