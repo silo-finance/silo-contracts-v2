@@ -186,10 +186,10 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         );
 
         uint256 interestAPY = toBorrow * siloLens.getBorrowAPR(silo1) / 1e18;
-        emit log_named_decimal_uint("interest APY", interestAPY, 18);
-        emit log_named_decimal_uint("interest 65 days", interestAPY * 65 / 365, 18);
-        emit log_named_decimal_uint("maxRepay based on APY", toBorrow + interestAPY * 65 / 365, 18);
-        emit log_named_decimal_uint("maxRepay based on view method", silo1.maxRepay(borrower), 18);
+        emit log_named_decimal_uint("interest APY for 65 days calculated based on getCurrentInterestRate", interestAPY, 18);
+        emit log_named_decimal_uint("interest for 65 days (based on getCurrentInterestRate)", interestAPY * 65 / 365, 18);
+        emit log_named_decimal_uint("maxRepay based on getCurrentInterestRate", toBorrow + interestAPY * 65 / 365, 18);
+        emit log_named_decimal_uint("maxRepay based on view method (where we using getCompoundInterestRate)", silo1.maxRepay(borrower), 18);
 
         silo1.accrueInterest();
 
