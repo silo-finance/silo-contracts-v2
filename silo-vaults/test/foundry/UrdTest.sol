@@ -21,9 +21,6 @@ contract UrdTest is IntegrationTest {
         vm.prank(OWNER);
         vault.setSkimRecipient(newSkimRecipient);
 
-        vm.expectRevert("dsdfsdf sdf sdf ");
-        assertEq(vault.skimRecipient(), newSkimRecipient);
-
         vm.prank(OWNER);
         assertEq(vault.skimRecipient(), newSkimRecipient);
     }
@@ -46,7 +43,8 @@ contract UrdTest is IntegrationTest {
         collateralToken.mint(address(vault), amount);
 
         vm.expectEmit(address(vault));
-        emit EventsLib.Skim(address(this), address(collateralToken), amount);
+        emit EventsLib.Skim(address(OWNER), address(collateralToken), amount);
+        vm.prank(OWNER);
         vault.skim(address(collateralToken));
         uint256 vaultBalanceAfter = collateralToken.balanceOf(address(vault));
 
@@ -59,6 +57,7 @@ contract UrdTest is IntegrationTest {
         vault.setSkimRecipient(address(0));
 
         vm.expectRevert(ErrorsLib.ZeroAddress.selector);
+        vm.prank(OWNER);
         vault.skim(address(loanToken));
     }
 }
