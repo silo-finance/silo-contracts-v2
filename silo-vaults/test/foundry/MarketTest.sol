@@ -401,4 +401,41 @@ contract MarketTest is IntegrationTest {
         vault.revokePendingMarketRemoval(IERC4626(address(0)));
         vm.stopPrank();
     }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSkimWithdrawalMarket -vvv
+    */
+    function testSkimWithdrawalMarket() public {
+        vm.prank(OWNER);
+
+        vm.expectRevert(ErrorsLib.TokenInWithdrawQueue.selector);
+        vault.skim(address(allMarkets[0]));
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSkimSupplyMarket -vvv
+    */
+    function testSkimSupplyMarket() public {
+        address marketToRemove = address(0x1111);
+
+        IERC4626[] memory arr = new IERC4626[](1);
+        arr[0] = IERC4626(marketToRemove);
+
+        vm.startPrank(OWNER);
+
+        vm.mockCall(marketToRemove, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(vault.asset()));
+        vm.mockCall(marketToRemove, abi.encodeWithSignature("balanceOf(address)", address(vault)), abi.encode(0));
+        vm.mockCall(marketToRemove, abi.encodeWithSignature("convertToAssets(uint256)", 0), abi.encode(0));
+
+        vault.submitCap(arr[0], 1);
+        vm.warp(block.timestamp + 100 days);
+        vault.acceptCap(IERC4626(marketToRemove));
+
+        vault.setSupplyQueue(arr);
+
+        vm.expectRevert(ErrorsLib.TokenInSupplyQueue.selector);
+        vault.skim(marketToRemove);
+
+        vm.stopPrank();
+    }
 }

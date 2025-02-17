@@ -21,6 +21,10 @@ contract UrdTest is IntegrationTest {
         vm.prank(OWNER);
         vault.setSkimRecipient(newSkimRecipient);
 
+        vm.expectRevert("dsdfsdf sdf sdf ");
+        assertEq(vault.skimRecipient(), newSkimRecipient);
+
+        vm.prank(OWNER);
         assertEq(vault.skimRecipient(), newSkimRecipient);
     }
 
