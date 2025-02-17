@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 // Interfaces
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -19,6 +19,8 @@ contract DonationAttackHandler is BaseHandler {
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    uint256 underlyingAmountDonatedToVault;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +35,8 @@ contract DonationAttackHandler is BaseHandler {
         _token.mint(address(this), amount);
 
         _token.transfer(target, amount);
+
+        underlyingAmountDonatedToVault += amount;
     }
 
     /// @notice This function transfers any amount of Silos shares to the SiloVault contract simulating
@@ -41,17 +45,17 @@ contract DonationAttackHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        TestERC20 _token = TestERC20(_getRandomMarket(i));
+        address _token = _getRandomMarketAddress(i);
 
         address target = address(vault);
 
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.transfer.selector, target, amount));
+        (success, returnData) = actor.proxy(_token, abi.encodeWithSelector(IERC20.transfer.selector, target, amount));
     }
 
     /// @notice This function transfers any amount of underlying assets the underlying silos simulating
     /// a big range of donation attacks
     function donateUnderlyingToSilo(uint256 amount, uint8 i) external {
-        address target = _getRandomMarket(i);
+        address target = address(_getRandomMarket(i));
 
         TestERC20 _token = asset;
 

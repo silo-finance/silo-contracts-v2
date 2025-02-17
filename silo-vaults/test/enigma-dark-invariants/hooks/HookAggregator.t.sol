@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Interfaces
+import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
+
 // Hook Contracts
 import {DefaultBeforeAfterHooks} from "./DefaultBeforeAfterHooks.t.sol";
 
@@ -42,14 +45,39 @@ abstract contract HookAggregator is DefaultBeforeAfterHooks {
         for (uint256 i; i < actorAddresses.length; i++) {
             _checkUserPostConditions(actorAddresses[i]);
         }
+
+        // Check market postconditions
+        for (uint256 i; i < markets.length; i++) {
+            _checkMarketPostConditions(markets[i]);
+        }
     }
 
     function _checkGeneralPostConditions() internal {
-        // Check general postconditions
+        // Base
+        assert_GPOST_BASE_A();
+        assert_GPOST_BASE_C();
+
+        // Fees
+        assert_GPOST_FEES_A();
+
+        // Accounting
+        assert_GPOST_ACCOUNTING_A();
+        assert_GPOST_ACCOUNTING_B();
+        assert_GPOST_ACCOUNTING_C();
+        assert_GPOST_ACCOUNTING_D();
+
+        // Reentrancy
+        assert_GPOST_REENTRANCY_A();
     }
 
     /// @notice Postconditions for each user
     function _checkUserPostConditions(address user) internal {
         // Check user postconditions
+    }
+
+    /// @notice Postconditions for each market
+    function _checkMarketPostConditions(IERC4626 market) internal {
+        assert_GPOST_BASE_B(market);
+        assert_GPOST_BASE_D(market);
     }
 }

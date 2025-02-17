@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 // Utils
 import "forge-std/console.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 // Contracts
 import {SiloVault} from "silo-vaults/contracts/SiloVault.sol";
@@ -10,10 +11,13 @@ import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
 import {MockERC4626 as Market} from "./utils/mocks/MockERC4626.sol";
 import {PublicAllocator} from "silo-vaults/contracts/PublicAllocator.sol";
+import {InvariantsSiloFixture} from
+    "silo-vaults/test/enigma-dark-invariants/helpers/fixtures/InvariantsSiloFixture.sol";
 
 // Interfaces
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
-import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 // Test Contracts
 import {TestERC20} from "silo-vaults/test/enigma-dark-invariants/utils/mocks/TestERC20.sol";
@@ -21,15 +25,13 @@ import {BaseTest} from "silo-vaults/test/enigma-dark-invariants/base/BaseTest.t.
 import {Actor} from "./utils/Actor.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
-contract Setup is
-    BaseTest
-{
+contract Setup is BaseTest {
     function _setUp() internal {
         // Deploy core contracts of the protocol
         _deployProtocolCore();
 
         // Deploy markets
-        _deployMarkets();
+        _createNewMarkets();
     }
 
     /// @notice Deploy protocol core contracts
@@ -49,18 +51,24 @@ contract Setup is
 
         // Deploy the asset token
         asset = new TestERC20("Asset", "ASSET", 18);
+        collateralAsset = new TestERC20("Collateral Asset", "CASSET", 18);
+        suiteAssets.push(address(asset));
+        suiteAssets.push(address(collateralAsset));
 
         publicAllocator = new PublicAllocator();
 
         // Deploy the Incentives Module
-        vaultIncentivesModule = new VaultIncentivesModule(OWNER); //TODO setup 
+        vaultIncentivesModule = new VaultIncentivesModule(OWNER); //TODO setup
 
         // Deploy the protocol main contracts
         vault = ISiloVault(
             address(new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(asset), "SiloVault Vault", "MMV"))
         );
-        vaults.push(address(vault));
+        vaults.push(vault);
+        suiteAssets.push(address(vault));
+
         idleMarket = new IdleVault(address(vault), address(asset), "idle vault", "idle");
+        suiteAssets.push(address(idleMarket)); //TODO remove comment when internal accounting is applied
 
         vault.setIsAllocator(address(publicAllocator), true);
     }
@@ -69,27 +77,50 @@ contract Setup is
     //                                          MARKETS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _deployMarkets() internal {
-        // Deploy markets
-        market1 = _deployMarket(address(asset));
-        unsortedMarkets.push(address(market1));
-        vaults.push(address(market1));
+    function _createNewMarkets() internal {
+        siloFixture = new InvariantsSiloFixture(FEE_RECIPIENT);
 
-        market2 = _deployMarket(address(asset));
-        unsortedMarkets.push(address(market2));
-        vaults.push(address(market2));
-
-        market3 = _deployMarket(address(asset));
-        unsortedMarkets.push(address(market3));
-        vaults.push(address(market3));
+        for (uint256 i; i < NUM_MARKETS; i++) {
+            _setupMarket(i);
+        }
 
         // Sort and push to markets array
-        _sortAndStoreMarkets();
+        _sortLoanMarkets();
+
+        // Must be pushed last.
+        markets.push(idleMarket);
+
+        // STORAGE LOGS
+        _logArray("unsortedMarkets", unsortedMarkets);
+        _logArray("markets", markets);
+        _logArray("loanMarketsArray", loanMarketsArray);
+        _logArray("collateralMarketsArray", collateralMarketsArray);
+        _logArray("silos", silos);
+        _logArray("vaults", vaults);
     }
 
-    function _deployMarket(address asset) internal returns (IERC4626 market) {
-        // TODO implement Silo's instead
-        market = new Market(asset, "default market", "market");
+    function _setupMarket(uint256 _marketId) internal returns (IERC4626 market) {
+        // Deploy Silo markets
+        (ISilo silo0_, ISilo silo1_) = siloFixture.createSilo(address(collateralAsset), address(asset));
+        vm.label(address(silo0_), string.concat("Market#", Strings.toString(_marketId)));
+
+        // Store references to allMarkets
+        unsortedMarkets.push(silo1_);
+        collateralMarkets[silo1_] = silo0_;
+
+        // Store references to each type of market
+        loanMarketsArray.push(silo1_);
+        collateralMarketsArray.push(silo0_);
+
+        // Add both silos to the vaults array
+        vaults.push(silo0_);
+        vaults.push(silo1_);
+
+        silos.push(silo0_);
+        silos.push(silo1_);
+
+        suiteAssets.push(address(silo0_));
+        suiteAssets.push(address(silo1_));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,11 +136,15 @@ contract Setup is
         addresses[2] = USER3;
 
         // Initialize the tokens array
-        address[] memory tokens = new address[](1);
+        address[] memory tokens = new address[](2);
         tokens[0] = address(asset);
+        tokens[1] = address(collateralAsset);
 
-        address[] memory contracts_ = new address[](1);
-        contracts_[0] = address(vault);
+        address[] memory contracts_ = new address[](NUM_MARKETS * 2 + 1);
+        for (uint256 i; i < silos.length; i++) {
+            contracts_[i] = address(silos[i]);
+        }
+        contracts_[contracts_.length - 1] = address(vault);
 
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deploy actor proxies and approve system contracts_
@@ -145,13 +180,13 @@ contract Setup is
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _sortAndStoreMarkets() internal {
+    function _sortLoanMarkets() internal {
         uint256 length = unsortedMarkets.length;
         address[] memory sortedMarkets = new address[](length);
 
         // Copy unsortedMarkets into sortedMarkets
         for (uint256 i = 0; i < length; i++) {
-            sortedMarkets[i] = unsortedMarkets[i];
+            sortedMarkets[i] = address(unsortedMarkets[i]);
         }
 
         // Sort using Bubble Sort
@@ -165,7 +200,15 @@ contract Setup is
 
         // Push sorted addresses into the markets array
         for (uint256 i = 0; i < length; i++) {
-            markets.push(sortedMarkets[i]);
+            markets.push(IERC4626(sortedMarkets[i]));
         }
+    }
+
+    function _logArray(string memory key, IERC4626[] storage array) internal {
+        console.log("STORAGE: ", key);
+        for (uint256 i; i < array.length; i++) {
+            console.log("contract: ", address(array[i]));
+        }
+        console.log("#####");
     }
 }

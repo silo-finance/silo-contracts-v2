@@ -4,9 +4,9 @@ pragma solidity ^0.8.19;
 // Interfaces
 
 // Libraries
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 import {TestERC20} from "../utils/mocks/TestERC20.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 // Contracts
 import {Actor} from "../utils/Actor.sol";
@@ -54,5 +54,16 @@ contract BaseHandler is HookAggregator {
     function _mintAndApprove(address token, address owner, address spender, uint256 amount) internal {
         _mint(token, owner, amount);
         _approve(token, owner, spender, amount);
+    }
+
+    function _mintApproveAndDeposit(address _vault, address owner, uint256 amount) internal {
+        _mintAndApprove(address(vault.asset()), owner, _vault, amount * 2);
+        vm.prank(owner);
+        vault.deposit(amount, owner);
+    }
+
+    function _mintApproveAndMint(address _vault, address owner, uint256 amount) internal {
+        _mintAndApprove(address(vault.asset()), owner, _vault, vault.convertToAssets(amount) * 2);
+        vault.mint(amount, owner);
     }
 }

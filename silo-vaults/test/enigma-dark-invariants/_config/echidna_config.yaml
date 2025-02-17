@@ -26,7 +26,7 @@ propMaxGas: 1000000000
 testMaxGas: 1000000000
 
 # list of methods to filter
-#filterFunctions: ["openCdpExt"]
+#filterFunctions: [""]
 # by default, blacklist methods in filterFunctions
 #filterBlacklist: false
 
@@ -37,7 +37,7 @@ stopOnFail: false
 coverage: true
 
 # list of file formats to save coverage reports in; default is all possible formats
-coverageFormats: [ "txt", "html" ]
+coverageFormats: [ "html" ]
 
 #directory to save the corpus; by default is disabled
 corpusDir: "silo-vaults/test/enigma-dark-invariants/_corpus/echidna/default/_data/corpus"
@@ -45,13 +45,17 @@ corpusDir: "silo-vaults/test/enigma-dark-invariants/_corpus/echidna/default/_dat
 #mutConsts: [100, 1, 1]
 
 #remappings
-cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=lib/properties/ forge-std/=lib/forge-std/src/ ds-test/=lib/forge-std/lib/ds-test/src/ openzeppelin/=lib/openzeppelin-contracts/contracts/" ]
+cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=lib/properties/ forge-std/=lib/forge-std/src/ ds-test/=lib/forge-std/lib/ds-test/src/ openzeppelin/=lib/openzeppelin-contracts/contracts/", "--compile-libraries=(SiloERC4626Lib,0x1f),(SiloLendingLib,0x2f), (PartialLiquidationExecLib,0x0f), (SiloSolvencyLib,0x5f),(SiloStdLib,0x6f),(ShareTokenLib,0x7f),(Views,0x8f),(Actions,0x9f), (ShareCollateralTokenLib,0xf03)" ]
+
+deployContracts: [ [ "0x1f", "SiloERC4626Lib" ], [ "0x0f", "PartialLiquidationExecLib" ], [ "0x2f", "SiloLendingLib" ], [ "0x5f", "SiloSolvencyLib" ], [ "0x6f", "SiloStdLib" ], [ "0x7f", "ShareTokenLib" ], [ "0x8f", "Views" ], [ "0x9f", "Actions" ], [ "0xf03", "ShareCollateralTokenLib" ] ]
 
 # maximum value to send to payable functions
 maxValue: 1e+30 # 100000 eth
 
 #quiet produces (much) less verbose output
 quiet: false
+
+format: "text"
 
 # concurrent workers
 workers: 12

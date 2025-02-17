@@ -31,10 +31,11 @@ abstract contract ERC4626Handler is BaseHandler {
         address receiver = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomMarket(j);
+        address target = _getRandomSiloAddress(j);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC4626.deposit.selector, assets, receiver));
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(IERC4626.deposit.selector, assets, receiver));
 
         if (success) {
             _after();
@@ -51,7 +52,7 @@ abstract contract ERC4626Handler is BaseHandler {
         address receiver = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomMarket(j);
+        address target = _getRandomSiloAddress(j);
 
         _before();
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC4626.mint.selector, shares, receiver));
@@ -71,7 +72,7 @@ abstract contract ERC4626Handler is BaseHandler {
         address receiver = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomMarket(j);
+        address target = _getRandomSiloAddress(j);
 
         _before();
         (success, returnData) =
@@ -92,7 +93,7 @@ abstract contract ERC4626Handler is BaseHandler {
         address receiver = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomMarket(j);
+        address target = _getRandomSiloAddress(j);
 
         _before();
         (success, returnData) =

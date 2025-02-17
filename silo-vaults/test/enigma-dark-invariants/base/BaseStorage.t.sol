@@ -6,10 +6,13 @@ pragma solidity ^0.8.19;
 // Contracts
 import {PublicAllocator} from "silo-vaults/contracts/PublicAllocator.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
+import {InvariantsSiloFixture} from
+    "silo-vaults/test/enigma-dark-invariants/helpers/fixtures/InvariantsSiloFixture.sol";
 
 // Interfaces
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
-import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 // Mock Contracts
 import {TestERC20} from "silo-vaults/test/enigma-dark-invariants/utils/mocks/TestERC20.sol";
@@ -83,29 +86,53 @@ abstract contract BaseStorage {
 
     // Test Assets
     TestERC20 internal asset;
+    TestERC20 internal collateralAsset;
 
-    // Test Markets
-    IERC4626 internal market1;
-    IERC4626 internal market2;
-    IERC4626 internal market3;
+    // Silo fixture
+    InvariantsSiloFixture internal siloFixture;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       EXTRA VARIABLES                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice Array of markets for the suite
-    address[] internal markets;
+    // LOAN MARKETS
 
     /// @notice Array of markets for the suite
-    address[] internal unsortedMarkets;
+    IERC4626[] internal markets;
+
+    /// @notice Array of markets for the suite
+    IERC4626[] internal unsortedMarkets;
+
+    // COLLATERAL MARKETS
+
+    /// @notice Array of collateral markets for the suite
+    IERC4626[] internal loanMarketsArray;
+
+    /// @notice Array of collateral markets for the suite
+    IERC4626[] internal collateralMarketsArray;
+
+    /// @notice Mapping of loan markets to collateral markets
+    mapping(IERC4626 collateral => IERC4626) internal collateralMarkets;
+
+    // VAULTS (MARKETS AND SILO VAULT)
 
     /// @notice Array of all 4626 vaults on the suite
-    address[] internal vaults;
+    IERC4626[] internal vaults;
+
+    /// @notice Array of all silos on suite -> markets & collateral markets
+    IERC4626[] internal silos;
+
+    // SUITE ASSETS
+
+    /// @notice All ERC20 assets on the suite including vaults share tokens and loan and collateral assets
+    address[] suiteAssets;
+
+    address targetMarket;
+
+    // HELPER CONTRACTS
 
     /// @notice Permit2 contract
     address permit2;
-
-    address targetMarket;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          STRUCTS                                          //

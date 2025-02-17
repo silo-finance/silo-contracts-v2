@@ -30,12 +30,12 @@ abstract contract PublicAllocatorHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function reallocateTo(uint8 i, uint128[NUM_MARKETS - 1] memory withdrawals) external setup {
+    function reallocateTo(uint8 i, uint128[NUM_MARKETS] memory withdrawals) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three markets randomly
-        address supplyMarket = _getRandomMarket(i);
+        address supplyMarket = _getRandomMarketAddress(i);
 
         Withdrawal[] memory _withdrawals = _generateWithdrawalsArray(withdrawals, supplyMarket);
 
@@ -49,6 +49,9 @@ abstract contract PublicAllocatorHandler is BaseHandler {
 
         if (success) {
             _after();
+
+            // POSTCONDITIONS
+            assertTrue(_balanceHasNotChanged(), HSPOST_BALANCES_A);
         } else {
             revert("SiloVaultHandler: deposit failed");
         }
@@ -58,7 +61,7 @@ abstract contract PublicAllocatorHandler is BaseHandler {
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _generateWithdrawalsArray(uint128[NUM_MARKETS - 1] memory withdrawals, address excludedAddress)
+    function _generateWithdrawalsArray(uint128[NUM_MARKETS] memory withdrawals, address excludedAddress)
         internal
         returns (Withdrawal[] memory)
     {
@@ -69,9 +72,9 @@ abstract contract PublicAllocatorHandler is BaseHandler {
 
         // Iterate through the storage array and populate the struct array
         for (uint256 i; i < markets.length; i++) {
-            if (markets[i] != excludedAddress && _isMarketEnabled(markets[i])) {
+            if (address(markets[i]) != excludedAddress && _isMarketEnabled(markets[i])) {
                 withdraws[index] = Withdrawal({
-                    market: IERC4626(markets[i]),
+                    market: markets[i],
                     amount: uint128(clampBetween(withdrawals[index], 1, _expectedSupplyAssets(markets[i]))) // Example random amount
                 });
                 index++;

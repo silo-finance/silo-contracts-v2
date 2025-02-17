@@ -33,7 +33,7 @@ abstract contract PublicAllocatorPermissionedHandler is BaseHandler {
         publicAllocator.setFee(vault, newFee);
     }
 
-    function setFlowCaps(FlowCaps[NUM_MARKETS] memory _flowCaps) external {
+    function setFlowCaps(FlowCaps[NUM_MARKETS + 1] memory _flowCaps) external {
         FlowCapsConfig[] memory flowCapsConfig = _getFlowCaps(_flowCaps);
 
         publicAllocator.setFlowCaps(vault, flowCapsConfig);
@@ -47,9 +47,9 @@ abstract contract PublicAllocatorPermissionedHandler is BaseHandler {
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _getFlowCaps(FlowCaps[NUM_MARKETS] memory _flowcaps) internal view returns (FlowCapsConfig[] memory) {
+    function _getFlowCaps(FlowCaps[NUM_MARKETS + 1] memory _flowcaps) internal view returns (FlowCapsConfig[] memory) {
         // Create a memory array of FlowCapsConfig structs
-        FlowCapsConfig[] memory flowCapsConfigs = new FlowCapsConfig[](NUM_MARKETS);
+        FlowCapsConfig[] memory flowCapsConfigs = new FlowCapsConfig[](NUM_MARKETS + 1);
 
         uint256 enabledMarkets;
         for (uint256 i; i < NUM_MARKETS; i++) {

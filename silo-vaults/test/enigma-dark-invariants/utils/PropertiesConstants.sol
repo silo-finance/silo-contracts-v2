@@ -15,7 +15,14 @@ abstract contract PropertiesConstants {
     uint184 constant CAP = type(uint128).max;
     uint256 constant NB_MARKETS = 3;
     uint256 constant TIMELOCK = 1 weeks;
+    uint256 constant MAX_FEE = 0.5e18;
+    /// @dev The maximum delay of a timelock.
+    uint256 internal constant MAX_TIMELOCK = 2 weeks;
+
+    /// @dev The minimum delay of a timelock.
+    uint256 internal constant MIN_TIMELOCK = 1 days;
 
     // Suite constants
     uint256 constant NUM_MARKETS = 3;
+    uint256 constant WAD = 1e18;
 }

@@ -15,11 +15,13 @@ import {
 // Libraries
 import {Vm} from "forge-std/Base.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
+import {Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 // Utils
 import {Actor} from "../utils/Actor.sol";
 import {PropertiesConstants} from "../utils/PropertiesConstants.sol";
 import {StdAsserts} from "../utils/StdAsserts.sol";
+import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
 // Contracts
 
@@ -71,22 +73,81 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                   HELPERS: RANDOM GETTERS                                 //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    // ACTORS
+
     /// @notice Get a random actor proxy address
     function _getRandomActor(uint256 _i) internal view returns (address) {
         uint256 _actorIndex = _i % NUMBER_OF_ACTORS;
         return actorAddresses[_actorIndex];
     }
 
-    /// @notice Get a random vault address
-    function _getRandomMarket(uint8 i) internal view returns (address) {
+    // MARKETS: loan Silos + idleVault
+
+    /// @notice Get a random market
+    function _getRandomMarket(uint8 i) internal view returns (IERC4626) {
         uint256 _marketIndex = i % markets.length;
         return markets[_marketIndex];
     }
 
     /// @notice Get a random vault address
-    function _getRandomVault(uint8 i) internal view returns (address) {
+    function _getRandomMarketAddress(uint8 i) internal view returns (address) {
+        return address(_getRandomMarket(i));
+    }
+
+    /// @notice Get a random market
+    function _getRandomUnsortedMarket(uint8 i) internal view returns (IERC4626) {
+        uint256 _marketIndex = i % unsortedMarkets.length;
+        return unsortedMarkets[_marketIndex];
+    }
+
+    /// @notice Get a random vault address
+    function _getRandomUnsortedMarketAddress(uint8 i) internal view returns (address) {
+        return address(_getRandomUnsortedMarket(i));
+    }
+
+    // LOAN MARKETS: loan Silos
+
+    /// @notice Get a random silo
+    function _getRandomLoanMarket(uint8 i) internal view returns (IERC4626) {
+        uint256 _marketIndex = i % loanMarketsArray.length;
+        return loanMarketsArray[_marketIndex];
+    }
+
+    /// @notice Get a random silo address
+    function _getRandomLoanMarketAddress(uint8 i) internal view returns (address) {
+        return address(_getRandomLoanMarket(i));
+    }
+
+    // SILOS: all Silos
+
+    /// @notice Get a random silo
+    function _getRandomSilo(uint8 i) internal view returns (IERC4626) {
+        uint256 _siloIndex = i % silos.length;
+        return silos[_siloIndex];
+    }
+
+    /// @notice Get a random silo address
+    function _getRandomSiloAddress(uint8 i) internal view returns (address) {
+        return address(_getRandomSilo(i));
+    }
+
+    // VAULTS: SiloVault + all Silos
+
+    /// @notice Get a random vault
+    function _getRandomVault(uint8 i) internal view returns (IERC4626) {
         uint256 _vaultIndex = i % vaults.length;
         return vaults[_vaultIndex];
+    }
+
+    /// @notice Get a random vault
+    function _getRandomVaultAddress(uint8 i) internal view returns (address) {
+        return address(_getRandomVault(i));
+    }
+
+    // ASSETS:
+    function _getRandomSuiteAsset(uint8 i) internal view returns (address) {
+        uint256 _assetIndex = i % suiteAssets.length;
+        return suiteAssets[_assetIndex];
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,11 +214,37 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
         }
     }
 
-    function _isMarketEnabled(address _market) internal view returns (bool) {
-        return vault.config(IERC4626(_market)).enabled;
+    function _isMarketEnabled(IERC4626 _market) internal view returns (bool) {
+        return vault.config(_market).enabled;
     }
 
-    function _expectedSupplyAssets(address _market) internal view virtual returns (uint256 assets) {
-        assets = IERC4626(_market).convertToAssets(IERC4626(_market).balanceOf(address(vault)));
+    function _expectedSupplyAssets(IERC4626 _market) internal view virtual returns (uint256 assets) {
+        assets = _market.convertToAssets(_market.balanceOf(address(vault)));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                       PROTOCOL HELPERS                                    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _getUnAccountedYield() internal view returns (uint256 yield) {
+        yield = UtilsLib.zeroFloorSub(vault.totalAssets(), vault.lastTotalAssets());
+    }
+
+    function _getAccruedFee(uint256 totalInterest) internal view returns (uint256 fee) {
+        fee = Math.mulDiv(totalInterest, vault.fee(), WAD);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                        LOGS HELPERS                                       //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _logWithdrawalQueue() internal {
+        uint256 length = vault.withdrawQueueLength();
+        console.log("===========================================");
+        console.log("WITHDRAWAL QUEUE");
+        for (uint256 i; i < length; i++) {
+            console.log("withdrawal Queue: ", address(vault.withdrawQueue(i)));
+        }
+        console.log("===========================================");
     }
 }

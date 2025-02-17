@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 // Interfaces
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -30,7 +30,7 @@ abstract contract ERC20Handler is BaseHandler {
         address spender = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomVault(j);
+        address target = _getRandomVaultAddress(j);
 
         _before();
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.approve.selector, spender, amount));
@@ -50,7 +50,7 @@ abstract contract ERC20Handler is BaseHandler {
         address to = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomVault(j);
+        address target = _getRandomVaultAddress(j);
 
         _before();
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
@@ -72,7 +72,7 @@ abstract contract ERC20Handler is BaseHandler {
         address to = _getRandomActor(j);
 
         // Get one of the vaults randomly
-        address target = _getRandomVault(k);
+        address target = _getRandomVaultAddress(k);
 
         _before();
         (success, returnData) =

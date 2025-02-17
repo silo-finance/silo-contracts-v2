@@ -45,6 +45,14 @@ abstract contract SiloVaultPermissionedHandler is BaseHandler {
         IERC4626[] memory _newSupplyQueue = _generateRandomMarketArray(i);
 
         vault.setSupplyQueue(_newSupplyQueue);
+
+        uint256 supplyQueueLength = vault.supplyQueueLength();
+
+        // POSTCONDITIONS
+
+        for (uint256 j; j < supplyQueueLength; j++) {
+            assertGt(vault.config(vault.supplyQueue(j)).cap, 0, HSPOST_QUEUES_F);
+        }
     }
 
     function updateWithdrawQueue(uint8[] memory _indexes, uint8 i) external {
