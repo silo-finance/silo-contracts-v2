@@ -50,10 +50,10 @@ library Actions {
 
     /// @notice Implements IERC4626.deposit for protected (non-borrowable) and borrowable collateral
     /// @dev Reverts for debt asset type
-    /// @param _assets Amount of assets to deposit (must be > 0)
-    /// @param _shares Minimum shares expected for the deposit (optional, can be 0)
+    /// @param _assets Amount of assets to deposit (0 if `_shares` specified)
+    /// @param _shares shares expected for the deposit  (0 if `_assets` specified)
     /// @param _receiver Address to receive the deposit shares
-    /// @param _collateralType Type of collateral (Protected or Borrowable)
+    /// @param _collateralType Type of collateral (Protected or Collateral)
     /// @return assets Amount of assets deposited
     /// @return shares Amount of shares minted due to deposit
     function deposit(
