@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
@@ -35,7 +36,18 @@ contract VaultIncentivesModuleTest is Test {
         incentivesModule = new VaultIncentivesModule(_deployer);
     }
 
-    function test_init() public {
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_init -vvv
+    */
+    function test_IncentivesModule_init() public {
+        address module = Clones.clone(address(new VaultIncentivesModule(_deployer)));
+
+        VaultIncentivesModule(module).__VaultIncentivesModule_init(address(1));
+
+        assertEq(VaultIncentivesModule(module).owner(), address(1), "valid owner");
+    }
+
+    function test_IncentivesModule_initOnce() public {
         vm.expectRevert();
         incentivesModule.__VaultIncentivesModule_init(address(1));
     }
