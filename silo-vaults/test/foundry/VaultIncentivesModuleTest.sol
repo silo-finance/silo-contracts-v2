@@ -33,7 +33,8 @@ contract VaultIncentivesModuleTest is Test {
     event NotificationReceiverRemoved(address notificationReceiver);
 
     function setUp() public {
-        incentivesModule = new VaultIncentivesModule();
+        incentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
+        incentivesModule.__VaultIncentivesModule_init(_deployer);
     }
 
     /*
@@ -41,7 +42,7 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_IncentivesModule_new() public {
         VaultIncentivesModule module = new VaultIncentivesModule();
-        vm.expectRevert(abi.encodeWithSignature("NotInitializing()"));
+        vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
         module.__VaultIncentivesModule_init(address(1));
     }
 
