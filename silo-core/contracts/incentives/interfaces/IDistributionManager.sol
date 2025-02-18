@@ -37,6 +37,7 @@ interface IDistributionManager {
     error TooLongProgramName();
     error InvalidIncentivesProgramName();
     error OnlyNotifierOrOwner();
+    error ZeroAddress();
 
     /**
      * @dev Sets the end date for the distribution

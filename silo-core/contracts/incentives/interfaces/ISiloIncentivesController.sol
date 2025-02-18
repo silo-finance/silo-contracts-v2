@@ -35,6 +35,7 @@ interface ISiloIncentivesController is IDistributionManager {
     error IncentivesProgramAlreadyExists();
     error IncentivesProgramNotFound();
     error DifferentRewardsTokens();
+
     /**
      * @dev Silo share token event handler
      * @param _sender The address of the sender

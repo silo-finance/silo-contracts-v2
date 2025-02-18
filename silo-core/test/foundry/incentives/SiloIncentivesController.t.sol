@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
@@ -20,6 +21,7 @@ contract SiloIncentivesControllerTest is Test {
     address internal _owner = makeAddr("Owner");
     address internal _notifier;
     address internal _rewardToken;
+    SiloIncentivesControllerFactory internal _factory;
 
     address internal user1 = makeAddr("User1");
     address internal user2 = makeAddr("User2");
@@ -41,11 +43,11 @@ contract SiloIncentivesControllerTest is Test {
         SiloIncentivesControllerFactoryDeploy deployer = new SiloIncentivesControllerFactoryDeploy();
         deployer.disableDeploymentsSync();
 
-        SiloIncentivesControllerFactory factory = deployer.run();
+        _factory = deployer.run();
 
-        _controller = SiloIncentivesController(factory.create(_owner, _notifier));
+        _controller = SiloIncentivesController(_factory.create(_owner, _notifier));
 
-        assertTrue(factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
+        assertTrue(_factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
@@ -777,6 +779,24 @@ contract SiloIncentivesControllerTest is Test {
         _controller.setClaimer(user1, address(this));
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_zeroAddress
+    function test_setClaimer_zeroAddress() public {
+        vm.prank(_owner);
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
+        _controller.setClaimer(address(0), address(this));
+
+        vm.prank(_owner);
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
+        _controller.setClaimer(user1, address(0));
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_wrong_notifier
+    function test_wrong_notifier() public {
+        // vm.expectRevert(abi.encodeWithSelector(IDistributionManager.WrongDecimals.selector));
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
+        SiloIncentivesController(_factory.create(_owner, address(0)));
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_success
     function test_setClaimer_success() public {
         vm.expectEmit(address(_controller));
@@ -799,6 +819,7 @@ contract SiloIncentivesControllerTest is Test {
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_inputsValidation
     function test_claimRewardsOnBehalf_inputsValidation() public {
         vm.prank(_owner);
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
         _controller.setClaimer(address(0), address(this));
 
         vm.prank(_owner);
@@ -806,9 +827,6 @@ contract SiloIncentivesControllerTest is Test {
 
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
-
-        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidUserAddress.selector));
-        _controller.claimRewardsOnBehalf(address(0), user2, programsNames);
 
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidToAddress.selector));
         _controller.claimRewardsOnBehalf(user1, address(0), programsNames);
