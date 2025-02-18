@@ -25,6 +25,9 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
+    address depositor = makeAddr("depositor");
+    address borrower = makeAddr("borrower");
+
     function setUp() public {
         siloConfig = _setUpLocalFixture();
 
@@ -35,8 +38,6 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens -vv
     */
     function test_siloLens() public {
-        address depositor = makeAddr("depositor");
-        address borrower = makeAddr("borrower");
 
         uint256 deposit0 = 33e18;
         uint256 deposit1 = 11e18;
@@ -113,7 +114,13 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(siloLens.totalDeposits(silo1), deposit1, "totalDeposits after borrow are the same");
 
-        vm.warp(block.timestamp + 65 days);
+        vm.warp(block.timestamp + 5 days);
+
+        _assertInterest(toBorrow, 5);
+
+        ////
+
+        vm.warp(block.timestamp + 60 days);
 
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after 65 days #0");
         assertEq(siloLens.getBorrowAPR(silo1), 6_605018041910688000, "getBorrowAPR after 65 days #1");
@@ -222,5 +229,26 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(maxRepayAfter, 1247.410613506809097866e18, "maxRepayAfter");
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "hasPosition");
+    }
+
+    function _assertInterest(uint256 _toBorrow, uint256 _days) internal {
+        uint256 interestAPYAfter = _toBorrow * siloLens.getBorrowAPR(silo1) / 1e18;
+        emit log_named_uint("APY checkpoint for days", _days);
+        emit log_named_decimal_uint("utilization [%]", siloLens.getUtilization(silo1), 16);
+        emit log_named_decimal_uint("APY (based on getCurrentInterestRate) [%]", interestAPYAfter, 16);
+
+        uint256 interestDays = interestAPYAfter * _days / 365;
+        uint256 maxRepay = silo1.maxRepay(borrower);
+        uint256 interestToRepay = maxRepay - _toBorrow;
+
+        emit log_named_decimal_uint("borrow amount", _toBorrow, 18);
+        emit log_named_decimal_uint("interest baseline (getCompoundInterestRate)", interestToRepay, 18);
+        emit log_named_decimal_uint("interest estimation (getCurrentInterestRate)", interestDays, 18);
+
+        uint256 interestDiff = (interestDays - interestToRepay) * 1e18 / interestToRepay;
+
+        emit log_named_decimal_uint("interestDiff [%]", interestDiff, 16);
+        assertLt(interestDiff, 0.01e18, "accepting difference in calculation of 1%");
+
     }
 }
