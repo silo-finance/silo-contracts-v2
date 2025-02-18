@@ -107,6 +107,11 @@ contract EchidnaIRMv2 is PropertiesAsserts {
     /* ================================================================
                                 Properties
        ================================================================ */
+    function interestRateCannotBeLargerThanMax() public {
+        uint256 rcur = IRMv2.getCurrentInterestRate(address(this), block.timestamp);
+        assertLte(rcur, 1e20, "Interest rate is higher than 1e20");
+    }
+
     function compInterestRateCannotBeLargerThanMax() public {
         int256 _t = (block.timestamp - interestRateTimestamp).toInt256();
         uint256 cap = 3170979198376 * _t.toUint256();

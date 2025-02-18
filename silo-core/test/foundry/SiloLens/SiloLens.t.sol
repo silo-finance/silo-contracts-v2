@@ -84,6 +84,9 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         uint256 borrowAPR = siloLens.getBorrowAPR(silo1);
         assertEq(borrowAPR, 70000000004304000, "Borrow APR in silo1 ~7% because of debt");
+
+        IInterestRateModel irm = IInterestRateModel(siloLens.getInterestRateModel(silo1));
+        assertEq(borrowAPR, irm.getCurrentInterestRate(address(silo1), block.timestamp), "APR equal to IRM rate");
     }
 
     /*

@@ -168,6 +168,25 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         );
     }
 
+    /// @inheritdoc IInterestRateModel
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        override
+        returns (uint256 rcur)
+    {
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+
+        rcur = calculateCurrentInterestRate(
+            getConfig(_silo),
+            data.collateralAssets,
+            data.debtAssets,
+            data.interestRateTimestamp,
+            _blockTimestamp
+        );
+    }
+
     function getConfig(address _silo) public view virtual returns (Config memory fullConfig) {
         Setup memory siloSetup = getSetup[_silo];
         fullConfig = irmConfig.getConfig();
@@ -177,6 +196,60 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             fullConfig.ri = siloSetup.ri;
             fullConfig.Tcrit = siloSetup.Tcrit;
         }
+    }
+
+    /// @inheritdoc IInterestRateModelV2
+    function calculateCurrentInterestRate(
+        Config memory _c,
+        uint256 _totalDeposits,
+        uint256 _totalBorrowAmount,
+        uint256 _interestRateTimestamp,
+        uint256 _blockTimestamp
+    ) public pure virtual returns (uint256 rcur) {
+        require(_interestRateTimestamp <= _blockTimestamp, InvalidTimestamps());
+
+        LocalVarsRCur memory _l = LocalVarsRCur(0,0,0,0,0,0,false); // struct for local vars to avoid "Stack too deep"
+
+        (,,,_l.overflow) = calculateCompoundInterestRateWithOverflowDetection(
+            _c,
+            _totalDeposits,
+            _totalBorrowAmount,
+            _interestRateTimestamp,
+            _blockTimestamp
+        );
+
+        if (_l.overflow) {
+            return 0;
+        }
+
+        // There can't be an underflow in the subtraction because of the previous check
+        unchecked {
+            // T := t1 - t0 # length of time period in seconds
+            _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
+        }
+
+        _l.u = SiloMathLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();
+        _l.DP = int256(_DP);
+
+        if (_l.u > _c.ucrit) {
+            // rp := kcrit *(1 + Tcrit + beta *T)*( u0 - ucrit )
+            _l.rp = _c.kcrit * (_l.DP + _c.Tcrit + _c.beta * _l.T) / _l.DP * (_l.u - _c.ucrit) / _l.DP;
+        } else {
+            // rp := min (0, klow * (u0 - ulow ))
+            _l.rp = _min(0, _c.klow * (_l.u - _c.ulow) / _l.DP);
+        }
+
+        // rlin := klin * u0 # lower bound between t0 and t1
+        _l.rlin = _c.klin * _l.u / _l.DP;
+        // ri := max(ri , rlin )
+        _l.ri = _max(_c.ri, _l.rlin);
+        // ri := max(ri + ki * (u0 - uopt ) * T, rlin )
+        _l.ri = _max(_l.ri + _c.ki * (_l.u - _c.uopt) * _l.T / _l.DP, _l.rlin);
+        // rcur := max (ri + rp , rlin ) # current per second interest rate
+        rcur = (_max(_l.ri + _l.rp, _l.rlin)).toUint256();
+        rcur *= 365 days;
+
+        return _currentInterestRateCAP(rcur);
     }
 
     /// @inheritdoc IInterestRateModelV2
