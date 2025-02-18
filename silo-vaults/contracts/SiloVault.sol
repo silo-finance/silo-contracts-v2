@@ -118,7 +118,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18, IERC20Metadata(_asset).decimals()));
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, IERC20Metadata(_asset).decimals()));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
