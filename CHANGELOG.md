@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Router with multicall
 - Silo hooks refactoring
 
+## [1.4.0] - 2025-02-18
+### Added
+- Router with multicall
+
 ## [1.3.5] - 2025-02-07
 ### Updated
 - stS/S market with 18 decimals share token on Sonic
