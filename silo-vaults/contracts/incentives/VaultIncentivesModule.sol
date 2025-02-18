@@ -17,9 +17,11 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
 
     mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
-    constructor(address _owner) {}
+    constructor() {
+        _disableInitializers();
+    }
 
-    function __VaultIncentivesModule_init(address _owner) external virtual {
+    function __VaultIncentivesModule_init(address _owner) external virtual initializer {
         __Ownable_init(_owner);
     }
 
