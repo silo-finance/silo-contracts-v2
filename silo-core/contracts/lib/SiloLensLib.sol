@@ -33,14 +33,8 @@ library SiloLensLib {
     }
 
     function getBorrowAPR(ISilo _silo) internal view returns (uint256 borrowAPR) {
-        IInterestRateModel model = IInterestRateModel(getInterestRateModel(_silo));
-        uint256 interestRateTimestamp = _silo.utilizationData().interestRateTimestamp;
-
-        // adding 1s, so in case we accrued interest for current block it will not return 0.
-        uint256 rcomp = model.getCompoundInterestRate(address(_silo), block.timestamp + 1);
-        uint256 deltaT = (block.timestamp + 1) - interestRateTimestamp;
-
-        borrowAPR = 356 days * rcomp / deltaT;
+        IInterestRateModel model = IInterestRateModel(_silo.config().getConfig((address(_silo))).interestRateModel);
+        borrowAPR = model.getCurrentInterestRate(address(_silo), block.timestamp);
     }
 
     function getDepositAPR(ISilo _silo) internal view returns (uint256 depositAPR) {

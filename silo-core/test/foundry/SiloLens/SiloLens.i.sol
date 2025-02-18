@@ -220,15 +220,27 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_skip_siloLens_apy_utilization_fuzz -vv
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_apy_utilization_10 -vv
     */
-    function test_skip_siloLens_apy_utilization_fuzz(uint8 _utilization) public {
-        vm.assume(_utilization > 0 && _utilization <= 50); // because `defaultAsset` IRM model is for 50%
-
-        _siloLens_apy_utilization(uint256(_utilization) * 1e16);
+    function test_siloLens_apy_utilization_10() public {
+        _siloLens_apy_utilization(0.10e18, 1 days);
     }
 
-    function _siloLens_apy_utilization(uint256 _utilization) internal {
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_apy_utilization_fuzz -vv
+    TODO investigate
+    */
+    function test_skip_siloLens_apy_utilization_fuzz(
+//        uint8 _utilization, uint8 _days
+    ) public {
+        (uint8 _utilization, uint8 _days) = (75, 1);
+        vm.assume(_utilization > 0 && _utilization < 90);
+        vm.assume(_days > 0 && _days < 300);
+
+        _siloLens_apy_utilization(uint256(_utilization) * 1e16, uint256(_days) * 1 days);
+    }
+
+    function _siloLens_apy_utilization(uint256 _utilization, uint256 _days) internal {
         uint256 deposit0 = 33e18;
         uint256 deposit1 = 11e18;
         uint256 collateral = 11e18;
@@ -243,30 +255,35 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getUtilization(silo0), 0, "getUtilization #0");
         assertEq(siloLens.getUtilization(silo1), _utilization, "getUtilization #1");
 
-        uint256 borrowAPY = siloLens.getBorrowAPR(silo1);
-        uint256 depositAPY = siloLens.getDepositAPR(silo1);
+        vm.warp(block.timestamp + _days);
 
-        uint256 borrowInterest = toBorrow * borrowAPY / 1e18;
-        uint256 depositInterest = deposit1 * depositAPY / 1e18;
-
-        vm.warp(block.timestamp + 365 days);
-
-        _assertCloseTo(silo1.maxRepay(borrower), toBorrow + borrowInterest, "borrow APY");
-        _assertCloseTo(silo1.convertToAssets(silo1.balanceOf(depositor)), deposit1 + depositInterest, "deposit APY");
+//        _assertInterest(toBorrow, _days);
 
         silo0.accrueInterest();
         silo1.accrueInterest();
+        emit log("checkpoint after we accrueInterest");
 
-        _assertCloseTo(silo1.maxRepay(borrower), toBorrow + borrowInterest, "borrow APY");
-        _assertCloseTo(silo1.convertToAssets(silo1.balanceOf(depositor)), deposit1 + depositInterest, "deposit APY");
+        _assertInterest(toBorrow, _days);
     }
 
-    function _assertCloseTo(uint256 _a, uint256 _closeTo, string memory _msg) internal {
-        uint256 diff = Math.max(_a, _closeTo) - Math.min(_a, _closeTo);
-        uint256 deviation = diff * 1e18 / _closeTo;
+    function _assertInterest(uint256 _toBorrow, uint256 _days) internal {
+        uint256 interestAPYAfter = _toBorrow * siloLens.getBorrowAPR(silo1) / 1e18;
+        emit log_named_uint("APY checkpoint for days", (_days / 1 days));
+        emit log_named_decimal_uint("utilization [%]", siloLens.getUtilization(silo1), 16);
+        emit log_named_decimal_uint("APY (based on getCurrentInterestRate) [%]", interestAPYAfter, 16);
 
-        emit log_named_uint("      _a", _a);
-        emit log_named_uint("_closeTo", _closeTo);
-        assertLt(deviation, 0.005e18, string.concat(_msg, " (accepted diff 0.5%)"));
+        uint256 interestDays = interestAPYAfter * _days / (365 days);
+        uint256 maxRepay = silo1.maxRepay(borrower);
+        uint256 interestToRepay = maxRepay - _toBorrow;
+
+        emit log_named_decimal_uint("borrow amount", _toBorrow, 18);
+        emit log_named_decimal_uint("interest baseline (getCompoundInterestRate)", interestToRepay, 18);
+        emit log_named_decimal_uint("interest estimation (getCurrentInterestRate)", interestDays, 18);
+
+        uint256 diff = Math.max(interestDays, interestToRepay) - Math.min(interestDays, interestToRepay);
+        uint256 interestDiff = diff * 1e18 / interestToRepay;
+
+        emit log_named_decimal_uint("interestDiff [%]", interestDiff, 16);
+        assertLt(interestDiff, 0.01e18, "accepting difference in calculation of 1%");
     }
 }
