@@ -7,8 +7,6 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -32,7 +30,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     address borrower = makeAddr("borrower");
 
     function setUp() public {
-        siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
+        siloConfig = _setUpLocalFixture();
 
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
     }
