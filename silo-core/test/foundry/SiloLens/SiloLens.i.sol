@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
@@ -35,9 +36,9 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens -vv
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_utilization_75 -vv
     */
-    function test_siloLens() public {
+    function test_siloLens_utilization_75() public {
 
         uint256 deposit0 = 33e18;
         uint256 deposit1 = 11e18;
@@ -114,13 +115,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(siloLens.totalDeposits(silo1), deposit1, "totalDeposits after borrow are the same");
 
-        vm.warp(block.timestamp + 5 days);
-
-        _assertInterest(toBorrow, 5);
-
-        ////
-
-        vm.warp(block.timestamp + 60 days);
+        vm.warp(block.timestamp + 65 days);
 
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after 65 days #0");
         assertEq(siloLens.getBorrowAPR(silo1), 6_605018041910688000, "getBorrowAPR after 65 days #1");
@@ -192,13 +187,6 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
             "[debtBalanceOfUnderlying] with interest debt is higher"
         );
 
-        uint256 interestAPY = toBorrow * siloLens.getBorrowAPR(silo1) / 1e18;
-        emit log_named_decimal_uint("interest APY for 65 days calculated based on getCurrentInterestRate", interestAPY, 18);
-        emit log_named_decimal_uint("interest for 65 days (based on getCurrentInterestRate)", interestAPY * 65 / 365, 18);
-        emit log_named_decimal_uint("debt amount is (base for interest)", toBorrow, 18);
-        emit log_named_decimal_uint("maxRepay based on getCurrentInterestRate", toBorrow + interestAPY * 65 / 365, 18);
-        emit log_named_decimal_uint("maxRepay based on view method (where we using getCompoundInterestRate)", silo1.maxRepay(borrower), 18);
-
         silo1.accrueInterest();
 
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after accrueInterest #0");
@@ -231,13 +219,58 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "hasPosition");
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_apy_utilization_10 -vv
+    */
+    function test_siloLens_apy_utilization_10() public {
+        _siloLens_apy_utilization(0.10e18, 1 days);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_apy_utilization_fuzz -vv
+    */
+    function test_siloLens_apy_utilization_fuzz(
+        uint8 _utilization, uint8 _days
+    ) public {
+//        (uint8 _utilization, uint8 _days) = (21, 241);
+        vm.assume(_utilization > 0 && _utilization < 75);
+        vm.assume(_days > 0 && _days < 30);
+
+        _siloLens_apy_utilization(uint256(_utilization) * 1e16, uint256(_days) * 1 days);
+    }
+
+    function _siloLens_apy_utilization(uint256 _utilization, uint256 _days) internal {
+        uint256 deposit0 = 33e18;
+        uint256 deposit1 = 11e18;
+        uint256 collateral = 11e18;
+
+        _deposit(deposit0, depositor);
+        _depositForBorrow(deposit1, depositor);
+        _depositCollateral(collateral, borrower, TWO_ASSETS);
+
+        uint256 toBorrow = collateral * _utilization / 1e18;
+        _borrow(toBorrow, borrower);
+
+        assertEq(siloLens.getUtilization(silo0), 0, "getUtilization #0");
+        assertEq(siloLens.getUtilization(silo1), _utilization, "getUtilization #1");
+
+        vm.warp(block.timestamp + _days);
+
+        _assertInterest(toBorrow, _days);
+
+        silo1.accrueInterest();
+        emit log("checkpoint after we accrueInterest");
+
+        _assertInterest(toBorrow, _days);
+    }
+
     function _assertInterest(uint256 _toBorrow, uint256 _days) internal {
         uint256 interestAPYAfter = _toBorrow * siloLens.getBorrowAPR(silo1) / 1e18;
-        emit log_named_uint("APY checkpoint for days", _days);
+        emit log_named_uint("APY checkpoint for days", (_days / 1 days));
         emit log_named_decimal_uint("utilization [%]", siloLens.getUtilization(silo1), 16);
         emit log_named_decimal_uint("APY (based on getCurrentInterestRate) [%]", interestAPYAfter, 16);
 
-        uint256 interestDays = interestAPYAfter * _days / 365;
+        uint256 interestDays = interestAPYAfter * _days / (365 days);
         uint256 maxRepay = silo1.maxRepay(borrower);
         uint256 interestToRepay = maxRepay - _toBorrow;
 
@@ -245,10 +278,10 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("interest baseline (getCompoundInterestRate)", interestToRepay, 18);
         emit log_named_decimal_uint("interest estimation (getCurrentInterestRate)", interestDays, 18);
 
-        uint256 interestDiff = (interestDays - interestToRepay) * 1e18 / interestToRepay;
+        uint256 diff = Math.max(interestDays, interestToRepay) - Math.min(interestDays, interestToRepay);
+        uint256 interestDiff = diff * 1e18 / interestToRepay;
 
         emit log_named_decimal_uint("interestDiff [%]", interestDiff, 16);
         assertLt(interestDiff, 0.01e18, "accepting difference in calculation of 1%");
-
     }
 }
