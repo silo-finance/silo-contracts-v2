@@ -139,4 +139,7 @@ library ErrorsLib {
 
     /// @notice Thrown when attempting to supply more than the max inflow of a market.
     error MaxInflowExceeded(IERC4626 market);
+
+    /// @notice Thrown when attempting to skim tokens that is a share token for one of withdrawal market
+    error TokenInWithdrawQueue();
 }

@@ -490,8 +490,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ISiloVaultBase
-    function skim(address _token) external virtual {
+    function skim(address _token) external virtual onlyOwner {
         if (skimRecipient == address(0)) revert ErrorsLib.ZeroAddress();
+
+        for (uint256 i; i < withdrawQueue.length; ++i) {
+            require(_token != address(withdrawQueue[i]), ErrorsLib.TokenInWithdrawQueue());
+        }
 
         uint256 amount = _ERC20BalanceOf(_token, address(this));
 
