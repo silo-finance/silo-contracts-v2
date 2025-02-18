@@ -11,7 +11,7 @@ import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncen
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 /*
-forge test --mc VaultIncentivesModuleTest -vv
+FOUNDRY_PROFILE=vaults-tests forge test --mc VaultIncentivesModuleTest -vv
 */
 contract VaultIncentivesModuleTest is Test {
     VaultIncentivesModule public incentivesModule;
@@ -33,14 +33,24 @@ contract VaultIncentivesModuleTest is Test {
     event NotificationReceiverRemoved(address notificationReceiver);
 
     function setUp() public {
-        incentivesModule = new VaultIncentivesModule(_deployer);
+        incentivesModule = new VaultIncentivesModule();
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_new -vvv
+    */
+    function test_IncentivesModule_new() public {
+        VaultIncentivesModule module = new VaultIncentivesModule();
+        vm.expectRevert(abi.encodeWithSignature("NotInitializing()"));
+        module.__VaultIncentivesModule_init(address(1));
     }
 
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_init -vvv
     */
     function test_IncentivesModule_init() public {
-        address module = Clones.clone(address(new VaultIncentivesModule(_deployer)));
+        address module = Clones.clone(address(new VaultIncentivesModule()));
+        assertEq(VaultIncentivesModule(module).owner(), address(0), "cloned contract has NO owner");
 
         VaultIncentivesModule(module).__VaultIncentivesModule_init(address(1));
 
@@ -48,7 +58,7 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     function test_IncentivesModule_initOnce() public {
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
         incentivesModule.__VaultIncentivesModule_init(address(1));
     }
 

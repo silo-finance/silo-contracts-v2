@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
@@ -46,7 +47,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
     MintableToken internal loanToken = new MintableToken(18);
     MintableToken internal collateralToken = new MintableToken(18);
-    VaultIncentivesModule internal vaultIncentivesModule = new VaultIncentivesModule(OWNER);
+    VaultIncentivesModule internal vaultIncentivesModule;
 
     IERC4626[] internal allMarkets;
     mapping (IERC4626 collateral => IERC4626) internal collateralMarkets;
@@ -62,6 +63,9 @@ contract BaseTest is SiloLittleHelper, Test {
         loanToken.setOnDemand(true);
 
         emit log_named_address("loanToken", address(loanToken));
+
+        vaultIncentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
+        vaultIncentivesModule.__VaultIncentivesModule_init(OWNER);
 
         vault = ISiloVault(address(
             new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV")
