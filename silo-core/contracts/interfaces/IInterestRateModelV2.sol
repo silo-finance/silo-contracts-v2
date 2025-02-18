@@ -65,21 +65,6 @@ interface IInterestRateModelV2 {
         view
         returns (bool overflow);
 
-    /// @dev pure function that calculates current annual interest rate
-    /// @param _c configuration object, IInterestRateModel.Config
-    /// @param _totalBorrowAmount current total borrows for asset
-    /// @param _totalDeposits current total deposits for asset
-    /// @param _interestRateTimestamp timestamp of last interest rate update
-    /// @param _blockTimestamp current block timestamp
-    /// @return rcur current annual interest rate (1e18 == 100%)
-    function calculateCurrentInterestRate(
-        Config calldata _c,
-        uint256 _totalDeposits,
-        uint256 _totalBorrowAmount,
-        uint256 _interestRateTimestamp,
-        uint256 _blockTimestamp
-    ) external pure returns (uint256 rcur);
-
     /// @dev pure function that calculates interest rate based on raw input data
     /// @param _c configuration object, IInterestRateModel.Config
     /// @param _totalBorrowAmount current total borrows for asset

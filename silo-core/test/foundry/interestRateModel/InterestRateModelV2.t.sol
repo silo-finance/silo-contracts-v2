@@ -86,36 +86,6 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         INTEREST_RATE_MODEL.calculateCompoundInterestRate(c, 0, 0, 1, 0);
     }
 
-    function test_IRM_calculateCurrentInterestRate_InvalidTimestamps() public {
-        IInterestRateModelV2.Config memory c;
-        vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
-        INTEREST_RATE_MODEL.calculateCurrentInterestRate(c, 0, 0, 1, 0);
-    }
-    
-    // forge test -vv --mt test_IRM_calculateCurrentInterestRate_CAP
-    function test_IRM_calculateCurrentInterestRate_CAP() public view {
-        uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
-            _defaultConfig(),
-            100e18, // _totalDeposits,
-            99e18, // _totalBorrowAmount,
-            TODAY, // _interestRateTimestamp,
-            TODAY + 60 days // after 59 days we got capped
-        );
-
-        assertEq(rcur, 10**20, "expect to return CAP");
-    }
-
-    function test_IRM_calculateCurrentInterestRate_revertsWhenTimestampInvalid() public {
-        IInterestRateModelV2.Config memory emptyConfig;
-
-        // currentTime should always be larger than last, so this should revert
-        uint256 lastTransactionTime = 1;
-        uint256 currentTime = 0;
-
-        vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
-        INTEREST_RATE_MODEL.calculateCurrentInterestRate(emptyConfig, 0, 0, lastTransactionTime, currentTime);
-    }
-
     // forge test -vv --mt test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz
     function test_IRM_calculateCompoundInterestRateWithOverflowDetection_CAP_fuzz(uint256 _t) public view {
         vm.assume(_t < 5 * 365 days);

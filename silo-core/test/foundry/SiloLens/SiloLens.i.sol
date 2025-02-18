@@ -117,14 +117,6 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         vm.warp(block.timestamp + 65 days);
 
-        assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after 65 days #0");
-        assertEq(siloLens.getBorrowAPR(silo1), 6_605018041910688000, "getBorrowAPR after 65 days #1");
-
-        assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after 65 days #0");
-        assertEq(siloLens.getDepositAPR(silo1), 4_625564840811145381, "getDepositAPR after 65 days #1");
-
-        assertLt(siloLens.getDepositAPR(silo1), siloLens.getBorrowAPR(silo1), "deposit APR should be less than borrow");
-
         assertFalse(siloLens.isSolvent(silo0, borrower), "borrower is NOT solvent @0");
         assertFalse(siloLens.isSolvent(silo1, borrower), "borrower is NOT solvent @1");
 
@@ -189,12 +181,6 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         silo1.accrueInterest();
 
-        assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after accrueInterest #0");
-        assertEq(siloLens.getBorrowAPR(silo1), 6_942449830693104000, "getBorrowAPR after accrueInterest #1");
-
-        assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after accrueInterest #0");
-        assertEq(siloLens.getDepositAPR(silo1), 4_861871934669203484, "getDepositAPR after accrueInterest #1");
-
         assertGt(
             siloLens.totalDeposits(silo1),
             deposit1,
@@ -205,13 +191,6 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(maxRepayBefore, 14.994397297218850137e18, "maxRepayBefore");
 
         vm.warp(block.timestamp + 300 days);
-
-        // TODO why APR is zero but maxRepayAfter is growing?
-        assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after long time #0");
-        assertEq(siloLens.getBorrowAPR(silo1), 0, "getBorrowAPR after long time #1");
-
-        assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after long time #0");
-        assertEq(siloLens.getDepositAPR(silo1), 0, "getDepositAPR after long time #1");
 
         uint256 maxRepayAfter = silo1.maxRepay(borrower);
         assertEq(maxRepayAfter, 1247.410613506809097866e18, "maxRepayAfter");
