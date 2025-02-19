@@ -8,7 +8,7 @@ methods {
 
     // a function of ISharedTokenInitializable
     function _.initialize(address _silo, address _hookReceiver, uint24 _tokenType) external =>
-        initializeCVL_3(_silo, _hookReceiver, _tokenType) expect void;
+        initializeCVL_3(calledContract, _silo, _hookReceiver, _tokenType) expect void;
 
     // a function of ISilo
     function _.initialize(address) external =>
@@ -87,7 +87,7 @@ function initializeCVL_3(address calledC, address _silo, address _hookReceiver, 
 // call this at the beginning of rules to avoid the assertion in `initializeCVL_3` from 
 // failing spuriously
 function init_3_already_initialized() {
-    require(forall address a1. forall address a2. forall uint24 i. !already_initialized_3[a1][a2][i]);
+    require(forall address a. !already_initialized_3[a]);
 }
 
 //// summary: one arg initialization ////
