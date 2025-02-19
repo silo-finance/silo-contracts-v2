@@ -25,8 +25,8 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
 
     /* CONSTRUCTOR */
 
-    constructor() {
-        VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule(msg.sender));
+    constructor(VaultIncentivesModule _implementation) {
+        VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(_implementation);
     }
 
     /* EXTERNAL */
