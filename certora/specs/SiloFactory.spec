@@ -9,8 +9,8 @@ methods {
     function _.initialize(address _silo, address _hookReceiver, uint24 _tokenType) external =>
         initializeCVL_3(_silo, _hookReceiver, _tokenType) expect void;
 
-    function _.initialize(address _silo) external =>
-        initializeCVL_1(_silo) expect void;
+    function _.initialize(address) external =>
+        initializeCVL_1(calledContract) expect void;
 
     function _.quoteToken() external => NONDET; // PER_CALLEE_CONSTANT ?
 
@@ -72,14 +72,14 @@ function cloneDeterministicCVL(address master, bytes32 salt) returns address {
 // "share token" -> "silo"
 ghost mapping(address => address) share_token_silo;
 
-ghost mapping(address => mapping(address => mapping(uint24 => bool))) already_initialized_3;
+ghost mapping(address => bool) already_initialized_3;
 
-function initializeCVL_3(address _silo, address _hookReceiver, uint24 _tokenType) {
+function initializeCVL_3(address calledC, address _silo, address _hookReceiver, uint24 _tokenType) {
     share_token_silo[_hookReceiver] = _silo;
 
     // make sure this is never called on the same inputs twice
-    assert(!already_initialized_3[_silo][_hookReceiver][_tokenType]); 
-    already_initialized_3[_silo][_hookReceiver][_tokenType] = true;
+    assert(!already_initialized_3[calledC]); 
+    already_initialized_3[calledC] = true;
 }
 
 // call this at the beginning of rules to avoid the assertion in `initializeCVL_3` from 
@@ -92,10 +92,10 @@ function init_3_already_initialized() {
 
 ghost mapping(address => bool) already_initialized_1;
 
-function initializeCVL_1(address _silo) {
+function initializeCVL_1(address calledC) {
     // make sure this is never called on the same inputs twice 
-    assert(!already_initialized_1[_silo]); 
-    already_initialized_1[_silo] = true;
+    assert(!already_initialized_1[calledC]); 
+    already_initialized_1[calledC] = true;
 }
 
 // call this at the beginning of rules to avoid the assertion in `initializeCVL_1` from 
