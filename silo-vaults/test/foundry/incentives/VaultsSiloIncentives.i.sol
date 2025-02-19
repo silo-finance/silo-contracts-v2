@@ -82,7 +82,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
                 address(0),
                 0,
                 user,
-                depositAmount,
+                depositAmount * vault.DECIMALS_OFFSET(),
                 depositAmount,
                 depositAmount
             )

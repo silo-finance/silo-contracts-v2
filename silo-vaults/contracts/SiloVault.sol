@@ -518,7 +518,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc IERC20Metadata
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return ERC4626.decimals();
+        return 18;
     }
 
     /// @inheritdoc IERC4626
