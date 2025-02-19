@@ -206,6 +206,34 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testClaimRewardsAccrueFee -vvv
+    */
+    function testClaimRewardsAccrueFee(uint256 deposited, uint256 withdrawn, uint256 blocks) public {
+        deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+        withdrawn = bound(withdrawn, MIN_TEST_ASSETS, deposited);
+        blocks = _boundBlocks(blocks);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(deposited, ONBEHALF);
+
+        assertApproxEqAbs(vault.lastTotalAssets(), vault.totalAssets(), 1, "lastTotalAssets1");
+
+        _forward(blocks);
+
+        uint256 feeShares = _feeShares();
+        vm.assume(feeShares != 0);
+
+        vm.expectEmit(address(vault));
+        emit EventsLib.AccrueInterest(vault.totalAssets(), feeShares);
+
+        vm.prank(ONBEHALF);
+        vault.claimRewards();
+
+        assertApproxEqAbs(vault.lastTotalAssets(), vault.totalAssets(), 1, "lastTotalAssets2");
+        assertEq(vault.balanceOf(FEE_RECIPIENT), feeShares, "vault.balanceOf(FEE_RECIPIENT)");
+    }
+
+    /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeAccrueFee -vvv
     */
     function testSetFeeAccrueFee(uint256 deposited, uint256 fee, uint256 blocks) public {
