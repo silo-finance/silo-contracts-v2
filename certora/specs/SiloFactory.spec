@@ -1,10 +1,16 @@
 methods {
 
+    function maxDeployerFee() external returns uint256 envfree;
+    function MAX_FEE() external returns uint256 envfree;
+
     function _.cloneDeterministic(address master, bytes32 salt) internal =>
         cloneDeterministicCVL(master, salt) expect address;
 
     function _.initialize(address _silo, address _hookReceiver, uint24 _tokenType) external =>
-        initializeCVL(_silo, _hookReceiver, _tokenType) expect void;
+        initializeCVL_3args(_silo, _hookReceiver, _tokenType) expect void;
+
+    function _.initialize(address _silo) external =>
+        initializeCVL_1arg(_silo) expect void;
 
     function _.quoteToken() external => NONDET; // PER_CALLEE_CONSTANT ?
 
@@ -16,7 +22,27 @@ methods {
         uint256 tokenId,
         bytes data
     ) external => NONDET; /* expects bytes4 */
+
+    function _.updateHooks() external => NONDET;
+
+    function _.config() external => configCVL(calledContract) expect address;
+
+    function _.SILO_ID() external => PER_CALLEE_CONSTANT;
 }
+
+//// summary: config ////
+
+ghost configDet(address) returns address; 
+
+function configCVL(address calledContract) returns address {
+    if (already_initialized_1[calledContract]) {
+        return configDet(calledContract);
+    } else {
+        return 0;
+    }
+}
+
+//// summary: cloneDeterministic ////
 
 // "clone address" -> "has already been deployed"
 ghost mapping(address => bool) deployed;
@@ -27,7 +53,7 @@ ghost mapping(address => bytes32) clonedet_rev2;
 
 
 function cloneDeterministicCVL(address master, bytes32 salt) returns address {
-    address res = clonedet[master][salt]; // keccak256(master) +  keccak256(salt);
+    address res = clonedet[master][salt]; 
 
     // injectivity (could also use quantifiers + ghost axioms)
     require(clonedet_rev1[res] == master);
@@ -40,19 +66,47 @@ function cloneDeterministicCVL(address master, bytes32 salt) returns address {
     return res;
 }
 
+
+//// summary: three args initialization ////
+
 // "share token" -> "silo"
 ghost mapping(address => address) share_token_silo;
-ghost mapping(address => mapping(address => mapping(uint24 => bool))) already_initialized;
 
-function initializeCVL(address _silo, address _hookReceiver, uint24 _tokenType) {
-    assert(false, "this isn't called right now, is it?  (just checking, not a requirement)");
+ghost mapping(address => mapping(address => mapping(uint24 => bool))) already_initialized_3;
 
+function initializeCVL_3args(address _silo, address _hookReceiver, uint24 _tokenType) {
     share_token_silo[_hookReceiver] = _silo;
 
-    // make sure this is never called on the same inputs twice (TODO: double check -- do all the inputs count, or only a subset?)
-    assert(!already_initialized[_silo][_hookReceiver][_tokenType]); 
-    already_initialized[_silo][_hookReceiver][_tokenType] = true;
+    // make sure this is never called on the same inputs twice
+    assert(!already_initialized_3[_silo][_hookReceiver][_tokenType]); 
+    already_initialized_3[_silo][_hookReceiver][_tokenType] = true;
 }
+
+// call this at the beginning of rules to avoid the assertion in `initializeCVL_3args` from 
+// failing spuriously
+function init_3_already_initialized() {
+    require(forall address a1. forall address a2. forall uint24 i. !already_initialized_3[a1][a2][i]);
+}
+
+//// summary: one arg initialization ////
+
+ghost mapping(address => bool) already_initialized_1;
+
+function initializeCVL_1(address _silo) {
+    // make sure this is never called on the same inputs twice 
+    assert(!already_initialized_1[_silo]); 
+    already_initialized_1[_silo][_hookReceiver][_tokenType] = true;
+}
+
+// call this at the beginning of rules to avoid the assertion in `initializeCVL_1` from 
+// failing spuriously
+function init_1_already_initialized() {
+    require(forall address a. !already_initialized_1[a]);
+}
+
+//// rules ////
 
 use builtin rule sanity filtered { f -> f.contract == currentContract }
 
+invariant deployerFeeInRange()
+    maxDeployerFee() <= MAX_FEE();
