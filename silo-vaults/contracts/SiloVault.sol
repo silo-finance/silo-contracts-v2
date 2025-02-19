@@ -803,11 +803,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }
 
             marketConfig.removableAt = 0;
+            // one time approval, so market can pull any amount of tokens from SiloVault in a future
+            IERC20(asset()).forceApprove(address(_market), type(uint256).max);
+        } else {
+            IERC20(asset()).forceApprove(address(_market), 0);
         }
 
         marketConfig.cap = _supplyCap;
-        // one time approval, so market can pull any amount of tokens from SiloVault in a future
-        IERC20(asset()).forceApprove(address(_market), type(uint256).max);
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 
         delete pendingCap[_market];
