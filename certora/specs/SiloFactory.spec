@@ -1,5 +1,11 @@
 methods {
 
+    function maxDeployerFee() external returns uint256 envfree;
+    function maxFlashloanFee() external returns uint256 envfree;
+    function maxLiquidationFee() external returns uint256 envfree;
+    
+    function MAX_FEE() external returns uint256 envfree;
+
     function _.cloneDeterministic(address master, bytes32 salt) internal =>
         cloneDeterministicCVL(master, salt) expect address;
 
@@ -54,5 +60,13 @@ function initializeCVL(address _silo, address _hookReceiver, uint24 _tokenType) 
     already_initialized[_silo][_hookReceiver][_tokenType] = true;
 }
 
-use builtin rule sanity filtered { f -> f.contract == currentContract }
+//use builtin rule sanity filtered { f -> f.contract == currentContract }
 
+invariant deployerFeeInRange()
+    maxDeployerFee() <= MAX_FEE();
+
+invariant flashLoanFeeInRange()
+    maxFlashloanFee() <= MAX_FEE();
+
+invariant liquidationFeeInRange()
+    maxLiquidationFee() <= MAX_FEE();
