@@ -7,10 +7,10 @@ methods {
         cloneDeterministicCVL(master, salt) expect address;
 
     function _.initialize(address _silo, address _hookReceiver, uint24 _tokenType) external =>
-        initializeCVL_3args(_silo, _hookReceiver, _tokenType) expect void;
+        initializeCVL_3(_silo, _hookReceiver, _tokenType) expect void;
 
     function _.initialize(address _silo) external =>
-        initializeCVL_1arg(_silo) expect void;
+        initializeCVL_1(_silo) expect void;
 
     function _.quoteToken() external => NONDET; // PER_CALLEE_CONSTANT ?
 
@@ -34,9 +34,9 @@ methods {
 
 ghost configDet(address) returns address; 
 
-function configCVL(address calledContract) returns address {
-    if (already_initialized_1[calledContract]) {
-        return configDet(calledContract);
+function configCVL(address calledC) returns address {
+    if (already_initialized_1[calledC]) {
+        return configDet(calledC);
     } else {
         return 0;
     }
@@ -74,7 +74,7 @@ ghost mapping(address => address) share_token_silo;
 
 ghost mapping(address => mapping(address => mapping(uint24 => bool))) already_initialized_3;
 
-function initializeCVL_3args(address _silo, address _hookReceiver, uint24 _tokenType) {
+function initializeCVL_3(address _silo, address _hookReceiver, uint24 _tokenType) {
     share_token_silo[_hookReceiver] = _silo;
 
     // make sure this is never called on the same inputs twice
@@ -82,7 +82,7 @@ function initializeCVL_3args(address _silo, address _hookReceiver, uint24 _token
     already_initialized_3[_silo][_hookReceiver][_tokenType] = true;
 }
 
-// call this at the beginning of rules to avoid the assertion in `initializeCVL_3args` from 
+// call this at the beginning of rules to avoid the assertion in `initializeCVL_3` from 
 // failing spuriously
 function init_3_already_initialized() {
     require(forall address a1. forall address a2. forall uint24 i. !already_initialized_3[a1][a2][i]);
@@ -95,7 +95,7 @@ ghost mapping(address => bool) already_initialized_1;
 function initializeCVL_1(address _silo) {
     // make sure this is never called on the same inputs twice 
     assert(!already_initialized_1[_silo]); 
-    already_initialized_1[_silo][_hookReceiver][_tokenType] = true;
+    already_initialized_1[_silo] = true;
 }
 
 // call this at the beginning of rules to avoid the assertion in `initializeCVL_1` from 
