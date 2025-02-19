@@ -6,9 +6,11 @@ methods {
     function _.cloneDeterministic(address master, bytes32 salt) internal =>
         cloneDeterministicCVL(master, salt) expect address;
 
+    // a function of ISharedTokenInitializable
     function _.initialize(address _silo, address _hookReceiver, uint24 _tokenType) external =>
         initializeCVL_3(_silo, _hookReceiver, _tokenType) expect void;
 
+    // a function of ISilo
     function _.initialize(address) external =>
         initializeCVL_1(calledContract) expect void;
 
