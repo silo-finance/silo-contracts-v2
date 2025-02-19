@@ -69,7 +69,7 @@ function cloneDeterministicCVL(address master, bytes32 salt) returns address {
 }
 
 
-//// summary: three args initialization ////
+//// summary: ISharedTokenInitializable.initialize(<three args>) ////
 
 // "share token" -> "silo"
 ghost mapping(address => address) share_token_silo;
@@ -86,11 +86,11 @@ function initializeCVL_3(address calledC, address _silo, address _hookReceiver, 
 
 // call this at the beginning of rules to avoid the assertion in `initializeCVL_3` from 
 // failing spuriously
-function init_3_already_initialized() {
+function init_already_initialized_3() {
     require(forall address a. !already_initialized_3[a]);
 }
 
-//// summary: one arg initialization ////
+//// summary: ISilo.initialize(<one arg>) ////
 
 ghost mapping(address => bool) already_initialized_1;
 
@@ -102,7 +102,7 @@ function initializeCVL_1(address calledC) {
 
 // call this at the beginning of rules to avoid the assertion in `initializeCVL_1` from 
 // failing spuriously
-function init_1_already_initialized() {
+function init_already_initialized_1() {
     require(forall address a. !already_initialized_1[a]);
 }
 
