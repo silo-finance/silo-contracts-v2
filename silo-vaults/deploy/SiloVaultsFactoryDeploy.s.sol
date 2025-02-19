@@ -30,7 +30,7 @@ contract SiloVaultsFactoryDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        SiloVaultsFactory = new SiloVaultsFactory(new VaultIncentivesModule(msg.sender));
+        SiloVaultsFactory = new SiloVaultsFactory();
 
         vm.stopBroadcast();
 
