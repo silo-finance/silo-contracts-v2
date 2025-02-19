@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.5.0] - 2025-02-19
+### Added
+- SiloLens deployment
+
 ## [1.4.0] - 2025-02-18
 ### Added
 - Router with multicall
