@@ -175,7 +175,8 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         );
 
         vault.claimRewards();
-
+        333333333333333000
+        333333333333333333
         assertEq(
             vaultIncentivesController.getRewardsBalance(address(this), programName),
             rewardsPerSec / 3,

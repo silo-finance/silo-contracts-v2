@@ -32,7 +32,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
-        assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
+        assertEq(vault.decimals(), 18, "offset does not affect decimals");
+        assertEq(vault.DECIMALS_OFFSET(), 21 - decimals, "DECIMALS_OFFSET");
     }
 
     /*

@@ -178,8 +178,8 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         return false;
     }
 
-    function _assertEqPrevAmountInSharesWhenNoInterest(uint256 _preview, uint256 _amountIn) private pure {
+    function _assertEqPrevAmountInSharesWhenNoInterest(uint256 _preview, uint256 _amountIn) private view {
         if (_useRedeem()) assertEq(_preview, _amountIn, "previewWithdraw == assets == shares, when no interest");
-        else assertEq(_preview, _amountIn, "previewWithdraw == assets == shares, when no interest");
+        else assertEq(_preview, _amountIn * OFFSET_POW, "previewWithdraw == assets == shares, when no interest");
     }
 }
