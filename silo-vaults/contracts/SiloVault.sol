@@ -504,6 +504,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function claimRewards() public virtual {
         _nonReentrantOn();
 
+        _updateLastTotalAssets(_accrueFee());
         _claimRewards();
 
         _nonReentrantOff();
