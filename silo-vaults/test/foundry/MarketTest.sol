@@ -35,7 +35,7 @@ contract MarketTest is IntegrationTest {
     function testAllowanceOnSetCap() public {
         IERC4626 market = allMarkets[0];
         IERC20 asset = IERC20(market.asset());
-        
+
         assertEq(
             asset.allowance(address(vault), address(market)),
             type(uint256).max,
