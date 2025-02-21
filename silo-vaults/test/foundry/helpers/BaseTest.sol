@@ -17,7 +17,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
-import {SiloVaultsFactoryDeploy} from "../../../deploy/SiloVaultsFactoryDeploy.sol";
+import {SiloVaultsFactoryDeploy} from "../../../deploy/SiloVaultsFactoryDeploy.s.sol";
 
 import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
