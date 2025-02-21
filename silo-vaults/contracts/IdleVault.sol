@@ -49,4 +49,8 @@ contract IdleVault is ERC4626 {
 
         return super.mint(_shares, _receiver);
     }
+
+    function _decimalsOffset() internal view virtual override returns (uint8) {
+        return 36;
+    }
 }

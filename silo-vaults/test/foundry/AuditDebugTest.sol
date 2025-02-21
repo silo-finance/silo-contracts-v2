@@ -83,15 +83,24 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
 
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttackWithDonation -vvv
 
+    - donation attack works but it is not profitable to attacker
+    - however it can cause damage (founds loss + tokens locked)
+    - if we want to protect from locked tokens, we can add rescue tokens to immutable address (when total supply == 0)
+
+    - solution proposed by certora where we will check withdraw amount will work, but it will lock deposits after
+     donation attack, so we will have to remove ide vault from queue (this may be general solution)
+
+    - will offset 18 works? YES! looks like perfect solution (but only for our idle vault)
+
     */
     function testInflationAttackWithDonation(
 //        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12468, 3418918637631701048, 13698018464851299819);
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12345, 3.5e18, 14e18);
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
 
-        // we want some founds go to idle market, so cap must be lower than deposit
+        // we want some founds to go to idle market, so cap must be lower than deposit
         _setCap(allMarkets[0], supplierDeposit / 2);
 
         address attacker = makeAddr("attacker");
@@ -99,25 +108,37 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
         vm.prank(attacker);
         vault.deposit(attackerDeposit, attacker);
 
-        emit log("donation!");
+        _printData("state after attacker deposit");
+
         IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
 
+        _printData("state after donation");
+
+        // we want cases where asset generates some shares
         vm.assume(vault.convertToShares(supplierDeposit) != 0);
 
         vm.prank(SUPPLIER);
         vault.deposit(supplierDeposit, SUPPLIER);
 
-        _printData();
+        _printData("after supplier deposit");
 
         vm.startPrank(attacker);
-        assertLe(vault.redeem(vault.balanceOf(attacker), attacker, attacker), uint256(attackerDeposit) + donation, "must be not profitable");
+        uint256 attackerWithdraw = vault.redeem(vault.balanceOf(attacker), attacker, attacker);
+        assertLe(attackerWithdraw, uint256(attackerDeposit) + donation, "must be not profitable");
         vm.stopPrank();
+
+        _printData("after attacker exit");
 
         vm.startPrank(SUPPLIER);
         uint256 withdraw2 = vault.redeem(vault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
 
-        _printData();
+        _printData("after supplier exit");
 
+        uint256 attackerTotalSpend = donation + attackerDeposit;
+        emit log_named_uint("ATTACKER loss", attackerTotalSpend - attackerWithdraw);
+        emit log_named_decimal_uint("ATTACKER lost [%]", (attackerTotalSpend - attackerWithdraw) * 1e18 / attackerTotalSpend, 16);
+
+        // -2 because we allow for 2 wei rounding loss
         if (withdraw2 < supplierDeposit - 2) {
             emit log_named_uint("SUPPLIER lost", supplierDeposit - 2 - withdraw2);
             emit log_named_decimal_uint("SUPPLIER lost [%]", (supplierDeposit - 2 - withdraw2) * 1e18 / supplierDeposit, 16);
@@ -132,66 +153,66 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttack -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttack_permanentLoss -vvv
 
+    1. withdraw from idle
+    2. inflate price
+    3. deposit to idle (loss?): yes, it is the same as donation
+
+    setting up 18 (or even 36 offset) prevent it (for idle vault)
+    
     */
-    function testInflationAttackWithRealocation(
-        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+    function testInflationAttack_permanentLoss(
+//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12, 250923041328, 158581482927923 );
-//        vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
-//
-//        address attacker = makeAddr("attacker");
-//
-//        _setCap(allMarkets[0], 50);
-//
-//        IERC4626[] memory supplyQueue = new IERC4626[](2);
-//        supplyQueue[0] = allMarkets[0];
-//        supplyQueue[1] = idleMarket;
-//
-//
-//        vm.prank(ALLOCATOR);
-//        vault.setSupplyQueue(supplyQueue);
-//
-//        _setCap(supplyQueue[0], attackerDeposit / 2);
-//        _setCap(supplyQueue[1], type(uint128).max);
-//
-//        assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
-//        assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
-//
-//        vm.prank(attacker);
-//        vault.deposit(attackerDeposit, attacker);
-//
-//        emit log("donation!");
-//        IERC20(idleMarket.asset()).transfer(address(supplyQueue[1]), donation);
-//
-//        vm.assume(vault.convertToShares(supplierDeposit) != 0);
-//
-//        vm.prank(SUPPLIER);
-//        vault.deposit(supplierDeposit, SUPPLIER);
-////
-//        _printData();
-//
-//        vm.startPrank(attacker);
-//        uint256 shares = vault.balanceOf(attacker);
-//        uint256 assets = vault.redeem(shares, attacker, attacker);
-//        assertLe(assets, uint256(attackerDeposit) + donation, "must be not profitable");
-//        vm.stopPrank();
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12345, 3.5e18, 14e18);
+        vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
+        vm.assume(supplierDeposit >= 2);
+
+        // we want some founds to go to idle market, so cap must be lower than deposit
+        _setCap(allMarkets[0], supplierDeposit / 2);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(supplierDeposit, SUPPLIER);
+
+        _printData("after supplier deposit");
+
+        // simulate realocation (withdraw from idle)
+        vm.startPrank(address(vault));
+        uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)), address(vault), address(vault));
+        vm.stopPrank();
+
+        _printData("state after realoction from idle");
+
+        address attacker = makeAddr("attacker");
+        IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
+
+
+        // simulate realocation back
+        vm.startPrank(address(vault));
+        idleMarket.deposit(idleAmount, address(vault));
+        vm.stopPrank();
+
+        _printData("state after realocation back to idle");
     }
 
-    function _printData() internal {
+    function _printData(string memory _msg) internal {
         address attacker = makeAddr("attacker");
         IERC20 asset = IERC20(allMarkets[0].asset());
 
-        emit log("--------- dump:");
-        emit log_named_address("allMarkets[0]", address(allMarkets[0]));
-        emit log_named_address("   idleMarket", address(idleMarket));
+        emit log(string.concat("\n----------------", _msg, "------------------"));
 
         emit log_named_uint("asset.balanceOf(allMarkets[0])", asset.balanceOf(address(allMarkets[0])));
         emit log_named_uint("   asset.balanceOf(idleMarket)", asset.balanceOf(address(idleMarket)));
 
+        emit log_named_uint("   SUPPLIER vault shares", vault.balanceOf(SUPPLIER));
+        emit log_named_uint("   attacker vault shares", vault.balanceOf(attacker));
+
         emit log_named_uint("     SUPPLIER preview withdraw", vault.previewRedeem(vault.balanceOf(SUPPLIER)));
         emit log_named_uint("     attacker preview withdraw", vault.previewRedeem(vault.balanceOf(attacker)));
+
+        emit log_named_uint("  vault shares in market#0", allMarkets[0].balanceOf(address(vault)));
+        emit log_named_uint("vault shares in idleMarket", idleMarket.balanceOf(address(vault)));
 
     }
 }
