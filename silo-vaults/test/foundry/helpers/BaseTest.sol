@@ -17,9 +17,12 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
+import {SiloVaultsFactoryDeploy} from "../../../deploy/SiloVaultsFactoryDeploy.sol";
+
 import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
 import {IdleVaultsFactory} from "../../../contracts/IdleVaultsFactory.sol";
+import {SiloVaultsFactory} from "../../../contracts/SiloVaultsFactory.sol";
 
 import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
@@ -67,9 +70,10 @@ contract BaseTest is SiloLittleHelper, Test {
         vaultIncentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
         vaultIncentivesModule.__VaultIncentivesModule_init(OWNER);
 
-        vault = ISiloVault(address(
-            new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV")
-        ));
+        SiloVaultsFactoryDeploy factoryDeploy = new SiloVaultsFactoryDeploy();
+        factoryDeploy.disableDeploymentsSync();
+        SiloVaultsFactory factory = factoryDeploy.run();
+        vault = factory.createSiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV");
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
         idleMarket = factory.createIdleVault(vault);
