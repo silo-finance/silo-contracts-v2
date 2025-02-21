@@ -68,11 +68,9 @@ contract BaseTest is SiloLittleHelper, Test {
 
         SiloVaultsFactoryDeploy factoryDeploy = new SiloVaultsFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
-        SiloVaultsFactory siloVaultsFactory = factoryDeploy.run();
+        siloVaultsFactory = factoryDeploy.run();
 
-        vault = siloVaultsFactory.createSiloVault(
-            OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV"
-        );
+        vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
         idleMarket = factory.createIdleVault(vault);
