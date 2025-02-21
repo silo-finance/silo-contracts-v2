@@ -36,6 +36,9 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
     function setUp() public virtual override {
         super.setUp();
 
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        assertTrue(address(vaultIncentivesModule) != address(0), "empty vaultIncentivesModule");
+
         _setCap(allMarkets[0], _cap());
         _setCap(allMarkets[1], _cap());
         _setCap(allMarkets[2], _cap());
@@ -61,8 +64,6 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
 
         (, uint24 hooksAfter) = IGaugeHookReceiver(address(partialLiquidation)).hookReceiverConfig(address(silo1));
         assertEq(hooksAfter, Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER, "hook after");
-
-        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     function _cap() internal view virtual returns (uint256) {

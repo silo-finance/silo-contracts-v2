@@ -46,6 +46,9 @@ contract VaultMultipleRewardsTest is IntegrationTest {
     function setUp() public virtual override {
         super.setUp();
 
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        assertTrue(address(vaultIncentivesModule) != address(0), "empty vaultIncentivesModule");
+
         _setCap(allMarkets[0], _cap());
         _setCap(allMarkets[1], _cap());
         _setCap(allMarkets[2], _cap());
@@ -76,8 +79,6 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         assertEq(hooksAfter, Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER, "hook after");
 
         _setupIncentivesContracts();
-
-        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     function _overrideTestAddresses() internal returns (address incentiviseSilo) {

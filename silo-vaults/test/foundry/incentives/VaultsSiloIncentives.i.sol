@@ -25,6 +25,9 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
     function setUp() public override {
         super.setUp();
 
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        assertTrue(address(vaultIncentivesModule) != address(0), "empty vaultIncentivesModule");
+
         _setCap(allMarkets[0], CAP);
         _setCap(allMarkets[1], CAP);
         _setCap(allMarkets[2], CAP);
@@ -32,8 +35,6 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
         reward1.setOnDemand(true);
 
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
-
-        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     /*

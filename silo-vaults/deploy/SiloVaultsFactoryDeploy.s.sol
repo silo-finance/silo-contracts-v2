@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {SiloVaultsContracts} from "silo-vaults/common/SiloVaultsContracts.sol";
 
 import {SiloVaultsFactory, ISiloVaultsFactory} from "../contracts/SiloVaultsFactory.sol";
@@ -33,6 +35,8 @@ contract SiloVaultsFactoryDeploy is CommonDeploy {
         siloVaultsFactory = new SiloVaultsFactory();
 
         vm.stopBroadcast();
+
+        console2.log("[SiloVaultsFactoryDeploy] SiloVaultsFactory deployed at ", address(siloVaultsFactory));
 
         _registerDeployment(address(siloVaultsFactory), SiloVaultsContracts.SILO_VAULTS_FACTORY);
     }
