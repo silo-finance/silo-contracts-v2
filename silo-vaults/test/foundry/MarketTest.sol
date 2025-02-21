@@ -435,13 +435,75 @@ Lastly, we would also recommend making a design change and cap the amounts that 
 (decrease back when funds are withdrawn) into each market (and not just the amount that it currently holds
 on the Silo Vault's behalf). This could limit any damage to the Silo Vault that could occur as a result of a faulty market.
 
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttack -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttackWithDonation -vvv
 
     */
-    function testInflationAttack(
-//        uint64 deposit1, uint64 deposit2, uint64 donation
+    function testInflationAttackWithDonation(
+        uint64 deposit1, uint64 deposit2, uint64 donation
     ) public {
-        (uint64 deposit1, uint64 deposit2, uint64 donation) = (12, 250923041328, 158581482927923 );
+//        (uint64 deposit1, uint64 deposit2, uint64 donation) = (12, 250923041328, 158581482927923 );
+        vm.assume(uint256(deposit1) * deposit2 * donation != 0);
+        vm.assume(deposit2 >= 2);
+
+        address user = makeAddr("user");
+        uint256 additionalSupply = 2;
+
+        _setCap(allMarkets[0], 50);
+
+        IERC4626[] memory supplyQueue = new IERC4626[](2);
+        supplyQueue[0] = allMarkets[0];
+        supplyQueue[1] = idleMarket;
+
+
+        vm.prank(ALLOCATOR);
+        vault.setSupplyQueue(supplyQueue);
+
+        _setCap(supplyQueue[0], deposit1 / 2);
+        _setCap(supplyQueue[1], type(uint128).max);
+
+        assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
+        assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
+
+        vm.prank(user);
+        vault.deposit(deposit1, user);
+
+        emit log("donation!");
+        IERC20(idleMarket.asset()).transfer(address(supplyQueue[1]), donation);
+
+        vm.assume(vault.convertToShares(deposit2) != 0);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(deposit2, SUPPLIER);
+//
+        _printData();
+
+        vm.startPrank(user);
+        assertLe(vault.redeem(vault.balanceOf(user), user, user), uint256(deposit1) + donation, "must be not profitable");
+        vm.stopPrank();
+
+        vm.startPrank(SUPPLIER);
+        uint256 withdraw2 = vault.redeem(vault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
+
+        if (withdraw2 < deposit2 - 2) {
+            emit log_named_uint("SUPPLIER lost", deposit2 - 2 - withdraw2);
+        }
+
+        assertGe(
+            withdraw2,
+            deposit2 - 2,
+            "there should be no loss (2 wei acceptable for two roundings)"
+        );
+        vm.stopPrank();
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttack -vvv
+
+    */
+    function testInflationAttackWithRealocation(
+        uint64 deposit1, uint64 deposit2, uint64 donation
+    ) public {
+//        (uint64 deposit1, uint64 deposit2, uint64 donation) = (12, 250923041328, 158581482927923 );
         vm.assume(uint256(deposit1) * deposit2 * donation != 0);
 
         address user = makeAddr("user");
@@ -466,14 +528,21 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
         vm.prank(user);
         vault.deposit(deposit1, user);
 
+        emit log("donation!");
         IERC20(idleMarket.asset()).transfer(address(supplyQueue[1]), donation);
+
+        vm.assume(vault.convertToShares(deposit2) != 0);
 
         vm.prank(SUPPLIER);
         vault.deposit(deposit2, SUPPLIER);
 //
-//        _printData();
-//
-//        assertLe(vault.redeem(vault.balanceOf(user), user, user), deposit1 + donation, "must be not profitable");
+        _printData();
+
+        vm.startPrank(user);
+        uint256 shares = vault.balanceOf(user);
+        uint256 assets = vault.redeem(shares, user, user);
+        assertLe(assets, uint256(deposit1) + donation, "must be not profitable");
+        vm.stopPrank();
     }
 
     function _printData() internal {
@@ -481,11 +550,14 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
         IERC20 asset = IERC20(allMarkets[0].asset());
 
         emit log("--------- dump:");
-        emit log_named_uint("asset.balanceOf(allMarkets[0])", asset.balanceOf(address(allMarkets[0])));
-        emit log_named_uint("asset.balanceOf(idleMarket)", asset.balanceOf(address(idleMarket)));
+        emit log_named_address("allMarkets[0]", address(allMarkets[0]));
+        emit log_named_address("   idleMarket", address(idleMarket));
 
-        emit log_named_uint("SUPPLIER preview withdraw", vault.previewRedeem(vault.balanceOf(SUPPLIER)));
-        emit log_named_uint("user preview withdraw", vault.previewRedeem(vault.balanceOf(user)));
+        emit log_named_uint("asset.balanceOf(allMarkets[0])", asset.balanceOf(address(allMarkets[0])));
+        emit log_named_uint("   asset.balanceOf(idleMarket)", asset.balanceOf(address(idleMarket)));
+
+        emit log_named_uint("     SUPPLIER preview withdraw", vault.previewRedeem(vault.balanceOf(SUPPLIER)));
+        emit log_named_uint("         user preview withdraw", vault.previewRedeem(vault.balanceOf(user)));
 
     }
 
