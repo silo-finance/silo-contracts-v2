@@ -810,6 +810,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Sets the cap of the market.
     function _setCap(IERC4626 _market, uint184 _supplyCap) internal virtual {
         MarketConfig storage marketConfig = config[_market];
+        uint256 approveValue;
 
         if (_supplyCap > 0) {
             if (!marketConfig.enabled) {
@@ -826,11 +827,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }
 
             marketConfig.removableAt = 0;
+            // one time approval, so market can pull any amount of tokens from SiloVault in a future
+            approveValue = type(uint256).max;
         }
 
         marketConfig.cap = _supplyCap;
-        // one time approval, so market can pull any amount of tokens from SiloVault in a future
-        IERC20(asset()).forceApprove(address(_market), type(uint256).max);
+        IERC20(asset()).forceApprove(address(_market), approveValue);
+
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 
         delete pendingCap[_market];
