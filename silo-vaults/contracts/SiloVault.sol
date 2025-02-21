@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ERC4626, Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
@@ -724,6 +726,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 _newTotalAssets,
         Math.Rounding _rounding
     ) internal view virtual returns (uint256) {
+        console2.log("10 ** _decimalsOffset()", 10 ** _decimalsOffset());
+        console2.log("%s * %s / %s, ", _assets, _newTotalSupply + 10 ** _decimalsOffset(), _newTotalAssets);
         return _assets.mulDiv(_newTotalSupply + 10 ** _decimalsOffset(), _newTotalAssets + 1, _rounding);
     }
 
