@@ -5,11 +5,14 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {BaseTest} from "./BaseTest.sol";
 import {SiloVault, ConstantsLib} from "../../../contracts/SiloVault.sol";
+import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
 
 contract InternalTest is BaseTest, SiloVault {
 
     constructor()
-        SiloVault(OWNER, ConstantsLib.MIN_TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MM")
+        SiloVault(
+            OWNER, ConstantsLib.MIN_TIMELOCK, new VaultIncentivesModule(), address(loanToken), "SiloVault Vault", "MM"
+        )
     {
 
     }

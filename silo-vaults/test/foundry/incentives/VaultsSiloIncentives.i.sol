@@ -7,6 +7,8 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
+
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
 import {CAP} from "../helpers/BaseTest.sol";
 
@@ -18,6 +20,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
 
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     function setUp() public override {
         super.setUp();
@@ -29,6 +32,8 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
         reward1.setOnDemand(true);
 
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     /*

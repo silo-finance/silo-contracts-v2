@@ -21,6 +21,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
 import {SiloIncentivesControllerCL} from "../../../contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
@@ -38,6 +39,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
 
     SiloIncentivesControllerGaugeLike siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     address siloWithIncentives;
 
@@ -74,6 +76,8 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         assertEq(hooksAfter, Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER, "hook after");
 
         _setupIncentivesContracts();
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     function _overrideTestAddresses() internal returns (address incentiviseSilo) {

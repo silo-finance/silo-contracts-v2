@@ -26,7 +26,6 @@ import {SiloVaultsFactory} from "../../../contracts/SiloVaultsFactory.sol";
 
 import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
-import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
 
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
@@ -50,7 +49,7 @@ contract BaseTest is SiloLittleHelper, Test {
 
     MintableToken internal loanToken = new MintableToken(18);
     MintableToken internal collateralToken = new MintableToken(18);
-    VaultIncentivesModule internal vaultIncentivesModule;
+    SiloVaultsFactory siloVaultsFactory;
 
     IERC4626[] internal allMarkets;
     mapping (IERC4626 collateral => IERC4626) internal collateralMarkets;
@@ -67,13 +66,13 @@ contract BaseTest is SiloLittleHelper, Test {
 
         emit log_named_address("loanToken", address(loanToken));
 
-        vaultIncentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
-        vaultIncentivesModule.__VaultIncentivesModule_init(OWNER);
-
         SiloVaultsFactoryDeploy factoryDeploy = new SiloVaultsFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
-        SiloVaultsFactory factory = factoryDeploy.run();
-        vault = factory.createSiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV");
+        SiloVaultsFactory siloVaultsFactory = factoryDeploy.run();
+
+        vault = siloVaultsFactory.createSiloVault(
+            OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV"
+        );
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
         idleMarket = factory.createIdleVault(vault);
@@ -88,10 +87,8 @@ contract BaseTest is SiloLittleHelper, Test {
         address asset,
         string memory name,
         string memory symbol
-    ) public returns (ISiloVault) {
-        return ISiloVault(address(
-            new SiloVault(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
-        ));
+    ) public returns (ISiloVault vault) {
+        vault = siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
     }
 
     function _createNewMarkets() public virtual {

@@ -19,6 +19,7 @@ import {SiloIncentivesControllerCL} from "../../../contracts/incentives/claiming
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 import {CAP} from "../helpers/BaseTest.sol";
 
@@ -30,6 +31,7 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
 
     SiloIncentivesControllerGaugeLike siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     function setUp() public virtual override {
         super.setUp();
@@ -59,6 +61,8 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
 
         (, uint24 hooksAfter) = IGaugeHookReceiver(address(partialLiquidation)).hookReceiverConfig(address(silo1));
         assertEq(hooksAfter, Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER, "hook after");
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     function _cap() internal view virtual returns (uint256) {
