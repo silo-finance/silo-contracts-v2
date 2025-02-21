@@ -23,9 +23,18 @@ contract AuditDebugTest is IntegrationTest {
     function setUp() public override {
         super.setUp();
 
-        _setCap(allMarkets[0], CAP);
-        _setCap(allMarkets[1], CAP);
-        _setCap(allMarkets[2], CAP);
+        IERC4626[] memory supplyQueue = new IERC4626[](2);
+        supplyQueue[0] = allMarkets[0];
+        supplyQueue[1] = idleMarket;
+
+        _setCap(allMarkets[0], 1);
+        _setCap(idleMarket, type(uint128).max);
+
+        vm.prank(ALLOCATOR);
+        vault.setSupplyQueue(supplyQueue);
+
+        assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
+        assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
     }
 
 
@@ -58,14 +67,14 @@ it would be possible. However, the Idle Vault should always be vulnerable to a s
   In that case, the attacker can forcibly make the Silo Vault withdraw the funds from there (if caps allow it)
   and inflate the share price through a donation. After the inflation, the attacker can force the Silo Vault
    to deposit funds into the Idle Vault that will be lost due to rounding, causing a permanent loss of funds,
-   as they will be owned by the “virtual user” in the Idle Vault.
+   as they will be owned by the “virtual attacker” in the Idle Vault.
 
 
 
 Recommendations: Firstly, we would recommend adding a sanity check that whenever the Silo Vault deposits funds into
 an ERC4626 market, the difference in Silo Vault-owned assets reported by the market is not too different from the
  amount that was actually deposited. Secondly, we would recommend setting the _decimalsOffset() in the Idle Vault to be
- very large (say, 18). This would make the amount that the user would need to "gift" the market in order to significantly
+ very large (say, 18). This would make the amount that the attacker would need to "gift" the market in order to significantly
  inflate the share price very large and impractical.
 
 Lastly, we would also recommend making a design change and cap the amounts that could be deposited
@@ -76,46 +85,32 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
 
     */
     function testInflationAttackWithDonation(
-//        uint64 deposit1, uint64 deposit2, uint64 donation
+//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-        (uint64 deposit1, uint64 deposit2, uint64 donation) = (12468, 3418918637631701048, 13698018464851299819);
-        vm.assume(uint256(deposit1) * deposit2 * donation != 0);
-        vm.assume(deposit2 >= 2);
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12468, 3418918637631701048, 13698018464851299819);
+        vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
+        vm.assume(supplierDeposit >= 2);
 
-        address user = makeAddr("user");
-        uint256 additionalSupply = 2;
+        // we want some founds go to idle market, so cap must be lower than deposit
+        _setCap(allMarkets[0], supplierDeposit / 2);
 
-        _setCap(allMarkets[0], 50);
+        address attacker = makeAddr("attacker");
 
-        IERC4626[] memory supplyQueue = new IERC4626[](2);
-        supplyQueue[0] = allMarkets[0];
-        supplyQueue[1] = idleMarket;
-
-
-        vm.prank(ALLOCATOR);
-        vault.setSupplyQueue(supplyQueue);
-
-        _setCap(supplyQueue[0], deposit1 / 2);
-        _setCap(supplyQueue[1], type(uint128).max);
-
-        assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
-        assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
-
-        vm.prank(user);
-        vault.deposit(deposit1, user);
+        vm.prank(attacker);
+        vault.deposit(attackerDeposit, attacker);
 
         emit log("donation!");
-        IERC20(idleMarket.asset()).transfer(address(supplyQueue[1]), donation);
+        IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
 
-        vm.assume(vault.convertToShares(deposit2) != 0);
+        vm.assume(vault.convertToShares(supplierDeposit) != 0);
 
         vm.prank(SUPPLIER);
-        vault.deposit(deposit2, SUPPLIER);
-//
+        vault.deposit(supplierDeposit, SUPPLIER);
+
         _printData();
 
-        vm.startPrank(user);
-        assertLe(vault.redeem(vault.balanceOf(user), user, user), uint256(deposit1) + donation, "must be not profitable");
+        vm.startPrank(attacker);
+        assertLe(vault.redeem(vault.balanceOf(attacker), attacker, attacker), uint256(attackerDeposit) + donation, "must be not profitable");
         vm.stopPrank();
 
         vm.startPrank(SUPPLIER);
@@ -123,14 +118,14 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
 
         _printData();
 
-        if (withdraw2 < deposit2 - 2) {
-            emit log_named_uint("SUPPLIER lost", deposit2 - 2 - withdraw2);
-            emit log_named_decimal_uint("SUPPLIER lost [%]", (deposit2 - 2 - withdraw2) * 1e18 / deposit2, 16);
+        if (withdraw2 < supplierDeposit - 2) {
+            emit log_named_uint("SUPPLIER lost", supplierDeposit - 2 - withdraw2);
+            emit log_named_decimal_uint("SUPPLIER lost [%]", (supplierDeposit - 2 - withdraw2) * 1e18 / supplierDeposit, 16);
         }
 
         assertGe(
             withdraw2,
-            deposit2 - 2,
+            supplierDeposit - 2,
             "there should be no loss (2 wei acceptable for two roundings)"
         );
         vm.stopPrank();
@@ -141,13 +136,12 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
 
     */
     function testInflationAttackWithRealocation(
-        uint64 deposit1, uint64 deposit2, uint64 donation
+        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 deposit1, uint64 deposit2, uint64 donation) = (12, 250923041328, 158581482927923 );
-//        vm.assume(uint256(deposit1) * deposit2 * donation != 0);
+//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12, 250923041328, 158581482927923 );
+//        vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
 //
-//        address user = makeAddr("user");
-//        uint256 additionalSupply = 2;
+//        address attacker = makeAddr("attacker");
 //
 //        _setCap(allMarkets[0], 50);
 //
@@ -159,34 +153,34 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
 //        vm.prank(ALLOCATOR);
 //        vault.setSupplyQueue(supplyQueue);
 //
-//        _setCap(supplyQueue[0], deposit1 / 2);
+//        _setCap(supplyQueue[0], attackerDeposit / 2);
 //        _setCap(supplyQueue[1], type(uint128).max);
 //
 //        assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
 //        assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
 //
-//        vm.prank(user);
-//        vault.deposit(deposit1, user);
+//        vm.prank(attacker);
+//        vault.deposit(attackerDeposit, attacker);
 //
 //        emit log("donation!");
 //        IERC20(idleMarket.asset()).transfer(address(supplyQueue[1]), donation);
 //
-//        vm.assume(vault.convertToShares(deposit2) != 0);
+//        vm.assume(vault.convertToShares(supplierDeposit) != 0);
 //
 //        vm.prank(SUPPLIER);
-//        vault.deposit(deposit2, SUPPLIER);
+//        vault.deposit(supplierDeposit, SUPPLIER);
 ////
 //        _printData();
 //
-//        vm.startPrank(user);
-//        uint256 shares = vault.balanceOf(user);
-//        uint256 assets = vault.redeem(shares, user, user);
-//        assertLe(assets, uint256(deposit1) + donation, "must be not profitable");
+//        vm.startPrank(attacker);
+//        uint256 shares = vault.balanceOf(attacker);
+//        uint256 assets = vault.redeem(shares, attacker, attacker);
+//        assertLe(assets, uint256(attackerDeposit) + donation, "must be not profitable");
 //        vm.stopPrank();
     }
 
     function _printData() internal {
-        address user = makeAddr("user");
+        address attacker = makeAddr("attacker");
         IERC20 asset = IERC20(allMarkets[0].asset());
 
         emit log("--------- dump:");
@@ -197,7 +191,7 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
         emit log_named_uint("   asset.balanceOf(idleMarket)", asset.balanceOf(address(idleMarket)));
 
         emit log_named_uint("     SUPPLIER preview withdraw", vault.previewRedeem(vault.balanceOf(SUPPLIER)));
-        emit log_named_uint("         user preview withdraw", vault.previewRedeem(vault.balanceOf(user)));
+        emit log_named_uint("     attacker preview withdraw", vault.previewRedeem(vault.balanceOf(attacker)));
 
     }
 }
