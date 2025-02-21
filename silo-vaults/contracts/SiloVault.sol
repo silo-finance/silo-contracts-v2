@@ -552,6 +552,29 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, Math.Rounding.Floor);
     }
 
+    /// @inheritdoc IERC20
+    function transfer(address _to, uint256 _value) public virtual override(ERC20, IERC20) returns (bool success) {
+        _nonReentrantOn();
+
+        success = ERC20.transfer(_to, _value);
+
+        _nonReentrantOff();
+    }
+
+    /// @inheritdoc IERC20
+    function transferFrom(address _from, address _to, uint256 _value)
+        public
+        virtual
+        override(ERC20, IERC20)
+        returns (bool success)
+    {
+        _nonReentrantOn();
+
+        success = ERC20.transferFrom(_from, _to, _value);
+
+        _nonReentrantOff();
+    }
+
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {
         _nonReentrantOn();
