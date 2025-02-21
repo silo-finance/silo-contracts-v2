@@ -211,7 +211,6 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution_pass -vv
     */
     function test_1secondDistribution_pass() public {
-
         uint128 depositAmount = 123e18;
         uint128 rewardsPerSec = 123456789123453000; // zeros at the end to avoid precision errors
 

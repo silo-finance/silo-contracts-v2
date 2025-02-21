@@ -3,15 +3,15 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
-import {VaultIncentivesModuleDeploy} from "silo-vaults/deploy/VaultIncentivesModuleDeploy.s.sol";
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 /*
-forge test --mc VaultIncentivesModuleTest -vv
+FOUNDRY_PROFILE=vaults-tests forge test --mc VaultIncentivesModuleTest -vv
 */
 contract VaultIncentivesModuleTest is Test {
     VaultIncentivesModule public incentivesModule;
@@ -25,7 +25,7 @@ contract VaultIncentivesModuleTest is Test {
     address internal _market1 = makeAddr("Market1");
     address internal _market2 = makeAddr("Market2");
 
-    address internal _deployer;
+    address internal _deployer = makeAddr("_deployer");
 
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
     event IncentivesClaimingLogicRemoved(address indexed market, address logic);
@@ -33,13 +33,34 @@ contract VaultIncentivesModuleTest is Test {
     event NotificationReceiverRemoved(address notificationReceiver);
 
     function setUp() public {
-        VaultIncentivesModuleDeploy deployer = new VaultIncentivesModuleDeploy();
-        deployer.disableDeploymentsSync();
+        incentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
+        incentivesModule.__VaultIncentivesModule_init(_deployer);
+    }
 
-        incentivesModule = deployer.run();
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_new -vvv
+    */
+    function test_IncentivesModule_new() public {
+        VaultIncentivesModule module = new VaultIncentivesModule();
+        vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
+        module.__VaultIncentivesModule_init(address(1));
+    }
 
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        _deployer = vm.addr(deployerPrivateKey);
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_init -vvv
+    */
+    function test_IncentivesModule_init() public {
+        address module = Clones.clone(address(new VaultIncentivesModule()));
+        assertEq(VaultIncentivesModule(module).owner(), address(0), "cloned contract has NO owner");
+
+        VaultIncentivesModule(module).__VaultIncentivesModule_init(address(1));
+
+        assertEq(VaultIncentivesModule(module).owner(), address(1), "valid owner");
+    }
+
+    function test_IncentivesModule_initOnce() public {
+        vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
+        incentivesModule.__VaultIncentivesModule_init(address(1));
     }
 
     /*

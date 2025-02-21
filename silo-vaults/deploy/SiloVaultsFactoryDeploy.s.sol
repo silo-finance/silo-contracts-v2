@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {SiloVaultsContracts} from "silo-vaults/common/SiloVaultsContracts.sol";
 
-import {SiloVaultsFactory} from "../contracts/SiloVaultsFactory.sol";
+import {SiloVaultsFactory, ISiloVaultsFactory} from "../contracts/SiloVaultsFactory.sol";
 
 import {CommonDeploy} from "./common/CommonDeploy.sol";
 
@@ -25,15 +27,17 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
 
 */
 contract SiloVaultsFactoryDeploy is CommonDeploy {
-    function run() public returns (SiloVaultsFactory SiloVaultsFactory) {
+    function run() public returns (SiloVaultsFactory siloVaultsFactory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         vm.startBroadcast(deployerPrivateKey);
 
-        SiloVaultsFactory = new SiloVaultsFactory();
+        siloVaultsFactory = new SiloVaultsFactory();
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(SiloVaultsFactory), SiloVaultsContracts.SILO_VAULTS_FACTORY);
+        console2.log("[SiloVaultsFactoryDeploy] SiloVaultsFactory deployed at ", address(siloVaultsFactory));
+
+        _registerDeployment(address(siloVaultsFactory), SiloVaultsContracts.SILO_VAULTS_FACTORY);
     }
 }

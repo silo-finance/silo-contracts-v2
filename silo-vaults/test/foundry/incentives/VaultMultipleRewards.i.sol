@@ -21,6 +21,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
 import {SiloIncentivesControllerCL} from "../../../contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
@@ -38,11 +39,15 @@ contract VaultMultipleRewardsTest is IntegrationTest {
 
     SiloIncentivesControllerGaugeLike siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     address siloWithIncentives;
 
     function setUp() public virtual override {
         super.setUp();
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        assertTrue(address(vaultIncentivesModule) != address(0), "empty vaultIncentivesModule");
 
         _setCap(allMarkets[0], _cap());
         _setCap(allMarkets[1], _cap());
