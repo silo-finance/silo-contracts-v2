@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {Ownable2StepUpgradeable, OwnableUpgradeable} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable, OwnableUpgradeable
+} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
