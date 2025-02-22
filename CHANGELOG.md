@@ -5,9 +5,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- allow to burn NFT only by owner
+- revert on invalid token type in `Hook.shareTokenTransfer()`
+
 ### Updated
 - Router with multicall
 - Silo hooks refactoring
+
+## [1.5.0] - 2025-02-19
+### Added
+- SiloLens deployment
+
+## [1.4.0] - 2025-02-18
+### Added
+- Router with multicall
 
 ## [1.3.5] - 2025-02-07
 ### Updated

@@ -55,10 +55,8 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
 
         idleMarket = _createNewMarket(address(collateralToken), address(reentrantToken));
 
-        vault = ISiloVault(
-            address(
-                new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(reentrantToken), "SiloVault Vault", "MMV")
-            )
+        vault = siloVaultsFactory.createSiloVault(
+            OWNER, TIMELOCK, address(reentrantToken), "SiloVault Vault", "MMV"
         );
 
         vm.startPrank(OWNER);
