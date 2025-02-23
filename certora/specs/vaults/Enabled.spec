@@ -5,6 +5,8 @@ methods
 {
     function supplyQGetAt(uint256) external returns (address) envfree;
     function supplyQLength() external returns (uint256) envfree;   
+    function withdrawQGetAt(uint256) external returns (address) envfree;
+    function withdrawQLength() external returns (uint256) envfree;   
 }
 
 function isInWithdrawQueueIsEnabled(uint256 i) returns bool {

@@ -17,6 +17,7 @@ methods {
 function summaryDeposit(address id, uint256 assets, address receiver) returns uint256 {
     assert assets != 0;
     assert receiver == currentContract;
+    require id != currentContract;
 
     requireInvariant supplyCapIsEnabled(id);
     requireInvariant enabledHasConsistentAsset(id);
@@ -28,6 +29,7 @@ function summaryDeposit(address id, uint256 assets, address receiver) returns ui
 function summaryWithdraw(address id, uint256 assets, address receiver, address spender) returns uint256 {
     assert receiver == currentContract;
     assert spender == currentContract;
+    require id != currentContract;
 
     // Safe require because it is verified in MarketInteractions.
     require config_(id).enabled;
@@ -43,6 +45,7 @@ function summaryWithdraw(address id, uint256 assets, address receiver, address s
 function summaryRedeem(address id, uint256 shares, address receiver, address spender) returns uint256 {
     assert receiver == currentContract;
     assert spender == currentContract;
+    require id != currentContract;
 
     // Safe require because it is verified in MarketInteractions.
     require config_(id).enabled;
@@ -57,75 +60,95 @@ function summaryRedeem(address id, uint256 shares, address receiver, address spe
 }
 
 // Check balances change on deposit.
-rule depositTokenChange(env e, uint256 assets, address receiver, address id) {
+rule depositTokenChange(env e, uint256 assets, address receiver) {
     address asset = asset();
 
     // Trick to require that all the following addresses are different.
     require asset == 0x11;
     require currentContract == 0x12;
     require e.msg.sender == 0x13;
-    require id == 0x14;
 
-    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, id);
-    uint256 balanceMetaMorphoBefore = ERC20.balanceOf(asset, currentContract);
+    //this together with loop_iter == 2 ensures that the markets don't call "deposit" on the Vault
+    require supplyQGetAt(0) != e.msg.sender;
+    require supplyQGetAt(1) != e.msg.sender;
+
+    require ERC20.balanceOf(asset, currentContract) + 
+        ERC20.balanceOf(asset, e.msg.sender) <= ERC20.totalSupply(asset);
+
+    uint256 balanceVaultBefore = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderBefore = ERC20.balanceOf(asset, e.msg.sender);
     deposit(e, assets, receiver);
-    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, id);
-    uint256 balanceMetaMorphoAfter = ERC20.balanceOf(asset, currentContract);
+    uint256 balanceVaultAfter = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderAfter = ERC20.balanceOf(asset, e.msg.sender);
 
-    require balanceMorphoAfter > balanceMorphoBefore;
     require balanceSenderBefore > balanceSenderAfter;
 
-    assert assert_uint256(balanceMorphoAfter - balanceMorphoBefore) == assets;
-    assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
+    assert balanceVaultAfter == balanceVaultBefore;
     assert assert_uint256(balanceSenderBefore - balanceSenderAfter) == assets;
 }
 
 // Check balance changes on withdraw.
-rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner, address id) {
+rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner) {
     address asset = asset();
 
     // Trick to require that all the following addresses are different.
     require asset == 0x11;
     require currentContract == 0x12;
     require receiver == 0x13;
-    require id == 0x14;
 
-    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, id);
-    uint256 balanceMetaMorphoBefore = ERC20.balanceOf(asset, currentContract);
+    //this togehter with loop_iter == 2 ensures that the markets don't withdraw from the Vault
+    require withdrawQGetAt(0) != e.msg.sender;
+    require withdrawQGetAt(1) != e.msg.sender;
+
+    //with loop_iter = 2 this shows whether the reveiver is among the markets in the WithdrawQ
+    //(the caller of withdraw may set any receiver address so shouldn't discard this option)
+    bool isReceiverAVault = receiver == withdrawQGetAt(0) || receiver == withdrawQGetAt(1);
+
+    require ERC20.balanceOf(asset, currentContract) + 
+        ERC20.balanceOf(asset, e.msg.sender) <= ERC20.totalSupply(asset);
+    require ERC20.balanceOf(asset, currentContract) + 
+        ERC20.balanceOf(asset, receiver) <= ERC20.totalSupply(asset);
+
+    uint256 balanceVaultBefore = ERC20.balanceOf(asset, currentContract);
     uint256 balanceReceiverBefore = ERC20.balanceOf(asset, receiver);
     withdraw(e, assets, receiver, owner);
-    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, id);
-    uint256 balanceMetaMorphoAfter = ERC20.balanceOf(asset, currentContract);
+    uint256 balanceVaultAfter = ERC20.balanceOf(asset, currentContract);
     uint256 balanceReceiverAfter = ERC20.balanceOf(asset, receiver);
 
-    require balanceMorphoBefore > balanceMorphoAfter;
+    // no overflow happened. 
+    // Another way to ensure this is to require sum_i{balanceOf(withdrawQ[i])} + balanceOf(receiver) <= totalSupply
     require balanceReceiverAfter > balanceReceiverBefore;
 
-    assert assert_uint256(balanceMorphoBefore - balanceMorphoAfter) == assets;
-    assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
-    assert assert_uint256(balanceReceiverAfter - balanceReceiverBefore) == assets;
+    assert balanceVaultAfter == balanceVaultBefore;
+
+    // the balance of receiver must change unless the receiver is one of the markets in the queue
+    assert !isReceiverAVault => assert_uint256(balanceReceiverAfter - balanceReceiverBefore) == assets;
 }
 
 // Check that balances do not change on reallocate.
-rule reallocateTokenChange(env e, SiloVaultHarness.MarketAllocation[] allocations, address id) {
+rule reallocateTokenChange(env e, SiloVaultHarness.MarketAllocation[] allocations) {
     address asset = asset();
 
     // Trick to require that all the following addresses are different.
-    require id == 0x10;
     require asset == 0x11;
     require currentContract == 0x12;
+    require e.msg.sender == 0x13;
 
-    uint256 balanceMorphoBefore = ERC20.balanceOf(asset, id);
-    uint256 balanceMetaMorphoBefore = ERC20.balanceOf(asset, currentContract);
+    // this together with loop_iter = 2 ensures that markets in the withdrawQ are not Allocators and not SiloVault
+    // based on enabledIsInWithdrawQueue
+    require config_(allocations[0].market).enabled => allocations[0].market != e.msg.sender;
+    require config_(allocations[1].market).enabled => allocations[1].market != e.msg.sender;
+    require config_(allocations[0].market).enabled => allocations[0].market != currentContract;
+    require config_(allocations[1].market).enabled => allocations[1].market != currentContract;
+
+    uint256 balanceVaultBefore = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderBefore = ERC20.balanceOf(asset, e.msg.sender);
     reallocate(e, allocations);
-    uint256 balanceMorphoAfter = ERC20.balanceOf(asset, id);
-    uint256 balanceMetaMorphoAfter = ERC20.balanceOf(asset, currentContract);
+
+    uint256 balanceVaultAfter = ERC20.balanceOf(asset, currentContract);
     uint256 balanceSenderAfter = ERC20.balanceOf(asset, e.msg.sender);
 
-    assert balanceMetaMorphoAfter == balanceMetaMorphoBefore;
+    assert balanceVaultAfter == balanceVaultBefore;
     assert balanceSenderAfter == balanceSenderBefore;
 }
 

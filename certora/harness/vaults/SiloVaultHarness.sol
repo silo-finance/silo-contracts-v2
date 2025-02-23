@@ -128,4 +128,13 @@ contract SiloVaultHarness is SiloVault {
     {
         return supplyQueue.length;
     }
+    function withdrawQGetAt(uint256 index) external view returns (IERC4626)
+    {
+        return withdrawQueue[index];
+    }
+
+    function withdrawQLength() external view returns (uint256)
+    {
+        return withdrawQueue.length;
+    }
 }
