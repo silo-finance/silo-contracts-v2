@@ -780,7 +780,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     {
         shares = _ERC20BalanceOf(address(_market), address(this));
         // we assume here, that in case of any interest on IERC4626, convertToAssets returns assets with interest
-        assets = _market.previewWithdraw(shares);
+        assets = _market.previewRedeem(shares);
     }
 
     /// @dev Reverts if `newTimelock` is not within the bounds.
@@ -943,7 +943,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
     function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
-        assets = _market.previewWithdraw(_ERC20BalanceOf(address(_market), _user));
+        assets = _market.previewRedeem(_ERC20BalanceOf(address(_market), _user));
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
