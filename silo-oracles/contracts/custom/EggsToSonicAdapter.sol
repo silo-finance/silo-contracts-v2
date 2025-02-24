@@ -2,8 +2,6 @@
 pragma solidity 0.8.28;
 
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
-import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 /// @dev part of EGGS contract interface to get the EGGS / S exchange rate
 interface IEggsLike {
