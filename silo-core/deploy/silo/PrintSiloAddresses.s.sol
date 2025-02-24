@@ -41,9 +41,7 @@ contract PrintSiloAddresses is CommonDeploy {
             ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(i));
             i++;
 
-            if (address(config) == address(0)) {
-                break;
-            }
+            if (address(config) == address(0)) break;
 
             (address silo0, address silo1) = config.getSilos();
             console2.log(silo0);
@@ -60,9 +58,7 @@ contract PrintSiloAddresses is CommonDeploy {
             ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(i));
             i++;
 
-            if (address(config) == address(0)) {
-                break;
-            }
+            if (address(config) == address(0)) break;
 
             (address silo0, address silo1) = config.getSilos();
 
