@@ -40,6 +40,21 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     /*
+        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_minDepositWithOffset -vvv
+    */
+    function test_idleVault_minDepositWithOffset() public {
+        address v = address(vault);
+
+        vm.startPrank(v);
+        idleMarket.deposit(1, v);
+
+        idleMarket.deposit(1, v);
+
+        assertEq(idleMarket.redeem(idleMarket.balanceOf(v), v, v), 2, "expect no loss on tiny deposit");
+        vm.stopPrank();
+    }
+
+    /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation -vvv
 
     TODO skipping that one, because offset itself does not help here, we need general solution for checking preview
