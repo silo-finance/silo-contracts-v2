@@ -26,7 +26,7 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
     /* CONSTRUCTOR */
 
     constructor() {
-        VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule(msg.sender));
+        VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule());
     }
 
     /* EXTERNAL */
@@ -42,6 +42,8 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION)
         );
+
+        vaultIncentivesModule.__VaultIncentivesModule_init(initialOwner);
 
         siloVault = ISiloVault(address(
             new SiloVault(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))

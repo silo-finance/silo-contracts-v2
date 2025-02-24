@@ -504,6 +504,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function claimRewards() public virtual {
         _nonReentrantOn();
 
+        _updateLastTotalAssets(_accrueFee());
         _claimRewards();
 
         _nonReentrantOff();
@@ -549,6 +550,29 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(_owner);
 
         return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, Math.Rounding.Floor);
+    }
+
+    /// @inheritdoc IERC20
+    function transfer(address _to, uint256 _value) public virtual override(ERC20, IERC20) returns (bool success) {
+        _nonReentrantOn();
+
+        success = ERC20.transfer(_to, _value);
+
+        _nonReentrantOff();
+    }
+
+    /// @inheritdoc IERC20
+    function transferFrom(address _from, address _to, uint256 _value)
+        public
+        virtual
+        override(ERC20, IERC20)
+        returns (bool success)
+    {
+        _nonReentrantOn();
+
+        success = ERC20.transferFrom(_from, _to, _value);
+
+        _nonReentrantOff();
     }
 
     /// @inheritdoc IERC4626
@@ -786,6 +810,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Sets the cap of the market.
     function _setCap(IERC4626 _market, uint184 _supplyCap) internal virtual {
         MarketConfig storage marketConfig = config[_market];
+        uint256 approveValue;
 
         if (_supplyCap > 0) {
             if (!marketConfig.enabled) {
@@ -802,11 +827,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             }
 
             marketConfig.removableAt = 0;
+            // one time approval, so market can pull any amount of tokens from SiloVault in a future
+            approveValue = type(uint256).max;
         }
 
         marketConfig.cap = _supplyCap;
-        // one time approval, so market can pull any amount of tokens from SiloVault in a future
-        IERC20(asset()).forceApprove(address(_market), type(uint256).max);
+        IERC20(asset()).forceApprove(address(_market), approveValue);
+
         emit EventsLib.SetCap(_msgSender(), _market, _supplyCap);
 
         delete pendingCap[_market];

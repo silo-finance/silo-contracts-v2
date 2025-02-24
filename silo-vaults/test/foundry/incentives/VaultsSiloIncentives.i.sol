@@ -7,6 +7,8 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
+
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
 import {CAP} from "../helpers/BaseTest.sol";
 
@@ -18,9 +20,13 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
 
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     function setUp() public override {
         super.setUp();
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        assertTrue(address(vaultIncentivesModule) != address(0), "empty vaultIncentivesModule");
 
         _setCap(allMarkets[0], CAP);
         _setCap(allMarkets[1], CAP);
@@ -28,7 +34,6 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
 
         reward1.setOnDemand(true);
 
-        // TODO add test when notifier will be wrong and expect no rewards (or revert?)
         vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
     }
 

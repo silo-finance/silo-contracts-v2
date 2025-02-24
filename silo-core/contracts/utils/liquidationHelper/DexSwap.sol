@@ -15,7 +15,6 @@ contract DexSwap {
     /// @dev 0x ExchangeProxy address.
     /// See https://docs.0x.org/developer-resources/contract-addresses
     /// The `to` field from the API response, but at the same time,
-    /// TODO: maybe unit test that will check, if it does not changed?
     // solhint-disable-next-line var-name-mixedcase
     address public immutable EXCHANGE_PROXY;
 
@@ -28,7 +27,6 @@ contract DexSwap {
     }
 
     /// @dev Swaps ERC20->ERC20 tokens held by this contract using a 0x-API quote.
-    /// Must attach ETH equal to the `value` field from the API response.
     /// @param _sellToken The `sellTokenAddress` field from the API response.
     /// @param _spender The `allowanceTarget` field from the API response.
     /// @param _swapCallData The `data` field from the API response.

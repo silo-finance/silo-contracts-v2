@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {
+    Ownable2StepUpgradeable, OwnableUpgradeable
+} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
@@ -9,7 +11,7 @@ import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.s
 import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
 
 /// @title Vault Incentives Module
-contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
+contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     EnumerableSet.AddressSet internal _markets;
@@ -17,7 +19,13 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2Step {
 
     mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
-    constructor(address _owner) Ownable(_owner) {}
+    constructor() {
+        _disableInitializers();
+    }
+
+    function __VaultIncentivesModule_init(address _owner) external virtual initializer {
+        __Ownable_init(_owner);
+    }
 
     /// @inheritdoc IVaultIncentivesModule
     function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyOwner {

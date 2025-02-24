@@ -72,6 +72,7 @@ interface ISiloFactory is IERC721 {
     error InvalidQuoteToken();
     error HookIsZeroAddress();
     error LiquidationTargetLtvTooHigh();
+    error NotYourSilo();
 
     /// @notice Create a new Silo.
     /// @param _initData Silo initialization data.

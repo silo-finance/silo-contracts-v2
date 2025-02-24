@@ -35,6 +35,7 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
     error NoDebtToCover();
     error STokenNotSupported();
+    error ZeroAddress();
 
     /// @param _nativeToken address of wrapped native blockchain token eg. WETH on Ethereum
     /// @param _exchangeProxy exchange address, where to send swap data on liquidation
@@ -44,6 +45,10 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         address _exchangeProxy,
         address payable _tokensReceiver
     ) DexSwap(_exchangeProxy) {
+        require(_nativeToken != address(0), ZeroAddress());
+        require(_exchangeProxy != address(0), ZeroAddress());
+        require(address(_tokensReceiver) != address(0), ZeroAddress());
+
         NATIVE_TOKEN = _nativeToken;
         EXCHANGE_PROXY = _exchangeProxy;
         TOKENS_RECEIVER = _tokensReceiver;

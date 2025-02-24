@@ -5,7 +5,10 @@
         "primaryAggregator": "REDSTONE_stS_S_aggregator",
         "primaryHeartbeat": 22201,
         "secondaryAggregator": "",
-        "secondaryHeartbeat": 0
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     },
     "REDSTONE_solvBTC.BNN_USD": {
         "baseToken": "solvBTC.BNN",
@@ -88,6 +91,28 @@
         "secondaryHeartbeat": 22201,
         "normalizationDivider": 1e16,
         "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_ANON_USD": {
+        "baseToken": "Anon",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "PYTH_ANON_USD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_USDC_USD": {
+        "baseToken": "USDC.e",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "PYTH_USDC_USD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     }
 }

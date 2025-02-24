@@ -112,6 +112,8 @@ library EventsLib {
         string symbol
     );
 
+    event CreateIdleVault(address indexed idleVault, address indexed vault);
+
     /// @notice Emitted during a public reallocation for each withdrawn-from market.
     event PublicWithdrawal(
         address indexed sender, ISiloVault indexed vault, IERC4626 indexed market, uint256 withdrawnAssets

@@ -19,6 +19,7 @@ import {SiloIncentivesControllerCL} from "../../../contracts/incentives/claiming
 
 import {INotificationReceiver} from "../../../contracts/interfaces/INotificationReceiver.sol";
 import {IntegrationTest} from "../helpers/IntegrationTest.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 import {CAP} from "../helpers/BaseTest.sol";
 
@@ -30,9 +31,13 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
 
     SiloIncentivesControllerGaugeLike siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     function setUp() public virtual override {
         super.setUp();
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
+        assertTrue(address(vaultIncentivesModule) != address(0), "empty vaultIncentivesModule");
 
         _setCap(allMarkets[0], _cap());
         _setCap(allMarkets[1], _cap());

@@ -137,8 +137,8 @@ contract SiloRouterImplementation is ISiloRouterImplementation {
         uint256 _amount,
         address _receiver,
         ISilo.CollateralType _collateral
-    ) external payable virtual returns (uint256 assets) {
-        assets = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
+    ) external payable virtual returns (uint256 shares) {
+        shares = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
     }
 
     /// @inheritdoc ISiloRouterImplementation
