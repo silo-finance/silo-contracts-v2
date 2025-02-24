@@ -161,6 +161,9 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
 
     /// @inheritdoc ISiloIncentivesController
     function setClaimer(address _user, address _caller) external virtual onlyOwner {
+        require(_user != address(0), ZeroAddress());
+        require(_caller != address(0), ZeroAddress());
+
         _authorizedClaimers[_user] = _caller;
         emit ClaimerSet(_user, _caller);
     }
