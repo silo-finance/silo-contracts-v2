@@ -34,11 +34,11 @@ contract PrintSiloAddresses is CommonDeploy {
     }
 
     /// @dev print only silo0 and silo1 addresses for all deployed silos.
-    function printSilos(ISiloFactory siloFactory) internal view {
+    function printSilos(ISiloFactory _siloFactory) internal view {
         uint256 i = 1;
 
         while (true) {
-            ISiloConfig config = ISiloConfig(siloFactory.idToSiloConfig(i));
+            ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(i));
             i++;
 
             if (address(config) == address(0)) {
@@ -53,11 +53,11 @@ contract PrintSiloAddresses is CommonDeploy {
 
     /// @dev print all related addresses for every silo: IRMs, Oracles, configs. Prints everything except silo0 and
     /// silo1 addresses.
-    function printAllRelatedAddresses(ISiloFactory siloFactory) internal view {
+    function printAllRelatedAddresses(ISiloFactory _siloFactory) internal view {
         uint256 i = 1;
 
         while (true) {
-            ISiloConfig config = ISiloConfig(siloFactory.idToSiloConfig(i));
+            ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(i));
             i++;
 
             if (address(config) == address(0)) {
@@ -77,27 +77,27 @@ contract PrintSiloAddresses is CommonDeploy {
 
     /// @dev print all related addresses for SiloConfig: IRMs, Oracles, configs. Prints everything except silo0 and
     /// silo1 addresses.
-    function printSiloConfigRelatedAddresses(ISiloConfig.ConfigData memory siloConfig) internal view {
-        logIfNotZero(siloConfig.protectedShareToken); // regular share token is logged as silo address
-        logIfNotZero(siloConfig.debtShareToken);
-        logIfNotZero(siloConfig.solvencyOracle);
-        tryLogChainlinkConfig(siloConfig.solvencyOracle);
-        logIfNotZero(siloConfig.maxLtvOracle);
-        tryLogChainlinkConfig(siloConfig.maxLtvOracle);
-        logIfNotZero(siloConfig.interestRateModel);
-        logIfNotZero(address(InterestRateModelV2(siloConfig.interestRateModel).irmConfig()));
+    function printSiloConfigRelatedAddresses(ISiloConfig.ConfigData memory _siloConfig) internal view {
+        logIfNotZero(_siloConfig.protectedShareToken); // regular share token is logged as silo address
+        logIfNotZero(_siloConfig.debtShareToken);
+        logIfNotZero(_siloConfig.solvencyOracle);
+        tryLogChainlinkConfig(_siloConfig.solvencyOracle);
+        logIfNotZero(_siloConfig.maxLtvOracle);
+        tryLogChainlinkConfig(_siloConfig.maxLtvOracle);
+        logIfNotZero(_siloConfig.interestRateModel);
+        logIfNotZero(address(InterestRateModelV2(_siloConfig.interestRateModel).irmConfig()));
 
-        GaugeHookReceiver hookReceiver = GaugeHookReceiver(siloConfig.hookReceiver);
+        GaugeHookReceiver hookReceiver = GaugeHookReceiver(_siloConfig.hookReceiver);
         logIfNotZero(address(hookReceiver));
 
         address protectedShareTokensGauge =
-            address(hookReceiver.configuredGauges(IShareToken(siloConfig.protectedShareToken)));
+            address(hookReceiver.configuredGauges(IShareToken(_siloConfig.protectedShareToken)));
 
         address collateralShareTokensGauge =
-            address(hookReceiver.configuredGauges(IShareToken(siloConfig.collateralShareToken)));
+            address(hookReceiver.configuredGauges(IShareToken(_siloConfig.collateralShareToken)));
 
         address debtShareTokensGauge =
-            address(hookReceiver.configuredGauges(IShareToken(siloConfig.debtShareToken)));
+            address(hookReceiver.configuredGauges(IShareToken(_siloConfig.debtShareToken)));
 
         logIfNotZero(protectedShareTokensGauge);
         logIfNotZero(collateralShareTokensGauge);
