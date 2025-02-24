@@ -114,6 +114,6 @@ contract PreviewMintTest is VaultsLittleHelper {
             diff = convertToAssets - previewMint;
         }
 
-        assertLe(diff, 2, "diff should be less than 2");
+        assertLe(diff, 2, "diff should be less or equal than 2");
     }
 }
