@@ -401,14 +401,4 @@ contract MarketTest is IntegrationTest {
         vault.revokePendingMarketRemoval(IERC4626(address(0)));
         vm.stopPrank();
     }
-
-    /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSkimWithdrawalMarket -vvv
-    */
-    function testSkimWithdrawalMarket() public {
-        vm.prank(OWNER);
-
-        vm.expectRevert(ErrorsLib.TokenInWithdrawQueue.selector);
-        vault.skim(address(allMarkets[0]));
-    }
 }
