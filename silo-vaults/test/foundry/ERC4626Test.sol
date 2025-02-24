@@ -415,7 +415,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         vault.deposit(vaultDepositAmount, ONBEHALF);
 
-        assertEq(vault.maxDeposit(SUPPLIER), cap - vaultDepositAmount, "maxDeposit should be 0");
+        // +1 because of the rounding in the Silo previewRedeem fn
+        assertEq(vault.maxDeposit(SUPPLIER), cap - vaultDepositAmount + 1, "maxDeposit should be 0");
     }
 
     function onFlashLoan(address, address, uint256, uint256, bytes calldata) external view returns (bytes32) {
