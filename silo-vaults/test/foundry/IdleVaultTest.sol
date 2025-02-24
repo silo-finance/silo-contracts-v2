@@ -97,7 +97,7 @@ contract IdleVaultTest is IntegrationTest {
     function test_idleVault_InflationAttack_permanentLoss(
         uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12345, 3.5e18, 14e18);
+//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12783837464301441318, 36, 18446744073709551614);
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
 
@@ -112,6 +112,7 @@ contract IdleVaultTest is IntegrationTest {
         uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)), address(vault), address(vault));
         vm.stopPrank();
 
+        // inflate price
         IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
 
         // simulate realocation back
