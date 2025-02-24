@@ -94,7 +94,7 @@ contract SiloVerifierScriptTest is Test {
         ISiloConfig.ConfigData memory configData1 = WS_USDC_CONFIG.getConfig(silo1);
 
         configData0.liquidationFee = 10**18;
-        configData1.liquidationFee = 10**18/2;
+        configData1.liquidationFee = 10**18 / 2;
 
         vm.mockCall(
             address(WS_USDC_CONFIG),
@@ -121,7 +121,7 @@ contract SiloVerifierScriptTest is Test {
         ISiloConfig.ConfigData memory configData1 = WS_USDC_CONFIG.getConfig(silo1);
 
         configData0.flashloanFee = 10**18;
-        configData1.flashloanFee = 10**18/2;
+        configData1.flashloanFee = 10**18 / 2;
 
         vm.mockCall(
             address(WS_USDC_CONFIG),
@@ -199,12 +199,12 @@ contract SiloVerifierScriptTest is Test {
         assertEq(verifier.verify(), 0, "0 errors when maxLTV, LT and liquidation fee are zeros");
 
         configData0.maxLtv = 0;
-        configData0.lt = 10**18/2;
-        configData0.liquidationFee = 10**18/100;
+        configData0.lt = 10**18 / 2;
+        configData0.liquidationFee = 10**18 / 100;
 
         configData1.maxLtv = 10**18 * 75 / 100;
         configData1.lt = 0;
-        configData1.liquidationFee = 10**18/100;
+        configData1.liquidationFee = 10**18 / 100;
         
 
         vm.mockCall(

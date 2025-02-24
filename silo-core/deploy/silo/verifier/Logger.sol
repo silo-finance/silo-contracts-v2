@@ -333,10 +333,8 @@ contract Logger is Test {
     function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
         internal
         view
-        returns (bool success)
     {
-        uint256 price;
-        (success, price) = Utils.quote(_oracle, _baseToken, _quoteNamedAmount.amount);
+        (bool success, uint256 price) = Utils.quote(_oracle, _baseToken, _quoteNamedAmount.amount);
 
         if (success) {
             if (_quoteNamedAmount.logExponentialNotation) {
@@ -346,7 +344,6 @@ contract Logger is Test {
             }
         } else {
             console2.log("\t", WARNING_SYMBOL, "Price reverts for", _quoteNamedAmount.name);
-            success = true;
         }
     }
 

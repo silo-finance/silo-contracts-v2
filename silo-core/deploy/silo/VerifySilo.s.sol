@@ -18,10 +18,8 @@ contract VerifySilo is Script, Test {
     function run() public {
         AddrLib.init();
 
-        ISiloConfig siloConfig = ISiloConfig(vm.envAddress("CONFIG"));
-
         SiloVerifier verifier = new SiloVerifier({
-            _siloConfig: siloConfig,
+            _siloConfig: ISiloConfig(vm.envAddress("CONFIG")),
             _logDetails: true,
             _externalPrice0: vm.envOr("EXTERNAL_PRICE_0", uint256(0)),
             _externalPrice1: vm.envOr("EXTERNAL_PRICE_1", uint256(0))

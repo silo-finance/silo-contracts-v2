@@ -58,10 +58,7 @@ library Utils {
         try _oracle.quote(_amount, _baseToken) returns (uint256 priceFromOracle) {
             success = true;
             price = priceFromOracle;
-        } catch {
-            success = false;
-            price = 0;
-        }
+        } catch {}
     }
 
     /// @dev approximate representation of a past unix timestamp in human readable format.
@@ -70,11 +67,11 @@ library Utils {
 
         if (timeDiff < 1 minutes) {
             return string.concat(Strings.toString(timeDiff), " seconds ago");
-        } else if (timeDiff >= 1 minutes && timeDiff < 1 hours) {
+        } else if (timeDiff < 1 hours) {
             return string.concat("approx. ", Strings.toString(timeDiff / 1 minutes), " minutes ago");
-        } else if (timeDiff >= 1 hours && timeDiff <= 72 hours) {
+        } else if (timeDiff <= 72 hours) {
             return string.concat("approx. ", Strings.toString(timeDiff / (1 hours)), " hours ago");
-        } else if (timeDiff > 72 hours) {
+        } else {
             return string.concat("approx. ", Strings.toString(timeDiff / (1 days)), " days ago");
         }
     }

@@ -8,7 +8,6 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 
-
 contract CheckQuoteLargeAmounts is ICheck {
     ISiloOracle internal oracle;
     string internal oracleName;

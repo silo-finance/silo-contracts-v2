@@ -53,9 +53,8 @@ contract SiloVerifier {
         for (uint i; i < _checks.length; i++) {
             bool success = _checks[i].execute();
 
-            if (!success) errorsCounter++;
-
             if (!success) {
+                errorsCounter++;
                 console2.log(LOGGER.FAIL_SYMBOL(), _checks[i].checkName(), ":", _checks[i].errorMessage());
             } else {
                 console2.log(LOGGER.SUCCESS_SYMBOL(), _checks[i].checkName(), ":", _checks[i].successMessage());

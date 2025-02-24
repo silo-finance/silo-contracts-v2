@@ -8,7 +8,6 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 
-
 contract CheckExternalPrices is ICheck {
     address internal solvencyOracle0;
     address internal token0;
@@ -116,8 +115,8 @@ contract CheckExternalPrices is ICheck {
 
         if (minRatio == 0 || ratioDiff * precisionDecimals / maxRatio > precisionDecimals / 100) {
             return false;
-        } else {
-            return true;
         }
+
+        success = true;
     }
 }
