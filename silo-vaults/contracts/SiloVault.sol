@@ -780,7 +780,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     {
         shares = _ERC20BalanceOf(address(_market), address(this));
         // we assume here, that in case of any interest on IERC4626, convertToAssets returns assets with interest
-        assets = _market.previewWithdraw(_shares)
+        assets = _market.previewWithdraw(shares);
     }
 
     /// @dev Reverts if `newTimelock` is not within the bounds.
