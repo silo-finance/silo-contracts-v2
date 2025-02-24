@@ -160,7 +160,7 @@ on the Silo Vault's behalf). This could limit any damage to the Silo Vault that 
     3. deposit to idle (loss?): yes, it is the same as donation
 
     setting up 18 (or even 36 offset) prevent it (for idle vault)
-    
+
     */
     function testInflationAttack_permanentLoss(
 //        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
