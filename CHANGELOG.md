@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Updated
 - Router with multicall
 - Silo hooks refactoring
+- use 36 decimals offset in idle vault
 
 ## [1.5.0] - 2025-02-19
 ### Added
