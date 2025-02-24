@@ -2,16 +2,19 @@
 pragma solidity ^0.8.28;
 
 import {stdError} from "forge-std/StdError.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ERC20, ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {IdleVault} from "../../contracts/IdleVault.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MAX_TEST_ASSETS, MIN_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
@@ -23,88 +26,85 @@ contract ERC4626impl is ERC4626 {
 /*
  FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc IdleVaultTest -vvv
 */
-contract IdleVaultTest is IntegrationTest {
+contract IdleVaultTest is Test {
     ERC4626 erc4626;
+    IdleVault idleVault;
+    MintableToken asset;
+    
+    address SUPPLIER = makeAddr("SUPPLIER");
+    address attacker = makeAddr("attacker");
 
-    function setUp() public override {
-        super.setUp();
+    function setUp() public {
+        asset = new MintableToken(18);
+        asset.setOnDemand(true);
 
-        IERC4626[] memory supplyQueue = new IERC4626[](2);
-        supplyQueue[0] = allMarkets[0];
-        supplyQueue[1] = idleMarket;
-
-        _setCap(allMarkets[0], 1);
-        _setCap(idleMarket, type(uint128).max);
-
-        vm.prank(ALLOCATOR);
-        vault.setSupplyQueue(supplyQueue);
-
-        assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
-        assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
-
-        erc4626 = new ERC4626impl(address(vault.asset()));
+        erc4626 = new ERC4626impl(address(asset));
+        idleVault = new IdleVault(address(1), address(asset), "name", "symbol");
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testInflationAttackWithDonation -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_inflationAttackWithDonation -vvv
     */
-    function testInflationAttackWithDonation(
+    function test_idleVault_inflationAttackWithDonation(
 //        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
         (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12345, 3.5e18, 14e18);
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
 
-        // we want some founds to go to idle market, so cap must be lower than deposit
-        _setCap(allMarkets[0], supplierDeposit / 2);
-
-        address attacker = makeAddr("attacker");
-
-        vm.prank(attacker);
-        vault.deposit(attackerDeposit, attacker);
-
-        _printData("state after attacker deposit");
-
-        IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
-
-        _printData("state after donation");
-
-        // we want cases where asset generates some shares
-        vm.assume(vault.convertToShares(supplierDeposit) != 0);
-
-        vm.prank(SUPPLIER);
-        vault.deposit(supplierDeposit, SUPPLIER);
-
-        _printData("after supplier deposit");
-
         vm.startPrank(attacker);
-        uint256 attackerWithdraw = vault.redeem(vault.balanceOf(attacker), attacker, attacker);
-        assertLe(attackerWithdraw, uint256(attackerDeposit) + donation, "must be not profitable");
+        idleVault.deposit(attackerDeposit, attacker);
+        erc4626.deposit(attackerDeposit, attacker);
         vm.stopPrank();
 
-        _printData("after attacker exit");
+        asset.transfer(address(idleVault), donation);
+        asset.transfer(address(erc4626), donation);
+        
+        // we want cases where asset generates some shares
+        vm.assume(idleVault.convertToShares(supplierDeposit) != 0);
+        vm.assume(erc4626.convertToShares(supplierDeposit) != 0);
 
         vm.startPrank(SUPPLIER);
-        uint256 withdraw2 = vault.redeem(vault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
+        idleVault.deposit(supplierDeposit, SUPPLIER);
+        erc4626.deposit(supplierDeposit, SUPPLIER);
 
-        _printData("after supplier exit");
+        uint256 attackerTotalSpend = uint256(donation) + attackerDeposit;
 
-        uint256 attackerTotalSpend = donation + attackerDeposit;
-        emit log_named_uint("ATTACKER loss", attackerTotalSpend - attackerWithdraw);
-        emit log_named_decimal_uint("ATTACKER lost [%]", (attackerTotalSpend - attackerWithdraw) * 1e18 / attackerTotalSpend, 16);
+        vm.startPrank(attacker);
+        uint256 attackerWithdrawIdle = idleVault.redeem(idleVault.balanceOf(attacker), attacker, attacker);
+        uint256 attackerWithdrawErc = erc4626.redeem(erc4626.balanceOf(attacker), attacker, attacker);
+        assertLe(attackerWithdrawIdle, attackerTotalSpend, "[idleVault] must be not profitable");
+        assertLe(attackerWithdrawErc, attackerTotalSpend, "[erc4626] must be not profitable");
+        vm.stopPrank();
 
-        // -2 because we allow for 2 wei rounding loss
-        if (withdraw2 < supplierDeposit - 2) {
-            emit log_named_uint("SUPPLIER lost", supplierDeposit - 2 - withdraw2);
-            emit log_named_decimal_uint("SUPPLIER lost [%]", (supplierDeposit - 2 - withdraw2) * 1e18 / supplierDeposit, 16);
-        }
+        vm.startPrank(SUPPLIER);
+        uint256 withdrawIdle = idleVault.redeem(idleVault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
+        uint256 withdrawErc = erc4626.redeem(erc4626.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
+        vm.stopPrank();
+
+        uint256 attackerTotalLossIdlePercent = (attackerTotalSpend - attackerWithdrawErc) * 1e18 / attackerTotalSpend;
+        emit log_named_uint("[idleVault] ATTACKER loss", attackerTotalSpend - attackerWithdrawIdle);
+        emit log_named_decimal_uint("[erc4626] ATTACKER lost [%]", attackerTotalLossIdlePercent, 16);
+
+        assertGt(
+            attackerTotalSpend - attackerWithdrawErc,
+            attackerTotalSpend - attackerWithdrawIdle,
+            "loss is greater on idle vault because of higher offset"
+        );
+
+        assertGt(attackerTotalLossIdlePercent, 0.99e18, "loss is greater than 99%");
 
         assertGe(
-            withdraw2,
-            supplierDeposit - 2,
-            "there should be no loss (2 wei acceptable for two roundings)"
+            withdrawIdle,
+            withdrawErc,
+            "idle vault allow to withdraw more ebcause of offset"
         );
-        vm.stopPrank();
+
+        assertGe(
+            withdrawIdle,
+            supplierDeposit - 2,
+            "[idle] SUPPLIER should not lost (2 wei acceptable for roundings)"
+        );
     }
 
     /*
@@ -123,51 +123,31 @@ contract IdleVaultTest is IntegrationTest {
         (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (12345, 3.5e18, 14e18);
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
+//
+//        // we want some founds to go to idle market, so cap must be lower than deposit
+//        _setCap(allMarkets[0], supplierDeposit / 2);
+//
+//        vm.prank(SUPPLIER);
+//        vault.deposit(supplierDeposit, SUPPLIER);
+//
+////        _printData("after supplier deposit");
+//
+//        // simulate realocation (withdraw from idle)
+//        vm.startPrank(address(vault));
+//        uint256 idleAmount = idleVault.redeem(idleVault.balanceOf(address(vault)), address(vault), address(vault));
+//        vm.stopPrank();
+//
+////        _printData("state after realoction from idle");
+//
+//        address attacker = makeAddr("attacker");
+//        IERC20(idleVault.asset()).transfer(address(idleVault), donation);
+//
+//
+//        // simulate realocation back
+//        vm.startPrank(address(vault));
+//        idleVault.deposit(idleAmount, address(vault));
+//        vm.stopPrank();
 
-        // we want some founds to go to idle market, so cap must be lower than deposit
-        _setCap(allMarkets[0], supplierDeposit / 2);
-
-        vm.prank(SUPPLIER);
-        vault.deposit(supplierDeposit, SUPPLIER);
-
-        _printData("after supplier deposit");
-
-        // simulate realocation (withdraw from idle)
-        vm.startPrank(address(vault));
-        uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)), address(vault), address(vault));
-        vm.stopPrank();
-
-        _printData("state after realoction from idle");
-
-        address attacker = makeAddr("attacker");
-        IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
-
-
-        // simulate realocation back
-        vm.startPrank(address(vault));
-        idleMarket.deposit(idleAmount, address(vault));
-        vm.stopPrank();
-
-        _printData("state after realocation back to idle");
-    }
-
-    function _printData(string memory _msg) internal {
-        address attacker = makeAddr("attacker");
-        IERC20 asset = IERC20(allMarkets[0].asset());
-
-        emit log(string.concat("\n----------------", _msg, "------------------"));
-
-        emit log_named_uint("asset.balanceOf(allMarkets[0])", asset.balanceOf(address(allMarkets[0])));
-        emit log_named_uint("   asset.balanceOf(idleMarket)", asset.balanceOf(address(idleMarket)));
-
-        emit log_named_uint("   SUPPLIER vault shares", vault.balanceOf(SUPPLIER));
-        emit log_named_uint("   attacker vault shares", vault.balanceOf(attacker));
-
-        emit log_named_uint("     SUPPLIER preview withdraw", vault.previewRedeem(vault.balanceOf(SUPPLIER)));
-        emit log_named_uint("     attacker preview withdraw", vault.previewRedeem(vault.balanceOf(attacker)));
-
-        emit log_named_uint("  vault shares in market#0", allMarkets[0].balanceOf(address(vault)));
-        emit log_named_uint("vault shares in idleMarket", idleMarket.balanceOf(address(vault)));
-
+//        _printData("state after realocation back to idle");
     }
 }
