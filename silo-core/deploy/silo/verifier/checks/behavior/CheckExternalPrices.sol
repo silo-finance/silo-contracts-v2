@@ -21,6 +21,7 @@ contract CheckExternalPrices is ICheck {
     bool internal reverted;
     bool internal noExternalPrice;
     bool internal oracleReturnsZero;
+    bool internal noOracleCase;
 
     constructor(
         address _solvencyOracle0,
@@ -36,6 +37,7 @@ contract CheckExternalPrices is ICheck {
         solvencyOracle1 = _solvencyOracle1;
         token1 = _token1;
         externalPrice1 = _externalPrice1;
+        noOracleCase = _solvencyOracle0 == address(0) && _solvencyOracle1 == address(0);
     }
 
     function checkName() external pure override returns (string memory name) {
@@ -43,12 +45,16 @@ contract CheckExternalPrices is ICheck {
     }
 
     function successMessage() external view override returns (string memory message) {
-        message = string.concat(
-            "Price1/Price2 from contracts ",
-            Strings.toString(contractsRatio),
-            " is close to external source ",
-            Strings.toString(externalRatio)
-        );
+        if (noOracleCase) {
+            message = "No oracles case: provided external prices are equal as expected";
+        } else {
+            message = string.concat(
+                "Price1/Price2 from contracts ",
+                Strings.toString(contractsRatio),
+                " is close to external source ",
+                Strings.toString(externalRatio)
+            );
+        }
     }
 
     function errorMessage() external view override returns (string memory message) {
@@ -58,6 +64,8 @@ contract CheckExternalPrices is ICheck {
             message = "oracles revert";
         } else if (oracleReturnsZero){
             message = "oracle returns zero";
+        } else if (noOracleCase) {
+            message = "external prices are not equal for no oracles case, prices must be 1:1";
         } else {
            message = string.concat(
                 "Price1/Price2 from contracts ",
@@ -81,6 +89,10 @@ contract CheckExternalPrices is ICheck {
             noExternalPrice = true;
             return false;
         }
+
+        if (noOracleCase) {
+            return externalPrice0 == externalPrice1;
+        } 
 
         // price0 / price1 from external source
         externalRatio = externalPrice0 * precisionDecimals / externalPrice1;
