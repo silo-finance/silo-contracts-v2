@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Silo hooks refactoring
 
 ### Removed
-- remove skim method
+- silo-vaults: remove skim method
 
 ## [1.5.0] - 2025-02-19
 ### Added
