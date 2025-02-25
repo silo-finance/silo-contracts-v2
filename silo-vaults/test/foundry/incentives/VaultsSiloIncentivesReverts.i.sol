@@ -39,7 +39,15 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
         IncentivesClaimingLogicWithRevert claimingLogic = new IncentivesClaimingLogicWithRevert();
 
         vm.prank(OWNER);
-        vaultIncentivesModule.addIncentivesClaimingLogic(
+        vaultIncentivesModule.submitIncentivesClaimingLogic(
+            address(allMarkets[0]),
+            IIncentivesClaimingLogic(address(claimingLogic))
+        );
+
+        vm.warp(block.timestamp + vault.timelock() + 1);
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.acceptIncentivesClaimingLogic(
             address(allMarkets[0]),
             IIncentivesClaimingLogic(address(claimingLogic))
         );

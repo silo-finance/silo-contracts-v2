@@ -10,19 +10,28 @@ interface IVaultIncentivesModule {
     event IncentivesClaimingLogicRemoved(address indexed market, address logic);
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
+    event SubmitIncentivesClaimingLogic(address indexed market, address logic);
 
     error AddressZero();
     error LogicAlreadyAdded();
     error LogicNotFound();
+    error LogicAlreadyPending();
+    error LogicNotPending();
+    error CantAcceptLogic();
     error NotificationReceiverAlreadyAdded();
     error NotificationReceiverNotFound();
     error MarketAlreadySet();
     error MarketNotConfigured();
 
-    /// @notice Add an incentives claiming logic for the vault.
+    /// @notice Submit an incentives claiming logic for the vault.
     /// @param _market The market to add the logic for.
     /// @param _logic The logic to add.
-    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+    function submitIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+
+    /// @notice Accept an incentives claiming logic for the vault.
+    /// @param _market The market to accept the logic for.
+    /// @param _logic The logic to accept.
+    function acceptIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Remove an incentives claiming logic for the vault.
     /// @param _market The market to remove the logic for.

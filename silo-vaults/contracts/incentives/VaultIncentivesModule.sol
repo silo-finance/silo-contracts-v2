@@ -9,34 +9,67 @@ import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.sol";
 import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
+import {ErrorsLib} from "../libraries/ErrorsLib.sol";
+import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 
 /// @title Vault Incentives Module
 contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    ISiloVault public vault;
+
     EnumerableSet.AddressSet internal _markets;
     EnumerableSet.AddressSet internal _notificationReceivers;
 
+    mapping(address market => mapping(address logic => uint256 validAt)) public pendingClaimingLogics;
     mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
     constructor() {
         _disableInitializers();
     }
 
-    function __VaultIncentivesModule_init(address _owner) external virtual initializer {
+    /// @dev Reverts if the caller doesn't have the guardian role.
+    modifier onlyGuardianRole() {
+        address guardian = vault.guardian();
+
+        if (_msgSender() != owner() && _msgSender() != guardian) revert ErrorsLib.NotGuardianRole();
+
+        _;
+    }
+
+    function __VaultIncentivesModule_init(address _owner, ISiloVault _vault) external virtual initializer {
         __Ownable_init(_owner);
+
+        require(address(_vault) != address(0), AddressZero());
+
+        vault = _vault;
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function addIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyOwner {
+    function submitIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyGuardianRole {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
+        require(pendingClaimingLogics[_market][address(_logic)] == 0, LogicAlreadyPending());
+
+        uint256 timelock = vault.timelock();
+
+        pendingClaimingLogics[_market][address(_logic)] = block.timestamp + timelock;
+
+        emit SubmitIncentivesClaimingLogic(_market, address(_logic));
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function acceptIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyGuardianRole {
+        uint256 validAt = pendingClaimingLogics[_market][address(_logic)];
+        require(validAt != 0 && validAt < block.timestamp, CantAcceptLogic());
 
         if (_claimingLogics[_market].length() == 0) {
             _markets.add(_market);
         }
 
         _claimingLogics[_market].add(address(_logic));
+
+        delete pendingClaimingLogics[_market][address(_logic)];
 
         emit IncentivesClaimingLogicAdded(_market, address(_logic));
     }
@@ -45,7 +78,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic)
         external
         virtual
-        onlyOwner
+        onlyGuardianRole
     {
         require(_claimingLogics[_market].contains(address(_logic)), LogicNotFound());
 

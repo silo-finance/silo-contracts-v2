@@ -79,6 +79,11 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
         );
 
         vm.prank(OWNER);
-        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
+        vaultIncentivesModule.submitIncentivesClaimingLogic(address(silo1), cl);
+
+        vm.warp(block.timestamp + vault.timelock() + 1);
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.acceptIncentivesClaimingLogic(address(silo1), cl);
     }
 }

@@ -43,11 +43,11 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
             Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION)
         );
 
-        vaultIncentivesModule.__VaultIncentivesModule_init(initialOwner);
-
         siloVault = ISiloVault(address(
             new SiloVault(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
+
+        vaultIncentivesModule.__VaultIncentivesModule_init(initialOwner, siloVault);
 
         isSiloVault[address(siloVault)] = true;
 
