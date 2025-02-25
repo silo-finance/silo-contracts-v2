@@ -43,4 +43,26 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         assertEq(siloVault.symbol(), symbol, "symbol");
         assertTrue(address(siloVault.INCENTIVES_MODULE()) != address(0), "INCENTIVES_MODULE");
     }
+
+    function testCreateSiloVaultTwice(
+        address initialOwner,
+        uint256 initialTimelock,
+        string memory name,
+        string memory symbol
+    ) public {
+        vm.assume(address(initialOwner) != address(0));
+        initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
+
+        ISiloVault siloVault1 =
+            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol);
+
+        assertTrue(factory.isSiloVault(address(siloVault1)), "isSiloVault1");
+
+        ISiloVault siloVault2 =
+            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol);
+
+        assertTrue(factory.isSiloVault(address(siloVault2)), "isSiloVault2");
+
+        assertNotEq(address(siloVault1), address(siloVault2), "siloVault1 != siloVault2");
+    }
 }
