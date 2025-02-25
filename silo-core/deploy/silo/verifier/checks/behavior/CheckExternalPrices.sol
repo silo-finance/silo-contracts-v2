@@ -103,7 +103,7 @@ contract CheckExternalPrices is ICheck {
             }
 
             return externalPrice0 == externalPrice1;
-        } 
+        }
 
         // price0 / price1 from external source
         externalRatio = externalPrice0 * precisionDecimals / externalPrice1;

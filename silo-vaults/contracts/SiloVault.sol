@@ -85,9 +85,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     address public feeRecipient;
 
     /// @inheritdoc ISiloVaultBase
-    address public skimRecipient;
-
-    /// @inheritdoc ISiloVaultBase
     IERC4626[] public supplyQueue;
 
     /// @inheritdoc ISiloVaultBase
@@ -190,15 +187,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         isAllocator[_newAllocator] = _newIsAllocator;
 
         emit EventsLib.SetIsAllocator(_newAllocator, _newIsAllocator);
-    }
-
-    /// @inheritdoc ISiloVaultBase
-    function setSkimRecipient(address _newSkimRecipient) external virtual onlyOwner {
-        if (_newSkimRecipient == skimRecipient) revert ErrorsLib.AlreadySet();
-
-        skimRecipient = _newSkimRecipient;
-
-        emit EventsLib.SetSkimRecipient(_newSkimRecipient);
     }
 
     /// @inheritdoc ISiloVaultBase
@@ -487,17 +475,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _setCap(_market, uint184(pendingCap[_market].value));
 
         _nonReentrantOff();
-    }
-
-    /// @inheritdoc ISiloVaultBase
-    function skim(address _token) external virtual {
-        if (skimRecipient == address(0)) revert ErrorsLib.ZeroAddress();
-
-        uint256 amount = _ERC20BalanceOf(_token, address(this));
-
-        IERC20(_token).safeTransfer(skimRecipient, amount);
-
-        emit EventsLib.Skim(_msgSender(), _token, amount);
     }
 
     /// @inheritdoc ISiloVaultBase

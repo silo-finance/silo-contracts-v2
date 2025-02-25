@@ -45,7 +45,6 @@ contract BaseTest is SiloLittleHelper, Test {
     address internal CURATOR = makeAddr("Curator");
     address internal GUARDIAN = makeAddr("Guardian");
     address internal FEE_RECIPIENT = makeAddr("FeeRecipient");
-    address internal SKIM_RECIPIENT = makeAddr("SkimRecipient");
 
     MintableToken internal loanToken = new MintableToken(18);
     MintableToken internal collateralToken = new MintableToken(18);
@@ -85,8 +84,8 @@ contract BaseTest is SiloLittleHelper, Test {
         address asset,
         string memory name,
         string memory symbol
-    ) public returns (ISiloVault vault) {
-        vault = siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
+    ) public returns (ISiloVault) {
+        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
     }
 
     function _createNewMarkets() public virtual {
