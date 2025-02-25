@@ -129,7 +129,7 @@ contract IdleVaultTest is IntegrationTest {
         vm.prank(SUPPLIER);
         vault.deposit(supplierDeposit, SUPPLIER);
 
-        // simulate realocation (withdraw from idle)
+        // simulate reallocation (withdraw from idle)
         vm.startPrank(address(vault));
         uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)), address(vault), address(vault));
         vm.stopPrank();
