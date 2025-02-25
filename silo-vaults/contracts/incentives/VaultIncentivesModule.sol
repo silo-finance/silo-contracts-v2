@@ -5,6 +5,7 @@ import {
     Ownable2StepUpgradeable, OwnableUpgradeable
 } from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.sol";
@@ -21,8 +22,11 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     EnumerableSet.AddressSet internal _markets;
     EnumerableSet.AddressSet internal _notificationReceivers;
 
-    mapping(IERC4626 market => mapping(IIncentivesClaimingLogic logic => uint256 validAt)) public pendingClaimingLogics;
-    mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
+    mapping(
+        IERC4626 market => mapping(IIncentivesClaimingLogic logic => uint256 validAt)
+    ) public pendingClaimingLogics;
+
+    mapping(IERC4626 market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
     constructor() {
         _disableInitializers();
@@ -47,41 +51,41 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
 
     /// @inheritdoc IVaultIncentivesModule
     function submitIncentivesClaimingLogic(
-        address _market,
+        IERC4626 _market,
         IIncentivesClaimingLogic _logic
     ) external virtual onlyGuardianRole {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
-        require(pendingClaimingLogics[_market][address(_logic)] == 0, LogicAlreadyPending());
+        require(pendingClaimingLogics[_market][_logic] == 0, LogicAlreadyPending());
 
         uint256 timelock = vault.timelock();
 
-        unchecked { pendingClaimingLogics[_market][address(_logic)] = block.timestamp + timelock };
+        unchecked { pendingClaimingLogics[_market][_logic] = block.timestamp + timelock; }
 
-        emit SubmitIncentivesClaimingLogic(_market, address(_logic));
+        emit SubmitIncentivesClaimingLogic(_market, _logic);
     }
 
     /// @inheritdoc IVaultIncentivesModule
     function acceptIncentivesClaimingLogic(
-        address _market,
+        IERC4626 _market,
         IIncentivesClaimingLogic _logic
     ) external virtual {
-        uint256 validAt = pendingClaimingLogics[_market][address(_logic)];
+        uint256 validAt = pendingClaimingLogics[_market][_logic];
         require(validAt != 0 && validAt < block.timestamp, CantAcceptLogic());
 
         if (_claimingLogics[_market].length() == 0) {
-            _markets.add(_market);
+            _markets.add(address(_market));
         }
 
         _claimingLogics[_market].add(address(_logic));
 
-        delete pendingClaimingLogics[_market][address(_logic)];
+        delete pendingClaimingLogics[_market][_logic];
 
-        emit IncentivesClaimingLogicAdded(_market, address(_logic));
+        emit IncentivesClaimingLogicAdded(_market, _logic);
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic)
+    function removeIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic)
         external
         virtual
         onlyGuardianRole
@@ -91,21 +95,21 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         _claimingLogics[_market].remove(address(_logic));
 
         if (_claimingLogics[_market].length() == 0) {
-            _markets.remove(_market);
+            _markets.remove(address(_market));
         }
 
-        emit IncentivesClaimingLogicRemoved(_market, address(_logic));
+        emit IncentivesClaimingLogicRemoved(_market, _logic);
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function revokePendingClaimingLogic(address _market, IIncentivesClaimingLogic _logic)
+    function revokePendingClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic)
         external
         virtual
         onlyGuardianRole
     {
-        delete pendingClaimingLogics[_market][address(_logic)];
+        delete pendingClaimingLogics[_market][_logic];
 
-        emit RevokePendingClaimingLogic(_market, address(_logic));
+        emit RevokePendingClaimingLogic(_market, _logic);
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -151,7 +155,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getMarketIncentivesClaimingLogics(address market) external view virtual returns (address[] memory logics) {
+    function getMarketIncentivesClaimingLogics(IERC4626 market) external view virtual returns (address[] memory logics) {
         logics = _claimingLogics[market].values();
     }
 
@@ -169,7 +173,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         for (uint256 i = 0; i < _marketsInput.length; i++) {
             unchecked {
                 // safe to uncheck as we will never have more than 2^256 logics
-                totalLogics += _claimingLogics[_marketsInput[i]].length();
+                totalLogics += _claimingLogics[IERC4626(_marketsInput[i])].length();
             }
         }
 
@@ -177,7 +181,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
 
         uint256 index;
         for (uint256 i = 0; i < _marketsInput.length; i++) {
-            address[] memory marketLogics = _claimingLogics[_marketsInput[i]].values();
+            address[] memory marketLogics = _claimingLogics[IERC4626(_marketsInput[i])].values();
 
             for (uint256 j = 0; j < marketLogics.length; j++) {
                 unchecked {

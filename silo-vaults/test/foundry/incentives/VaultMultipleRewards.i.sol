@@ -100,12 +100,12 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         );
 
         vm.prank(OWNER);
-        vaultIncentivesModule.submitIncentivesClaimingLogic(siloWithIncentives, cl);
+        vaultIncentivesModule.submitIncentivesClaimingLogic(IERC4626(siloWithIncentives), cl);
 
         vm.warp(block.timestamp + vault.timelock() + 1);
 
         vm.prank(OWNER);
-        vaultIncentivesModule.acceptIncentivesClaimingLogic(siloWithIncentives, cl);
+        vaultIncentivesModule.acceptIncentivesClaimingLogic(IERC4626(siloWithIncentives), cl);
     }
 
     function _cap() internal view virtual returns (uint256) {

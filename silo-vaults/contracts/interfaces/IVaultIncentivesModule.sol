@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
 import {IIncentivesClaimingLogic} from "./IIncentivesClaimingLogic.sol";
 import {INotificationReceiver} from "./INotificationReceiver.sol";
 
 /// @title Vault Incentives Module interface
 interface IVaultIncentivesModule {
-    event IncentivesClaimingLogicAdded(address indexed market, address logic);
-    event IncentivesClaimingLogicRemoved(address indexed market, address logic);
+    event IncentivesClaimingLogicAdded(IERC4626 indexed market, IIncentivesClaimingLogic logic);
+    event IncentivesClaimingLogicRemoved(IERC4626 indexed market, IIncentivesClaimingLogic logic);
+    event SubmitIncentivesClaimingLogic(IERC4626 indexed market, IIncentivesClaimingLogic logic);
+    event RevokePendingClaimingLogic(IERC4626 indexed market, IIncentivesClaimingLogic logic);
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
-    event SubmitIncentivesClaimingLogic(address indexed market, address logic);
-    event RevokePendingClaimingLogic(address indexed market, address logic);
 
     error AddressZero();
     error LogicAlreadyAdded();
@@ -27,22 +29,22 @@ interface IVaultIncentivesModule {
     /// @notice Submit an incentives claiming logic for the vault.
     /// @param _market The market to add the logic for.
     /// @param _logic The logic to add.
-    function submitIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+    function submitIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Accept an incentives claiming logic for the vault.
     /// @param _market The market to accept the logic for.
     /// @param _logic The logic to accept.
-    function acceptIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+    function acceptIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Remove an incentives claiming logic for the vault.
     /// @param _market The market to remove the logic for.
     /// @param _logic The logic to remove.
-    function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+    function removeIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Revoke a pending incentives claiming logic for the vault.
     /// @param _market The market to revoke the logic for.
     /// @param _logic The logic to revoke.
-    function revokePendingClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+    function revokePendingClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Add an incentives distribution solution for the vault.
     /// @param _notificationReceiver The solution to add.
@@ -71,7 +73,7 @@ interface IVaultIncentivesModule {
     /// @notice Get incentives claiming logics for a market.
     /// @param _market The market to get the incentives claiming logics for.
     /// @return logics
-    function getMarketIncentivesClaimingLogics(address _market) external view returns (address[] memory logics);
+    function getMarketIncentivesClaimingLogics(IERC4626 _market) external view returns (address[] memory logics);
 
     /// @notice Get all configured markets for the vault.
     /// @return markets

@@ -40,7 +40,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
 
         vm.prank(OWNER);
         vaultIncentivesModule.submitIncentivesClaimingLogic(
-            address(allMarkets[0]),
+            allMarkets[0],
             IIncentivesClaimingLogic(address(claimingLogic))
         );
 
@@ -48,7 +48,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
 
         vm.prank(OWNER);
         vaultIncentivesModule.acceptIncentivesClaimingLogic(
-            address(allMarkets[0]),
+            allMarkets[0],
             IIncentivesClaimingLogic(address(claimingLogic))
         );
 
