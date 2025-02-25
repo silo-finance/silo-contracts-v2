@@ -99,7 +99,7 @@ contract IdleVaultTest is IntegrationTest {
             ? supplierDeposit - supplierWithdraw
             : supplierWithdraw - supplierDeposit;
 
-        emit log_named_uint("SUPPLIER diff", attackerTotalLossPercent);
+        emit log_named_uint("SUPPLIER diff", supplierDiff);
 
         assertGe(
             supplierWithdraw,
