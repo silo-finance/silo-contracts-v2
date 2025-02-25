@@ -98,6 +98,17 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     /// @inheritdoc IVaultIncentivesModule
+    function revokePendingClaimingLogic(address _market, IIncentivesClaimingLogic _logic)
+        external
+        virtual
+        onlyGuardianRole
+    {
+        delete pendingClaimingLogics[_market][address(_logic)];
+
+        emit RevokePendingClaimingLogic(_market, address(_logic));
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
     function addNotificationReceiver(INotificationReceiver _notificationReceiver) external virtual onlyOwner {
         require(address(_notificationReceiver) != address(0), AddressZero());
         require(_notificationReceivers.add(address(_notificationReceiver)), NotificationReceiverAlreadyAdded());

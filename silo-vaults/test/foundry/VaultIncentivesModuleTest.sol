@@ -36,6 +36,7 @@ contract VaultIncentivesModuleTest is Test {
     event IncentivesClaimingLogicAdded(address indexed market, address logic);
     event IncentivesClaimingLogicRemoved(address indexed market, address logic);
     event SubmitIncentivesClaimingLogic(address indexed market, address logic);
+    event RevokePendingClaimingLogic(address indexed market, address logic);
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
 
@@ -235,6 +236,30 @@ contract VaultIncentivesModuleTest is Test {
     function test_removeIncentivesClaimingLogic_onlyGuardian() public {
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotGuardianRole.selector));
         incentivesModule.removeIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
+    }
+
+    /*
+    forge test --mt test_revokePendingClaimingLogic_onlyGuardian -vvv
+    */
+    function test_revokePendingClaimingLogic_onlyGuardian() public {
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotGuardianRole.selector));
+        incentivesModule.revokePendingClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
+    }
+
+    /*
+    forge test --mt test_revokePendingClaimingLogic_success -vvv
+    */
+    function test_revokePendingClaimingLogic_success() public {
+        vm.prank(_deployer);
+        incentivesModule.submitIncentivesClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
+
+        vm.expectEmit(true, true, true, true);
+        emit RevokePendingClaimingLogic(_market1, _logic1);
+
+        vm.prank(_guardian);
+        incentivesModule.revokePendingClaimingLogic(_market1, IIncentivesClaimingLogic(_logic1));
+
+        assertEq(incentivesModule.pendingClaimingLogics(_market1, _logic1), 0, "failed to revoke pending logic");
     }
 
     /*

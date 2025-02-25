@@ -11,6 +11,7 @@ interface IVaultIncentivesModule {
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
     event SubmitIncentivesClaimingLogic(address indexed market, address logic);
+    event RevokePendingClaimingLogic(address indexed market, address logic);
 
     error AddressZero();
     error LogicAlreadyAdded();
@@ -37,6 +38,11 @@ interface IVaultIncentivesModule {
     /// @param _market The market to remove the logic for.
     /// @param _logic The logic to remove.
     function removeIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
+
+    /// @notice Revoke a pending incentives claiming logic for the vault.
+    /// @param _market The market to revoke the logic for.
+    /// @param _logic The logic to revoke.
+    function revokePendingClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external;
 
     /// @notice Add an incentives distribution solution for the vault.
     /// @param _notificationReceiver The solution to add.
