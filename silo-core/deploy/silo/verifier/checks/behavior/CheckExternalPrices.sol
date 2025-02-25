@@ -21,6 +21,8 @@ contract CheckExternalPrices is ICheck {
     bool internal reverted;
     bool internal noExternalPrice;
     bool internal oracleReturnsZero;
+    bool internal noOracleCase;
+    bool internal wrongDecimalsForNoOracleCase;
 
     constructor(
         address _solvencyOracle0,
@@ -36,6 +38,7 @@ contract CheckExternalPrices is ICheck {
         solvencyOracle1 = _solvencyOracle1;
         token1 = _token1;
         externalPrice1 = _externalPrice1;
+        noOracleCase = _solvencyOracle0 == address(0) && _solvencyOracle1 == address(0);
     }
 
     function checkName() external pure override returns (string memory name) {
@@ -58,6 +61,10 @@ contract CheckExternalPrices is ICheck {
             message = "oracles revert";
         } else if (oracleReturnsZero){
             message = "oracle returns zero";
+        } else if (wrongDecimalsForNoOracleCase) {
+            message = "no oracles case: decimals of tokens are not equal";
+        } else if (noOracleCase) {
+            message = "external prices are not equal for no oracles case, prices must be 1:1";
         } else {
            message = string.concat(
                 "Price1/Price2 from contracts ",
@@ -74,13 +81,25 @@ contract CheckExternalPrices is ICheck {
 
     function _checkExternalPrice() internal returns (bool success) {
         uint256 precisionDecimals = 10**18;
-        uint256 oneToken0 = (10**uint256(IERC20Metadata(token0).decimals()));
-        uint256 oneToken1 = (10**uint256(IERC20Metadata(token1).decimals()));
+
+        uint256 token0Decimals = uint256(IERC20Metadata(token0).decimals());
+        uint256 token1Decimals = uint256(IERC20Metadata(token1).decimals());
+        uint256 oneToken0 = 10 ** token0Decimals;
+        uint256 oneToken1 = 10 ** token1Decimals;
 
         if (externalPrice0 == 0 || externalPrice1 == 0) {
             noExternalPrice = true;
             return false;
         }
+
+        if (noOracleCase) {
+            if (token0Decimals != token1Decimals) {
+                wrongDecimalsForNoOracleCase = true;
+                return false;
+            }
+
+            return externalPrice0 == externalPrice1;
+        } 
 
         // price0 / price1 from external source
         externalRatio = externalPrice0 * precisionDecimals / externalPrice1;
