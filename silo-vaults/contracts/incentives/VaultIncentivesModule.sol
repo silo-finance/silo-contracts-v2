@@ -65,7 +65,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     function acceptIncentivesClaimingLogic(
         address _market,
         IIncentivesClaimingLogic _logic
-    ) external virtual onlyGuardianRole {
+    ) external virtual {
         uint256 validAt = pendingClaimingLogics[_market][address(_logic)];
         require(validAt != 0 && validAt < block.timestamp, CantAcceptLogic());
 
