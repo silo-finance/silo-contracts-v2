@@ -46,12 +46,16 @@ contract CheckExternalPrices is ICheck {
     }
 
     function successMessage() external view override returns (string memory message) {
-        message = string.concat(
-            "Price1/Price2 from contracts ",
-            Strings.toString(contractsRatio),
-            " is close to external source ",
-            Strings.toString(externalRatio)
-        );
+        if (noOracleCase) {
+            message = "No oracles case: provided external prices are equal as expected";
+        } else {
+            message = string.concat(
+                "Price1/Price2 from contracts ",
+                Strings.toString(contractsRatio),
+                " is close to external source ",
+                Strings.toString(externalRatio)
+            );
+        }
     }
 
     function errorMessage() external view override returns (string memory message) {
