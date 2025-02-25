@@ -56,7 +56,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
 
         uint256 timelock = vault.timelock();
 
-        pendingClaimingLogics[_market][address(_logic)] = block.timestamp + timelock;
+        unchecked { pendingClaimingLogics[_market][address(_logic)] = block.timestamp + timelock };
 
         emit SubmitIncentivesClaimingLogic(_market, address(_logic));
     }
