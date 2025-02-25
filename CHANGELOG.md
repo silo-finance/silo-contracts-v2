@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Silo hooks refactoring
 - silo-vaults: use 18 decimals offset in idle vault
 
+### Removed
+- silo-vaults: remove skim method
+
 ## [1.5.0] - 2025-02-19
 ### Added
 - SiloLens deployment
