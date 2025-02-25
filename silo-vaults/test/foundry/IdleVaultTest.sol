@@ -137,7 +137,7 @@ contract IdleVaultTest is IntegrationTest {
         // inflate price
         IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
 
-        // simulate realocation back
+        // simulate reallocation back
         vm.startPrank(address(vault));
         idleMarket.deposit(idleAmount, address(vault));
         vm.stopPrank();
