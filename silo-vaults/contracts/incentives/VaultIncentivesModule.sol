@@ -21,7 +21,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     EnumerableSet.AddressSet internal _markets;
     EnumerableSet.AddressSet internal _notificationReceivers;
 
-    mapping(address market => mapping(address logic => uint256 validAt)) public pendingClaimingLogics;
+    mapping(IERC4626 market => mapping(IIncentivesClaimingLogic logic => uint256 validAt)) public pendingClaimingLogics;
     mapping(address market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
     constructor() {
