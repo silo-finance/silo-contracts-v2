@@ -46,7 +46,10 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function submitIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyGuardianRole {
+    function submitIncentivesClaimingLogic(
+        address _market,
+        IIncentivesClaimingLogic _logic
+    ) external virtual onlyGuardianRole {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
         require(pendingClaimingLogics[_market][address(_logic)] == 0, LogicAlreadyPending());
@@ -59,7 +62,10 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function acceptIncentivesClaimingLogic(address _market, IIncentivesClaimingLogic _logic) external virtual onlyGuardianRole {
+    function acceptIncentivesClaimingLogic(
+        address _market,
+        IIncentivesClaimingLogic _logic
+    ) external virtual onlyGuardianRole {
         uint256 validAt = pendingClaimingLogics[_market][address(_logic)];
         require(validAt != 0 && validAt < block.timestamp, CantAcceptLogic());
 
