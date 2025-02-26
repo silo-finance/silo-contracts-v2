@@ -41,7 +41,15 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
         string memory name,
         string memory symbol
     ) external virtual returns (ISiloVault siloVault) {
-        bytes32 salt = keccak256(abi.encode(_internalCounter++, msg.sender));
+        bytes32 salt = keccak256(abi.encodePacked(
+            counter[msg.sender]++,
+            msg.sender,
+            initialOwner,
+            initialTimelock,
+            asset,
+            name,
+            symbol
+        ));
 
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
