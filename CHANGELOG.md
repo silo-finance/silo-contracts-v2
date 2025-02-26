@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.6.1] - 2025-02-26
+### Added
+- LBTC / scBTC market on Sonic
+- LBTC / WBTC market on Sonic
+
 ## [1.6.0] - 2025-02-25
 ### Added
 - SiloRouter deployment
