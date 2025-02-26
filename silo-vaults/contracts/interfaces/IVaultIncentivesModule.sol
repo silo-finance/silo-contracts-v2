@@ -51,6 +51,8 @@ interface IVaultIncentivesModule {
     function addNotificationReceiver(INotificationReceiver _notificationReceiver) external;
 
     /// @notice Remove an incentives distribution solution for the vault.
+    /// @dev It is very important to be careful when you remove a notification receiver from the incentive module.
+    /// All ongoing incentive distributions must be stopped before removing a notification receiver.
     /// @param _notificationReceiver The solution to remove.
     function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external;
 
