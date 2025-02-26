@@ -10,6 +10,7 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 /**
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloLensDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify

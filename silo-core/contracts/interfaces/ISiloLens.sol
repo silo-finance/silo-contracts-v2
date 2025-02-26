@@ -7,6 +7,11 @@ import {IInterestRateModel} from "./IInterestRateModel.sol";
 import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 interface ISiloLens {
+    struct Borrower {
+        ISilo silo;
+        address wallet;
+    }
+
     error InvalidAsset();
 
     /// @dev calculates solvency
@@ -34,6 +39,17 @@ interface ISiloLens {
     /// @param _silo Address of the silo
     /// @return lt The LT value in 18 decimals points
     function getLt(ISilo _silo) external view returns (uint256 lt);
+
+    /// @notice Retrieves the LT for a specific borrower
+    /// @param _silo Address of the silo
+    /// @param _borrower Address of the borrower
+    /// @return userLT The LT for the borrower in 18 decimals points, returns 0 if no debt
+    function getUserLT(ISilo _silo, address _borrower) external view returns (uint256 userLT);
+
+    /// @notice Retrieves the LT for a specific borrowers
+    /// @param _borrowers list of borrowers with corresponding silo addresses
+    /// @return usersLTs The LTs for the borrowers in 18 decimals points, returns 0 for users with no debt
+    function getUsersLT(Borrower[] calldata _borrowers) external view returns (uint256[] memory usersLTs);
 
     /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
     /// @param _silo Address of the silo
