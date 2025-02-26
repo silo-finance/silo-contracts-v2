@@ -23,7 +23,7 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
     /// @inheritdoc ISiloVaultsFactory
     mapping(address => bool) public isSiloVault;
 
-    uint256 internal _internalCounter;
+    mapping(address owner => uint256 counter) public counter;
 
     /* CONSTRUCTOR */
 
