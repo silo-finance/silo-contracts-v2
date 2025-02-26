@@ -15,7 +15,6 @@ import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
 /// @title SiloLens is a helper contract for integrations and UI
 contract SiloLens is ISiloLens {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 public constant PRECISION = 1e18;
 
     /// @inheritdoc ISiloLens
     function isSolvent(ISilo _silo, address _borrower) external view returns (bool) {
@@ -40,6 +39,20 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getLt(ISilo _silo) external view virtual returns (uint256 lt) {
         lt = SiloLensLib.getLt(_silo);
+    }
+
+    /// @inheritdoc ISiloLens
+    function getUserLT(ISilo _silo, address _borrower) external view returns (uint256 userLT) {
+        return SiloLensLib.getUserLt(_silo, _borrower);
+    }
+
+    function getUsersLT(Borrower[] calldata _borrowers) external view returns (uint256[] memory usersLTs) {
+        usersLTs = new uint256[](_borrowers.length);
+
+        for (uint256 i; i < _borrowers.length; i++) {
+            Borrower memory borrower = _borrowers[i];
+            usersLTs[i] = SiloLensLib.getUserLt(borrower.silo, borrower.wallet);
+        }
     }
 
     /// @inheritdoc ISiloLens
@@ -178,7 +191,7 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getUtilization(ISilo _silo) external view returns (uint256) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
-        return data.debtAssets * PRECISION / data.collateralAssets;
+        return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
     }
 
     /// @inheritdoc ISiloLens

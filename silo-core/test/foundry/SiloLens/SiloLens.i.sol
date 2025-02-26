@@ -59,6 +59,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         _depositCollateral(collateral, borrower, TWO_ASSETS);
 
         assertFalse(siloLens.inDebt(siloConfig, borrower), "borrower has no debt");
+        assertEq(siloLens.getUserLT(silo0, borrower), 0, "LT is 0 when borrower has no debt");
 
         assertEq(siloLens.liquidity(silo0), deposit0 + collateral, "liquidity in silo0 before borrow");
         assertEq(siloLens.liquidity(silo1), deposit1, "liquidity in silo1 before borrow");
@@ -73,6 +74,8 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertTrue(siloLens.isSolvent(silo1, borrower), "borrower is solvent @0");
         assertTrue(siloLens.isSolvent(silo1, borrower), "borrower is solvent @1");
         assertTrue(siloLens.inDebt(siloConfig, borrower), "borrower has debt now");
+        assertEq(siloLens.getUserLT(silo0, borrower), 0.85e18, "user LT when borrower has debt @0");
+        assertEq(siloLens.getUserLT(silo1, borrower), 0.85e18, "user LT when borrower has debt @1");
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "borrower has position #0");
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "borrower has position #1");
