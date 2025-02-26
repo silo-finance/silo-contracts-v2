@@ -155,7 +155,12 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function getMarketIncentivesClaimingLogics(IERC4626 market) external view virtual returns (address[] memory logics) {
+    function getMarketIncentivesClaimingLogics(IERC4626 market)
+        external
+        view
+        virtual
+        returns (address[] memory logics)
+    {
         logics = _claimingLogics[market].values();
     }
 
