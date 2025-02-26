@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 - silo-vaults: remove skim method
 
+## [1.6.0] - 2025-02-25
+### Added
+- SiloRouter deployment
+
 ## [1.5.0] - 2025-02-19
 ### Added
 - SiloLens deployment
