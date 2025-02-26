@@ -34,8 +34,8 @@ contract EggsSonicPriceProvider is IntegrationTest {
     Whale balance 	1,593,795,176
     */
     function test_priceManipulation_sell() public {
-        uint256 priceBefore = _eggs.SONICtoEGGS(1e18);
-        assertEq(priceBefore, 880273767432114872737, "priceBefore");
+        uint256 priceBefore = _eggs.EGGStoSONIC(1e18);
+        assertEq(priceBefore, 1136010235775762, "priceBefore");
 
         uint256 eggsAmount = _eggs.balanceOf(address(_eggsWhale));
 
@@ -47,15 +47,15 @@ contract EggsSonicPriceProvider is IntegrationTest {
         uint256 priceAfter = _eggs.EGGStoSONIC(1e18);
         assertEq(priceAfter, 1136374922743370, "priceAfter");
 
-        assertLt(priceAfter, priceBefore, "Price did not decrease");
+        assertGt(priceAfter, priceBefore, "Price should have increased");
     }
 
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_priceManipulation_borrow
     */
     function test_priceManipulation_borrow() public {
-        uint256 priceBefore = _eggs.SONICtoEGGS(1e18);
-        assertEq(priceBefore, 880273767432114872737, "priceBefore");
+        uint256 priceBefore = _eggs.EGGStoSONIC(1e18);
+        assertEq(priceBefore, 1136010235775762, "priceBefore");
 
         uint256 sonicAmount = 1000_000e18;
         uint256 eggsAmount = _eggs.balanceOf(address(_eggsWhale));
@@ -68,6 +68,6 @@ contract EggsSonicPriceProvider is IntegrationTest {
         uint256 priceAfter = _eggs.EGGStoSONIC(1e18);
         assertEq(priceAfter, 1136019114778502, "priceAfter");
 
-        assertLt(priceAfter, priceBefore, "Price did not decrease");
+        assertGt(priceAfter, priceBefore, "Price should have increased");
     }
 }
