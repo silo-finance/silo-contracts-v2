@@ -1,8 +1,12 @@
+using SiloConfig as theSiloConfig;
+
 methods {
 
     function maxDeployerFee() external returns uint256 envfree;
     function maxFlashloanFee() external returns uint256 envfree;
     function maxLiquidationFee() external returns uint256 envfree;
+    function daoFeeRange() external returns ISiloFactory.Range envfree;
+    
     
     function MAX_FEE() external returns uint256 envfree;
 
@@ -14,8 +18,8 @@ methods {
         initializeCVL_3(calledContract, _silo, _hookReceiver, _tokenType) expect void;
 
     // a function of ISilo
-    function _.initialize(address) external =>
-        initializeCVL_1(calledContract) expect void;
+    function _.initialize(address siloConfig) external =>
+        initializeCVL_1(calledContract, siloConfig) expect void;
 
     function _.quoteToken() external => NONDET; // PER_CALLEE_CONSTANT ?
 
@@ -29,10 +33,16 @@ methods {
     ) external => NONDET; /* expects bytes4 */
 
     function _.updateHooks() external => NONDET;
-
     function _.config() external => configCVL(calledContract) expect address;
-
     function _.SILO_ID() external => PER_CALLEE_CONSTANT;
+    
+    function _.tokenURI() external returns string envfree => NONDET;
+    
+    function _initializeShareTokens(
+        ISiloConfig.ConfigData memory configData0,
+        ISiloConfig.ConfigData memory configData1) internal
+        => initShareTokensCVL(configData0, configData1);
+
 }
 
 //// summary: config ////
@@ -97,7 +107,7 @@ function init_already_initialized_3() {
 
 ghost mapping(address => bool) already_initialized_1;
 
-function initializeCVL_1(address calledC) {
+function initializeCVL_1(address calledC, address siloConfig) {
     // make sure this is never called on the same inputs twice 
     assert(!already_initialized_1[calledC]); 
     already_initialized_1[calledC] = true;
@@ -120,3 +130,17 @@ invariant flashLoanFeeInRange()
 
 invariant liquidationFeeInRange()
     maxLiquidationFee() <= MAX_FEE();
+
+invariant DAOFeeInRange()
+    daoFeeRange().min <= daoFeeRange().max && 
+    daoFeeRange().max <= MAX_FEE();
+
+rule consitencyOfCreatedSilos(env e)
+{
+    ISiloConfig.InitData initData;
+    address config;
+    require config == theSiloConfig;
+    address siloImpl; address shareProtectedCollateralTokenImpl; address shareDebtTokenImpl;
+    createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+    satisfy true;
+}
