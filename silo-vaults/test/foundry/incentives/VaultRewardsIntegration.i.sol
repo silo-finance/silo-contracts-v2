@@ -92,9 +92,9 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
                 address(0),
                 0,
                 address(this),
-                depositAmount,
-                depositAmount,
-                depositAmount
+                depositAmount * OFFSET_POW,
+                depositAmount * OFFSET_POW,
+                depositAmount * OFFSET_POW
             )
         );
 

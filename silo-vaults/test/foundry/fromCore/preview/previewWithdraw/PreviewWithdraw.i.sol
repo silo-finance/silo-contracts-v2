@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc PreviewWithdrawTest
+    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc PreviewWithdrawTest
 */
 contract PreviewWithdrawTest is VaultsLittleHelper {
     address immutable depositor;
@@ -28,13 +28,13 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
 
         uint256 preview = _getPreview(amountIn);
 
-        _assertEqPrevAmountInSharesWhenNoInterest(preview, amountIn);
+        _assertEqPreviewAmountEqSharesWhenNoInterest(preview, amountIn);
 
         _assertPreviewWithdraw(preview, amountIn);
     }
 
     /*
-    forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
+    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
     same asset: we check preview on same silo
     two assets: we need to borrow on silo0 in addition
     */
@@ -45,10 +45,18 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         bool _partial
     ) public {
         vm.assume(_assetsOrShares > 1); // can not create debt with 1 collateral
+
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
+
+        if (_useRedeem()) {
+            vm.assume(amountToUse < type(uint128).max / uint128(OFFSET_POW));
+            amountToUse *= uint128(OFFSET_POW);
+        }
+
         vm.assume(amountToUse > 0);
 
-        _deposit(_assetsOrShares, depositor);
+        uint256 assets = _useRedeem() ? _assetsOrShares * OFFSET_POW : _assetsOrShares;
+        _deposit(assets, depositor);
 
         _createSiloUsage();
 
@@ -57,7 +65,7 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         uint256 preview = _getPreview(amountToUse);
 
         if (!_interest) {
-            _assertEqPrevAmountInSharesWhenNoInterest(preview, amountToUse);
+            _assertEqPreviewAmountEqSharesWhenNoInterest(preview, amountToUse);
         }
 
         _assertPreviewWithdraw(preview, amountToUse);
@@ -79,31 +87,32 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         uint256 preview = _getPreview(_assetsOrShares);
 
         if (!_interest) {
-            _assertEqPrevAmountInSharesWhenNoInterest(preview, _assetsOrShares);
+            _assertEqPreviewAmountEqSharesWhenNoInterest(preview, _assetsOrShares);
         }
 
         _assertPreviewWithdraw(preview, _assetsOrShares);
     }
 
     /*
-    forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
+    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
     */
     /// forge-config: vaults-tests.fuzz.runs = 1000
     function test_previewWithdraw_min_fuzz(uint112 _assetsOrShares, bool _interest) public {
-        vm.assume(_assetsOrShares > 0);
+        if (_useRedeem()) vm.assume(_assetsOrShares >= OFFSET_POW);
+        else vm.assume(_assetsOrShares > 0);
 
-        _deposit(_assetsOrShares, depositor);
+        uint256 assets = _useRedeem() ? _assetsOrShares / OFFSET_POW : _assetsOrShares;
+        _deposit(assets, depositor);
 
         _createSiloUsage();
 
         if (_interest) _applyInterest();
 
-        uint256 minInput = _useRedeem() ? vault.convertToShares(1) : vault.convertToAssets(1);
+        uint256 minInput = _useRedeem() ? vault.convertToShares(1) : vault.convertToAssets(vault.convertToShares(1) + 1);
         uint256 minPreview = _getPreview(minInput);
 
         if (!_interest) {
-            _assertEqPrevAmountInSharesWhenNoInterest(minPreview, minInput);
-
+            _assertEqPreviewAmountEqSharesWhenNoInterest(minPreview, minInput);
         }
 
         _assertPreviewWithdraw(minPreview, minInput);
@@ -130,7 +139,7 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         uint256 maxPreview = _getPreview(maxInput);
 
         if (!_interest) {
-            _assertEqPrevAmountInSharesWhenNoInterest(maxPreview, maxInput);
+            _assertEqPreviewAmountEqSharesWhenNoInterest(maxPreview, maxInput);
         }
 
         _assertPreviewWithdraw(maxPreview, maxInput);
@@ -178,8 +187,8 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         return false;
     }
 
-    function _assertEqPrevAmountInSharesWhenNoInterest(uint256 _preview, uint256 _amountIn) private pure {
-        if (_useRedeem()) assertEq(_preview, _amountIn, "previewWithdraw == assets == shares, when no interest");
-        else assertEq(_preview, _amountIn, "previewWithdraw == assets == shares, when no interest");
+    function _assertEqPreviewAmountEqSharesWhenNoInterest(uint256 _preview, uint256 _amountIn) private view {
+        if (_useRedeem()) assertEq(_preview, _amountIn / OFFSET_POW, "previewWithdraw == shares, when no interest");
+        else assertEq(_preview, _amountIn * OFFSET_POW, "previewWithdraw == assets, when no interest");
     }
 }
