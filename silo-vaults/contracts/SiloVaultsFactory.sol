@@ -23,6 +23,8 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
     /// @inheritdoc ISiloVaultsFactory
     mapping(address => bool) public isSiloVault;
 
+    mapping(address owner => uint256 counter) public counter;
+
     /* CONSTRUCTOR */
 
     constructor() {
@@ -39,8 +41,18 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
         string memory name,
         string memory symbol
     ) external virtual returns (ISiloVault siloVault) {
+        bytes32 salt = keccak256(abi.encodePacked(
+            counter[msg.sender]++,
+            msg.sender,
+            initialOwner,
+            initialTimelock,
+            asset,
+            name,
+            symbol
+        ));
+
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.clone(VAULT_INCENTIVES_MODULE_IMPLEMENTATION)
+            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
         );
 
         siloVault = ISiloVault(address(
