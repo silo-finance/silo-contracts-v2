@@ -565,6 +565,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         shares = _convertToSharesWithTotals(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         _deposit(_msgSender(), _receiver, _assets, shares);
+        _assetLossCheck(shares, _assets);
 
         _nonReentrantOff();
     }
@@ -582,6 +583,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _convertToAssetsWithTotals(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         _deposit(_msgSender(), _receiver, assets, _shares);
+        _assetLossCheck(_shares, assets);
 
         _nonReentrantOff();
     }
@@ -982,5 +984,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev to save code size ~500 B
     function _ERC20BalanceOf(address _token, address _account) internal view returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(_account);
+    }
+
+    function _assetLossCheck(uint256 _shares, uint256 _expectedAssets) internal {
+        uint256 preview = previewRedeem(_shares);
+        if (preview >= _expectedAssets) return;
+
+        uint256 loss;
+        // save because we checking above `if (preview >= _expectedAssets)`
+        unchecked { loss = _expectedAssets - preview; }
+        uint256 arbitraryLossThreshold = 10;
+
+        require(loss < arbitraryLossThreshold, ErrorsLib.AssetLoss(loss));
     }
 }
