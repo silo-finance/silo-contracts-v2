@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- silo-vaults: require asset decimals to be up to 18
+
 ### Fixed
 - allow to burn NFT only by owner
 - revert on invalid token type in `Hook.shareTokenTransfer()`

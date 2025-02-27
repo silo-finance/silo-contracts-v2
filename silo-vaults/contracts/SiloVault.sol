@@ -11,6 +11,8 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+
 import {
     MarketConfig,
     PendingUint192,
@@ -114,7 +116,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
-        uint256 decimals = IERC20Metadata(_asset).decimals();
+        uint256 decimals = TokenHelper.assertAndGetDecimals(_asset);
         require(decimals <= 18, ErrorsLib.NotSupportedDecimals());
         DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, decimals));
 
