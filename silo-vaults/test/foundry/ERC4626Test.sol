@@ -28,11 +28,13 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDecimals -vvv
     */
     function testDecimals(uint8 decimals) public {
+        vm.assume(decimals <= 18);
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
-        assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
+        assertEq(vault.decimals(), 18, "offset does not affect decimals");
+        assertEq(vault.DECIMALS_OFFSET(), 21 - decimals, "DECIMALS_OFFSET");
     }
 
     /*
