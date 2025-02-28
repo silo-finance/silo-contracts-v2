@@ -8,7 +8,7 @@ import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 
 /**
     FOUNDRY_PROFILE=oracles \
-        forge script silo-oracles/deploy/EggsToSonicAdapterDeploy.s.sol \
+        forge script silo-oracles/deploy/EggsToSonicAdapterDeploy.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract EggsToSonicAdapterDeploy is CommonDeploy {
