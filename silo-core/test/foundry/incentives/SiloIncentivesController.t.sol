@@ -27,7 +27,7 @@ contract SiloIncentivesControllerTest is Test {
     address internal user2 = makeAddr("User2");
     address internal user3 = makeAddr("User3");
 
-    uint256 internal constant _PRECISION = 10 ** 18;
+    uint256 internal _PRECISION;
     uint256 internal constant _TOTAL_SUPPLY = 1000e18;
     string internal constant _PROGRAM_NAME = "Test";
     string internal constant _PROGRAM_NAME_2 = "Test2";
@@ -35,6 +35,7 @@ contract SiloIncentivesControllerTest is Test {
     event IncentivesProgramCreated(string name);
     event IncentivesProgramUpdated(string name);
     event ClaimerSet(address indexed user, address indexed claimer);
+
 
     function setUp() public {
         _rewardToken = address(new ERC20Mock());
@@ -48,6 +49,8 @@ contract SiloIncentivesControllerTest is Test {
         _controller = SiloIncentivesController(_factory.create(_owner, _notifier));
 
         assertTrue(_factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
+
+        _PRECISION = _controller.TEN_POW_PRECISION();
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
@@ -392,7 +395,9 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), expectedRewardsUser2, "invalid user2 balance");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_Success
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_Success
+    */
     function test_updateIncentivesProgram_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
 
@@ -409,8 +414,8 @@ contract SiloIncentivesControllerTest is Test {
 
         IDistributionManager.IncentiveProgramDetails memory detailsBefore = _controller.incentivesProgram(_PROGRAM_NAME);
 
-        assertEq(detailsBefore.emissionPerSecond, emissionPerSecond);
-        assertEq(detailsBefore.distributionEnd, distributionEnd);
+        assertEq(detailsBefore.emissionPerSecond, emissionPerSecond, "invalid emissionPerSecond");
+        assertEq(detailsBefore.distributionEnd, distributionEnd, "invalid distributionEnd");
 
         vm.warp(block.timestamp + 1000);
 
@@ -448,7 +453,9 @@ contract SiloIncentivesControllerTest is Test {
         _controller.afterTokenTransfer(address(0), 0, address(0), 0, 0, 0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_Success
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_Success
+    */
     function test_afterTokenTransfer_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
 
@@ -500,7 +507,7 @@ contract SiloIncentivesControllerTest is Test {
         uint256 expectedRewards = recipientBalance * (expectedIndex - userDataAfter) / _PRECISION;
         expectedRewards += _controller.getUserUnclaimedRewards(recipient, _PROGRAM_NAME);
 
-        assertEq(rewards, expectedRewards);
+        assertEq(rewards, expectedRewards, "unexpected rewards");
         assertNotEq(rewards, 0);
     }
 
