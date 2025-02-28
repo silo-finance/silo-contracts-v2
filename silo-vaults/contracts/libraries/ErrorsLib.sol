@@ -139,4 +139,7 @@ library ErrorsLib {
 
     /// @notice Thrown when attempting to supply more than the max inflow of a market.
     error MaxInflowExceeded(IERC4626 market);
+
+    /// @notice Thrown when projected withdraw is much less than what user deposit.
+    error AssetLoss(uint256 loss);
 }
