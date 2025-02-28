@@ -17,6 +17,7 @@ import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultInc
 FOUNDRY_PROFILE=vaults-tests forge test --mc VaultIncentivesModuleTest -vv
 */
 contract VaultIncentivesModuleTest is Test {
+    bool internal constant _ALL_PROGRAMS_STOPPED = true;
     uint256 internal _timelock = 1 days;
 
     VaultIncentivesModule public incentivesModule;
@@ -329,10 +330,19 @@ contract VaultIncentivesModuleTest is Test {
         emit NotificationReceiverRemoved(_solution1);
 
         vm.prank(_deployer);
-        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1));
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1), _ALL_PROGRAMS_STOPPED);
 
         solutions = incentivesModule.getNotificationReceivers();
         assertEq(solutions.length, 0);
+    }
+
+    /*
+    forge test --mt test_removeNotificationReceiver_allProgramsNotStopped -vvv
+    */
+    function test_removeNotificationReceiver_allProgramsNotStopped() public {
+        vm.expectRevert(IVaultIncentivesModule.AllProgramsNotStopped.selector);
+        vm.prank(_deployer);
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1), !_ALL_PROGRAMS_STOPPED);
     }
 
     /*
@@ -341,7 +351,7 @@ contract VaultIncentivesModuleTest is Test {
     function test_removeNotificationReceiver_notAdded() public {
         vm.expectRevert(IVaultIncentivesModule.NotificationReceiverNotFound.selector);
         vm.prank(_deployer);
-        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1));
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1), _ALL_PROGRAMS_STOPPED);
     }
 
     /*
@@ -349,7 +359,7 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_removeNotificationReceiver_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1));
+        incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1), _ALL_PROGRAMS_STOPPED);
     }
 
     /*
