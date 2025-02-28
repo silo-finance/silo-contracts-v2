@@ -22,11 +22,12 @@ contract EggsToSonicAdapterTest is TokensGenerator {
         IEggsLike mockEggs = IEggsLike(address(1235));
         EggsToSonicAdapter adapter = new EggsToSonicAdapter(mockEggs);
         assertEq(address(adapter.EGGS()), address(mockEggs), "Eggs is set in constructor");
+
         assertEq(adapter.SAMPLE_AMOUNT(), 10**18, "Sample amount is correct");
+        assertEq(adapter.decimals(), 18, "adapter decimals are 18");
 
         assertEq(adapter.RATE_DIVIDER(), 1000, "rate divider is correct");
         assertEq(adapter.RATE_MULTIPLIER(), 989, "rate multiplier is correct to get 98.9%");
-
         assertEq(1000 * adapter.RATE_MULTIPLIER() / adapter.RATE_DIVIDER(), 989, "sanity check of 98.9%");
     }
 
