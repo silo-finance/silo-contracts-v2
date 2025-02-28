@@ -23,10 +23,20 @@ contract EggsToSonicAdapterTest is TokensGenerator {
         EggsToSonicAdapter adapter = new EggsToSonicAdapter(mockEggs);
         assertEq(address(adapter.EGGS()), address(mockEggs), "Eggs is set in constructor");
         assertEq(adapter.SAMPLE_AMOUNT(), 10**18, "Sample amount is correct");
+
+        assertEq(adapter.RATE_DIVIDER(), 1000, "rate divider is correct");
+        assertEq(adapter.RATE_MULTIPLIER(), 989, "rate multiplier is correct to get 98.9%");
+
+        assertEq(1000 * adapter.RATE_MULTIPLIER() / adapter.RATE_DIVIDER(), 989, "sanity check of 98.9%");
     }
 
-    function test_EggsToSonicAdapter_latestRoundData_equalToOriginalRate() public {
+    function test_EggsToSonicAdapter_latestRoundData_compareToOriginalRate() public {
         AggregatorV3Interface aggregator = AggregatorV3Interface(new EggsToSonicAdapter(EGGS));
+        int256 originalRate = int256(EGGS.EGGStoSONIC(1 ether));
+        int256 originalRateScaledDown = originalRate * 989 / 1000;
+
+        assertTrue(originalRateScaledDown < originalRate, "scaled down rate is less as expected");
+        assertTrue(originalRateScaledDown > originalRate * 98 / 100, "but scaled down rate is >98%");
 
         (
             uint80 roundId,
@@ -37,7 +47,7 @@ contract EggsToSonicAdapterTest is TokensGenerator {
         ) = aggregator.latestRoundData();
 
         assertEq(roundId, 1);
-        assertEq(answer, int256(EGGS.EGGStoSONIC(1 ether)));
+        assertEq(answer, originalRateScaledDown);
         assertEq(startedAt, block.timestamp);
         assertEq(updatedAt, block.timestamp);
         assertEq(answeredInRound, 1);
@@ -53,13 +63,14 @@ contract EggsToSonicAdapterTest is TokensGenerator {
 
         // $0.837582 sonic price per block (external source)
         // $0.0009628 eggs price per block (external source)
-        // expected price is 0.0009628 * 10**18/0.837582 ~ 1.149 * 10 ** 15 ~ 1149 * 10 ** 12.
-        // price from adapter is 1135975935730390
+        // expected price is 98.9% of 0.0009628 * 10**18/0.837582 ~ 98.9% of 1.149 * 10 ** 15 ~ 
+        // ~ 98.9% of 1149 * 10 ** 12 ~ 1136 * 10**12.
+        // price from adapter is 1123480200437355
         // which is close with 0.9886 relative precision, less than 2% difference with calculated value.
 
-        int256 expectedAnswer = 1149 * 10**12;
+        int256 expectedAnswer = 1136 * 10**12;
 
-        assertEq(answer, 1135975935730390);
+        assertEq(answer, 1123480200437355);
 
         assertTrue(
             answer > expectedAnswer * 98/100 && answer < expectedAnswer,

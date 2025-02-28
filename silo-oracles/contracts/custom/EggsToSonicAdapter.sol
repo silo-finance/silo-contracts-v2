@@ -10,10 +10,15 @@ interface IEggsLike {
 
 /// @title EGGS / S adapter
 /// @notice EggsToSonic is the adapter for EGGS / S price feed. Price is equal to EGGS internal rate of
-/// `EGGStoSONIC()`.
+/// `EGGStoSONIC()` multiplied by 98.9%.
 contract EggsToSonicAdapter is AggregatorV3Interface {
     /// @dev Sample amount for EGGS / S conversion rate calculations
     uint256 public constant SAMPLE_AMOUNT = 10 ** 18; // solhint-disable-line var-name-mixedcase
+
+    /// @dev EGGStoSONIC rate is be multiplied by RATE_MULTIPLIER and divided by RATE_DIVIDER to get 98.9% of original
+    /// value.
+    int256 public constant RATE_DIVIDER = 1000;
+    int256 public constant RATE_MULTIPLIER = RATE_DIVIDER - 11;
 
     /// @dev EGGS asset address
     IEggsLike public immutable EGGS;
@@ -36,7 +41,7 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
         )
     {
         roundId = 1;
-        answer = int256(EGGS.EGGStoSONIC(SAMPLE_AMOUNT));
+        answer = int256(EGGS.EGGStoSONIC(SAMPLE_AMOUNT)) * RATE_MULTIPLIER / RATE_DIVIDER;
         startedAt = block.timestamp;
         updatedAt = block.timestamp;
         answeredInRound = roundId;
