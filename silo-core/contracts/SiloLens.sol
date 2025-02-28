@@ -55,6 +55,17 @@ contract SiloLens is ISiloLens {
         }
     }
 
+    function getUsersHealth(Borrower[] calldata _borrowers) external view returns (BorrowerHealth[] memory healths) {
+        healths = new BorrowerHealth[](_borrowers.length);
+
+        for (uint256 i; i < _borrowers.length; i++) {
+            Borrower memory borrower = _borrowers[i];
+            BorrowerHealth memory health = healths[i];
+
+            (health.ltv, health.lt) = SiloLensLib.getLtvAndLt(borrower.silo, borrower.wallet);
+        }
+    }
+
     /// @inheritdoc ISiloLens
     function getUserLTV(ISilo _silo, address _borrower) external view returns (uint256 userLTV) {
         return SiloLensLib.getLtv(_silo, _borrower);
