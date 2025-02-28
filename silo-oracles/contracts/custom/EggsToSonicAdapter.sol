@@ -15,8 +15,7 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
     /// @dev Sample amount for EGGS / S conversion rate calculations
     uint256 public constant SAMPLE_AMOUNT = 10 ** 18;
 
-    /// @dev EGGStoSONIC rate is be multiplied by RATE_MULTIPLIER and divided by RATE_DIVIDER to get 98.9% of original
-    /// value.
+    /// @dev rate is be multiplied by RATE_MULTIPLIER and divided by RATE_DIVIDER to get 98.9% of original rate.
     int256 public constant RATE_DIVIDER = 1000;
     int256 public constant RATE_MULTIPLIER = RATE_DIVIDER - 11;
 
