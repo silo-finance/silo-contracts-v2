@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {console2} from "forge-std/console2.sol";
 
 struct Loan {
     uint256 collateral; // shares of token staked
