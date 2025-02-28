@@ -36,7 +36,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
         _deposit(_assets2, address(1)); // any
 
         uint256 maxRedeem = vault.maxRedeem(depositor);
-        assertEq(maxRedeem, _assets, "max withdraw == _assets/shares if no interest");
+        assertEq(maxRedeem, _assets * OFFSET_POW, "max withdraw == _assets/shares if no interest");
 
         _assertDepositorCanNotRedeemMore(maxRedeem);
         _assertDepositorHasNothingToRedeem();
@@ -79,7 +79,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
         uint256 maxRedeem = vault.maxRedeem(depositor);
         assertLt(maxRedeem, vault.balanceOf(depositor), "with debt you can not withdraw all");
 
-        _assertDepositorCanNotRedeemMore(maxRedeem, 3);
+        _assertDepositorCanNotRedeemMore(maxRedeem, 3 * OFFSET_POW);
     }
 
     function _assertDepositorHasNothingToRedeem() internal view {
@@ -88,13 +88,13 @@ contract MaxRedeemTest is VaultsLittleHelper {
     }
 
     function _assertDepositorCanNotRedeemMore(uint256 _maxRedeem) internal {
-        _assertDepositorCanNotRedeemMore(_maxRedeem, 1);
+        _assertDepositorCanNotRedeemMore(_maxRedeem, 1 * OFFSET_POW);
     }
 
     function _assertDepositorCanNotRedeemMore(uint256 _maxRedeem, uint256 _underestimate) internal {
         emit log_named_uint("------- QA: _assertDepositorCanNotRedeemMore shares", _maxRedeem);
 
-        assertGt(_underestimate, 0, "_underestimate must be at least 1");
+        assertGt(vault.convertToAssets(_underestimate), 0, "_underestimate must be at least 1 asset");
 
         if (_maxRedeem > 0) {
             vm.prank(depositor);

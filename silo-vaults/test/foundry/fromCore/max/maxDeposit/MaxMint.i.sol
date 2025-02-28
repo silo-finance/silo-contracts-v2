@@ -17,7 +17,7 @@ contract MaxMintTest is VaultsLittleHelper {
     function test_maxMint() public view {
         assertEq(
             vault.maxMint(address(1)),
-            CAP + _IDLE_CAP,
+            (CAP + _IDLE_CAP) * OFFSET_POW,
             "ERC4626 expect to return summary CAP for all markets"
         );
     }
@@ -32,7 +32,7 @@ contract MaxMintTest is VaultsLittleHelper {
 
         assertEq(
             vault.maxMint(address(1)),
-            CAP + _IDLE_CAP - deposit,
+            (CAP + _IDLE_CAP - deposit) * OFFSET_POW,
             "ERC4626 expect to return summary CAP for all markets - deposit"
         );
     }

@@ -22,7 +22,7 @@ contract MaxWithdrawTest is VaultsLittleHelper {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxWithdraw_deposit_
+    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
     */
     /// forge-config: vaults-tests.fuzz.runs = 1000
     function test_maxWithdraw_deposit_fuzz(
