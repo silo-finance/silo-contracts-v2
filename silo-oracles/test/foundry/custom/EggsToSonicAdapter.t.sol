@@ -18,6 +18,13 @@ contract EggsToSonicAdapterTest is TokensGenerator {
         initFork(TEST_BLOCK);
     }
 
+    function test_EggsToSonicAdapter_constructor() public {
+        IEggsLike mockEggs = IEggsLike(address(1235));
+        EggsToSonicAdapter adapter = new EggsToSonicAdapter(mockEggs);
+        assertEq(address(adapter.EGGS()), address(mockEggs), "Eggs is set in constructor");
+        assertEq(adapter.SAMPLE_AMOUNT(), 10**18, "Sample amount is correct");
+    }
+
     function test_EggsToSonicAdapter_latestRoundData_equalToOriginalRate() public {
         AggregatorV3Interface aggregator = AggregatorV3Interface(new EggsToSonicAdapter(EGGS));
 
