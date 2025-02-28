@@ -17,7 +17,7 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
 
     /// @dev rate is be multiplied by RATE_MULTIPLIER and divided by RATE_DIVIDER to get 98.9% of original rate.
     int256 public constant RATE_DIVIDER = 1000;
-    int256 public constant RATE_MULTIPLIER = RATE_DIVIDER - 11;
+    int256 public constant RATE_MULTIPLIER = 989;
 
     /// @dev EGGS asset address
     IEggsLike public immutable EGGS; // solhint-disable-line var-name-mixedcase
