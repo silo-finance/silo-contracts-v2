@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
@@ -79,6 +80,11 @@ contract VaultRewardsIntegrationSetup is IntegrationTest {
         );
 
         vm.prank(OWNER);
-        vaultIncentivesModule.addIncentivesClaimingLogic(address(silo1), cl);
+        vaultIncentivesModule.submitIncentivesClaimingLogic(IERC4626(address(silo1)), cl);
+
+        vm.warp(block.timestamp + vault.timelock() + 1);
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.acceptIncentivesClaimingLogic(IERC4626(address(silo1)), cl);
     }
 }
