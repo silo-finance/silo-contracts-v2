@@ -114,5 +114,16 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
+    },
+    "EGGS_CHAINLINK_EGGS_USD": {
+        "baseToken": "EGGS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EGGS_SONIC_ADAPTER",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "CHAINLINK_S_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e26,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
