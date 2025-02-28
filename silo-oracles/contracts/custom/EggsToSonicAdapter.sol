@@ -13,7 +13,7 @@ interface IEggsLike {
 /// `EGGStoSONIC()` multiplied by 98.9%.
 contract EggsToSonicAdapter is AggregatorV3Interface {
     /// @dev Sample amount for EGGS / S conversion rate calculations
-    uint256 public constant SAMPLE_AMOUNT = 10 ** 18; // solhint-disable-line var-name-mixedcase
+    uint256 public constant SAMPLE_AMOUNT = 10 ** 18;
 
     /// @dev EGGStoSONIC rate is be multiplied by RATE_MULTIPLIER and divided by RATE_DIVIDER to get 98.9% of original
     /// value.
@@ -21,7 +21,7 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
     int256 public constant RATE_MULTIPLIER = RATE_DIVIDER - 11;
 
     /// @dev EGGS asset address
-    IEggsLike public immutable EGGS;
+    IEggsLike public immutable EGGS; // solhint-disable-line var-name-mixedcase
 
     constructor(IEggsLike _eggs) {
         EGGS = _eggs;
