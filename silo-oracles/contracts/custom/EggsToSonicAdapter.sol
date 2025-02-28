@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 
 /// @dev part of EGGS contract interface to get the EGGS / S exchange rate
@@ -50,7 +51,7 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
         )
     {
         roundId = 1;
-        answer = int256(EGGS.EGGStoSONIC(SAMPLE_AMOUNT)) * RATE_MULTIPLIER / RATE_DIVIDER;
+        answer = SafeCast.toInt256(EGGS.EGGStoSONIC(SAMPLE_AMOUNT)) * RATE_MULTIPLIER / RATE_DIVIDER;
         startedAt = block.timestamp;
         updatedAt = block.timestamp;
         answeredInRound = roundId;
