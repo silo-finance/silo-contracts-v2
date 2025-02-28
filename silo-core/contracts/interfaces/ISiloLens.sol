@@ -12,6 +12,11 @@ interface ISiloLens {
         address wallet;
     }
 
+    struct BorrowerHealth {
+        uint256 lt;
+        uint256 ltv;
+    }
+
     error InvalidAsset();
 
     /// @dev calculates solvency
@@ -50,6 +55,11 @@ interface ISiloLens {
     /// @param _borrowers list of borrowers with corresponding silo addresses
     /// @return usersLTs The LTs for the borrowers in 18 decimals points, returns 0 for users with no debt
     function getUsersLT(Borrower[] calldata _borrowers) external view returns (uint256[] memory usersLTs);
+
+    /// @notice Retrieves the LT and LTV for a specific borrowers
+    /// @param _borrowers list of borrowers with corresponding silo addresses
+    /// @return healths The LTs and LTVs for the borrowers in 18 decimals points, returns 0 for users with no debt
+    function getUsersHealth(Borrower[] calldata _borrowers) external view returns (BorrowerHealth[] memory healths);
 
     /// @notice Retrieves the loan-to-value (LTV) for a specific borrower
     /// @param _silo Address of the silo
