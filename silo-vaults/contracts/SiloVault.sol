@@ -24,7 +24,6 @@ import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
 import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "./interfaces/IIncentivesClaimingLogic.sol";
 
-
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
@@ -562,7 +561,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // It is updated again in `_deposit`.
         lastTotalAssets = newTotalAssets;
 
-        shares = _convertToSharesWithTotals(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
+        shares = _convertToSharesWithTotalsSafe(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         _deposit(_msgSender(), _receiver, _assets, shares);
         _assetLossCheck(shares, _assets);
@@ -580,7 +579,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // It is updated again in `_deposit`.
         lastTotalAssets = newTotalAssets;
 
-        assets = _convertToAssetsWithTotals(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
+        assets = _convertToAssetsWithTotalsSafe(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         _deposit(_msgSender(), _receiver, assets, _shares);
         _assetLossCheck(_shares, assets);
@@ -601,7 +600,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // Do not call expensive `maxWithdraw` and optimistically withdraw assets.
 
-        shares = _convertToSharesWithTotals(_assets, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
+        shares = _convertToSharesWithTotalsSafe(_assets, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         // `newTotalAssets - assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, _assets));
@@ -623,7 +622,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // Do not call expensive `maxRedeem` and optimistically redeem shares.
 
-        assets = _convertToAssetsWithTotals(_shares, totalSupply(), newTotalAssets, Math.Rounding.Floor);
+        assets = _convertToAssetsWithTotalsSafe(_shares, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         // `newTotalAssets - assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, assets));
@@ -706,6 +705,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         return _assets.mulDiv(_newTotalSupply + 10 ** _decimalsOffset(), _newTotalAssets + 1, _rounding);
     }
 
+    /// @dev Returns the amount of shares that the vault would exchange for the amount of `assets` provided.
+    /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
+    /// @dev Reverts if the result is zero.
+    function _convertToSharesWithTotalsSafe(
+        uint256 _assets,
+        uint256 _newTotalSupply,
+        uint256 _newTotalAssets,
+        Math.Rounding _rounding
+    ) internal view virtual returns (uint256 shares) {
+        shares = _convertToSharesWithTotals(_assets, _newTotalSupply, _newTotalAssets, _rounding);
+        require(shares != 0, ErrorsLib.ZeroShares());
+    }
+
     /// @dev Returns the amount of assets that the vault would exchange for the amount of `shares` provided.
     /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
     function _convertToAssetsWithTotals(
@@ -715,6 +727,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         Math.Rounding _rounding
     ) internal view virtual returns (uint256) {
         return _shares.mulDiv(_newTotalAssets + 1, _newTotalSupply + 10 ** _decimalsOffset(), _rounding);
+    }
+
+    /// @dev Returns the amount of assets that the vault would exchange for the amount of `shares` provided.
+    /// @dev It assumes that the arguments `newTotalSupply` and `newTotalAssets` are up to date.
+    /// @dev Reverts if the result is zero.
+    function _convertToAssetsWithTotalsSafe(
+        uint256 _shares,
+        uint256 _newTotalSupply,
+        uint256 _newTotalAssets,
+        Math.Rounding _rounding
+    ) internal view virtual returns (uint256 assets) {
+        assets = _convertToAssetsWithTotals(_shares, _newTotalSupply, _newTotalAssets, _rounding);
+        require(assets != 0, ErrorsLib.ZeroAssets());
     }
 
     /// @inheritdoc ERC4626

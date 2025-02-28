@@ -16,7 +16,7 @@ contract DepositTest is VaultsLittleHelper {
         uint256 _assets;
         address depositor = makeAddr("Depositor");
 
-        vm.expectRevert(ErrorsLib.InputZeroShares.selector);
+        vm.expectRevert(ErrorsLib.ZeroShares.selector);
         vault.deposit(_assets, depositor);
     }
 

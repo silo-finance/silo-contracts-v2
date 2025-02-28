@@ -42,7 +42,7 @@ contract PreviewMintTest is VaultsLittleHelper {
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_previewMint_withInterest_1token_fuzz(uint128 _shares) public {
-        vm.assume(_shares > 0);
+        vm.assume(_shares > 1);
 
         _createInterest();
 
@@ -51,7 +51,7 @@ contract PreviewMintTest is VaultsLittleHelper {
 
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares) public {
-        vm.assume(_shares > 0);
+        vm.assume(_shares > 1);
 
         _createInterest();
 
