@@ -10,7 +10,7 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
     FOUNDRY_PROFILE=oracles forge test -vv --match-contract EggsToSonicAdapterTest
 */
 contract EggsToSonicAdapterTest is TokensGenerator {
-    uint256 constant TEST_BLOCK = 9823015;
+    uint256 constant TEST_BLOCK = 10717305;
     IEggsLike constant EGGS = IEggsLike(0xf26Ff70573ddc8a90Bd7865AF8d7d70B8Ff019bC);
     IERC20Metadata constant WS = IERC20Metadata(0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38);
 
@@ -61,20 +61,19 @@ contract EggsToSonicAdapterTest is TokensGenerator {
         assertEq(IERC20Metadata(address(EGGS)).decimals(), 18, "EGGS decimals are 18");
         assertEq(WS.decimals(), 18, "wS decimals are 18");
 
-        // $0.837582 sonic price per block (external source)
-        // $0.0009628 eggs price per block (external source)
-        // expected price is 98.9% of 0.0009628 * 10**18/0.837582 ~ 98.9% of 1.149 * 10 ** 15 ~ 
-        // ~ 98.9% of 1149 * 10 ** 12 ~ 1136 * 10**12.
-        // price from adapter is 1123480200437355
-        // which is close with 0.9886 relative precision, less than 2% difference with calculated value.
+        // $0.63 sonic price per block (external source)
+        // $0.0007146 eggs price per block (external source)
+        // expected price is eggs/$ / S/$ = 1.1342 * 10**15
+        // price from adapter is 1123812498083768
+        // which is close with 0.991 relative precision, less than 1% difference with calculated value.
 
-        int256 expectedAnswer = 1136 * 10**12;
+        int256 expectedAnswer = 1134 * 10**12;
 
-        assertEq(answer, 1123480200437355);
+        assertEq(answer, 1123812498083768);
 
         assertTrue(
-            answer > expectedAnswer * 98/100 && answer < expectedAnswer,
-            "answer should be close to precalculated with 2% error"
+            answer > expectedAnswer * 99/100 && answer < expectedAnswer,
+            "answer should be close to precalculated with 1% error"
         );
     }
 }
