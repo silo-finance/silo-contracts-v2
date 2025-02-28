@@ -76,6 +76,26 @@ library SiloLensLib {
         if (debtConfig.silo != address(0)) lt = collateralConfig.lt;
     }
 
+    function getLtvAndLt(ISilo _silo, address _borrower) internal view returns (uint256 ltv, uint256 lt) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _silo.config().getConfigsForSolvency(_borrower);
+
+        if (debtConfig.silo != address(0)) {
+            ltv = SiloSolvencyLib.getLtv(
+                collateralConfig,
+                debtConfig,
+                _borrower,
+                ISilo.OracleType.Solvency,
+                ISilo.AccrueInterestInMemory.Yes,
+                IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+            );
+
+            lt = collateralConfig.lt;
+        }
+    }
+
     function hasPosition(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
         (address silo0, address silo1) = _siloConfig.getSilos();
         ISiloConfig.ConfigData memory cfg0 = _siloConfig.getConfig(silo0);

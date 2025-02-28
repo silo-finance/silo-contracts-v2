@@ -11,6 +11,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol";
@@ -76,6 +77,13 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertTrue(siloLens.inDebt(siloConfig, borrower), "borrower has debt now");
         assertEq(siloLens.getUserLT(silo0, borrower), 0.85e18, "user LT when borrower has debt @0");
         assertEq(siloLens.getUserLT(silo1, borrower), 0.85e18, "user LT when borrower has debt @1");
+
+        ISiloLens.Borrower[] memory borrowers = new ISiloLens.Borrower[](1);
+        borrowers[0] = ISiloLens.Borrower(silo1, borrower);
+        ISiloLens.BorrowerHealth[] memory health = siloLens.getUsersHealth(borrowers);
+
+        assertEq(health[0].lt, 0.85e18, "[health] user LT when borrower has debt");
+        assertEq(health[0].ltv, 0.75e18, "[health] user LTV when borrower has debt");
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "borrower has position #0");
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "borrower has position #1");
