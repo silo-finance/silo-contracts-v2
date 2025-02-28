@@ -22,7 +22,17 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
     /// @dev EGGS asset address
     IEggsLike public immutable EGGS; // solhint-disable-line var-name-mixedcase
 
+    /// @dev Revert when address of EGGS is invalid. Checks the address to return non-zero EGGStoSONIC rate.
+    error InvalidEggsAddress();
+
+    /// @dev Revert when getRoundData() is called.
+    error NotImplemented();
+
     constructor(IEggsLike _eggs) {
+        if (address(_eggs) == address(0) || _eggs.EGGStoSONIC(SAMPLE_AMOUNT) == 0) {
+            revert InvalidEggsAddress();
+        }
+
         EGGS = _eggs;
     }
 
@@ -63,6 +73,6 @@ contract EggsToSonicAdapter is AggregatorV3Interface {
 
     /// @inheritdoc AggregatorV3Interface
     function getRoundData(uint80) external pure virtual returns (uint80, int256, uint256, uint256, uint80) {
-        revert("not implemented");
+        revert NotImplemented();
     }
 }

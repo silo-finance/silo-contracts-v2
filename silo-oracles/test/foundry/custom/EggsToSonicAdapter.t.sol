@@ -19,9 +19,8 @@ contract EggsToSonicAdapterTest is TokensGenerator {
     }
 
     function test_EggsToSonicAdapter_constructor() public {
-        IEggsLike mockEggs = IEggsLike(address(1235));
-        EggsToSonicAdapter adapter = new EggsToSonicAdapter(mockEggs);
-        assertEq(address(adapter.EGGS()), address(mockEggs), "Eggs is set in constructor");
+        EggsToSonicAdapter adapter = new EggsToSonicAdapter(EGGS);
+        assertEq(address(adapter.EGGS()), address(EGGS), "Eggs is set in constructor");
 
         assertEq(adapter.SAMPLE_AMOUNT(), 10**18, "Sample amount is correct");
         assertEq(adapter.decimals(), 18, "adapter decimals are 18");
@@ -29,6 +28,20 @@ contract EggsToSonicAdapterTest is TokensGenerator {
         assertEq(adapter.RATE_DIVIDER(), 1000, "rate divider is correct");
         assertEq(adapter.RATE_MULTIPLIER(), 989, "rate multiplier is correct to get 98.9%");
         assertEq(1000 * adapter.RATE_MULTIPLIER() / adapter.RATE_DIVIDER(), 989, "sanity check of 98.9%");
+    }
+
+    function test_EggsToSonicAdapter_constructor_reverts() public {
+        vm.expectRevert();
+        new EggsToSonicAdapter(IEggsLike(address(WS)));
+
+        vm.expectRevert(EggsToSonicAdapter.InvalidEggsAddress.selector);
+        new EggsToSonicAdapter(IEggsLike(address(0)));
+
+        vm.expectRevert();
+        new EggsToSonicAdapter(IEggsLike(address(this)));
+
+        vm.expectRevert();
+        new EggsToSonicAdapter(IEggsLike(address(111112)));
     }
 
     function test_EggsToSonicAdapter_latestRoundData_compareToOriginalRate() public {
