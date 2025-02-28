@@ -27,6 +27,12 @@ library ErrorsLib {
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();
 
+    /// @notice Thrown when the result of a conversion is zero.
+    error ZeroAssets();
+
+    /// @notice Thrown when the result of a conversion is zero.
+    error ZeroShares();
+
     /// @notice Thrown when the caller doesn't have the curator role.
     error NotCuratorRole();
 

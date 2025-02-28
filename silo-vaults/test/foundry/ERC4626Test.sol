@@ -75,6 +75,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeem -vvv
     */
     function testRedeem(uint256 deposited, uint256 redeemed) public {
+        vm.assume(deposited != 0);
+        vm.assume(redeemed != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -95,6 +98,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdraw -vvv
     */
     function testWithdraw(uint256 deposited, uint256 withdrawn) public {
+        vm.assume(deposited != 0);
+        vm.assume(withdrawn != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
 
@@ -114,6 +120,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawIdle -vvv
     */
     function testWithdrawIdle(uint256 deposited, uint256 withdrawn) public {
+        vm.assume(deposited != 0);
+        vm.assume(withdrawn != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
 
@@ -136,6 +145,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemTooMuch -vvv
     */
     function testRedeemTooMuch(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.startPrank(SUPPLIER);
@@ -154,6 +165,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawAll -vvv
     */
     function testWithdrawAll(uint256 assets) public {
+        vm.assume(assets != 0);
+
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -174,6 +187,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemAll -vvv
     */
     function testRedeemAll(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -194,6 +209,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemNotDeposited -vvv
     */
     function testRedeemNotDeposited(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -208,6 +225,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemNotApproved -vvv
     */
     function testRedeemNotApproved(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -222,6 +241,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawNotApproved -vvv
     */
     function testWithdrawNotApproved(uint256 assets) public {
+        vm.assume(assets != 0);
+
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
