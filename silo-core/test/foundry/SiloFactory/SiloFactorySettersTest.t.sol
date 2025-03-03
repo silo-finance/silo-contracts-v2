@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -164,6 +165,83 @@ contract SiloFactorySettersTest is Test {
     }
 
     /*
+    forge test -vv --mt test_setDaoFeeReceiverForAsset
+    */
+    function test_setDaoFeeReceiverForAsset() public {
+        address silo = makeAddr("silo");
+        address asset = makeAddr("siloAsset");
+        address assetDaoFeeReceiver = makeAddr("assetDaoFeeReceiverForSilo");
+
+        _assertDaoFeeReceiver(silo, daoFeeReceiver, "default receiver");
+
+        vm.expectRevert(ISiloFactory.DaoFeeReceiverZeroAddress.selector);
+        siloFactory.setDaoFeeReceiverForAsset(asset, address(0));
+
+        vm.prank(hacker);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
+        siloFactory.setDaoFeeReceiverForAsset(asset, assetDaoFeeReceiver);
+
+        siloFactory.setDaoFeeReceiverForAsset(asset, assetDaoFeeReceiver);
+        _assertDaoFeeReceiver(silo, assetDaoFeeReceiver, "assetDaoFeeReceiver set");
+
+        vm.expectRevert(ISiloFactory.SameDaoFeeReceiver.selector);
+        siloFactory.setDaoFeeReceiverForAsset(asset, assetDaoFeeReceiver);
+
+        siloFactory.setDaoFeeReceiverForAsset(asset, address(0));
+        _assertDaoFeeReceiver(silo, daoFeeReceiver, "asset setup reset, back to default receiver");
+    }
+
+    /*
+    forge test -vv --mt test_setDaoFeeReceiverForSilo
+    */
+    function test_setDaoFeeReceiverForSilo() public {
+        address silo = makeAddr("silo");
+        address siloDaoFeeReceiver = makeAddr("siloDaoFeeReceiverForSilo");
+
+        _assertDaoFeeReceiver(silo, daoFeeReceiver, "default receiver");
+
+        vm.expectRevert(ISiloFactory.DaoFeeReceiverZeroAddress.selector);
+        siloFactory.setDaoFeeReceiverForSilo(silo, address(0));
+
+        vm.prank(hacker);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, hacker));
+        siloFactory.setDaoFeeReceiverForSilo(silo, siloDaoFeeReceiver);
+
+        siloFactory.setDaoFeeReceiverForSilo(silo, siloDaoFeeReceiver);
+        _assertDaoFeeReceiver(silo, siloDaoFeeReceiver, "siloDaoFeeReceiver set");
+
+        vm.expectRevert(ISiloFactory.SameDaoFeeReceiver.selector);
+        siloFactory.setDaoFeeReceiverForSilo(silo, siloDaoFeeReceiver);
+
+        siloFactory.setDaoFeeReceiverForSilo(silo, address(0));
+        _assertDaoFeeReceiver(silo, daoFeeReceiver, "silo setup reset, back to default receiver");
+    }
+
+    /*
+    forge test -vv --mt test_daoFeeReceiverFlow
+    */
+    function test_daoFeeReceiverFlow() public {
+        address silo = makeAddr("silo");
+        address asset = makeAddr("siloAsset");
+        address siloDaoFeeReceiver = makeAddr("DaoFeeReceiverForSilo");
+        address assetDaoFeeReceiver = makeAddr("DaoFeeReceiverForAsset");
+
+        _assertDaoFeeReceiver(silo, daoFeeReceiver, "default receiver");
+
+        siloFactory.setDaoFeeReceiverForAsset(asset, assetDaoFeeReceiver);
+        _assertDaoFeeReceiver(silo, assetDaoFeeReceiver, "assetDaoFeeReceiver set");
+
+        siloFactory.setDaoFeeReceiverForSilo(silo, siloDaoFeeReceiver);
+        _assertDaoFeeReceiver(silo, siloDaoFeeReceiver, "silo setup has higher priority");
+
+        siloFactory.setDaoFeeReceiverForAsset(asset, address(0));
+        _assertDaoFeeReceiver(silo, siloDaoFeeReceiver, "silo setup is active");
+
+        siloFactory.setDaoFeeReceiverForSilo(silo, address(0));
+        _assertDaoFeeReceiver(silo, daoFeeReceiver, "silo setup reset, back to default receiver");
+    }
+
+    /*
     forge test -vv --mt test_setBaseURI
     */
     function test_setBaseURI(string calldata _newBaseURI) public {
@@ -175,5 +253,32 @@ contract SiloFactorySettersTest is Test {
 
         siloFactory.setBaseURI(_newBaseURI);
         assertEq(siloFactory.baseURI(), _newBaseURI);
+    }
+
+    function _assertDaoFeeReceiver(address _silo, address _expectedAddress, string memory _msg) internal {
+        address config = makeAddr("SiloConfig");
+        address asset = makeAddr("siloAsset");
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(ISilo.config.selector),
+            abi.encode(config)
+        );
+
+        vm.mockCall(
+            _silo,
+            abi.encodeWithSelector(IERC4626.asset.selector),
+            abi.encode(asset)
+        );
+
+        vm.mockCall(
+            config,
+            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
+            abi.encode(1)
+        );
+
+        (address dao,) = siloFactory.getFeeReceivers(_silo);
+
+        assertEq(dao, _expectedAddress, string.concat("factory returns correct dao:", _msg));
     }
 }

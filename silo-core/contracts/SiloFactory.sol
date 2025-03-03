@@ -194,7 +194,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         returns (address daoReceiver, address deployerReceiver)
     {
         uint256 siloID = ISilo(_silo).config().SILO_ID();
-        
+
         daoReceiver = siloDaoFeeReceivers[_silo];
         if (daoReceiver == address(0)) daoReceiver = assetDaoFeeReceivers[ISilo(_silo).asset()];
         if (daoReceiver == address(0)) daoReceiver = daoFeeReceiver;
@@ -267,8 +267,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         address _mappingKey,
         address _newDaoFeeReceiver
     ) internal virtual {
-        require(_newDaoFeeReceiver != address(0), DaoFeeReceiverZeroAddress());
-        require(_mapping[_mappingKey] != _newDaoFeeReceiver, SameDaoFeeReceiver());
+        address currentValue = _mapping[_mappingKey];
+        require((uint160(currentValue) | uint160(_newDaoFeeReceiver)) != 0, DaoFeeReceiverZeroAddress());
+        require(currentValue != _newDaoFeeReceiver, SameDaoFeeReceiver());
 
         _mapping[_mappingKey] = _newDaoFeeReceiver;
     }
