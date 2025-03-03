@@ -16,7 +16,7 @@ rule depositWithdrawInverse(env e)
 
     storage init = lastStorage;
     deposit(e, silo, _assets, _collateralType);
-    withdraw(e, silo,_assets, e.msg.sender, _collateralType);
+    withdraw(e, silo, _assets, e.msg.sender, _collateralType);
     storage after = lastStorage;
     assert init == after;
     satisfy true;

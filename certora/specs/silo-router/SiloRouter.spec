@@ -25,3 +25,15 @@ rule onlyOwnerCanPause(env e1, env e2)
     assert e1.msg.sender != e2.msg.sender => reverted2; // must revert for all other callers
     satisfy true;
 }
+
+rule onlyOwnerCanUnpause(env e1, env e2)
+{
+    storage init = lastStorage;
+    unpause(e1);  // didn't revert, e1.msg.sender is the owner
+
+    unpause@withrevert(e2) at init;
+    bool reverted2 = lastReverted;
+
+    assert e1.msg.sender != e2.msg.sender => reverted2; // must revert for all other callers
+    satisfy true;
+}
