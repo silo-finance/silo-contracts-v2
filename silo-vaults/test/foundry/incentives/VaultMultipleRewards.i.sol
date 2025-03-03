@@ -185,16 +185,15 @@ contract VaultMultipleRewardsTest is IntegrationTest {
         );
 
         vault.claimRewards();
-
         assertEq(
             vaultIncentivesController.getRewardsBalance(address(this), programName),
-            rewardsPerSec / 3,
+            (rewardsPerSec / 3),
             "expected rewards, because they are claimed"
         );
 
         assertEq(
             vaultIncentivesController.getRewardsBalance(address(1), programName),
-            rewardsPerSec * 2 / 3,
+            (rewardsPerSec * 2 / 3),
             "expected rewards for other depositor"
         );
     }

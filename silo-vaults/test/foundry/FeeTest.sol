@@ -65,7 +65,7 @@ contract FeeTest is IntegrationTest {
         uint256 interest = totalAssetsAfter - vault.lastTotalAssets();
         uint256 feeAssets = Math.mulDiv(interest, FEE, WAD);
 
-        return Math.mulDiv(feeAssets, vault.totalSupply() + 1, totalAssetsAfter - feeAssets + 1, Math.Rounding.Floor);
+        return Math.mulDiv(feeAssets, vault.totalSupply() + OFFSET_POW, totalAssetsAfter - feeAssets + 1, Math.Rounding.Floor);
     }
 
     /*
@@ -224,6 +224,8 @@ contract FeeTest is IntegrationTest {
         vm.assume(feeShares != 0);
 
         vm.expectEmit(address(vault));
+        // AccrueInterest(newTotalAssets: 10000418691750321042067128277 [1e28], feeShares: 83735545313645916835716363000 [8.373e28])
+        // AccrueInterest(newTotalAssets: 10000418691750321042067128277 [1e28], feeShares: 83735545313645916835716363 [8.373e25])
         emit EventsLib.AccrueInterest(vault.totalAssets(), feeShares);
 
         vm.prank(ONBEHALF);
@@ -370,7 +372,7 @@ contract FeeTest is IntegrationTest {
 
         uint256 feeShares = _feeShares();
         uint256 expectedShares =
-            Math.mulDiv(assets, vault.totalSupply() + feeShares + 1, vault.totalAssets() + 1, Math.Rounding.Floor);
+            Math.mulDiv(assets, vault.totalSupply() + feeShares + OFFSET_POW, vault.totalAssets() + 1, Math.Rounding.Floor);
         uint256 shares = vault.convertToShares(assets);
 
         assertEq(shares, expectedShares, "shares");
@@ -394,7 +396,7 @@ contract FeeTest is IntegrationTest {
 
         uint256 feeShares = _feeShares();
         uint256 expectedAssets =
-            Math.mulDiv(shares, vault.totalAssets() + 1, vault.totalSupply() + feeShares + 1, Math.Rounding.Floor);
+            Math.mulDiv(shares, vault.totalAssets() + 1, vault.totalSupply() + feeShares + OFFSET_POW, Math.Rounding.Floor);
         uint256 assets = vault.convertToAssets(shares);
 
         assertEq(assets, expectedAssets, "assets");

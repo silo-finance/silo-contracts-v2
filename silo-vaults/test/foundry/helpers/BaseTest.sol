@@ -56,6 +56,7 @@ contract BaseTest is SiloLittleHelper, Test {
     IERC4626 internal idleMarket;
 
     ISiloVault internal vault;
+    uint256 internal OFFSET_POW;
 
     function setUp() public virtual {
         assertEq(allMarkets.length, 0, "allMarkets is fresh");
@@ -76,6 +77,8 @@ contract BaseTest is SiloLittleHelper, Test {
         vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
+
+        OFFSET_POW = 10 ** vault.DECIMALS_OFFSET();
     }
 
     function createSiloVault(

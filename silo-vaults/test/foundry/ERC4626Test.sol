@@ -28,11 +28,13 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDecimals -vvv
     */
     function testDecimals(uint8 decimals) public {
+        vm.assume(decimals <= 18);
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
-        assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
+        assertEq(vault.decimals(), 18, "offset does not affect decimals");
+        assertEq(vault.DECIMALS_OFFSET(), 21 - decimals, "DECIMALS_OFFSET");
     }
 
     /*
@@ -75,15 +77,14 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeem -vvv
     */
     function testRedeem(uint256 deposited, uint256 redeemed) public {
-        vm.assume(deposited != 0);
-        vm.assume(redeemed != 0);
-
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
         redeemed = bound(redeemed, 0, shares);
+
+        vm.assume(vault.convertToAssets(redeemed) != 0);
 
         vm.expectEmit();
         emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));

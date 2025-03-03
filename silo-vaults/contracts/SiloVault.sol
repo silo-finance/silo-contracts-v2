@@ -11,6 +11,8 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+
 import {
     MarketConfig,
     PendingUint192,
@@ -28,6 +30,7 @@ import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
+import {SiloVaultActionsLib} from "./libraries/SiloVaultActionsLib.sol";
 
 /// @title SiloVault
 /// @dev Forked with gratitude from Morpho Labs.
@@ -114,7 +117,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18, IERC20Metadata(_asset).decimals()));
+        uint256 decimals = TokenHelper.assertAndGetDecimals(_asset);
+        require(decimals <= 18, ErrorsLib.NotSupportedDecimals());
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, decimals));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -181,11 +186,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setIsAllocator(address _newAllocator, bool _newIsAllocator) external virtual onlyOwner {
-        if (isAllocator[_newAllocator] == _newIsAllocator) revert ErrorsLib.AlreadySet();
-
-        isAllocator[_newAllocator] = _newIsAllocator;
-
-        emit EventsLib.SetIsAllocator(_newAllocator, _newIsAllocator);
+        SiloVaultActionsLib.setIsAllocator(_newAllocator, _newIsAllocator, isAllocator);
     }
 
     /// @inheritdoc ISiloVaultBase
@@ -495,7 +496,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc IERC20Metadata
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return ERC4626.decimals();
+        return 18;
     }
 
     /// @inheritdoc IERC4626
@@ -660,7 +661,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         newTotalSupply = totalSupply() + feeShares;
 
         assets = _convertToAssetsWithTotals(balanceOf(_owner), newTotalSupply, newTotalAssets, Math.Rounding.Floor);
-        assets -= _simulateWithdrawERC4626(assets);
+        assets -= SiloVaultActionsLib.simulateWithdrawERC4626(assets, withdrawQueue);
     }
 
     /// @dev Returns the maximum amount of assets that the vault can supply to ERC4626 vaults.
@@ -893,20 +894,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
 
         if (_assets != 0) revert ErrorsLib.NotEnoughLiquidity();
-    }
-
-    /// @dev Simulates a withdraw of `assets` from ERC4626 vault.
-    /// @return The remaining assets to be withdrawn.
-    function _simulateWithdrawERC4626(uint256 _assets) internal view virtual returns (uint256) {
-        for (uint256 i; i < withdrawQueue.length; ++i) {
-            IERC4626 market = withdrawQueue[i];
-
-            _assets = UtilsLib.zeroFloorSub(_assets, market.maxWithdraw(address(this)));
-
-            if (_assets == 0) break;
-        }
-
-        return _assets;
     }
 
     /* FEE MANAGEMENT */

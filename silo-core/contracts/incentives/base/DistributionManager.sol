@@ -27,7 +27,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     /// rewards distribution is calculated
     address public immutable NOTIFIER; // solhint-disable-line var-name-mixedcase
 
-    uint8 public constant PRECISION = 18;
+    uint8 public constant PRECISION = 21;
     uint256 public constant TEN_POW_PRECISION = 10 ** PRECISION;
 
     modifier onlyNotifier() {
