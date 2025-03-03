@@ -144,7 +144,14 @@ contract SiloFactorySettersTest is Test {
         assertEq(siloFactory.daoFeeReceiver(), _newDaoFeeReceiver);
 
         address silo = makeAddr("Silo");
+        address asset = makeAddr("asset");
         address config = makeAddr("SiloConfig");
+
+        vm.mockCall(
+            silo,
+            abi.encodeWithSelector(IERC4626.asset.selector),
+            abi.encode(asset)
+        );
 
         vm.mockCall(
             silo,
@@ -218,9 +225,9 @@ contract SiloFactorySettersTest is Test {
     }
 
     /*
-    forge test -vv --mt test_daoFeeReceiverFlow
+    forge test -vv --mt test_setDaoFeeReceiverFlow
     */
-    function test_daoFeeReceiverFlow() public {
+    function test_setDaoFeeReceiverFlow() public {
         address silo = makeAddr("silo");
         address asset = makeAddr("siloAsset");
         address siloDaoFeeReceiver = makeAddr("DaoFeeReceiverForSilo");
