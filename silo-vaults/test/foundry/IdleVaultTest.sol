@@ -74,10 +74,10 @@ contract IdleVaultTest is IntegrationTest {
 
 //        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (7151, 256688, 18446744073709551612);
 
-        // 24 wei loss for 1.96e13wei deposit
+        // 26 wei loss for 3.905e15 deposit
         _idleVault_InflationAttackWithDonation(
             false,
-            24, // bit weird, that loss can happen later for input: (1.164e12, 1.96e13, 1.844e19)
+            26, // bit weird, that loss can happen later for input: (481, 3.905e15, 1.844e19)
             attackerDeposit,
             supplierDeposit,
             donation
