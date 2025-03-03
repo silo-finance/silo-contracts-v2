@@ -25,8 +25,10 @@ interface IVaultIncentivesModule {
     error NotificationReceiverNotFound();
     error MarketAlreadySet();
     error MarketNotConfigured();
+    error AllProgramsNotStopped();
 
     /// @notice Submit an incentives claiming logic for the vault.
+    /// @notice Add an incentives claiming logic for the vault.
     /// @param _market The market to add the logic for.
     /// @param _logic The logic to add.
     function submitIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic) external;
@@ -51,8 +53,14 @@ interface IVaultIncentivesModule {
     function addNotificationReceiver(INotificationReceiver _notificationReceiver) external;
 
     /// @notice Remove an incentives distribution solution for the vault.
+    /// @dev It is very important to be careful when you remove a notification receiver from the incentive module.
+    /// All ongoing incentive distributions must be stopped before removing a notification receiver.
     /// @param _notificationReceiver The solution to remove.
-    function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external;
+    /// @param _allProgramsStopped Reminder for anyone who is removing a notification receiver.
+    function removeNotificationReceiver(
+        INotificationReceiver _notificationReceiver,
+        bool _allProgramsStopped
+    ) external;
 
     /// @notice Get all incentives claiming logics for the vault.
     /// @return logics The logics.

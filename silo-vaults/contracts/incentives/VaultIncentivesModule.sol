@@ -121,7 +121,13 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     /// @inheritdoc IVaultIncentivesModule
-    function removeNotificationReceiver(INotificationReceiver _notificationReceiver) external virtual onlyOwner {
+    function removeNotificationReceiver(
+        INotificationReceiver _notificationReceiver,
+        bool _allProgramsStopped
+    ) external virtual onlyOwner {
+        // sanity check and reminder for anyone who is removing a notification receiver.
+        require(_allProgramsStopped, AllProgramsNotStopped());
+
         require(_notificationReceivers.remove(address(_notificationReceiver)), NotificationReceiverNotFound());
 
         emit NotificationReceiverRemoved(address(_notificationReceiver));
