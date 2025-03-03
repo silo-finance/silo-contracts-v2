@@ -25,12 +25,20 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     uint256 public maxDeployerFee;
     uint256 public maxFlashloanFee;
     uint256 public maxLiquidationFee;
+
+    /// @dev default DAO fee receiver, will be used in case there is nothing set per silo or per asset
     address public daoFeeReceiver;
 
     string public baseURI;
 
     mapping(uint256 id => address siloConfig) public idToSiloConfig;
     mapping(address silo => bool) public isSilo;
+
+    /// @dev DAO fee receiver for silo, it has biggest priority over other setup for DAO fee receiver
+    mapping(address silo => address feeReceiverPerSilo) public siloDaoFeeReceivers;
+
+    /// @dev DAO fee receiver for asset, in case there is no setup for silo, this setup will be used
+    mapping(address asset => address feeReceiverPerAsset) public assetDaoFeeReceivers;
 
     uint256 internal _siloId;
 
@@ -156,6 +164,18 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
+    function setDaoFeeReceiverForAsset(address _asset, address _newDaoFeeReceiver) external virtual onlyOwner {
+        _setDaoFeeReceiver(assetDaoFeeReceivers, _asset, _newDaoFeeReceiver);
+        emit DaoFeeReceiverChangedForSilo(_asset, _newDaoFeeReceiver);
+    }
+
+    /// @inheritdoc ISiloFactory
+    function setDaoFeeReceiverForSilo(address _silo, address _newDaoFeeReceiver) external virtual onlyOwner {
+        _setDaoFeeReceiver(siloDaoFeeReceivers, _silo, _newDaoFeeReceiver);
+        emit DaoFeeReceiverChangedForSilo(_silo, _newDaoFeeReceiver);
+    }
+
+    /// @inheritdoc ISiloFactory
     function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
         baseURI = _newBaseURI;
         emit BaseURI(_newBaseURI);
@@ -167,9 +187,19 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
-    function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
+    function getFeeReceivers(address _silo)
+        external
+        view
+        virtual
+        returns (address daoReceiver, address deployerReceiver)
+    {
         uint256 siloID = ISilo(_silo).config().SILO_ID();
-        return (daoFeeReceiver, _ownerOf(siloID));
+        
+        daoReceiver = siloDaoFeeReceivers[_silo];
+        if (daoReceiver == address(0)) daoReceiver = assetDaoFeeReceivers[ISilo(_silo).asset()];
+        if (daoReceiver == address(0)) daoReceiver = daoFeeReceiver;
+
+        deployerReceiver = _ownerOf(siloID);
     }
 
     /// @inheritdoc ISiloFactory
@@ -230,6 +260,17 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         daoFeeReceiver = _newDaoFeeReceiver;
 
         emit DaoFeeReceiverChanged(_newDaoFeeReceiver);
+    }
+
+    function _setDaoFeeReceiver(
+        mapping(address => address) storage _mapping,
+        address _mappingKey,
+        address _newDaoFeeReceiver
+    ) internal virtual {
+        require(_newDaoFeeReceiver != address(0), DaoFeeReceiverZeroAddress());
+        require(_mapping[_mappingKey] != _newDaoFeeReceiver, SameDaoFeeReceiver());
+
+        _mapping[_mappingKey] = _newDaoFeeReceiver;
     }
 
     function _cloneShareTokens(
