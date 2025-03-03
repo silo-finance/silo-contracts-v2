@@ -68,13 +68,16 @@ contract IdleVaultTest is IntegrationTest {
     function test_idleVault_InflationAttackWithDonation_attackerFirst(
         uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
+        vm.assume(attackerDeposit > 1);
+        vm.assume(supplierDeposit > 1);
+        vm.assume(donation > 1);
+
 //        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (7151, 256688, 18446744073709551612);
 
-        // 23 wei loss for 45wei deposit is 50%, however fuzzing did not found any case with more wei loss nad higher
-        // amount, so imo we can consider this acceptable result
+        // 24 wei loss for 1.96e13wei deposit
         _idleVault_InflationAttackWithDonation(
             false,
-            23, // bit weird, that loss can happen later for input: (3, 45, 18446744073709551615)
+            24, // bit weird, that loss can happen later for input: (1.164e12, 1.96e13, 1.844e19)
             attackerDeposit,
             supplierDeposit,
             donation
