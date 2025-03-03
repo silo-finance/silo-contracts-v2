@@ -77,15 +77,14 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeem -vvv
     */
     function testRedeem(uint256 deposited, uint256 redeemed) public {
-        vm.assume(deposited != 0);
-        vm.assume(redeemed != 0);
-
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
         redeemed = bound(redeemed, 0, shares);
+
+        vm.assume(vault.convertToAssets(redeemed) != 0);
 
         vm.expectEmit();
         emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
