@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {SiloVaultActionsLib} from "../../contracts/libraries/SiloVaultActionsLib.sol";
 import {InternalTest} from "./helpers/InternalTest.sol";
 import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "./helpers/BaseTest.sol";
 
@@ -46,7 +47,7 @@ contract SiloVaultInternalTest is InternalTest {
         silo1.borrow(silo1.maxBorrow(BORROWER), BORROWER, BORROWER);
         vm.stopPrank();
 
-        uint256 remaining = _simulateWithdrawERC4626(assets);
+        uint256 remaining = SiloVaultActionsLib.simulateWithdrawERC4626(assets, withdrawQueue);
         uint256 expectedWithdrawable = allMarkets[0].maxWithdraw(address(this));
         uint256 expectedRemaining = UtilsLib.zeroFloorSub(assets, expectedWithdrawable);
 
