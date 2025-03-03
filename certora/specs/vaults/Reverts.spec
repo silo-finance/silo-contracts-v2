@@ -113,23 +113,23 @@ rule submitGuardianRevertCondition(env e, address newGuardian) {
 }
 
 // Check all the revert conditions of the submitCap function.
-rule submitCapRevertCondition(env e, address id, uint256 newSupplyCap) {
+rule submitCapRevertCondition(env e, address market, uint256 newSupplyCap) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
     address asset = asset();
-    uint256 pendingCapValidAt = pendingCap_(id).validAt;
-    SiloVaultHarness.MarketConfig config = config_(id);
+    uint256 pendingCapValidAt = pendingCap_(market).validAt;
+    SiloVaultHarness.MarketConfig config = config_(market);
 
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
     require e.block.timestamp < 2^63;
-    requireInvariant supplyCapIsEnabled(id);
+    requireInvariant supplyCapIsEnabled(market);
 
-    submitCap@withrevert(e, id, newSupplyCap);
+    submitCap@withrevert(e, market, newSupplyCap);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
         !hasCuratorRole ||
-        getVaultAsset(id) != asset ||
+        getVaultAsset(market) != asset ||
         pendingCapValidAt != 0 ||
         config.removableAt != 0 ||
         newSupplyCap == assert_uint256(config.cap) ||
@@ -137,16 +137,16 @@ rule submitCapRevertCondition(env e, address id, uint256 newSupplyCap) {
 }
 
 // Check all the revert conditions of the submitMarketRemoval function.
-rule submitMarketRemovalRevertCondition(env e, address id) {
+rule submitMarketRemovalRevertCondition(env e, address market) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
-    uint256 pendingCapValidAt = pendingCap_(id).validAt;
-    SiloVaultHarness.MarketConfig config = config_(id);
+    uint256 pendingCapValidAt = pendingCap_(market).validAt;
+    SiloVaultHarness.MarketConfig config = config_(market);
 
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
     require e.block.timestamp < 2^63;
 
-    submitMarketRemoval@withrevert(e, id);
+    submitMarketRemoval@withrevert(e, market);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
@@ -234,11 +234,11 @@ rule revokePendingGuardianRevertCondition(env e) {
 }
 
 // Check all the revert conditions of the revokePendingCap function.
-rule revokePendingCapRevertCondition(env e, address id) {
+rule revokePendingCapRevertCondition(env e, address market) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
 
-    revokePendingCap@withrevert(e, id);
+    revokePendingCap@withrevert(e, market);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
@@ -246,11 +246,11 @@ rule revokePendingCapRevertCondition(env e, address id) {
 }
 
 // Check all the revert conditions of the revokePendingMarketRemoval function.
-rule revokePendingMarketRemovalRevertCondition(env e, address id) {
+rule revokePendingMarketRemovalRevertCondition(env e, address market) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
 
-    revokePendingMarketRemoval@withrevert(e, id);
+    revokePendingMarketRemoval@withrevert(e, market);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
@@ -283,10 +283,10 @@ rule acceptGuardianRevertCondition(env e) {
 
 // Check the input validation conditions under which the acceptCap function reverts.
 // This function can also revert if interest accrual reverts or if it would lead to growing the withdraw queue past the max length.
-rule acceptCapInputValidation(env e, address id) {
-    uint256 pendingCapValidAt = pendingCap_(id).validAt;
+rule acceptCapInputValidation(env e, address market) {
+    uint256 pendingCapValidAt = pendingCap_(market).validAt;
 
-    acceptCap@withrevert(e, id);
+    acceptCap@withrevert(e, market);
 
     assert e.msg.value != 0 ||
            pendingCapValidAt == 0 ||

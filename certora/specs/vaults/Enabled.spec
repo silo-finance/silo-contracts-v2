@@ -12,9 +12,9 @@ methods
 function isInWithdrawQueueIsEnabled(uint256 i) returns bool {
     if(i >= withdrawQueueLength()) return true;
 
-    address id = withdrawQueue(i);
+    address market = withdrawQueue(i);
 
-    return config_(id).enabled;
+    return config_(market).enabled;
 }
 
 // Check that markets in the withdraw queue are enabled.
@@ -32,47 +32,47 @@ rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue(env e, uint256 i, uint
 
     updateWithdrawQueue(e, indexes);
 
-    address id = withdrawQueue(i);
+    address market = withdrawQueue(i);
     // Safe require because j is not otherwise constrained.
     // The ghost variable deletedAt is useful to make sure that markets are not permuted and deleted at the same time in updateWithdrawQueue.
-    require j == deletedAt(id);
+    require j == deletedAt(market);
 
     assert isInWithdrawQueueIsEnabled(i);
 }
 
-function isWithdrawRankCorrect(address id) returns bool {
-    uint256 rank = withdrawRank(id);
+function isWithdrawRankCorrect(address market) returns bool {
+    uint256 rank = withdrawRank(market);
 
     if (rank == 0) return true;
 
-    return withdrawQueue(assert_uint256(rank - 1)) == id;
+    return withdrawQueue(assert_uint256(rank - 1)) == market;
 }
 
 // Checks that the withdraw rank of a market is given by the withdrawRank ghost variable.
-invariant withdrawRankCorrect(address id)
-    isWithdrawRankCorrect(id);
+invariant withdrawRankCorrect(address market)
+    isWithdrawRankCorrect(market);
 
 // Checks that enabled markets have a positive withdraw rank, according to the withdrawRank ghost variable.
-invariant enabledHasPositiveRank(address id)
-    config_(id).enabled => withdrawRank(id) > 0;
+invariant enabledHasPositiveRank(address market)
+    config_(market).enabled => withdrawRank(market) > 0;
 
 // Check that enabled markets are in the withdraw queue.
-rule enabledIsInWithdrawQueue(address id) {
-    require config_(id).enabled;
+rule enabledIsInWithdrawQueue(address market) {
+    require config_(market).enabled;
 
-    requireInvariant enabledHasPositiveRank(id);
-    requireInvariant withdrawRankCorrect(id);
+    requireInvariant enabledHasPositiveRank(market);
+    requireInvariant withdrawRankCorrect(market);
 
-    uint256 witness = assert_uint256(withdrawRank(id) - 1);
-    assert withdrawQueue(witness) == id;
+    uint256 witness = assert_uint256(withdrawRank(market) - 1);
+    assert withdrawQueue(witness) == market;
 }
 
 // Checks that markets with nonzero cap have a positive withdraw rank, according to the withdrawRank ghost variable.
-invariant nonZeroCapHasPositiveRank(address id)
-    config_(id).cap > 0 => withdrawRank(id) > 0
+invariant nonZeroCapHasPositiveRank(address market)
+    config_(market).cap > 0 => withdrawRank(market) > 0
     {
     preserved {
-        requireInvariant enabledHasPositiveRank(id); 
+        requireInvariant enabledHasPositiveRank(market); 
     }
 }
 

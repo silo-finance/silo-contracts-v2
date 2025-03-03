@@ -14,47 +14,47 @@ methods {
     function vault0.getConvertToAssets(address vault, uint256 shares) external returns(uint256) envfree;
 }
 
-function summaryDeposit(address id, uint256 assets, address receiver) returns uint256 {
+function summaryDeposit(address market, uint256 assets, address receiver) returns uint256 {
     assert assets != 0;
     assert receiver == currentContract;
-    require id != currentContract;
+    require market != currentContract;
 
-    requireInvariant supplyCapIsEnabled(id);
-    requireInvariant enabledHasConsistentAsset(id);
+    requireInvariant supplyCapIsEnabled(market);
+    requireInvariant enabledHasConsistentAsset(market);
     
-    ERC20.safeTransferFrom(asset(), currentContract, id, assets);
-    return vault0.getConvertToShares(id, assets);
+    ERC20.safeTransferFrom(asset(), currentContract, market, assets);
+    return vault0.getConvertToShares(market, assets);
 }
 
-function summaryWithdraw(address id, uint256 assets, address receiver, address spender) returns uint256 {
+function summaryWithdraw(address market, uint256 assets, address receiver, address spender) returns uint256 {
     assert receiver == currentContract;
     assert spender == currentContract;
-    require id != currentContract;
+    require market != currentContract;
 
     // Safe require because it is verified in MarketInteractions.
-    require config_(id).enabled;
-    requireInvariant enabledHasConsistentAsset(id);
+    require config_(market).enabled;
+    requireInvariant enabledHasConsistentAsset(market);
 
     address asset = asset();
 
-    ERC20.safeTransferFrom(asset, id, currentContract, assets);
+    ERC20.safeTransferFrom(asset, market, currentContract, assets);
 
-    return vault0.getConvertToShares(id, assets);
+    return vault0.getConvertToShares(market, assets);
 }
 
-function summaryRedeem(address id, uint256 shares, address receiver, address spender) returns uint256 {
+function summaryRedeem(address market, uint256 shares, address receiver, address spender) returns uint256 {
     assert receiver == currentContract;
     assert spender == currentContract;
-    require id != currentContract;
+    require market != currentContract;
 
     // Safe require because it is verified in MarketInteractions.
-    require config_(id).enabled;
-    requireInvariant enabledHasConsistentAsset(id);
+    require config_(market).enabled;
+    requireInvariant enabledHasConsistentAsset(market);
 
     address asset = asset();
-    uint256 assets = vault0.getConvertToAssets(id, shares);
+    uint256 assets = vault0.getConvertToAssets(market, shares);
 
-    ERC20.safeTransferFrom(asset, id, currentContract, assets);
+    ERC20.safeTransferFrom(asset, market, currentContract, assets);
 
     return assets;
 }

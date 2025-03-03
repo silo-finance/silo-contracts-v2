@@ -28,15 +28,15 @@ invariant smallerPendingTimelock()
     }
 }
 
-function hasNoBadPendingCap(address id) returns bool {
-    SiloVaultHarness.PendingUint192 pendingCap = pendingCap_(id);
+function hasNoBadPendingCap(address market) returns bool {
+    SiloVaultHarness.PendingUint192 pendingCap = pendingCap_(market);
 
     return pendingCap.validAt == 0 <=> pendingCap.value == 0;
 }
 
 // Check that having no pending cap value is equivalent to having its valid timestamp at 0.
-invariant noBadPendingCap(address id)
-    hasNoBadPendingCap(id)
+invariant noBadPendingCap(address market)
+    hasNoBadPendingCap(market)
 {
     preserved with (env e) {
         requireInvariant timelockInRange();
@@ -45,16 +45,16 @@ invariant noBadPendingCap(address id)
     }
 }
 
-function isGreaterPendingCap(address id) returns bool {
-    uint192 pendingCapValue = pendingCap_(id).value;
-    uint192 currentCapValue = config_(id).cap;
+function isGreaterPendingCap(address market) returns bool {
+    uint192 pendingCapValue = pendingCap_(market).value;
+    uint192 currentCapValue = config_(market).cap;
 
     return pendingCapValue != 0 => assert_uint256(pendingCapValue) > assert_uint256(currentCapValue);
 }
 
 // Check that the pending cap value is either 0 or strictly greater than the current cap value.
-invariant greaterPendingCap(address id)
-    isGreaterPendingCap(id);
+invariant greaterPendingCap(address market)
+    isGreaterPendingCap(market);
 
 function hasNoBadPendingGuardian() returns bool {
     SiloVaultHarness.PendingAddress pendingGuardian = pendingGuardian_();

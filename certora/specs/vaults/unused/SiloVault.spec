@@ -1,3 +1,7 @@
+// A robust setup for SiloVault.
+// Doesn't reuire the withdrawRank
+// works with 2-3 markets in the withdrawQ
+
 using Vault0 as Vault0;
 // using Vault1 as Vault1;
 using Vault2 as Vault2;
