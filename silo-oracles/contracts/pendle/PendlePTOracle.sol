@@ -3,7 +3,9 @@ pragma solidity 0.8.28;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
+import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
 
 /// @notice PendlePTOracle is an oracle, which multiplies the underlying PT token price by PtToSyRate from Pendle.
 /// This oracle must be deployed using PendlePTOracleFactory contract. PendlePTOracle decimals are equal to underlying
@@ -46,12 +48,13 @@ contract PendlePTOracle is ISiloOracle {
     constructor(
         ISiloOracle _underlyingOracle,
         IPyYtLpOracleLike _pendleOracle,
-        address _ptToken,
-        address _ptUnderlyingToken,
         address _market
     ) {
-        uint256 ptUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(_ptUnderlyingToken);
-        require(ptUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(_ptToken), TokensDecimalsDoesNotMatch());
+        address ptToken = getPtToken(_market);
+        address ptUnderlyingToken = getPtUnderlyingToken(_market);
+        uint256 ptUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(ptUnderlyingToken);
+
+        require(ptUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(ptToken), TokensDecimalsDoesNotMatch());
 
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             _pendleOracle.getOracleState(_market, TWAP_DURATION);
@@ -60,12 +63,12 @@ contract PendlePTOracle is ISiloOracle {
         require(_pendleOracle.getPtToSyRate(_market, TWAP_DURATION) != 0, PendlePtToSyRateIsZero());
 
         uint256 underlyingSampleToQuote = 10 ** ptUnderlyingTokenDecimals;
-        require(_underlyingOracle.quote(underlyingSampleToQuote, _ptUnderlyingToken) != 0, InvalidUnderlyingOracle());
+        require(_underlyingOracle.quote(underlyingSampleToQuote, ptUnderlyingToken) != 0, InvalidUnderlyingOracle());
 
         UNDERLYING_ORACLE = _underlyingOracle;
         PENDLE_ORACLE = _pendleOracle;
-        PT_TOKEN = _ptToken;
-        PT_UNDERLYING_TOKEN = _ptUnderlyingToken;
+        PT_TOKEN = ptToken;
+        PT_UNDERLYING_TOKEN = ptUnderlyingToken;
         MARKET = _market;
 
         QUOTE_TOKEN = _underlyingOracle.quoteToken();
@@ -85,5 +88,14 @@ contract PendlePTOracle is ISiloOracle {
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
+    }
+
+    function getPtToken(address _market) public virtual view returns (address ptToken) {
+        (, ptToken,) = IPendleMarketV3Like(_market).readTokens();
+    }
+
+    function getPtUnderlyingToken(address _market) public virtual view returns (address ptUnderlyingToken) {
+        (address syToken,,) = IPendleMarketV3Like(_market).readTokens();
+        ptUnderlyingToken = IPendleSYTokenLike(syToken).yieldToken();
     }
 }

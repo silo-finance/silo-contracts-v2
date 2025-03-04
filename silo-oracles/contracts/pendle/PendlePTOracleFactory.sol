@@ -13,24 +13,23 @@ contract PendlePTOracleFactory is IPendlePTOracleFactory {
     /// @dev Mapping of oracles created in this factory.
     mapping(ISiloOracle => bool) public createdInFactory;
 
+    error PendleOracleIsZero();
+
     /// @dev Pendle oracle address is a single deployment per chain, it is equal for all markets. This address will
     /// be used to deploy PendlePTOracles.
     constructor(IPyYtLpOracleLike _pendleOracle) {
+        require(address(_pendleOracle) != address(0), PendleOracleIsZero());
         PENDLE_ORACLE = _pendleOracle;
     }
 
     /// @inheritdoc IPendlePTOracleFactory
     function create(
         ISiloOracle _underlyingOracle,
-        address _ptToken,
-        address _ptUnderlyingToken,
         address _market
     ) external virtual returns (ISiloOracle pendlePTOracle) {
         pendlePTOracle = new PendlePTOracle({
             _underlyingOracle: _underlyingOracle,
             _pendleOracle: PENDLE_ORACLE,
-            _ptToken: _ptToken,
-            _ptUnderlyingToken: _ptUnderlyingToken,
             _market: _market
         });
 

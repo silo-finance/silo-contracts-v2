@@ -9,14 +9,10 @@ interface IPendlePTOracleFactory {
 
     /// @notice Create a new PendlePTOracle
     /// @param _underlyingOracle Oracle for PT token's underlying asset.
-    /// @param _ptToken PT token.
-    /// @param _ptUnderlyingToken PT token's underlying asset.
     /// @param _market Pendle market's address.
     /// @return pendlePTOracle The pendlePTOracle created.
     function create(
         ISiloOracle _underlyingOracle,
-        address _ptToken,
-        address _ptUnderlyingToken,
         address _market
     ) external returns (ISiloOracle pendlePTOracle);
 }
