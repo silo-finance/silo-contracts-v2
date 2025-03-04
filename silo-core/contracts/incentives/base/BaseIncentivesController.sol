@@ -18,6 +18,8 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
+    uint256 public constant MAX_EMISSION_PER_SECOND = 1e30;
+
     mapping(address user => mapping(bytes32 programId => uint256 unclaimedRewards)) internal _usersUnclaimedRewards;
 
     // this mapping allows whitelisted addresses to claim on behalf of others
@@ -47,6 +49,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         onlyOwner
     {
         require(bytes(_incentivesProgramInput.name).length <= 32, TooLongProgramName());
+        require(_incentivesProgramInput.emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
         require(_incentivesProgramInput.distributionEnd >= block.timestamp, InvalidDistributionEnd());
 
         _createIncentiveProgram(_incentivesProgramInput);
@@ -59,6 +62,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         uint104 _emissionPerSecond
     ) external virtual onlyOwner {
         require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
+        require(_emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
 
         bytes32 programId = getProgramId(_incentivesProgram);
 

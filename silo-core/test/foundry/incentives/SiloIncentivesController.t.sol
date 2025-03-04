@@ -65,6 +65,19 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_EmissionPerSecondTooHigh
+    function test_createIncentivesProgram_EmissionPerSecondTooHigh() public {
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.EmissionPerSecondTooHigh.selector));
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: address(0),
+            distributionEnd: 0,
+            emissionPerSecond: 1e30
+        }));
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_invalidDistributionEnd
     function test_createIncentivesProgram_invalidDistributionEnd() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
@@ -176,6 +189,14 @@ contract SiloIncentivesControllerTest is Test {
             distributionEnd: uint40(block.timestamp + 1000),
             emissionPerSecond: 1000e18
         }));
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_EmissionPerSecondTooHigh
+    function test_updateIncentivesProgram_EmissionPerSecondTooHigh() public {
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.EmissionPerSecondTooHigh.selector));
+
+        vm.prank(_owner);
+        _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp + 1000), 1e30);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_InvalidDistributionEnd
