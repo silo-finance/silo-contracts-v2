@@ -14,7 +14,7 @@ contract PendlePTOracle is ISiloOracle {
     uint256 public constant RATE_PRECISION_DECIMALS = 10 ** 18;
 
     /// @dev time range for TWAP to get PtToSyRate, in seconds.
-    uint32 public constant TWAP_DURATION = 1800;
+    uint32 public constant TWAP_DURATION = 30 minutes;
 
     /// @dev oracle to get the price of PT underlying asset.
     ISiloOracle public immutable UNDERLYING_ORACLE; // solhint-disable-line var-name-mixedcase
@@ -37,6 +37,7 @@ contract PendlePTOracle is ISiloOracle {
     error TokensDecimalsDoesNotMatch();
     error InvalidUnderlyingOracle();
     error PendleOracleNotReady();
+    error PendlePtToSyRateIsZero();
     error AssetNotSupported();
 
     /// @dev constructor has sanity check for _underlyingOracle to not return zero or revert and for _pendleOracle to
@@ -56,7 +57,7 @@ contract PendlePTOracle is ISiloOracle {
             _pendleOracle.getOracleState(_market, TWAP_DURATION);
         
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
-        require(_pendleOracle.getPtToSyRate(_market, TWAP_DURATION) != 0, PendleOracleNotReady());
+        require(_pendleOracle.getPtToSyRate(_market, TWAP_DURATION) != 0, PendlePtToSyRateIsZero());
 
         uint256 underlyingSampleToQuote = 10 ** ptUnderlyingTokenDecimals;
         require(_underlyingOracle.quote(underlyingSampleToQuote, _ptUnderlyingToken) != 0, InvalidUnderlyingOracle());
