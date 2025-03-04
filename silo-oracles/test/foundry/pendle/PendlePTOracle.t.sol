@@ -221,5 +221,6 @@ contract PendlePTOracleTest is Forking {
 
         assertEq(oracle.quote(quoteAmount, ptToken), newUnderlyingPrice * rateFromPendleOracle / 10**18);
         assertTrue(oracle.quote(quoteAmount, ptToken) < newUnderlyingPrice);
+        assertTrue(oracle.quote(quoteAmount, ptToken) > newUnderlyingPrice * 95 / 100); // rate is ~96.68%
     }
 }
