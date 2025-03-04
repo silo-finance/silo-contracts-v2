@@ -860,6 +860,19 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_success
     function test_claimRewardsOnBehalf_success() public {
+        ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
+
+        uint40 distributionEnd = uint40(block.timestamp + 30 days);
+        uint104 emissionPerSecond = 100e18;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: distributionEnd,
+            emissionPerSecond: emissionPerSecond
+        }));
+
         vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
 
