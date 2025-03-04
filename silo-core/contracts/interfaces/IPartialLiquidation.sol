@@ -29,6 +29,7 @@ interface IPartialLiquidation {
         bool receiveSToken
     );
 
+    error ReentrancyGuardReentrantCall();
     error UnexpectedCollateralToken();
     error UnexpectedDebtToken();
     error NoDebtToCover();

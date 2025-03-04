@@ -34,6 +34,16 @@ abstract contract PartialLiquidation is BaseHookReceiver, IPartialLiquidation {
         bytes4 customError;
     }
 
+    bool private transient _lock;
+
+    modifier nonReentrant() {
+        require(!_lock, ReentrancyGuardReentrantCall());
+        _lock = true;
+        _;
+        _lock = false;
+    }
+
+
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
         address _collateralAsset,
@@ -44,6 +54,7 @@ abstract contract PartialLiquidation is BaseHookReceiver, IPartialLiquidation {
     )
         external
         virtual
+        nonReentrant
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = siloConfig;
