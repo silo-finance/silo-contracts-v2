@@ -458,7 +458,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         uint256 maxRepay = siloWithDebt.maxRepay(address(actor));
         // we assume we do not have oracle and price is 1:1
-        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
+        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._FULL_LIQUIDATION_THRESHOLD / 1e18;
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
         partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, false);
