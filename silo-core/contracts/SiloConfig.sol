@@ -464,11 +464,10 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         returns (bool collateralSiloChanged)
     {
         _onlySilo();
-        address oldSilo = borrowerCollateralSilo[_borrower];
 
-        if (oldSilo != _newCollateralSilo) {
+        if (borrowerCollateralSilo[_borrower] != _newCollateralSilo) {
             borrowerCollateralSilo[_borrower] = _newCollateralSilo;
-            collateralSiloChanged = oldSilo != address(0);
+            collateralSiloChanged = true;
         }
     }
 }
