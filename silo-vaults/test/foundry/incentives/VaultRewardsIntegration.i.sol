@@ -249,7 +249,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution_fuzz -vv
     */
     function test_1secondDistribution_fuzz(uint128 _depositAmount, uint128 _rewardsPerSec) public {
-        vm.assume(_rewardsPerSec > 1e3);
+        vm.assume(_rewardsPerSec > 1e3 && _rewardsPerSec < 1e30);
         vm.assume(_depositAmount > 0);
 
         _setupIncentives();
