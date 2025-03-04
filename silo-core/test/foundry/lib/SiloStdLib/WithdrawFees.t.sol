@@ -116,10 +116,14 @@ contract WithdrawFeesTest is Test {
 
         _$().daoAndDeployerRevenue = 9;
 
-        token.transferMock(dao, 9);
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
-        _withdrawFees(ISilo(address(this)));
+        (uint256 daoRevenue, uint256 deployerRevenue) = _withdrawFees(ISilo(address(this)));
+
+        assertEq(daoRevenue, 0, "no daoRevenue, because fee zero");
+        assertEq(deployerRevenue, 0, "no deployerRevenue, because deployer is empty");
+
+        assertEq(_$().daoAndDeployerRevenue, 0, "_$().daoAndDeployerRevenue updated");
     }
 
     /*
@@ -207,8 +211,8 @@ contract WithdrawFeesTest is Test {
         assertEq(_$().daoAndDeployerRevenue, 0, "fees cleared");
     }
 
-    function _withdrawFees(ISilo _silo) internal {
-        Actions.withdrawFees(_silo);
+    function _withdrawFees(ISilo _silo) internal returns (uint256 daoRevenue, uint256 deployerRevenue) {
+        return Actions.withdrawFees(_silo);
     }
 
     function _setProtectedAssets(uint256 _assets) internal {
