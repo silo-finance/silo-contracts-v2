@@ -190,8 +190,8 @@ contract PendlePTOracleTest is Forking {
         uint256 quote = oracle.quote(quoteAmount, ptToken);
         uint256 rateFromPendleOracle = IPyYtLpOracleLike(pendleOracle).getPtToSyRate(market, 1800);
 
-        assertEq(underlyingOracle.quote(0, address(0)), 10**18, "underlying oracle always returns 10**18");
-        assertEq(underlyingOracle.quote(quoteAmount, ptUnderlyingToken), 10**18, "underlying oracle returns 10**18");
+        assertEq(underlyingOracle.quote(0, address(0)), 10 ** 18, "underlying oracle always returns 10**18");
+        assertEq(underlyingOracle.quote(quoteAmount, ptUnderlyingToken), 10 ** 18, "underlying oracle returns 10**18");
         
         assertEq(
             quote,
@@ -199,7 +199,7 @@ contract PendlePTOracleTest is Forking {
             "quote value is equal to ptToSyRate, because underlying oracle returns 10**18"
         );
 
-        assertTrue(rateFromPendleOracle < 10**18);
+        assertTrue(rateFromPendleOracle < 10 ** 18);
         assertEq(rateFromPendleOracle, 967114134407545484); // 0.9671141344, close to UI 0.9668
 
         uint256 newUnderlyingPrice = 15 * 10 ** 18;
@@ -219,7 +219,7 @@ contract PendlePTOracleTest is Forking {
             "price changed only for underlying to ensure PT oracle asking underlying price"
         );
 
-        assertEq(oracle.quote(quoteAmount, ptToken), newUnderlyingPrice * rateFromPendleOracle / 10**18);
+        assertEq(oracle.quote(quoteAmount, ptToken), newUnderlyingPrice * rateFromPendleOracle / 10 ** 18);
         assertTrue(oracle.quote(quoteAmount, ptToken) < newUnderlyingPrice);
         assertTrue(oracle.quote(quoteAmount, ptToken) > newUnderlyingPrice * 95 / 100); // rate is ~96.68%
     }
