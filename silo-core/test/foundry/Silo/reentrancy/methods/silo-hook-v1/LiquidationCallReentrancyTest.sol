@@ -5,7 +5,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
-import {TransientReentrancy} from "silo-core/contracts/utils/hook-receivers/_common/TransientReentrancy.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -72,7 +71,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
 
         vm.prank(borrowerOnReentrancy);
-        vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
 
         partialLiquidation.liquidationCall(
             address(token1),
