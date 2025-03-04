@@ -815,11 +815,30 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(_controller.getClaimer(user1), address(this), "invalid claimer");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewards_programNotFound
+    function test_claimRewards_programNotFound() public {
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = "Some other program";
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramNotFound.selector));
+        _controller.claimRewards(user1, programsNames);
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_onlyAuthorizedClaimers
     function test_claimRewardsOnBehalf_onlyAuthorizedClaimers() public {
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
+        _controller.claimRewardsOnBehalf(user1, user2, programsNames);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_programNotFound
+    function test_claimRewardsOnBehalf_programNotFound() public {
+         vm.prank(_owner);
+        _controller.setClaimer(user1, address(this));
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = "Some other program";
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramNotFound.selector));
         _controller.claimRewardsOnBehalf(user1, user2, programsNames);
     }
 
