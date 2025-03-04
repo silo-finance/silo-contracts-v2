@@ -213,7 +213,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /**
-     * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending rewards
+     * @dev Claims rewards on the user's behalf, on all the assets of the lending pool, accumulating the pending rewards
      * @param claimer Address to check and claim rewards
      * @param user Address to check and claim rewards
      * @param to Address that will be receiving the rewards
