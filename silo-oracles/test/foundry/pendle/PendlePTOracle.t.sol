@@ -185,6 +185,17 @@ contract PendlePTOracleTest is Forking {
         oracle.quote(0, ptUnderlyingToken);
     }
 
+    function test_PendlePTOracle_quote_revertsZeroPrice() public {
+        vm.mockCall(
+            address(underlyingOracle),
+            abi.encodeWithSelector(ISiloOracle.quote.selector),
+            abi.encode(0)
+        );
+
+        vm.expectRevert(PendlePTOracle.ZeroPrice.selector);
+        oracle.quote(0, ptToken);
+    }
+
     function test_PendlePTOracle_quote() public {
         uint256 quoteAmount = 1000 * IERC20Metadata(ptToken).decimals();
         uint256 quote = oracle.quote(quoteAmount, ptToken);

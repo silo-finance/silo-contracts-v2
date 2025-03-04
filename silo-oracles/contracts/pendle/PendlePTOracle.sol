@@ -41,6 +41,7 @@ contract PendlePTOracle is ISiloOracle {
     error PendleOracleNotReady();
     error PendlePtToSyRateIsZero();
     error AssetNotSupported();
+    error ZeroPrice();
 
     /// @dev constructor has sanity check for _underlyingOracle to not return zero or revert and for _pendleOracle to
     /// return non-zero value for _market address and TWAP_DURATION. If underlying oracle reverts, constructor will
@@ -83,6 +84,8 @@ contract PendlePTOracle is ISiloOracle {
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, PT_UNDERLYING_TOKEN);
         quoteAmount = quoteAmount * PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION) / RATE_PRECISION_DECIMALS;
+
+        require(quoteAmount != 0, ZeroPrice());
     }
 
     // @inheritdoc ISiloOracle
