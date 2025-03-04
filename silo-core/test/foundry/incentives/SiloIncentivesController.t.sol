@@ -513,7 +513,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_permissions
     function test_immediateDistribution_permissions() public {
-        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifierOrOwner.selector));
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector));
         _controller.immediateDistribution(_rewardToken, 100e18);
     }
 
@@ -583,7 +583,7 @@ contract SiloIncentivesControllerTest is Test {
         toDistribute = 1000e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
 
-        vm.prank(_owner);
+        vm.prank(_notifier);
         _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user3 deposit 100
@@ -694,7 +694,7 @@ contract SiloIncentivesControllerTest is Test {
         toDistribute = 900e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
 
-        vm.prank(_owner);
+        vm.prank(_notifier);
         _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         // user1 withdraw 100
@@ -770,14 +770,22 @@ contract SiloIncentivesControllerTest is Test {
         vm.expectEmit(true, true, true, true);
         emit IncentivesProgramCreated(programName);
 
-        vm.prank(_owner);
+        vm.prank(_notifier);
         _controller.immediateDistribution(_rewardToken, 1e18);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_doNotRevert_when_amount_is_0
     function test_immediateDistribution_doNotRevert_when_amount_is_0() public {
-        vm.prank(_owner);
+        vm.prank(_notifier);
         _controller.immediateDistribution(_rewardToken, 0);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_not_allowed_for_owner
+    function test_immediateDistribution_not_allowed_for_owner() public {
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector));
+
+        vm.prank(_owner);
+        _controller.immediateDistribution(_rewardToken, 1e18);
     }
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_onlyOwner
