@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.5.0;
+
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
+
+interface IPendlePTOracleFactory {
+    event PendlePTOracleCreated(ISiloOracle indexed pendlePTOracle);
+
+    /// @notice Create a new PendlePTOracle
+    /// @param _underlyingOracle Oracle for PT token's underlying asset.
+    /// @param _ptToken PT token.
+    /// @param _ptUnderlyingToken PT token's underlying asset.
+    /// @param _market Pendle market's address.
+    /// @return pendlePTOracle The pendlePTOracle created.
+    function create(
+        ISiloOracle _underlyingOracle,
+        address _ptToken,
+        address _ptUnderlyingToken,
+        address _market
+    ) external returns (ISiloOracle pendlePTOracle);
+}
