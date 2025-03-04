@@ -421,8 +421,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool collateralTypeChanged;
 
-        (assets, shares) = Actions.borrow(
+        (assets, shares, collateralTypeChanged) = Actions.borrow(
             BorrowArgs({
                 assets: _assets,
                 shares: 0,
@@ -432,6 +433,8 @@ contract Silo is ISilo, ShareCollateralToken {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo
@@ -457,8 +460,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 assets)
     {
         uint256 shares;
+        bool collateralTypeChanged;
 
-        (assets, shares) = Actions.borrow(
+        (assets, shares, collateralTypeChanged) = Actions.borrow(
             BorrowArgs({
                 assets: 0,
                 shares: _shares,
@@ -468,6 +472,8 @@ contract Silo is ISilo, ShareCollateralToken {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo
@@ -482,8 +488,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool collateralTypeChanged;
 
-        (assets, shares) = Actions.borrowSameAsset(
+        (assets, shares, collateralTypeChanged) = Actions.borrowSameAsset(
             BorrowArgs({
                 assets: _assets,
                 shares: 0,
@@ -493,6 +500,8 @@ contract Silo is ISilo, ShareCollateralToken {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo

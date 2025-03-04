@@ -145,9 +145,10 @@ library Actions {
     /// - `borrower`: Address of the borrower
     /// @return assets Amount of assets borrowed
     /// @return shares Amount of shares minted for the borrowed assets
+    /// @return collateralTypeChanged TRUE if action changed collateral type
     function borrow(ISilo.BorrowArgs memory _args)
         external
-        returns (uint256 assets, uint256 shares)
+        returns (uint256 assets, uint256 shares, bool collateralTypeChanged)
     {
         _hookCallBeforeBorrow(_args, Hook.BORROW);
 
@@ -157,7 +158,7 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
-        siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);
+        collateralTypeChanged = siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -185,7 +186,7 @@ library Actions {
     /// @return shares Amount of shares minted for the borrowed assets
     function borrowSameAsset(ISilo.BorrowArgs memory _args)
         external
-        returns (uint256 assets, uint256 shares)
+        returns (uint256 assets, uint256 shares, bool collateralTypeChanged)
     {
         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
@@ -195,7 +196,7 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
-        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
+        collateralTypeChanged = siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
 
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
         ISiloConfig.ConfigData memory debtConfig = collateralConfig;
@@ -341,10 +342,8 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
-
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.setThisSiloAsCollateralSilo(msg.sender);
+        require(siloConfig.setThisSiloAsCollateralSilo(msg.sender), ISilo.CollateralSiloAlreadySet());
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
