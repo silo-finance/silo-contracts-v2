@@ -17,11 +17,12 @@ import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
+import {TransientReentrancy} from "../_common/TransientReentrancy.sol";
 import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-abstract contract PartialLiquidation is BaseHookReceiver, IPartialLiquidation {
+abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, IPartialLiquidation {
     using SafeERC20 for IERC20;
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
@@ -33,16 +34,6 @@ abstract contract PartialLiquidation is BaseHookReceiver, IPartialLiquidation {
         uint256 withdrawAssetsFromProtected;
         bytes4 customError;
     }
-
-    bool private transient _lock;
-
-    modifier nonReentrant() {
-        require(!_lock, ReentrancyGuardReentrantCall());
-        _lock = true;
-        _;
-        _lock = false;
-    }
-
 
     /// @inheritdoc IPartialLiquidation
     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity
