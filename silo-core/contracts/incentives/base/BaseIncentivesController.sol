@@ -47,6 +47,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         onlyOwner
     {
         require(bytes(_incentivesProgramInput.name).length <= 32, TooLongProgramName());
+        require(_incentivesProgramInput.emissionPerSecond < 1e30, EmissionPerSecondTooHigh());
         require(_incentivesProgramInput.distributionEnd >= block.timestamp, InvalidDistributionEnd());
 
         _createIncentiveProgram(_incentivesProgramInput);
@@ -59,6 +60,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         uint104 _emissionPerSecond
     ) external virtual onlyOwner {
         require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
+        require(_emissionPerSecond < 1e30, EmissionPerSecondTooHigh());
 
         bytes32 programId = getProgramId(_incentivesProgram);
 
