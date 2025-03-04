@@ -50,6 +50,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _siloId = 1;
 
         baseURI = "https://v2.app.silo.finance/markets/";
+        emit BaseURI(baseURI);
 
         _setDaoFee({_minFee: 0.05e18, _maxFee: 0.5e18});
         _setDaoFeeReceiver(_daoFeeReceiver);
