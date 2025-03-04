@@ -146,6 +146,9 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         if (_to == address(0)) revert InvalidToAddress();
 
         bytes32[] memory programIds = _getProgramsIds(_programNames);
+
+        _requireExistingPrograms(programIds);
+
         accruedRewards = _accrueRewardsForPrograms(msg.sender, programIds);
         _claimRewards(msg.sender, msg.sender, _to, accruedRewards);
     }
@@ -159,6 +162,9 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         returns (AccruedRewards[] memory accruedRewards)
     {
         bytes32[] memory programIds = _getProgramsIds(_programNames);
+
+        _requireExistingPrograms(programIds);
+
         accruedRewards = _accrueRewardsForPrograms(_user, programIds);
         _claimRewards(msg.sender, _user, _to, accruedRewards);
     }
@@ -280,6 +286,17 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         incentivesPrograms[programId].lastUpdateTimestamp = uint40(block.timestamp);
 
         emit IncentivesProgramCreated(_incentivesProgramInput.name);
+    }
+
+    /**
+     * @dev Checks if the programs exist
+     * Reverts if any of the programs does not exist in the `_incentivesProgramIds` list
+     * @param _programIds The program ids
+     */
+    function _requireExistingPrograms(bytes32[] memory _programIds) internal view virtual {
+        for (uint256 i = 0; i < _programIds.length; i++) {
+            require(_incentivesProgramIds.contains(_programIds[i]), IncentivesProgramNotFound());
+        }
     }
 
     /**

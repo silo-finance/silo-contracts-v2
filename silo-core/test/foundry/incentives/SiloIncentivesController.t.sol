@@ -844,11 +844,30 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(_controller.getClaimer(user1), address(this), "invalid claimer");
     }
 
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewards_programNotFound
+    function test_claimRewards_programNotFound() public {
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = "Some other program";
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramNotFound.selector));
+        _controller.claimRewards(user1, programsNames);
+    }
+
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_onlyAuthorizedClaimers
     function test_claimRewardsOnBehalf_onlyAuthorizedClaimers() public {
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.ClaimerUnauthorized.selector));
+        _controller.claimRewardsOnBehalf(user1, user2, programsNames);
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_programNotFound
+    function test_claimRewardsOnBehalf_programNotFound() public {
+         vm.prank(_owner);
+        _controller.setClaimer(user1, address(this));
+
+        string[] memory programsNames = new string[](1);
+        programsNames[0] = "Some other program";
+        vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramNotFound.selector));
         _controller.claimRewardsOnBehalf(user1, user2, programsNames);
     }
 
@@ -870,6 +889,19 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_success
     function test_claimRewardsOnBehalf_success() public {
+        ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
+
+        uint40 distributionEnd = uint40(block.timestamp + 30 days);
+        uint104 emissionPerSecond = 100e18;
+
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: _PROGRAM_NAME,
+            rewardToken: _rewardToken,
+            distributionEnd: distributionEnd,
+            emissionPerSecond: emissionPerSecond
+        }));
+
         vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
 
