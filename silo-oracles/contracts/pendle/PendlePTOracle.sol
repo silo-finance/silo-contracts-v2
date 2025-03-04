@@ -34,6 +34,7 @@ contract PendlePTOracle is ISiloOracle {
     /// @dev This oracle's quote token is equal to UNDERLYING_ORACLE's quote token.
     address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
+    error TokensDecimalsDoesNotMatch();
     error InvalidUnderlyingOracle();
     error PendleOracleNotReady();
     error AssetNotSupported();
@@ -48,13 +49,16 @@ contract PendlePTOracle is ISiloOracle {
         address _ptUnderlyingToken,
         address _market
     ) {
+        uint256 ptUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(_ptUnderlyingToken);
+        require(ptUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(_ptToken), TokensDecimalsDoesNotMatch());
+
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             _pendleOracle.getOracleState(_market, TWAP_DURATION);
         
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
         require(_pendleOracle.getPtToSyRate(_market, TWAP_DURATION) != 0, PendleOracleNotReady());
 
-        uint256 underlyingSampleToQuote = 10 ** TokenHelper.assertAndGetDecimals(_ptUnderlyingToken);
+        uint256 underlyingSampleToQuote = 10 ** ptUnderlyingTokenDecimals;
         require(_underlyingOracle.quote(underlyingSampleToQuote, _ptUnderlyingToken) != 0, InvalidUnderlyingOracle());
 
         UNDERLYING_ORACLE = _underlyingOracle;
