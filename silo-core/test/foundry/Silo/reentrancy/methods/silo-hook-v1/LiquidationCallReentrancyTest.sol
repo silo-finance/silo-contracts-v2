@@ -39,11 +39,14 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
 
         // Enable reentrancy to check in the test so we can check it during the liquidation.
         TestStateLib.enableReentrancy();
+        TestStateLib.setReenterViaLiquidationCall(true);
 
         bool receiveSTokens = true;
 
         vm.prank(borrower);
         partialLiquidation.liquidationCall(address(token1), address(token0), borrower, debtToRepay, receiveSTokens);
+
+        TestStateLib.setReenterViaLiquidationCall(false);
     }
 
     function verifyReentrancy() external {
@@ -72,7 +75,12 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
 
         vm.prank(borrowerOnReentrancy);
-        vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
+
+        if (TestStateLib.reenterViaLiquidationCall()) {
+            vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
+        } else {
+            vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        }
 
         partialLiquidation.liquidationCall(
             address(token1),
