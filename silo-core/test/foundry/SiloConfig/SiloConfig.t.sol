@@ -433,6 +433,23 @@ contract SiloConfigTest is Test {
     }
 
     /*
+    forge test -vv --mt test_setThisSiloAsCollateralSilo_returnValue
+    */
+    function test_setThisSiloAsCollateralSilo_returnValue() public {
+        address borrower = makeAddr("borrower");
+
+        vm.startPrank(_silo0Default);
+
+        assertTrue(_siloConfig.setThisSiloAsCollateralSilo(borrower), "change on initial set");
+        assertFalse(_siloConfig.setThisSiloAsCollateralSilo(borrower), "NO change on same value");
+        assertTrue(_siloConfig.setOtherSiloAsCollateralSilo(borrower), "change on changing to other silo");
+        assertFalse(_siloConfig.setOtherSiloAsCollateralSilo(borrower), "NO change on changing again");
+        assertTrue(_siloConfig.setThisSiloAsCollateralSilo(borrower), "change on switch back to this silo set");
+
+        vm.stopPrank();
+    }
+
+    /*
     forge test -vv --mt test_setThisSiloAsCollateralSilo_MultipleTimes
     */
     function test_setThisSiloAsCollateralSilo_MultipleTimes() public {
