@@ -167,6 +167,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error UnsupportedFlashloanToken();
     error FlashloanAmountTooBig();
     error NothingToWithdraw();
+    error ProtectedProtection();
     error NotEnoughLiquidity();
     error NotSolvent();
     error BorrowNotPossible();
