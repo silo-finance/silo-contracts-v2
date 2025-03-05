@@ -10,7 +10,7 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
 /*
     ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/SiloVaultsFactoryDeploy.s.sol:SiloVaultsFactoryDeploy \
-        --ffi --broadcast --rpc-url $RPC_ARBITRUM \
+        --ffi --broadcast --rpc-url http://127.0.0.1:8545 \
         --verify
 
     SiloVault verification:
