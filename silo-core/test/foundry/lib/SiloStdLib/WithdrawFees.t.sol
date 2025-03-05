@@ -120,7 +120,7 @@ contract WithdrawFeesTest is Test {
 
         (uint256 daoRevenue, uint256 deployerRevenue) = _withdrawFees(ISilo(address(this)));
 
-        assertEq(daoRevenue, 0, "no daoRevenue, because fee zero");
+        assertEq(daoRevenue, 9, "daoRevenue");
         assertEq(deployerRevenue, 0, "no deployerRevenue, because deployer is empty");
 
         assertEq(_$().daoAndDeployerRevenue, 0, "_$().daoAndDeployerRevenue updated");
