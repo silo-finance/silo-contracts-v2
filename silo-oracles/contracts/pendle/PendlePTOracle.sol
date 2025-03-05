@@ -13,7 +13,7 @@ import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPend
 /// PT token's underlying asset. Quote token of PendlePTOracle is equal to UNDERLYING_ORACLE quote token.
 contract PendlePTOracle is ISiloOracle {
     /// @dev PtToSyRate unit of measurement.
-    uint256 public constant RATE_PRECISION_DECIMALS = 10 ** 18;
+    uint256 public constant PENDLE_RATE_PRECISION = 10 ** 18;
 
     /// @dev time range for TWAP to get PtToSyRate, in seconds.
     uint32 public constant TWAP_DURATION = 30 minutes;
@@ -83,7 +83,7 @@ contract PendlePTOracle is ISiloOracle {
         require(_baseToken == PT_TOKEN, AssetNotSupported());
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, PT_UNDERLYING_TOKEN);
-        quoteAmount = quoteAmount * PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION) / RATE_PRECISION_DECIMALS;
+        quoteAmount = quoteAmount * PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION) / PENDLE_RATE_PRECISION;
 
         require(quoteAmount != 0, ZeroPrice());
     }

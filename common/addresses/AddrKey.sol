@@ -24,4 +24,5 @@ library AddrKey {
     string constant public DEV_WALLET = "DEV_WALLET";
     string constant public scUSD = "scUSD";
     string constant public EGGS = "EGGS";
+    string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
 }

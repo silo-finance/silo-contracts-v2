@@ -12,6 +12,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {PendlePTOracleFactory} from "silo-oracles/contracts/pendle/PendlePTOracleFactory.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {PendlePTOracleDeploy} from "silo-oracles/deploy/pendle/PendlePTOracleDeploy.s.sol";
+import {PendlePTOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendlePTOracleFactoryDeploy.s.sol";
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
@@ -38,15 +39,15 @@ contract PendlePTOracleTest is Forking {
     function setUp() public {
         AddrLib.init();
 
-        factory = new PendlePTOracleFactory(pendleOracle);
-        PendlePTOracleDeploy oracleDeploy = new PendlePTOracleDeploy();
-        underlyingOracle = new SiloOracleMock1();
+        PendlePTOracleFactoryDeploy factoryDeploy = new PendlePTOracleFactoryDeploy();
+        factoryDeploy.initQA(address(pendleOracle));
+        factory = PendlePTOracleFactory(factoryDeploy.run());
 
-        oracle = PendlePTOracle(address(oracleDeploy.deploy({
-            _factory: factory,
-            _underlyingOracle: underlyingOracle,
-            _market: market
-        })));
+        underlyingOracle = new SiloOracleMock1();
+        PendlePTOracleDeploy oracleDeploy = new PendlePTOracleDeploy();
+        oracleDeploy.initQA(factory, market, underlyingOracle);
+
+        oracle = PendlePTOracle(address(oracleDeploy.run()));
     }
 
     function test_PendlePTOracle_factory_pendleOracle() public view {
@@ -76,7 +77,7 @@ contract PendlePTOracleTest is Forking {
     }
 
     function test_PendlePTOracle_constructor_state() public view {
-        assertEq(oracle.RATE_PRECISION_DECIMALS(), 10 ** 18);
+        assertEq(oracle.PENDLE_RATE_PRECISION(), 10 ** 18);
         assertEq(oracle.TWAP_DURATION(), 1800);
         assertEq(oracle.PT_TOKEN(), ptToken);
         assertEq(oracle.PT_UNDERLYING_TOKEN(), ptUnderlyingToken);

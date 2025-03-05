@@ -15,39 +15,49 @@ FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE=0x MARKET=0x \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract PendlePTOracleDeploy is CommonDeploy {
-    function run() public returns (ISiloOracle oracle) {
-        AddrLib.init();
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+    ISiloOracle underlyingOracle;
+    PendlePTOracleFactory factory;
+    address market;
+    bool qaMode;
 
-        PendlePTOracleFactory factory =
-            PendlePTOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY));
+    modifier withBroadcast() {
+        if (!qaMode) {
+            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+            vm.startBroadcast(deployerPrivateKey);
+        }
 
-        ISiloOracle underlyingOracle = ISiloOracle(vm.envAddress("UNDERLYING_ORACLE"));
-        address market = AddrLib.getAddress(vm.envString("MARKET"));
+        _;
 
-        vm.startBroadcast(deployerPrivateKey);
+        if (!qaMode) vm.stopBroadcast();
+    }
 
-        oracle = deploy({
-            _factory: factory,
+    function run() public withBroadcast returns (ISiloOracle oracle) {
+        if (!qaMode) {
+            AddrLib.init();
+
+            factory =
+                PendlePTOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY));
+
+            underlyingOracle = ISiloOracle(vm.envAddress("UNDERLYING_ORACLE"));
+            market = AddrLib.getAddress(vm.envString("MARKET"));
+        }
+
+
+        oracle = factory.create({
             _underlyingOracle: underlyingOracle,
             _market: market
         });
 
-        vm.stopBroadcast();
-
-        string memory oracleName = string.concat("PENDLE_PT_ORACLE_", Strings.toHexString(market));
-
-        OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
+        if (!qaMode) {
+            string memory oracleName = string.concat("PENDLE_PT_ORACLE_", Strings.toHexString(market));
+            OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
+        }
     }
 
-    function deploy(
-        PendlePTOracleFactory _factory,
-        ISiloOracle _underlyingOracle,
-        address _market
-    ) public returns (ISiloOracle oracle) {
-        oracle = _factory.create({
-            _underlyingOracle: _underlyingOracle,
-            _market: _market
-        });
+    function initQA(PendlePTOracleFactory _factory, address _market, ISiloOracle _underlyingOracle) external {
+        factory = _factory;
+        market = _market;
+        underlyingOracle = _underlyingOracle;
+        qaMode = true;
     }
 }

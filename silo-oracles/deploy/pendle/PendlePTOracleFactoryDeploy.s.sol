@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {PendlePTOracleFactory} from "silo-oracles/contracts/pendle/PendlePTOracleFactory.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
@@ -13,20 +14,33 @@ FOUNDRY_PROFILE=oracles \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract PendlePTOracleFactoryDeploy is CommonDeploy {
-    function run() public returns (address factory) {
-        AddrLib.init();
+    address pendleOracle;
+    bool qaMode;
 
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        address pendleOracle = AddrLib.getAddress("PENDLE_ORACLE");
+    modifier withBroadcast() {
+        if (!qaMode) {
+            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+            vm.startBroadcast(deployerPrivateKey);
+        }
 
-        require(pendleOracle != address(0), "Pendle oracle is zero");
+        _;
 
-        vm.startBroadcast(deployerPrivateKey);
+        if (!qaMode) vm.stopBroadcast();
+    }
+
+    function run() public withBroadcast returns (address factory) {
+        if (!qaMode) {
+            AddrLib.init();
+            pendleOracle = AddrLib.getAddress(AddrKey.PENDLE_ORACLE);
+        }
 
         factory = address(new PendlePTOracleFactory(IPyYtLpOracleLike(pendleOracle)));
 
-        vm.stopBroadcast();
+        if (!qaMode) _registerDeployment(factory, SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY);
+    }
 
-        _registerDeployment(factory, SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY);
+    function initQA(address _pendleOracle) external {
+        pendleOracle = _pendleOracle;
+        qaMode = true;
     }
 }
