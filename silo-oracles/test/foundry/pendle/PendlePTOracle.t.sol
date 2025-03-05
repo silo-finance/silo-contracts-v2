@@ -16,6 +16,8 @@ import {PendlePTOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendlePTOr
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 /*
     FOUNDRY_PROFILE=oracles forge test -vv --match-contract PendlePTOracleTest --ffi
@@ -37,16 +39,15 @@ contract PendlePTOracleTest is Forking {
     }
 
     function setUp() public {
-        AddrLib.init();
-
+        AddrLib.setAddress(AddrKey.PENDLE_ORACLE, address(pendleOracle));
         PendlePTOracleFactoryDeploy factoryDeploy = new PendlePTOracleFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
         factory = PendlePTOracleFactory(factoryDeploy.run());
 
         underlyingOracle = new SiloOracleMock1();
         PendlePTOracleDeploy oracleDeploy = new PendlePTOracleDeploy();
-        oracleDeploy.setParams(factory, market, underlyingOracle);
-        oracleDeploy.disableDeploymentsSync();
+        AddrLib.setAddress(AddrKey.PENDLE_ORACLE, address(pendleOracle));
+        oracleDeploy.setParams(market, underlyingOracle);
 
         oracle = PendlePTOracle(address(oracleDeploy.run()));
     }

@@ -17,14 +17,7 @@ FOUNDRY_PROFILE=oracles \
  */
 contract PendlePTOracleFactoryDeploy is CommonDeploy {
     function run() public returns (address factory) {
-        AddrLib.init();
-        string memory chainAlias = ChainsLib.chainAlias();
-
-        if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) {
-            chainAlias = ChainsLib.SONIC_ALIAS;
-        }
-
-        address pendleOracle = AddrLib.getAddress(chainAlias, AddrKey.PENDLE_ORACLE);
+        address pendleOracle = AddrLib.getAddress(AddrKey.PENDLE_ORACLE);
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);

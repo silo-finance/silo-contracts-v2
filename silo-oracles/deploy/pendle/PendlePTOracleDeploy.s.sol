@@ -15,17 +15,14 @@ FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE=0x MARKET=0x \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract PendlePTOracleDeploy is CommonDeploy {
-    PendlePTOracleFactory factory;
     ISiloOracle underlyingOracle;
     address market;
 
     function run() public returns (ISiloOracle oracle) {
-        AddrLib.init();
+        PendlePTOracleFactory factory =
+            PendlePTOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY));
 
-        if (address(factory) == address(0)) {
-            factory =
-                PendlePTOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY));
-
+        if (address(market) == address(0)) {
             underlyingOracle = ISiloOracle(vm.envAddress("UNDERLYING_ORACLE"));
             market = vm.envAddress("MARKET");
         }
@@ -44,8 +41,7 @@ contract PendlePTOracleDeploy is CommonDeploy {
         OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
     }
 
-    function setParams(PendlePTOracleFactory _factory, address _market, ISiloOracle _underlyingOracle) external {
-        factory = _factory;
+    function setParams(address _market, ISiloOracle _underlyingOracle) external {
         market = _market;
         underlyingOracle = _underlyingOracle;
     }
