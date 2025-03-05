@@ -40,12 +40,13 @@ contract PendlePTOracleTest is Forking {
         AddrLib.init();
 
         PendlePTOracleFactoryDeploy factoryDeploy = new PendlePTOracleFactoryDeploy();
-        factoryDeploy.initQA(address(pendleOracle));
+        factoryDeploy.disableDeploymentsSync();
         factory = PendlePTOracleFactory(factoryDeploy.run());
 
         underlyingOracle = new SiloOracleMock1();
         PendlePTOracleDeploy oracleDeploy = new PendlePTOracleDeploy();
-        oracleDeploy.initQA(factory, market, underlyingOracle);
+        oracleDeploy.setParams(factory, market, underlyingOracle);
+        oracleDeploy.disableDeploymentsSync();
 
         oracle = PendlePTOracle(address(oracleDeploy.run()));
     }

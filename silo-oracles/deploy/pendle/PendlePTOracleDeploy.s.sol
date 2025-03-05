@@ -15,49 +15,38 @@ FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE=0x MARKET=0x \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract PendlePTOracleDeploy is CommonDeploy {
-    ISiloOracle underlyingOracle;
     PendlePTOracleFactory factory;
+    ISiloOracle underlyingOracle;
     address market;
-    bool qaMode;
 
-    modifier withBroadcast() {
-        if (!qaMode) {
-            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-            vm.startBroadcast(deployerPrivateKey);
-        }
+    function run() public returns (ISiloOracle oracle) {
+        AddrLib.init();
 
-        _;
-
-        if (!qaMode) vm.stopBroadcast();
-    }
-
-    function run() public withBroadcast returns (ISiloOracle oracle) {
-        if (!qaMode) {
-            AddrLib.init();
-
+        if (address(factory) == address(0)) {
             factory =
                 PendlePTOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY));
 
             underlyingOracle = ISiloOracle(vm.envAddress("UNDERLYING_ORACLE"));
-            market = AddrLib.getAddress(vm.envString("MARKET"));
+            market = vm.envAddress("MARKET");
         }
 
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        vm.startBroadcast(deployerPrivateKey);
 
         oracle = factory.create({
             _underlyingOracle: underlyingOracle,
             _market: market
         });
 
-        if (!qaMode) {
-            string memory oracleName = string.concat("PENDLE_PT_ORACLE_", Strings.toHexString(market));
-            OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
-        }
+        vm.stopBroadcast();
+
+        string memory oracleName = string.concat("PENDLE_PT_ORACLE_", Strings.toHexString(market));
+        OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
     }
 
-    function initQA(PendlePTOracleFactory _factory, address _market, ISiloOracle _underlyingOracle) external {
+    function setParams(PendlePTOracleFactory _factory, address _market, ISiloOracle _underlyingOracle) external {
         factory = _factory;
         market = _market;
         underlyingOracle = _underlyingOracle;
-        qaMode = true;
     }
 }

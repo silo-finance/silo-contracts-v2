@@ -7,6 +7,8 @@ import {PendlePTOracleFactory} from "silo-oracles/contracts/pendle/PendlePTOracl
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {console2} from "forge-std/console2.sol";
 
 /**
 FOUNDRY_PROFILE=oracles \
@@ -14,33 +16,23 @@ FOUNDRY_PROFILE=oracles \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract PendlePTOracleFactoryDeploy is CommonDeploy {
-    address pendleOracle;
-    bool qaMode;
+    function run() public returns (address factory) {
+        AddrLib.init();
+        string memory chainAlias = ChainsLib.chainAlias();
 
-    modifier withBroadcast() {
-        if (!qaMode) {
-            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-            vm.startBroadcast(deployerPrivateKey);
+        if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) {
+            chainAlias = ChainsLib.SONIC_ALIAS;
         }
 
-        _;
+        address pendleOracle = AddrLib.getAddress(chainAlias, AddrKey.PENDLE_ORACLE);
 
-        if (!qaMode) vm.stopBroadcast();
-    }
-
-    function run() public withBroadcast returns (address factory) {
-        if (!qaMode) {
-            AddrLib.init();
-            pendleOracle = AddrLib.getAddress(AddrKey.PENDLE_ORACLE);
-        }
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        vm.startBroadcast(deployerPrivateKey);
 
         factory = address(new PendlePTOracleFactory(IPyYtLpOracleLike(pendleOracle)));
 
-        if (!qaMode) _registerDeployment(factory, SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY);
-    }
+        vm.stopBroadcast();
 
-    function initQA(address _pendleOracle) external {
-        pendleOracle = _pendleOracle;
-        qaMode = true;
+        _registerDeployment(factory, SiloOraclesFactoriesContracts.PENDLE_PT_ORACLE_FACTORY);
     }
 }
