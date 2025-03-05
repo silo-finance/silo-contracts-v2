@@ -132,7 +132,7 @@ library SiloERC4626Lib {
             uint256 protectedBalance = $.totalAssets[ISilo.AssetType.Protected];
 
             require(
-                protectedBalance == 0 || protectedBalance - assets >= IERC20(_asset).balanceOf(address(this)),
+                protectedBalance == 0 || IERC20(_asset).balanceOf(address(this)) - assets >= protectedBalance,
                 ISilo.ProtectedProtection()
             );
 
