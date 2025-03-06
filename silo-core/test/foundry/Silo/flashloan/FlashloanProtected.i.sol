@@ -5,17 +5,10 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
-
-import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
-import {Silo} from "silo-core/contracts/Silo.sol";
-import {Actions} from "silo-core/contracts/lib/Actions.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-import {FlashLoanReceiverWithInvalidResponse} from "../../_mocks/FlashLoanReceiverWithInvalidResponse.sol";
-import {Gas} from "../../gas/Gas.sol";
 
 bytes32 constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -29,18 +22,17 @@ contract HackProtected is Test {
         }
     }
 
-    function onFlashLoan(address _initiator, address _token, uint256, uint256, bytes calldata)
+    function onFlashLoan(address, address _token, uint256, uint256, bytes calldata)
         external
         returns (bytes32)
     {
         ISilo silo = ISilo(msg.sender);
 
-        assertEq(IERC20(_token).balanceOf(address(silo)), 1e18, "protected deposit left in silo");
+        assertGe(IERC20(_token).balanceOf(address(silo)), 1e18, "protected deposit left in silo");
 
         assertEq(silo.maxWithdraw(address(this)), 1e18, "contract must have assets to withdraw");
-        silo.withdraw(1, address(this), address(this));
 
-        assertTrue(false, "withdraw should revert and we should not got here");
+        silo.withdraw(1, address(this), address(this));
 
         return FLASHLOAN_CALLBACK;
     }
@@ -50,14 +42,13 @@ contract HackProtected is Test {
     forge test -vv --ffi --mc FlashloanProtectedTest
 */
 contract FlashloanProtectedTest is SiloLittleHelper, Test {
-    ISiloConfig siloConfig;
-
     function setUp() public {
-
-        siloConfig = _setUpLocalFixture();
+        _setUpLocalFixture();
 
         _deposit(1e18, USER);
         _deposit(1e18, USER, ISilo.CollateralType.Protected);
+
+        token0.setOnDemand(true);
     }
 
     /*
@@ -69,8 +60,18 @@ contract FlashloanProtectedTest is SiloLittleHelper, Test {
         _deposit(1e18, address(receiver));
 
         uint256 maxFlashloan = silo0.maxFlashLoan(address(token0));
+        emit log_named_decimal_uint("maxFlashloan", maxFlashloan, 18);
 
         vm.expectRevert(ISilo.ProtectedProtection.selector);
         silo0.flashLoan(IERC3156FlashBorrower(address(receiver)), address(token0), maxFlashloan, "");
+
+        // contr example, this flashloan should pass, because we flashloan 1 wei less
+        silo0.flashLoan(IERC3156FlashBorrower(address(receiver)), address(token0), maxFlashloan - 1, "");
+
+        assertEq(
+            token0.balanceOf(address(silo0)),
+            uint256(1e18) * 3 + uint256(2e18 - 1) * 0.01e18 / 1e18 - 1,
+            "protected deposit is in silo, balance is: 3 deposits + flashloan fee - 1wei withdraw"
+        );
     }
 }
