@@ -110,8 +110,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         isSilo[address(silo0)] = true;
         isSilo[address(silo1)] = true;
 
-        if (_initData.deployer != address(0)) {
-            _safeMint(_initData.deployer, nextSiloId);
+        if (_deployer != address(0)) {
+            _safeMint(_deployer, nextSiloId);
         }
 
         emit NewSilo(
