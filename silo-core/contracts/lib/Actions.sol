@@ -453,6 +453,7 @@ library Actions {
 
         if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
+            daoRevenue = earnedFees;
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
