@@ -699,10 +699,6 @@ library Actions {
         bytes memory data = abi.encodeCall(token.transfer, (to, value));
         bytes memory returndata = address(token).functionCall(data);
 
-        result = true;
-
-        if (returndata.length != 0 && !abi.decode(returndata, (bool))) {
-            result = false;
-        }
+        result = returndata.length == 0 || abi.decode(returndata, (bool));
     }
 }
