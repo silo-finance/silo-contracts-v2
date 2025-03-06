@@ -44,6 +44,15 @@ contract TokenMock is CommonBase {
         vm.expectCall(ADDRESS, data);
     }
 
+    // IERC20.transfer.selector: 0xa9059cbb
+    function transferResultFalseMock(address _to, uint256 _amount) public {
+        require(_to != address(0), "ERC20: transfer to the zero address");
+
+        bytes memory data = abi.encodeWithSelector(IERC20.transfer.selector, _to, _amount);
+        vm.mockCall(ADDRESS, data, abi.encode(false));
+        vm.expectCall(ADDRESS, data);
+    }
+
     // IERC20.totalSupply.selector: 0x18160ddd
     function totalSupplyMock(uint256 _totalSupply, bool _expectCall) public {
         bytes memory data = abi.encodeWithSelector(IERC20.totalSupply.selector);

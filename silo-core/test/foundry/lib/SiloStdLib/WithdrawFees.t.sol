@@ -179,6 +179,34 @@ contract WithdrawFeesTest is Test {
         _withdrawFees(ISilo(address(this)));
     }
 
+    /*
+    forge test -vv --mt test_withdraw_to_deployer_fails
+    */
+    function test_withdraw_to_deployer_fails() external {
+        uint256 daoFee = 0.1e18;
+        uint256 deployerFee = 0.1e18;
+        uint256 flashloanFeeInBp;
+        address asset = token.ADDRESS();
+        uint256 siloBalance = 1e18;
+
+        address dao = makeAddr("DAO");
+        address deployer = makeAddr("Deployer");
+
+        siloConfig.turnOnReentrancyProtectionMock();
+        siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
+        siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+        siloConfig.turnOffReentrancyProtectionMock();
+
+        token.balanceOfMock(address(this), siloBalance);
+
+        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
+
+        token.transferResultFalseMock(deployer, siloBalance / 2); // transfer to deployer fails
+        token.transferMock(dao, siloBalance); // dao gets all fees as transfer to deployer fails
+
+        Actions.withdrawFees(ISilo(address(this)));
+    }
+
     function _withdrawFees_pass(
         uint256 _daoFee,
         uint256 _deployerFee,
