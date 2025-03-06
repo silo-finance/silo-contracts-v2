@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {IERC721Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -151,6 +152,27 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareDebtTokenImpl empty
         siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, address(0));
+    }
+
+    /*
+    forge test -vv --ffi --mt test_createSilo_invalidReceiver
+    */
+    function test_createSilo_invalidReceiver() public {
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
+        initData.deployer = address(this);
+
+        address siloImpl = makeAddr("siloImpl");
+        address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
+        address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
+
+        ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
+
+        initData.hookReceiver = makeAddr("hookReceiver");
+        initData.token0 = makeAddr("token0");
+        initData.token1 = makeAddr("token1");
+
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721InvalidReceiver.selector, address(this)));
+        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
     }
 
     /*
