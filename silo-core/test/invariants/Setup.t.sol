@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
+
 // Utils
 import {Actor} from "./utils/Actor.sol";
 
@@ -47,7 +49,16 @@ import {ISilo} from "silo-core/contracts/Silo.sol";
 import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
-contract Setup is BaseTest {
+contract Setup is BaseTest, IERC721Receiver {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
     function _setUp() internal {
         // Deploy protocol contracts and protocol actors
         _deployProtocolCore();
