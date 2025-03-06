@@ -166,20 +166,17 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     */
     function test_createSilo_invalidReceiver() public {
         (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
-        initData.deployer = address(this);
 
-        address siloImpl = makeAddr("siloImpl");
+        address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
         address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
 
         ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
 
-        initData.hookReceiver = makeAddr("hookReceiver");
-        initData.token0 = makeAddr("token0");
-        initData.token1 = makeAddr("token1");
+        _createSiloNewSiloEventMockCalls(siloImpl, config);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721InvalidReceiver.selector, address(this)));
-        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+        siloFactory.createSilo(config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, address(this));
     }
 
     /*
