@@ -25,6 +25,7 @@ import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
+import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -182,6 +183,29 @@ contract Logger is Test {
         console2.log("\tQuote token symbol:", Utils.tryGetTokenSymbol(quoteToken));
         console2.log("\tQuote token decimals:", Utils.tryGetTokenDecimals(quoteToken));
         console2.log("\tQuote token:", quoteToken);
+
+        try PendlePTOracle(address(_oracle)).MARKET() returns (address market) {
+            console2.log(DELIMITER);
+            console2.log("\n\tPENDLE ORACLE INFO\n");
+            console2.log("\tMarket:", market);
+
+            console2.log(
+                "\tPendle oracle (Pendle protocol deployments):",
+                address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
+            );
+
+            address ptToken = address(PendlePTOracle(address(_oracle)).PT_TOKEN());
+            console2.log("\tPT token:", ptToken);
+            console2.log("\tPT token symbol:", IERC20Metadata(ptToken).symbol());
+            address underlyingToken = address(PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN());
+            address underlyingOracle = address(PendlePTOracle(address(_oracle)).UNDERLYING_ORACLE());
+            console2.log("\tPT underlying token:", underlyingToken);
+            console2.log("\tPT underlying token symbol:", IERC20Metadata(underlyingToken).symbol());
+            console2.log("\tUnderlying oracle:", underlyingOracle);
+            console2.log("\n\tPendle underlying oracle info:");
+            _logOracle(ISiloOracle(underlyingOracle), underlyingToken);
+            console2.log(DELIMITER);
+        } catch {}
 
         (
             address primaryAggregator,
