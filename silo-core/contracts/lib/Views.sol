@@ -95,7 +95,8 @@ library Views {
         view
         returns (
             uint192 daoAndDeployerRevenue,
-            uint64 interestRateTimestamp,
+            uint32 interestRateTimestamp,
+            uint32 interestFraction,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
