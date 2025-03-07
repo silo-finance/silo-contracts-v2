@@ -423,7 +423,7 @@ library Actions {
     /// @param _silo Silo address
     function withdrawFees(ISilo _silo)
         external
-        returns (uint256 daoRevenue, uint256 deployerRevenue, bool deployerFeeRedirected)
+        returns (uint256 daoRevenue, uint256 deployerRevenue, uint256 redirectedFees)
     {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         siloConfig.turnOnReentrancyProtection();
@@ -456,11 +456,9 @@ library Actions {
         // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
         unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
 
-        if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
-            daoRevenue = earnedFees;
-            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
-        } else {
+        daoRevenue = earnedFees;
+
+        if (deployerFeeReceiver != address(0)) {
             // split fees proportionally
             daoRevenue = earnedFees * daoFee;
 
@@ -474,14 +472,14 @@ library Actions {
             // trying to transfer to deployer (it might fail)
             if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
                 // if transfer to deployer fails, send their portion to the DAO instead
-                unchecked { daoRevenue += deployerRevenue; }
-
-                deployerFeeRedirected = true;
+                daoRevenue = earnedFees;
+                redirectedFees = deployerRevenue;
+                deployerRevenue = 0;
             }
-
-            // Transfer daoRevenue to DAO
-            IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
         }
+
+        // Transfer daoRevenue to DAO
+        IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
     }
