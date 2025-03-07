@@ -564,7 +564,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidate, uint256 debtToRepay,
         ) = partialLiquidation.maxLiquidation(BORROWER);
 
-        (uint192 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+        (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
         uint256 maxRepay = silo1.maxRepay(BORROWER);
         uint256 interest = maxRepay - DEBT - daoAndDeployerRevenue;
         uint256 liquidity = silo1.getLiquidity();

@@ -169,7 +169,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), siloBalance);
 
-        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
+        _$().daoAndDeployerRevenue = uint160(siloBalance); // fees are the same as balance
 
         uint256 protectedAssets = siloBalance / 3; // the third part of the balance is protected
 

@@ -111,7 +111,7 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        (,, uint32 interestFraction,, uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getSiloStorage();
+        (,, uint64 interestFraction,, uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getSiloStorage();
 
         (totalCollateralAssetsWithInterest,,,,) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: collateralAssets,
@@ -154,7 +154,7 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        (,, uint32 interestFraction,,, uint256 debtAssets) = ISilo(_silo).getSiloStorage();
+        (,, uint64 interestFraction,,, uint256 debtAssets) = ISilo(_silo).getSiloStorage();
 
         (
             totalDebtAssetsWithInterest,,

@@ -96,7 +96,7 @@ library SiloLendingLib {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint64 lastTimestamp = $.interestRateTimestamp;
+        uint32 lastTimestamp = $.interestRateTimestamp;
 
         // Interest has already been accrued this block
         if (lastTimestamp == block.timestamp) {
@@ -149,8 +149,8 @@ library SiloLendingLib {
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // even if we have 12 decimals,
-        // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
-        unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
+        // fee is simply too small to overflow on cast to uint160, even if, we will get lower fee
+        unchecked { $.daoAndDeployerRevenue += uint160(totalFees); }
     }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral

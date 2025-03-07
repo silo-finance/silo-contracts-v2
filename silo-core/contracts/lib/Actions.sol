@@ -29,7 +29,7 @@ library Actions {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-    uint256 internal constant _FEE_DECIMALS = 1e12;
+    uint256 internal constant _FEE_DECIMALS = 1e18;
 
     error FeeOverflow();
     error FlashLoanNotPossible();
@@ -392,12 +392,12 @@ library Actions {
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
 
-        require(fee <= type(uint192).max, FeeOverflow());
+        require(fee <= type(uint160).max, FeeOverflow());
         // this check also verify if token is correct
         require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
-        // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
+        // cast safe, because we checked `fee > type(uint160).max`
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint160(fee);
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
@@ -468,10 +468,10 @@ library Actions {
 
         // we will never underflow because:
         // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
-        unchecked { $.daoAndDeployerRevenue -= uint192((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
+        // and because we cast
+        unchecked { $.daoAndDeployerRevenue -= uint160((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
 
         if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
             require(earnedFees != 0, ISilo.EarnedZero());
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {

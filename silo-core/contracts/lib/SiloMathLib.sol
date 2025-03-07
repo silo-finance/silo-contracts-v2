@@ -9,7 +9,6 @@ library SiloMathLib {
     using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _FEE_DECIMALS = 1e12;
 
     uint256 internal constant _DECIMALS_OFFSET = 3;
 
@@ -45,7 +44,7 @@ library SiloMathLib {
         uint256 _rcomp,
         uint256 _daoFee,
         uint256 _deployerFee,
-        uint32 _currentInterestFraction
+        uint64 _currentInterestFraction
     )
         internal
         pure
@@ -54,7 +53,7 @@ library SiloMathLib {
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerRevenue,
             uint256 accruedInterest,
-            uint32 newInterestFraction
+            uint64 newInterestFraction
         )
     {
         (
@@ -69,7 +68,13 @@ library SiloMathLib {
         daoAndDeployerRevenue = accruedInterest * fees;
 
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
-        uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
+        // TODO who will pay for `daoAndDeployerRevenue % _PRECISION_DECIMALS) ? this is fraction we will store
+        // so eg
+        // accruedInterest = 123
+        // daoAndDeployerRevenue = 3.75
+        // collateralInterest = 123 - 3.75 / 100 => 120, and .75 we will store for "later"
+        // maybe we need rounding up so the result is 119 ?
+        uint256 collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
 
         // save to uncheck because variable can not be more than max
         uint256 cap = type(uint256).max - _collateralAssets;
@@ -93,11 +98,11 @@ library SiloMathLib {
     function getDebtAmountsWithInterest(
         uint256 _totalDebtAssets,
         uint256 _rcomp,
-        uint32 _currentInterestFraction
+        uint64 _currentInterestFraction
     )
         internal
         pure
-        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest, uint32 newInterestFraction)
+        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest, uint64 newInterestFraction)
     {
         if (_totalDebtAssets == 0 || _rcomp == 0) {
             return (_totalDebtAssets, 0, 0);
@@ -106,8 +111,8 @@ library SiloMathLib {
         uint256 accruedInterest36 = _totalDebtAssets * _rcomp + _currentInterestFraction;
 
         accruedInterest = accruedInterest36 / _PRECISION_DECIMALS;
-        // safe to cast, because max value after modulo will be 1e18 (_PRECISION_DECIMALS) and this is less than 2 ** 32
-        newInterestFraction = uint32(accruedInterest36 % _PRECISION_DECIMALS);
+        // safe to cast, because max value after modulo will be 1e18 (_PRECISION_DECIMALS) and this is less than 2 ** 64
+        newInterestFraction = uint64(accruedInterest36 % _PRECISION_DECIMALS);
 
         unchecked {
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.

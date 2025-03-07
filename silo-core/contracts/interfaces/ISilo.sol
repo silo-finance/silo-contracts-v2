@@ -102,12 +102,12 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     struct SiloStorage {
         /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
         /// but not yet withdrawn
-        uint192 daoAndDeployerRevenue;
+        uint160 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual, max supported time: Sunday, 7 February 2106 06:28:15
         uint32 interestRateTimestamp;
         /// @dev interest value that we could not convert to full token in 36 decimals, max value for it is 1e18.
         /// this value was not yet apply as interest for borrowers
-        uint32 interestFraction;
+        uint64 interestFraction;
 
         /// @dev silo is just for one asset,
         /// but this one asset can be of three types: mapping key is uint256(AssetType), so we store `assets` by type.
@@ -236,9 +236,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         external
         view
         returns (
-            uint192 daoAndDeployerRevenue,
+            uint160 daoAndDeployerRevenue,
             uint32 interestRateTimestamp,
-            uint32 interestFraction,
+            uint64 interestFraction,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets

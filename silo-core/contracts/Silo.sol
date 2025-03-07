@@ -111,9 +111,9 @@ contract Silo is ISilo, ShareCollateralToken {
         view
         virtual
         returns (
-            uint192 daoAndDeployerRevenue,
+            uint160 daoAndDeployerRevenue,
             uint32 interestRateTimestamp,
-            uint32 interestFraction,
+            uint64 interestFraction,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
