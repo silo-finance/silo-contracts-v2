@@ -118,7 +118,7 @@ contract WithdrawFeesTest is Test {
 
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
-        (uint256 daoRevenue, uint256 deployerRevenue) = _withdrawFees(ISilo(address(this)));
+        (uint256 daoRevenue, uint256 deployerRevenue,) = _withdrawFees(ISilo(address(this)));
 
         assertEq(daoRevenue, 9, "daoRevenue");
         assertEq(deployerRevenue, 0, "no deployerRevenue, because deployer is empty");
@@ -240,7 +240,10 @@ contract WithdrawFeesTest is Test {
         assertEq(_$().daoAndDeployerRevenue, 0, "fees cleared");
     }
 
-    function _withdrawFees(ISilo _silo) internal returns (uint256 daoRevenue, uint256 deployerRevenue) {
+    function _withdrawFees(ISilo _silo)
+        internal
+        returns (uint256 daoRevenue, uint256 deployerRevenue, bool deployerFeeRedirected)
+    {
         return Actions.withdrawFees(_silo);
     }
 
