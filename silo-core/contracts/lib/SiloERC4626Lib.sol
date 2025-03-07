@@ -225,26 +225,26 @@ library SiloERC4626Lib {
 
         {
             (uint256 collateralValue, uint256 debtValue) =
-                                SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+                SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
 
-            assets = SiloMathLib.calculateMaxAssetsToWithdraw(
-                collateralValue,
-                debtValue,
-                _collateralConfig.lt,
-                ltvData.borrowerProtectedAssets,
-                ltvData.borrowerCollateralAssets
-            );
+            assets = SiloMathLib.calculateMaxAssetsToWithdraw({
+                _sumOfCollateralsValue: collateralValue,
+                _debtValue: debtValue,
+                _lt: _collateralConfig.lt,
+                _borrowerCollateralAssets: ltvData.borrowerCollateralAssets,
+                _borrowerProtectedAssets: ltvData.borrowerProtectedAssets
+            });
         }
 
-        (assets, shares) = SiloMathLib.maxWithdrawToAssetsAndShares(
-            assets,
-            ltvData.borrowerCollateralAssets,
-            ltvData.borrowerProtectedAssets,
-            _collateralType,
-            _totalAssets,
-            _shareTokenTotalSupply,
-            _liquidity
-        );
+        (assets, shares) = SiloMathLib.maxWithdrawToAssetsAndShares({
+            _maxAssets: assets,
+            _borrowerCollateralAssets: ltvData.borrowerCollateralAssets,
+            _borrowerProtectedAssets: ltvData.borrowerProtectedAssets,
+            _collateralType: _collateralType,
+            _totalAssets: _totalAssets,
+            _assetTypeShareTokenTotalSupply: _shareTokenTotalSupply,
+            _liquidity: _liquidity
+        });
 
         if (assets != 0) {
             // recalculate assets due to rounding error that we have in convertToShares
