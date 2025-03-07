@@ -421,7 +421,10 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
-    function withdrawFees(ISilo _silo) external returns (uint256 daoRevenue, uint256 deployerRevenue) {
+    function withdrawFees(ISilo _silo)
+        external
+        returns (uint256 daoRevenue, uint256 deployerRevenue, bool deployerFeeRedirected)
+    {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         siloConfig.turnOnReentrancyProtection();
 
@@ -472,6 +475,8 @@ library Actions {
             if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
                 // if transfer to deployer fails, send their portion to the DAO instead
                 unchecked { daoRevenue += deployerRevenue; }
+
+                deployerFeeRedirected = true;
             }
 
             // Transfer daoRevenue to DAO

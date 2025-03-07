@@ -180,7 +180,7 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    forge test -vv --mt test_withdraw_to_deployer_fails
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdraw_to_deployer_fails
     */
     function test_withdraw_to_deployer_fails() external {
         uint256 daoFee = 0.1e18;
@@ -204,7 +204,8 @@ contract WithdrawFeesTest is Test {
         token.transferResultFalseMock(deployer, siloBalance / 2); // transfer to deployer fails
         token.transferMock(dao, siloBalance); // dao gets all fees as transfer to deployer fails
 
-        Actions.withdrawFees(ISilo(address(this)));
+        (,, bool deployerFeeRedirected) = Actions.withdrawFees(ISilo(address(this)));
+        assertTrue(deployerFeeRedirected, "deployer fee redirected");
     }
 
     function _withdrawFees_pass(
