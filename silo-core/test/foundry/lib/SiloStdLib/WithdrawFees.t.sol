@@ -204,8 +204,8 @@ contract WithdrawFeesTest is Test {
         token.transferResultFalseMock(deployer, siloBalance / 2); // transfer to deployer fails
         token.transferMock(dao, siloBalance); // dao gets all fees as transfer to deployer fails
 
-        (,, uint256 redirectedFees) = Actions.withdrawFees(ISilo(address(this)));
-        assertEq(redirectedFees, siloBalance / 2, "redirected fees");
+        (,, bool redirectedDeployerFees) = Actions.withdrawFees(ISilo(address(this)));
+        assertTrue(redirectedDeployerFees, "redirected fees");
     }
 
     function _withdrawFees_pass(
@@ -242,7 +242,7 @@ contract WithdrawFeesTest is Test {
 
     function _withdrawFees(ISilo _silo)
         internal
-        returns (uint256 daoRevenue, uint256 deployerRevenue, uint256 redirectedFees)
+        returns (uint256 daoRevenue, uint256 deployerRevenue, bool redirectedDeployerFees)
     {
         return Actions.withdrawFees(_silo);
     }

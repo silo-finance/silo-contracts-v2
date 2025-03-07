@@ -162,7 +162,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     event FlashLoan(uint256 amount);
 
-    event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
+    event WithdrawnFees(uint256 daoFees, uint256 deployerFees, bool redirectedDeployerFees);
 
     event DeployerFeesRedirected(uint256 deployerFees);
 

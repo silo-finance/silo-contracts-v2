@@ -646,13 +646,9 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
         _accrueInterest();
-        (uint256 daoFees, uint256 deployerFees, uint256 redirectedDeployerFees) = Actions.withdrawFees(this);
+        (uint256 daoFees, uint256 deployerFees, bool redirectedDeployerFees) = Actions.withdrawFees(this);
 
-        if (redirectedDeployerFees != 0) {
-            emit DeployerFeesRedirected(redirectedDeployerFees);
-        }
-
-        emit WithdrawnFeed(daoFees, deployerFees);
+        emit WithdrawnFees(daoFees, deployerFees, redirectedDeployerFees);
     }
 
     function _totalAssets() internal view virtual returns (uint256 totalManagedAssets) {
