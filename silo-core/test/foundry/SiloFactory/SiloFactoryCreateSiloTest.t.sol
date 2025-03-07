@@ -143,7 +143,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     function test_createSilo_zeroes() public {
         (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
 
-        address siloImpl = makeAddr("siloImpl");
+        address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
         ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
