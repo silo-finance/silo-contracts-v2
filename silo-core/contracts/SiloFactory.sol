@@ -41,6 +41,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @dev DAO fee receiver for asset, in case there is no setup for silo, this setup will be used
     mapping(address asset => address feeReceiverPerAsset) public assetDaoFeeReceivers;
 
+    /// @dev counter of silos created by the wallet
+    mapping(address creator => uint256 siloCounter) public creatorSiloCounter;
+
     uint256 internal _siloId;
 
     constructor(address _daoFeeReceiver)
@@ -71,7 +74,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
-        address _deployer
+        address _deployer,
+        address _creator
     )
         external
         virtual
@@ -88,13 +92,12 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 
-        ISilo silo0 = ISilo(CloneDeterministic.silo0(_siloImpl, nextSiloId));
-        ISilo silo1 = ISilo(CloneDeterministic.silo1(_siloImpl, nextSiloId));
-
-        _cloneShareTokens(
+        (ISilo silo0, ISilo silo1) = _createValidateSilosAndShareTokens(
+            _siloConfig,
+            _siloImpl,
             _shareProtectedCollateralTokenImpl,
             _shareDebtTokenImpl,
-            nextSiloId
+            _creator
         );
 
         silo0.initialize(_siloConfig);
@@ -212,6 +215,33 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         );
     }
 
+    function _createValidateSilosAndShareTokens(
+        ISiloConfig _siloConfig,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        address _creator
+    ) internal virtual returns (ISilo silo0, ISilo silo1) {
+        uint256 creatorSiloCounter = creatorSiloCounter[_creator];
+
+        silo0 = ISilo(CloneDeterministic.silo0(_siloImpl, creatorSiloCounter, _creator));
+        silo1 = ISilo(CloneDeterministic.silo1(_siloImpl, creatorSiloCounter, _creator));
+
+        (address siloFromConfig0, address siloFromConfig1) = _siloConfig.getSilos();
+
+        require(address(silo0) == siloFromConfig0 && address(silo1) == siloFromConfig1, ConfigMismatchSilo());
+
+        _cloneShareTokensAndValidate(
+            _siloConfig,
+            silo0,
+            silo1,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            creatorSiloCounter,
+            _creator
+        );
+    }
+
     function _setDaoFee(uint128 _minFee, uint128 _maxFee) internal virtual {
         require(_maxFee <= MAX_FEE, MaxFeeExceeded());
         require(_minFee <= _maxFee, InvalidFeeRange());
@@ -267,21 +297,41 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _mapping[_mappingKey] = _newDaoFeeReceiver;
     }
 
-    function _cloneShareTokens(
+    function _cloneShareTokensAndValidate(
+        ISiloConfig _siloConfig,
+        ISilo _silo0,
+        ISilo _silo1,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
-        uint256 _nextSiloId
+        uint256 _creatorSiloCounter,
+        address _creator
     ) internal virtual {
-        CloneDeterministic.shareProtectedCollateralToken0(
-            _shareProtectedCollateralTokenImpl, _nextSiloId
+        address createdProtectedShareToken0 = CloneDeterministic.shareProtectedCollateralToken0(
+            _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
         );
 
-        CloneDeterministic.shareProtectedCollateralToken1(
-            _shareProtectedCollateralTokenImpl, _nextSiloId
+        address createdProtectedShareToken1 = CloneDeterministic.shareProtectedCollateralToken1(
+            _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
         );
 
-        CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _nextSiloId);
-        CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _nextSiloId);
+        address createdDebtShareToken0 = CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _creatorSiloCounter, _creator);
+        address createdDebtShareToken1 = CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _creatorSiloCounter, _creator);
+
+        _validateShareTokens(_siloConfig, address(_silo0), createdProtectedShareToken0, createdDebtShareToken0);
+        _validateShareTokens(_siloConfig, address(_silo1), createdProtectedShareToken1, createdDebtShareToken1);
+    }
+
+    function _validateShareTokens(
+        ISiloConfig _siloConfig,
+        address _silo,
+        address _createdProtectedShareToken,
+        address _createdDebtShareToken
+    ) internal virtual {
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(_silo);
+
+        require(_silo == collateralShareToken, ConfigMismatchShareCollateralToken());
+        require(protectedShareToken == _createdProtectedShareToken, ConfigMismatchShareProtectedToken());
+        require(debtShareToken == _createdDebtShareToken, ConfigMismatchShareDebtToken());
     }
 
     function _initializeShareTokens(ISiloConfig _siloConfig, ISilo _silo0, ISilo _silo1) internal virtual {
