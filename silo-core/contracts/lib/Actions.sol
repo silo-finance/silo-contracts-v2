@@ -478,7 +478,6 @@ library Actions {
             }
         }
 
-        // Transfer daoRevenue to DAO
         IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
