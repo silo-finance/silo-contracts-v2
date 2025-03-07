@@ -100,7 +100,7 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
 
     /// @notice Get DAO and Deployer fees
     function _getDaoAndDeployerFees(address silo) internal view returns (uint192 daoAndDeployerFees) {
-        (daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
+        (daoAndDeployerFees,,,,,) = ISilo(silo).getSiloStorage();
     }
 
     /// @notice Get a random address
