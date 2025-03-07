@@ -172,8 +172,6 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error NotSolvent();
     error BorrowNotPossible();
     error EarnedZero();
-    error DeployerEarnedZero();
-    error DaoEarnedZero();
     error FlashloanFailed();
     error AboveMaxLtv();
     error SiloInitialized();

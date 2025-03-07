@@ -9,7 +9,6 @@ library SiloMathLib {
     using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
-    uint256 internal constant _FEE_DECIMALS = 1e12;
 
     uint256 internal constant _DECIMALS_OFFSET = 3;
 
@@ -35,7 +34,7 @@ library SiloMathLib {
     /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
-    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer (36 decimals)
+    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer
     /// @return accruedInterest The total accrued interest
     function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
@@ -81,21 +80,21 @@ library SiloMathLib {
     /// @param _totalDebtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
-    /// @return accruedInterest The total amount of interest accrued on the debt assets (36 decimals)
+    /// @return accruedInterest The total amount of interest accrued on the debt assets
     function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)
         internal
         pure
-        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest, uint256 accruedInterestFractional)
+        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
         if (_totalDebtAssets == 0 || _rcomp == 0) {
             return (_totalDebtAssets, 0);
         }
 
-        accruedInterest = _totalDebtAssets * _rcomp;
+        accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
 
         unchecked {
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
-            debtAssetsWithInterest = _totalDebtAssets + (accruedInterest / _PRECISION_DECIMALS);
+            debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
 
             // If overflow occurs, we skip accruing interest.
             if (debtAssetsWithInterest < _totalDebtAssets) {
