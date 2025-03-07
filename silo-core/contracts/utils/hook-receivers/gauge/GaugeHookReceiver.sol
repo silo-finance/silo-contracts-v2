@@ -79,7 +79,6 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
 
         require(theGauge != IGauge(address(0)), GaugeIsNotConfigured());
 
-        if (theGauge.is_killed()) return; // Do not revert if gauge is killed. Ignore the action.
         if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case
 
         Hook.AfterTokenTransfer memory input = _inputAndOutput.afterTokenTransferDecode();
