@@ -460,7 +460,7 @@ library Actions {
 
         if (deployerFeeReceiver != address(0)) {
             // split fees proportionally
-            daoRevenue = earnedFees * daoFee;
+            daoRevenue *= daoFee;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
