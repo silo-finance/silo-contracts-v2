@@ -64,10 +64,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
     }
 
-    function daoFeeRange() external view returns (Range memory) {
-        return _daoFeeRange;
-    }
-
     /// @inheritdoc ISiloFactory
     function createSilo( // solhint-disable-line function-max-lines
         ISiloConfig _siloConfig,
@@ -180,6 +176,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     /// @inheritdoc ISiloFactory
     function getNextSiloId() external view virtual returns (uint256) {
         return _siloId;
+    }
+
+    function daoFeeRange() external view virtual returns (Range memory) {
+        return _daoFeeRange;
     }
 
     /// @inheritdoc ISiloFactory
@@ -314,8 +314,13 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
         );
 
-        address createdDebtShareToken0 = CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _creatorSiloCounter, _creator);
-        address createdDebtShareToken1 = CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _creatorSiloCounter, _creator);
+        address createdDebtShareToken0 = CloneDeterministic.shareDebtToken0(
+            _shareDebtTokenImpl, _creatorSiloCounter, _creator
+        );
+
+        address createdDebtShareToken1 = CloneDeterministic.shareDebtToken1(
+            _shareDebtTokenImpl, _creatorSiloCounter, _creator
+        );
 
         _validateShareTokens(_siloConfig, address(_silo0), createdProtectedShareToken0, createdDebtShareToken0);
         _validateShareTokens(_siloConfig, address(_silo1), createdProtectedShareToken1, createdDebtShareToken1);
@@ -327,7 +332,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         address _createdProtectedShareToken,
         address _createdDebtShareToken
     ) internal virtual {
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(_silo);
+        (
+            address protectedShareToken,
+            address collateralShareToken,
+            address debtShareToken
+        ) = _siloConfig.getShareTokens(_silo);
 
         require(_silo == collateralShareToken, ConfigMismatchShareCollateralToken());
         require(protectedShareToken == _createdProtectedShareToken, ConfigMismatchShareProtectedToken());

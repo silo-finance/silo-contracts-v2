@@ -57,14 +57,14 @@ contract SiloDeployer is ISiloDeployer {
         // deploy `SiloConfig` (with predicted addresses)
         siloConfig = _deploySiloConfig(_siloInitData);
         // create silo
-        SILO_FACTORY.createSilo(
-            siloConfig,
-            SILO_IMPL,
-            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            SHARE_DEBT_TOKEN_IMPL,
-            _siloInitData.deployer,
-            msg.sender
-        );
+        SILO_FACTORY.createSilo({
+            _siloConfig: siloConfig,
+            _siloImpl: SILO_IMPL,
+            _shareProtectedCollateralTokenImpl: SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
+            _shareDebtTokenImpl: SHARE_DEBT_TOKEN_IMPL,
+            _deployer: _siloInitData.deployer,
+            _creator: msg.sender
+        });
         // initialize hook receiver only if it was cloned
         _initializeHookReceiver(_siloInitData, siloConfig, _clonableHookReceiver);
 
