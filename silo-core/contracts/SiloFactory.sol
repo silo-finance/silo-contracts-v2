@@ -96,6 +96,8 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             _creator
         );
 
+        unchecked { creatorSiloCounter[_creator]++; }
+
         silo0.initialize(_siloConfig);
         silo1.initialize(_siloConfig);
 
