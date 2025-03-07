@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
@@ -23,6 +24,7 @@ import {SiloStorageLib} from "./SiloStorageLib.sol";
 import {Views} from "./Views.sol";
 
 library Actions {
+    using Address for address;
     using SafeERC20 for IERC20;
     using Hook for uint256;
     using Hook for uint24;
@@ -419,7 +421,10 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
-    function withdrawFees(ISilo _silo) external returns (uint256 daoRevenue, uint256 deployerRevenue) {
+    function withdrawFees(ISilo _silo)
+        external
+        returns (uint256 daoRevenue, uint256 deployerRevenue, bool redirectedDeployerFees)
+    {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         siloConfig.turnOnReentrancyProtection();
 
@@ -451,13 +456,11 @@ library Actions {
         // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
         unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
 
-        if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
-            daoRevenue = earnedFees;
-            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
-        } else {
+        daoRevenue = earnedFees;
+
+        if (deployerFeeReceiver != address(0)) {
             // split fees proportionally
-            daoRevenue = earnedFees * daoFee;
+            daoRevenue *= daoFee;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
@@ -466,9 +469,15 @@ library Actions {
                 deployerRevenue = earnedFees - daoRevenue;
             }
 
-            IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
-            IERC20(asset).safeTransfer(deployerFeeReceiver, deployerRevenue);
+            // trying to transfer to deployer (it might fail)
+            if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
+                // if transfer to deployer fails, send their portion to the DAO instead
+                daoRevenue = earnedFees;
+                redirectedDeployerFees = true;
+            }
         }
+
+        IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
     }
@@ -680,5 +689,17 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
+    }
+
+    /**
+     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     * Copied from openzeppelin5/contracts/token/ERC20/utils/SafeERC20.sol and modified to return call result
+     */
+    function _safeTransferInternal(IERC20 token, address to, uint256 value) internal returns (bool result) {
+        bytes memory data = abi.encodeCall(token.transfer, (to, value));
+        bytes memory returndata = address(token).functionCall(data);
+
+        result = returndata.length == 0 || abi.decode(returndata, (bool));
     }
 }
