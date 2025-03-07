@@ -9,6 +9,7 @@ library SiloMathLib {
     using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
+    uint256 internal constant _FEE_DECIMALS = 1e12;
 
     uint256 internal constant _DECIMALS_OFFSET = 3;
 
@@ -35,7 +36,7 @@ library SiloMathLib {
     /// @param _currentInterestFraction current uncounted fraction of interest (in 36 decimals points)
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
-    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer
+    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer (36 decimals)
     /// @return accruedInterest The total accrued interest
     /// @return newInterestFraction new uncounted fraction of interest (in 36 decimals points)
     function getCollateralAmountsWithInterest(
@@ -65,7 +66,7 @@ library SiloMathLib {
         // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
         unchecked { fees = _daoFee + _deployerFee; }
 
-        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);
+        daoAndDeployerRevenue = accruedInterest * fees;
 
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
         uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;

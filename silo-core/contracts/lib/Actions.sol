@@ -29,6 +29,7 @@ library Actions {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+    uint256 internal constant _FEE_DECIMALS = 1e12;
 
     error FeeOverflow();
     error FlashLoanNotPossible();
@@ -425,7 +426,9 @@ library Actions {
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFees = $.daoAndDeployerRevenue;
+        uint256 earnedFeesDecimals = $.daoAndDeployerRevenue;
+        uint256 earnedFees = earnedFeesDecimals / _FEE_DECIMALS;
+
         require(earnedFees != 0, ISilo.EarnedZero());
 
         (
@@ -448,16 +451,12 @@ library Actions {
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
-        // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
-        unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
-
         if (deployerFeeReceiver == address(0)) {
             // deployer was never setup or deployer NFT has been burned
             daoRevenue = earnedFees;
-            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
             // split fees proportionally
-            daoRevenue = earnedFees * daoFee;
+            daoRevenue = earnedFeesDecimals * daoFee / _FEE_DECIMALS;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
@@ -465,6 +464,19 @@ library Actions {
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }
+        }
+
+        // we will never underflow because:
+        // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
+        unchecked { $.daoAndDeployerRevenue -= uint192((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
+
+        if (deployerFeeReceiver == address(0)) {
+            // deployer was never setup or deployer NFT has been burned
+            require(earnedFees != 0, ISilo.EarnedZero());
+            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
+        } else {
+            require(daoRevenue != 0, ISilo.DaoEarnedZero());
+            require(deployerRevenue != 0, ISilo.DeployerEarnedZero());
 
             IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
             IERC20(asset).safeTransfer(deployerFeeReceiver, deployerRevenue);
