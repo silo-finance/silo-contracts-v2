@@ -89,7 +89,7 @@ contract Setup is BaseTest, IERC721Receiver {
 
         // deploy silo
         siloFactory.createSilo(
-            siloData["MOCK"], siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+            siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, siloData["MOCK"].deployer
         );
 
         (_vault0, _vault1) = siloConfig.getSilos();

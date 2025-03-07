@@ -86,17 +86,17 @@ interface ISiloFactory is IERC721 {
     error NotYourSilo();
 
     /// @notice Create a new Silo.
-    /// @param _initData Silo initialization data.
     /// @param _siloConfig Silo configuration.
     /// @param _siloImpl Address of the `Silo` implementation.
     /// @param _shareProtectedCollateralTokenImpl Address of the `ShareProtectedCollateralToken` implementation.
     /// @param _shareDebtTokenImpl Address of the `ShareDebtToken` implementation.
+    /// @param _deployer Address of the deployer.
     function createSilo(
-        ISiloConfig.InitData memory _initData,
         ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl
+        address _shareDebtTokenImpl,
+        address _deployer
     )
         external;
 

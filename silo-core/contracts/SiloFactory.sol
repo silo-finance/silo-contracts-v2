@@ -8,6 +8,7 @@ import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
+import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {Hook} from "./lib/Hook.sol";
 import {Views} from "./lib/Views.sol";
@@ -66,11 +67,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @inheritdoc ISiloFactory
     function createSilo( // solhint-disable-line function-max-lines
-        ISiloConfig.InitData memory _initData,
         ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl
+        address _shareDebtTokenImpl,
+        address _deployer
     )
         external
         virtual
@@ -83,51 +84,42 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             ZeroAddress()
         );
 
-        ISiloConfig.ConfigData memory configData0;
-        ISiloConfig.ConfigData memory configData1;
-
-        (
-            configData0, configData1
-        ) = Views.copySiloConfig(_initData, _daoFeeRange, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
-
         uint256 nextSiloId = _siloId;
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 
-        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
-        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
+        ISilo silo0 = ISilo(CloneDeterministic.silo0(_siloImpl, nextSiloId));
+        ISilo silo1 = ISilo(CloneDeterministic.silo1(_siloImpl, nextSiloId));
 
         _cloneShareTokens(
-            configData0,
-            configData1,
             _shareProtectedCollateralTokenImpl,
             _shareDebtTokenImpl,
             nextSiloId
         );
 
-        ISilo(configData0.silo).initialize(_siloConfig);
-        ISilo(configData1.silo).initialize(_siloConfig);
+        silo0.initialize(_siloConfig);
+        silo1.initialize(_siloConfig);
 
-        _initializeShareTokens(configData0, configData1);
+        _initializeShareTokens(_siloConfig, silo0, silo1);
 
-        ISilo(configData0.silo).updateHooks();
-        ISilo(configData1.silo).updateHooks();
+        silo0.updateHooks();
+        silo1.updateHooks();
 
         idToSiloConfig[nextSiloId] = address(_siloConfig);
 
-        isSilo[configData0.silo] = true;
-        isSilo[configData1.silo] = true;
+        isSilo[address(silo0)] = true;
+        isSilo[address(silo1)] = true;
 
-        if (_initData.deployer != address(0)) {
-            _safeMint(_initData.deployer, nextSiloId);
+        if (_deployer != address(0)) {
+            _safeMint(_deployer, nextSiloId);
         }
 
         emit NewSilo(
             _siloImpl,
-            configData0.token,
-            configData1.token,
-            configData0.silo,
-            configData1.silo,
+            silo0.asset(),
+            silo1.asset(),
+            address(silo0),
+            address(silo1),
             address(_siloConfig)
         );
     }
@@ -276,46 +268,38 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     function _cloneShareTokens(
-        ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _nextSiloId
     ) internal virtual {
-        configData0.collateralShareToken = configData0.silo;
-        configData1.collateralShareToken = configData1.silo;
-
-        configData0.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken0(
+        CloneDeterministic.shareProtectedCollateralToken0(
             _shareProtectedCollateralTokenImpl, _nextSiloId
         );
 
-        configData1.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken1(
+        CloneDeterministic.shareProtectedCollateralToken1(
             _shareProtectedCollateralTokenImpl, _nextSiloId
         );
 
-        configData0.debtShareToken = CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _nextSiloId);
-        configData1.debtShareToken = CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _nextSiloId);
+        CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _nextSiloId);
+        CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _nextSiloId);
     }
 
-    function _initializeShareTokens(
-        ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1
-    ) internal virtual {
+    function _initializeShareTokens(ISiloConfig _siloConfig, ISilo _silo0, ISilo _silo1) internal virtual {
         uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
 
-        // initialize configData0
-        ISilo silo0 = ISilo(configData0.silo);
-        address hookReceiver0 = configData0.hookReceiver;
+        // initialize silo0 share tokens
+        address hookReceiver0 = IShareToken(address(_silo0)).hookReceiver();
+        (address protectedShareToken0, , address debtShareToken0) = _siloConfig.getShareTokens(address(_silo0));
 
-        IShareTokenInitializable(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
-        IShareTokenInitializable(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
+        IShareTokenInitializable(protectedShareToken0).initialize(_silo0, hookReceiver0, protectedTokenType);
+        IShareTokenInitializable(debtShareToken0).initialize(_silo0, hookReceiver0, debtTokenType);
 
-        // initialize configData1
-        ISilo silo1 = ISilo(configData1.silo);
-        address hookReceiver1 = configData1.hookReceiver;
+        // initialize silo1 share tokens
+        address hookReceiver1 = IShareToken(address(_silo1)).hookReceiver();
+        (address protectedShareToken1, , address debtShareToken1) = _siloConfig.getShareTokens(address(_silo1));
 
-        IShareTokenInitializable(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
-        IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
+        IShareTokenInitializable(protectedShareToken1).initialize(_silo1, hookReceiver1, protectedTokenType);
+        IShareTokenInitializable(debtShareToken1).initialize(_silo1, hookReceiver1, debtTokenType);
     }
 }
