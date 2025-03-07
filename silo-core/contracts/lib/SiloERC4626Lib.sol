@@ -128,6 +128,14 @@ library SiloERC4626Lib {
         IShareToken(_shareToken).burn(_args.owner, _args.spender, shares);
 
         if (_asset != address(0)) {
+            // does not matter what is the type of transfer, we can not go below protected balance
+            uint256 protectedBalance = $.totalAssets[ISilo.AssetType.Protected];
+
+            require(
+                protectedBalance == 0 || IERC20(_asset).balanceOf(address(this)) - assets >= protectedBalance,
+                ISilo.ProtectedProtection()
+            );
+
             // fee-on-transfer is ignored
             IERC20(_asset).safeTransfer(_args.receiver, assets);
         }
