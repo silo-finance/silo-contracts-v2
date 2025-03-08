@@ -197,6 +197,22 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.assert_ERC4626_ROUNDTRIP_INVARIANT_G(2);
     }
 
+    function test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_D() public {
+        // @audit-issue ERC4626_ROUNDTRIP_INVARIANT_D: a = redeem(s) a' = mint(s), a' >= a"
+        // redeeming and then minting the same number of shares on the same transaction shouldnt leave the user with more assets deposited for the same amount of shares
+        Tester.submitCap(9062025, 11);
+        _delay(318197);
+        _delay(291190);
+        Tester.submitCap(1, 0);
+        Tester.acceptCap(3);
+        _delay(621091);
+        Tester.acceptCap(0);
+        Tester.setSupplyQueue(7);
+        Tester.donateUnderlyingToSilo(1650, 3);
+        Tester.mintVault(4370000, 0);
+        Tester.assert_ERC4626_ROUNDTRIP_INVARIANT_D(4370001);
+    }
+
     // ACCOUNTING
 
     function test_replay_2depositVault() public {
@@ -295,7 +311,136 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.withdrawVault(0, 0);
     }
 
-    function test_replay_assert_INV_ACCOUNTING_B() public {// TODO check this property
+    function test_replay_3withdrawVault() public {
+        // @audit-issue
+        // Inconsistency in asset tracking after withdrawals
+        //
+        // Before calling donateUnderlyingToSilo:
+        //      - vault.totalAssets(): 1
+        //      - vault.totalSupply(): 1
+        //      - vault.lastTotalAssets(): 1
+        // After calling donateUnderlyingToSilo with 2 assets:
+        //      - vault.totalAssets(): 2
+        //      - vault.totalSupply(): 1
+        //      - vault.lastTotalAssets(): 1
+        //
+        // After withdrawing 1 asset from the vault:
+        //      - vault.totalAssets(): 0
+        //      - vault.totalSupply(): 0
+        //      - vault.lastTotalAssets(): 1
+        //
+        // Summary:
+        // The protocol fails to fully account for all assets during withdrawals.
+        // Although there are 2 assets to withdraw, only 1 is withdrawn in the final transaction,
+        // leaving 1 asset stranded in the underlying vault without corresponding shares.
+        //
+        // Issue:
+        // Violates GPOST_ACCOUNTING_D:
+        //      - Expected: lastTotalAssets() == totalAssets() after any transaction.
+        //      - Actual: lastTotalAssets() still tracks the lost wei, while totalAssets()
+        //        no longer includes it since the SiloVault holds no shares for it.
+
+        // Impact
+        // This affects fee Accrual since it is based on lastTotalAssets
+
+        Tester.submitCap(1, 3);
+        _delay(322374);
+        _delay(285249);
+        Tester.acceptCap(3);
+        Tester.setSupplyQueue(11);
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.totalSupply(): ", vault.totalSupply());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        _logSeparatorInternal();
+
+        Tester.depositVault(1, 0);
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.totalSupply(): ", vault.totalSupply());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        _logSeparatorInternal();
+
+        Tester.donateUnderlyingToSilo(2, 3);
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.totalSupply(): ", vault.totalSupply());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        _logSeparatorInternal();
+
+        Tester.withdrawVault(1, 0);
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.totalSupply(): ", vault.totalSupply());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+    }
+
+    function test_replay_3depositVault() public {
+        // @audit-issue
+        // Inconsistency in asset tracking after deposits
+        //
+        // Before calling depositVault:
+        //      - vault.totalAssets(): 0
+        //      - vault.totalSupply(): 0
+        //      - vault.lastTotalAssets(): 0
+        //
+        // After calling depositVault with 3 assets:
+        //      - vault.totalAssets(): 2
+        //      - vault.totalSupply(): 3
+        //      - vault.lastTotalAssets(): 3
+        //
+        //
+        // Summary:
+        // The protocol fails to correctly account with assets deposited on the underlying vaults.
+        // Although there are 3 assets deposited, only 2 are reported back,
+        //
+        // Issue:
+        // Violates GPOST_ACCOUNTING_D:
+        //      - Expected: lastTotalAssets() == totalAssets() after any transaction.
+        //      - Actual: lastTotalAssets() still tracks the lost wei, while totalAssets()
+        //        no longer includes it since the SiloVault holds no shares for it.
+        Tester.submitCap(18, 3);
+        _delay(318197);
+        _delay(291190);
+        Tester.submitCap(1, 0);
+        Tester.acceptCap(3);
+        _delay(626639);
+        Tester.acceptCap(0);
+        Tester.setSupplyQueue(7);
+
+        Tester.donateUnderlyingToSilo(1, 3);
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.totalSupply(): ", vault.totalSupply());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        _logSeparatorInternal();
+
+        Tester.depositVault(3, 0);
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.totalSupply(): ", vault.totalSupply());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        _logSeparatorInternal();
+    }
+
+    function test_replay_transitionCollateral() public {
+        // @audit-issue mismatch between lastTotalAssets and totalAssets after a call leads to wrong yield accounting in the suite
+        Tester.submitCap(729479, 7);
+        _delay(318197);
+        _delay(291190);
+        Tester.submitCap(1, 0);
+        Tester.acceptCap(3);
+        _delay(626639);
+        Tester.acceptCap(0);
+        Tester.setSupplyQueue(7);
+        Tester.deposit(39, 0, 3);
+        Tester.depositVault(2, 0);
+        Tester.assert_ERC4626_DEPOSIT_INVARIANT_C();
+        Tester.donateUnderlyingToSilo(56447107724879501408673723970558992484992870152700643, 3);
+        Tester.withdrawVault(1, 0);
+        Tester.transitionCollateral(1004, 0, 99, 3);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                 BROKEN INVARIANTS REPLAY                                  //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function test_replay_assert_INV_ACCOUNTING_B() public {
+        // TODO check this property
         Tester.donateUnderlyingToSilo(3456838271434152511590211646958305458300539680628471060073068582, 3);
         Tester.submitCap(1, 3);
         _delay(605654);
@@ -304,10 +449,6 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.assert_ERC4626_MINT_INVARIANT_C();
         Tester.assert_INV_ACCOUNTING_B(1);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                 BROKEN INVARIANTS REPLAY                                  //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                        RANDOM TESTS                                       //

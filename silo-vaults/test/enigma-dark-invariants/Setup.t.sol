@@ -90,13 +90,7 @@ contract Setup is BaseTest {
         // Must be pushed last.
         markets.push(idleMarket);
 
-        // STORAGE LOGS
-        _logArray("unsortedMarkets", unsortedMarkets);
-        _logArray("markets", markets);
-        _logArray("loanMarketsArray", loanMarketsArray);
-        _logArray("collateralMarketsArray", collateralMarketsArray);
-        _logArray("silos", silos);
-        _logArray("vaults", vaults);
+        _logMarkets();
     }
 
     function _setupMarket(uint256 _marketId) internal returns (IERC4626 market) {
@@ -204,11 +198,18 @@ contract Setup is BaseTest {
         }
     }
 
-    function _logArray(string memory key, IERC4626[] storage array) internal {
-        console.log("STORAGE: ", key);
-        for (uint256 i; i < array.length; i++) {
-            console.log("contract: ", address(array[i]));
-        }
-        console.log("#####");
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          LOGGING                                          //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _logMarkets() internal {
+        _logSeparator();
+        _logArray("unsortedMarkets", unsortedMarkets);
+        _logArray("markets", markets);
+        _logArray("loanMarketsArray", loanMarketsArray);
+        _logArray("collateralMarketsArray", collateralMarketsArray);
+        _logArray("silos", silos);
+        _logArray("vaults", vaults);
+        _logSeparator();
     }
 }

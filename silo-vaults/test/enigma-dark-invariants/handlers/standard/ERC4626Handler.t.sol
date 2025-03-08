@@ -33,13 +33,10 @@ abstract contract ERC4626Handler is BaseHandler {
         // Get one of the vaults randomly
         address target = _getRandomSiloAddress(j);
 
-        _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IERC4626.deposit.selector, assets, receiver));
 
-        if (success) {
-            _after();
-        } else {
+        if (success) {} else {
             revert("ERC4626Handler: deposit failed");
         }
     }
@@ -54,12 +51,9 @@ abstract contract ERC4626Handler is BaseHandler {
         // Get one of the vaults randomly
         address target = _getRandomSiloAddress(j);
 
-        _before();
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC4626.mint.selector, shares, receiver));
 
-        if (success) {
-            _after();
-        } else {
+        if (success) {} else {
             revert("ERC4626Handler: mint failed");
         }
     }
@@ -74,13 +68,10 @@ abstract contract ERC4626Handler is BaseHandler {
         // Get one of the vaults randomly
         address target = _getRandomSiloAddress(j);
 
-        _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IERC4626.withdraw.selector, assets, receiver, address(actor)));
 
-        if (success) {
-            _after();
-        } else {
+        if (success) {} else {
             revert("ERC4626Handler: withdraw failed");
         }
     }
@@ -95,13 +86,10 @@ abstract contract ERC4626Handler is BaseHandler {
         // Get one of the vaults randomly
         address target = _getRandomSiloAddress(j);
 
-        _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IERC4626.redeem.selector, shares, receiver, address(actor)));
 
-        if (success) {
-            _after();
-        } else {
+        if (success) {} else {
             revert("ERC4626Handler: redeem failed");
         }
     }

@@ -50,7 +50,11 @@ abstract contract PublicAllocatorHandler is BaseHandler {
         if (success) {
             _after();
 
-            // POSTCONDITIONS
+            ///////////////////////////////////////////////////////////////////////////////////////
+            //                                        HSPOST                                     //
+            ///////////////////////////////////////////////////////////////////////////////////////
+
+            /// @dev BALANCES
             assertTrue(_balanceHasNotChanged(), HSPOST_BALANCES_A);
         } else {
             revert("SiloVaultHandler: deposit failed");

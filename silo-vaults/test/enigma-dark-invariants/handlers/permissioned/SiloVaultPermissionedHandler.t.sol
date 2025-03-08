@@ -48,8 +48,11 @@ abstract contract SiloVaultPermissionedHandler is BaseHandler {
 
         uint256 supplyQueueLength = vault.supplyQueueLength();
 
-        // POSTCONDITIONS
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //                                        HSPOST                                     //
+        ///////////////////////////////////////////////////////////////////////////////////////
 
+        /// @dev QUEUES
         for (uint256 j; j < supplyQueueLength; j++) {
             assertGt(vault.config(vault.supplyQueue(j)).cap, 0, HSPOST_QUEUES_F);
         }

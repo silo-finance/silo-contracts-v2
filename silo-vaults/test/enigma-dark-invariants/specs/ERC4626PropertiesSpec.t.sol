@@ -103,24 +103,24 @@ abstract contract ERC4626PropertiesSpec {
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
     string constant ERC4626_ROUNDTRIP_INVARIANT_B =
-        "ERC4626_ROUNDTRIP_INVARIANT_B: s = deposit(a) s' = withdraw(a) s' >= s";
+        "ERC4626_ROUNDTRIP_INVARIANT_B: s = deposit(a), s' = withdraw(a), s' >= s";
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
     string constant ERC4626_ROUNDTRIP_INVARIANT_C = "ERC4626_ROUNDTRIP_INVARIANT_C: deposit(redeem(s)) <= s";
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
-    string constant ERC4626_ROUNDTRIP_INVARIANT_D = "ERC4626_ROUNDTRIP_INVARIANT_D: a = redeem(s) a' = mint(s) a' >= a";
+    string constant ERC4626_ROUNDTRIP_INVARIANT_D = "ERC4626_ROUNDTRIP_INVARIANT_D: a = redeem(s) a' = mint(s), a' >= a";
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
     string constant ERC4626_ROUNDTRIP_INVARIANT_E = "ERC4626_ROUNDTRIP_INVARIANT_E: withdraw(mint(s)) >= s";
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
-    string constant ERC4626_ROUNDTRIP_INVARIANT_F = "ERC4626_ROUNDTRIP_INVARIANT_F: a = mint(s) a' = redeem(s) a' <= a";
+    string constant ERC4626_ROUNDTRIP_INVARIANT_F = "ERC4626_ROUNDTRIP_INVARIANT_F: a = mint(s), a' = redeem(s), a' <= a";
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
     string constant ERC4626_ROUNDTRIP_INVARIANT_G = "ERC4626_ROUNDTRIP_INVARIANT_G: mint(withdraw(a)) >= a";
 
     /// ERC4626Handler.sol::ROUNDTRIP PROPERTIES
     string constant ERC4626_ROUNDTRIP_INVARIANT_H =
-        "ERC4626_ROUNDTRIP_INVARIANT_H: s = withdraw(a) s' = deposit(a) s' <= s";
+        "ERC4626_ROUNDTRIP_INVARIANT_H: s = withdraw(a), s' = deposit(a), s' <= s";
 }

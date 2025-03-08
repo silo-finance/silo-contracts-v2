@@ -226,7 +226,7 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                       PROTOCOL HELPERS                                    //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _getUnAccountedYield() internal view returns (uint256 yield) {
+    function _getUnAccountedYield() internal view virtual returns (uint256 yield) {
         yield = UtilsLib.zeroFloorSub(vault.totalAssets(), vault.lastTotalAssets());
     }
 
@@ -240,11 +240,26 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
 
     function _logWithdrawalQueue() internal {
         uint256 length = vault.withdrawQueueLength();
-        console.log("===========================================");
+        _logSeparatorInternal();
         console.log("WITHDRAWAL QUEUE");
         for (uint256 i; i < length; i++) {
             console.log("withdrawal Queue: ", address(vault.withdrawQueue(i)));
         }
-        console.log("===========================================");
+    }
+
+    function _logArray(string memory key, IERC4626[] storage array) internal {
+        console.log("STORAGE: ", key);
+        for (uint256 i; i < array.length; i++) {
+            console.log("contract: ", address(array[i]));
+        }
+        _logSeparatorInternal();
+    }
+
+    function _logSeparator() internal {
+        console.log("============================================================");
+    }
+
+    function _logSeparatorInternal() internal {
+        console.log("------------------------------------------------------------");
     }
 }

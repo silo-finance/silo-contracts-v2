@@ -33,8 +33,11 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         }
 
         vm.prank(_account);
-        try vault.deposit(maxDeposit, _account) {}
-        catch {
+        try vault.deposit(maxDeposit, _account) returns (uint256 shares) {
+            /// @dev restore original state to not break invariants
+            vm.prank(_account);
+            vault.redeem(shares, address(0), _account);
+        } catch {
             //assertTrue(false, ERC4626_DEPOSIT_INVARIANT_C);// TODO remove comment once test_replay_assert_ERC4626_DEPOSIT_INVARIANT_C is checked
         }
     }
@@ -51,8 +54,11 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         }
 
         vm.prank(_account);
-        try vault.mint(maxMint, _account) {}
-        catch {
+        try vault.mint(maxMint, _account) {
+            /// @dev restore original state to not break invariants
+            vm.prank(_account);
+            vault.redeem(maxMint, address(0), _account);
+        } catch {
             //assertTrue(false, ERC4626_MINT_INVARIANT_C);// TODO remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C is checked
         }
     }
@@ -185,8 +191,8 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
     //                                  PROPERTIES: ACCOUNTING                                   //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_INV_ACCOUNTING_B(uint256 amount) external {// TODO check this property
-        //assertEq(vault.convertToShares(vault.convertToAssets(amount)), amount, INV_ACCOUNTING_B);
+    function assert_INV_ACCOUNTING_B(uint256 amount) external { // TODO check this property
+            //assertEq(vault.convertToShares(vault.convertToAssets(amount)), amount, INV_ACCOUNTING_B);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

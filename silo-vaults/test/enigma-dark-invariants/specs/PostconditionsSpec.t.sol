@@ -58,12 +58,6 @@ abstract contract PostconditionsSpec {
     string constant HSPOST_USER_B =
         "HSPOST_USER_B: After a withdraw or redeem, assets should be withdrawn from the vaults in the withdrawal queue following the queue order"; //TODO
 
-    string constant HSPOST_USER_C =
-        "HSPOST_USER_C: After a deposit or mint, the totalAssets should increase by the amount deposited";
-
-    string constant HSPOST_USER_D =
-        "HSPOST_USER_D: After a withdraw or redeem, the totalAssets should decrease by the amount withdrawn";
-
     string constant HSPOST_USER_E =
         "HSPOST_USER_E: After a deposit or mint, the user balance should increase by the shares minted";
 
@@ -89,29 +83,34 @@ abstract contract PostconditionsSpec {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     string constant GPOST_ACCOUNTING_A =
-        "GPOST_ACCOUNTING_A: totalAssets() should always increase unless a withdrawal occurs";
+        "GPOST_ACCOUNTING_A: totalAssets should always increase unless a withdrawal occurs";
 
     string constant GPOST_ACCOUNTING_B =
-        "GPOST_ACCOUNTING_B: totalAssets() should only increase due to deposits or yield";
+        "GPOST_ACCOUNTING_B: totalAssets should only increase due to deposits or yield";
 
     string constant GPOST_ACCOUNTING_C =
-        "GPOST_ACCOUNTING_C: totalSupply() can only be increase with deposits or fee accrual";
+        "GPOST_ACCOUNTING_C: totalSupply can only be increase with deposits or fee accrual";
 
-    string constant GPOST_ACCOUNTING_D =
-        "GPOST_ACCOUNTING_D: totalSupply() can only be decrease with withdrawals";
+    string constant GPOST_ACCOUNTING_D = "GPOST_ACCOUNTING_D: totalSupply can only be decrease with withdrawals";
+
+    string constant GPOST_ACCOUNTING_E = "GPOST_ACCOUNTING_E: after any transaction lastTotalAssets == totalAssets";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                   DEPOSITS & WITHDRAWALS                                  //
+    //                              ACCOUNTING: DEPOSITS & WITHDRAWALS                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     string constant HSPOST_ACCOUNTING_A =
-        "HSPOST_ACCOUNTING_A: deposit(amount) should always fail if totalAssets() + amount > market.cap"; 
+        "HSPOST_ACCOUNTING_A: deposit(amount) should always fail if totalAssets + amount > market.cap";
 
     string constant HSPOST_ACCOUNTING_B = "HSPOST_ACCOUNTING_B: Withdrawals must never overdraw funds";
 
-    string constant HSPOST_ACCOUNTING_C = "HSPOST_ACCOUNTING_C: A deposit or mint should increase lastTotalAssets by the amount deposited + yield";
+    string constant HSPOST_ACCOUNTING_C =
+        "HSPOST_ACCOUNTING_C: After a deposit or mint, the totalAssets should increase by the amount deposited";
 
-    string constant HSPOST_ACCOUNTING_D = "HSPOST_ACCOUNTING_D: After a withdrawal or redeem lastTotalAssets' == lastTotalAssets + yield - amount withdrawn";
+    string constant HSPOST_ACCOUNTING_D =
+        "HSPOST_ACCOUNTING_D: After a withdraw or redeem, the totalAssets should decrease by the amount withdrawn";
+
+    // TODO establish a relationship between totalAssets before and after
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       REENTRANCY                                          //

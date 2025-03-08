@@ -65,6 +65,7 @@ abstract contract HookAggregator is DefaultBeforeAfterHooks {
         assert_GPOST_ACCOUNTING_B();
         assert_GPOST_ACCOUNTING_C();
         assert_GPOST_ACCOUNTING_D();
+        assert_GPOST_ACCOUNTING_E();
 
         // Reentrancy
         assert_GPOST_REENTRANCY_A();

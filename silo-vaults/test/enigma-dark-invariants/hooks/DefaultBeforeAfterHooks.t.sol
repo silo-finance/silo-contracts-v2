@@ -190,10 +190,10 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     }
 
     function assert_GPOST_ACCOUNTING_B() internal {
-        if (defaultVarsAfter.totalAssets > defaultVarsBefore.totalAssets) {
+        if (defaultVarsAfter.totalAssets > defaultVarsBefore.totalAssets) {//@audit-issue since lastTotalAssets can be unsynced with totalAssets after a call, yield accounting is raising a faltse positive test_replay_transitionCollateral
             assertTrue(
                 (msg.sig == ISiloVaultHandler.depositVault.selector || msg.sig == ISiloVaultHandler.mintVault.selector)
-                    || defaultVarsBefore.yield != 0 || defaultVarsAfter.yield != 0, //@audit added after yield, 1 wei changes in exchange rate of underlying vaults affect silo vault
+                    || defaultVarsBefore.yield != 0 || defaultVarsAfter.yield != 0,
                 GPOST_ACCOUNTING_B
             );
         }
@@ -217,6 +217,10 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
                 GPOST_ACCOUNTING_D
             );
         }
+    }
+
+    function assert_GPOST_ACCOUNTING_E() internal {
+        //assertEq(defaultVarsAfter.lastTotalAssets, defaultVarsAfter.totalAssets, GPOST_ACCOUNTING_E);// TODO remove comment when test_replay_3withdrawVault & test_replay_3depositVault are addressed
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
