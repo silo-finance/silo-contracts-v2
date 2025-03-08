@@ -22,7 +22,7 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 forge test -vv --ffi --mc SiloFactoryTest
 */
 contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
-    string public constant SILO_TO_DEPLOY = SiloConfigsNames.ETH_USDC_UNI_V3_SILO;
+    string public constant SILO_TO_DEPLOY = SiloConfigsNames.SILO_ETH_USDC_UNI_V3;
 
     ISiloConfig siloConfig;
     SiloConfigData siloData;
@@ -53,6 +53,9 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         assertTrue(isSilo, "silo0 is not a silo");
         isSilo = siloFactory.isSilo(address(silo1));
         assertTrue(isSilo, "silo1 is not a silo");
+
+        vm.expectRevert(ISiloFactory.NotYourSilo.selector);
+        siloFactory.burn(firstSiloId);
 
         vm.prank(owner);
         siloFactory.burn(firstSiloId);

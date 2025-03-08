@@ -1,0 +1,40 @@
+# Read the Docs configuration file for Sphinx projects
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+# Used here for Certora documentation
+
+# Required
+version: 2
+
+# Set the OS, Python version and other tools you might need
+# We need graphviz
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+  apt_packages:
+    - graphviz
+
+# Submodules
+# I only included a few submodules to shorten build times
+submodules:
+  include:
+    - openzeppelin5
+    - openzeppelin-contracts-upgradeable-5
+  recursive: false
+
+# Build documentation in the "docs/source" directory with Sphinx
+sphinx:
+  configuration: certora/docs/source/conf.py
+  fail_on_warning: true
+  # You can configure Sphinx to use a different builder,
+  # for instance use the dirhtml builder for simpler URLs
+  # builder: "dirhtml"
+  # Fail on all warnings to avoid broken references
+  # fail_on_warning: true
+
+# Optional but recommended, declare the Python requirements required
+# to build your documentation
+# See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
+python:
+  install:
+    - requirements: certora/docs/requirements.txt

@@ -6,8 +6,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloFactoryDeploy} from "./SiloFactoryDeploy.s.sol";
 import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
 import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
-import {PartialLiquidationDeploy} from "./PartialLiquidationDeploy.s.sol";
-import {GaugeHookReceiverDeploy} from "./GaugeHookReceiverDeploy.s.sol";
+import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
 import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
 import {TowerDeploy} from "./TowerDeploy.s.sol";
@@ -33,8 +32,7 @@ contract MainnetDeploy is CommonDeploy {
         InterestRateModelV2FactoryDeploy interestRateModelV2ConfigFactoryDeploy =
             new InterestRateModelV2FactoryDeploy();
         InterestRateModelV2Deploy interestRateModelV2Deploy = new InterestRateModelV2Deploy();
-        PartialLiquidationDeploy siloLiquidationDeploy = new PartialLiquidationDeploy();
-        GaugeHookReceiverDeploy gaugeHookReceiverDeploy = new GaugeHookReceiverDeploy();
+        SiloHookV1Deploy siloHookV1Deploy = new SiloHookV1Deploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
         LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
         SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
@@ -43,8 +41,7 @@ contract MainnetDeploy is CommonDeploy {
         siloFactoryDeploy.run();
         interestRateModelV2ConfigFactoryDeploy.run();
         interestRateModelV2Deploy.run();
-        siloLiquidationDeploy.run();
-        gaugeHookReceiverDeploy.run();
+        siloHookV1Deploy.run();
         siloDeployerDeploy.run();
         liquidationHelperDeploy.run();
         siloLensDeploy.run();

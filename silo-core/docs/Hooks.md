@@ -4,11 +4,11 @@
 The **Silo Protocol Hooks System** provides an extensible mechanism for interacting with core actions like deposits, withdrawals, borrowing, repayments, leverage operations, collateral transitions, switching collateral, flash loans, and liquidations. Hooks allow external systems to execute custom logic **before** or **after** protocol actions, offering flexibility for validation, logging, or integration with external contracts. While the protocol is fully functional without hooks, they enhance its modularity and allow for seamless interaction with other decentralized systems.
 
 - [Overview](#overview)
+- [Call On Behalf Of](#call-on-behalf-of-the-silo-or-share-token)
 - [Deposit function hook actions](#deposit-function-hook-actions)
 - [Withdraw function hook actions](#withdraw-function-hook-actions)
 - [Borrow function hook actions](#borrow-function-hook-actions)
 - [Repay function hook actions](#repay-function-hook-actions)
-- [Leverage Same Asset function hook actions](#leverage-same-asset-function-hook-actions)
 - [Transition Collateral function hook actions](#transition-collateral-function-hook-actions)
 - [Switch Collateral To This Silo function hook actions](#switch-collateral-to-this-silo-function-hook-actions)
 - [Flash Loan function hook actions](#flash-loan-function-hook-actions)
@@ -40,6 +40,41 @@ Share tokens transfer only has an **After Action Hook**.
 
 3. **Transitioning Between Collateral Types**:
    - Users can transition their assets between **Hook.PROTECTED_TOKEN** and **Hook.COLLATERAL_TOKEN** and vice verse without transferring the underlying assets. This transition is crucial for users who want to switch between protected and borrowable collateral, enabling interest generation or enhanced security.
+
+## Call on behalf of the Silo or Share token
+
+Hooks developers can call any function on behalf of the Silo or Share token. Which opens a possibility to use a silo or share token as a proxy for any other contract.
+
+If developer need this functionality, they can use `callOnBehalfOfSilo` function to call on behalf of the silo or collateral share token.
+
+```solidity
+function callOnBehalfOfSilo(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
+    external
+    payable
+    onlyHookReceiver()
+    returns (bool success, bytes memory result)
+{
+    ...
+}
+```
+
+Or if it is needed to call on behalf of the protected share token or debt token, they can use `callOnBehalfOfShareToken` function.
+
+```solidity
+function callOnBehalfOfShareToken(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
+    external
+    payable
+    onlyHookReceiver()
+    returns (bool success, bytes memory result)
+{
+    ...
+}
+```
+
+See this function implementation in the
+- [Silo](https://github.com/silo-finance/silo-contracts-v2/blob/1.3.2/silo-core/contracts/Silo.sol#L55) contract.
+- [ShareDebtToken](https://github.com/silo-finance/silo-contracts-v2/blob/1.3.2/silo-core/contracts/utils/ShareDebtToken.sol#L22) contract.
+- [ShareProtectedCollateralToken](https://github.com/silo-finance/silo-contracts-v2/blob/1.3.2/silo-core/contracts/utils/ShareProtectedCollateralToken.sol#L11) contract.
 
 # Deposit function hook actions
 
@@ -219,52 +254,6 @@ Share tokens transfer only has an **After Action Hook**.
 ### Share Debt Token Transfer Hook (During Repay)
 
 - During the repayment process, debt tokens are burned to adjust the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
----
-
-# Leverage Same Asset function hook actions
-
-- **Action**: `Hook.LEVERAGE_SAME_ASSET` (beforeAction and afterAction)
-  - **Context**: This hook is invoked during leverage operations where the same asset is used for both deposit and borrowing. It allows for actions to be taken before and after the leverage logic is executed. During this process, both debt and collateral tokens are transferred to reflect the leveraged position.
-  
-  - **Before Leverage Data**:
-    - **Structure**: The data processed before the leverage action is encoded as `abi.encodePacked(depositAssets, borrowAssets, borrower, collateralType)`.
-    - **Fields**:
-      - `depositAssets`: The assets being deposited into the protocol as collateral.
-      - `borrowAssets`: The assets being borrowed from the protocol.
-      - `borrower`: The address of the borrower leveraging the assets.
-      - `collateralType`: The type of collateral being used (either **Hook.COLLATERAL_TOKEN** or **Hook.PROTECTED_TOKEN**).
-    - **Purpose**: The `beforeAction` hook is called **before** any logic of the leverage action is executed. It allows external systems to perform checks or actions before the leverage logic runs. For example, this could involve verifying the borrower’s collateral or eligibility for leverage. The core leverage logic (e.g., collateral and debt adjustments) does not depend on this hook.
-
-    - **Decoding Hook Input Example**:
-      ```solidity
-      Hook.BeforeLeverageSameAssetInput memory input = Hook.beforeLeverageSameAssetDecode(_inputAndOutput);
-      ```
-      - **Explanation**: This code shows how developers can decode the data sent to the `beforeAction` hook using the `Hook` library. The `beforeLeverageSameAssetDecode` function simplifies access to fields like `depositAssets`, `borrowAssets`, `borrower`, and `collateralType`, enabling developers to apply pre-leverage logic as needed.
-
-  - **After Leverage Data**:
-    - **Structure**: The data processed after the leverage action is encoded as `abi.encodePacked(depositAssets, borrowAssets, borrower, collateralType, depositedShares, borrowedShares)`.
-    - **Fields**:
-      - `depositAssets`: The assets deposited into the protocol as collateral.
-      - `borrowAssets`: The assets borrowed from the protocol.
-      - `borrower`: The address of the borrower leveraging the assets.
-      - `collateralType`: The type of collateral being used.
-      - `depositedShares`: The shares representing the borrower’s collateral deposit.
-      - `borrowedShares`: The shares representing the borrower’s debt position.
-    - **Purpose**: The `afterAction` hook is called **after** all logic of the leverage action is completed. It allows external systems to perform follow-up tasks or adjustments after the leverage process has finished. For example, this hook could be used to update the borrower’s leveraged position or notify external systems about the new debt and collateral state. The core leverage logic (e.g., token and share adjustments) is fully executed before this hook is invoked.
-
-    - **Decoding Hook Input Example**:
-      ```solidity
-      Hook.AfterLeverageSameAssetInput memory input = Hook.afterLeverageSameAssetDecode(_inputAndOutput);
-      ```
-      - **Explanation**: This code example shows how developers can decode the data sent to the `afterAction` hook using the `Hook` library. The `afterLeverageSameAssetDecode` function allows developers to easily access data such as `depositedShares` and `borrowedShares` for post-leverage logic.
-
-### Share Token Transfer Hooks (During Leverage Same Asset)
-
-- **Debt Token Transfer**:
-  - During the leverage process, debt tokens are minted to represent the borrower’s debt position. This action triggers a **Share Token Transfer Hook** for the **DEBT_TOKEN** type, which manages the token transfer logic for debt tokens. For more details, refer to the [Share Debt Token Transfer hook](#share-debt-token-transfer-hook-afteraction) section.
-
-- **Collateral Token Transfer**:
-  - Simultaneously, collateral tokens are transferred to represent the borrower’s collateral position. This action triggers a **Share Token Transfer Hook** for both **COLLATERAL_TOKEN** and **PROTECTED_TOKEN** types, depending on the type of collateral used. For more details, refer to the [Share Token Transfer Hook](#share-token-transfer-hook-afteraction) section.
 ---
 
 # Transition Collateral function hook actions

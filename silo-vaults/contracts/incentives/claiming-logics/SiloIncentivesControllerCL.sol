@@ -19,6 +19,9 @@ contract SiloIncentivesControllerCL is IIncentivesClaimingLogic {
         address _vaultIncentivesController,
         address _siloIncentivesController
     ) {
+        require(_vaultIncentivesController != address(0), VaultIncentivesControllerZeroAddress());
+        require(_siloIncentivesController != address(0), SiloIncentivesControllerZeroAddress());
+
         VAULT_INCENTIVES_CONTROLLER = ISiloIncentivesController(_vaultIncentivesController);
         SILO_INCENTIVES_CONTROLLER = ISiloIncentivesController(_siloIncentivesController);
     }

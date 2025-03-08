@@ -49,9 +49,20 @@ interface ISiloFactory is IERC721 {
     /// @param daoFeeReceiver Address of the new DAO fee receiver.
     event DaoFeeReceiverChanged(address daoFeeReceiver);
 
+    /// @notice Emitted on the change of DAO fee receiver for particular silo
+    /// @param silo Address for which new DAO fee receiver is set.
+    /// @param daoFeeReceiver Address of the new DAO fee receiver.
+    event DaoFeeReceiverChangedForSilo(address silo, address daoFeeReceiver);
+
+    /// @notice Emitted on the change of DAO fee receiver for particular asset
+    /// @param asset Address for which new DAO fee receiver is set.
+    /// @param daoFeeReceiver Address of the new DAO fee receiver.
+    event DaoFeeReceiverChangedForAsset(address asset, address daoFeeReceiver);
+
     error MissingHookReceiver();
     error ZeroAddress();
     error DaoFeeReceiverZeroAddress();
+    error SameDaoFeeReceiver();
     error EmptyToken0();
     error EmptyToken1();
     error MaxFeeExceeded();
@@ -72,19 +83,20 @@ interface ISiloFactory is IERC721 {
     error InvalidQuoteToken();
     error HookIsZeroAddress();
     error LiquidationTargetLtvTooHigh();
+    error NotYourSilo();
 
     /// @notice Create a new Silo.
-    /// @param _initData Silo initialization data.
     /// @param _siloConfig Silo configuration.
     /// @param _siloImpl Address of the `Silo` implementation.
     /// @param _shareProtectedCollateralTokenImpl Address of the `ShareProtectedCollateralToken` implementation.
     /// @param _shareDebtTokenImpl Address of the `ShareDebtToken` implementation.
+    /// @param _deployer Address of the deployer.
     function createSilo(
-        ISiloConfig.InitData memory _initData,
         ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl
+        address _shareDebtTokenImpl,
+        address _deployer
     )
         external;
 
@@ -99,9 +111,19 @@ interface ISiloFactory is IERC721 {
     /// @param _maxFee Value of the new DAO maximal fee.
     function setDaoFee(uint128 _minFee, uint128 _maxFee) external;
 
-    /// @notice Set the new DAO fee receiver.
+    /// @notice Set the default DAO fee receiver.
     /// @param _newDaoFeeReceiver Address of the new DAO fee receiver.
     function setDaoFeeReceiver(address _newDaoFeeReceiver) external;
+
+    /// @notice Set the new DAO fee receiver for asset, this setup will be used when fee receiver for silo is empty.
+    /// @param _asset Address for which new DAO fee receiver is set.
+    /// @param _newDaoFeeReceiver Address of the new DAO fee receiver.
+    function setDaoFeeReceiverForAsset(address _asset, address _newDaoFeeReceiver) external;
+
+    /// @notice Set the new DAO fee receiver for silo. This setup has highest priority.
+    /// @param _silo Address for which new DAO fee receiver is set.
+    /// @param _newDaoFeeReceiver Address of the new DAO fee receiver.
+    function setDaoFeeReceiverForSilo(address _silo, address _newDaoFeeReceiver) external;
 
     /// @notice Update the value of max deployer fee. Updated value will be used only for a new Silos max deployer
     /// fee validation. Previously deployed SiloConfigs are immutable.

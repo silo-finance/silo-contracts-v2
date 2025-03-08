@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
@@ -23,6 +24,7 @@ import {SiloStorageLib} from "./SiloStorageLib.sol";
 import {Views} from "./Views.sol";
 
 library Actions {
+    using Address for address;
     using SafeERC20 for IERC20;
     using Hook for uint256;
     using Hook for uint24;
@@ -33,6 +35,9 @@ library Actions {
     error FeeOverflow();
     error FlashLoanNotPossible();
 
+    /// @notice Initialize Silo
+    /// @param _siloConfig Address of ISiloConfig with full configuration for this Silo
+    /// @return hookReceiver Address of the hook receiver for the silo
     function initialize(ISiloConfig _siloConfig) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
@@ -45,6 +50,14 @@ library Actions {
         return configData.hookReceiver;
     }
 
+    /// @notice Implements IERC4626.deposit for protected (non-borrowable) and borrowable collateral
+    /// @dev Reverts for debt asset type
+    /// @param _assets Amount of assets to deposit (0 if `_shares` specified)
+    /// @param _shares shares expected for the deposit  (0 if `_assets` specified)
+    /// @param _receiver Address to receive the deposit shares
+    /// @param _collateralType Type of collateral (Protected or Collateral)
+    /// @return assets Amount of assets deposited
+    /// @return shares Amount of shares minted due to deposit
     function deposit(
         uint256 _assets,
         uint256 _shares,
@@ -80,6 +93,17 @@ library Actions {
         _hookCallAfterDeposit(_collateralType, _assets, _shares, _receiver, assets, shares);
     }
 
+    /// @notice Implements IERC4626.withdraw for protected (non-borrowable) and borrowable collateral
+    /// @dev Reverts for debt asset type
+    /// @param _args Contains withdrawal parameters:
+    /// - `assets`: Amount of assets to withdraw (0 if `_shares` specified)
+    /// - `shares`: Amount of shares burnt for the withdrawal (0 if `_assets` specified)
+    /// - `receiver`: Address to receive withdrawn assets
+    /// - `owner`: Owner of the assets being withdrawn
+    /// - `spender`: Caller executing the withdrawal
+    /// - `collateralType`: Specifies whether withdrawal is protected or borrowable collateral
+    /// @return assets Amount of assets withdrawn
+    /// @return shares Amount of shares burnt during withdrawal
     function withdraw(ISilo.WithdrawArgs calldata _args)
         external
         returns (uint256 assets, uint256 shares)
@@ -115,9 +139,18 @@ library Actions {
         _hookCallAfterWithdraw(_args, assets, shares);
     }
 
+    /// @notice Allows an address to borrow a specified amount of assets
+    /// @param _args Contains the borrowing parameters:
+    /// - `assets`: Number of assets the borrower intends to borrow (0 if `_shares` specified)
+    /// - `shares`: Number of shares corresponding to the assets being borrowed (0 if `_assets` specified)
+    /// - `receiver`: Address receiving the borrowed assets
+    /// - `borrower`: Address of the borrower
+    /// @return assets Amount of assets borrowed
+    /// @return shares Amount of shares minted for the borrowed assets
+    /// @return collateralTypeChanged TRUE if action changed collateral type
     function borrow(ISilo.BorrowArgs memory _args)
         external
-        returns (uint256 assets, uint256 shares)
+        returns (uint256 assets, uint256 shares, bool collateralTypeChanged)
     {
         _hookCallBeforeBorrow(_args, Hook.BORROW);
 
@@ -127,7 +160,7 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
-        siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);
+        collateralTypeChanged = siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -148,9 +181,14 @@ library Actions {
         _hookCallAfterBorrow(_args, Hook.BORROW, assets, shares);
     }
 
+    /// @notice Allows an address to borrow a specified amount of assets that will be back up with deposit made with the
+    /// same asset
+    /// @param _args check ISilo.BorrowArgs for details
+    /// @return assets Amount of assets borrowed
+    /// @return shares Amount of shares minted for the borrowed assets
     function borrowSameAsset(ISilo.BorrowArgs memory _args)
         external
-        returns (uint256 assets, uint256 shares)
+        returns (uint256 assets, uint256 shares, bool collateralTypeChanged)
     {
         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
@@ -160,7 +198,7 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
-        siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
+        collateralTypeChanged = siloConfig.setThisSiloAsCollateralSilo(_args.borrower);
 
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
         ISiloConfig.ConfigData memory debtConfig = collateralConfig;
@@ -179,6 +217,13 @@ library Actions {
         _hookCallAfterBorrow(_args, Hook.BORROW_SAME_ASSET, assets, shares);
     }
 
+    /// @notice Repays a given asset amount and returns the equivalent number of shares
+    /// @param _assets Amount of assets to be repaid
+    /// @param _borrower Address of the borrower whose debt is being repaid
+    /// @param _repayer Address of the repayer who repay debt
+    /// @return assets number of assets that had been repay
+    /// @return shares number of shares that had been repay
+    // solhint-disable-next-line function-max-lines
     function repay(
         uint256 _assets,
         uint256 _shares,
@@ -213,8 +258,14 @@ library Actions {
             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);
         }
     }
-
-    // solhint-disable-next-line function-max-lines
+    /// @notice Transitions assets between collateral (borrowable) and protected (non-borrowable) states
+    /// @dev This method allows assets to switch states without leaving the protocol
+    /// @param _args Contains the transition parameters:
+    /// - `shares`: Amount of shares to transition
+    /// - `owner`: Owner of the assets being transitioned
+    /// - `transitionFrom`: Specifies whether transitioning from collateral or protected
+    /// @return assets Amount of assets transitioned
+    /// @return toShares Equivalent shares gained from the transition
     function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
@@ -278,6 +329,8 @@ library Actions {
         _hookCallAfterTransitionCollateral(_args, toShares, assets);
     }
 
+    /// @notice Switches the collateral silo to this silo
+    /// @dev Revert if the collateral silo is already set
     function switchCollateralToThisSilo() external {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
@@ -291,10 +344,8 @@ library Actions {
 
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
-        require(siloConfig.borrowerCollateralSilo(msg.sender) != address(this), ISilo.CollateralSiloAlreadySet());
-
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.setThisSiloAsCollateralSilo(msg.sender);
+        require(siloConfig.setThisSiloAsCollateralSilo(msg.sender), ISilo.CollateralSiloAlreadySet());
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -370,7 +421,10 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
-    function withdrawFees(ISilo _silo) external returns (uint256 daoRevenue, uint256 deployerRevenue) {
+    function withdrawFees(ISilo _silo)
+        external
+        returns (uint256 daoRevenue, uint256 deployerRevenue, bool redirectedDeployerFees)
+    {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         siloConfig.turnOnReentrancyProtection();
 
@@ -402,12 +456,11 @@ library Actions {
         // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
         unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
 
-        if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
-            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
-        } else {
+        daoRevenue = earnedFees;
+
+        if (deployerFeeReceiver != address(0)) {
             // split fees proportionally
-            daoRevenue = earnedFees * daoFee;
+            daoRevenue *= daoFee;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
@@ -416,13 +469,21 @@ library Actions {
                 deployerRevenue = earnedFees - daoRevenue;
             }
 
-            IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
-            IERC20(asset).safeTransfer(deployerFeeReceiver, deployerRevenue);
+            // trying to transfer to deployer (it might fail)
+            if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
+                // if transfer to deployer fails, send their portion to the DAO instead
+                daoRevenue = earnedFees;
+                redirectedDeployerFees = true;
+            }
         }
+
+        IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
     }
 
+    /// @notice Update hooks configuration for Silo
+    /// @dev This function must be called after the hooks configuration is changed in the hook receiver
     function updateHooks() external returns (uint24 hooksBefore, uint24 hooksAfter) {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
@@ -439,6 +500,11 @@ library Actions {
         IShareToken(cfg.debtShareToken).synchronizeHooks(hooksBefore, hooksAfter);
     }
 
+    /// @notice Method for HookReceiver only to call on behalf of Silo
+    /// @param _target address of the contract to call
+    /// @param _value amount of ETH to send
+    /// @param _callType type of the call (Call or Delegatecall)
+    /// @param _input calldata for the call
     function callOnBehalfOfSilo(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)
         internal
         returns (bool success, bytes memory result)
@@ -623,5 +689,17 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
+    }
+
+    /**
+     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     * Copied from openzeppelin5/contracts/token/ERC20/utils/SafeERC20.sol and modified to return call result
+     */
+    function _safeTransferInternal(IERC20 token, address to, uint256 value) internal returns (bool result) {
+        bytes memory data = abi.encodeCall(token.transfer, (to, value));
+        bytes memory returndata = address(token).functionCall(data);
+
+        result = returndata.length == 0 || abi.decode(returndata, (bool));
     }
 }

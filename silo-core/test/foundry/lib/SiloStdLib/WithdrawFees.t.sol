@@ -116,10 +116,14 @@ contract WithdrawFeesTest is Test {
 
         _$().daoAndDeployerRevenue = 9;
 
-        token.transferMock(dao, 9);
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
-        _withdrawFees(ISilo(address(this)));
+        (uint256 daoRevenue, uint256 deployerRevenue,) = _withdrawFees(ISilo(address(this)));
+
+        assertEq(daoRevenue, 9, "daoRevenue");
+        assertEq(deployerRevenue, 0, "no deployerRevenue, because deployer is empty");
+
+        assertEq(_$().daoAndDeployerRevenue, 0, "_$().daoAndDeployerRevenue updated");
     }
 
     /*
@@ -175,6 +179,35 @@ contract WithdrawFeesTest is Test {
         _withdrawFees(ISilo(address(this)));
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdraw_to_deployer_fails
+    */
+    function test_withdraw_to_deployer_fails() external {
+        uint256 daoFee = 0.1e18;
+        uint256 deployerFee = 0.1e18;
+        uint256 flashloanFeeInBp;
+        address asset = token.ADDRESS();
+        uint256 siloBalance = 1e18;
+
+        address dao = makeAddr("DAO");
+        address deployer = makeAddr("Deployer");
+
+        siloConfig.turnOnReentrancyProtectionMock();
+        siloConfig.getFeesWithAssetMock(address(this), daoFee, deployerFee, flashloanFeeInBp, asset);
+        siloFactory.getFeeReceiversMock(address(this), dao, deployer);
+        siloConfig.turnOffReentrancyProtectionMock();
+
+        token.balanceOfMock(address(this), siloBalance);
+
+        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
+
+        token.transferResultFalseMock(deployer, siloBalance / 2); // transfer to deployer fails
+        token.transferMock(dao, siloBalance); // dao gets all fees as transfer to deployer fails
+
+        (,, bool redirectedDeployerFees) = Actions.withdrawFees(ISilo(address(this)));
+        assertTrue(redirectedDeployerFees, "redirected fees");
+    }
+
     function _withdrawFees_pass(
         uint256 _daoFee,
         uint256 _deployerFee,
@@ -207,8 +240,11 @@ contract WithdrawFeesTest is Test {
         assertEq(_$().daoAndDeployerRevenue, 0, "fees cleared");
     }
 
-    function _withdrawFees(ISilo _silo) internal {
-        Actions.withdrawFees(_silo);
+    function _withdrawFees(ISilo _silo)
+        internal
+        returns (uint256 daoRevenue, uint256 deployerRevenue, bool redirectedDeployerFees)
+    {
+        return Actions.withdrawFees(_silo);
     }
 
     function _setProtectedAssets(uint256 _assets) internal {

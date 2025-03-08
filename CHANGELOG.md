@@ -6,7 +6,89 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Changed
-- use underlying token decimals in collateral share token
+- silo-vaults: require asset decimals to be up to 18
+
+### Fixed
+- allow to burn NFT only by owner
+- revert on invalid token type in `Hook.shareTokenTransfer()`
+
+### Updated
+- Router with multicall
+- Silo hooks refactoring
+- silo-vaults: use 18 decimals offset in idle vault
+
+### Removed
+- silo-vaults: remove skim method
+
+## [1.9.0] - 2025-02-28
+### Added
+- add method `getUsersHealth` to SiloLens
+
+## [1.8.0] - 2025-02-25
+### Added
+- SiloLens redeployment
+
+## [1.7.0] - 2025-02-26
+### Added
+- LBTC / scBTC market on Sonic
+- LBTC / WBTC market on Sonic
+
+## [1.6.0] - 2025-02-25
+### Added
+- SiloRouter deployment
+
+## [1.5.0] - 2025-02-19
+### Added
+- SiloLens deployment
+
+## [1.4.0] - 2025-02-18
+### Added
+- Router with multicall
+
+## [1.3.5] - 2025-02-07
+### Updated
+- stS/S market with 18 decimals share token on Sonic
+
+## [1.3.4] - 2025-02-07
+### Updated
+- deploy new `LiquidationHelper` 
+
+## [1.3.3] - 2025-02-06
+### Updated
+- adjustment for coverage to work
+
+## [1.3.2] - 2025-02-04
+### Added
+- Anon/USDC.e market sonic
+
+## [1.3.1] - 2025-02-04
+### Added
+- wstkscETH/ETH market sonic
+
+## [1.3.0] - 2025-02-04
+### Added
+- wanS/S market sonic
+
+## [1.2.0] - 2025-02-03
+### Added
+- silo-coracle: silo virtual asset name and symbol
+- silo-core: add flag that informs about full liquidation
+- silo lens redeployment
+- silo-oracles: ERC4626 price oracle
+- silo-oracles: Pyth aggregator factory
+- silo-oracles: OracleScaler to normalize amounts for 18 decimal
+- silo-core: manual liquidation helper
+- wS/USDC.e borrowable S market sonic
+- woS/S market sonic
+- wstkscUSD/USDC.e market sonic
+
+## [1.1.0] - 2025-01-27
+### Added
+- solvBTC.BNN/solvBTC market sonic
+- wS/scUSD market sonic
+- Redeployment SiloDeployer
+- silo-core: use underlying token decimals in collateral share token
+- silo-oracles: invert flag
 
 ## [1.0.0] - 2025-01-20
 ### Added

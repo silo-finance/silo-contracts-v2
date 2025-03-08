@@ -2,8 +2,9 @@
 pragma solidity 0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
+
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 import {
     FlowCaps,
@@ -89,7 +90,9 @@ contract PublicAllocator is IPublicAllocatorStaticTyping {
     function transferFee(ISiloVault vault, address payable feeRecipient) external virtual onlyAdminOrVaultOwner(vault) {
         uint256 claimed = accruedFee[vault];
         accruedFee[vault] = 0;
-        feeRecipient.transfer(claimed);
+        (bool success, bytes memory data) = feeRecipient.call{value: claimed}("");
+        if (!success) RevertLib.revertBytes(data, "fee transfer failed");
+
         emit EventsLib.TransferFee(msg.sender, vault, claimed, feeRecipient);
     }
 

@@ -19,7 +19,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
 
-    function _setUp() private {
+    function setUp() public {
         siloConfig = _setUpLocalFixture();
 
         // we need to have something to borrow
@@ -38,8 +38,47 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         _withdraw_all_possible_Collateral();
     }
 
+    /*
+    forge test -vv --ffi --mt test_withdraw_whenDebt
+    */
+    function test_withdraw_whenDebt() public {
+        address depositor = makeAddr("depositor");
+        address borrower = address(this);
+
+        _deposit(1e18, borrower);
+        _deposit(1e18, borrower, ISilo.CollateralType.Protected);
+
+        _depositForBorrow(5e18, depositor);
+        _borrow(silo1.maxBorrow(borrower), borrower);
+
+        _withdraw(silo0.maxWithdraw(borrower), borrower);
+
+        vm.warp(block.timestamp + 1);
+
+        assertFalse(silo0.isSolvent(borrower), "must be insolvent");
+
+        assertEq(
+            silo0.maxWithdraw(borrower),
+            0,
+            "should not be able to withdraw more collateral"
+        );
+
+        assertEq(
+            silo0.maxWithdraw(borrower, ISilo.CollateralType.Protected),
+            0,
+            "should not be able to withdraw more protected"
+        );
+
+        vm.prank(borrower);
+        vm.expectRevert(ISilo.NotSolvent.selector);
+        silo0.withdraw(1, borrower, borrower);
+
+        vm.prank(borrower);
+        vm.expectRevert(ISilo.NotSolvent.selector);
+        silo0.withdraw(1, borrower, borrower, ISilo.CollateralType.Protected);
+    }
+
     function _withdraw_all_possible_Collateral() private {
-        _setUp();
         address borrower = address(this);
 
         ISilo collateralSilo = silo0;

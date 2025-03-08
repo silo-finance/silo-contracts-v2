@@ -58,11 +58,11 @@ contract SiloDeployer is ISiloDeployer {
         siloConfig = _deploySiloConfig(_siloInitData);
         // create silo
         SILO_FACTORY.createSilo(
-            _siloInitData,
             siloConfig,
             SILO_IMPL,
             SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            SHARE_DEBT_TOKEN_IMPL
+            SHARE_DEBT_TOKEN_IMPL,
+            _siloInitData.deployer
         );
         // initialize hook receiver only if it was cloned
         _initializeHookReceiver(_siloInitData, siloConfig, _clonableHookReceiver);
@@ -140,21 +140,21 @@ contract SiloDeployer is ISiloDeployer {
     /// @param _siloInitData Silo configuration for the silo creation
     /// @param _oracles Oracles creation details (factory and creation tx input)
     function _createOracles(ISiloConfig.InitData memory _siloInitData, Oracles memory _oracles) internal {
-        _siloInitData.solvencyOracle0 = _siloInitData.solvencyOracle0 != address(0)
-            ? _siloInitData.solvencyOracle0
-            : _createOracle(_oracles.solvencyOracle0);
+        if (_siloInitData.solvencyOracle0 == address(0)) {
+            _siloInitData.solvencyOracle0 = _createOracle(_oracles.solvencyOracle0);
+        }
 
-        _siloInitData.maxLtvOracle0 = _siloInitData.maxLtvOracle0 != address(0)
-            ? _siloInitData.maxLtvOracle0
-            : _createOracle(_oracles.maxLtvOracle0);
+        if (_siloInitData.maxLtvOracle0 == address(0)) {
+            _siloInitData.maxLtvOracle0 = _createOracle(_oracles.maxLtvOracle0);
+        }
 
-        _siloInitData.solvencyOracle1 = _siloInitData.solvencyOracle1 != address(0)
-            ? _siloInitData.solvencyOracle1
-            : _createOracle(_oracles.solvencyOracle1);
+        if (_siloInitData.solvencyOracle1 == address(0)) {
+            _siloInitData.solvencyOracle1 = _createOracle(_oracles.solvencyOracle1);
+        }
 
-        _siloInitData.maxLtvOracle1 = _siloInitData.maxLtvOracle1 != address(0)
-            ? _siloInitData.maxLtvOracle1
-            : _createOracle(_oracles.maxLtvOracle1);
+        if (_siloInitData.maxLtvOracle1 == address(0)) {
+            _siloInitData.maxLtvOracle1 = _createOracle(_oracles.maxLtvOracle1);
+        }
     }
 
     /// @notice Create an oracle

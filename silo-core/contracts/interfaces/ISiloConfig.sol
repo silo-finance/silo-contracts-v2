@@ -142,13 +142,15 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
     /// @dev Always set collateral silo the same as msg.sender.
     /// @param _borrower borrower address
-    function setThisSiloAsCollateralSilo(address _borrower) external;
+    /// @return collateralSiloChanged TRUE if collateral silo changed
+    function setThisSiloAsCollateralSilo(address _borrower) external returns (bool collateralSiloChanged);
 
     /// @notice Set collateral silo
     /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
     /// @dev Always set collateral silo opposite to the msg.sender.
     /// @param _borrower borrower address
-    function setOtherSiloAsCollateralSilo(address _borrower) external;
+    /// @return collateralSiloChanged TRUE if collateral silo changed
+    function setOtherSiloAsCollateralSilo(address _borrower) external returns (bool collateralSiloChanged);
 
     /// @notice Accrue interest for the silo
     /// @param _silo silo for which accrue interest

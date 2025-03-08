@@ -67,6 +67,61 @@ library SiloLensLib {
         }
     }
 
+    function getUserLt(ISilo _silo, address _borrower) internal view returns (uint256 lt) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _silo.config().getConfigsForSolvency(_borrower);
+
+        if (debtConfig.silo != address(0)) lt = collateralConfig.lt;
+    }
+
+    function getLtvAndLt(ISilo _silo, address _borrower) internal view returns (uint256 ltv, uint256 lt) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _silo.config().getConfigsForSolvency(_borrower);
+
+        if (debtConfig.silo != address(0)) {
+            ltv = SiloSolvencyLib.getLtv(
+                collateralConfig,
+                debtConfig,
+                _borrower,
+                ISilo.OracleType.Solvency,
+                ISilo.AccrueInterestInMemory.Yes,
+                IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+            );
+
+            lt = collateralConfig.lt;
+        }
+    }
+
+    function hasPosition(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
+        (address silo0, address silo1) = _siloConfig.getSilos();
+        ISiloConfig.ConfigData memory cfg0 = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory cfg1 = _siloConfig.getConfig(silo1);
+
+        if (IShareToken(cfg0.collateralShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg0.protectedShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg1.collateralShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg1.protectedShareToken).balanceOf(_borrower) != 0) return true;
+
+        if (IShareToken(cfg0.debtShareToken).balanceOf(_borrower) != 0) return true;
+        if (IShareToken(cfg1.debtShareToken).balanceOf(_borrower) != 0) return true;
+
+        return false;
+      }
+
+    function inDebt(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _siloConfig.getConfigsForSolvency(_borrower);
+
+        has = debtConfig.debtShareToken != address(0)
+            && IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) != 0;
+    }
+
     function collateralBalanceOfUnderlying(ISilo _silo, address _borrower)
         internal
         view
@@ -86,5 +141,39 @@ library SiloLensLib {
         if (collateralShareBalance != 0) {
             borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
         }
+    }
+
+    function totalBorrowShare(ISilo _silo) internal view returns (uint256) {
+        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        return IShareToken(debtShareToken).totalSupply();
+    }
+
+    function borrowShare(ISilo _silo, address _borrower) external view returns (uint256) {
+        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        return IShareToken(debtShareToken).balanceOf(_borrower);
+    }
+
+    function calculateValues(ISiloConfig _siloConfig, address _borrower)
+        internal
+        view
+        returns (uint256 sumOfBorrowerCollateralValue, uint256 totalBorrowerDebtValue)
+    {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _siloConfig.getConfigsForSolvency(_borrower);
+
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+        );
+
+        (
+            sumOfBorrowerCollateralValue, totalBorrowerDebtValue,
+        ) = SiloSolvencyLib.calculateLtv(ltvData, collateralConfig.token, debtConfig.token);
     }
 }

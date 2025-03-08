@@ -15,10 +15,10 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --broadcast --rpc-url $RPC_SONIC\
-        --verify
+        --ffi --rpc-url $RPC_SONIC \
+        --broadcast --verify
 
     NOTICE: remember to register it in Tower
 */
@@ -26,12 +26,12 @@ contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
     address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
 
-    address payable constant GNOSIS_SAFE_MAINNET = payable(0); // placeholder for integration tests
+    address payable constant GNOSIS_SAFE_MAINNET = payable(address(1)); // placeholder for integration tests
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
     address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d);
     address payable constant GNOSIS_SAFE_SONIC = payable(0x7461d8c0fDF376c847b651D882DEa4C73fad2e4B);
 
-    function run() public returns (ILiquidationHelper liquidationHelper) {
+    function run() public virtual returns (address liquidationHelper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         address nativeToken = _nativeToken();
@@ -40,18 +40,18 @@ contract LiquidationHelperDeploy is CommonDeploy {
 
         console2.log("[LiquidationHelperDeploy] nativeToken(): ", nativeToken);
         console2.log("[LiquidationHelperDeploy] exchangeProxy: ", exchangeProxy);
-        console2.log("[LiquidationHelperDeploy] tokensReceiver: ", tokenReceiver);
+        console2.log("[LiquidationHelperDeploy] tokenReceiver: ", tokenReceiver);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        liquidationHelper = new LiquidationHelper(nativeToken, exchangeProxy, tokenReceiver);
+        liquidationHelper = address(new LiquidationHelper(nativeToken, exchangeProxy, tokenReceiver));
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(liquidationHelper), SiloCoreContracts.LIQUIDATION_HELPER);
+        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER);
     }
 
-    function _nativeToken() private returns (address) {
+    function _nativeToken() internal returns (address) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(1);
@@ -63,7 +63,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         revert(string.concat("can not find native token for ", ChainsLib.chainAlias()));
     }
 
-    function _exchangeProxy() private view returns (address) {
+    function _exchangeProxy() internal view returns (address) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(2);
@@ -75,7 +75,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
     }
 
-    function _tokenReceiver() private view returns (address payable) {
+    function _tokenReceiver() internal view returns (address payable) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));
