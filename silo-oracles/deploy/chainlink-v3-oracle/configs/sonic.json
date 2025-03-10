@@ -125,5 +125,16 @@
         "normalizationDivider": 1e26,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "REDSTONE_CHAINLINK_stS_USD": {
+        "baseToken": "stS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_stS_S_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "CHAINLINK_S_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e16,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
