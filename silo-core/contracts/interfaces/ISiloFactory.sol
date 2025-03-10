@@ -84,6 +84,10 @@ interface ISiloFactory is IERC721 {
     error HookIsZeroAddress();
     error LiquidationTargetLtvTooHigh();
     error NotYourSilo();
+    error ConfigMismatchSilo();
+    error ConfigMismatchShareProtectedToken();
+    error ConfigMismatchShareDebtToken();
+    error ConfigMismatchShareCollateralToken();
 
     /// @notice Create a new Silo.
     /// @param _siloConfig Silo configuration.
@@ -91,12 +95,14 @@ interface ISiloFactory is IERC721 {
     /// @param _shareProtectedCollateralTokenImpl Address of the `ShareProtectedCollateralToken` implementation.
     /// @param _shareDebtTokenImpl Address of the `ShareDebtToken` implementation.
     /// @param _deployer Address of the deployer.
+    /// @param _creator Address of the creator.
     function createSilo(
         ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
-        address _deployer
+        address _deployer,
+        address _creator
     )
         external;
 
@@ -161,6 +167,9 @@ interface ISiloFactory is IERC721 {
 
     /// @notice Get SiloConfig address by Silo id.
     function idToSiloConfig(uint256 _id) external view returns (address);
+
+    /// @notice Get the counter of silos created by the wallet.
+    function creatorSiloCounter(address _creator) external view returns (uint256);
 
     /// @notice Do not use this method to check if silo is secure. Anyone can deploy silo with any configuration
     /// and implementation. Most critical part of verification would be to check who deployed it.
