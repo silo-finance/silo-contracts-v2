@@ -34,6 +34,13 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloFactoryCreateSiloAddrValidationsTest
 */
 contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
+    enum ExpectedRevertPlaces {
+        none,
+        siloValidation,
+        shareTokenSilo0,
+        shareTokenSilo1
+    }
+
     ISiloFactory public siloFactory;
     ISiloConfig public siloConfig = ISiloConfig(makeAddr("siloConfig"));
 
@@ -70,7 +77,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             protectedShareToken0,
             protectedShareToken1,
             debtShareToken0,
-            debtShareToken1
+            debtShareToken1,
+            ExpectedRevertPlaces.none
         );
 
         uint256 creatorSiloCounterBefore = siloFactory.creatorSiloCounter(msg.sender);
@@ -100,7 +108,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             protectedShareToken0,
             protectedShareToken1,
             debtShareToken0,
-            debtShareToken1
+            debtShareToken1,
+            ExpectedRevertPlaces.siloValidation
         );
 
         vm.expectRevert(ISiloFactory.ConfigMismatchSilo.selector);
@@ -121,7 +130,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             protectedShareToken0,
             protectedShareToken1,
             debtShareToken0,
-            debtShareToken1
+            debtShareToken1,
+            ExpectedRevertPlaces.siloValidation
         );
 
         vm.expectRevert(ISiloFactory.ConfigMismatchSilo.selector);
@@ -147,7 +157,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             protectedShareToken0,
             protectedShareToken1,
             debtShareToken0,
-            debtShareToken1
+            debtShareToken1,
+            ExpectedRevertPlaces.shareTokenSilo0
         );
 
         vm.expectRevert(ISiloFactory.ConfigMismatchShareCollateralToken.selector);
@@ -168,7 +179,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             protectedShareToken0,
             protectedShareToken1,
             debtShareToken0,
-            debtShareToken1
+            debtShareToken1,
+            ExpectedRevertPlaces.shareTokenSilo1
         );
 
         vm.expectRevert(ISiloFactory.ConfigMismatchShareCollateralToken.selector);
@@ -194,7 +206,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             protectedShareToken0,
             protectedShareToken1,
             invalidDebtShareToken0,
-            debtShareToken1
+            debtShareToken1,
+            ExpectedRevertPlaces.shareTokenSilo0
         );
 
         vm.expectRevert(ISiloFactory.ConfigMismatchShareDebtToken.selector);
@@ -214,8 +227,9 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
             silo1,
             protectedShareToken0,
             protectedShareToken1,
+            debtShareToken0,
             invalidDebtShareToken1,
-            debtShareToken0
+            ExpectedRevertPlaces.shareTokenSilo1
         );
 
         vm.expectRevert(ISiloFactory.ConfigMismatchShareDebtToken.selector);
@@ -290,7 +304,8 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
         address _protectedShareToken0,
         address _protectedShareToken1,
         address _debtShareToken0,
-        address _debtShareToken1
+        address _debtShareToken1,
+        ExpectedRevertPlaces _expectedRevertPlace
     ) internal {
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
@@ -305,64 +320,50 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
         configData1.protectedShareToken = _protectedShareToken1;
         configData1.debtShareToken = _debtShareToken1;
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getConfig.selector, _silo0),
-            abi.encode(configData0)
-        );
+        bytes memory data = abi.encodeWithSelector(ISiloConfig.getSilos.selector);
+        vm.mockCall(address(siloConfig), data, abi.encode(_silo0, _silo1));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getConfig.selector, _silo1),
-            abi.encode(configData1)
-        );
+        if (_expectedRevertPlace == ExpectedRevertPlaces.siloValidation) return;
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getAssetForSilo.selector, _silo0),
-            abi.encode(makeAddr("token0"))
-        );
+        data = abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, _silo0);
+        vm.mockCall(address(siloConfig), data, abi.encode(_protectedShareToken0, _collateralShareToken0, _debtShareToken0));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getAssetForSilo.selector, _silo1),
-            abi.encode(makeAddr("token1"))
-        );
+        if (_expectedRevertPlace == ExpectedRevertPlaces.shareTokenSilo0) return;
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, _silo0),
-            abi.encode(_protectedShareToken0, _collateralShareToken0, _debtShareToken0)
-        );
+        data = abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, _silo1);
+        vm.mockCall(address(siloConfig), data, abi.encode(_protectedShareToken1, _collateralShareToken1, _debtShareToken1));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, _silo1),
-            abi.encode(_protectedShareToken1, _collateralShareToken1, _debtShareToken1)
-        );
+        if (_expectedRevertPlace == ExpectedRevertPlaces.shareTokenSilo1) return;
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ICrossReentrancyGuard.reentrancyGuardEntered.selector),
-            abi.encode(false)
-        );
+        data = abi.encodeWithSelector(ISiloConfig.getConfig.selector, _silo0);
+        vm.mockCall(address(siloConfig), data, abi.encode(configData0));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getSilos.selector),
-            abi.encode(_silo0, _silo1)
-        );
+        data = abi.encodeWithSelector(ISiloConfig.getConfig.selector, _silo1);
+        vm.mockCall(address(siloConfig), data, abi.encode(configData1));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            configData0.hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector, _silo0),
-            abi.encode(0, 0)
-        );
+        data = abi.encodeWithSelector(ISiloConfig.getAssetForSilo.selector, _silo0);
+        vm.mockCall(address(siloConfig), data, abi.encode(makeAddr("token0")));
+        vm.expectCall(address(siloConfig), data);
 
-        vm.mockCall(
-            configData1.hookReceiver,
-            abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector, _silo1),
-            abi.encode(0, 0)
-        );
+        data = abi.encodeWithSelector(ISiloConfig.getAssetForSilo.selector, _silo1);
+        vm.mockCall(address(siloConfig), data, abi.encode(makeAddr("token1")));
+        vm.expectCall(address(siloConfig), data);
+
+        data = abi.encodeWithSelector(ICrossReentrancyGuard.reentrancyGuardEntered.selector);
+        vm.mockCall(address(siloConfig), data, abi.encode(false));
+        vm.expectCall(address(siloConfig), data);
+
+        data = abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector, _silo0);
+        vm.mockCall(configData0.hookReceiver, data, abi.encode(0, 0));
+        vm.expectCall(configData0.hookReceiver, data);
+
+        data = abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector, _silo1);
+        vm.mockCall(configData1.hookReceiver, data, abi.encode(0, 0));
+        vm.expectCall(configData1.hookReceiver, data);
     }
 }
