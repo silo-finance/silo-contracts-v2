@@ -426,6 +426,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         address borrower = makeAddr("Borrower");
         address spender = makeAddr("Spender");
 
+        // Approve does not work on share debt token transferFrom
         vm.prank(borrower);
         shareDebtToken.approve(spender, 1e18);
 
@@ -460,9 +461,6 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
         _borrow(borrowAmount, borrower, _sameAsset);
 
-        vm.prank(borrower);
-        shareDebtToken.approve(spender, borrowAmount);
-
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(borrower, borrowAmount);
 
@@ -476,6 +474,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
 
         assertEq(balance, 0, "receiver has no debt");
 
+        // Only receive approval is required for transferFrom
         vm.prank(spender);
         shareDebtToken.transferFrom(borrower, receiver, borrowAmount);
 
