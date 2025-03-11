@@ -11,6 +11,8 @@ import {IERC3156FlashBorrower} from "./interfaces/IERC3156FlashBorrower.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 
+import { IKeyringChecker } from "./interfaces/IKeyringChecker.sol";
+
 import {ShareCollateralToken} from "./utils/ShareCollateralToken.sol";
 
 import {Actions} from "./lib/Actions.sol";
@@ -36,6 +38,12 @@ contract Silo is ISilo, ShareCollateralToken {
 
     ISiloFactory public immutable factory;
 
+    /// @notice Address of the KeyringChecker. Set to address(0) if not used.
+    IKeyringChecker private keyringChecker;
+
+    /// @notice PolicyId to be used for the silo. Not used if keyringChecker is address(0).
+    uint256 private keyringPolicyId;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(ISiloFactory _siloFactory) {
         factory = _siloFactory;
@@ -49,6 +57,15 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc IShareToken
     function silo() external view virtual override returns (ISilo) {
         return this;
+    }
+
+    /// @notice Modifier to check if the sender is whitelisted by the keyring checker
+    modifier onlyKeyringWhitelisted() {
+        require(
+        keyringChecker.checkCredential(keyringPolicyId, msg.sender),
+        OnlyKeyringWhitelisted()
+        );
+        _;
     }
 
     /// @inheritdoc ISilo
@@ -694,6 +711,7 @@ contract Silo is ISilo, ShareCollateralToken {
     )
         internal
         virtual
+        onlyKeyringWhitelisted
         returns (uint256 assets, uint256 shares)
     {
         (
@@ -717,6 +735,7 @@ contract Silo is ISilo, ShareCollateralToken {
     )
         internal
         virtual
+        onlyKeyringWhitelisted
         returns (uint256 assets, uint256 shares)
     {
         (assets, shares) = Actions.withdraw(
@@ -826,4 +845,12 @@ contract Silo is ISilo, ShareCollateralToken {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
     }
+
+    /// @inheritdoc ISilo
+  function setKeyringConfig(address _keyringChecker, uint256 _keyringPolicyId)
+    external
+  {
+    keyringChecker = IKeyringChecker(_keyringChecker);
+    keyringPolicyId = _keyringPolicyId;
+  }
 }
