@@ -8,30 +8,45 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IKeyringChecker} from "silo-core/contracts/interfaces/IKeyringChecker.sol";
 import {IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
-
-contract MockKeyringChecker is IKeyringChecker {
-    mapping(uint256 => mapping(address => bool)) public whitelisted;
-
-    function checkCredential(uint256 policyId, address user) external view returns (bool) {
-        return whitelisted[policyId][user];
-    }
-
-    function setWhitelisted(uint256 policyId, address user, bool status) external {
-        whitelisted[policyId][user] = status;
-    }
-}
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {KeyringCheckerMock} from "silo-core/test/foundry/_mocks/KeyringCheckerMock.sol";
 
 contract SiloKeyringTest is SiloLittleHelper, IntegrationTest {
     string public constant SILO_TO_DEPLOY = SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO;
-    MockKeyringChecker public keyringChecker;
+    KeyringCheckerMock public keyringChecker;
     uint256 public constant TEST_POLICY_ID = 1;
+    address siloConfigAddr;
 
     function setUp() public {
         // Deploy base setup using the helper
         _setUpLocalFixture();
         
         // Deploy mock keyring checker
-        keyringChecker = new MockKeyringChecker();
+        keyringChecker = new KeyringCheckerMock();
+        
+        // Store SiloConfig address
+        siloConfigAddr = address(silo0.config());
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testOnlySiloConfigCanSetKeyring
+    */
+    function testOnlySiloConfigCanSetKeyring() public {
+        // Try to set keyring config from non-SiloConfig address
+        vm.expectRevert(IShareToken.OnlySiloConfig.selector);
+        silo0.setKeyringConfig(address(keyringChecker), TEST_POLICY_ID);
+
+        // Set it from SiloConfig address
+        vm.prank(siloConfigAddr);
+        silo0.setKeyringConfig(address(keyringChecker), TEST_POLICY_ID);
+        
+        // Verify it worked by trying a deposit (should fail due to not being whitelisted)
+        uint256 depositAmount = 1000e18;
+        deal(address(token0), address(this), depositAmount);
+        token0.approve(address(silo0), depositAmount);
+        
+        vm.expectRevert(ISilo.OnlyKeyringWhitelisted.selector);
+        silo0.deposit(depositAmount, address(this));
     }
 
     /*
@@ -39,6 +54,7 @@ contract SiloKeyringTest is SiloLittleHelper, IntegrationTest {
     */
     function testSetKeyringConfig() public {
         // Test setting keyring config
+        vm.prank(siloConfigAddr);
         silo0.setKeyringConfig(address(keyringChecker), TEST_POLICY_ID);
         
         // Try to deposit with non-whitelisted address
@@ -62,32 +78,14 @@ contract SiloKeyringTest is SiloLittleHelper, IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testKeyringDisabled
-    */
-    function testKeyringDisabled() public {
-        // Test with keyring checker disabled (address(0))
-        silo0.setKeyringConfig(address(0), TEST_POLICY_ID);
-        
-        // Should allow deposit without whitelisting
-        uint256 depositAmount = 1000e18;
-        deal(address(token0), address(this), depositAmount);
-        token0.approve(address(silo0), depositAmount);
-        
-        uint256 expectedShares = silo0.previewDeposit(depositAmount);
-        uint256 receivedShares = silo0.deposit(depositAmount, address(this));
-        
-        assertEq(receivedShares, expectedShares, "Received shares should match preview");
-        assertEq(silo0.balanceOf(address(this)), expectedShares, "Balance should match expected shares");
-    }
-
-    /*
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testMultipleUsers
     */
     function testMultipleUsers() public {
+        vm.prank(siloConfigAddr);
+        silo0.setKeyringConfig(address(keyringChecker), TEST_POLICY_ID);
+        
         address alice = makeAddr("alice");
         address bob = makeAddr("bob");
-        
-        silo0.setKeyringConfig(address(keyringChecker), TEST_POLICY_ID);
         
         uint256 depositAmount = 1000e18;
         deal(address(token0), alice, depositAmount);
@@ -127,6 +125,7 @@ contract SiloKeyringTest is SiloLittleHelper, IntegrationTest {
     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testUpdateKeyringConfig
     */
     function testUpdateKeyringConfig() public {
+        vm.prank(siloConfigAddr);
         silo0.setKeyringConfig(address(keyringChecker), TEST_POLICY_ID);
         
         // Whitelist user in first policy
@@ -144,6 +143,7 @@ contract SiloKeyringTest is SiloLittleHelper, IntegrationTest {
         
         // Change to new policy
         uint256 newPolicyId = 2;
+        vm.prank(siloConfigAddr);
         silo0.setKeyringConfig(address(keyringChecker), newPolicyId);
         
         // Should fail with new policy (not whitelisted)

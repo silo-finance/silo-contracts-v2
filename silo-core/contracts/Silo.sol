@@ -850,6 +850,9 @@ contract Silo is ISilo, ShareCollateralToken {
   function setKeyringConfig(address _keyringChecker, uint256 _keyringPolicyId)
     external
   {
+    
+    require(msg.sender == address(ShareTokenLib.siloConfig()), OnlySiloConfig());
+
     keyringChecker = IKeyringChecker(_keyringChecker);
     keyringPolicyId = _keyringPolicyId;
   }
