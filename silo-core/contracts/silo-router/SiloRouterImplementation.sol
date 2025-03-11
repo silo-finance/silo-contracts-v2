@@ -25,12 +25,18 @@ Supporting the following scenarios:
     SiloRouter.deposit(ISilo _silo, uint256 _amount)
 
 ## borrow
-- borrow token Silo.borrow or Silo.borrowSameAsset
+- borrow token Silo.borrow
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
-- borrow same asset Silo.borrowSameAsset
-    SiloRouter.borrowSameAsset(ISilo _silo, uint256 _assets, address _receiver)
 - borrow wrapped native token and unwrap in a single tx using SiloRouter.multicall
     SiloRouter.borrow(ISilo _silo, uint256 _assets, address _receiver)
+    SiloRouter.unwrap(IWrappedNativeToken _native, uint256 _amount)
+    SiloRouter.sendValue(address payable _to, uint256 _amount)
+
+## borrowSameAsset
+- borrow same asset Silo.borrowSameAsset
+    SiloRouter.borrowSameAsset(ISilo _silo, uint256 _assets, address _receiver)
+- borrowSameAsset wrapped native token and unwrap in a single tx using SiloRouter.multicall
+    SiloRouter.borrowSameAsset(ISilo _silo, uint256 _assets, address _receiver)
     SiloRouter.unwrap(IWrappedNativeToken _native, uint256 _amount)
     SiloRouter.sendValue(address payable _to, uint256 _amount)
 
@@ -59,7 +65,14 @@ Supporting the following scenarios:
     SiloRouter.repay(ISilo _silo, uint256 _assets, address _borrower)
 - full repay token using SiloRouter.multicall
     SiloRouter.repayAll(ISilo _silo, address _borrower)
+    SiloRouter.transferAll(IERC20 _token, address _to)
+- full repay & unwrap in a single tx using SiloRouter.multicall
+    SiloRouter.repayAll(ISilo _silo, address _borrower)
+    SiloRouter.unwrapAll(IWrappedNativeToken _native)
     SiloRouter.sendValueAll(address payable _to)
+- full repay native
+    SiloRouter.repayAllNative(IWrappedNativeToken _native, ISilo _silo)
+    SiloRouter.transferAll(IERC20 _token, address _to)
  */
 
 /// @dev This contract should never use `msg.value` as `SiloRouter` contract executes multicall with a delegatecall.
