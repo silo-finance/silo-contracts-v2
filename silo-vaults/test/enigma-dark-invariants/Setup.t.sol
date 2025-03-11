@@ -7,15 +7,14 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 // Contracts
 import {SiloVault} from "silo-vaults/contracts/SiloVault.sol";
-import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
-import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
+import {SiloVaultsFactory} from "silo-vaults/contracts/SiloVaultsFactory.sol";
+import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
 import {MockERC4626 as Market} from "./utils/mocks/MockERC4626.sol";
 import {PublicAllocator} from "silo-vaults/contracts/PublicAllocator.sol";
 import {InvariantsSiloFixture} from
     "silo-vaults/test/enigma-dark-invariants/helpers/fixtures/InvariantsSiloFixture.sol";
 
 // Interfaces
-import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
@@ -27,6 +26,9 @@ import {Actor} from "./utils/Actor.sol";
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {
     function _setUp() internal {
+        // Deploy the suite assets
+        _deployAssets();
+
         // Deploy core contracts of the protocol
         _deployProtocolCore();
 
@@ -36,41 +38,38 @@ contract Setup is BaseTest {
 
     /// @notice Deploy protocol core contracts
     function _deployProtocolCore() internal {
-        ALLOCATOR = _makeAddr("Allocator");
-        CURATOR = _makeAddr("Curator");
-        GUARDIAN = _makeAddr("Guardian");
-
-        SUPPLIER = _makeAddr("Supplier");
-        BORROWER = _makeAddr("Borrower");
-        REPAYER = _makeAddr("Repayer");
-        ONBEHALF = _makeAddr("OnBehalf");
-        RECEIVER = _makeAddr("Receiver");
-
+        // Set the fee recipient
         FEE_RECIPIENT = payable(_makeAddr("FeeRecipient"));
-        SKIM_RECIPIENT = _makeAddr("SkimRecipient");
 
-        // Deploy the asset token
-        asset = new TestERC20("Asset", "ASSET", 18);
-        collateralAsset = new TestERC20("Collateral Asset", "CASSET", 18);
-        suiteAssets.push(address(asset));
-        suiteAssets.push(address(collateralAsset));
+        // Deploy SiloVault Factory
+        siloVaultsFactory = new SiloVaultsFactory();
 
-        publicAllocator = new PublicAllocator();
-
-        // Deploy the Incentives Module
-        vaultIncentivesModule = new VaultIncentivesModule(OWNER); //TODO setup
-
-        // Deploy the protocol main contracts
-        vault = ISiloVault(
-            address(new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(asset), "SiloVault Vault", "MMV"))
-        );
+        // Deploy Silo Vault
+        vault = siloVaultsFactory.createSiloVault(OWNER, TIMELOCK,address(asset), "SiloVault Vault", "MMV");
         vaults.push(vault);
         suiteAssets.push(address(vault));
 
-        idleMarket = new IdleVault(address(vault), address(asset), "idle vault", "idle");
-        suiteAssets.push(address(idleMarket)); //TODO remove comment when internal accounting is applied
+        // Deploy Idle Vault
+        IdleVaultsFactory factory = new IdleVaultsFactory();
+        idleMarket = factory.createIdleVault(vault);
+        suiteAssets.push(address(idleMarket));
 
+        // Deploy the public allocator
+        publicAllocator = new PublicAllocator();
         vault.setIsAllocator(address(publicAllocator), true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          ASSETS                                           //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _deployAssets() internal {
+        // Deploy the suite asset token
+        asset = new TestERC20("Asset", "ASSET", 18);
+        suiteAssets.push(address(asset));
+
+        collateralAsset = new TestERC20("Collateral Asset", "CASSET", 18);
+        suiteAssets.push(address(collateralAsset));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +77,7 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _createNewMarkets() internal {
-        siloFixture = new InvariantsSiloFixture(FEE_RECIPIENT);
+        siloFixture = new InvariantsSiloFixture(FEE_RECIPIENT, address(this));
 
         for (uint256 i; i < NUM_MARKETS; i++) {
             _setupMarket(i);

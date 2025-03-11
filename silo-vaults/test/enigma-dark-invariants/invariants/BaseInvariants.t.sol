@@ -64,7 +64,7 @@ abstract contract BaseInvariants is HandlerAggregator {
 
         for (uint256 i; i < markets.length; i++) {
             if (vault.config(markets[i]).enabled) {
-                assertTrue(withdrawQueueCache[markets[i]], INV_QUEUES_C);
+                assertTrue(withdrawQueueCache[markets[i]], INV_QUEUES_E);
             }
         }
 

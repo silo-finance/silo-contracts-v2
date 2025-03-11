@@ -32,13 +32,15 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
             asset.mint(_account, maxDeposit - asset.balanceOf(_account));
         }
 
-        vm.prank(_account);
-        try vault.deposit(maxDeposit, _account) returns (uint256 shares) {
-            /// @dev restore original state to not break invariants
+        if (maxDeposit != 0) {
             vm.prank(_account);
-            vault.redeem(shares, address(0), _account);
-        } catch {
-            //assertTrue(false, ERC4626_DEPOSIT_INVARIANT_C);// TODO remove comment once test_replay_assert_ERC4626_DEPOSIT_INVARIANT_C is checked
+            try vault.deposit(maxDeposit, _account) returns (uint256 shares) {
+                /// @dev restore original state to not break invariants
+                vm.prank(_account);
+                vault.redeem(shares, address(0), _account);
+            } catch {
+                assertTrue(false, ERC4626_DEPOSIT_INVARIANT_C);
+            }
         }
     }
 
@@ -53,13 +55,15 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
             asset.mint(_account, maxMintToAssets - asset.balanceOf(_account));
         }
 
-        vm.prank(_account);
-        try vault.mint(maxMint, _account) {
-            /// @dev restore original state to not break invariants
+        if (maxMint != 0) {
             vm.prank(_account);
-            vault.redeem(maxMint, address(0), _account);
-        } catch {
-            //assertTrue(false, ERC4626_MINT_INVARIANT_C);// TODO remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C is checked
+            try vault.mint(maxMint, _account) {
+                /// @dev restore original state to not break invariants
+                vm.prank(_account);
+                vault.redeem(maxMint, address(0), _account);
+            } catch {
+                assertTrue(false, ERC4626_MINT_INVARIANT_C);
+            }
         }
     }
 
@@ -67,10 +71,12 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         address _account = address(actor);
         uint256 maxWithdraw = vault.maxWithdraw(_account);
 
-        vm.prank(_account);
-        try vault.withdraw(maxWithdraw, _account, _account) {}
-        catch {
-            assertTrue(false, ERC4626_WITHDRAW_INVARIANT_C);
+        if (maxWithdraw != 0) {
+            vm.prank(_account);
+            try vault.withdraw(maxWithdraw, _account, _account) {}
+            catch {
+                assertTrue(false, ERC4626_WITHDRAW_INVARIANT_C);
+            }
         }
     }
 
@@ -78,10 +84,12 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         address _account = address(actor);
         uint256 maxRedeem = vault.maxRedeem(_account);
 
-        vm.prank(_account);
-        try vault.redeem(maxRedeem, _account, _account) {}
-        catch {
-            assertTrue(false, ERC4626_REDEEM_INVARIANT_C);
+        if (maxRedeem != 0) {
+            vm.prank(_account);
+            try vault.redeem(maxRedeem, _account, _account) {}
+            catch {
+                assertTrue(false, ERC4626_REDEEM_INVARIANT_C); //test_replay_assert_ERC4626_REDEEM_INVARIANT_C
+            }
         }
     }
 
@@ -122,7 +130,7 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         vault.redeem(mintedShares, address(this), address(this));
 
-        //assertLe(mintedShares, _shares, ERC4626_ROUNDTRIP_INVARIANT_C);// TODO remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C is checked
+        assertLe(mintedShares, _shares, ERC4626_ROUNDTRIP_INVARIANT_C); // TODO pending: remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C is checked
     }
 
     function assert_ERC4626_ROUNDTRIP_INVARIANT_D(uint256 _shares) external {
@@ -171,7 +179,7 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         vault.redeem(vault.balanceOf(address(this)), address(this), address(this));
 
-        //assertGe(depositedAssets, _assets, ERC4626_ROUNDTRIP_INVARIANT_G);// TODO remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_G is checked
+        assertGe(depositedAssets, _assets, ERC4626_ROUNDTRIP_INVARIANT_G);
     }
 
     function assert_ERC4626_ROUNDTRIP_INVARIANT_H(uint256 _assets) external {
@@ -184,7 +192,7 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         vault.redeem(vault.balanceOf(address(this)), address(this), address(this));
 
-        //assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H);// TODO remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_H is checked
+        assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H);// TODO pending: remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_H is checked
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

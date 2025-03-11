@@ -45,14 +45,6 @@ abstract contract InvariantsSpec {
     string constant INV_QUEUES_B = "INV_QUEUES_B: markets in the withdraw queue are enabled";
 
     /// @notice related to certora Enabled properties
-    string constant INV_QUEUES_C =
-        "INV_QUEUES_C: the withdraw rank of a market is given by the withdrawRank ghost variable"; //TODO
-
-    /// @notice related to certora Enabled properties
-    string constant INV_QUEUES_D =
-        "INV_QUEUES_D: enabled markets have a positive withdraw rank, according to the withdrawRank ghost variable"; //TODO
-
-    /// @notice related to certora Enabled properties
     string constant INV_QUEUES_E = "INV_QUEUES_E: enabled markets are in the withdraw queue";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

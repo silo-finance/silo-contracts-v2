@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 // Utils
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 // Contracts
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
@@ -9,11 +10,7 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {
-    IGaugeHookReceiver,
-    GaugeHookReceiver
-} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
 
@@ -47,13 +44,14 @@ contract InvariantsSiloFixture {
     IInterestRateModelV2Factory public interestRateModelV2ConfigFactory;
     IInterestRateModelV2.Config public presetIRMConfig;
     IInterestRateModelV2 public interestRateModelV2;
+    address deployer_;
 
     address oracle0;
     address oracle1;
 
     //mapping(string => ISiloConfig.InitData) public siloData;
 
-    constructor(address feeReceiver) {
+    constructor(address feeReceiver, address _deployer) {
         // Deploy core contracts and factory
         core_deploySiloCoreContracts();
         core_deploySiloFactory(feeReceiver);
@@ -61,6 +59,8 @@ contract InvariantsSiloFixture {
         // Interest rate model
         core_deployInterestRateConfigFactory();
         core_deployInterestRateModel();
+
+        deployer_ = _deployer;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,23 +73,25 @@ contract InvariantsSiloFixture {
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
-        ISiloConfig.InitData memory siloInitData = _getInitData(asset0, asset1, address(new PartialLiquidation()));
+        // Deploy SiloHookV1
+        address siloHookImplementation = address(new SiloHookV1());
+        SiloHookV1 siloHook = SiloHookV1(Clones.cloneDeterministic(siloHookImplementation, bytes32(0)));
 
         // deploy silo config
+        ISiloConfig.InitData memory siloInitData = _getInitData(asset0, asset1, address(siloHook));
         siloConfig = _deploySiloConfig(siloInitData, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
 
         // deploy silo
         siloFactory.createSilo(
-            siloInitData, siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+            siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, siloInitData.deployer
         );
 
         (address _vault0, address _vault1) = siloConfig.getSilos();
         vault0 = ISilo(payable(_vault0));
         vault1 = ISilo(payable(_vault1));
 
-        // Deploy and initialize the liquidation module & mock flashloan receiver
-        PartialLiquidation liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
-        liquidationModule.initialize(siloConfig, "");
+        // Initialize the liquidation module
+        siloHook.initialize(siloConfig, abi.encode(deployer_));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +187,7 @@ contract InvariantsSiloFixture {
         returns (ISiloConfig.InitData memory)
     {
         return ISiloConfig.InitData({
-            deployer: address(this),
+            deployer: deployer_,
             daoFee: 0.15e18,
             deployerFee: 0.1e18,
             token0: asset0,

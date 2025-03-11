@@ -185,7 +185,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
     function assert_GPOST_ACCOUNTING_A() internal {
         if (msg.sig != ISiloVaultHandler.withdrawVault.selector && msg.sig != ISiloVaultHandler.redeemVault.selector) {
-            //assertGe(defaultVarsAfter.totalAssets, defaultVarsBefore.totalAssets, GPOST_ACCOUNTING_A); // TODO remove comment when test_replay_reallocateTo is addressed
+            assertGe(defaultVarsAfter.totalAssets, defaultVarsBefore.totalAssets, GPOST_ACCOUNTING_A);
         }
     }
 
@@ -220,7 +220,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     }
 
     function assert_GPOST_ACCOUNTING_E() internal {
-        //assertEq(defaultVarsAfter.lastTotalAssets, defaultVarsAfter.totalAssets, GPOST_ACCOUNTING_E);// TODO remove comment when test_replay_3withdrawVault & test_replay_3depositVault are addressed
+        assertEq(defaultVarsAfter.lastTotalAssets, defaultVarsAfter.totalAssets, GPOST_ACCOUNTING_E);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

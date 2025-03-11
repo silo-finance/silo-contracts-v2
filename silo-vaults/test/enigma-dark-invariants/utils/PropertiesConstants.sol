@@ -7,6 +7,7 @@ abstract contract PropertiesConstants {
     address constant USER2 = address(0x20000);
     address constant USER3 = address(0x30000);
     uint256 constant INITIAL_BALANCE = 1000e30;
+    uint184 constant MAX_UNDERLYING_SUPPLY = type(uint128).max;
 
     // Protocol constants
     int256 constant BLOCK_TIME = 1;

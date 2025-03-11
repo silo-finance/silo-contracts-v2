@@ -39,6 +39,10 @@ abstract contract ERC4626Handler is BaseHandler {
         if (success) {} else {
             revert("ERC4626Handler: deposit failed");
         }
+
+        if (IERC20(target).totalSupply() > MAX_UNDERLYING_SUPPLY) {
+            revert("ERC4626Handler: deposit overflow");
+        }
     }
 
     function mint(uint256 shares, uint8 i, uint8 j) external setup {
@@ -55,6 +59,10 @@ abstract contract ERC4626Handler is BaseHandler {
 
         if (success) {} else {
             revert("ERC4626Handler: mint failed");
+        }
+
+        if (IERC20(target).totalSupply() > MAX_UNDERLYING_SUPPLY) {
+            revert("ERC4626Handler: deposit overflow");
         }
     }
 

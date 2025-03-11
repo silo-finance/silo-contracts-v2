@@ -53,6 +53,13 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
         _;
     }
 
+    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data)
+        external
+        returns (bytes4)
+    {
+        return this.onERC721Received.selector;
+    }
+
     receive() external payable {}
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

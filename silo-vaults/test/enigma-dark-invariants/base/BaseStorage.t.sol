@@ -11,6 +11,7 @@ import {InvariantsSiloFixture} from
 
 // Interfaces
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
+import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFactory.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
@@ -57,18 +58,8 @@ abstract contract BaseStorage {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     address internal OWNER = address(this);
-    address internal ALLOCATOR;
-    address internal CURATOR;
-    address internal GUARDIAN;
-
-    address internal SUPPLIER;
-    address internal BORROWER;
-    address internal REPAYER;
-    address internal ONBEHALF;
-    address internal RECEIVER;
 
     address payable internal FEE_RECIPIENT;
-    address internal SKIM_RECIPIENT;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       SUITE STORAGE                                       //
@@ -77,19 +68,21 @@ abstract contract BaseStorage {
     // Main contract of the suite
     ISiloVault internal vault;
 
-    // "Fake" Market for the suite
-    IERC4626 internal idleMarket;
+    // Main contract of the suite
+    ISiloVaultsFactory internal siloVaultsFactory;
 
+    // Public Allocator contract
     PublicAllocator internal publicAllocator;
 
-    VaultIncentivesModule internal vaultIncentivesModule;
+    // Idle Market of the suite
+    IERC4626 internal idleMarket;
+
+    // Silo fixture
+    InvariantsSiloFixture internal siloFixture;
 
     // Test Assets
     TestERC20 internal asset;
     TestERC20 internal collateralAsset;
-
-    // Silo fixture
-    InvariantsSiloFixture internal siloFixture;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       EXTRA VARIABLES                                     //

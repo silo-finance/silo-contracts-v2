@@ -57,7 +57,7 @@ abstract contract SiloVaultHandler is BaseHandler {
             );
 
             /// @dev ACCOUNTING
-            //assertEq(defaultVarsBefore.totalAssets + _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_C);// TODO remove comment once test_replay_depositVault is checked
+            assertEq(defaultVarsBefore.totalAssets + _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_C);// TODO pending: remove comment once test_replay_depositVault is checked
         } else {
             revert("SiloVaultHandler: deposit failed");
         }
@@ -97,7 +97,7 @@ abstract contract SiloVaultHandler is BaseHandler {
             );
 
             /// @dev ACCOUNTING
-            //assertEq(defaultVarsBefore.totalAssets + _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_C);// TODO remove comment once test_replay_mintVault is checked
+            assertEq(defaultVarsBefore.totalAssets + _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_C);
         } else {
             revert("SiloVaultHandler: mint failed");
         }
@@ -140,7 +140,7 @@ abstract contract SiloVaultHandler is BaseHandler {
             /// @dev ACCOUNTING
             assertGe(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_B);
 
-            //assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D);// TODO remove comment once test_replay_withdrawVault is checked
+            assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D);// TODO peding: remove comment once test_replay_withdrawVault is checked
         } else {
             revert("SiloVaultHandler: withdraw failed");
         }
@@ -182,14 +182,10 @@ abstract contract SiloVaultHandler is BaseHandler {
 
             /// @dev ACCOUNTING
             assertGe(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_B);
-            //assertEq(defaultVarsBefore.totalAssets - assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D); // TODO remove comment once test_replay_redeemVault is checked
+            assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D); // TODO pending: remove comment once test_replay_redeemVault is checked
         } else {
             revert("SiloVaultHandler: redeem failed");
         }
-    }
-
-    function skim(uint8 i) external {
-        vault.skim(_getRandomSuiteAsset(i));
     }
 
     function claimRewards() external {

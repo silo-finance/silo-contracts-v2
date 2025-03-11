@@ -45,9 +45,9 @@ corpusDir: "silo-vaults/test/enigma-dark-invariants/_corpus/echidna/default/_dat
 #mutConsts: [100, 1, 1]
 
 #remappings
-cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=lib/properties/ forge-std/=lib/forge-std/src/ ds-test/=lib/forge-std/lib/ds-test/src/ openzeppelin/=lib/openzeppelin-contracts/contracts/", "--compile-libraries=(SiloERC4626Lib,0x1f),(SiloLendingLib,0x2f), (PartialLiquidationExecLib,0x0f), (SiloSolvencyLib,0x5f),(SiloStdLib,0x6f),(ShareTokenLib,0x7f),(Views,0x8f),(Actions,0x9f), (ShareCollateralTokenLib,0xf03)" ]
+cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=lib/properties/ forge-std/=lib/forge-std/src/ ds-test/=lib/forge-std/lib/ds-test/src/ openzeppelin/=lib/openzeppelin-contracts/contracts/", "--compile-libraries=(SiloERC4626Lib,0x1f),(SiloLendingLib,0x2f), (PartialLiquidationExecLib,0x0f), (SiloSolvencyLib,0x5f),(SiloStdLib,0x6f),(ShareTokenLib,0x7f),(Views,0x8f),(Actions,0x9f), (ShareCollateralTokenLib,0xf03), (PartialLiquidationExecLib, 0xf04), (SiloVaultActionsLib, 0xf05)" ]
 
-deployContracts: [ [ "0x1f", "SiloERC4626Lib" ], [ "0x0f", "PartialLiquidationExecLib" ], [ "0x2f", "SiloLendingLib" ], [ "0x5f", "SiloSolvencyLib" ], [ "0x6f", "SiloStdLib" ], [ "0x7f", "ShareTokenLib" ], [ "0x8f", "Views" ], [ "0x9f", "Actions" ], [ "0xf03", "ShareCollateralTokenLib" ] ]
+deployContracts: [ [ "0x1f", "SiloERC4626Lib" ], [ "0x0f", "PartialLiquidationExecLib" ], [ "0x2f", "SiloLendingLib" ], [ "0x5f", "SiloSolvencyLib" ], [ "0x6f", "SiloStdLib" ], [ "0x7f", "ShareTokenLib" ], [ "0x8f", "Views" ], [ "0x9f", "Actions" ], [ "0xf03", "ShareCollateralTokenLib" ], [ "0xf04", "PartialLiquidationExecLib" ], [ "0xf05", "SiloVaultActionsLib" ] ]
 
 # maximum value to send to payable functions
 maxValue: 1e+30 # 100000 eth
