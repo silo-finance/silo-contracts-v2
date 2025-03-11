@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {ERC20Upgradeable} from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+
 import {IERC20R} from "../interfaces/IERC20R.sol";
+import {ISiloConfig} from "../SiloConfig.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
@@ -50,6 +54,24 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
 
         _setReceiveApproval(owner, _msgSender(), _amount);
+    }
+
+    /// @dev Anyone can take someone else's debt without asking.
+    /// For the share debt token `transferFrom` action is different from the ERC20 standard
+    /// and does not require approval from the sender, but it verifies the receive allowance see `_beforeTokenTransfer`
+    function transferFrom(address _from, address _to, uint256 _amount)
+        public
+        virtual
+        override(ShareToken)
+        returns (bool result)
+    {
+        ISiloConfig siloConfigCached = _crossNonReentrantBefore();
+
+        ERC20Upgradeable._transfer(_from, _to, _amount);
+
+        siloConfigCached.turnOffReentrancyProtection();
+
+        result = true;
     }
 
     /// @inheritdoc IERC20R
