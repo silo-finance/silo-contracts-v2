@@ -37,7 +37,13 @@ contract PendlePTOracleDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        string memory oracleName = string.concat("PENDLE_PT_ORACLE_", Strings.toHexString(market));
+        string memory oracleName = string.concat(
+            "PENDLE_PT_ORACLE_",
+            Strings.toHexString(market),
+            "_",
+            Strings.toHexString(address(underlyingOracle))
+        );
+
         OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
     }
 
