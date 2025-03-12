@@ -12,7 +12,7 @@
     "maxLtv0": 9000,
     "lt0": 9500,
     "liquidationTargetLtv0": 9400,
-    "liquidationFee0": 650,
+    "liquidationFee0": 350,
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
     "token1": "wS",
