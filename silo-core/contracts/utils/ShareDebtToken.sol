@@ -36,7 +36,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
 
     /// @inheritdoc IShareToken
     function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
-        if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);
+        if (_owner != _spender) _spendReceiveApproval(_spender, _owner, _amount);
         _mint(_owner, _amount);
     }
 
@@ -114,19 +114,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
             // if we NOT doing checks, we early return and not checking/changing any allowance
             if (!$.transferWithChecks) return;
 
-            // _recipient must approve debt transfer, _sender does not have to
-            uint256 currentAllowance = _receiveAllowance(_sender, _recipient);
-            require(currentAllowance >= _amount, IShareToken.AmountExceedsAllowance());
-
-            uint256 newDebtAllowance;
-
-            // There can't be an underflow in the subtraction because of the previous check
-            unchecked {
-                // update debt allowance
-                newDebtAllowance = currentAllowance - _amount;
-            }
-
-            _setReceiveApproval(_sender, _recipient, newDebtAllowance);
+            _spendReceiveApproval(_sender, _recipient, _amount);
         }
     }
 
@@ -144,6 +132,22 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         }
 
         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);
+    }
+
+    function _spendReceiveApproval(address _sender, address _recipient, uint256 _amount) internal virtual {
+        // _recipient must approve debt transfer, _sender does not have to
+        uint256 currentAllowance = _receiveAllowance(_sender, _recipient);
+        require(currentAllowance >= _amount, IShareToken.AmountExceedsAllowance());
+
+        uint256 newDebtAllowance;
+
+        // There can't be an underflow in the subtraction because of the previous check
+        unchecked {
+            // update debt allowance
+            newDebtAllowance = currentAllowance - _amount;
+        }
+
+        _setReceiveApproval(_sender, _recipient, newDebtAllowance);
     }
 
     function _receiveAllowance(address _owner, address _recipient) internal view virtual returns (uint256) {
