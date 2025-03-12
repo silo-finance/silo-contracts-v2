@@ -12,3 +12,14 @@ echidna-explore:
 # Medusa
 medusa:
 	medusa fuzz --config ./medusa.json
+
+# Invariants
+echidna-vaults:
+	echidna silo-vaults/test/enigma-dark-invariants/Tester.t.sol --contract Tester --config ./silo-vaults/test/enigma-dark-invariants/_config/echidna_config.yaml
+
+echidna-assert-vaults:
+	echidna silo-vaults/test/enigma-dark-invariants/Tester.t.sol --contract Tester --test-mode assertion --config ./silo-vaults/test/enigma-dark-invariants/_config/echidna_config.yaml --format text
+
+echidna-explore-vaults:
+	echidna silo-vaults/test/enigma-dark-invariants/Tester.t.sol --contract Tester --test-mode exploration --config ./silo-vaults/test/enigma-dark-invariants/_config/echidna_config.yaml
+
