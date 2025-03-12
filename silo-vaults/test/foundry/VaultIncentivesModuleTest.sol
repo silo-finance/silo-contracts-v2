@@ -183,10 +183,10 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    forge test --mt test_submitIncentivesClaimingLogic_NotGuardianRole -vvv
+    forge test --mt test_submitIncentivesClaimingLogic_OnlyOwner -vvv
     */
-    function test_submitIncentivesClaimingLogic_NotGuardianRole() public {
-        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotGuardianRole.selector));
+    function test_submitIncentivesClaimingLogic_OnlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
     }
 
@@ -233,10 +233,10 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    forge test --mt test_removeIncentivesClaimingLogic_onlyGuardian -vvv
+    forge test --mt test_removeIncentivesClaimingLogic_onlyOwner -vvv
     */
-    function test_removeIncentivesClaimingLogic_onlyGuardian() public {
-        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotGuardianRole.selector));
+    function test_removeIncentivesClaimingLogic_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         incentivesModule.removeIncentivesClaimingLogic(_market1, _logic1);
     }
 

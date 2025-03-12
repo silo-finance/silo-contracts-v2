@@ -53,7 +53,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     function submitIncentivesClaimingLogic(
         IERC4626 _market,
         IIncentivesClaimingLogic _logic
-    ) external virtual onlyGuardianRole {
+    ) external virtual onlyOwner {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
         require(pendingClaimingLogics[_market][_logic] == 0, LogicAlreadyPending());
@@ -88,7 +88,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     function removeIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic)
         external
         virtual
-        onlyGuardianRole
+        onlyOwner
     {
         require(_claimingLogics[_market].contains(address(_logic)), LogicNotFound());
 
