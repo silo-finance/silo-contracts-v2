@@ -29,13 +29,13 @@ abstract contract SiloVaultHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = address(vault);
+        _target = address(vault);
 
         uint256 previewedShares = vault.previewDeposit(_assets);
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
+            actor.proxy(_target, abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
 
         if (success) {
             _after();
@@ -70,12 +70,12 @@ abstract contract SiloVaultHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = address(vault);
+        _target = address(vault);
 
         uint256 previewedAssets = vault.previewMint(_shares);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC4626.mint.selector, _shares, receiver));
+        (success, returnData) = actor.proxy(_target, abi.encodeWithSelector(IERC4626.mint.selector, _shares, receiver));
 
         if (success) {
             _after();
@@ -110,13 +110,13 @@ abstract contract SiloVaultHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = address(vault);
+        _target = address(vault);
 
         uint256 previewedShares = vault.previewWithdraw(_assets);
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC4626.withdraw.selector, _assets, receiver, address(actor)));
+            actor.proxy(_target, abi.encodeWithSelector(IERC4626.withdraw.selector, _assets, receiver, address(actor)));
 
         if (success) {
             _after();
@@ -153,13 +153,13 @@ abstract contract SiloVaultHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = address(vault);
+        _target = address(vault);
 
         uint256 previewedAssets = vault.previewRedeem(_shares);
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC4626.redeem.selector, _shares, receiver, address(actor)));
+            actor.proxy(_target, abi.encodeWithSelector(IERC4626.redeem.selector, _shares, receiver, address(actor)));
 
         if (success) {
             _after();
@@ -188,7 +188,7 @@ abstract contract SiloVaultHandler is BaseHandler {
         }
     }
 
-    function claimRewards() external {
+    function claimRewards() external {// TODO add hooks here?
         vault.claimRewards();
     }
 }

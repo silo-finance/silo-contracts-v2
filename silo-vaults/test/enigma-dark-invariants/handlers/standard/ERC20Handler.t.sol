@@ -30,10 +30,10 @@ abstract contract ERC20Handler is BaseHandler {
         address spender = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomVaultAddress(j);
+        _target = _getRandomVaultAddress(j);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.approve.selector, spender, amount));
+        (success, returnData) = actor.proxy(_target, abi.encodeWithSelector(IERC20.approve.selector, spender, amount));
 
         if (success) {
             _after();
@@ -50,10 +50,10 @@ abstract contract ERC20Handler is BaseHandler {
         address to = _getRandomActor(i);
 
         // Get one of the vaults randomly
-        address target = _getRandomVaultAddress(j);
+        _target = _getRandomVaultAddress(j);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
+        (success, returnData) = actor.proxy(_target, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
 
         if (success) {
             _after();
@@ -72,11 +72,11 @@ abstract contract ERC20Handler is BaseHandler {
         address to = _getRandomActor(j);
 
         // Get one of the vaults randomly
-        address target = _getRandomVaultAddress(k);
+        _target = _getRandomVaultAddress(k);
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amount));
+            actor.proxy(_target, abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amount));
 
         if (success) {
             _after();

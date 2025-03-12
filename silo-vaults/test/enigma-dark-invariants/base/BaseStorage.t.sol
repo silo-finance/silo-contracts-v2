@@ -88,6 +88,9 @@ abstract contract BaseStorage {
     //                                       EXTRA VARIABLES                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    // TARGET
+    address internal _target;
+
     // LOAN MARKETS
 
     /// @notice Array of markets for the suite

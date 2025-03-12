@@ -30,6 +30,9 @@ abstract contract HookAggregator is DefaultBeforeAfterHooks {
 
         // POST-CONDITIONS
         _checkPostConditions();
+
+        // Reset the state
+        _resetState();
     }
 
     /*/////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,5 +83,14 @@ abstract contract HookAggregator is DefaultBeforeAfterHooks {
     function _checkMarketPostConditions(IERC4626 market) internal {
         assert_GPOST_BASE_B(market);
         assert_GPOST_BASE_D(market);
+    }
+
+    /*/////////////////////////////////////////////////////////////////////////////////////////////
+    //                                           HELPERS                                         //
+    /////////////////////////////////////////////////////////////////////////////////////////////*/
+
+    function _resetState() internal {
+        // Reset the target
+        delete _target;
     }
 }

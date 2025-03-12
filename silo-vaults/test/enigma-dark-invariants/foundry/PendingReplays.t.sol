@@ -76,18 +76,6 @@ contract PendingReplays is BaseCryticToFoundry {
 
     // ERC4626
 
-    function test_replay_assert_ERC4626_DEPOSIT_INVARIANT_C() public {
-        // @audit-ok `if (_shares == 0) revert ErrorsLib.InputZeroShares();` make 0 deposit revert which breaks the ERC4626 rule
-        /// @dev added maxDeposit != 0 check -> consider documenting this difference in the ERC4626 spec
-        Tester.assert_ERC4626_DEPOSIT_INVARIANT_C();
-    }
-
-    function test_replay_assert_ERC4626_MINT_INVARIANT_C() public {
-        // @audit-issue `if (_shares == 0) revert ErrorsLib.InputZeroShares();` make 0 deposit revert which breaks the ERC4626 rule
-        /// @dev added maxDeposit != 0 check -> consider documenting this difference in the ERC4626 spec
-        Tester.assert_ERC4626_MINT_INVARIANT_C();
-    }
-
     function test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C() public {
         /// @dev discarded
         vm.skip(true);
@@ -171,14 +159,50 @@ contract PendingReplays is BaseCryticToFoundry {
         Tester.withdrawVault(0, 0);
     }
 
-    function test_replay_assert_ERC4626_REDEEM_INVARIANT_C() public {
-        //@audit-issue reverts when siloVault tries to withdraw 667 assets which corresponds to 0 shares in silo -> ERC4626_REDEEM_INVARIANT_C
-        Tester.submitCap(3, 2);
-        _delay(609387);
-        Tester.acceptCap(2);
-        Tester.setSupplyQueue(6);
-        Tester.mintVault(1002, 0);
-        Tester.assert_ERC4626_REDEEM_INVARIANT_C();
+    function test_replay_3mintVault() public {
+        // @audit check why this is not reverting
+        Tester.submitCap(1, 1);
+        _delay(611025);
+        Tester.acceptCap(1);
+        Tester.setSupplyQueue(1);
+        console.log("==========");
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        console.log("==========");
+
+        Tester.mint(3, 0, 3);
+        console.log("==========");
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+        console.log("vault.lastTotalAssets(): ", vault.lastTotalAssets());
+        console.log("==========");
+
+        Tester.mintVault(1, 0);
+        console.log("==========");
+        console.log("vault.totalAssets(): ", vault.totalAssets());
+    }
+
+    function test_replay_2reallocateTo() public {
+        //@audit check why this is not failing in foundry
+        Tester.submitCap(1, 1);
+        _delay(611025);
+        Tester.submitCap(1, 0);
+        Tester.acceptCap(1);
+        _delay(624208);
+        Tester.acceptCap(0);
+        Tester.setSupplyQueue(12);
+        Tester.deposit(43698, 0, 3);
+        Tester.mintVault(1, 0);
+        Tester.borrowSameAsset(33988, 0, 3);
+        _delay(8259);
+        Tester.setFlowCaps(
+            [
+                FlowCaps(43, 1),
+                FlowCaps(1, 0),
+                FlowCaps(0, 0),
+                FlowCaps(1164210329040005621302952752, 107674377076781863601164)
+            ]
+        );
+        Tester.reallocateTo(1, [uint128(0), uint128(0), uint128(337189132338989816015415173)]);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

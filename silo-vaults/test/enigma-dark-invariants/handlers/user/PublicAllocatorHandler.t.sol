@@ -39,11 +39,11 @@ abstract contract PublicAllocatorHandler is BaseHandler {
 
         Withdrawal[] memory _withdrawals = _generateWithdrawalsArray(withdrawals, supplyMarket);
 
-        address target = address(publicAllocator);
+        _target = address(publicAllocator);
 
         _before();
         (success, returnData) = actor.proxy(
-            target,
+            _target,
             abi.encodeWithSelector(IPublicAllocatorBase.reallocateTo.selector, vault, _withdrawals, supplyMarket)
         );
 

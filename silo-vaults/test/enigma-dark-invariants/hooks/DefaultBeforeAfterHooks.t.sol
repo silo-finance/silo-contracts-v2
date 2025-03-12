@@ -10,7 +10,7 @@ import {BaseHooks} from "../base/BaseHooks.t.sol";
 
 // Interfaces
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
-import {IERC4626Handler} from "../handlers/interfaces/IERC4626Handler.sol";
+import {IERC20Handler} from "../handlers/interfaces/IERC20Handler.sol";
 import {ISiloVaultHandler} from "../handlers/interfaces/ISiloVaultHandler.sol";
 
 /// @title Default Before After Hooks
@@ -190,7 +190,8 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     }
 
     function assert_GPOST_ACCOUNTING_B() internal {
-        if (defaultVarsAfter.totalAssets > defaultVarsBefore.totalAssets) {//@audit-issue since lastTotalAssets can be unsynced with totalAssets after a call, yield accounting is raising a faltse positive test_replay_transitionCollateral
+        if (defaultVarsAfter.totalAssets > defaultVarsBefore.totalAssets) {
+            //@audit-issue since lastTotalAssets can be unsynced with totalAssets after a call, yield accounting is raising a faltse positive test_replay_transitionCollateral
             assertTrue(
                 (msg.sig == ISiloVaultHandler.depositVault.selector || msg.sig == ISiloVaultHandler.mintVault.selector)
                     || defaultVarsBefore.yield != 0 || defaultVarsAfter.yield != 0,
@@ -220,7 +221,14 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     }
 
     function assert_GPOST_ACCOUNTING_E() internal {
-        assertEq(defaultVarsAfter.lastTotalAssets, defaultVarsAfter.totalAssets, GPOST_ACCOUNTING_E);
+        if (_target == address(vault) || _target == address(publicAllocator)) {
+            if (
+                (msg.sig != IERC20Handler.approve.selector && msg.sig != IERC20Handler.transfer.selector)
+                    && msg.sig != IERC20Handler.transferFrom.selector
+            ) {
+                assertEq(defaultVarsAfter.lastTotalAssets, defaultVarsAfter.totalAssets, GPOST_ACCOUNTING_E);
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

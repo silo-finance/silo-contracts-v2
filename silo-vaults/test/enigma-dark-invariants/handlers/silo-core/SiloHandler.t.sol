@@ -31,11 +31,11 @@ abstract contract SiloHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = _getRandomLoanMarketAddress(j);
+        _target = _getRandomLoanMarketAddress(j);
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(ISilo.borrow.selector, _assets, receiver, address(actor)));
+            actor.proxy(_target, abi.encodeWithSelector(ISilo.borrow.selector, _assets, receiver, address(actor)));
 
         if (success) {
             _after();
@@ -49,11 +49,11 @@ abstract contract SiloHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = _getRandomSiloAddress(j);
+        _target = _getRandomSiloAddress(j);
 
         _before();
         (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(ISilo.borrowSameAsset.selector, _assets, receiver, address(actor))
+            _target, abi.encodeWithSelector(ISilo.borrowSameAsset.selector, _assets, receiver, address(actor))
         );
 
         if (success) {
@@ -68,10 +68,10 @@ abstract contract SiloHandler is BaseHandler {
         // Get one of the three actors randomly
         address borrower = _getRandomActor(i);
 
-        address target = _getRandomSiloAddress(j);
+        _target = _getRandomSiloAddress(j);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.repay.selector, _assets, borrower));
+        (success, returnData) = actor.proxy(_target, abi.encodeWithSelector(ISilo.repay.selector, _assets, borrower));
 
         if (success) {
             _after();
@@ -82,10 +82,10 @@ abstract contract SiloHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        address target = _getRandomSiloAddress(i);
+        _target = _getRandomSiloAddress(i);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.switchCollateralToThisSilo.selector));
+        (success, returnData) = actor.proxy(_target, abi.encodeWithSelector(ISilo.switchCollateralToThisSilo.selector));
 
         if (success) {
             _after();
@@ -99,13 +99,13 @@ abstract contract SiloHandler is BaseHandler {
         // Get one of the three actors randomly
         address owner = _getRandomActor(i);
 
-        address target = _getRandomSiloAddress(j);
+        _target = _getRandomSiloAddress(j);
 
         ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
 
         _before();
         (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(ISilo.transitionCollateral.selector, _shares, owner, _collateralType)
+            _target, abi.encodeWithSelector(ISilo.transitionCollateral.selector, _shares, owner, _collateralType)
         );
 
         if (success) {
@@ -122,10 +122,10 @@ abstract contract SiloHandler is BaseHandler {
         bytes memory returnData;
 
         // Get one of the three actors randomly
-        address target = _getRandomSiloAddress(i);
+        _target = _getRandomSiloAddress(i);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.accrueInterest.selector));
+        (success, returnData) = actor.proxy(_target, abi.encodeWithSelector(ISilo.accrueInterest.selector));
 
         if (success) {
             _after();
@@ -133,10 +133,10 @@ abstract contract SiloHandler is BaseHandler {
     }
 
     function withdrawFees(uint8 i) external {
-        address target = _getRandomSiloAddress(i);
+        _target = _getRandomSiloAddress(i);
 
         _before();
-        ISilo(target).withdrawFees();
+        ISilo(_target).withdrawFees();
 
         _after();
     }
