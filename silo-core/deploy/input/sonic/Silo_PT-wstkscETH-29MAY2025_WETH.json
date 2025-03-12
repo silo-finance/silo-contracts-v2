@@ -5,7 +5,7 @@
     "daoFee": 1500,
     "deployerFee": 0,
     "token0": "PT-wstkscETH-29MAY2025",
-    "solvencyOracle0": "PENDLE_PT_ORACLE_0xd14117baf6ec5d12be68cd06e763a4b82c9b6d1d",
+    "solvencyOracle0": "PENDLE_PT_ORACLE_PT-wstkscETH-29MAY2025_PYTH_REDSTONE_wstkscETH_ETH",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2.sol",
     "interestRateModelConfig0": "bridgeETHv15",
