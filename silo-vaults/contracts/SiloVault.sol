@@ -409,10 +409,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
                 if (supplyAssets + suppliedAssets > supplyCap) revert ErrorsLib.SupplyCapExceeded(allocation.market);
 
+                uint256 newBalance = balanceTracker[allocation.market] + suppliedAssets;
+
+                if (newBalance > supplyCap) revert ErrorsLib.InternalSupplyCapExceeded(allocation.market);
+
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
 
-                unchecked { balanceTracker[allocation.market] += suppliedAssets; }
+                balanceTracker[allocation.market] = newBalance;
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -891,15 +895,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
             if (toSupply > 0) {
-                uint256 newAllocation;
-                unchecked { newAllocation = balanceTracker[market] + toSupply; }
+                uint256 newBalance = balanceTracker[market] + toSupply;
                 // As `_supplyBalance` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
-                if (newAllocation <= supplyCap) {
+                if (newBalance <= supplyCap) {
                     // Using try/catch to skip markets that revert.
                     try market.deposit(toSupply, address(this)) {
                         _assets -= toSupply;
-                        balanceTracker[market] = newAllocation;
+                        balanceTracker[market] = newBalance;
                     } catch {
                     }
                 }
