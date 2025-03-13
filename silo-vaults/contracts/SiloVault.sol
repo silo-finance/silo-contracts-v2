@@ -389,7 +389,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                     withdrawnShares = allocation.market.withdraw(withdrawn, address(this), address(this));
                 }
 
-                balanceTracker[allocation.market] -= withdrawnAssets;
+                balanceTracker[allocation.market] = UtilsLib.zeroFloorSub(
+                    balanceTracker[allocation.market],
+                    withdrawnAssets
+                );
 
                 emit EventsLib.ReallocateWithdraw(_msgSender(), allocation.market, withdrawnAssets, withdrawnShares);
 
@@ -920,7 +923,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
-                    balanceTracker[market] -= toWithdraw;
+                    balanceTracker[market] = UtilsLib.zeroFloorSub(balanceTracker[market], toWithdraw);
                 } catch {
                 }
             }
