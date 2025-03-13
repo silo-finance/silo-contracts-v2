@@ -399,6 +399,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
+                _assetLossCheck(allocation.market, suppliedShares, suppliedAssets);
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -565,7 +566,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         shares = _convertToSharesWithTotalsSafe(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         _deposit(_msgSender(), _receiver, _assets, shares);
-        _assetLossCheck(shares, _assets);
 
         _nonReentrantOff();
     }
@@ -583,7 +583,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _convertToAssetsWithTotalsSafe(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         _deposit(_msgSender(), _receiver, assets, _shares);
-        _assetLossCheck(_shares, assets);
 
         _nonReentrantOff();
     }
@@ -861,8 +860,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
-                try market.deposit(toSupply, address(this)) {
+                try market.deposit(toSupply, address(this)) returns (uint256 shares) {
                     _assets -= toSupply;
+                    _assetLossCheck(market, shares, toSupply);
                 } catch {
                 }
             }
@@ -1002,15 +1002,27 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _market.previewRedeem(_shares);
     }
 
-    function _assetLossCheck(uint256 _shares, uint256 _expectedAssets) internal {
-        uint256 preview = previewRedeem(_shares);
-        if (preview >= _expectedAssets) return;
+    function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
+        uint256 previewShares = _market.previewWithdraw(_expectedAssets);
+//        if (previewShares >= _shares) return;
+//
+//        uint256 shareLoss;
+//        // save because we checking above `if (previewAssets >= _expectedAssets)`
+//        unchecked { shareLoss = _shares - previewShares; }
+//        uint256 threshold = 10;
+//
+//        require(shareLoss < threshold, ErrorsLib.AssetLoss(shareLoss));
 
-        uint256 loss;
-        // save because we checking above `if (preview >= _expectedAssets)`
-        unchecked { loss = _expectedAssets - preview; }
+
+        uint256 previewAssets = _market.previewRedeem(previewShares);
+        if (previewAssets >= _expectedAssets) return;
+
+        uint256 assetLoss;
+        // save because we checking above `if (previewAssets >= _expectedAssets)`
+        unchecked { assetLoss = _expectedAssets - previewAssets; }
         uint256 arbitraryLossThreshold = 10;
 
-        require(loss < arbitraryLossThreshold, ErrorsLib.AssetLoss(loss));
+        require(assetLoss < arbitraryLossThreshold, ErrorsLib.AssetLoss(assetLoss));
+
     }
 }

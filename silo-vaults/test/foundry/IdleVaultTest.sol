@@ -26,8 +26,22 @@ contract IdleVaultTest is IntegrationTest {
         vm.prank(ALLOCATOR);
         vault.setSupplyQueue(supplyQueue);
 
+//        uint256[] memory indexes = new uint256[](2);
+//        indexes[0] = 0;
+//        indexes[1] = 1;
+//        vm.prank(ALLOCATOR);
+//        vault.updateWithdrawQueue(indexes);
+
         assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
+        assertEq(vault.withdrawQueueLength(), 2, "only 2 markets on withdraw");
+
         assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
+
+        assertEq(
+            address(vault.withdrawQueue(0)),
+            address(idleMarket),
+            "ensure we have idle at begin, so when we withdraw, we do it from 'invalid` market first"
+        );
     }
 
     /*
@@ -46,6 +60,15 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     /*
+        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_offset -vv
+    */
+    function test_idleVault_offset() public {
+        vm.prank(address(vault));
+        uint256 shares = idleMarket.deposit(1, address(vault));
+        assertEq(shares, 1e18, "big offset");
+    }
+
+    /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
     */
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
@@ -53,35 +76,40 @@ contract IdleVaultTest is IntegrationTest {
     ) public {
 //        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (35277, 418781076350872, 18446744073709551613);
 
-        _idleVault_InflationAttackWithDonation(
-            true,
-            10,
-            attackerDeposit,
-            supplierDeposit,
-            donation
-        );
+        _idleVault_InflationAttackWithDonation({
+            supplierWithdrawFirst: true,
+            // bit weird, that loss can happen later for input:
+            // (773323656, 43511057, 3652262098821462)
+            // SUPPLIER loss: 4506
+            // attacker loss: 9577829
+            _lossThreshold: 4506,
+            attackerDeposit: attackerDeposit,
+            supplierDeposit: supplierDeposit,
+            donation: donation
+        });
     }
 
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_attackerFirst -vvv
     */
     function test_idleVault_InflationAttackWithDonation_attackerFirst(
-        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (308496185, 681844, 20_2884268016093027);
+
         vm.assume(attackerDeposit > 1);
         vm.assume(supplierDeposit > 1);
         vm.assume(donation > 1);
 
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (7151, 256688, 18446744073709551612);
-
-        // 26 wei loss for 3.905e15 deposit
-        _idleVault_InflationAttackWithDonation(
-            false,
-            26, // bit weird, that loss can happen later for input: (481, 3.905e15, 1.844e19)
-            attackerDeposit,
-            supplierDeposit,
-            donation
-        );
+        _idleVault_InflationAttackWithDonation({
+            supplierWithdrawFirst: false,
+            // bit weird, that loss can happen later for input:
+            // (31260780, 2715, 22621791505034)
+            _lossThreshold: 545,
+            attackerDeposit: attackerDeposit,
+            supplierDeposit: supplierDeposit,
+            donation: donation
+        });
     }
 
     function _idleVault_InflationAttackWithDonation(
@@ -135,7 +163,8 @@ contract IdleVaultTest is IntegrationTest {
 
             emit log_named_uint(" SUPPLIER deposit", supplierDeposit);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
-            emit log_named_uint("    SUPPLIER diff", supplierDeposit - supplierWithdraw);
+            emit log_named_uint("    SUPPLIER loss", supplierDeposit - supplierWithdraw);
+            emit log_named_uint("    attacker loss", attackerTotalLoss);
 
             uint256 supplierLostPercent = supplierDiff * 1e18 / supplierDeposit;
 
