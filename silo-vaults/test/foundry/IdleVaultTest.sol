@@ -71,6 +71,7 @@ contract IdleVaultTest is IntegrationTest {
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
     */
+    /// forge-config: vaults-tests.fuzz.runs = 1000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
         uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
@@ -78,11 +79,7 @@ contract IdleVaultTest is IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: true,
-            // bit weird, that loss can happen later for input:
-            // (773323656, 43511057, 3652262098821462)
-            // SUPPLIER loss: 4506
-            // attacker loss: 9577829
-            _lossThreshold: 4506,
+            _lossThreshold: 10,
             attackerDeposit: attackerDeposit,
             supplierDeposit: supplierDeposit,
             donation: donation
@@ -131,6 +128,9 @@ contract IdleVaultTest is IntegrationTest {
 
         vm.prank(SUPPLIER);
 
+        emit log_named_address("IDLE MARKET", address(idleMarket));
+        emit log(".......SUPPLIER doing deposit");
+
         try vault.deposit(supplierDeposit, SUPPLIER) {
             // if did not revert, we expect no loss
 
@@ -140,7 +140,10 @@ contract IdleVaultTest is IntegrationTest {
             uint256 attackerWithdraw;
 
             if (supplierWithdrawFirst) {
+                emit log(".......SUPPLIER withdraw");
                 supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
+                emit log(".......SUPPLIER withdraw END");
+
                 attackerWithdraw = _vaultWithdrawAll(attacker);
             } else {
                 attackerWithdraw = _vaultWithdrawAll(attacker);
@@ -161,6 +164,13 @@ contract IdleVaultTest is IntegrationTest {
                 "attacker pays for it (+2 because of rounding error, we accepting 2wei discrepancy)"
             );
 
+            /*
+             emit Withdraw(
+             caller: SiloVault: [0x550E4d0a372a64F14B7433DbAF4719398F767C31],
+             receiver: SiloVault: [0x550E4d0a372a64F14B7433DbAF4719398F767C31],
+             owner: SiloVault: [0x550E4d0a372a64F14B7433DbAF4719398F767C31],
+             assets: 657655 [6.576e5], shares: 998893861115099
+            */
             emit log_named_uint(" SUPPLIER deposit", supplierDeposit);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
             emit log_named_uint("    SUPPLIER loss", supplierDeposit - supplierWithdraw);
@@ -239,6 +249,7 @@ contract IdleVaultTest is IntegrationTest {
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
         vm.startPrank(_user);
         amount = vault.redeem(vault.balanceOf(_user), _user, _user);
+        emit log_named_uint("_vaultWithdrawAll", amount);
         vm.stopPrank();
     }
 }

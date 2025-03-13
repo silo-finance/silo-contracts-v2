@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {console} from "forge-std/console.sol";
+
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ERC4626, Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
@@ -750,6 +752,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         super._deposit(_caller, _receiver, _assets, _shares);
 
         _supplyERC4626(_assets);
+        // TODO: loss detection only works when I put it here
+        // preview on market does not detect loss for some reason
+        // I didn't get to core reason why, but I know it is about vaults shares, not market shares
+        // attack on market actually changed price in vault
+        _assetLossCheck(this, _shares, _assets);
 
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(lastTotalAssets + _assets);
@@ -861,6 +868,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) returns (uint256 shares) {
+                    console.log("market %s, deposited %s", address(market), toSupply);
                     _assets -= toSupply;
                     _assetLossCheck(market, shares, toSupply);
                 } catch {
@@ -886,6 +894,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
+                    console.log("_withdrawERC4626 from market %, amount", address(market), toWithdraw);
                 } catch {
                 }
             }
@@ -1003,7 +1012,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
-        uint256 previewShares = _market.previewWithdraw(_expectedAssets);
+//        uint256 previewShares = _market.previewWithdraw(_expectedAssets);
 //        if (previewShares >= _shares) return;
 //
 //        uint256 shareLoss;
@@ -1014,15 +1023,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 //        require(shareLoss < threshold, ErrorsLib.AssetLoss(shareLoss));
 
 
-        uint256 previewAssets = _market.previewRedeem(previewShares);
+        uint256 previewAssets = _market.previewRedeem(_shares);
+        console.log("[_assetLossCheck] market %s, previewAssets %s", address(_market), previewAssets);
+
         if (previewAssets >= _expectedAssets) return;
 
         uint256 assetLoss;
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
         uint256 arbitraryLossThreshold = 10;
+        console.log("[_assetLossCheck] market %s, accepted loss %s", address(_market), assetLoss);
 
         require(assetLoss < arbitraryLossThreshold, ErrorsLib.AssetLoss(assetLoss));
-
     }
 }
