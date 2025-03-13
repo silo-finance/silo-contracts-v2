@@ -26,12 +26,6 @@ contract IdleVaultTest is IntegrationTest {
         vm.prank(ALLOCATOR);
         vault.setSupplyQueue(supplyQueue);
 
-//        uint256[] memory indexes = new uint256[](2);
-//        indexes[0] = 0;
-//        indexes[1] = 1;
-//        vm.prank(ALLOCATOR);
-//        vault.updateWithdrawQueue(indexes);
-
         assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
         assertEq(vault.withdrawQueueLength(), 2, "only 2 markets on withdraw");
 
@@ -71,15 +65,14 @@ contract IdleVaultTest is IntegrationTest {
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
-//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (151958258109595, 216049, 1844674407370955161);
+//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (151958258109595, 216049, 1844674407370955161);
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: true,
-            _lossThreshold: 10,
             attackerDeposit: attackerDeposit,
             supplierDeposit: supplierDeposit,
             donation: donation
@@ -89,10 +82,11 @@ contract IdleVaultTest is IntegrationTest {
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_attackerFirst -vvv
     */
+    /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_attackerFirst(
-//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (308496185, 681844, 20_2884268016093027);
+//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (308496185, 681844, 20_2884268016093027);
 
         vm.assume(attackerDeposit > 1);
         vm.assume(supplierDeposit > 1);
@@ -100,9 +94,6 @@ contract IdleVaultTest is IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: false,
-            // bit weird, that loss can happen later for input:
-            // (31260780, 2715, 22621791505034)
-            _lossThreshold: 545,
             attackerDeposit: attackerDeposit,
             supplierDeposit: supplierDeposit,
             donation: donation
@@ -110,7 +101,7 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     function _idleVault_InflationAttackWithDonation(
-        bool supplierWithdrawFirst, uint256 _lossThreshold, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        bool supplierWithdrawFirst, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
@@ -156,27 +147,20 @@ contract IdleVaultTest is IntegrationTest {
             uint256 attackerTotalLossPercent = attackerTotalLoss * 1e18 / uint256(attackerTotalSpend);
             emit log_named_decimal_uint("attackerTotalLossPercent", attackerTotalLossPercent, 16);
 
-            uint256 supplierDiff = supplierDeposit - supplierWithdraw;
+            uint256 supplierLoss = supplierDeposit - supplierWithdraw;
 
             assertGe(
                 attackerTotalLoss + 2,
-                supplierDiff,
+                supplierLoss,
                 "attacker pays for it (+2 because of rounding error, we accepting 2wei discrepancy)"
             );
 
-            /*
-             emit Withdraw(
-             caller: SiloVault: [0x550E4d0a372a64F14B7433DbAF4719398F767C31],
-             receiver: SiloVault: [0x550E4d0a372a64F14B7433DbAF4719398F767C31],
-             owner: SiloVault: [0x550E4d0a372a64F14B7433DbAF4719398F767C31],
-             assets: 657655 [6.576e5], shares: 998893861115099
-            */
             emit log_named_uint(" SUPPLIER deposit", supplierDeposit);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
             emit log_named_uint("    SUPPLIER loss", supplierDeposit - supplierWithdraw);
             emit log_named_uint("    attacker loss", attackerTotalLoss);
 
-            uint256 supplierLostPercent = supplierDiff * 1e18 / supplierDeposit;
+            uint256 supplierLostPercent = supplierLoss * 1e18 / supplierDeposit;
 
             if (supplierDeposit < 1e15) {
                 // for tiny amounts % is higher because fuzzing cases can be extreme eg
@@ -186,10 +170,10 @@ contract IdleVaultTest is IntegrationTest {
                 assertLt(supplierLostPercent, 1e15, "0.001%");
             }
 
-            assertLe(
-                supplierDiff,
-                _lossThreshold,
-                "we should detect loss (some wei acceptable for fuzzing test to pass for extreme scenarios)"
+            assertLt(
+                supplierLoss,
+                vault.ARBITRARY_LOSS_THRESHOLD(),
+                "loss is higher than THRESHOLD, we should detect"
             );
         } catch (bytes memory data) {
             emit log("deposit reverted for SUPPLIER");

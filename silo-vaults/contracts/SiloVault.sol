@@ -48,7 +48,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     using PendingLib for PendingAddress;
 
     /* IMMUTABLES */
-    
+    /// @dev amount of tokens that is acceptable to be lost on deposit->withdraww action
+    /// if vault detect higher loss, action will be reverted
+    uint8 public constant ARBITRARY_LOSS_THRESHOLD = 100;
+
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
     /// precision between shares and assets.
@@ -1020,17 +1023,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
-//        uint256 previewShares = _market.previewWithdraw(_expectedAssets);
-//        if (previewShares >= _shares) return;
-//
-//        uint256 shareLoss;
-//        // save because we checking above `if (previewAssets >= _expectedAssets)`
-//        unchecked { shareLoss = _shares - previewShares; }
-//        uint256 threshold = 10;
-//
-//        require(shareLoss < threshold, ErrorsLib.AssetLoss(shareLoss));
-
-
         uint256 previewAssets = _market.previewRedeem(_shares);
         console.log("[_assetLossCheck] market %s, previewAssets %s", address(_market), previewAssets);
 
@@ -1039,9 +1031,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 assetLoss;
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
-        uint256 arbitraryLossThreshold = 10;
         console.log("[_assetLossCheck] market %s, accepted loss %s", address(_market), assetLoss);
 
-        require(assetLoss < arbitraryLossThreshold, ErrorsLib.AssetLoss(assetLoss));
+        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss(assetLoss));
     }
 }
