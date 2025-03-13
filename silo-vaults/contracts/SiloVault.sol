@@ -412,7 +412,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
 
-                balanceTracker[allocation.market] += suppliedAssets;
+                unchecked { balanceTracker[allocation.market] += suppliedAssets; }
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -891,7 +891,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
             if (toSupply > 0) {
-                uint256 newAllocation = balanceTracker[market] + toSupply;
+                uint256 newAllocation;
+                unchecked { newAllocation = balanceTracker[market] + toSupply; }
                 // As `_supplyBalance` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
                 if (newAllocation <= supplyCap) {
