@@ -119,9 +119,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
-        uint256 decimals = TokenHelper.assertAndGetDecimals(_asset);
-        require(decimals <= 18, ErrorsLib.NotSupportedDecimals());
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, decimals));
+        uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
+        require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, assetDecimals));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -356,6 +356,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         uint256 totalSupplied;
         uint256 totalWithdrawn;
+
+        uint256 totalSharesBefore = totalSupply();
+        uint256 totalAssetsBefore = totalAssets();
+
         for (uint256 i; i < _allocations.length; ++i) {
             MarketAllocation memory allocation = _allocations[i];
 
@@ -410,6 +414,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
 
         if (totalWithdrawn != totalSupplied) revert ErrorsLib.InconsistentReallocation();
+        _assetLossCheck(this, totalSharesBefore, totalAssetsBefore);
 
         _nonReentrantOff();
     }
@@ -692,6 +697,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev The accrual of performance fees is taken into account in the conversion.
     function _convertToAssets(uint256 _shares, Math.Rounding _rounding) internal view virtual override returns (uint256) {
         (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
+        console.log("[_convertToAssets] feeShares %s, newTotalAssets %s", feeShares, newTotalAssets);
 
         return _convertToAssetsWithTotals(_shares, totalSupply() + feeShares, newTotalAssets, _rounding);
     }
@@ -756,6 +762,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // preview on market does not detect loss for some reason
         // I didn't get to core reason why, but I know it is about vaults shares, not market shares
         // attack on market actually changed price in vault
+        console.log("general check for loss:");
         _assetLossCheck(this, _shares, _assets);
 
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
@@ -929,6 +936,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// (`newTotalAssets`).
     function _accruedFeeShares() internal view virtual returns (uint256 feeShares, uint256 newTotalAssets) {
         newTotalAssets = totalAssets();
+        console.log("[_accruedFeeShares] feeShares %s, newTotalAssets %s", feeShares, newTotalAssets);
 
         uint256 totalInterest = UtilsLib.zeroFloorSub(newTotalAssets, lastTotalAssets);
         if (totalInterest != 0 && fee != 0) {

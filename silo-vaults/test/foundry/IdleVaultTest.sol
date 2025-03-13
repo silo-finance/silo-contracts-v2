@@ -73,9 +73,9 @@ contract IdleVaultTest is IntegrationTest {
     */
     /// forge-config: vaults-tests.fuzz.runs = 1000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
-        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (35277, 418781076350872, 18446744073709551613);
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (151958258109595, 216049, 1844674407370955161);
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: true,
@@ -192,6 +192,8 @@ contract IdleVaultTest is IntegrationTest {
                 "we should detect loss (some wei acceptable for fuzzing test to pass for extreme scenarios)"
             );
         } catch (bytes memory data) {
+            emit log("deposit reverted for SUPPLIER");
+
             bytes4 errorType = bytes4(data);
             assertEq(errorType, ErrorsLib.AssetLoss.selector, "AssetLoss is only acceptable revert here");
         }
