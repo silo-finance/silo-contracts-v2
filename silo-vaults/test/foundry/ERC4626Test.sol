@@ -118,9 +118,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMarketAllocation -vvv
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMarketBalanceTracker -vvv
     */
-    function testWithdrawMarketAllocation() public {
+    function testWithdrawMarketBalanceTracker() public {
         uint256 length = vault.withdrawQueueLength();
 
         IERC4626 market0 = vault.withdrawQueue(0);
@@ -135,11 +135,11 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         vault.deposit(depositAmount, ONBEHALF);
 
-        uint256 allocationBefore0 = vault.marketAllocation(market0);
-        uint256 allocationBefore1 = vault.marketAllocation(market1);
+        uint256 balanceBefore0 = vault.balanceTracker(market0);
+        uint256 balanceBefore1 = vault.balanceTracker(market1);
 
-        assertEq(allocationBefore0, depositOverCap, "allocationBefore0");
-        assertEq(allocationBefore1, config1.cap, "allocationBefore1");
+        assertEq(balanceBefore0, depositOverCap, "balanceBefore0");
+        assertEq(balanceBefore1, config1.cap, "balanceBefore1");
 
         uint256 withdrawOverCap = 300;
 
@@ -148,11 +148,11 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(ONBEHALF);
         vault.withdraw(withdrawAmount, RECEIVER, ONBEHALF);
 
-        uint256 allocationAfter0 = vault.marketAllocation(market0);
-        uint256 allocationAfter1 = vault.marketAllocation(market1);
+        uint256 balanceAfter0 = vault.balanceTracker(market0);
+        uint256 balanceAfter1 = vault.balanceTracker(market1);
 
-        assertEq(allocationAfter0, 0, "allocationAfter0");
-        assertEq(allocationAfter1, config1.cap - withdrawOverCap, "allocationAfter1");
+        assertEq(balanceAfter0, 0, "balanceAfter0");
+        assertEq(balanceAfter1, config1.cap - withdrawOverCap, "balanceAfter1");
     }
 
     /*

@@ -32,9 +32,9 @@ contract DepositTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_marketAllocation -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_balanceTracker -vvv
     */
-    function test_deposit_marketAllocation() public {
+    function test_deposit_balanceTracker() public {
         uint256 length = vault.supplyQueueLength();
 
         assertGt(length, 1, "supplyQueueLength less than 2");
@@ -42,11 +42,11 @@ contract DepositTest is VaultsLittleHelper {
         IERC4626 market0 = vault.supplyQueue(0);
         IERC4626 market1 = vault.supplyQueue(1);
 
-        uint256 allocationBefore0 = vault.marketAllocation(market0);
-        uint256 allocationBefore1 = vault.marketAllocation(market1);
+        uint256 balanceBefore0 = vault.balanceTracker(market0);
+        uint256 balanceBefore1 = vault.balanceTracker(market1);
 
-        assertEq(allocationBefore0, 0, "expect allocationBefore0 to be 0");
-        assertEq(allocationBefore1, 0, "expect allocationBefore1 to be 0");
+        assertEq(balanceBefore0, 0, "expect balanceBefore0 to be 0");
+        assertEq(balanceBefore1, 0, "expect balanceBefore1 to be 0");
 
         MarketConfig memory config0 = vault.config(market0);
 
@@ -56,26 +56,26 @@ contract DepositTest is VaultsLittleHelper {
 
         _deposit(depositAmount, makeAddr("Depositor"));
 
-        uint256 allocationAfter0 = vault.marketAllocation(market0);
-        uint256 allocationAfter1 = vault.marketAllocation(market1);
+        uint256 balanceAfter0 = vault.balanceTracker(market0);
+        uint256 balanceAfter1 = vault.balanceTracker(market1);
 
-        assertEq(allocationAfter0, config0.cap, "allocationAfter0 should be config0.cap");
-        assertEq(allocationAfter1, depositOverCap, "allocationAfter1 should be depositOverCap");
+        assertEq(balanceAfter0, config0.cap, "balanceAfter0 should be config0.cap");
+        assertEq(balanceAfter1, depositOverCap, "balanceAfter1 should be depositOverCap");
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_marketAllocation_MarketReportedWrongSupply -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_balanceTracker_MarketReportedWrongSupply -vvv
     */
-    function test_deposit_marketAllocation_MarketReportedWrongSupply() public {
+    function test_deposit_balanceTracker_MarketReportedWrongSupply() public {
         uint256 length = vault.supplyQueueLength();
 
         assertGt(length, 1, "supplyQueueLength less than 2");
 
         IERC4626 market0 = vault.supplyQueue(0);
 
-        uint256 allocationBefore0 = vault.marketAllocation(market0);
+        uint256 balanceBefore0 = vault.balanceTracker(market0);
 
-        assertEq(allocationBefore0, 0, "expect allocationBefore0 to be 0");
+        assertEq(balanceBefore0, 0, "expect balanceBefore0 to be 0");
 
         MarketConfig memory config0 = vault.config(market0);
 
@@ -87,9 +87,9 @@ contract DepositTest is VaultsLittleHelper {
         emit log_string("First deposit");
         _deposit(depositAmount, depositor);
 
-        uint256 allocationAfter0 = vault.marketAllocation(market0);
+        uint256 balanceAfter0 = vault.balanceTracker(market0);
 
-        assertEq(allocationAfter0, depositAmount, "invalid allocationAfter0");
+        assertEq(balanceAfter0, depositAmount, "invalid balanceAfter0");
 
         // simulate hacked market
         // vault hacked and started to report wrong supply

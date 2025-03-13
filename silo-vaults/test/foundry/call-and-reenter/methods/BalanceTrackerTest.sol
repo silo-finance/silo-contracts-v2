@@ -7,7 +7,7 @@ import {MethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/metho
 import {TestStateLib} from "silo-vaults/test/foundry/call-and-reenter/TestState.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 
-contract MarketAllocationTest is MethodReentrancyTest {
+contract BalanceTrackerTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -18,12 +18,12 @@ contract MarketAllocationTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "marketAllocation(address)";
+        description = "balanceTracker(address)";
     }
 
     function _ensureItWillNotRevert() internal view {
         ISiloVault vault = TestStateLib.vault();
 
-        vault.marketAllocation(IERC4626(address(0)));
+        vault.balanceTracker(IERC4626(address(0)));
     }
 }
