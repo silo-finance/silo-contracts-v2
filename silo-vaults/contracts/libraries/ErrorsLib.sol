@@ -151,7 +151,4 @@ library ErrorsLib {
 
     /// @notice Thrown when projected withdraw is much less than what user deposit.
     error AssetLoss(uint256 loss);
-
-    /// @notice Thrown when a market reports a wrong supply.
-    error MarketReportedWrongSupply(IERC4626 market);
 }
