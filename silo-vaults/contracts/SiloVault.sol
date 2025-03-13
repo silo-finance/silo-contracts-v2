@@ -83,7 +83,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
 
-    mapping(IERC4626 => uint256) public marketAllocation;
+    mapping(IERC4626 => uint256) public balanceTracker;
 
     /// @inheritdoc ISiloVaultBase
     uint96 public fee;
@@ -389,7 +389,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                     withdrawnShares = allocation.market.withdraw(withdrawn, address(this), address(this));
                 }
 
-                marketAllocation[allocation.market] -= withdrawnAssets;
+                balanceTracker[allocation.market] -= withdrawnAssets;
 
                 emit EventsLib.ReallocateWithdraw(_msgSender(), allocation.market, withdrawnAssets, withdrawnShares);
 
@@ -409,7 +409,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
 
-                marketAllocation[allocation.market] += suppliedAssets;
+                balanceTracker[allocation.market] += suppliedAssets;
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -807,12 +807,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     function _updateInternalBalanceForMarket(IERC4626 _market) internal virtual {
         uint256 newBalance = _expectedSupplyAssets(_market, address(this));
-        uint256 currentBalance = marketAllocation[_market];
+        uint256 currentBalance = balanceTracker[_market];
 
         if (newBalance > currentBalance) {
             // We do not take into account assets lose in the market allocation but we allow it on the deposit
             // because of that `newAllocation` can be less than `currentAllocation` up to allowed assets loss.
-            marketAllocation[_market] = newBalance;
+            balanceTracker[_market] = newBalance;
         }
     }
 
@@ -888,7 +888,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
             if (toSupply > 0) {
-                uint256 newAllocation = marketAllocation[market] + toSupply;
+                uint256 newAllocation = balanceTracker[market] + toSupply;
                 // As `_supplyBalance` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
                 require(newAllocation <= supplyCap, ErrorsLib.MarketReportedWrongSupply(market));
@@ -896,7 +896,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) {
                     _assets -= toSupply;
-                    marketAllocation[market] = newAllocation;
+                    balanceTracker[market] = newAllocation;
                 } catch {
                 }
             }
@@ -920,7 +920,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
-                    marketAllocation[market] -= toWithdraw;
+                    balanceTracker[market] -= toWithdraw;
                 } catch {
                 }
             }
