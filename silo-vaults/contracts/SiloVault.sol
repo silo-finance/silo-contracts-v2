@@ -894,13 +894,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 uint256 newAllocation = balanceTracker[market] + toSupply;
                 // As `_supplyBalance` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
-                require(newAllocation <= supplyCap, ErrorsLib.MarketReportedWrongSupply(market));
-
-                // Using try/catch to skip markets that revert.
-                try market.deposit(toSupply, address(this)) {
-                    _assets -= toSupply;
-                    balanceTracker[market] = newAllocation;
-                } catch {
+                if (newAllocation <= supplyCap) {
+                    // Using try/catch to skip markets that revert.
+                    try market.deposit(toSupply, address(this)) {
+                        _assets -= toSupply;
+                        balanceTracker[market] = newAllocation;
+                    } catch {
+                    }
                 }
             }
 

@@ -72,6 +72,7 @@ contract DepositTest is VaultsLittleHelper {
         assertGt(length, 1, "supplyQueueLength less than 2");
 
         IERC4626 market0 = vault.supplyQueue(0);
+        IERC4626 market1 = vault.supplyQueue(1);
 
         uint256 balanceBefore0 = vault.balanceTracker(market0);
 
@@ -84,7 +85,6 @@ contract DepositTest is VaultsLittleHelper {
 
         uint256 depositAmount = config0.cap - depositBelowCap;
 
-        emit log_string("First deposit");
         _deposit(depositAmount, depositor);
 
         uint256 balanceAfter0 = vault.balanceTracker(market0);
@@ -101,7 +101,11 @@ contract DepositTest is VaultsLittleHelper {
         vm.mockCall(address(market0), data, abi.encode(currentPreviewRedeem / 2));
         vm.expectCall(address(market0), data);
 
-        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.MarketReportedWrongSupply.selector, address(market0)));
         _deposit(depositBelowCap * 2, depositor);
+
+        uint256 balanceAfter1 = vault.balanceTracker(market1);
+
+        assertEq(balanceAfter0, vault.balanceTracker(market0), "expect no deposit to market0");
+        assertEq(balanceAfter1, depositBelowCap * 2, "expect deposit to market1");
     }
 }
