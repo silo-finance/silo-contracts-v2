@@ -9,7 +9,7 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
-
+import {MarketConfig} from "../../contracts/libraries/PendingLib.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
 
@@ -115,6 +115,44 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         assertEq(loanToken.balanceOf(address(vault)), 0, "balanceOf(vault)");
         assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, "balanceOf(ONBEHALF)");
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMarketAllocation -vvv
+    */
+    function testWithdrawMarketAllocation() public {
+        uint256 length = vault.withdrawQueueLength();
+
+        IERC4626 market0 = vault.withdrawQueue(0);
+        IERC4626 market1 = vault.withdrawQueue(1);
+
+        MarketConfig memory config1 = vault.config(market1);
+
+        uint256 depositOverCap = 100;
+
+        uint256 depositAmount = config1.cap + depositOverCap;
+
+        vm.prank(SUPPLIER);
+        vault.deposit(depositAmount, ONBEHALF);
+
+        uint256 allocationBefore0 = vault.marketAllocation(market0);
+        uint256 allocationBefore1 = vault.marketAllocation(market1);
+
+        assertEq(allocationBefore0, depositOverCap, "allocationBefore0");
+        assertEq(allocationBefore1, config1.cap, "allocationBefore1");
+
+        uint256 withdrawOverCap = 300;
+
+        uint256 withdrawAmount = depositOverCap + withdrawOverCap;
+
+        vm.prank(ONBEHALF);
+        vault.withdraw(withdrawAmount, RECEIVER, ONBEHALF);
+
+        uint256 allocationAfter0 = vault.marketAllocation(market0);
+        uint256 allocationAfter1 = vault.marketAllocation(market1);
+
+        assertEq(allocationAfter0, 0, "allocationAfter0");
+        assertEq(allocationAfter1, config1.cap - withdrawOverCap, "allocationAfter1");
     }
 
     /*

@@ -19,7 +19,8 @@ import {
     PendingAddress,
     MarketAllocation,
     ISiloVaultBase,
-    ISiloVaultStaticTyping
+    ISiloVaultStaticTyping,
+    ISiloVault
 } from "./interfaces/ISiloVault.sol";
 
 import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
@@ -79,6 +80,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
+
+    mapping(IERC4626 => uint256) public marketAllocation;
 
     /// @inheritdoc ISiloVaultBase
     uint96 public fee;
@@ -382,6 +385,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                     withdrawnShares = allocation.market.withdraw(withdrawn, address(this), address(this));
                 }
 
+                marketAllocation[allocation.market] -= withdrawnAssets;
+
                 emit EventsLib.ReallocateWithdraw(_msgSender(), allocation.market, withdrawnAssets, withdrawnShares);
 
                 totalWithdrawn += withdrawnAssets;
@@ -399,6 +404,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
+
+                marketAllocation[allocation.market] += suppliedAssets;
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -844,9 +851,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
             if (toSupply > 0) {
+                uint256 newAllocation = marketAllocation[market] + toSupply;
+
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) {
                     _assets -= toSupply;
+                    marketAllocation[market] = newAllocation;
                 } catch {
                 }
             }
@@ -870,6 +880,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
+                    marketAllocation[market] -= toWithdraw;
                 } catch {
                 }
             }
