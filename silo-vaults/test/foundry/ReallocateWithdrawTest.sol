@@ -67,6 +67,42 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateAllocationChanges -vvv
+    */
+    function testReallocateAllocationChanges() public {
+        allocations.push(MarketAllocation(allMarkets[0], 0));
+        allocations.push(MarketAllocation(allMarkets[1], 0));
+        allocations.push(MarketAllocation(allMarkets[2], 0));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
+
+        uint256 allocationBefore0 = vault.marketAllocation(allMarkets[0]);
+        uint256 allocationBefore1 = vault.marketAllocation(allMarkets[1]);
+        uint256 allocationBefore2 = vault.marketAllocation(allMarkets[2]);
+        uint256 allocationBeforeIdle = vault.marketAllocation(idleMarket);
+
+        assertNotEq(allocationBefore0, 0, "market0 allocation before is 0");
+        assertNotEq(allocationBefore1, 0, "market1 allocation before is 0");
+        assertNotEq(allocationBefore2, 0, "market2 allocation before is 0");
+        assertNotEq(allocationBeforeIdle, 0, "idle market allocation before is 0");
+
+        vm.prank(ALLOCATOR);
+        vault.reallocate(allocations);
+
+        uint256 allocationAfter0 = vault.marketAllocation(allMarkets[0]);
+        uint256 allocationAfter1 = vault.marketAllocation(allMarkets[1]);
+        uint256 allocationAfter2 = vault.marketAllocation(allMarkets[2]);
+        uint256 allocationAfterIdle = vault.marketAllocation(idleMarket);
+
+        assertEq(allocationAfter0, 0, "market0 allocation after is not 0");
+        assertEq(allocationAfter1, 0, "market1 allocation after is not 0");
+        assertEq(allocationAfter2, 0, "market2 allocation after is not 0");
+
+        uint256 expectedIdle = allocationBeforeIdle + allocationBefore0 + allocationBefore1 + allocationBefore2;
+
+        assertEq(allocationAfterIdle, expectedIdle, "wrong idle allocation after");
+    }
+
+    /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawMarketNotEnabled -vvv
     */
     function testReallocateWithdrawMarketNotEnabled() public {

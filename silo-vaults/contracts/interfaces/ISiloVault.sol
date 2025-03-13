@@ -207,4 +207,7 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
 
     /// @notice Returns the pending timelock.
     function pendingTimelock() external view returns (PendingUint192 memory);
+
+    /// @notice Returns the allocation of assets for the market.
+    function marketAllocation(IERC4626) external view returns (uint256);
 }
