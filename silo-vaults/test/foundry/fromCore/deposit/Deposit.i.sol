@@ -62,4 +62,46 @@ contract DepositTest is VaultsLittleHelper {
         assertEq(allocationAfter0, config0.cap, "allocationAfter0 should be config0.cap");
         assertEq(allocationAfter1, depositOverCap, "allocationAfter1 should be depositOverCap");
     }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_marketAllocation_MarketReportedWrongSupply -vvv
+    */
+    function test_deposit_marketAllocation_MarketReportedWrongSupply() public {
+        uint256 length = vault.supplyQueueLength();
+
+        assertGt(length, 1, "supplyQueueLength less than 2");
+
+        IERC4626 market0 = vault.supplyQueue(0);
+
+        uint256 allocationBefore0 = vault.marketAllocation(market0);
+
+        assertEq(allocationBefore0, 0, "expect allocationBefore0 to be 0");
+
+        MarketConfig memory config0 = vault.config(market0);
+
+        address depositor = makeAddr("Depositor");
+        uint256 depositBelowCap = 100;
+
+        uint256 depositAmount = config0.cap - depositBelowCap;
+
+        emit log_string("First deposit");
+        _deposit(depositAmount, depositor);
+
+        uint256 allocationAfter0 = vault.marketAllocation(market0);
+
+        assertEq(allocationAfter0, depositAmount, "invalid allocationAfter0");
+
+        // simulate hacked market
+        // vault hacked and started to report wrong supply
+        uint256 sharesBalance = market0.balanceOf(address(vault));
+        uint256 currentPreviewRedeem = market0.previewRedeem(sharesBalance);
+
+        bytes memory data = abi.encodeWithSelector(IERC4626.previewRedeem.selector, sharesBalance);
+
+        vm.mockCall(address(market0), data, abi.encode(currentPreviewRedeem / 2));
+        vm.expectCall(address(market0), data);
+
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.MarketReportedWrongSupply.selector, address(market0)));
+        _deposit(depositBelowCap * 2, depositor);
+    }
 }
