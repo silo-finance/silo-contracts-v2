@@ -761,15 +761,16 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         super._deposit(_caller, _receiver, _assets, _shares);
 
         _supplyERC4626(_assets);
+
+        // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
+        _updateLastTotalAssets(lastTotalAssets + _assets);
+
         // TODO: loss detection only works when I put it here
         // preview on market does not detect loss for some reason
         // I didn't get to core reason why, but I know it is about vaults shares, not market shares
         // attack on market actually changed price in vault
         console.log("general check for loss:");
         _assetLossCheck(this, _shares, _assets);
-
-        // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
-        _updateLastTotalAssets(lastTotalAssets + _assets);
     }
 
     /// @inheritdoc ERC4626
@@ -878,7 +879,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) returns (uint256 shares) {
-                    console.log("market %s, deposited %s", address(market), toSupply);
+                    console.log("[_supplyERC4626] market %s, deposited %s", address(market), toSupply);
                     _assetLossCheck(market, shares, toSupply);
                     _assets -= toSupply;
                 } catch {
@@ -920,7 +921,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Updates `lastTotalAssets` to `updatedTotalAssets`.
     function _updateLastTotalAssets(uint256 _updatedTotalAssets) internal virtual {
         lastTotalAssets = _updatedTotalAssets;
-
+        console.log("[_updateLastTotalAssets] lastTotalAssets", lastTotalAssets);
         emit EventsLib.UpdateLastTotalAssets(_updatedTotalAssets);
     }
 
@@ -945,6 +946,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (totalInterest != 0 && fee != 0) {
             // It is acknowledged that `feeAssets` may be rounded down to 0 if `totalInterest * fee < WAD`.
             uint256 feeAssets = totalInterest.mulDiv(fee, WAD);
+            console.log("[_accruedFeeShares] *********** feeAssets %s", feeAssets);
+
             // The fee assets is subtracted from the total assets in this calculation to compensate for the fact
             // that total assets is already increased by the total interest (including the fee assets).
             feeShares =
@@ -1023,7 +1026,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
-        uint256 previewAssets = _market.convertToAssets(_shares);
+        uint256 previewAssets = _market.previewRedeem(_shares);
         console.log("[_assetLossCheck] market %s, previewAssets %s", address(_market), previewAssets);
         if (previewAssets >= _expectedAssets) return;
 
@@ -1031,6 +1034,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
         console.log("[_assetLossCheck] market %s, loss %s", address(_market), assetLoss);
+        console.log("[_assetLossCheck] totalAssets", totalAssets());
+        console.log("[_assetLossCheck] lastTotalAssets", lastTotalAssets);
+
 
         require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss(assetLoss));
     }
