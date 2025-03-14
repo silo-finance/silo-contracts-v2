@@ -1030,7 +1030,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 assetLoss;
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
-        console.log("[_assetLossCheck] market %s, accepted loss %s", address(_market), assetLoss);
+        console.log("[_assetLossCheck] market %s, loss %s", address(_market), assetLoss);
 
         require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss(assetLoss));
     }
