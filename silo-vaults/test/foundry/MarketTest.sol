@@ -81,7 +81,7 @@ contract MarketTest is IntegrationTest {
         IERC4626 market = allMarkets[0];
 
         vm.startPrank(CURATOR);
-        vm.prank(CURATOR);
+        
         vm.expectRevert(ErrorsLib.AbnormalLossPercent.selector);
         vault.submitAcceptableLoss(market, true, 0.5e18 + 1);
 
@@ -127,6 +127,8 @@ contract MarketTest is IntegrationTest {
         pendingLoss = vault.pendingAcceptableLoss(market);
         assertFalse(pendingLoss.usePercent, "pending usePercent for 49");
         assertEq(pendingLoss.value, 49, "pending 49 value");
+
+        vm.stopPrank();
     }
 
     function testSubmitCapOverflow(uint256 seed, uint256 cap) public {
