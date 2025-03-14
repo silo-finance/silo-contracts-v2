@@ -869,8 +869,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) returns (uint256 shares) {
-                    _assets -= toSupply;
                     _assetLossCheck(market, shares, toSupply);
+                    _assets -= toSupply;
                 } catch {
                 }
             }
@@ -1012,7 +1012,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
-        uint256 previewAssets = _market.previewRedeem(_shares);
+        uint256 previewAssets = _market.convertToAssets(_shares);
         if (previewAssets >= _expectedAssets) return;
 
         uint256 assetLoss;
