@@ -218,6 +218,10 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (MarketConfig memory);
 
+    function pendingAcceptableLoss(IERC4626) external view returns (PendingLoss memory);
+
+    function lossThreshold(IERC4626) external view returns (AcceptableLoss memory);
+
     /// @notice Returns the pending guardian.
     function pendingGuardian() external view returns (PendingAddress memory);
 
