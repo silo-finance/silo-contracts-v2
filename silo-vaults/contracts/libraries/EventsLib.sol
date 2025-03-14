@@ -124,7 +124,7 @@ library EventsLib {
     /// @notice Emitted when the fee is set for a vault.
     event SetFee(address indexed sender, ISiloVault indexed vault, uint256 fee);
 
-    /// @notice Emitted when the fee is transfered for a vault.
+    /// @notice Emitted when the fee is transferred for a vault.
     event TransferFee(address indexed sender, ISiloVault indexed vault, uint256 amount, address indexed feeRecipient);
 
     /// @notice Emitted when the flow caps are set for a vault.
