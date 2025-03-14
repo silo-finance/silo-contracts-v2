@@ -11,6 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {PendingLoss, AcceptableLoss} from "../../contracts/libraries/PendingLib.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MAX_TEST_ASSETS, MIN_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
@@ -19,7 +20,6 @@ import {CAP, MAX_TEST_ASSETS, MIN_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTes
  FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketTest -vvv
 */
 contract MarketTest is IntegrationTest {
-
     function setUp() public override {
         super.setUp();
 
@@ -27,7 +27,6 @@ contract MarketTest is IntegrationTest {
         _setCap(allMarkets[1], CAP);
         _setCap(allMarkets[2], CAP);
     }
-
 
     /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testAllowanceOnSetCap -vvv
@@ -73,6 +72,61 @@ contract MarketTest is IntegrationTest {
         vm.expectRevert(ErrorsLib.AllCapsReached.selector);
         vm.prank(SUPPLIER);
         vault.deposit(1, RECEIVER);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_submitAcceptableLoss -vvv
+    */
+    function test_submitAcceptableLoss() public {
+        IERC4626 market = allMarkets[0];
+
+        vm.startPrank(CURATOR);
+        vm.prank(CURATOR);
+        vm.expectRevert(ErrorsLib.AbnormalLossPercent.selector);
+        vault.submitAcceptableLoss(market, true, 0.5e18 + 1);
+
+        vm.expectRevert(ErrorsLib.AlreadySet.selector);
+        vault.submitAcceptableLoss(market, false, 0);
+
+        vault.submitAcceptableLoss(market, true, 100);
+
+        PendingLoss memory pendingLoss = vault.pendingAcceptableLoss(market);
+        assertTrue(pendingLoss.usePercent, "pending usePercent set");
+        assertEq(pendingLoss.value, 100, "pending value set");
+
+        AcceptableLoss memory acceptableLoss = vault.lossThreshold(market);
+        assertEq(acceptableLoss.lossThreshold, 0, "lossThreshold should be pending");
+
+        vm.warp(pendingLoss.validAt);
+
+        vault.acceptLoss(market);
+
+        pendingLoss = vault.pendingAcceptableLoss(market);
+        assertFalse(pendingLoss.usePercent, "pending usePercent is deleted");
+        assertEq(pendingLoss.value, 0, "pending value deleted");
+
+        acceptableLoss = vault.lossThreshold(market);
+        assertEq(acceptableLoss.lossThreshold, 100, "lossThreshold should be set to new value");
+
+        vm.expectRevert(ErrorsLib.AlreadySet.selector);
+        vault.submitAcceptableLoss(market, true, 100);
+
+        vault.submitAcceptableLoss(market, true, 50);
+
+        pendingLoss = vault.pendingAcceptableLoss(market);
+        assertFalse(pendingLoss.usePercent, "[%] pending not in use");
+        assertEq(pendingLoss.value, 0, "[%] pending not in use when new value is lower");
+
+        acceptableLoss = vault.lossThreshold(market);
+        assertEq(acceptableLoss.lossThreshold, 50, "lossThreshold should be immediate set");
+
+        vault.submitAcceptableLoss(market, false, 49);
+        acceptableLoss = vault.lossThreshold(market);
+        assertEq(acceptableLoss.lossThreshold, 50, "lossThreshold is still 50 because changing type must be done via timelock");
+
+        pendingLoss = vault.pendingAcceptableLoss(market);
+        assertFalse(pendingLoss.usePercent, "pending usePercent for 49");
+        assertEq(pendingLoss.value, 49, "pending 49 value");
     }
 
     function testSubmitCapOverflow(uint256 seed, uint256 cap) public {

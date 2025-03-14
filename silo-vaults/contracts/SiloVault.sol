@@ -76,8 +76,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultStaticTyping
     mapping(IERC4626 => MarketConfig) public config;
-    mapping(IERC4626 => AcceptableLoss) public lossThresholds;
-
+    
+    mapping(IERC4626 => AcceptableLoss) public lossThreshold;
+    
     /// @inheritdoc ISiloVaultBase
     uint256 public timelock;
 
@@ -86,6 +87,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultStaticTyping
     mapping(IERC4626 => PendingUint192) public pendingCap;
+
     mapping(IERC4626 => PendingLoss) public pendingAcceptableLoss;
 
     /// @inheritdoc ISiloVaultStaticTyping
@@ -286,7 +288,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_usePercent && _lossThreshold > 0.5e18) revert ErrorsLib.AbnormalLossPercent();
         if (pendingAcceptableLoss[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
 
-        AcceptableLoss memory lossThreshold = lossThresholds[_market];
+        AcceptableLoss memory lossThreshold = lossThreshold[_market];
 
         if (
             lossThreshold.usePercent == _usePercent && lossThreshold.lossThreshold == _lossThreshold
@@ -918,7 +920,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @dev Sets the cap of the market.
     function _setAcceptableLoss(IERC4626 _market, bool _usePercent, uint64 _loss) internal virtual {
-        lossThresholds[_market] = AcceptableLoss({
+        lossThreshold[_market] = AcceptableLoss({
             usePercent: _usePercent,
             lossThreshold: _loss
         });
@@ -1105,11 +1107,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         console.log("[_assetLossCheck] totalAssets", totalAssets());
         console.log("[_assetLossCheck] lastTotalAssets", lastTotalAssets);
 
-        AcceptableLoss memory lossThreshold = lossThresholds[_market];
+        AcceptableLoss memory threshold = lossThreshold[_market];
 
-        uint256 acceptableLoss = lossThreshold.usePercent
-            ? _expectedAssets * lossThreshold.lossThreshold / 1e18
-            : (lossThreshold.lossThreshold == 0 ? 100 : lossThreshold.lossThreshold);
+        uint256 acceptableLoss = threshold.usePercent
+            ? _expectedAssets * threshold.lossThreshold / 1e18
+            : (threshold.lossThreshold == 0 ? 100 : threshold.lossThreshold);
 
         require(assetLoss < acceptableLoss, ErrorsLib.AssetLoss(assetLoss));
     }
