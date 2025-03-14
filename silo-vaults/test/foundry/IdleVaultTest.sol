@@ -27,7 +27,15 @@ contract IdleVaultTest is IntegrationTest {
         vault.setSupplyQueue(supplyQueue);
 
         assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
+        assertEq(vault.withdrawQueueLength(), 2, "only 2 markets on withdraw");
+
         assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
+
+        assertEq(
+            address(vault.withdrawQueue(0)),
+            address(idleMarket),
+            "ensure we have idle at begin, so when we withdraw, we do it from 'invalid` market first"
+        );
     }
 
     /*
@@ -46,46 +54,54 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     /*
+        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_offset -vv
+    */
+    function test_idleVault_offset() public {
+        vm.prank(address(vault));
+        uint256 shares = idleMarket.deposit(1, address(vault));
+        assertEq(shares, 1e18, "big offset");
+    }
+
+    /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
     */
+    /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
         uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (35277, 418781076350872, 18446744073709551613);
+//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (151958258109595, 216049, 1844674407370955161);
 
-        _idleVault_InflationAttackWithDonation(
-            true,
-            10,
-            attackerDeposit,
-            supplierDeposit,
-            donation
-        );
+        _idleVault_InflationAttackWithDonation({
+            supplierWithdrawFirst: true,
+            attackerDeposit: attackerDeposit,
+            supplierDeposit: supplierDeposit,
+            donation: donation
+        });
     }
 
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_attackerFirst -vvv
     */
+    /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_attackerFirst(
         uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
+//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (308496185, 681844, 20_2884268016093027);
+
         vm.assume(attackerDeposit > 1);
         vm.assume(supplierDeposit > 1);
         vm.assume(donation > 1);
 
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (7151, 256688, 18446744073709551612);
-
-        // 26 wei loss for 3.905e15 deposit
-        _idleVault_InflationAttackWithDonation(
-            false,
-            26, // bit weird, that loss can happen later for input: (481, 3.905e15, 1.844e19)
-            attackerDeposit,
-            supplierDeposit,
-            donation
-        );
+        _idleVault_InflationAttackWithDonation({
+            supplierWithdrawFirst: false,
+            attackerDeposit: attackerDeposit,
+            supplierDeposit: supplierDeposit,
+            donation: donation
+        });
     }
 
     function _idleVault_InflationAttackWithDonation(
-        bool supplierWithdrawFirst, uint256 _lossThreshold, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        bool supplierWithdrawFirst, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
@@ -103,6 +119,9 @@ contract IdleVaultTest is IntegrationTest {
 
         vm.prank(SUPPLIER);
 
+        emit log_named_address("IDLE MARKET", address(idleMarket));
+        emit log(".......SUPPLIER doing deposit");
+
         try vault.deposit(supplierDeposit, SUPPLIER) {
             // if did not revert, we expect no loss
 
@@ -112,7 +131,10 @@ contract IdleVaultTest is IntegrationTest {
             uint256 attackerWithdraw;
 
             if (supplierWithdrawFirst) {
+                emit log(".......SUPPLIER withdraw");
                 supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
+                emit log(".......SUPPLIER withdraw END");
+
                 attackerWithdraw = _vaultWithdrawAll(attacker);
             } else {
                 attackerWithdraw = _vaultWithdrawAll(attacker);
@@ -125,19 +147,20 @@ contract IdleVaultTest is IntegrationTest {
             uint256 attackerTotalLossPercent = attackerTotalLoss * 1e18 / uint256(attackerTotalSpend);
             emit log_named_decimal_uint("attackerTotalLossPercent", attackerTotalLossPercent, 16);
 
-            uint256 supplierDiff = supplierDeposit - supplierWithdraw;
+            uint256 supplierLoss = supplierDeposit - supplierWithdraw;
 
             assertGe(
                 attackerTotalLoss + 2,
-                supplierDiff,
+                supplierLoss,
                 "attacker pays for it (+2 because of rounding error, we accepting 2wei discrepancy)"
             );
 
             emit log_named_uint(" SUPPLIER deposit", supplierDeposit);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
-            emit log_named_uint("    SUPPLIER diff", supplierDeposit - supplierWithdraw);
+            emit log_named_uint("    SUPPLIER loss", supplierDeposit - supplierWithdraw);
+            emit log_named_uint("    attacker loss", attackerTotalLoss);
 
-            uint256 supplierLostPercent = supplierDiff * 1e18 / supplierDeposit;
+            uint256 supplierLostPercent = supplierLoss * 1e18 / supplierDeposit;
 
             if (supplierDeposit < 1e15) {
                 // for tiny amounts % is higher because fuzzing cases can be extreme eg
@@ -147,12 +170,14 @@ contract IdleVaultTest is IntegrationTest {
                 assertLt(supplierLostPercent, 1e15, "0.001%");
             }
 
-            assertLe(
-                supplierDiff,
-                _lossThreshold,
-                "we should detect loss (some wei acceptable for fuzzing test to pass for extreme scenarios)"
+            assertLt(
+                supplierLoss,
+                vault.ARBITRARY_LOSS_THRESHOLD(),
+                "loss is higher than THRESHOLD, we should detect"
             );
         } catch (bytes memory data) {
+            emit log("deposit reverted for SUPPLIER");
+
             bytes4 errorType = bytes4(data);
             assertEq(errorType, ErrorsLib.AssetLoss.selector, "AssetLoss is only acceptable revert here");
         }
@@ -210,6 +235,7 @@ contract IdleVaultTest is IntegrationTest {
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
         vm.startPrank(_user);
         amount = vault.redeem(vault.balanceOf(_user), _user, _user);
+        emit log_named_uint("_vaultWithdrawAll", amount);
         vm.stopPrank();
     }
 }
