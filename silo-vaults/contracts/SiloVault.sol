@@ -888,8 +888,20 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
             (uint256 supplyAssets,) = _supplyBalance(market);
 
-            uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
-            uint256 newBalance = balanceTracker[market] + toSupply;
+            /// deposit 100 we allow 10 wei loss
+            /// balanceTracker[market] = 100
+            /// supplyAssets = 90
+            // 2 wei interest
+
+            // supplyAssets - 92 
+
+            // 11 wei
+            // balanceTracker[market] = 101
+
+            // max loss supplyCap + arbitraryLossThreshold * N deposits + unaccrued interest (if it is less than balanceTracker[market] - supplyAssets)
+
+            uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets); // 11
+            uint256 newBalance = balanceTracker[market] + toSupply; // 103
 
             // As `_supplyBalance` reads the balance directly from the market,
             // we have additional check to ensure that the market did not report wrong supply.
@@ -922,6 +934,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
                     balanceTracker[market] = UtilsLib.zeroFloorSub(balanceTracker[market], toWithdraw);
+                    // TODO add a comment about the dust
                 } catch {
                 }
             }
