@@ -67,6 +67,42 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateBalanceTrackerChanges -vvv
+    */
+    function testReallocateBalanceTrackerChanges() public {
+        allocations.push(MarketAllocation(allMarkets[0], 0));
+        allocations.push(MarketAllocation(allMarkets[1], 0));
+        allocations.push(MarketAllocation(allMarkets[2], 0));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
+
+        uint256 balanceBefore0 = vault.balanceTracker(allMarkets[0]);
+        uint256 balanceBefore1 = vault.balanceTracker(allMarkets[1]);
+        uint256 balanceBefore2 = vault.balanceTracker(allMarkets[2]);
+        uint256 balanceBeforeIdle = vault.balanceTracker(idleMarket);
+
+        assertNotEq(balanceBefore0, 0, "market0 balance before is 0");
+        assertNotEq(balanceBefore1, 0, "market1 balance before is 0");
+        assertNotEq(balanceBefore2, 0, "market2 balance before is 0");
+        assertNotEq(balanceBeforeIdle, 0, "idle market balance before is 0");
+
+        vm.prank(ALLOCATOR);
+        vault.reallocate(allocations);
+
+        uint256 balanceAfter0 = vault.balanceTracker(allMarkets[0]);
+        uint256 balanceAfter1 = vault.balanceTracker(allMarkets[1]);
+        uint256 balanceAfter2 = vault.balanceTracker(allMarkets[2]);
+        uint256 balanceAfterIdle = vault.balanceTracker(idleMarket);
+
+        assertEq(balanceAfter0, 0, "market0 balance after is not 0");
+        assertEq(balanceAfter1, 0, "market1 balance after is not 0");
+        assertEq(balanceAfter2, 0, "market2 balance after is not 0");
+
+        uint256 expectedIdle = balanceBeforeIdle + balanceBefore0 + balanceBefore1 + balanceBefore2;
+
+        assertEq(balanceAfterIdle, expectedIdle, "wrong idle balance after");
+    }
+
+    /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawMarketNotEnabled -vvv
     */
     function testReallocateWithdrawMarketNotEnabled() public {
