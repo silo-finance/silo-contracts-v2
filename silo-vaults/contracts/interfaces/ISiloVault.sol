@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-import {MarketConfig, PendingUint192, PendingAddress} from "../libraries/PendingLib.sol";
+import {MarketConfig, PendingUint192, PendingAddress, PendingLoss, AcceptableLoss} from "../libraries/PendingLib.sol";
 import {IVaultIncentivesModule} from "./IVaultIncentivesModule.sol";
 
 struct MarketAllocation {
@@ -98,12 +98,29 @@ interface ISiloVaultBase {
     /// @dev In case the new cap is lower than the current one, the cap is set immediately.
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external;
 
-    /// @notice Accepts the pending cap of the market defined by `marketParams`.
+    /// @notice Submits loss threshold for the market.
+    /// @dev Warning: Reverts if a loss is already pending. Revoke the pending loss to overwrite it.
+    /// @dev Warning: Reverts if set to over 50%.
+    /// @dev In case the new loss is lower than the current one, the loss is set immediately.
+    function submitAcceptableLoss(
+        IERC4626 _market,
+        bool _usePercent,
+        uint64 _lossThreshold
+    ) external;
+
+    /// @notice Accepts the pending cap of the market defined by `market`.
     function acceptCap(IERC4626 _market) external;
+
+    /// @notice Accepts the pending loss threshold of the market defined by `market`.
+    function acceptLoss(IERC4626 _market) external;
 
     /// @notice Revokes the pending cap of the market defined by `market`.
     /// @dev Does not revert if there is no pending cap.
     function revokePendingCap(IERC4626 _market) external;
+
+    /// @notice Revokes the pending loss threshold of the market defined by `market`.
+    /// @dev Does not revert if there is no pending one.
+    function revokePendingLoss(IERC4626 _market) external;
 
     /// @notice Submits a forced market removal from the vault, eventually losing all funds supplied to the market.
     /// @notice Funds can be recovered by enabling this market again and withdrawing from it (using `reallocate`),

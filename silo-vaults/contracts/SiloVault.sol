@@ -17,6 +17,8 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {
     MarketConfig,
+    AcceptableLoss,
+    PendingLoss,
     PendingUint192,
     PendingAddress,
     MarketAllocation,
@@ -46,11 +48,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     using SafeERC20 for IERC20;
     using PendingLib for PendingUint192;
     using PendingLib for PendingAddress;
+    using PendingLib for PendingLoss;
 
     /* IMMUTABLES */
     /// @dev amount of tokens that is acceptable to be lost on deposit->withdraww action
     /// if vault detect higher loss, action will be reverted
     uint8 public constant ARBITRARY_LOSS_THRESHOLD = 100;
+    uint256 public constant LOSS_THRESHOLD_PRECISION = 1e18;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -72,6 +76,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultStaticTyping
     mapping(IERC4626 => MarketConfig) public config;
+    mapping(IERC4626 => AcceptableLoss) public lossThresholds;
 
     /// @inheritdoc ISiloVaultBase
     uint256 public timelock;
@@ -81,6 +86,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultStaticTyping
     mapping(IERC4626 => PendingUint192) public pendingCap;
+    mapping(IERC4626 => PendingLoss) public pendingAcceptableLoss;
 
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
@@ -272,6 +278,30 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ISiloVaultBase
+    function submitAcceptableLoss(
+        IERC4626 _market,
+        bool _usePercent,
+        uint64 _lossThreshold
+    ) external virtual onlyCuratorRole {
+        if (_usePercent && _lossThreshold > 0.5e18) revert ErrorsLib.AbnormalLossPercent();
+        if (pendingAcceptableLoss[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
+
+        AcceptableLoss memory lossThreshold = lossThresholds[_market];
+
+        if (
+            lossThreshold.usePercent == _usePercent && lossThreshold.lossThreshold == _lossThreshold
+        ) revert ErrorsLib.AlreadySet();
+
+        if (lossThreshold.usePercent == _usePercent && _lossThreshold < lossThreshold.lossThreshold) {
+            _setAcceptableLoss(_market, _usePercent, _lossThreshold);
+        } else {
+            pendingAcceptableLoss[_market].update(_usePercent, _lossThreshold, timelock);
+
+            emit EventsLib.SubmitAcceptableLoss(_msgSender(), _market, _usePercent, _lossThreshold);
+        }
+    }
+
+    /// @inheritdoc ISiloVaultBase
     function submitMarketRemoval(IERC4626 _market) external virtual onlyCuratorRole {
         if (config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
         if (config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
@@ -446,6 +476,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /// @inheritdoc ISiloVaultBase
+    function revokePendingLoss(IERC4626 _market) external virtual onlyCuratorOrGuardianRole {
+        delete pendingAcceptableLoss[_market];
+
+        emit EventsLib.RevokeAcceptableLoss(_msgSender(), _market);
+    }
+
+    /// @inheritdoc ISiloVaultBase
     function revokePendingMarketRemoval(IERC4626 _market) external virtual onlyCuratorOrGuardianRole {
         delete config[_market].removableAt;
 
@@ -484,6 +521,20 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // Safe "unchecked" cast because pendingCap <= type(uint184).max.
         _setCap(_market, uint184(pendingCap[_market].value));
+
+        _nonReentrantOff();
+    }
+
+    /// @inheritdoc ISiloVaultBase
+    function acceptLoss(IERC4626 _market)
+        external
+        virtual
+        afterTimelock(pendingAcceptableLoss[_market].validAt)
+    {
+        _nonReentrantOn();
+
+        PendingLoss memory pending = pendingAcceptableLoss[_market];
+        _setAcceptableLoss(_market, pending.usePercent, pending.value);
 
         _nonReentrantOff();
     }
@@ -757,13 +808,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
         if (_shares == 0) revert ErrorsLib.InputZeroShares();
+        console.log("[_deposit] INPUT assets %s, shares %s", _assets, _shares);
 
         super._deposit(_caller, _receiver, _assets, _shares);
+        console.log("[_deposit] before _supplyERC4626 assets %s, shares %s", totalAssets(), totalSupply());
 
         _supplyERC4626(_assets);
+        console.log("[_deposit] after _supplyERC4626 assets %s, shares %s", totalAssets(), totalSupply());
 
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(lastTotalAssets + _assets);
+        console.log("[_deposit] after _updateLastTotalAssets assets %s, shares %s", totalAssets(), totalSupply());
 
         // TODO: loss detection only works when I put it here
         // preview on market does not detect loss for some reason
@@ -861,6 +916,18 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         delete pendingCap[_market];
     }
 
+    /// @dev Sets the cap of the market.
+    function _setAcceptableLoss(IERC4626 _market, bool _usePercent, uint64 _loss) internal virtual {
+        lossThresholds[_market] = AcceptableLoss({
+            usePercent: _usePercent,
+            lossThreshold: _loss
+        });
+
+        emit EventsLib.SetAcceptableLoss(_msgSender(), _market, _usePercent, _loss);
+
+        delete pendingAcceptableLoss[_market];
+    }
+
     /* LIQUIDITY ALLOCATION */
 
     /// @dev Supplies `assets` to ERC4626 vaults.
@@ -879,6 +946,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) returns (uint256 shares) {
+                    console.log("[_supplyERC4626] got shares", shares);
                     console.log("[_supplyERC4626] market %s, deposited %s", address(market), toSupply);
                     _assetLossCheck(market, shares, toSupply);
                     _assets -= toSupply;
@@ -1037,7 +1105,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         console.log("[_assetLossCheck] totalAssets", totalAssets());
         console.log("[_assetLossCheck] lastTotalAssets", lastTotalAssets);
 
+        AcceptableLoss memory lossThreshold = lossThresholds[_market];
 
-        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss(assetLoss));
+        uint256 acceptableLoss = lossThreshold.usePercent
+            ? _expectedAssets * lossThreshold.lossThreshold / 1e18
+            : (lossThreshold.lossThreshold == 0 ? 100 : lossThreshold.lossThreshold);
+
+        require(assetLoss < acceptableLoss, ErrorsLib.AssetLoss(assetLoss));
     }
 }

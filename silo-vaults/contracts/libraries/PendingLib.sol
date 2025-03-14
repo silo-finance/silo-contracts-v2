@@ -10,9 +10,24 @@ struct MarketConfig {
     uint64 removableAt;
 }
 
+struct AcceptableLoss {
+    bool usePercent;
+    /// @dev if `usePercent` == TRUE then 100% == 1e18, otherwise value is in pure wei
+    uint64 lossThreshold;
+}
+
 struct PendingUint192 {
     /// @notice The pending value to set.
     uint192 value;
+    /// @notice The timestamp at which the pending value becomes valid.
+    uint64 validAt;
+}
+
+struct PendingLoss {
+    /// @notice The pending value to set.
+    bool usePercent;
+    /// @dev if `usePercent` == TRUE then 100% == 1e18, otherwise value is in pure wei
+    uint64 value;
     /// @notice The timestamp at which the pending value becomes valid.
     uint64 validAt;
 }
@@ -44,5 +59,14 @@ library PendingLib {
         _pending.value = _newValue;
         // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
         _pending.validAt = uint64(block.timestamp + _timelock);
+    }
+
+    /// @dev Updates `_pending`'s value to `_newValue` and its corresponding `validAt` timestamp.
+    /// @dev Assumes `timelock` <= `MAX_TIMELOCK`.
+    function update(PendingLoss storage _loss, bool _usePercent, uint64 _newValue,  uint256 _timelock) internal {
+        _loss.usePercent = _usePercent;
+        _loss.value = _newValue;
+        // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
+        _loss.validAt = uint64(block.timestamp + _timelock);
     }
 }
