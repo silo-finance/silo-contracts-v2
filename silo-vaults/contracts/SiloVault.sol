@@ -13,8 +13,6 @@ import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 import {
     MarketConfig,
     PendingUint192,
@@ -835,8 +833,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         shares = _ERC20BalanceOf(address(_market), address(this));
         // we assume here, that in case of any interest on IERC4626, convertToAssets returns assets with interest
         assets = _previewRedeem(_market, shares);
-
-        console2.log("[_supplyBalance] assets", assets);
     }
 
     /// @dev Reverts if `newTimelock` is not within the bounds.
@@ -893,18 +889,16 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             (uint256 supplyAssets,) = _supplyBalance(market);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
+            uint256 newBalance = balanceTracker[market] + toSupply;
 
-            if (toSupply > 0) {
-                uint256 newBalance = balanceTracker[market] + toSupply;
-                // As `_supplyBalance` reads the balance directly from the market,
-                // we have additional check to ensure that the market did not report wrong supply.
-                if (newBalance <= supplyCap) {
-                    // Using try/catch to skip markets that revert.
-                    try market.deposit(toSupply, address(this)) {
-                        _assets -= toSupply;
-                        balanceTracker[market] = newBalance;
-                    } catch {
-                    }
+            // As `_supplyBalance` reads the balance directly from the market,
+            // we have additional check to ensure that the market did not report wrong supply.
+            if (toSupply != 0 && newBalance <= supplyCap) {
+                // Using try/catch to skip markets that revert.
+                try market.deposit(toSupply, address(this)) {
+                    _assets -= toSupply;
+                    balanceTracker[market] = newBalance;
+                } catch {
                 }
             }
 
