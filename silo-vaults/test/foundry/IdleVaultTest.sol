@@ -67,9 +67,10 @@ contract IdleVaultTest is IntegrationTest {
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
-        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (151958258109595, 216049, 1844674407370955161);
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (31260780, 2715, 22621791505034);
+        // atacker deposit (0) 31260780
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: true,
@@ -84,9 +85,9 @@ contract IdleVaultTest is IntegrationTest {
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_attackerFirst(
-        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
-//        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (308496185, 681844, 20_2884268016093027);
+        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (31260780, 2715, 22621791505034);
 
         vm.assume(attackerDeposit > 1);
         vm.assume(supplierDeposit > 1);

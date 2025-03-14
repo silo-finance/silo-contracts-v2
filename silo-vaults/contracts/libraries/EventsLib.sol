@@ -37,6 +37,11 @@ library EventsLib {
     /// @notice Emitted when a new `cap` is set for `market`.
     event SetCap(address indexed caller, IERC4626 indexed market, uint256 cap);
 
+    /// @notice Emitted when a pending `cap` is submitted for `market`.
+    event SubmitAcceptableLoss(address indexed caller, IERC4626 indexed market, bool usePercent, uint64 acceptableLoss);
+
+    event SetAcceptableLoss(address indexed caller, IERC4626 indexed market, bool usePercent, uint64 acceptableLoss);
+
     /// @notice Emitted when the market's last total assets is updated to `updatedTotalAssets`.
     event UpdateLastTotalAssets(uint256 updatedTotalAssets);
 
@@ -54,6 +59,9 @@ library EventsLib {
 
     /// @notice Emitted when a `pendingCap` for the `market` is revoked.
     event RevokePendingCap(address indexed caller, IERC4626 indexed market);
+
+    /// @notice Emitted when a `pendingAcceptableLoss` for the `market` is revoked.
+    event RevokeAcceptableLoss(address indexed caller, IERC4626 indexed market);
 
     /// @notice Emitted when a `pendingGuardian` is revoked.
     event RevokePendingGuardian(address indexed caller);
