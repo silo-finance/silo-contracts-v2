@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
-import {console} from "forge-std/console.sol";
-
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -33,6 +31,7 @@ contract ERC4626WithBeforeHook is IdleVault {
 
     function setOffset(uint8 _offset) external {
         require(totalSupply() == 0, "vault must be empty to set offset");
+
         offset = _offset;
     }
     
@@ -69,14 +68,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         vm.prank(ALLOCATOR);
         vault.setSupplyQueue(supplyQueue);
-        emit log("setSupplyQueue done");
 
         uint256[] memory indexes = new uint256[](2);
         indexes[0] = 2;
         indexes[1] = 1;
         vm.prank(ALLOCATOR);
         vault.updateWithdrawQueue(indexes);
-        emit log("updateWithdrawQueue done");
 
         assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
         assertEq(vault.withdrawQueueLength(), 2, "only 2 markets on withdraw");
@@ -107,7 +104,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
     function beforeDeposit() external {
         if (donationAmount == 0) return;
 
-        emit log_named_uint("donation attack ", donationAmount);
+        emit log_named_uint("executing donation attack with amount", donationAmount);
         IERC20(idleMarket.asset()).transfer(address(idleMarket), donationAmount);
     }
 
@@ -117,7 +114,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
     function test_idleVault_offset() public {
         vm.prank(address(vault));
         uint256 shares = idleMarket.deposit(1, address(vault));
-        assertEq(shares, 1e18, "big offset");
+        assertEq(shares, 1e18, "expect big offset");
     }
 
     /*
@@ -142,8 +139,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
-            _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: vault.ARBITRARY_LOSS_THRESHOLD()
+            _idleVaultOffset: _idleVaultOffset
         });
     }
 
@@ -157,7 +153,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
         uint64 _donation,
         uint8 _idleVaultOffset
     ) public {
-        // case where we can detect loss on market:
 //        (uint64 _attackerDeposit,
 //            uint64 _supplierDeposit,
 //            uint64 _donation,
@@ -169,8 +164,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
-            _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: vault.ARBITRARY_LOSS_THRESHOLD()
+            _idleVaultOffset: _idleVaultOffset
         });
     }
 
@@ -190,8 +184,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
-            _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: vault.ARBITRARY_LOSS_THRESHOLD()
+            _idleVaultOffset: _idleVaultOffset
         });
     }
 
@@ -211,8 +204,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
-            _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: uint64(Math.max(vault.ARBITRARY_LOSS_THRESHOLD(), 1.3e15))
+            _idleVaultOffset: _idleVaultOffset
         });
     }
 
@@ -222,15 +214,14 @@ contract MarketLossTest is IBefore, IntegrationTest {
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
         uint64 _donation,
-        uint8 _idleVaultOffset,
-        uint64 _acceptableLossThreshold
+        uint8 _idleVaultOffset
     ) public {
         vm.assume(uint256(_attackerDeposit) * _supplierDeposit * _donation != 0);
         vm.assume(_supplierDeposit >= 2);
         vm.assume(_idleVaultOffset < 20);
         ERC4626WithBeforeHook(address(idleMarket)).setOffset(_idleVaultOffset);
 
-        // we want some founds to go to idle market, so cap must be lower than deposit
+        // we want some founds to go to idle market, so cap must be lower than supplier deposit
         _setCap(allMarkets[0], _supplierDeposit / 2);
 
         vm.prank(attacker);
@@ -241,9 +232,8 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         // to avoid losses caused by rounding error, recalculate assets
         emit log_named_uint("original _supplierDeposit", _supplierDeposit);
-        emit log_named_uint("1 asset is this much shares before attack", vault.convertToShares(1));
         _supplierDeposit = uint64(vault.convertToAssets(vault.convertToShares(_supplierDeposit)));
-        emit log_named_uint("recaulculared _supplierDeposit", _supplierDeposit);
+        emit log_named_uint("recalculated _supplierDeposit", _supplierDeposit);
 
         // here we have frontrun with donation
         if (_attackOnBeforeDeposit) donationAmount = _donation;
@@ -251,8 +241,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         vm.prank(SUPPLIER);
 
-        emit log_named_address("IDLE MARKET", address(idleMarket));
-        emit log(".......SUPPLIER doing deposit");
+        emit log("SUPPLIER doing deposit");
 
         try vault.deposit(_supplierDeposit, SUPPLIER) {
             // if did not revert, we expect no loss
@@ -265,8 +254,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
             if (_supplierWithdrawFirst) {
                 emit log(".......SUPPLIER withdraw");
                 supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
-                emit log(".......SUPPLIER withdraw END");
-
                 attackerWithdraw = _vaultWithdrawAll(attacker);
             } else {
                 attackerWithdraw = _vaultWithdrawAll(attacker);
@@ -299,9 +286,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
             uint256 supplierLostPercent = supplierLoss * 1e18 / _supplierDeposit;
 
-            assertLt(
+            assertLe(
                 supplierLoss,
-                _acceptableLossThreshold,
+                vault.ARBITRARY_LOSS_THRESHOLD(),
                 "loss is higher than THRESHOLD, we should detect"
             );
         } catch (bytes memory data) {
