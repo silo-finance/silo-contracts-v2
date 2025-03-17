@@ -81,9 +81,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
 
-    /// @dev Internal balance tracker to prevent assets loss
-    /// if underlying market hacked and started reporting wrong supply.
-    /// max loss == supplyCap + arbitraryLossThreshold * N deposits + unaccrued interest (if it is less than balanceTracker[market] - supplyAssets)
+    /// @dev Internal balance tracker to prevent assets loss if underlying market hacked
+    /// and started reporting wrong supply.
+    /// max loss == supplyCap + arbitraryLossThreshold * N deposits + un accrued interest.
+    /// Un accrued loss present only if it is less than balanceTracker[market] - supplyAssets.
     mapping(IERC4626 => uint256) public balanceTracker;
 
     /// @inheritdoc ISiloVaultBase
