@@ -21,10 +21,10 @@ library PartialLiquidationLibChecked {
     uint256 internal constant _UNDERESTIMATION = 2;
 
     /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the 
-    /// _DEBT_DUST_LEVEL threshold, a full liquidation is triggered.
+    /// _FULL_LIQUIDATION_THRESHOLD threshold, a full liquidation is triggered.
     /// For example, if the total debt value is 51 and the dust level is set at 98%, 
     /// then we are unable to liquidate 50, we must proceed to liquidate the entire 51.
-    uint256 internal constant _DEBT_DUST_LEVEL = 0.9e18; // 90%
+    uint256 internal constant _FULL_LIQUIDATION_THRESHOLD = 0.9e18; // 90%
 
     /// @dev debt keeps growing over time, so when dApp use this view to calculate max, tx should never revert
     /// because actual max can be only higher
@@ -260,7 +260,7 @@ library PartialLiquidationLibChecked {
         // here is weird case, sometimes it is impossible to go down to target LTV, however math can calculate it
         // eg with negative numerator and denominator and result will be positive, that's why we simply return all
         // we also cover dust case here
-        return repayValue * _PRECISION_DECIMALS / _totalBorrowerDebtValue > _DEBT_DUST_LEVEL
+        return repayValue * _PRECISION_DECIMALS / _totalBorrowerDebtValue > _FULL_LIQUIDATION_THRESHOLD
             ? _totalBorrowerDebtValue
             : repayValue;
     }

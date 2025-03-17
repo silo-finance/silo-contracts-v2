@@ -54,9 +54,6 @@ interface ISiloVaultBase {
     /// @notice The fee recipient.
     function feeRecipient() external view returns (address);
 
-    /// @notice The skim recipient.
-    function skimRecipient() external view returns (address);
-
     /// @notice The current timelock.
     function timelock() external view returns (uint256);
 
@@ -134,9 +131,6 @@ interface ISiloVaultBase {
     /// @notice Revokes the pending guardian.
     function revokePendingGuardian() external;
 
-    /// @notice Skims the vault `token` balance to `skimRecipient`.
-    function skim(address) external;
-
     /// @notice Sets `newAllocator` as an allocator or not (`newIsAllocator`).
     function setIsAllocator(address _newAllocator, bool _newIsAllocator) external;
 
@@ -148,9 +142,6 @@ interface ISiloVaultBase {
 
     /// @notice Sets `feeRecipient` to `newFeeRecipient`.
     function setFeeRecipient(address _newFeeRecipient) external;
-
-    /// @notice Sets `skimRecipient` to `newSkimRecipient`.
-    function setSkimRecipient(address _newSkimRecipient) external;
 
     /// @notice Sets `supplyQueue` to `newSupplyQueue`.
     /// @param _newSupplyQueue is an array of enabled markets, and can contain duplicate markets, but it would only

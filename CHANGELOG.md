@@ -5,12 +5,45 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- silo-vaults: require asset decimals to be up to 18
+
 ### Fixed
 - allow to burn NFT only by owner
+- revert on invalid token type in `Hook.shareTokenTransfer()`
 
 ### Updated
 - Router with multicall
 - Silo hooks refactoring
+- silo-vaults: use 18 decimals offset in idle vault
+
+### Removed
+- silo-vaults: remove skim method
+
+## [1.9.0] - 2025-02-28
+### Added
+- add method `getUsersHealth` to SiloLens
+
+## [1.8.0] - 2025-02-25
+### Added
+- SiloLens redeployment
+
+## [1.7.0] - 2025-02-26
+### Added
+- LBTC / scBTC market on Sonic
+- LBTC / WBTC market on Sonic
+
+## [1.6.0] - 2025-02-25
+### Added
+- SiloRouter deployment
+
+## [1.5.0] - 2025-02-19
+### Added
+- SiloLens deployment
+
+## [1.4.0] - 2025-02-18
+### Added
+- Router with multicall
 
 ## [1.3.5] - 2025-02-07
 ### Updated

@@ -9,6 +9,9 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 /// @custom:contact security@silo.finance
 /// @notice Library exposing error messages.
 library ErrorsLib {
+    /// @notice Thrown when asset decimals is too big
+    error NotSupportedDecimals();
+
     /// @notice Thrown when deposit generates zero shares
     error InputZeroShares();
 
@@ -26,6 +29,12 @@ library ErrorsLib {
 
     /// @notice Thrown when the address passed is the zero address.
     error ZeroAddress();
+
+    /// @notice Thrown when the result of a conversion is zero.
+    error ZeroAssets();
+
+    /// @notice Thrown when the result of a conversion is zero.
+    error ZeroShares();
 
     /// @notice Thrown when the caller doesn't have the curator role.
     error NotCuratorRole();
@@ -139,4 +148,7 @@ library ErrorsLib {
 
     /// @notice Thrown when attempting to supply more than the max inflow of a market.
     error MaxInflowExceeded(IERC4626 market);
+
+    /// @notice Thrown when projected withdraw is much less than what user deposit.
+    error AssetLoss(uint256 loss);
 }

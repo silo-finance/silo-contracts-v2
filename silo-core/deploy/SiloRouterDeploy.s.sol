@@ -7,6 +7,7 @@ import {SiloRouter} from "silo-core/contracts/silo-router/SiloRouter.sol";
 import {SiloRouterImplementation} from "silo-core/contracts/silo-router/SiloRouterImplementation.sol";
 
 /**
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloRouterDeploy.s.sol \
         --ffi --rpc-url http://127.0.0.1:8545 --broadcast --verify

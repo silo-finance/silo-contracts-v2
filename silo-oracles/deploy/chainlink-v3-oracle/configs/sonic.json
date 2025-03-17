@@ -114,5 +114,38 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
+    },
+    "EGGS_CHAINLINK_EGGS_USD": {
+        "baseToken": "EGGS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EGGS_SONIC_ADAPTER",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "CHAINLINK_S_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e26,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "REDSTONE_CHAINLINK_stS_USD": {
+        "baseToken": "stS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_stS_S_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "CHAINLINK_S_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e16,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_HARDCODE_wstkscUSD_frxUSD": {
+        "baseToken": "wstkscUSD",
+        "quoteToken": "frxUSD",
+        "primaryAggregator": "PYTH_wstkscUSD_scUSD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
     }
 }

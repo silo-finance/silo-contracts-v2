@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
@@ -16,13 +17,15 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
 
+import {SiloVaultsFactoryDeploy} from "../../../deploy/SiloVaultsFactoryDeploy.s.sol";
+
 import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
 import {IdleVaultsFactory} from "../../../contracts/IdleVaultsFactory.sol";
+import {SiloVaultsFactory} from "../../../contracts/SiloVaultsFactory.sol";
 
 import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
 import {ConstantsLib} from "../../../contracts/libraries/ConstantsLib.sol";
-import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
 
 uint256 constant BLOCK_TIME = 1;
 uint256 constant MIN_TEST_ASSETS = 1e8;
@@ -42,11 +45,10 @@ contract BaseTest is SiloLittleHelper, Test {
     address internal CURATOR = makeAddr("Curator");
     address internal GUARDIAN = makeAddr("Guardian");
     address internal FEE_RECIPIENT = makeAddr("FeeRecipient");
-    address internal SKIM_RECIPIENT = makeAddr("SkimRecipient");
 
     MintableToken internal loanToken = new MintableToken(18);
     MintableToken internal collateralToken = new MintableToken(18);
-    VaultIncentivesModule internal vaultIncentivesModule = new VaultIncentivesModule(OWNER);
+    SiloVaultsFactory siloVaultsFactory;
 
     IERC4626[] internal allMarkets;
     mapping (IERC4626 collateral => IERC4626) internal collateralMarkets;
@@ -54,6 +56,7 @@ contract BaseTest is SiloLittleHelper, Test {
     IERC4626 internal idleMarket;
 
     ISiloVault internal vault;
+    uint256 internal OFFSET_POW;
 
     function setUp() public virtual {
         assertEq(allMarkets.length, 0, "allMarkets is fresh");
@@ -63,15 +66,19 @@ contract BaseTest is SiloLittleHelper, Test {
 
         emit log_named_address("loanToken", address(loanToken));
 
-        vault = ISiloVault(address(
-            new SiloVault(OWNER, TIMELOCK, vaultIncentivesModule, address(loanToken), "SiloVault Vault", "MMV")
-        ));
+        SiloVaultsFactoryDeploy factoryDeploy = new SiloVaultsFactoryDeploy();
+        factoryDeploy.disableDeploymentsSync();
+        siloVaultsFactory = factoryDeploy.run();
+
+        vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
         idleMarket = factory.createIdleVault(vault);
         vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
+
+        OFFSET_POW = 10 ** vault.DECIMALS_OFFSET();
     }
 
     function createSiloVault(
@@ -81,9 +88,7 @@ contract BaseTest is SiloLittleHelper, Test {
         string memory name,
         string memory symbol
     ) public returns (ISiloVault) {
-        return ISiloVault(address(
-            new SiloVault(owner, initialTimelock, vaultIncentivesModule, asset, name, symbol)
-        ));
+        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
     }
 
     function _createNewMarkets() public virtual {
