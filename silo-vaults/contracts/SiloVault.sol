@@ -124,7 +124,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
         require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, assetDecimals));
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 18, assetDecimals));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
