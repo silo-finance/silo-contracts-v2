@@ -48,9 +48,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     using PendingLib for PendingAddress;
 
     /* IMMUTABLES */
+
     /// @dev amount of tokens that is acceptable to be lost on deposit->withdraww action
     /// if vault detect higher loss, action will be reverted
-    uint8 public constant ARBITRARY_LOSS_THRESHOLD = 100;
+    /// we can not set "too much", this must be precise, otherwise we can not detect loss
+    /// how to calculate loss? we have to count rounding and we have to be as precise as possible
+    /// TODO we might need to sum up loss for general check.
+    uint8 public constant ARBITRARY_LOSS_THRESHOLD = 2;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
