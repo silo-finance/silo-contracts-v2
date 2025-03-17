@@ -14,26 +14,14 @@ rule consistencyOfPausing(env e1, env e2)
     satisfy true;
 }
 
-rule onlyOwnerCanPause(env e1, env e2)
+rule onlyOwnerCanPause(env e)
 {
-    storage init = lastStorage;
-    pause(e1);  // didn't revert, e1.msg.sender is the owner
-
-    pause@withrevert(e2) at init;
-    bool reverted2 = lastReverted;
-
-    assert e1.msg.sender != e2.msg.sender => reverted2; // must revert for all other callers
-    satisfy true;
+    pause(e);
+    assert e.msg.sender == owner(e);
 }
 
-rule onlyOwnerCanUnpause(env e1, env e2)
+rule onlyOwnerCanUnpause(env e)
 {
-    storage init = lastStorage;
-    unpause(e1);  // didn't revert, e1.msg.sender is the owner
-
-    unpause@withrevert(e2) at init;
-    bool reverted2 = lastReverted;
-
-    assert e1.msg.sender != e2.msg.sender => reverted2; // must revert for all other callers
-    satisfy true;
+    unpause(e);
+    assert e.msg.sender == owner(e);
 }
