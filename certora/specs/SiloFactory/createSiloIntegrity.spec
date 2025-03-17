@@ -71,7 +71,8 @@ function cloneDeterministicCVL(address master, bytes32 salt) returns address {
     require(clonedet_rev2[res] == salt);
 
     // can't deploy the same twice
-    require(!deployed[res]); 
+    
+    assert(!deployed[res]); 
     deployed[res] = true;
 
     return res;
