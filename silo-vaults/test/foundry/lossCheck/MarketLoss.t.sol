@@ -196,7 +196,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: uint64(Math.max(vault.ARBITRARY_LOSS_THRESHOLD(), 451))
+            _acceptableLossThreshold: uint64(Math.max(vault.ARBITRARY_LOSS_THRESHOLD(), 1.3e15))
         });
     }
 
@@ -217,7 +217,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: uint64(Math.max(vault.ARBITRARY_LOSS_THRESHOLD(), 451))
+            _acceptableLossThreshold: uint64(Math.max(vault.ARBITRARY_LOSS_THRESHOLD(), 1.3e15))
         });
     }
 
