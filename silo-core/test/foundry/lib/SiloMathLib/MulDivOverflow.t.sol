@@ -23,7 +23,7 @@ contract MulDivOverflowTest is Test {
     /*
     forge test -vv --mt test_mulOverflow_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_mulOverflow_fuzz(uint256 _a, uint256 _b, uint256 _c) public view {
         vm.assume(_c != 0);
 

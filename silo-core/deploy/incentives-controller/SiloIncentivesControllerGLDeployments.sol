@@ -51,11 +51,19 @@ library SiloIncentivesControllerGLDeployments {
 
         (address silo0, address silo1) = siloConfig.getSilos();
 
-        address silo0Asset = ISilo(silo0).asset();
-        address silo1Asset = ISilo(silo1).asset();
+        string memory silo0AssetSymbol;
+        string memory silo1AssetSymbol;
 
-        string memory silo0AssetSymbol = TokenHelper.symbol(silo0Asset);
-        string memory silo1AssetSymbol = TokenHelper.symbol(silo1Asset);
+        {
+            address silo0Asset = ISilo(silo0).asset();
+            address silo1Asset = ISilo(silo1).asset();
+
+            silo0AssetSymbol = TokenHelper.symbol(silo0Asset);
+            silo1AssetSymbol = TokenHelper.symbol(silo1Asset);
+        }
+        
+
+        uint256 silo0Id = siloConfig.SILO_ID();
 
         bool isSilo0 = isSilo0Asset(siloConfig, _shareToken);
 
@@ -64,6 +72,9 @@ library SiloIncentivesControllerGLDeployments {
             silo0AssetSymbol,
             "/",
             silo1AssetSymbol,
+            "(",
+            VmLib.vm().toString(silo0Id),
+            ")",
             " ",
             isSilo0 ? silo0AssetSymbol : silo1AssetSymbol,
             ":",

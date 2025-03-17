@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
@@ -26,7 +28,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     /// rewards distribution is calculated
     address public immutable NOTIFIER; // solhint-disable-line var-name-mixedcase
 
-    uint8 public constant PRECISION = 18;
+    uint8 public constant PRECISION = 36;
     uint256 public constant TEN_POW_PRECISION = 10 ** PRECISION;
 
     modifier onlyNotifier() {
@@ -42,6 +44,8 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     /// @param _notifier is contract with IERC20 interface with users balances, based based on which
     /// rewards distribution is calculated
     constructor(address _owner, address _notifier) Ownable(_owner) {
+        require(_notifier != address(0), ZeroAddress());
+
         NOTIFIER = _notifier;
     }
 
@@ -286,8 +290,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 reserveIndex,
         uint256 userIndex
     ) internal pure virtual returns (uint256 rewards) {
-        rewards = principalUserBalance * (reserveIndex - userIndex);
-        unchecked { rewards /= TEN_POW_PRECISION; }
+        rewards = Math.mulDiv(principalUserBalance, (reserveIndex - userIndex), TEN_POW_PRECISION);
     }
 
     /**
@@ -319,8 +322,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 currentTimestamp = block.timestamp > distributionEnd ? distributionEnd : block.timestamp;
         uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
 
-        newIndex = emissionPerSecond * timeDelta * TEN_POW_PRECISION;
-        unchecked { newIndex /= totalBalance; }
+        newIndex = Math.mulDiv(emissionPerSecond * timeDelta, TEN_POW_PRECISION, totalBalance);
         newIndex += currentIndex;
     }
 

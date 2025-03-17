@@ -49,4 +49,10 @@ contract IdleVault is ERC4626 {
 
         return super.mint(_shares, _receiver);
     }
+
+    /// @notice This would make the amount that the user would need to "gift" the market in order to significantly
+    /// inflate the share price very large and impractical.
+    function _decimalsOffset() internal view virtual override returns (uint8) {
+        return 18;
+    }
 }

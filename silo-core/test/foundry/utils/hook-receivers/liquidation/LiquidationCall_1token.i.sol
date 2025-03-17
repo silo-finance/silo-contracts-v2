@@ -31,7 +31,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
     error SenderNotSolventAfterTransfer();
 
-    event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
+    event WithdrawnFees(uint256 daoFees, uint256 deployerFees, bool redirectedDeployerFees);
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
@@ -430,7 +430,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             // testing event for coverage
             vm.expectEmit(true, true, true, true);
-            emit WithdrawnFeed(7247046524394624088, 4831364349596416059);
+            emit WithdrawnFees(7247046524394624088, 4831364349596416059, false);
 
             silo0.withdrawFees();
 

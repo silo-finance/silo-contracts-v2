@@ -34,7 +34,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
     ISilo.CollateralType constant public PROTECTED = ISilo.CollateralType.Protected;
 
     SiloFixture internal _siloFixture;
-    ISiloConfig internal _siloConfig;
+    ISiloConfig internal _config;
     HookMock internal _siloHookReceiver;
 
     address internal _depositor = makeAddr("Depositor");
@@ -1042,12 +1042,12 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         configOverride.configName = SiloConfigsNames.SILO_LOCAL_DEPLOYER;
 
         address hook;
-        (_siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);
+        (_config, silo0, silo1,,, hook) = _siloFixture.deploy_local(configOverride);
         partialLiquidation = IPartialLiquidation(hook);
 
         __init(MintableToken(configOverride.token0), MintableToken(configOverride.token1), silo0, silo1);
 
-        ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory configData = _config.getConfig(address(silo0));
 
         _siloHookReceiver = HookMock(configData.hookReceiver);
 

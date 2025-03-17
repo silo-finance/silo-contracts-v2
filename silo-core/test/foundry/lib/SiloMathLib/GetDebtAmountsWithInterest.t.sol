@@ -41,7 +41,7 @@ contract GetDebtAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getDebtAmountsWithInterest_notRevert
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_getDebtAmountsWithInterest_notRevert_fuzz(uint256 _debtAssets, uint256 _rcompInDp) public pure {
         SiloMathLib.getDebtAmountsWithInterest(_debtAssets, _rcompInDp);
     }
