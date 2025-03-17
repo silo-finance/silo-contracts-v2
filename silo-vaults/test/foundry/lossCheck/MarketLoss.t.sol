@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
+import {console} from "forge-std/console.sol";
+
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -105,6 +107,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
     function beforeDeposit() external {
         if (donationAmount == 0) return;
 
+        emit log_named_uint("donation attack ", donationAmount);
         IERC20(idleMarket.asset()).transfer(address(idleMarket), donationAmount);
     }
 
@@ -181,14 +184,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
         uint64 _donation,
         uint8 _idleVaultOffset
     ) public {
-        // when attacker withdraw first, loss is not detected, eg:
-//        (
-//            uint64 _attackerDeposit,
-//            uint64 _supplierDeposit,
-//            uint64 _donation,
-//            uint8 _idleVaultOffset
-//        ) = (38002435762126, 224063681149666585, 2013265765460, 5);
-
         _idleVault_InflationAttackWithDonation({
             _supplierWithdrawFirst: false,
             _attackOnBeforeDeposit: false,
@@ -196,7 +191,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossThreshold: uint64(Math.max(vault.ARBITRARY_LOSS_THRESHOLD(), 1.3e15))
+            _acceptableLossThreshold: vault.ARBITRARY_LOSS_THRESHOLD()
         });
     }
 
