@@ -15,6 +15,7 @@ interface IBefore {
 
 contract ERC4626WithBeforeHook is IdleVault {
     IBefore hook;
+    uint8 offset = 18; // default for idle
 
     constructor(IBefore _hook, IERC4626 _vault) IdleVault(address(_vault), _vault.asset(), "n", "s") {
         hook = _hook;
@@ -25,6 +26,15 @@ contract ERC4626WithBeforeHook is IdleVault {
         hook.beforeDeposit();
 
         return super.deposit(_assets, _receiver);
+    }
+
+    function setOffset(uint8 _offset) external {
+        require(totalSupply() == 0, "vault must be empty to set offset");
+        offset = _offset;
+    }
+    
+    function _decimalsOffset() internal view virtual override returns (uint8) {
+        return offset;
     }
 }
 
@@ -111,17 +121,50 @@ contract MarketLossTest is IBefore, IntegrationTest {
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
-//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        uint64 _attackerDeposit,
+        uint64 _supplierDeposit,
+        uint64 _donation,
+        uint8 _idleVaultOffset
     ) public {
-        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (31260780, 2715, 22621791505034);
-        // atacker deposit (0) 31260780
+        // case where we can detect loss on market:
+//        (uint64 _attackerDeposit,
+//            uint64 _supplierDeposit,
+//            uint64 _donation,
+//            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);
 
         _idleVault_InflationAttackWithDonation({
-            supplierWithdrawFirst: true,
-            onBeforeDeposit: false,
-            attackerDeposit: attackerDeposit,
-            supplierDeposit: supplierDeposit,
-            donation: donation
+            _supplierWithdrawFirst: true,
+            _attackOnBeforeDeposit: false,
+            _attackerDeposit: _attackerDeposit,
+            _supplierDeposit: _supplierDeposit,
+            _donation: _donation,
+            _idleVaultOffset: _idleVaultOffset
+        });
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_hookAttackWithDonation_supplierFirst -vvv
+    */
+    /// forge-config: vaults-tests.fuzz.runs = 10000
+    function test_idleVault_hookAttackWithDonation_supplierFirst(
+        uint64 _attackerDeposit,
+        uint64 _supplierDeposit,
+        uint64 _donation,
+        uint8 _idleVaultOffset
+    ) public {
+        // case where we can detect loss on market:
+//        (uint64 _attackerDeposit,
+//            uint64 _supplierDeposit,
+//            uint64 _donation,
+//            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);
+
+        _idleVault_InflationAttackWithDonation({
+            _supplierWithdrawFirst: true,
+            _attackOnBeforeDeposit: true,
+            _attackerDeposit: _attackerDeposit,
+            _supplierDeposit: _supplierDeposit,
+            _donation: _donation,
+            _idleVaultOffset: _idleVaultOffset
         });
     }
 
@@ -130,63 +173,95 @@ contract MarketLossTest is IBefore, IntegrationTest {
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_attackerFirst(
-//        uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+//        uint64 _attackerDeposit,
+//        uint64 _supplierDeposit,
+//        uint64 _donation,
+//        uint8 _idleVaultOffset
     ) public {
-        (uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation) = (31260780, 2715, 22621791505034);
-
-        vm.assume(attackerDeposit > 1);
-        vm.assume(supplierDeposit > 1);
-        vm.assume(donation > 1);
+        // when attacker withdraw first, loss is not detected, eg:
+        (
+            uint64 _attackerDeposit,
+            uint64 _supplierDeposit,
+            uint64 _donation,
+            uint8 _idleVaultOffset
+        ) = (38002435762126, 224063681149666585, 2013265765460, 5);
 
         _idleVault_InflationAttackWithDonation({
-            supplierWithdrawFirst: false,
-            onBeforeDeposit: false,
-            attackerDeposit: attackerDeposit,
-            supplierDeposit: supplierDeposit,
-            donation: donation
+            _supplierWithdrawFirst: false,
+            _attackOnBeforeDeposit: false,
+            _attackerDeposit: _attackerDeposit,
+            _supplierDeposit: _supplierDeposit,
+            _donation: _donation,
+            _idleVaultOffset: _idleVaultOffset
+        });
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_hookAttackWithDonation_attackerFirst -vvv
+    */
+    /// forge-config: vaults-tests.fuzz.runs = 10000
+    function test_idleVault_hookAttackWithDonation_attackerFirst(
+        uint64 _attackerDeposit,
+        uint64 _supplierDeposit,
+        uint64 _donation,
+        uint8 _idleVaultOffset
+    ) public {
+        _idleVault_InflationAttackWithDonation({
+            _supplierWithdrawFirst: false,
+            _attackOnBeforeDeposit: true,
+            _attackerDeposit: _attackerDeposit,
+            _supplierDeposit: _supplierDeposit,
+            _donation: _donation,
+            _idleVaultOffset: _idleVaultOffset
         });
     }
 
     function _idleVault_InflationAttackWithDonation(
-        bool supplierWithdrawFirst, bool onBeforeDeposit, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        bool _supplierWithdrawFirst, 
+        bool _attackOnBeforeDeposit, 
+        uint64 _attackerDeposit, 
+        uint64 _supplierDeposit,
+        uint64 _donation,
+        uint8 _idleVaultOffset
     ) public {
-        vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
-        vm.assume(supplierDeposit >= 2);
+        vm.assume(uint256(_attackerDeposit) * _supplierDeposit * _donation != 0);
+        vm.assume(_supplierDeposit >= 2);
+        vm.assume(_idleVaultOffset < 20);
+        ERC4626WithBeforeHook(address(idleMarket)).setOffset(_idleVaultOffset);
 
         // we want some founds to go to idle market, so cap must be lower than deposit
-        _setCap(allMarkets[0], supplierDeposit / 2);
+        _setCap(allMarkets[0], _supplierDeposit / 2);
 
         vm.prank(attacker);
-        vault.deposit(attackerDeposit, attacker);
+        vault.deposit(_attackerDeposit, attacker);
 
         // we want cases where asset generates some shares
-        vm.assume(vault.convertToShares(supplierDeposit) != 0);
+        vm.assume(vault.convertToShares(_supplierDeposit) != 0);
 
         // to avoid losses caused by rounding error, recalculate assets
-        emit log_named_uint("original supplierDeposit", supplierDeposit);
+        emit log_named_uint("original _supplierDeposit", _supplierDeposit);
         emit log_named_uint("1 asset is this much shares before attack", vault.convertToShares(1));
-        supplierDeposit = uint64(vault.convertToAssets(vault.convertToShares(supplierDeposit)));
-        emit log_named_uint("recaulculared supplierDeposit", supplierDeposit);
+        _supplierDeposit = uint64(vault.convertToAssets(vault.convertToShares(_supplierDeposit)));
+        emit log_named_uint("recaulculared _supplierDeposit", _supplierDeposit);
 
         // here we have frontrun with donation
-        if (onBeforeDeposit) donationAmount = donation;
-        else IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
-
+        if (_attackOnBeforeDeposit) donationAmount = _donation;
+        else IERC20(idleMarket.asset()).transfer(address(idleMarket), _donation);
 
         vm.prank(SUPPLIER);
 
         emit log_named_address("IDLE MARKET", address(idleMarket));
         emit log(".......SUPPLIER doing deposit");
 
-        try vault.deposit(supplierDeposit, SUPPLIER) {
+        try vault.deposit(_supplierDeposit, SUPPLIER) {
             // if did not revert, we expect no loss
 
-            uint256 attackerTotalSpend = uint256(donation) + attackerDeposit;
+            uint256 attackerTotalSpend = uint256(_donation) + _attackerDeposit;
 
             uint256 supplierWithdraw;
             uint256 attackerWithdraw;
 
-            if (supplierWithdrawFirst) {
+            if (_supplierWithdrawFirst) {
                 emit log(".......SUPPLIER withdraw");
                 supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
                 emit log(".......SUPPLIER withdraw END");
@@ -203,7 +278,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
             uint256 attackerTotalLossPercent = attackerTotalLoss * 1e18 / uint256(attackerTotalSpend);
             emit log_named_decimal_uint("attackerTotalLossPercent", attackerTotalLossPercent, 16);
 
-            uint256 supplierLoss = supplierDeposit - supplierWithdraw;
+            if (supplierWithdraw > _supplierDeposit) {
+                emit log("there should be no gain for supplier on healthy markets, but we gain:");
+                emit log_uint(supplierWithdraw - _supplierDeposit);
+            }
+
+            uint256 supplierLoss = _supplierDeposit < supplierWithdraw ? 0 : _supplierDeposit - supplierWithdraw;
 
             assertGe(
                 attackerTotalLoss + 2,
@@ -211,20 +291,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
                 "attacker pays for it (+2 because of rounding error, we accepting 2wei discrepancy)"
             );
 
-            emit log_named_uint(" SUPPLIER deposit", supplierDeposit);
+            emit log_named_uint(" SUPPLIER deposit", _supplierDeposit);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
-            emit log_named_uint("    SUPPLIER loss", supplierDeposit - supplierWithdraw);
+            emit log_named_uint("    SUPPLIER loss", supplierLoss);
             emit log_named_uint("    attacker loss", attackerTotalLoss);
 
-            uint256 supplierLostPercent = supplierLoss * 1e18 / supplierDeposit;
-
-            if (supplierDeposit < 1e15) {
-                // for tiny amounts % is higher because fuzzing cases can be extreme eg
-                // deposit = 45
-                // donation = 18446744073709551615
-            } else {
-                assertLt(supplierLostPercent, 1e15, "0.001%");
-            }
+            uint256 supplierLostPercent = supplierLoss * 1e18 / _supplierDeposit;
 
             assertLt(
                 supplierLoss,
@@ -248,17 +320,17 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
     */
     function test_idleVault_InflationAttack_permanentLoss(
-        uint64 supplierDeposit, uint64 donation
+        uint64 _supplierDeposit, uint64 donation
     ) public {
-//        (uint64 supplierDeposit, uint64 donation) = (104637192540, 2730, 18446744073709551615);
-        vm.assume(uint256(supplierDeposit) * donation != 0);
-        vm.assume(supplierDeposit >= 2);
+//        (uint64 _supplierDeposit, uint64 donation) = (104637192540, 2730, 18446744073709551615);
+        vm.assume(uint256(_supplierDeposit) * donation != 0);
+        vm.assume(_supplierDeposit >= 2);
 
         // we want some founds to go to idle market, so cap must be lower than deposit
-        _setCap(allMarkets[0], supplierDeposit / 2);
+        _setCap(allMarkets[0], _supplierDeposit / 2);
 
         vm.prank(SUPPLIER);
-        vault.deposit(supplierDeposit, SUPPLIER);
+        vault.deposit(_supplierDeposit, SUPPLIER);
 
         // simulate reallocation (withdraw from idle)
         vm.startPrank(address(vault));
@@ -277,8 +349,8 @@ contract MarketLossTest is IBefore, IntegrationTest {
         uint256 supplierWithdraw = vault.redeem(vault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
         vm.stopPrank();
 
-        uint256 supplierDiff = supplierDeposit - supplierWithdraw;
-        uint256 supplierLostPercent = supplierDiff * 1e18 / supplierDeposit;
+        uint256 supplierDiff = _supplierDeposit - supplierWithdraw;
+        uint256 supplierLostPercent = supplierDiff * 1e18 / _supplierDeposit;
         emit log_named_uint("supplierLostPercent", supplierLostPercent);
 
         assertLe(
@@ -290,8 +362,11 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
         vm.startPrank(_user);
-        amount = vault.redeem(vault.balanceOf(_user), _user, _user);
+        amount = vault.maxRedeem(_user);
         emit log_named_uint("_vaultWithdrawAll", amount);
+        if (amount == 0) return 0;
+
+        amount = vault.redeem(vault.balanceOf(_user), _user, _user);
         vm.stopPrank();
     }
 }

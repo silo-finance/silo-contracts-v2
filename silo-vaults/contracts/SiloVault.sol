@@ -757,6 +757,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
         if (_shares == 0) revert ErrorsLib.InputZeroShares();
+        console.log("[_deposit] assets %s, vault shares %s", _assets, _shares);
+        console.log("[_deposit] one share == %s", convertToAssets(1));
 
         super._deposit(_caller, _receiver, _assets, _shares);
 
@@ -765,11 +767,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(lastTotalAssets + _assets);
 
-        // TODO: loss detection only works when I put it here
-        // preview on market does not detect loss for some reason
-        // I didn't get to core reason why, but I know it is about vaults shares, not market shares
-        // attack on market actually changed price in vault
         console.log("general check for loss:");
+        // with 18 decimals offset in vault and custom offset in idle vault
+        // with global check off, fuzzing tests were not able to find case where we have loss
         _assetLossCheck(this, _shares, _assets);
     }
 
@@ -879,7 +879,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) returns (uint256 shares) {
-                    console.log("[_supplyERC4626] market %s, deposited %s", address(market), toSupply);
+                    console.log("[_supplyERC4626] market %s, deposited %s (shares %s)", address(market), toSupply, shares);
                     _assetLossCheck(market, shares, toSupply);
                     _assets -= toSupply;
                 } catch {
