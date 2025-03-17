@@ -2,33 +2,71 @@
 pragma solidity ^0.8.28;
 
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
+import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
-import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
+import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
+import {IdleVault} from "../../../contracts/IdleVault.sol";
 
-import {IntegrationTest} from "./helpers/IntegrationTest.sol";
+import {IntegrationTest} from "../helpers/IntegrationTest.sol";
+
+interface IBefore {
+    function beforeDeposit() external;
+}
+
+contract ERC4626WithBeforeHook is IdleVault {
+    IBefore hook;
+
+    constructor(IBefore _hook, IERC4626 _vault) IdleVault(address(_vault), _vault.asset(), "n", "s") {
+        hook = _hook;
+    }
+
+    /// @inheritdoc IERC4626
+    function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {
+        hook.beforeDeposit();
+
+        return super.deposit(_assets, _receiver);
+    }
+}
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc IdleVaultTest -vvv
+ FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest -vvv
 */
-contract IdleVaultTest is IntegrationTest {
+contract MarketLossTest is IBefore, IntegrationTest {
     address attacker = makeAddr("attacker");
+    uint256 donationAmount;
 
     function setUp() public override {
         super.setUp();
+
+        // previous idle market removal
+        _setCapSimple(idleMarket, 0);
+        emit log_named_address("old idleMarket", address(idleMarket));
+
+        idleMarket = new ERC4626WithBeforeHook(this, vault);
+        allMarkets[allMarkets.length - 1] = idleMarket;
+        donationAmount = 0;
+        emit log_named_address("NEW idleMarket", address(idleMarket));
 
         IERC4626[] memory supplyQueue = new IERC4626[](2);
         supplyQueue[0] = allMarkets[0];
         supplyQueue[1] = idleMarket;
 
-        _setCap(allMarkets[0], 1);
-        _setCap(idleMarket, type(uint128).max);
+        _setCapSimple(allMarkets[0], 1);
+        _setCapSimple(idleMarket, type(uint128).max);
 
         vm.prank(ALLOCATOR);
         vault.setSupplyQueue(supplyQueue);
+        emit log("setSupplyQueue done");
+
+        uint256[] memory indexes = new uint256[](2);
+        indexes[0] = 2;
+        indexes[1] = 1;
+        vm.prank(ALLOCATOR);
+        vault.updateWithdrawQueue(indexes);
+        emit log("updateWithdrawQueue done");
 
         assertEq(vault.supplyQueueLength(), 2, "only 2 markets");
         assertEq(vault.withdrawQueueLength(), 2, "only 2 markets on withdraw");
-
         assertEq(address(vault.supplyQueue(1)), address(idleMarket), "ensure we have idle");
 
         assertEq(
@@ -53,6 +91,12 @@ contract IdleVaultTest is IntegrationTest {
         vm.stopPrank();
     }
 
+    function beforeDeposit() external {
+        if (donationAmount == 0) return;
+
+        IERC20(idleMarket.asset()).transfer(address(idleMarket), donationAmount);
+    }
+
     /*
         FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_offset -vv
     */
@@ -63,7 +107,7 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation_supplierFirst(
@@ -74,6 +118,7 @@ contract IdleVaultTest is IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: true,
+            onBeforeDeposit: false,
             attackerDeposit: attackerDeposit,
             supplierDeposit: supplierDeposit,
             donation: donation
@@ -95,6 +140,7 @@ contract IdleVaultTest is IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             supplierWithdrawFirst: false,
+            onBeforeDeposit: false,
             attackerDeposit: attackerDeposit,
             supplierDeposit: supplierDeposit,
             donation: donation
@@ -102,7 +148,7 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     function _idleVault_InflationAttackWithDonation(
-        bool supplierWithdrawFirst, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
+        bool supplierWithdrawFirst, bool onBeforeDeposit, uint64 attackerDeposit, uint64 supplierDeposit, uint64 donation
     ) public {
         vm.assume(uint256(attackerDeposit) * supplierDeposit * donation != 0);
         vm.assume(supplierDeposit >= 2);
@@ -113,10 +159,19 @@ contract IdleVaultTest is IntegrationTest {
         vm.prank(attacker);
         vault.deposit(attackerDeposit, attacker);
 
-        IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
-
         // we want cases where asset generates some shares
         vm.assume(vault.convertToShares(supplierDeposit) != 0);
+
+        // to avoid losses caused by rounding error, recalculate assets
+        emit log_named_uint("original supplierDeposit", supplierDeposit);
+        emit log_named_uint("1 asset is this much shares before attack", vault.convertToShares(1));
+        supplierDeposit = uint64(vault.convertToAssets(vault.convertToShares(supplierDeposit)));
+        emit log_named_uint("recaulculared supplierDeposit", supplierDeposit);
+
+        // here we have frontrun with donation
+        if (onBeforeDeposit) donationAmount = donation;
+        else IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);
+
 
         vm.prank(SUPPLIER);
 
