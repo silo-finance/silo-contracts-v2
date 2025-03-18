@@ -416,10 +416,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
                 if (newBalance > supplyCap) revert ErrorsLib.InternalSupplyCapExceeded(allocation.market);
 
+                balanceTracker[allocation.market] = newBalance;
+
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
-
-                balanceTracker[allocation.market] = newBalance;
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
