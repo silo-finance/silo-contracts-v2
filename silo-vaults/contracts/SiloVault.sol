@@ -814,7 +814,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         returns (uint256 marketBalance)
     {
-        (marketBalance,) = _supplyBalance(_market);
+        marketBalance = _expectedSupplyAssets(_market);
 
         if (marketBalance != 0 && marketBalance > balanceTracker[_market]) {
             // We do not take into account assets lose in the market allocation but we allow it on the deposit
