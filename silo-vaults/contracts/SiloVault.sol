@@ -392,6 +392,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                     withdrawnShares = allocation.market.withdraw(withdrawn, address(this), address(this));
                 }
 
+                // Balances tracker can accumulate dust.
+                // For example, if a user has deposited 100wei and withdrawn 99wei (because of rounding),
+                // we will still have 1wei in balanceTracker[market]. But, this dust can be covered
+                // by accrued interest over time.
                 balanceTracker[allocation.market] = UtilsLib.zeroFloorSub(
                     balanceTracker[allocation.market],
                     withdrawnAssets
@@ -913,6 +917,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
+
+                    // Balances tracker can accumulate dust.
+                    // For example, if a user has deposited 100wei and withdrawn 99wei (because of rounding),
+                    // we will still have 1wei in balanceTracker[market]. But, this dust can be covered
+                    // by accrued interest over time.
                     balanceTracker[market] = UtilsLib.zeroFloorSub(balanceTracker[market], toWithdraw);
                 } catch {
                 }
