@@ -704,15 +704,16 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             if (suppliable == 0) continue;
 
-            if (assets != 0) {
-                // 1 wei rounding on previewRedeem fn.
-                // Because of that, `_supplyBalance` returns 1 wei less than was taken into account.
-                unchecked { suppliable--; }
+            uint256 internalSuppliable = UtilsLib.zeroFloorSub(supplyCap, balanceTracker[market]);
+
+            // we reached a cap of the market by internal balance, so we can't supply more
+            if (internalSuppliable == 0) continue;
+
+            if (suppliable > internalSuppliable) {
+                suppliable = internalSuppliable;
             }
 
-            if (balanceTracker[market] + suppliable <= supplyCap) {
-                totalSuppliable += suppliable;
-            }
+            totalSuppliable += suppliable;
         }
     }
 
@@ -817,7 +818,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         returns (uint256 marketBalance)
     {
-        marketBalance = _expectedSupplyAssets(_market);
+        marketBalance = _expectedSupplyAssets(_market, address(this));
 
         if (marketBalance != 0 && marketBalance > balanceTracker[_market]) {
             // We do not take into account assets lose in the market allocation but we allow it on the deposit

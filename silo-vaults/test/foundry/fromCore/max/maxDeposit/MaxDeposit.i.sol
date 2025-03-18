@@ -32,7 +32,7 @@ contract MaxDepositTest is VaultsLittleHelper {
 
         assertEq(
             vault.maxDeposit(address(1)),
-            CAP + _IDLE_CAP - deposit - 1, // -1 because of the rounding in the Silo previewRedeem fn
+            CAP + _IDLE_CAP - deposit,
             "ERC4626 expect to return summary CAP for all markets - deposit"
         );
     }

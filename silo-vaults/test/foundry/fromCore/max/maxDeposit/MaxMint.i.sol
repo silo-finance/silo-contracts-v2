@@ -32,8 +32,7 @@ contract MaxMintTest is VaultsLittleHelper {
 
         assertEq(
             vault.maxMint(address(1)),
-            // -1 because of the rounding in the Silo previewRedeem fn
-            (CAP + _IDLE_CAP - deposit - 1) * OFFSET_POW,
+            (CAP + _IDLE_CAP - deposit) * OFFSET_POW,
             "ERC4626 expect to return summary CAP for all markets - deposit"
         );
     }
