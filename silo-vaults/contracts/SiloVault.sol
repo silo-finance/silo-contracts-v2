@@ -699,8 +699,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             (uint256 assets,) = _supplyBalance(market);
             uint256 depositMax = market.maxDeposit(address(this));
+            uint256 suppliable = Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
 
-            totalSuppliable += Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
+            if (suppliable == 0) continue;
+
+            if (assets != 0) {
+                // 1 wei rounding on previewRedeem fn.
+                // Because of that, `_supplyBalance` returns 1 wei less than was taken into account.
+                unchecked { suppliable--; }
+            }
+
+            if (balanceTracker[market] + suppliable <= supplyCap) {
+                totalSuppliable += suppliable;
+            }
         }
     }
 

@@ -25,14 +25,18 @@ contract MaxMintTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_maxMint_withDeposit
     */
-    function test_maxMint_withDeposit() public {
+    function test_maxMint_withDeposit2() public {
         uint256 deposit = 123;
 
         _deposit(deposit, address(1));
 
+        emit log_named_uint("OFFSET_POW", OFFSET_POW);
+        emit log_named_uint("CAP + _IDLE_CAP - deposit - 1", CAP + _IDLE_CAP - deposit - 1);
+
         assertEq(
             vault.maxMint(address(1)),
-            (CAP + _IDLE_CAP - deposit) * OFFSET_POW,
+            // -1 because of the rounding in the Silo previewRedeem fn
+            (CAP + _IDLE_CAP - deposit - 1) * OFFSET_POW,
             "ERC4626 expect to return summary CAP for all markets - deposit"
         );
     }

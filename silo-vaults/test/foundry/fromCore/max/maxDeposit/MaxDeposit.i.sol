@@ -12,9 +12,9 @@ contract MaxDepositTest is VaultsLittleHelper {
     uint256 internal constant _IDLE_CAP = type(uint184).max;
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit
+    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxDeposit1
     */
-    function test_maxDeposit() public view {
+    function test_maxDeposit1() public view {
         assertEq(
             vault.maxDeposit(address(1)),
             CAP + _IDLE_CAP,
@@ -23,7 +23,7 @@ contract MaxDepositTest is VaultsLittleHelper {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxDeposit_withDeposit
+    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxDeposit_withDeposit
     */
     function test_maxDeposit_withDeposit() public {
         uint256 deposit = 123;
@@ -32,7 +32,7 @@ contract MaxDepositTest is VaultsLittleHelper {
 
         assertEq(
             vault.maxDeposit(address(1)),
-            CAP + _IDLE_CAP - deposit,
+            CAP + _IDLE_CAP - deposit - 1, // -1 because of the rounding in the Silo previewRedeem fn
             "ERC4626 expect to return summary CAP for all markets - deposit"
         );
     }
