@@ -704,10 +704,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             if (suppliable == 0) continue;
 
-            uint256 internalSuppliable = UtilsLib.zeroFloorSub(supplyCap, balanceTracker[market]);
+            uint256 internalBalance = balanceTracker[market];
 
-            // we reached a cap of the market by internal balance, so we can't supply more
-            if (internalSuppliable == 0) continue;
+            // We reached a cap of the market by internal balance, so we can't supply more
+            if (internalBalance >= supplyCap) continue;
+
+            uint256 internalSuppliable = supplyCap - internalBalance;
 
             if (suppliable > internalSuppliable) {
                 suppliable = internalSuppliable;
