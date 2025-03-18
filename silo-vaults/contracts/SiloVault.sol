@@ -84,7 +84,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Internal balance tracker to prevent assets loss if underlying market hacked
     /// and started reporting wrong supply.
     /// max loss == supplyCap + arbitraryLossThreshold * N deposits + un accrued interest.
-    /// Un accrued loss present only if it is less than balanceTracker[market] - supplyAssets.
+    /// Un accrued interest loss present only if it is less than balanceTracker[market] - supplyAssets.
+    /// But this is only about internal balances. There is no interest loss on the vault.
     mapping(IERC4626 => uint256) public balanceTracker;
 
     /// @inheritdoc ISiloVaultBase
