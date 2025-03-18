@@ -709,13 +709,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             // We reached a cap of the market by internal balance, so we can't supply more
             if (internalBalance >= supplyCap) continue;
 
-            uint256 internalSuppliable = supplyCap - internalBalance;
+            uint256 internalSuppliable;
+            // safe to uncheck because internalBalance < supplyCap
+            unchecked { internalSuppliable = supplyCap - internalBalance; }
 
-            if (suppliable > internalSuppliable) {
-                suppliable = internalSuppliable;
-            }
-
-            totalSuppliable += suppliable;
+            totalSuppliable += suppliable > internalSuppliable ? internalSuppliable : suppliable;
         }
     }
 
