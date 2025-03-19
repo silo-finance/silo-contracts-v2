@@ -651,6 +651,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
             assets += _expectedSupplyAssets(market, address(this));
+            console.log("[totalAssets] market %s: %s", address(market), _expectedSupplyAssets(market, address(this)));
         }
     }
 
@@ -772,8 +773,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _updateLastTotalAssets(lastTotalAssets + _assets);
 
         console.log("general check for loss:");
-        // with 18 decimals offset in vault and custom offset in idle vault
-        // with global check off, fuzzing tests were not able to find case where we have loss
         _assetLossCheck(this, _shares, _assets);
     }
 
@@ -791,6 +790,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         _withdrawERC4626(_assets);
 
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
+
+        console.log("[_withdraw] vault: _assets %s (shares %s)", _assets, _shares);
+        console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(address(this)));
+        console.log("[_withdrawERC4626] balance of user", IERC20(asset()).balanceOf(_caller));
     }
 
     /* INTERNAL */
@@ -906,10 +909,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toWithdraw = UtilsLib.min(market.maxWithdraw(address(this)), _assets);
 
             if (toWithdraw > 0) {
+console.log("[_withdrawERC4626] before withdraw");
+console.log("[_withdrawERC4626] market balance %s (supply %s)", market.totalAssets(), market.totalSupply());
+console.log("[_withdrawERC4626] balance of market", IERC20(asset()).balanceOf(address(market)));
+console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(address(this)));
+
                 // Using try/catch to skip markets that revert.
-                try market.withdraw(toWithdraw, address(this), address(this)) {
+                try market.withdraw(toWithdraw, address(this), address(this)) returns (uint256 shares) {
                     _assets -= toWithdraw;
-                    console.log("_withdrawERC4626 from market %, amount", address(market), toWithdraw);
+                    console.log("[_withdrawERC4626] after withdraw");
+                    console.log("[_withdrawERC4626] from market %sew, amount %s (shares %s)", address(market), toWithdraw, shares);
+                    console.log("[_withdrawERC4626] market balance %s (supply %s)", market.totalAssets(), market.totalSupply());
+                    console.log("[_withdrawERC4626] balance of market", IERC20(asset()).balanceOf(address(market)));
+                    console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(address(this)));
                 } catch {
                 }
             }
@@ -1043,6 +1055,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         require(ru == mu, ErrorsLib.AssetLoss(1));
 
         if (previewAssets >= _expectedAssets) return;
+
 
         uint256 assetLoss;
         // save because we checking above `if (previewAssets >= _expectedAssets)`
