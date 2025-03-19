@@ -32,6 +32,8 @@ import {ErrorsLib} from "./libraries/ErrorsLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 import {SiloVaultActionsLib} from "./libraries/SiloVaultActionsLib.sol";
 
+import {console} from "forge-std/console.sol";
+
 /// @title SiloVault
 /// @dev Forked with gratitude from Morpho Labs.
 /// @author Silo Labs
@@ -727,6 +729,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         Math.Rounding _rounding
     ) internal view virtual returns (uint256 shares) {
         shares = _convertToSharesWithTotals(_assets, _newTotalSupply, _newTotalAssets, _rounding);
+        console.log("[_convertToSharesWithTotalsSafe] shares %s", shares);
         require(shares != 0, ErrorsLib.ZeroShares());
     }
 

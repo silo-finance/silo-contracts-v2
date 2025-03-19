@@ -229,8 +229,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
         vm.prank(attacker);
         vault.deposit(_attackerDeposit, attacker);
 
-        // we want cases where asset generates some shares
-        vm.assume(vault.convertToShares(_supplierDeposit) != 0);
         // to avoid losses caused by rounding error, recalculate assets
         emit log_named_uint("original _supplierDeposit", _supplierDeposit);
         _supplierDeposit = uint64(vault.convertToAssets(vault.convertToShares(_supplierDeposit)));
@@ -239,6 +237,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
         // here we have frontrun with donation
         if (_attackOnBeforeDeposit) donationAmount = _donation;
         else IERC20(idleMarket.asset()).transfer(address(idleMarket), _donation);
+
+        // we want cases where asset generates some shares
+        vm.assume(vault.convertToShares(_supplierDeposit) != 0);
 
         vm.prank(SUPPLIER);
 
