@@ -713,7 +713,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             // safe to uncheck because internalBalance < supplyCap
             unchecked { internalSuppliable = supplyCap - internalBalance; }
 
-            totalSuppliable += suppliable > internalSuppliable ? internalSuppliable : suppliable;
+            totalSuppliable += Math.min(suppliable, internalSuppliable);
         }
     }
 
