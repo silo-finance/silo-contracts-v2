@@ -119,7 +119,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         uint256 decimals = TokenHelper.assertAndGetDecimals(_asset);
         require(decimals <= 18, ErrorsLib.NotSupportedDecimals());
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, decimals));
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 6, decimals));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -565,7 +565,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         shares = _convertToSharesWithTotalsSafe(_assets, totalSupply(), newTotalAssets, Math.Rounding.Floor);
 
         _deposit(_msgSender(), _receiver, _assets, shares);
-        _assetLossCheck(shares, _assets);
 
         _nonReentrantOff();
     }
@@ -583,7 +582,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _convertToAssetsWithTotalsSafe(_shares, totalSupply(), newTotalAssets, Math.Rounding.Ceil);
 
         _deposit(_msgSender(), _receiver, assets, _shares);
-        _assetLossCheck(_shares, assets);
 
         _nonReentrantOff();
     }
@@ -984,17 +982,5 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     function _previewRedeem(IERC4626 _market, uint256 _shares) internal view returns (uint256 assets) {
         assets = _market.previewRedeem(_shares);
-    }
-
-    function _assetLossCheck(uint256 _shares, uint256 _expectedAssets) internal {
-        uint256 preview = previewRedeem(_shares);
-        if (preview >= _expectedAssets) return;
-
-        uint256 loss;
-        // save because we checking above `if (preview >= _expectedAssets)`
-        unchecked { loss = _expectedAssets - preview; }
-        uint256 arbitraryLossThreshold = 10;
-
-        require(loss < arbitraryLossThreshold, ErrorsLib.AssetLoss(loss));
     }
 }
