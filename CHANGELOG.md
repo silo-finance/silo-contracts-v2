@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [2.0.1] - 2025-03-19
+### Fixed
+- silo-vaults: [Guardian role in the vault incentives module](https://github.com/silo-finance/silo-contracts-v2/commit/389b0575d01f33d745876f6cc26747c082de860b)
+
+## [2.0.0] - 2025-03-19
 ### Added
 - silo-vaults: [Internal tracker for market allocations](https://github.com/silo-finance/silo-contracts-v2/commit/99d7ccd0ac1bc84e6667bae30bc5aa8e1f064bef)
 
