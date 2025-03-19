@@ -128,7 +128,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
         require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 18, assetDecimals));
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 3, assetDecimals));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -1031,7 +1031,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
         uint256 previewAssets = _market.previewRedeem(_shares);
-        console.log("[_assetLossCheck] market %s, previewAssets %s", address(_market), previewAssets);
+
+        console.log("[_assetLossCheck] market %s, previewRedeem(%s) = %s", address(_market), _shares, previewAssets);
+        console.log("[_assetLossCheck] vault shares in market %s", _market.balanceOf(address(this)));
+
+        uint256 ru = previewAssets * 1e18 / _shares;
+        uint256 mu = _market.totalAssets() * 1e18 / _market.totalSupply();
+        console.log("[_assetLossCheck] user asset:share ratio ", previewAssets * 1e18 / _shares);
+        console.log("[_assetLossCheck] market asset:share ratio ", _market.totalAssets() * 1e18 / _market.totalSupply());
+
+        require(ru == mu, ErrorsLib.AssetLoss(1));
+
         if (previewAssets >= _expectedAssets) return;
 
         uint256 assetLoss;
