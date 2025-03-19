@@ -76,12 +76,14 @@ import {AcceptOwnershipTest} from "../methods/AcceptOwnershipTest.sol";
 import {AcceptCapTest} from "../methods/AcceptCapTest.sol";
 import {AcceptGuardianTest} from "../methods/AcceptGuardianTest.sol";
 import {AcceptTimelockTest} from "../methods/AcceptTimelockTest.sol";
+import {BalanceTrackerTest} from "../methods/BalanceTrackerTest.sol";
 
 contract SiloVaultMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
     bytes4[] public supportedMethods;
 
     constructor() {
+        _registerMethod(new BalanceTrackerTest());
         _registerMethod(new AcceptGuardianTest());
         _registerMethod(new AcceptTimelockTest());
         _registerMethod(new AcceptOwnershipTest());

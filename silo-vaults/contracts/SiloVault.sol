@@ -19,7 +19,8 @@ import {
     PendingAddress,
     MarketAllocation,
     ISiloVaultBase,
-    ISiloVaultStaticTyping
+    ISiloVaultStaticTyping,
+    ISiloVault
 } from "./interfaces/ISiloVault.sol";
 
 import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
@@ -79,6 +80,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
+
+    /// @dev Internal balance tracker to prevent assets loss if underlying market hacked
+    /// and started reporting wrong supply.
+    /// max loss == supplyCap + arbitraryLossThreshold * N deposits + un accrued interest.
+    /// Un accrued interest loss present only if it is less than balanceTracker[market] - supplyAssets.
+    /// But this is only about internal balances. There is no interest loss on the vault.
+    mapping(IERC4626 => uint256) public balanceTracker;
 
     /// @inheritdoc ISiloVaultBase
     uint96 public fee;
@@ -357,6 +365,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         for (uint256 i; i < _allocations.length; ++i) {
             MarketAllocation memory allocation = _allocations[i];
 
+            // Update internal balance for market to include interest if any.
+            _updateInternalBalanceForMarket(allocation.market);
+
             // in original SiloVault, we are not checking liquidity, so this reallocation will fail if not enough assets
             (uint256 supplyAssets, uint256 supplyShares) = _supplyBalance(allocation.market);
             uint256 withdrawn = UtilsLib.zeroFloorSub(supplyAssets, allocation.assets);
@@ -382,6 +393,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                     withdrawnShares = allocation.market.withdraw(withdrawn, address(this), address(this));
                 }
 
+                // Balances tracker can accumulate dust.
+                // For example, if a user has deposited 100wei and withdrawn 99wei (because of rounding),
+                // we will still have 1wei in balanceTracker[market]. But, this dust can be covered
+                // by accrued interest over time.
+                balanceTracker[allocation.market] = UtilsLib.zeroFloorSub(
+                    balanceTracker[allocation.market],
+                    withdrawnAssets
+                );
+
                 emit EventsLib.ReallocateWithdraw(_msgSender(), allocation.market, withdrawnAssets, withdrawnShares);
 
                 totalWithdrawn += withdrawnAssets;
@@ -396,6 +416,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 if (supplyCap == 0) revert ErrorsLib.UnauthorizedMarket(allocation.market);
 
                 if (supplyAssets + suppliedAssets > supplyCap) revert ErrorsLib.SupplyCapExceeded(allocation.market);
+
+                uint256 newBalance = balanceTracker[allocation.market] + suppliedAssets;
+
+                if (newBalance > supplyCap) revert ErrorsLib.InternalSupplyCapExceeded(allocation.market);
+
+                balanceTracker[allocation.market] = newBalance;
 
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 uint256 suppliedShares = allocation.market.deposit(suppliedAssets, address(this));
@@ -672,8 +698,20 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             (uint256 assets,) = _supplyBalance(market);
             uint256 depositMax = market.maxDeposit(address(this));
+            uint256 suppliable = Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
 
-            totalSuppliable += Math.min(depositMax, UtilsLib.zeroFloorSub(supplyCap, assets));
+            if (suppliable == 0) continue;
+
+            uint256 internalBalance = balanceTracker[market];
+
+            // We reached a cap of the market by internal balance, so we can't supply more
+            if (internalBalance >= supplyCap) continue;
+
+            uint256 internalSuppliable;
+            // safe to uncheck because internalBalance < supplyCap
+            unchecked { internalSuppliable = supplyCap - internalBalance; }
+
+            totalSuppliable += Math.min(suppliable, internalSuppliable);
         }
     }
 
@@ -772,6 +810,21 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* INTERNAL */
 
+    /// @dev Updates the internal balance for the market.
+    function _updateInternalBalanceForMarket(IERC4626 _market)
+        internal
+        virtual
+        returns (uint256 marketBalance)
+    {
+        marketBalance = _expectedSupplyAssets(_market, address(this));
+
+        if (marketBalance != 0 && marketBalance > balanceTracker[_market]) {
+            // We do not take into account assets lose in the market allocation but we allow it on the deposit
+            // because of that `newAllocation` can be less than `currentAllocation` up to allowed assets loss.
+            balanceTracker[_market] = marketBalance;
+        }
+    }
+
 
     /// @dev Returns the vault's assets & corresponding shares supplied on the
     /// market defined by `market`, as well as the market's state.
@@ -836,16 +889,22 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyCap = config[market].cap;
             if (supplyCap == 0) continue;
 
+            // Update internal balance for market to include interest if any.
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
-            (uint256 supplyAssets,) = _supplyBalance(market);
+            uint256 supplyAssets = _updateInternalBalanceForMarket(market);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
-            if (toSupply > 0) {
-                // Using try/catch to skip markets that revert.
-                try market.deposit(toSupply, address(this)) {
-                    _assets -= toSupply;
-                } catch {
+            if (toSupply != 0) {
+                uint256 newBalance = balanceTracker[market] + toSupply;
+                // As `_supplyBalance` reads the balance directly from the market,
+                // we have additional check to ensure that the market did not report wrong supply.
+                if (newBalance <= supplyCap) {
+                    // Using try/catch to skip markets that revert.
+                    try market.deposit(toSupply, address(this)) {
+                        _assets -= toSupply;
+                        balanceTracker[market] = newBalance;
+                    } catch {}
                 }
             }
 
@@ -860,6 +919,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
+            // Update internal balance for market to include interest if any.
+            _updateInternalBalanceForMarket(market);
+
             // original implementation were using `_accruedSupplyBalance` which does not care about liquidity
             // now, liquidity is considered by using `maxWithdraw`
             uint256 toWithdraw = UtilsLib.min(market.maxWithdraw(address(this)), _assets);
@@ -868,6 +930,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
+
+                    // Balances tracker can accumulate dust.
+                    // For example, if a user has deposited 100wei and withdrawn 99wei (because of rounding),
+                    // we will still have 1wei in balanceTracker[market]. But, this dust can be covered
+                    // by accrued interest over time.
+                    balanceTracker[market] = UtilsLib.zeroFloorSub(balanceTracker[market], toWithdraw);
                 } catch {
                 }
             }

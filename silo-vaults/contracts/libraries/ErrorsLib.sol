@@ -58,6 +58,9 @@ library ErrorsLib {
     /// @notice Thrown when the supply cap has been exceeded on `market` during a reallocation of funds.
     error SupplyCapExceeded(IERC4626 market);
 
+    /// @notice Thrown when the supply cap has been exceeded on `market` during a reallocation of funds.
+    error InternalSupplyCapExceeded(IERC4626 market);
+
     /// @notice Thrown when the fee to set exceeds the maximum fee.
     error MaxFeeExceeded();
 
