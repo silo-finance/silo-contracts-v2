@@ -186,7 +186,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setCurator(address _newCurator) external virtual onlyOwner {
-        if (_newCurator == curator) revert ErrorsLib.AlreadySet();
+        _revertAlreadySet(_newCurator == curator);
 
         curator = _newCurator;
 
@@ -200,8 +200,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitTimelock(uint256 _newTimelock) external virtual onlyOwner {
-        if (_newTimelock == timelock) revert ErrorsLib.AlreadySet();
-        if (pendingTimelock.validAt != 0) revert ErrorsLib.AlreadyPending();
+        _revertAlreadySet(_newTimelock == timelock);
+        _revertAlreadyPending(pendingTimelock.validAt);
         _checkTimelockBounds(_newTimelock);
 
         if (_newTimelock > timelock) {
@@ -216,7 +216,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setFee(uint256 _newFee) external virtual onlyOwner {
-        if (_newFee == fee) revert ErrorsLib.AlreadySet();
+        _revertAlreadySet(_newFee == fee);
         if (_newFee > ConstantsLib.MAX_FEE) revert ErrorsLib.MaxFeeExceeded();
         if (_newFee != 0 && feeRecipient == address(0)) revert ErrorsLib.ZeroFeeRecipient();
 
@@ -231,7 +231,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setFeeRecipient(address _newFeeRecipient) external virtual onlyOwner {
-        if (_newFeeRecipient == feeRecipient) revert ErrorsLib.AlreadySet();
+        _revertAlreadySet(_newFeeRecipient == feeRecipient);
         if (_newFeeRecipient == address(0) && fee != 0) revert ErrorsLib.ZeroFeeRecipient();
 
         // Accrue fee to the previous fee recipient set before changing it.
@@ -244,8 +244,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitGuardian(address _newGuardian) external virtual onlyOwner {
-        if (_newGuardian == guardian) revert ErrorsLib.AlreadySet();
-        if (pendingGuardian.validAt != 0) revert ErrorsLib.AlreadyPending();
+        _revertAlreadySet(_newGuardian == guardian);
+        _revertAlreadyPending(pendingGuardian.validAt);
 
         if (guardian == address(0)) {
             _setGuardian(_newGuardian);
@@ -261,10 +261,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
         if (_market.asset() != asset()) revert ErrorsLib.InconsistentAsset(_market);
-        if (pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
+        _revertAlreadyPending(pendingCap[_market].validAt);
         if (config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
         uint256 supplyCap = config[_market].cap;
-        if (_newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
+        _revertAlreadySet(_newSupplyCap == supplyCap);
 
         if (_newSupplyCap < supplyCap) {
             _setCap(_market, SafeCast.toUint184(_newSupplyCap));
@@ -277,7 +277,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitMarketRemoval(IERC4626 _market) external virtual onlyCuratorRole {
-        if (config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
+        _revertAlreadyPending(config[_market].removableAt);
         if (config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
         if (!config[_market].enabled) revert ErrorsLib.MarketNotEnabled(_market);
         if (pendingCap[_market].validAt != 0) revert ErrorsLib.PendingCap(_market);
@@ -1028,5 +1028,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         unchecked { assetLoss = _expectedAssets - previewAssets; }
 
         require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
+    }
+
+    /// @dev to save code size
+    function _revertAlreadyPending(uint256 _time) internal pure {
+        if (_time != 0) revert ErrorsLib.AlreadyPending();
+    }
+
+    /// @dev to save code size
+    function _revertAlreadySet(bool _set) internal pure {
+        if (_set) revert ErrorsLib.AlreadySet();
     }
 }
