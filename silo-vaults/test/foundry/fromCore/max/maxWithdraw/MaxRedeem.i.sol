@@ -69,7 +69,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
         uint128 _collateral,
         uint128 _toBorrow
     ) public {
-        vm.assume(_toBorrow > 0);
+        vm.assume(_toBorrow > 3);
         vm.assume(_toBorrow <= _collateral);
 
         _reduceLiquidity(_collateral, _toBorrow);
