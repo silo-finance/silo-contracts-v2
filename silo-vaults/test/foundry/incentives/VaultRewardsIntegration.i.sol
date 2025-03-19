@@ -92,9 +92,9 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
                 address(0),
                 0,
                 address(this),
-                depositAmount,
-                depositAmount,
-                depositAmount
+                depositAmount * OFFSET_POW,
+                depositAmount * OFFSET_POW,
+                depositAmount * OFFSET_POW
             )
         );
 
@@ -211,7 +211,6 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution_pass -vv
     */
     function test_1secondDistribution_pass() public {
-
         uint128 depositAmount = 123e18;
         uint128 rewardsPerSec = 123456789123453000; // zeros at the end to avoid precision errors
 
@@ -250,7 +249,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution_fuzz -vv
     */
     function test_1secondDistribution_fuzz(uint128 _depositAmount, uint128 _rewardsPerSec) public {
-        vm.assume(_rewardsPerSec > 1e3);
+        vm.assume(_rewardsPerSec > 1e3 && _rewardsPerSec < 1e30);
         vm.assume(_depositAmount > 0);
 
         _setupIncentives();

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.28;
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {SiloHookReceiver, IHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/SiloHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 /// @dev Hook receiver for all actions with events to see decoded inputs
 /// This contract is designed to be deployed for each test case
-contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceiver {
+contract HookReceiverAllActionsWithEvents is PartialLiquidation {
     using Hook for uint256;
 
     bool internal constant _IS_BEFORE = true;
@@ -164,24 +164,14 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     }
 
     /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _siloConfig, bytes calldata) external override (IHookReceiver, PartialLiquidation) {
-        siloConfig = _siloConfig;
+    function initialize(ISiloConfig _config, bytes calldata) public override {
+        siloConfig = _config;
 
         (address silo0, address silo1) = siloConfig.getSilos();
 
         // Set hooks for all actions for both silos
         _setHookConfig(silo0, _SILO0_ACTIONS_BEFORE, _SILO0_ACTIONS_AFTER);
         _setHookConfig(silo1, _SILO1_ACTIONS_BEFORE, _SILO1_ACTIONS_AFTER);
-    }
-
-    function hookReceiverConfig(address _silo)
-        external
-        view
-        virtual
-        override (IHookReceiver, PartialLiquidation)
-        returns (uint24 hooksBefore, uint24 hooksAfter)
-    {
-        return _hookReceiverConfig(_silo);
     }
 
     function revertAnyAction() external {
@@ -199,7 +189,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
-        override (IHookReceiver, PartialLiquidation)
     {
         if (revertAllActions || revertOnlyBeforeAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
@@ -208,7 +197,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation, SiloHookReceive
     /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         external
-        override (IHookReceiver, PartialLiquidation)
+        override
     {
         if (revertAllActions || revertOnlyAfterAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);

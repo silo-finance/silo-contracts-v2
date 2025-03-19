@@ -200,6 +200,9 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         _depositCollateral(notCollateral, borrower, true /* to silo1 */);
         _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
+        vm.expectEmit(address(silo0));
+        emit ISilo.CollateralTypeChanged(borrower);
+
         vm.prank(borrower);
         silo0.borrowSameAsset(1234, borrower, borrower);
     }

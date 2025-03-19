@@ -280,6 +280,9 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
         _deposit(notCollateral, borrower);
         _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
+        vm.expectEmit(address(silo1));
+        emit ISilo.CollateralTypeChanged(borrower);
+
         _borrow(12345, borrower);
     }
 
@@ -414,6 +417,10 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         _deposit(_depositAmount, borrower);
         _depositForBorrow(_forBorrow, depositor);
+
+        vm.expectEmit(address(silo1));
+        emit ISilo.CollateralTypeChanged(borrower);
+
         uint256 amount = _borrowShares(1, borrower);
 
         assertGt(amount, 0, "amount can never be 0");

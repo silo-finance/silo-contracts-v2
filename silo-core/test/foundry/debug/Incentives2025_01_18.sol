@@ -412,10 +412,14 @@ contract Incentives20250118Test is IntegrationTest {
 
         expectedRewards = _getRewards(siloBalance, reserveIndex, userIndex);
 
-        emit log_named_uint("rewardsBalance", rewardsBalance);
+        emit log_named_uint(" rewardsBalance", rewardsBalance);
         emit log_named_uint("expectedRewards", expectedRewards);
 
-        assertEq(rewardsBalance, expectedRewards, "rewardsBalance should be equal to expectedRewards");
+        assertEq(
+            rewardsBalance,
+            expectedRewards,
+            "[_getRewardWithIndex] rewardsBalance should be equal to expectedRewards"
+        );
     }
 
     function _getRewardsNoIndex(
@@ -434,16 +438,20 @@ contract Incentives20250118Test is IntegrationTest {
         expectedRewards = _emissionPerSecond * _timeDelta * siloBalance / siloTotalSupply;
         emit log_named_uint("expectedRewards", expectedRewards);
 
-        assertEq(rewardsBalance, expectedRewards, "rewardsBalance should be equal to expectedRewards");
+        assertEq(
+            rewardsBalance,
+            expectedRewards,
+            "[_getRewardsNoIndex] rewardsBalance should be equal to expectedRewards"
+        );
     }
 
     function _getRewards(
         uint256 principalUserBalance,
         uint256 reserveIndex,
         uint256 userIndex
-    ) internal pure virtual returns (uint256 rewards) {
+    ) internal view virtual returns (uint256 rewards) {
         rewards = principalUserBalance * (reserveIndex - userIndex);
-        unchecked { rewards /= 10 ** 18; }
+        unchecked { rewards /= _controller.TEN_POW_PRECISION(); }
     }
 
     function _getIncentivesProgramIndex(
@@ -465,7 +473,7 @@ contract Incentives20250118Test is IntegrationTest {
         uint256 currentTimestamp = block.timestamp > distributionEnd ? distributionEnd : block.timestamp;
         uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
 
-        newIndex = emissionPerSecond * timeDelta * 10 ** 18;
+        newIndex = emissionPerSecond * timeDelta * _controller.TEN_POW_PRECISION();
         unchecked { newIndex /= totalBalance; }
         newIndex += currentIndex;
     }

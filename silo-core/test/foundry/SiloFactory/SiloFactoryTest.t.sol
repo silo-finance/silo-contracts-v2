@@ -54,6 +54,9 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         isSilo = siloFactory.isSilo(address(silo1));
         assertTrue(isSilo, "silo1 is not a silo");
 
+        vm.expectRevert(ISiloFactory.NotYourSilo.selector);
+        siloFactory.burn(firstSiloId);
+
         vm.prank(owner);
         siloFactory.burn(firstSiloId);
 

@@ -10,6 +10,7 @@ import {CAP} from "../helpers/BaseTest.sol";
 
 import {ErrorsLib} from "silo-vaults/contracts/libraries/ErrorsLib.sol";
 
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {IncentivesControllerWithRevert} from "../mocks/IncentivesControllerWithRevert.sol";
 import {IncentivesClaimingLogicWithRevert} from "../mocks/IncentivesClaimingLogicWithRevert.sol";
@@ -21,11 +22,14 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
     MintableToken internal reward1 = new MintableToken(18);
 
     SiloIncentivesController vaultIncentivesController;
+    IVaultIncentivesModule vaultIncentivesModule;
 
     function setUp() public override {
         super.setUp();
         _setCap(allMarkets[0], CAP);
         reward1.setOnDemand(true);
+
+        vaultIncentivesModule = vault.INCENTIVES_MODULE();
     }
 
     /*
@@ -35,8 +39,16 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
         IncentivesClaimingLogicWithRevert claimingLogic = new IncentivesClaimingLogicWithRevert();
 
         vm.prank(OWNER);
-        vaultIncentivesModule.addIncentivesClaimingLogic(
-            address(allMarkets[0]),
+        vaultIncentivesModule.submitIncentivesClaimingLogic(
+            allMarkets[0],
+            IIncentivesClaimingLogic(address(claimingLogic))
+        );
+
+        vm.warp(block.timestamp + vault.timelock() + 1);
+
+        vm.prank(OWNER);
+        vaultIncentivesModule.acceptIncentivesClaimingLogic(
+            allMarkets[0],
             IIncentivesClaimingLogic(address(claimingLogic))
         );
 

@@ -75,7 +75,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
             "expect full collateral to be swapped"
         );
 
-        // TODO, because we not swapping anything, we not transferring debt token
+        // because we are not swapping anything, we are not transferring debt token
         // this assertion can be turn on once we add swap to it
 //        assertEq(
 //            token1.balanceOf(TOKENS_RECEIVER),
@@ -83,7 +83,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
 //            "expect debt to be transfer (price is 1:1)"
 //        );
 
-        // TODO, because we not swapping anything, we not transferring debt token
+        // because we are not swapping anything, we are not transferring debt token
         // so contract will have debt, this assertion can be turn on once we add swap to the test
         // _assertAddressDoesNotHaveTokens(address(LIQUIDATION_HELPER));
         _assertAddressHasNoSTokens(silo0, TOKENS_RECEIVER);

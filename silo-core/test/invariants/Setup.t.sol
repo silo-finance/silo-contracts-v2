@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
+
 // Utils
 import {Actor} from "./utils/Actor.sol";
 
@@ -18,6 +20,7 @@ import {
     GaugeHookReceiver
 } from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
@@ -46,7 +49,16 @@ import {ISilo} from "silo-core/contracts/Silo.sol";
 import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
-contract Setup is BaseTest {
+contract Setup is BaseTest, IERC721Receiver {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
     function _setUp() internal {
         // Deploy protocol contracts and protocol actors
         _deployProtocolCore();
@@ -77,7 +89,7 @@ contract Setup is BaseTest {
 
         // deploy silo
         siloFactory.createSilo(
-            siloData["MOCK"], siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+            siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, siloData["MOCK"].deployer, msg.sender
         );
 
         (_vault0, _vault1) = siloConfig.getSilos();
@@ -110,7 +122,6 @@ contract Setup is BaseTest {
 
         // Deploy and initialize the liquidation module & mock flashloan receiver
         liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
-        liquidationModule.initialize(siloConfig, "");
 
         flashLoanReceiver = address(new MockFlashLoanReceiver());
     }
@@ -208,11 +219,11 @@ contract Setup is BaseTest {
     }
 
     function core_deployGaugeHookReceiver() internal {
-        hookReceiver = IGaugeHookReceiver(address(new GaugeHookReceiver()));
+        hookReceiver = IGaugeHookReceiver(address(new SiloHookV1()));
     }
 
     function core_deploySiloLiquidation() internal {
-        liquidationModule = new PartialLiquidation();
+        liquidationModule = PartialLiquidation(address(new SiloHookV1()));
     }
 
     function core_deploySiloDeployer() internal {
@@ -240,6 +251,7 @@ contract Setup is BaseTest {
         address _shareDebtTokenImpl
     ) internal returns (ISiloConfig siloConfig) {
         uint256 nextSiloId = siloFactory.getNextSiloId();
+        uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
 
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
@@ -252,25 +264,38 @@ contract Setup is BaseTest {
             siloFactory.maxLiquidationFee()
         );
 
-        configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
-        configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, nextSiloId, address(siloFactory));
+        configData0.silo = CloneDeterministic.predictSilo0Addr(
+            _siloImpl,
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
+        );
+
+        configData1.silo = CloneDeterministic.predictSilo1Addr(
+            _siloImpl,
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
+        );
 
         configData0.collateralShareToken = configData0.silo;
         configData1.collateralShareToken = configData1.silo;
 
         configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            _shareProtectedCollateralTokenImpl, nextSiloId, address(siloFactory)
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            _shareProtectedCollateralTokenImpl, nextSiloId, address(siloFactory)
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
-        configData0.debtShareToken =
-            CloneDeterministic.predictShareDebtToken0Addr(_shareDebtTokenImpl, nextSiloId, address(siloFactory));
+        configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
 
-        configData1.debtShareToken =
-            CloneDeterministic.predictShareDebtToken1Addr(_shareDebtTokenImpl, nextSiloId, address(siloFactory));
+        configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }

@@ -60,7 +60,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
     // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReInitialization
     function testReInitialization() public {
-        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.GAUGE_HOOK_RECEIVER);
+        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.SILO_HOOK_V1);
 
         bytes memory data = abi.encode(_dao);
 
@@ -235,7 +235,6 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         // will do nothing as action didn't match
         uint256 invalidAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
-        _mockGaugeIsKilled(false);
         vm.prank(debtShareToken);
         _hookReceiver.afterAction(
             silo0,
@@ -243,8 +242,10 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
             data
         );
 
-        // will do nothing when gauge is killed
-        _mockGaugeIsKilled(true);
+        // send notification when gauge is killed
+        bytes memory gaugeKilledSelector = abi.encodePacked(IGauge.is_killed.selector);
+        vm.mockCall(_gauge, gaugeKilledSelector, abi.encode(true));
+        _mockGaugeAfterTransfer();
         vm.prank(debtShareToken);
         _hookReceiver.afterAction(
             silo0,
@@ -252,8 +253,8 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
             data
         );
 
-        // gauge is set and not killed, notification will be send
-        _mockGaugeIsKilled(false);
+        // send notification when gauge is not killed
+        vm.mockCall(_gauge, gaugeKilledSelector, abi.encode(false));
         _mockGaugeAfterTransfer();
         vm.prank(debtShareToken);
         _hookReceiver.afterAction(
