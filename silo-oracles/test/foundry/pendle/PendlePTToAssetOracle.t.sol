@@ -172,6 +172,11 @@ contract PendlePTToAssetOracleTest is Forking {
         assertEq(oracle.quoteToken(), oracle.QUOTE_TOKEN());
     }
 
+    function test_PendlePTToAssetOracle_baseToken() public view {
+        assertEq(oracle.baseToken(), oracle.PT_TOKEN());
+        assertEq(oracle.baseToken(), ptToken);
+    }
+
     function test_PendlePTToAssetOracle_getPtToken() public view {
         assertEq(oracle.getPtToken(market), ptToken);
     }

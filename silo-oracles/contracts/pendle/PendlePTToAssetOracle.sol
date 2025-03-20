@@ -50,6 +50,9 @@ contract PendlePTToAssetOracle is ISiloOracle {
     /// @dev constructor has sanity check for _underlyingOracle to not return zero or revert and for _pendleOracle to
     /// return non-zero value for _market address and TWAP_DURATION. If underlying oracle reverts, constructor will
     /// revert with original revert reason.
+    /// @param _underlyingOracle oracle for SY underlying asset.
+    /// @param _pendleOracle Pendle PyYtLpOracle.
+    /// @param _market Pendle market address to deploy this oracle for.
     constructor(
         ISiloOracle _underlyingOracle,
         IPyYtLpOracleLike _pendleOracle,
@@ -95,6 +98,11 @@ contract PendlePTToAssetOracle is ISiloOracle {
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
+    }
+
+    /// @dev an oracle base token. This is equal to PT token address.
+    function baseToken() external virtual view returns (address) {
+        return PT_TOKEN;
     }
 
     function getPtToken(address _market) public virtual view returns (address ptToken) {
