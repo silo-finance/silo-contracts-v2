@@ -7,9 +7,9 @@ import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPen
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
 
-/// @notice PendlePTToAssetOracle is an oracle, which multiplies the SY.assetInfo().asset price by PtToAssetRate.
+/// @notice PendlePTToAssetOracle is an oracle, which multiplies the SY.assetInfo() asset price by PtToAssetRate.
 /// This oracle must be deployed using PendlePTToAssetOracleFactory contract. TWAP duration is constant and equal
-/// to 30 minutes. UNDERLYING_ORACLE must return the price of SY.assetInfo().asset. Quote token
+/// to 30 minutes. UNDERLYING_ORACLE must return the price of SY.assetInfo() asset. Quote token
 /// of PendlePTToAssetOracle is equal to UNDERLYING_ORACLE quote token. PendlePTToAssetOracle decimals are equal
 /// to underlying oracle's decimals.
 /// This oracle must be used for Pendle PT tokens with rebasing underlying assets and other cases with SY-to-asset
@@ -22,7 +22,7 @@ contract PendlePTToAssetOracle is ISiloOracle {
     /// @dev time range for TWAP to get PtToAssetRate, in seconds.
     uint32 public constant TWAP_DURATION = 30 minutes;
 
-    /// @dev oracle to get the price of SY.assetInfo().asset.
+    /// @dev oracle to get the price of SY.assetInfo() asset.
     ISiloOracle public immutable UNDERLYING_ORACLE; // solhint-disable-line var-name-mixedcase
 
     /// @dev Pendle PyYtLpOracle to get PtToAssetRate for a market.
@@ -31,7 +31,7 @@ contract PendlePTToAssetOracle is ISiloOracle {
     /// @dev Pendle PT token address. Quote function returns the price of this asset.
     address public immutable PT_TOKEN; // solhint-disable-line var-name-mixedcase
 
-    /// @dev SY.assetInfo().asset (SY underlying asset)
+    /// @dev SY.assetInfo() asset (SY underlying asset)
     address public immutable SY_UNDERLYING_TOKEN; // solhint-disable-line var-name-mixedcase
 
     /// @dev Pendle market for PT_TOKEN. This address is used to get PtToAssetRate.
