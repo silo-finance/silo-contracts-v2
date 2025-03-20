@@ -555,6 +555,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         shares = _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, Math.Rounding.Floor);
 
+        /*
+        there might be a case where conversion from assets <=> shares is not returning same amounts eg:
+        convert to shares ==> 1 * (1002 + 1e3) / (2 + 1) = 667.3
+        convert to assets ==> 667 * (2 + 1) / (1002 + 1e3) = 0.9995
+        so when user will use 667 withdrawa will fail, this is why we have to cross check:
+        */
         if (_convertToAssetsWithTotals(shares, newTotalSupply, newTotalAssets, Math.Rounding.Floor) == 0) return 0;
     }
 
