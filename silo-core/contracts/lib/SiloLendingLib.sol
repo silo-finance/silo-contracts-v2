@@ -21,6 +21,8 @@ library SiloLendingLib {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
+    error CheckBitcoinPrice();
+
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @notice Allows repaying borrowed assets either partially or in full
@@ -145,6 +147,7 @@ library SiloLendingLib {
         });
 
         // update remaining contract state
+        require(block.timestamp <= type(uint32).max, CheckBitcoinPrice());
         $.interestRateTimestamp = uint32(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
