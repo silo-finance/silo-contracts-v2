@@ -17,6 +17,7 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
     forge test -vv --ffi --mc WithdrawFeesIntegrationTest
 */
 contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
+    uint256 constant INTEREST_FOR_30_DAYS = 72431725;
 
     address user = makeAddr("user");
     address borrower = makeAddr("borrower");
@@ -112,7 +113,6 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         uint160 prevDaoAndDeployerRevenue;
         uint64 prevInterestFraction;
-        uint64 prevInterest;
 
         for (uint t = 1; t < 365 days; t++) {
             vm.warp(block.timestamp + 1);
@@ -168,7 +168,6 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             "prevInterestFraction is result of modulo, so once we got interest it should circle-drop"
         );
 
-        // TODO write test where we check if accru every second == one accrute after year
         for (uint t = 1; t < 365 days; t++) {
             vm.warp(block.timestamp + 1);
             silo1.accrueInterest();
@@ -192,6 +191,38 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         //
         // assertEq((daoBalance + deployerBalance) * 1e18 + daoAndDeployerRevenue, prevDaoAndDeployerRevenue, "proper fees calculation");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_fee_compare_fullYear
+    */
+    function test_fee_compare_fullYear() public {
+        uint8 _decimals = 8;
+
+        _setUp(1, _decimals);
+
+        vm.warp(block.timestamp + 30 days);
+
+        uint256 interest = silo1.accrueInterest();
+        assertEq(interest, INTEREST_FOR_30_DAYS, "compare: full year");
+    }
+
+    /*
+    forge test -vv --ffi --mt test_fee_compare_second
+    */
+    function test_fee_compare_second() public {
+        uint8 _decimals = 8;
+
+        _setUp(1, _decimals);
+
+        uint256 sum;
+
+        for (uint256 i; i < 30 days; i++) {
+            vm.warp(block.timestamp + 1);
+            sum += silo1.accrueInterest();
+        }
+
+        assertEq(sum, INTEREST_FOR_30_DAYS, "compare: per second must be the same");
     }
 
     function _fragmentedAmount(uint256 _amount, uint8 _decimals) internal pure returns (uint256) {

@@ -444,6 +444,7 @@ library Actions {
 
     function calculateFees(ISilo _silo)
         internal
+        view
         returns (
             address asset,
             uint256 daoRevenue,
