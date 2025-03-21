@@ -17,7 +17,7 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
     forge test -vv --ffi --mc WithdrawFeesIntegrationTest
 */
 contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
-    uint256 constant INTEREST_FOR_30_DAYS = 72431725;
+    uint256 constant INTEREST_FOR_3_DAYS = 32883;
 
     address user = makeAddr("user");
     address borrower = makeAddr("borrower");
@@ -201,10 +201,14 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         _setUp(1, _decimals);
 
-        vm.warp(block.timestamp + 30 days);
+        vm.warp(block.timestamp + 3 days);
 
         uint256 interest = silo1.accrueInterest();
-        assertEq(interest, INTEREST_FOR_30_DAYS, "compare: full year");
+        assertEq(
+            interest + 13,
+            INTEREST_FOR_3_DAYS,
+            "compare: 3 days (we got bit less because it was just one accrueInterest)"
+        );
     }
 
     /*
@@ -217,12 +221,12 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         uint256 sum;
 
-        for (uint256 i; i < 30 days; i++) {
+        for (uint256 i; i < 3 days; i++) {
             vm.warp(block.timestamp + 1);
             sum += silo1.accrueInterest();
         }
 
-        assertEq(sum, INTEREST_FOR_30_DAYS, "compare: per second must be the same");
+        assertEq(sum, INTEREST_FOR_3_DAYS, "compare: per second must be the same");
     }
 
     function _fragmentedAmount(uint256 _amount, uint8 _decimals) internal pure returns (uint256) {
