@@ -83,7 +83,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @dev Internal balance tracker to prevent assets loss if underlying market hacked
     /// and started reporting wrong supply.
-    /// max loss == supplyCap + arbitraryLossThreshold * N deposits + un accrued interest.
+    /// max loss == supplyCap + un accrued interest.
     /// Un accrued interest loss present only if it is less than balanceTracker[market] - supplyAssets.
     /// But this is only about internal balances. There is no interest loss on the vault.
     mapping(IERC4626 => uint256) public balanceTracker;
@@ -659,7 +659,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 assets) {
-        for (uint256 i; i < withdrawQueue.length; ++i) {
+        uint256 length = withdrawQueue.length;
+
+        for (uint256 i; i < length; ++i) {
             IERC4626 market = withdrawQueue[i];
             assets += _expectedSupplyAssets(market, address(this));
         }
@@ -690,7 +692,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @dev Returns the maximum amount of assets that the vault can supply to ERC4626 vaults.
     function _maxDeposit() internal view virtual returns (uint256 totalSuppliable) {
-        for (uint256 i; i < supplyQueue.length; ++i) {
+        uint256 length = supplyQueue.length;
+
+        for (uint256 i; i < length; ++i) {
             IERC4626 market = supplyQueue[i];
 
             uint256 supplyCap = config[market].cap;
@@ -1012,7 +1016,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 senderBalance = _from == address(0) ? 0 : balanceOf(_from);
         uint256 recipientBalance = _to == address(0) ? 0 : balanceOf(_to);
 
-        for(uint256 i; i < receivers.length; i++) {
+        for (uint256 i; i < receivers.length; i++) {
             INotificationReceiver(receivers[i]).afterTokenTransfer({
                 _sender: _from,
                 _senderBalance: senderBalance,
@@ -1049,6 +1053,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _previewRedeem(IERC4626 _market, uint256 _shares) internal view returns (uint256 assets) {
+        if (_shares == 0) return 0;
+
         assets = _market.previewRedeem(_shares);
     }
 }
