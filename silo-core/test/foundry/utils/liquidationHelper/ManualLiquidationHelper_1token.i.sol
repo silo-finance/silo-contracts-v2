@@ -35,7 +35,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
         uint32 _addTimestamp
     ) public {
 //        uint32 _addTimestamp = 1478627871;
-
+        vm.assume(block.timestamp + _addTimestamp < type(uint32).max);
         vm.warp(block.timestamp + _addTimestamp);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
@@ -77,6 +77,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     function test_executeLiquidation_1_token_BadDebt_fuzz(
         uint32 _addTimestamp
     ) public {
+        vm.assume(block.timestamp + _addTimestamp < type(uint32).max);
         vm.warp(block.timestamp + _addTimestamp);
 
         uint256 ltv = siloLens.getLtv(silo1, BORROWER);

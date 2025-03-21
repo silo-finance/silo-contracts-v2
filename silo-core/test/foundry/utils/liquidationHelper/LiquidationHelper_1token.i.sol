@@ -38,6 +38,7 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
     function test_executeLiquidation_1_token(
         uint32 _addTimestamp
     ) public {
+        vm.assume(block.timestamp + _addTimestamp < type(uint32).max);
         vm.warp(block.timestamp + _addTimestamp);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
