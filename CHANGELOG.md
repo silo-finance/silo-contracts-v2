@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Fixed
+- silo-core: add reentrancy protection for liquidation call
 - silo-vaults: fix max redeem
 
 ## [2.0.1] - 2025-03-19
