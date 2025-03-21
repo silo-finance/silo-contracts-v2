@@ -111,11 +111,16 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
+        (,, uint64 interestFraction,, uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getSiloStorage();
 
-        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
-        );
+        (totalCollateralAssetsWithInterest,,,,) = SiloMathLib.getCollateralAmountsWithInterest({
+            _collateralAssets: collateralAssets,
+            _debtAssets: debtAssets,
+            _rcomp: rcomp,
+            _daoFee: _daoFee,
+            _deployerFee: _deployerFee,
+            _currentInterestFraction: interestFraction
+        });
     }
 
     /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
@@ -149,8 +154,10 @@ library SiloStdLib {
             // do not lock silo
         }
 
+        (,, uint64 interestFraction,,, uint256 debtAssets) = ISilo(_silo).getSiloStorage();
+
         (
-            totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
+            totalDebtAssetsWithInterest,,
+        ) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcomp, interestFraction);
     }
 }

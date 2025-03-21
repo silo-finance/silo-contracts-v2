@@ -169,7 +169,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), siloBalance);
 
-        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
+        _$().daoAndDeployerRevenue = uint160(siloBalance); // fees are the same as balance
 
         uint256 protectedAssets = siloBalance / 3; // the third part of the balance is protected
 
@@ -199,7 +199,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), siloBalance);
 
-        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
+        _$().daoAndDeployerRevenue = uint160(siloBalance); // fees are the same as balance
 
         token.transferResultFalseMock(deployer, siloBalance / 2); // transfer to deployer fails
         token.transferMock(dao, siloBalance); // dao gets all fees as transfer to deployer fails

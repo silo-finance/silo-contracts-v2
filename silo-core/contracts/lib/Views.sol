@@ -94,8 +94,9 @@ library Views {
         internal
         view
         returns (
-            uint192 daoAndDeployerRevenue,
-            uint64 interestRateTimestamp,
+            uint160 daoAndDeployerRevenue,
+            uint32 interestRateTimestamp,
+            uint64 interestFraction,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
@@ -105,6 +106,7 @@ library Views {
 
         daoAndDeployerRevenue = $.daoAndDeployerRevenue;
         interestRateTimestamp = $.interestRateTimestamp;
+        interestFraction = $.interestFraction;
         protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
         collateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         debtAssets = $.totalAssets[ISilo.AssetType.Debt];

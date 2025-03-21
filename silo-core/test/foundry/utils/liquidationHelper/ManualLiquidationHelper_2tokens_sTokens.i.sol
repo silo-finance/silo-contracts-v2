@@ -51,9 +51,13 @@ contract ManualLiquidationHelper2TokensSTokensTest is ManualLiquidationHelperCom
 
         _assertAddressHasNoSTokens(silo0, _tokenReceiver());
         _assertAddressHasNoSTokens(silo1, _tokenReceiver());
+        emit log_named_decimal_uint("LTV", siloLens.getUserLTV(silo0, BORROWER), 18);
 
+        emit log_named_decimal_uint("max repay", silo1.maxRepay(BORROWER), 18);
         _executeLiquidation();
 
+        emit log_named_decimal_uint("LTV", siloLens.getUserLTV(silo0, BORROWER), 18);
+        emit log_named_decimal_uint("max repay", silo1.maxRepay(BORROWER), 18);
         assertTrue(silo0.isSolvent(BORROWER), "borrower must be solvent after manual liquidation");
 
         uint256 withdrawCollateral = token0.balanceOf(_tokenReceiver());
