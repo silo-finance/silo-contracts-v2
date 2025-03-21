@@ -31,6 +31,7 @@ library Actions {
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+    uint256 internal constant _FEE_DECIMALS = 1e18;
 
     error FeeOverflow();
     error FlashLoanNotPossible();
@@ -393,12 +394,12 @@ library Actions {
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
 
-        require(fee <= type(uint192).max, FeeOverflow());
+        require(fee <= type(uint160).max, FeeOverflow());
         // this check also verify if token is correct
         require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
-        // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
+        // cast safe, because we checked `fee > type(uint160).max`
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint160(fee);
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
@@ -430,7 +431,9 @@ library Actions {
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFees = $.daoAndDeployerRevenue;
+        uint256 earnedFeesDecimals = $.daoAndDeployerRevenue;
+        uint256 earnedFees = earnedFeesDecimals / _FEE_DECIMALS;
+
         require(earnedFees != 0, ISilo.EarnedZero());
 
         (
@@ -453,14 +456,12 @@ library Actions {
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
-        // we will never underflow because earnedFees max value is `daoAndDeployerRevenue`
-        unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
-
-        daoRevenue = earnedFees;
-
-        if (deployerFeeReceiver != address(0)) {
+        if (deployerFeeReceiver == address(0)) {
+            // deployer was never setup or deployer NFT has been burned
+            daoRevenue = earnedFees;
+        } else {
             // split fees proportionally
-            daoRevenue *= daoFee;
+            daoRevenue = earnedFeesDecimals * daoFee / _FEE_DECIMALS;
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
@@ -468,6 +469,19 @@ library Actions {
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }
+        }
+
+        // we will never underflow because:
+        // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
+        // and because we cast
+        unchecked { $.daoAndDeployerRevenue -= uint160((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
+
+        if (deployerFeeReceiver == address(0)) {
+            require(earnedFees != 0, ISilo.EarnedZero());
+            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
+        } else {
+            require(daoRevenue != 0, ISilo.DaoEarnedZero());
+            require(deployerRevenue != 0, ISilo.DeployerEarnedZero());
 
             // trying to transfer to deployer (it might fail)
             if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {

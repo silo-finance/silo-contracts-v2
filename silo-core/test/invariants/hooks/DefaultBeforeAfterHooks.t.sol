@@ -87,7 +87,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         _defaultVars.totalAssets = ISilo(silo).totalAssets();
         _defaultVars.debtAssets = ISilo(silo).getDebtAssets();
         _defaultVars.collateralAssets = ISilo(silo).getCollateralAssets();
-        (_defaultVars.daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
+        (_defaultVars.daoAndDeployerFees,,,,,) = ISilo(silo).getSiloStorage();
     }
 
     function _setBorrowingValues(address silo, DefaultVars storage _defaultVars) internal {

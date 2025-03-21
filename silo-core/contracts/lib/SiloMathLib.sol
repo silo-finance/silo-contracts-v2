@@ -32,16 +32,19 @@ library SiloMathLib {
     /// @param _rcomp Compound interest rate for debt
     /// @param _daoFee The fee (in 18 decimals points) to be taken for the DAO
     /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
+    /// @param _currentInterestFraction current uncounted fraction of interest (in 36 decimals points)
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
-    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer
+    /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer (36 decimals)
     /// @return accruedInterest The total accrued interest
+    /// @return newInterestFraction new uncounted fraction of interest (in 36 decimals points)
     function getCollateralAmountsWithInterest(
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _rcomp,
         uint256 _daoFee,
-        uint256 _deployerFee
+        uint256 _deployerFee,
+        uint64 _currentInterestFraction
     )
         internal
         pure
@@ -49,20 +52,29 @@ library SiloMathLib {
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerRevenue,
-            uint256 accruedInterest
+            uint256 accruedInterest,
+            uint64 newInterestFraction
         )
     {
-        (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
+        (
+            debtAssetsWithInterest, accruedInterest, newInterestFraction
+        ) = getDebtAmountsWithInterest(_debtAssets, _rcomp, _currentInterestFraction);
 
         uint256 fees;
 
         // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
         unchecked { fees = _daoFee + _deployerFee; }
 
-        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);
+        daoAndDeployerRevenue = accruedInterest * fees;
 
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
-        uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
+        // TODO who will pay for `daoAndDeployerRevenue % _PRECISION_DECIMALS) ? this is fraction we will store
+        // so eg
+        // accruedInterest = 123
+        // daoAndDeployerRevenue = 3.75
+        // collateralInterest = 123 - 3.75 / 100 => 120, and .75 we will store for "later"
+        // maybe we need rounding up so the result is 119 ?
+        uint256 collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
 
         // save to uncheck because variable can not be more than max
         uint256 cap = type(uint256).max - _collateralAssets;
@@ -79,18 +91,28 @@ library SiloMathLib {
     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
     /// @param _totalDebtAssets The total amount of debt assets before accrued interest
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
+    /// @param _currentInterestFraction current interest fraction
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
     /// @return accruedInterest The total amount of interest accrued on the debt assets
-    function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)
+    /// @return newInterestFraction fraction of interest that can not be converted to full 1e18 value
+    function getDebtAmountsWithInterest(
+        uint256 _totalDebtAssets,
+        uint256 _rcomp,
+        uint64 _currentInterestFraction
+    )
         internal
         pure
-        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
+        returns (uint256 debtAssetsWithInterest, uint256 accruedInterest, uint64 newInterestFraction)
     {
         if (_totalDebtAssets == 0 || _rcomp == 0) {
-            return (_totalDebtAssets, 0);
+            return (_totalDebtAssets, 0, 0);
         }
 
-        accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
+        uint256 accruedInterest36 = _totalDebtAssets * _rcomp + _currentInterestFraction;
+
+        accruedInterest = accruedInterest36 / _PRECISION_DECIMALS;
+        // safe to cast, because max value after modulo will be 1e18 (_PRECISION_DECIMALS) and this is less than 2 ** 64
+        newInterestFraction = uint64(accruedInterest36 % _PRECISION_DECIMALS);
 
         unchecked {
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.

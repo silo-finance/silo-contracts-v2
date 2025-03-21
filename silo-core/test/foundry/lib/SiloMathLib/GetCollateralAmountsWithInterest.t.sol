@@ -15,13 +15,16 @@ contract GetCollateralAmountsWithInterestTest is Test {
         uint256 rcomp;
         uint256 daoFee;
         uint256 deployerFee;
+        uint64 currentInterestFraction;
 
         (
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerRevenue,
-            uint256 accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            uint256 accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, 0);
         assertEq(debtAssetsWithInterest, 0);
@@ -36,8 +39,10 @@ contract GetCollateralAmountsWithInterestTest is Test {
             collateralAssetsWithInterest,
             debtAssetsWithInterest,
             daoAndDeployerRevenue,
-            accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, 2.1e18, "collateralAssetsWithInterest, just rcomp");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, just rcomp");
@@ -50,8 +55,10 @@ contract GetCollateralAmountsWithInterestTest is Test {
             collateralAssetsWithInterest,
             debtAssetsWithInterest,
             daoAndDeployerRevenue,
-            accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, 2.095e18, "collateralAssetsWithInterest, rcomp + daoFee");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + daoFee");
@@ -65,8 +72,10 @@ contract GetCollateralAmountsWithInterestTest is Test {
             collateralAssetsWithInterest,
             debtAssetsWithInterest,
             daoAndDeployerRevenue,
-            accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, 2.095e18, "collateralAssetsWithInterest, rcomp + deployerFee");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + deployerFee");
@@ -80,8 +89,10 @@ contract GetCollateralAmountsWithInterestTest is Test {
             collateralAssetsWithInterest,
             debtAssetsWithInterest,
             daoAndDeployerRevenue,
-            accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, 2.090e18, "collateralAssetsWithInterest, rcomp + fees");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + fees");
@@ -94,8 +105,10 @@ contract GetCollateralAmountsWithInterestTest is Test {
             collateralAssetsWithInterest,
             debtAssetsWithInterest,
             daoAndDeployerRevenue,
-            accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, 2e18, "collateralAssetsWithInterest - no debt, no interest");
         assertEq(debtAssetsWithInterest, 0, "debtAssetsWithInterest - no debt, no interest");
@@ -115,7 +128,11 @@ contract GetCollateralAmountsWithInterestTest is Test {
         uint64 _deployerFee
     ) public pure {
         vm.assume(uint256(_daoFee) + _deployerFee <= 1e18);
-        SiloMathLib.getCollateralAmountsWithInterest(_collateralAssets, _debtAssets, _rcomp, _daoFee, _deployerFee);
+        uint64 currentInterestFraction;
+
+        SiloMathLib.getCollateralAmountsWithInterest(
+            _collateralAssets, _debtAssets, _rcomp, _daoFee, _deployerFee, currentInterestFraction
+        );
     }
 
     /*
@@ -127,17 +144,56 @@ contract GetCollateralAmountsWithInterestTest is Test {
         uint256 rcomp = 0.1e18;
         uint256 daoFee = 0.1e18;
         uint256 deployerFee = 0.1e18;
+        uint64 currentInterestFraction;
 
         (
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerRevenue,
-            uint256 accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(collateralAssets, debtAssets, rcomp, daoFee, deployerFee);
+            uint256 accruedInterest,
+        ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
 
         assertEq(collateralAssetsWithInterest, type(uint256).max, "collateralAssetsWithInterest");
         assertEq(debtAssetsWithInterest, debtAssets + debtAssets * rcomp / 1e18, "debtAssetsWithInterest");
         assertEq(daoAndDeployerRevenue, (debtAssets * rcomp / 1e18) * 0.2e18 / 1e18, "daoAndDeployerRevenue");
         assertEq(accruedInterest, debtAssets * rcomp / 1e18, "accruedInterest");
+    }
+
+    /*
+    forge test -vv --mt test_getCollateralAmountsWithInterest_fraction
+    */
+    function test_getCollateralAmountsWithInterest_fraction18() public pure {
+        uint256 collateralAssets = 1e18;
+        uint256 debtAssets = _fragmentedAmount(0.5e18, 17);
+        uint256 rcomp = _fragmentedAmount(0.1e18, 17);
+        uint256 daoFee = 0.01e18;
+        uint256 deployerFee = 0.02e18;
+        uint64 currentInterestFraction;
+
+        (
+            uint256 collateralAssetsWithInterest,
+            uint256 debtAssetsWithInterest,
+            uint256 daoAndDeployerRevenue,
+            uint256 accruedInterest,
+            uint64 newInterestFraction
+    ) = SiloMathLib.getCollateralAmountsWithInterest(
+            collateralAssets, debtAssets, rcomp, daoFee, deployerFee, currentInterestFraction
+        );
+
+        assertEq(collateralAssetsWithInterest, 1_055086419753086420, "collateralAssetsWithInterest");
+        assertEq(debtAssetsWithInterest, debtAssets + debtAssets * rcomp / 1e18, "debtAssetsWithInterest");
+        assertEq(daoAndDeployerRevenue, 1703703703703703_690000000000000000, "daoAndDeployerRevenue");
+        assertEq(accruedInterest, debtAssets * rcomp / 1e18, "accruedInterest");
+        assertEq(newInterestFraction, 387654320987654321, "newInterestFraction");
+    }
+
+    function _fragmentedAmount(uint256 _amount, uint8 _decimals) internal pure  returns (uint256) {
+        for (uint i; i < _decimals; i++) {
+            _amount +=  10 ** i;
+        }
+
+        return _amount;
     }
 }

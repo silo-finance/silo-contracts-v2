@@ -62,7 +62,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     }
 
     function _invariant_checkForInterest(ISilo _silo) internal returns (bool noInterest) {
-        (, uint256 interestRateTimestamp,,,) = _silo.getSiloStorage();
+        (, uint32 interestRateTimestamp,,,,) = _silo.getSiloStorage();
         noInterest = block.timestamp == interestRateTimestamp;
 
         if (noInterest) assertEq(_silo.accrueInterest(), 0, "no interest should be applied");
@@ -138,7 +138,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     }
 
     function _checkForInterest(ISilo _silo) internal returns (bool noInterest) {
-        (, uint256 interestRateTimestamp,,,) = _silo.getSiloStorage();
+        (, uint32 interestRateTimestamp,,,,) = _silo.getSiloStorage();
         noInterest = block.timestamp == interestRateTimestamp;
 
         if (noInterest) assertEq(_silo.accrueInterest(), 0, "no interest should be applied");
@@ -152,8 +152,8 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_uint("block.number:", block.number);
         emit log_named_uint("block.timestamp:", block.timestamp);
 
-        (uint256 collectedFees0, uint256 irmTimestamp0,,,) = silo0.getSiloStorage();
-        (uint256 collectedFees1, uint256 irmTimestamp1,,,) = silo1.getSiloStorage();
+        (uint256 collectedFees0, uint32 irmTimestamp0,,,,) = silo0.getSiloStorage();
+        (uint256 collectedFees1, uint32 irmTimestamp1,,,,) = silo1.getSiloStorage();
 
 
         emit log_named_decimal_uint("getLiquidity0:", silo0.getLiquidity(), 18);

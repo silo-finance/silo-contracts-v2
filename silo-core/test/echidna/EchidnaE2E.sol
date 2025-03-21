@@ -842,7 +842,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
     }
 
     function _checkForInterest(Silo _silo) internal returns (bool noInterest) {
-        (, uint256 interestRateTimestamp,,,) = _silo.getSiloStorage();
+        (, uint32 interestRateTimestamp,,,,) = _silo.getSiloStorage();
         noInterest = block.timestamp == interestRateTimestamp;
 
         if (noInterest) assertEq(_silo.accrueInterest(), 0, "no interest should be applied");
@@ -914,8 +914,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         emit ExactAmount("block.number:", block.number);
         emit ExactAmount("block.timestamp:", block.timestamp);
 
-        (uint256 collectedFees0, uint256 irmTimestamp0,,,) = vault0.getSiloStorage();
-        (uint256 collectedFees1, uint256 irmTimestamp1,,,) = vault1.getSiloStorage();
+        (uint256 collectedFees0, uint32 irmTimestamp0,,,,) = vault0.getSiloStorage();
+        (uint256 collectedFees1, uint32 irmTimestamp1,,,,) = vault1.getSiloStorage();
 
         emit ExactAmount("collectedFees0:", collectedFees0);
         emit ExactAmount("irmTimestamp0:", irmTimestamp0);

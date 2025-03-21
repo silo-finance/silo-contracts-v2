@@ -93,7 +93,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             _repay(441711400819186749521513037373171753665316175379320209, borrower);
 
-            (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
 
             // we have dust because
@@ -120,7 +120,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         {
             (address collateralShare,, address debtShare) = ISiloConfig(silo1.config()).getShareTokens(address(silo1));
-            (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
             assertGe(token1.balanceOf(address(silo1)), daoAndDeployerRevenue, "got balance for fees");
             silo1.withdrawFees();
 
