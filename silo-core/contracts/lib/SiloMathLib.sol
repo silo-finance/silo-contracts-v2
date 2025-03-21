@@ -68,12 +68,6 @@ library SiloMathLib {
         daoAndDeployerRevenue = accruedInterest * fees;
 
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
-        // TODO who will pay for `daoAndDeployerRevenue % _PRECISION_DECIMALS) ? this is fraction we will store
-        // so eg
-        // accruedInterest = 123
-        // daoAndDeployerRevenue = 3.75
-        // collateralInterest = 123 - 3.75 / 100 => 120, and .75 we will store for "later"
-        // maybe we need rounding up so the result is 119 ?
         uint256 collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
 
         // save to uncheck because variable can not be more than max

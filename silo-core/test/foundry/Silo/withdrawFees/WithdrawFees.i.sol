@@ -68,7 +68,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         vm.expectEmit(address(silo1));
         uint256 daoFees = 173957632;
         uint256 deployerFees = 115971755;
-        emit ISilo.WithdrawnFeed(daoFees, deployerFees);
+        emit ISilo.WithdrawnFees(daoFees, deployerFees, false);
         silo1.withdrawFees();
     }
 
@@ -98,7 +98,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         vm.expectEmit(address(silo1));
         uint256 daoFees = 166476408;
         uint256 deployerFees = 110984272;
-        emit ISilo.WithdrawnFeed(daoFees, deployerFees);
+        emit ISilo.WithdrawnFees(daoFees, deployerFees, false);
         silo1.withdrawFees();
     }
 
@@ -176,7 +176,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             (prevDaoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
 
             vm.expectEmit(address(silo1));
-            emit ISilo.WithdrawnFeed(1e18, 1e18);
+            emit ISilo.WithdrawnFees(1e18, 1e18, false);
 
             try silo1.withdrawFees() {
                 emit log_named_uint("we got daoAndDeployerRevenue after s", t);
