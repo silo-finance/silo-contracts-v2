@@ -14,6 +14,7 @@ contract ReentrancyTestState {
     address public token1;
     address public hookReceiver;
     bool public reenter = true;
+    bool public reenterViaLiquidationCall = false;
 
     function set(
         address _siloConfig,
@@ -34,6 +35,10 @@ contract ReentrancyTestState {
     function setReenter(bool _status) external {
         reenter = _status;
     } 
+
+    function setReenterViaLiquidationCall(bool _status) external {
+        reenterViaLiquidationCall = _status;
+    }
 }
 
 library TestStateLib {
@@ -95,5 +100,13 @@ library TestStateLib {
 
     function enableReentrancy() internal {
         ReentrancyTestState(_ADDRESS).setReenter(true);
+    }
+
+    function setReenterViaLiquidationCall(bool _status) internal {
+        ReentrancyTestState(_ADDRESS).setReenterViaLiquidationCall(_status);
+    }
+
+    function reenterViaLiquidationCall() internal view returns (bool) {
+        return ReentrancyTestState(_ADDRESS).reenterViaLiquidationCall();
     }
 }
