@@ -887,7 +887,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @dev Supplies `assets` to ERC4626 vaults.
     function _supplyERC4626(uint256 _assets) internal virtual {
-        for (uint256 i; i < supplyQueue.length; ++i) {
+        uint256 length = supplyQueue.length;
+
+        for (uint256 i; i < length; ++i) {
             IERC4626 market = supplyQueue[i];
 
             uint256 supplyCap = config[market].cap;
@@ -920,7 +922,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @dev Withdraws `assets` from ERC4626 vaults.
     function _withdrawERC4626(uint256 _assets) internal virtual {
-        for (uint256 i; i < withdrawQueue.length; ++i) {
+        uint256 length = withdrawQueue.length;
+
+        for (uint256 i; i < length; ++i) {
             IERC4626 market = withdrawQueue[i];
 
             // Update internal balance for market to include interest if any.
