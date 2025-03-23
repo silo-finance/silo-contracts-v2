@@ -55,6 +55,30 @@ contract SiloMock is Test {
         vm.expectCall(ADDRESS, data);
     }
 
+    function getSiloStorageMock(
+        uint160 _daoAndDeployerRevenue,
+        uint32 _interestRateTimestamp,
+        uint64 _interestFraction,
+        uint256 _protectedAssets,
+        uint256 _collateralAssets,
+        uint256 _debtAssets
+    )
+        external
+    {
+        bytes memory data = abi.encodeWithSelector(ISilo.getSiloStorage.selector);
+
+        vm.mockCall(ADDRESS, data, abi.encode(
+        _daoAndDeployerRevenue,
+            _interestRateTimestamp,
+            _interestFraction,
+            _protectedAssets,
+            _collateralAssets,
+            _debtAssets
+        ));
+
+        vm.expectCall(ADDRESS, data);
+    }
+
     function configMock(address _config) external {
         bytes memory data = abi.encodeWithSelector(ISilo.config.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_config));

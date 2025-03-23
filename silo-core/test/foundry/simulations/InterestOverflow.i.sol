@@ -55,14 +55,16 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         for (uint i;; i++) {
             // if we apply interest often, we will generate more interest in shorter time
             silo1.accrueInterest();
+            (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
             emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
 
             uint256 newLtv = siloLens.getLtv(silo1, borrower);
 
             if (ltvBefore != newLtv) {
                 ltvBefore = newLtv;
-                vm.warp(block.timestamp + 365 days);
-                emit log_named_uint("years pass", i);
+                vm.warp(block.timestamp + 10 days);
+                emit log_named_uint("days pass", i * 10);
                 _printUtilization(silo1);
 
             } else {
@@ -91,13 +93,13 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
             // this repay covers interest only
             (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
-            emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 18);
+            emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
             // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            assertEq(daoAndDeployerRevenue, 315566259218055459529976822400129899175725957120, "expected daoAndDeployerRevenue with 36 decimals");
+            assertEq(daoAndDeployerRevenue, 1175280722581386981660173956027921342811554185216, "expected daoAndDeployerRevenue with 36 decimals");
             _repay(daoAndDeployerRevenue / 1e18, borrower);
 
             (daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
-            emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
+            emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 36);
 
             // we have dust because
             assertEq(silo1.getLiquidity(), minted, "even with huge repay, we cover interest first");
