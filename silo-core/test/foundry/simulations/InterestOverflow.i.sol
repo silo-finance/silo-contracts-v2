@@ -90,10 +90,13 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(minted, dust, "minted assets");
 
             // this repay covers interest only
-            // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            _repay(441711400819186749521513037373171753665316175379320209, borrower);
-
             (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 18);
+            // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            assertEq(daoAndDeployerRevenue, 315566259218055459529976822400129899175725957120, "expected daoAndDeployerRevenue with 36 decimals");
+            _repay(daoAndDeployerRevenue / 1e18, borrower);
+
+            (daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
 
             // we have dust because
