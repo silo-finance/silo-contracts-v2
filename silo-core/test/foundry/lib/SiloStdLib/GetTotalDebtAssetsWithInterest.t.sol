@@ -26,24 +26,47 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
         address silo = SILO.ADDRESS();
         address interestRateModel = INTEREST_RATE_MODEL.ADDRESS();
 
-        SILO.totalMock(ISilo.AssetType.Debt, 0);
-        SILO.getSiloStorageMock(ISilo.AssetType.Debt, 0);
+        uint160 daoAndDeployerRevenue;
+        uint32 interestRateTimestamp;
+        uint64 interestFraction;
+        uint256 protectedAssets;
+        uint256 collateralAssets;
+        uint256 debtAssets;
+
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
 
-//        INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 1e18);
-//
-//        assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
-//
-//        SILO.totalMock(ISilo.AssetType.Debt, 1e18);
-//        INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
-//
-//        assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 1e18);
-//
-//        SILO.totalMock(ISilo.AssetType.Debt, 1e18);
-//        INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0.01e18);
-//
-//        assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 1.01e18);
+        INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 1e18);
+
+        assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
+
+        debtAssets = 1e18;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
+        INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
+
+        assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 1e18);
+
+        INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0.01e18);
+
+        assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 1.01e18);
     }
 }
