@@ -101,7 +101,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     struct SiloStorage {
         /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
-        /// but not yet withdrawn
+        /// but not yet withdrawn, max value of tokens is (2^160 / 1e36) = 1,461,501,637,330
         uint160 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual, max supported time: Sunday, 7 February 2106 06:28:15
         uint32 interestRateTimestamp;
