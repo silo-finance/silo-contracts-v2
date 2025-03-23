@@ -89,9 +89,25 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalAssets, 0);
         assertEq(totalShares, 0);
 
-        SILO.getCollateralAndDebtAssetsMock(0, 0);
         COLLATERAL_SHARE_TOKEN.totalSupplyMock(0);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
+
+        uint160 daoAndDeployerRevenue;
+        uint32 interestRateTimestamp;
+        uint64 interestFraction;
+        uint256 protectedAssets;
+        uint256 collateralAssets;
+        uint256 debtAssets;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
         (totalAssets, totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Collateral);
 
@@ -99,7 +115,6 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalShares, 0);
 
         DEBT_SHARE_TOKEN.totalSupplyMock(0);
-        SILO.totalMock(ISilo.AssetType.Debt, 0);
         (totalAssets, totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Debt);
 

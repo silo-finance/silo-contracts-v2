@@ -33,7 +33,6 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
         uint256 collateralAssets;
         uint256 debtAssets;
 
-
         SILO.getSiloStorageMock(
             daoAndDeployerRevenue,
             interestRateTimestamp,
@@ -42,6 +41,7 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
             collateralAssets,
             debtAssets
         );
+
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
