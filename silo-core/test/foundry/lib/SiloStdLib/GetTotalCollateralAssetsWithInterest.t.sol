@@ -29,20 +29,65 @@ contract GetTotalAssetsWithInterestTest is Test {
         uint256 daoFee;
         uint256 deployerFee;
 
-        SILO.getCollateralAndDebtAssetsMock(0, 0);
+        uint160 daoAndDeployerRevenue;
+        uint32 interestRateTimestamp;
+        uint64 interestFraction;
+        uint256 protectedAssets;
+        uint256 collateralAssets;
+        uint256 debtAssets;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 0);
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0.01e18);
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 0);
 
-        SILO.getCollateralAndDebtAssetsMock(1000e18, 0);
+        collateralAssets = 1000e18;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1000e18);
 
-        SILO.getCollateralAndDebtAssetsMock(1000e18, 500e18);
+        debtAssets = 500e18;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1005e18);
 
-        SILO.getCollateralAndDebtAssetsMock(1000e18, 1000e18);
+        debtAssets = 1000e18;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
         daoFee = 0.01e18;
         assertEq(
             SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee),
