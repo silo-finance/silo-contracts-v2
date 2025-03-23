@@ -229,7 +229,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), 999e18);
 
-        _$().daoAndDeployerRevenue = 1e18;
+        _$().daoAndDeployerRevenue = 1e36;
 
         if (_transferDao != 0) token.transferMock(dao, _transferDao);
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);
