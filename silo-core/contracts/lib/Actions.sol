@@ -429,13 +429,11 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         siloConfig.turnOnReentrancyProtection();
 
-        (
-            address asset,
-            uint256 daoRevenue,
-            uint256 deployerRevenue,
-            address daoFeeReceiver,
-            address deployerFeeReceiver
-        ) = calculateFees(_silo);
+        address asset;
+        address daoFeeReceiver;
+        address deployerFeeReceiver;
+
+        (asset, daoRevenue, deployerRevenue, daoFeeReceiver, deployerFeeReceiver) = calculateFees(_silo);
 
         redirectedDeployerFees = transferFees(daoFeeReceiver, deployerFeeReceiver, asset, daoRevenue, deployerRevenue);
 
