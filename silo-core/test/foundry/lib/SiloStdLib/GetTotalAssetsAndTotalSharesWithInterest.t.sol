@@ -306,9 +306,19 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         uint256 totalAssets;
         uint256 totalShares;
 
+        uint160 daoAndDeployerRevenue;
+        uint32 interestRateTimestamp;
+        uint64 interestFraction;
+        uint256 protectedAssets;
+
         for (uint256 index = 0; index < collateralTestCasesIndex; index++) {
-            SILO.getCollateralAndDebtAssetsMock(
-                collateralTestCases[index].collateralAssets, collateralTestCases[index].debtAssets
+            SILO.getSiloStorageMock(
+                daoAndDeployerRevenue,
+                interestRateTimestamp,
+                interestFraction,
+                protectedAssets,
+                collateralTestCases[index].collateralAssets,
+                collateralTestCases[index].debtAssets
             );
             COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);
             INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, collateralTestCases[index].rcomp);
