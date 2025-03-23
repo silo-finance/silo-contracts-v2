@@ -392,7 +392,8 @@ library Actions {
         }
 
         // flashFee will revert for wrong token
-        uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
+        uint256 fee =
+            SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount) * _FEE_DECIMALS;
 
         require(fee <= type(uint160).max, FeeOverflow());
         // this check also verify if token is correct
