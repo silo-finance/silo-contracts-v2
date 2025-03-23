@@ -62,7 +62,7 @@ contract WithdrawFeesTest is Test {
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
     function test_withdrawFees_revert_NoLiquidity() external {
-        _$().daoAndDeployerRevenue = 1;
+        _$().daoAndDeployerRevenue = 1e18;
 
         uint256 daoFee;
         uint256 deployerFee;
