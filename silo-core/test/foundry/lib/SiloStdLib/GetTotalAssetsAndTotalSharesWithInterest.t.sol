@@ -140,7 +140,22 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalAssets, 0);
         assertEq(totalShares, _totalSupply);
 
-        SILO.getCollateralAndDebtAssetsMock(0, 0);
+        uint160 daoAndDeployerRevenue;
+        uint32 interestRateTimestamp;
+        uint64 interestFraction;
+        uint256 protectedAssets;
+        uint256 collateralAssets;
+        uint256 debtAssets;
+
+        SILO.getSiloStorageMock(
+            daoAndDeployerRevenue,
+            interestRateTimestamp,
+            interestFraction,
+            protectedAssets,
+            collateralAssets,
+            debtAssets
+        );
+
         COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
         (totalAssets, totalShares) =
@@ -150,7 +165,6 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalShares, _totalSupply);
 
         DEBT_SHARE_TOKEN.totalSupplyMock(_totalSupply);
-        SILO.totalMock(ISilo.AssetType.Debt, 0);
         (totalAssets, totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Debt);
 
@@ -193,8 +207,22 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         uint256 totalAssets;
         uint256 totalShares;
 
+        uint160 daoAndDeployerRevenue;
+        uint32 interestRateTimestamp;
+        uint64 interestFraction;
+        uint256 protectedAssets;
+        uint256 collateralAssets;
+
         for (uint256 index = 0; index < debtTestCasesIndex; index++) {
-            SILO.totalMock(ISilo.AssetType.Debt, debtTestCases[index].debtAssets);
+            SILO.getSiloStorageMock(
+                daoAndDeployerRevenue,
+                interestRateTimestamp,
+                interestFraction,
+                protectedAssets,
+                collateralAssets,
+                debtTestCases[index].debtAssets
+            );
+
             DEBT_SHARE_TOKEN.totalSupplyMock(_totalSupply);
             INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, debtTestCases[index].rcomp);
 
