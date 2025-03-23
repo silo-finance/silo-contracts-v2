@@ -566,7 +566,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
         uint256 maxRepay = silo1.maxRepay(BORROWER);
-        uint256 interest = maxRepay - DEBT - daoAndDeployerRevenue;
+        uint256 interest = maxRepay - DEBT - daoAndDeployerRevenue / 1e18;
         uint256 liquidity = silo1.getLiquidity();
 
         emit log_named_decimal_uint("balance of silo1", token1.balanceOf(address(silo1)), 18);
