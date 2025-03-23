@@ -114,7 +114,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), 1e18);
 
-        _$().daoAndDeployerRevenue = 9;
+        _$().daoAndDeployerRevenue = 9e18;
 
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
