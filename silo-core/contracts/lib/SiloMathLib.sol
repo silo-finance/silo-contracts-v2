@@ -66,8 +66,6 @@ library SiloMathLib {
         unchecked { fees = _daoFee + _deployerFee; }
 
         daoAndDeployerRevenue = accruedInterest * fees;
-
-        // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
         uint256 collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
 
         // save to uncheck because variable can not be more than max
