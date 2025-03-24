@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract GetCollateralAndDebtTotalsStorageReentrancyTest is MethodReentrancyTest {
+contract GetCollateralAndDebtTotalsWithInterestFactionStorageReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -15,7 +15,7 @@ contract GetCollateralAndDebtTotalsStorageReentrancyTest is MethodReentrancyTest
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "getCollateralAndDebtTotalsStorage()";
+        description = "getCollateralAndDebtTotalsWithInterestFactionStorage()";
     }
 
     function _ensureItWillNotRevert() internal view {

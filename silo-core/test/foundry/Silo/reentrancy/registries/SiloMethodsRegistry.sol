@@ -30,7 +30,7 @@ import {FactoryReentrancyTest} from "../methods/silo/FactoryReentrancyTest.sol";
 import {FlashFeeReentrancyTest} from "../methods/silo/FlashFeeReentrancyTest.sol";
 import {FlashLoanReentrancyTest} from "../methods/silo/FlashLoanReentrancyTest.sol";
 import {ForwardTransferFromNoChecksTest} from "../methods/silo/ForwardTransferFromNoChecksTest.sol";
-import {GetCollateralAndDebtTotalsStorageReentrancyTest} from "../methods/silo/GetCollateralAndDebtTotalsStorageReentrancyTest.sol";
+import {GetCollateralAndDebtTotalsWithInterestFactionStorageReentrancyTest} from "../methods/silo/GetCollateralAndDebtTotalsWithInterestFactionStorageReentrancyTest.sol";
 import {GetCollateralAndProtectedTotalsStorageReentrancyTest}
     from "../methods/silo/GetCollateralAndProtectedTotalsStorageReentrancyTest.sol";
 import {GetCollateralAssetsReentrancyTest} from "../methods/silo/GetCollateralAssetsReentrancyTest.sol";
@@ -127,7 +127,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new FlashFeeReentrancyTest());
         _registerMethod(new FlashLoanReentrancyTest());
         _registerMethod(new ForwardTransferFromNoChecksTest());
-        _registerMethod(new GetCollateralAndDebtTotalsStorageReentrancyTest());
+        _registerMethod(new GetCollateralAndDebtTotalsWithInterestFactionStorageReentrancyTest());
         _registerMethod(new GetCollateralAndProtectedTotalsStorageReentrancyTest());
         _registerMethod(new GetCollateralAssetsReentrancyTest());
         _registerMethod(new GetDebtAssetsReentrancyTest());
