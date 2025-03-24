@@ -117,10 +117,11 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         uint192 prevDaoAndDeployerRevenue;
         uint64 prevInterestFraction;
+        uint256 interest;
 
-        for (uint t = 1; t < 365 days; t++) {
-            vm.warp(block.timestamp + 1);
-            uint256 interest = silo1.accrueInterest();
+        for (uint t = 1; t < 24 hours; t++) {
+            vm.warp(block.timestamp + 6);
+            interest = silo1.accrueInterest();
 
             if (interest != 0) {
                 emit log_named_uint("we got interest after s", t);
@@ -160,7 +161,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             silo1.withdrawFees();
         }
 
-        uint256 interest = silo1.accrueInterest();
+        assertGt(interest, 0, "expect some interest at this point");
 
         (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
         (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
@@ -177,29 +178,27 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             "prevInterestFraction is result of modulo, so once we got interest it should circle-drop"
         );
 
-        for (uint t = 1; t < 365 days; t++) {
-            vm.warp(block.timestamp + 1);
-            silo1.accrueInterest();
+        vm.warp(block.timestamp + 60);
 
-            (prevDaoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        silo1.accrueInterest();
 
-            vm.expectEmit(address(silo1));
-            emit ISilo.WithdrawnFees(1, 1, false);
+        (prevDaoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
 
-            try silo1.withdrawFees() {
-                emit log_named_uint("we got daoAndDeployerRevenue after s", t);
-                emit log_named_decimal_uint("# daoAndDeployerRevenue", prevDaoAndDeployerRevenue, 18);
-                break;
-            } catch {
-                // keep going until we have enough for both receivers
-            }
-        }
+        vm.expectEmit(address(silo1));
+        emit ISilo.WithdrawnFees(1, 1, false);
+
+        silo1.withdrawFees();
+
+        assertGe(
+            prevDaoAndDeployerRevenue,
+            2e18,
+            "expect revenue to be at lest 2 wei in 18 decimals, because it has to be split by 2"
+        );
+
+        emit log_named_decimal_uint("# daoAndDeployerRevenue", prevDaoAndDeployerRevenue, 18);
 
         (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
         assertLt(daoAndDeployerRevenue, 1e18, "[daoAndDeployerRevenue] only fraction left < 1e18");
-
-        //
-        // assertEq((daoBalance + deployerBalance) * 1e18 + daoAndDeployerRevenue, prevDaoAndDeployerRevenue, "proper fees calculation");
     }
 
     /*

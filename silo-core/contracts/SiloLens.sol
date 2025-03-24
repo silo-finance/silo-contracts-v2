@@ -134,8 +134,8 @@ contract SiloLens is ISiloLens {
         totalDeposits = _silo.totalAssets();
     }
 
-    function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 totalBorrowAmount) {
-        totalBorrowAmount = _silo.getDebtAssets();
+    function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 amount) {
+        amount = _silo.getDebtAssets();
     }
 
     /// @inheritdoc ISiloLens
