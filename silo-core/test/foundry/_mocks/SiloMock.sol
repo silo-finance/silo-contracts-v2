@@ -66,7 +66,8 @@ contract SiloMock is Test {
     )
         external
     {
-        bytes memory data = abi.encodeWithSelector(ISilo.getSiloStorage.selector);
+        bytes memory data =
+            abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsWithInterestFactionStorage.selector);
 
         vm.mockCall(ADDRESS, data, abi.encode(_collateralAssets, _debtAssets, _interestFraction));
         vm.expectCall(ADDRESS, data);
