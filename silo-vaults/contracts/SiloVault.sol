@@ -549,10 +549,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc IERC4626
     /// @dev Warning: May be lower than the actual amount of shares that can be redeemed by `owner` due to conversion
     /// roundings between shares and assets.
-    function maxRedeem(address _owner) public view virtual override returns (uint256) {
+    function maxRedeem(address _owner) public view virtual override returns (uint256 shares) {
         (uint256 assets, uint256 newTotalSupply, uint256 newTotalAssets) = _maxWithdraw(_owner);
+        if (assets == 0) return 0;
 
-        return _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, Math.Rounding.Floor);
+        shares = _convertToSharesWithTotals(assets, newTotalSupply, newTotalAssets, Math.Rounding.Floor);
+
+        /*
+        there might be a case where conversion from assets <=> shares is not returning same amounts eg:
+        convert to shares ==> 1 * (1002 + 1e3) / (2 + 1) = 667.3
+        convert to assets ==> 667 * (2 + 1) / (1002 + 1e3) = 0.9995
+        so when user will use 667 withdrawal will fail, this is why we have to cross check:
+        */
+        if (_convertToAssetsWithTotals(shares, newTotalSupply, newTotalAssets, Math.Rounding.Floor) == 0) return 0;
     }
 
     /// @inheritdoc IERC20
@@ -721,18 +730,30 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ERC4626
     /// @dev The accrual of performance fees is taken into account in the conversion.
-    function _convertToShares(uint256 _assets, Math.Rounding _rounding) internal view virtual override returns (uint256) {
+    function _convertToShares(uint256 _assets, Math.Rounding _rounding)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 shares)
+    {
         (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
 
-        return _convertToSharesWithTotals(_assets, totalSupply() + feeShares, newTotalAssets, _rounding);
+        shares = _convertToSharesWithTotals(_assets, totalSupply() + feeShares, newTotalAssets, _rounding);
     }
 
     /// @inheritdoc ERC4626
     /// @dev The accrual of performance fees is taken into account in the conversion.
-    function _convertToAssets(uint256 _shares, Math.Rounding _rounding) internal view virtual override returns (uint256) {
+    function _convertToAssets(uint256 _shares, Math.Rounding _rounding)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assets)
+    {
         (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
 
-        return _convertToAssetsWithTotals(_shares, totalSupply() + feeShares, newTotalAssets, _rounding);
+        assets = _convertToAssetsWithTotals(_shares, totalSupply() + feeShares, newTotalAssets, _rounding);
     }
 
     /// @dev Returns the amount of shares that the vault would exchange for the amount of `assets` provided.
@@ -742,8 +763,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 _newTotalSupply,
         uint256 _newTotalAssets,
         Math.Rounding _rounding
-    ) internal view virtual returns (uint256) {
-        return _assets.mulDiv(_newTotalSupply + 10 ** _decimalsOffset(), _newTotalAssets + 1, _rounding);
+    ) internal view virtual returns (uint256 shares) {
+        shares = _assets.mulDiv(_newTotalSupply + 10 ** _decimalsOffset(), _newTotalAssets + 1, _rounding);
     }
 
     /// @dev Returns the amount of shares that the vault would exchange for the amount of `assets` provided.
@@ -766,8 +787,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 _newTotalSupply,
         uint256 _newTotalAssets,
         Math.Rounding _rounding
-    ) internal view virtual returns (uint256) {
-        return _shares.mulDiv(_newTotalAssets + 1, _newTotalSupply + 10 ** _decimalsOffset(), _rounding);
+    ) internal view virtual returns (uint256 assets) {
+        assets = _shares.mulDiv(_newTotalAssets + 1, _newTotalSupply + 10 ** _decimalsOffset(), _rounding);
     }
 
     /// @dev Returns the amount of assets that the vault would exchange for the amount of `shares` provided.

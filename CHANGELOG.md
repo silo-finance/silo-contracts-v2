@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- silo-core: add reentrancy protection for liquidation call
+- silo-vaults: fix max redeem
 
 ## [2.0.1] - 2025-03-19
 ### Fixed
