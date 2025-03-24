@@ -162,7 +162,8 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
         );
 
         (uint256 daoAndDeployerRevenueAfter,,,,) = silo0.getSiloStorage();
-        assertEq(daoAndDeployerRevenueAfter, daoAndDeployerRevenueBefore + fee);
+        // we have to `fee * 1e18` to be in 36 decimals
+        assertEq(daoAndDeployerRevenueAfter, daoAndDeployerRevenueBefore + fee * 1e18, "daoAndDeployerRevenueAfter");
     }
 
     /*

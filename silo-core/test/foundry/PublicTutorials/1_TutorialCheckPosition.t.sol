@@ -92,6 +92,7 @@ contract TutorialCheckPosition is Test {
 
     // Get user's loan-to-value ratio. For example, 0.5 * 10**18 LTV is for a position with 10$ collateral and
     // 5$ borrowed assets.
+    // TODO this test can be fixed only for new deployment because getSiloStorage changed
     function test_getMyLTV() public view {
         uint256 userLTVSilo0 = SILO_LENS.getLtv(SILO0, EXAMPLE_USER);
         uint256 userLTVSilo1 = SILO_LENS.getLtv(SILO1, EXAMPLE_USER);
