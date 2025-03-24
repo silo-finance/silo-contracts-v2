@@ -62,7 +62,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
 
         assertEq(collateralAssetsWithInterest, 2.095e18, "collateralAssetsWithInterest, rcomp + daoFee");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + daoFee");
-        assertEq(daoAndDeployerRevenue, 0.005e18, "daoAndDeployerRevenue, rcomp + daoFee");
+        assertEq(daoAndDeployerRevenue, 0.005e36, "daoAndDeployerRevenue, rcomp + daoFee");
         assertEq(accruedInterest, 0.1e18, "accruedInterest, rcomp + daoFee");
 
         deployerFee = 0.05e18;

@@ -107,7 +107,7 @@ contract AccrueInterestForAssetTest is Test {
         assertEq($.interestRateTimestamp, currentTimestamp, "interestRateTimestamp");
         assertEq(
             $.daoAndDeployerRevenue,
-            accruedInterest * (daoFee + deployerFee) / DECIMAL_POINTS,
+            accruedInterest * (daoFee + deployerFee),
             "daoAndDeployerRevenue"
         );
     }

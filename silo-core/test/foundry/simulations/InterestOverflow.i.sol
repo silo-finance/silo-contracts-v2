@@ -95,7 +95,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
             // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            assertEq(daoAndDeployerRevenue, 1175280722581386981660173956027921342811554185216, "expected daoAndDeployerRevenue with 36 decimals");
+            assertEq(daoAndDeployerRevenue, 1339771760383770109082728890833469271474593071104, "expected daoAndDeployerRevenue with 36 decimals");
             _repay(daoAndDeployerRevenue / 1e18, borrower);
 
             (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
