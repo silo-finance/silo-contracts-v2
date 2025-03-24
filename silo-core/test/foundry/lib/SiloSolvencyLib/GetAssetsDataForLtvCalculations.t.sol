@@ -169,7 +169,13 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 scenario.input.collateralConfig.totalProtectedAssets
             );
 
-            new SiloMock(silo1).getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+            SiloMock siloMock1 = new SiloMock(silo1);
+
+            if (cachedShareDebtBalance != 0) {
+                siloMock1.totalMock(ISilo.AssetType.Debt, scenario.input.debtConfig.totalDebtAssets);
+            }
+
+            siloMock1.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
                 _collateralAssets: 0,
                 _debtAssets: scenario.input.debtConfig.totalDebtAssets,
                 _interestFraction: 0
