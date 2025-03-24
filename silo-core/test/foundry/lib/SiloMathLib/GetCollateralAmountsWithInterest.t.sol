@@ -79,7 +79,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
 
         assertEq(collateralAssetsWithInterest, 2.095e18, "collateralAssetsWithInterest, rcomp + deployerFee");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + deployerFee");
-        assertEq(daoAndDeployerRevenue, 0.005e18, "daoAndDeployerRevenue, rcomp + deployerFee");
+        assertEq(daoAndDeployerRevenue, 0.005e36, "daoAndDeployerRevenue, rcomp + deployerFee");
         assertEq(accruedInterest, 0.1e18, "accruedInterest, rcomp + deployerFee");
 
         deployerFee = 0.05e18;
@@ -96,7 +96,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
 
         assertEq(collateralAssetsWithInterest, 2.090e18, "collateralAssetsWithInterest, rcomp + fees");
         assertEq(debtAssetsWithInterest, 1.1e18, "debtAssetsWithInterest, rcomp + fees");
-        assertEq(daoAndDeployerRevenue, 0.01e18, "daoAndDeployerRevenue, rcomp + fees");
+        assertEq(daoAndDeployerRevenue, 0.01e36, "daoAndDeployerRevenue, rcomp + fees");
         assertEq(accruedInterest, 0.1e18, "accruedInterest, rcomp + fees");
 
         debtAssets = 0;
@@ -157,7 +157,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
 
         assertEq(collateralAssetsWithInterest, type(uint256).max, "collateralAssetsWithInterest");
         assertEq(debtAssetsWithInterest, debtAssets + debtAssets * rcomp / 1e18, "debtAssetsWithInterest");
-        assertEq(daoAndDeployerRevenue, (debtAssets * rcomp / 1e18) * 0.2e18 / 1e18, "daoAndDeployerRevenue");
+        assertEq(daoAndDeployerRevenue, (debtAssets * rcomp / 1e18) * 0.2e18, "daoAndDeployerRevenue");
         assertEq(accruedInterest, debtAssets * rcomp / 1e18, "accruedInterest");
     }
 
