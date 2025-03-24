@@ -392,15 +392,15 @@ library Actions {
         }
 
         // flashFee will revert for wrong token
-        uint256 fee =
-            SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount) * _FEE_DECIMALS;
+        uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
+        uint256 fee36 = fee * _FEE_DECIMALS;
 
-        require(fee <= type(uint160).max, FeeOverflow());
+        require(fee36 <= type(uint160).max, FeeOverflow());
         // this check also verify if token is correct
         require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
         // cast safe, because we checked `fee > type(uint160).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint160(fee);
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint160(fee36);
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
