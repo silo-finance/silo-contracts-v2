@@ -128,7 +128,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
         require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 6, assetDecimals));
+        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 0, assetDecimals));
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -634,9 +634,16 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         uint256 newTotalAssets = _accrueFee();
 
+        // if (newTotalAssets == 2095014335) newTotalAssets = 2095014342;
+
         // Do not call expensive `maxRedeem` and optimistically redeem shares.
 
         assets = _convertToAssetsWithTotalsSafe(_shares, totalSupply(), newTotalAssets, Math.Rounding.Floor);
+
+        // if (assets == 2095014328) assets = 2095014334;
+
+        console.log("[redeem] newTotalAssets %s", newTotalAssets);
+        console.log("[redeem] assets %s", assets);
 
         // `newTotalAssets - assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(UtilsLib.zeroFloorSub(newTotalAssets, assets));
@@ -650,8 +657,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function totalAssets() public view virtual override returns (uint256 assets) {
         for (uint256 i; i < withdrawQueue.length; ++i) {
             IERC4626 market = withdrawQueue[i];
-            assets += _expectedSupplyAssets(market, address(this));
+            uint256 assetss = _expectedSupplyAssets(market, address(this));
+            console.log("[totalAssets] assets from market %s", assetss);
+            assets += assetss;
         }
+
+        // if (assets == 2095014335) assets = 2095014335 + 7;
     }
 
     /* ERC4626 (INTERNAL) */
@@ -769,6 +780,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
         _updateLastTotalAssets(lastTotalAssets + _assets);
 
+        // AssetLossGlobal
         _assetLossCheck(this, _shares, _assets);
     }
 
@@ -878,7 +890,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (toSupply > 0) {
                 // Using try/catch to skip markets that revert.
                 try market.deposit(toSupply, address(this)) returns (uint256 shares) {
-                    _assetLossCheck(market, shares, toSupply);
+                    _assetLossCheckMarket(market, shares, toSupply);
                     _assets -= toSupply;
                 } catch {
                 }
@@ -897,7 +909,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             // original implementation were using `_accruedSupplyBalance` which does not care about liquidity
             // now, liquidity is considered by using `maxWithdraw`
-            uint256 toWithdraw = UtilsLib.min(market.maxWithdraw(address(this)), _assets);
+            uint256 maxWithdraw = market.maxWithdraw(address(this));
+            uint256 toWithdraw = UtilsLib.min(maxWithdraw, _assets);
+
+            console.log("[withdrawERC4626] maxWithdraw %s, toWithdraw %s", maxWithdraw, toWithdraw);
 
             if (toWithdraw > 0) {
                 // Using try/catch to skip markets that revert.
@@ -926,6 +941,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function _accrueFee() internal virtual returns (uint256 newTotalAssets) {
         uint256 feeShares;
         (feeShares, newTotalAssets) = _accruedFeeShares();
+
+        console.log("[_accrueFee] feeShares %s, newTotalAssets %s", feeShares, newTotalAssets);
 
         if (feeShares != 0) _mint(feeRecipient, feeShares);
 
@@ -1020,6 +1037,21 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _assetLossCheck(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
+        // return;
+        uint256 previewAssets = _market.previewRedeem(_shares);
+        console.log("[assetLossCheck] previewAssets %s, expectedAssets %s", previewAssets, _expectedAssets);
+        if (previewAssets >= _expectedAssets) return;
+
+        uint256 assetLoss;
+        // save because we checking above `if (previewAssets >= _expectedAssets)`
+        unchecked { assetLoss = _expectedAssets - previewAssets; }
+
+        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLossGlobal());
+        // require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
+    }
+
+    function _assetLossCheckMarket(IERC4626 _market, uint256 _shares, uint256 _expectedAssets) internal {
+        // return;
         uint256 previewAssets = _market.previewRedeem(_shares);
         if (previewAssets >= _expectedAssets) return;
 
@@ -1027,7 +1059,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
 
-        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
+        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLossMarket());
+        // require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
     }
 
     /// @dev to save code size

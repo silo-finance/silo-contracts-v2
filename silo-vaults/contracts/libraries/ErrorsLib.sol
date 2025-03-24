@@ -150,5 +150,9 @@ library ErrorsLib {
     error MaxInflowExceeded(IERC4626 market);
 
     /// @notice Thrown when projected withdraw is much less than what user deposit.
+    error AssetLossGlobal();
+
+    error AssetLossMarket();
+
     error AssetLoss();
 }
