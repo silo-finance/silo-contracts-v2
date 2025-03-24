@@ -142,15 +142,28 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getCollateralAndDebtTotalsWithInterestFactionStorage()
+    function getCollateralAndDebtTotalsStorage()
         external
         view
         virtual
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
+    {
+        (totalCollateralAssets, totalDebtAssets) = Views.getCollateralAndDebtAssets();
+    }
+
+    function getCollateralAndDebtTotalsWithInterestFactionStorage()
+        external
+        view
         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction)
     {
         (
             totalCollateralAssets, totalDebtAssets, interestFraction
         ) = Views.getCollateralAndDebtTotalsWithInterestFaction();
+    }
+
+    /// @inheritdoc ISilo
+    function getInterestFractionStorage() external view virtual returns (uint64 interestFraction) {
+        interestFraction = SiloStorageLib.getSiloStorage().interestFraction;
     }
 
     // ERC4626
