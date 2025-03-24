@@ -85,8 +85,8 @@ library SiloMathLib {
     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision
     /// @param _currentInterestFraction current interest fraction
     /// @return debtAssetsWithInterest The debt assets including the accrued interest
-    /// @return accruedInterest The total amount of interest accrued on the debt assets
-    /// @return newInterestFraction fraction of interest that can not be converted to full 1e18 value
+    /// @return accruedInterest The total amount of interest accrued on the debt assets, 0 on overflow
+    /// @return newInterestFraction fraction of interest that can not be converted to full 1e18 value, 0 on overflow
     function getDebtAmountsWithInterest(
         uint256 _totalDebtAssets,
         uint256 _rcomp,
@@ -98,6 +98,14 @@ library SiloMathLib {
     {
         if (_totalDebtAssets == 0 || _rcomp == 0) {
             return (_totalDebtAssets, 0, 0);
+        }
+
+        unchecked {
+            // safe to unchecked because: _currentInterestFraction if never more than max uint256, div is safe
+            if ((type(uint256).max - _currentInterestFraction) / _totalDebtAssets <= _rcomp) {
+                // when overflow, return 0 interest
+                return (_totalDebtAssets, 0, 0);
+            }
         }
 
         uint256 accruedInterest36 = _totalDebtAssets * _rcomp + _currentInterestFraction;
