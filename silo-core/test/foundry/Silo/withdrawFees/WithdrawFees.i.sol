@@ -124,6 +124,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
             if (interest != 0) {
                 emit log_named_uint("we got interest after s", t);
+                emit log_named_uint("interest", interest);
                 break;
             }
 
@@ -183,7 +184,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             (prevDaoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
 
             vm.expectEmit(address(silo1));
-            emit ISilo.WithdrawnFees(1e18, 1e18, false);
+            emit ISilo.WithdrawnFees(1, 1, false);
 
             try silo1.withdrawFees() {
                 emit log_named_uint("we got daoAndDeployerRevenue after s", t);

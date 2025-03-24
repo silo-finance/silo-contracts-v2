@@ -196,6 +196,8 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         GetAssetsDataForLtvCalculationsTestData.ScenarioData[] memory scenarios = dataReader.getScenarios();
 
         for (uint256 index = 0; index < scenarios.length; index++) {
+            emit log_named_uint("scenario", index);
+
             (
                 ISiloConfig.ConfigData memory collateralConfig,
                 ISiloConfig.ConfigData memory debtConfig,
