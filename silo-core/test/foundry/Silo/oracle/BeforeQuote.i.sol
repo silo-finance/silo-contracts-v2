@@ -198,7 +198,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         silo0.borrow(borrowAmount, borrower, borrower);
 
         vm.startPrank(depositor);
-        vm.warp(block.timestamp + 100000 days);
+        vm.warp(type(uint32).max);
         token0.mint(depositor, borrowAmount / 2);
         token0.approve(address(partialLiquidation), borrowAmount / 2);
 
@@ -206,7 +206,7 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         emit log_named_address("solvencyOracle0", address(solvencyOracle0));
         emit log_named_address("liquidationModule", address(partialLiquidation));
 
-        _expectCallsToSolvencyOracle(0x1bd942c37174f394000); // amount with interest
+        _expectCallsToSolvencyOracle(91479326973624471118); // amount with interest
 
         partialLiquidation.liquidationCall(address(token1), address(token0), borrower, borrowAmount / 2, false);
     }
