@@ -52,9 +52,11 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("silo1.getLiquidity() 1", silo1.getLiquidity(), 18);
 
+        uint256 allInterest;
+
         for (uint i;; i++) {
             // if we apply interest often, we will generate more interest in shorter time
-            silo1.accrueInterest();
+            allInterest += silo1.accrueInterest();
             (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
             emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
@@ -75,7 +77,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         emit log("additional time should make no difference:");
         vm.warp(block.timestamp + 365 days);
-        silo1.accrueInterest();
+        assertEq(silo1.accrueInterest(), 0, "no interest when overflow");
         _printUtilization(silo1);
 
         emit log_named_decimal_uint("LTV after", siloLens.getLtv(silo0, borrower), 16);
@@ -86,22 +88,17 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         emit log_named_uint("dust", dust);
 
         { // too deep
+            uint256 toRepay = silo1.getDebtAssets() - silo1.getCollateralAssets();
+
             // even when overflow, we can deposit
             // approval is +2 because of rounding UP on convertToAssets and mint
             uint256 minted = _mintForBorrow(dust + 2, 1, makeAddr("user4"));
             assertEq(minted, dust, "minted assets");
 
             // this repay covers interest only
-            (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
-            // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            assertEq(daoAndDeployerRevenue, 1339771760383770109082728890833469271474593071104, "expected daoAndDeployerRevenue with 36 decimals");
-            _repay(daoAndDeployerRevenue / 1e18, borrower);
-
-            (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 36);
-
-            // we have dust because
+            _repay(toRepay, borrower);
+            assertEq(toRepay, 441711400819186749460738977491904652429383698047717714, "huge repay");
+            // we have dust because we minted
             assertEq(silo1.getLiquidity(), minted, "even with huge repay, we cover interest first");
         }
 
@@ -115,6 +112,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         emit log("_withdrawAndCheck user1");
         _withdrawAndCheck(makeAddr("user1"), 0, shares1);
 
+        emit log("_withdrawAndCheck user2");
         _withdrawAndCheck(makeAddr("user2"), 0, shares2 - 1);
 
         emit log("_withdrawAndCheck user3");
