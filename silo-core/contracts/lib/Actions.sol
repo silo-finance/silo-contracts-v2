@@ -507,11 +507,6 @@ library Actions {
         uint256 earnedFees;
         unchecked { earnedFees = _daoRevenue + _deployerRevenue; }
 
-        console.log("[transferFees] $.daoAndDeployerRevenue %s", $.daoAndDeployerRevenue);
-        console.log("[transferFees]       earnedFees %s", earnedFees);
-        console.log("[transferFees]      _daoRevenue %s", _daoRevenue);
-        console.log("[transferFees] _deployerRevenue %s", _deployerRevenue);
-        console.log("[transferFees] == %s", (_daoRevenue + _deployerRevenue) * _FEE_DECIMALS);
         // we will never underflow because:
         // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
         // and because we cast
