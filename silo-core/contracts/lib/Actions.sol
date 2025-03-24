@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "openzeppelin5/utils/Address.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
@@ -24,6 +25,7 @@ import {SiloStorageLib} from "./SiloStorageLib.sol";
 import {Views} from "./Views.sol";
 
 library Actions {
+    using Math for uint256;
     using Address for address;
     using SafeERC20 for IERC20;
     using Hook for uint256;
@@ -454,9 +456,7 @@ library Actions {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFeesDecimals = $.daoAndDeployerRevenue;
-        uint256 earnedFees = earnedFeesDecimals / _FEE_DECIMALS;
-
+        uint256 earnedFees = $.daoAndDeployerRevenue / _FEE_DECIMALS;
         require(earnedFees != 0, ISilo.EarnedZero());
 
         uint256 daoFee;
@@ -482,12 +482,10 @@ library Actions {
             // deployer was never setup or deployer NFT has been burned
             daoRevenue = earnedFees;
         } else {
-            // split fees proportionally
-            daoRevenue = earnedFeesDecimals * daoFee / _FEE_DECIMALS;
-
             unchecked {
+                // split fees proportionally
                 // fees are % in decimal point so safe to uncheck
-                daoRevenue = daoRevenue / (daoFee + deployerFee);
+                daoRevenue = earnedFees.mulDiv(daoFee, daoFee + deployerFee);
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }
@@ -509,6 +507,11 @@ library Actions {
         uint256 earnedFees;
         unchecked { earnedFees = _daoRevenue + _deployerRevenue; }
 
+        console.log("[transferFees] $.daoAndDeployerRevenue %s", $.daoAndDeployerRevenue);
+        console.log("[transferFees]       earnedFees %s", earnedFees);
+        console.log("[transferFees]      _daoRevenue %s", _daoRevenue);
+        console.log("[transferFees] _deployerRevenue %s", _deployerRevenue);
+        console.log("[transferFees] == %s", (_daoRevenue + _deployerRevenue) * _FEE_DECIMALS);
         // we will never underflow because:
         // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
         // and because we cast
