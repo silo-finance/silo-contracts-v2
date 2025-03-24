@@ -141,17 +141,6 @@ library Views {
         totalProtectedAssets = $.totalAssets[ISilo.AssetType.Protected];
     }
 
-    function getCollateralAndDebtAssets()
-        internal
-        view
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
-    {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-
-        totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
-        totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
-    }
-
     function getCollateralAndDebtTotalsWithInterestFaction()
         internal
         view
