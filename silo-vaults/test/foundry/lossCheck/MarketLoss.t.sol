@@ -564,6 +564,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
                 emit log_named_uint("asset balance idleMarket", IERC20(idleMarket.asset()).balanceOf(address(idleMarket)));
             }
 
+            emit log_named_uint("attackerWithdraw", attackerWithdraw);
+            emit log_named_uint("attackerTotalSpend", attackerTotalSpend);
+
             assertLe(attackerWithdraw, attackerTotalSpend, "must be not profitable");
 
             uint256 attackerTotalLoss = attackerTotalSpend - attackerWithdraw;
@@ -586,6 +589,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             emit log_named_uint("offset", _idleVaultOffset);
             emit log_named_decimal_uint("SUPPLIER deposit", _supplierDeposit, 6);
             emit log_named_decimal_uint("SUPPLIER withdraw", supplierWithdraw, 6);
+            emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
             emit log_named_decimal_uint("    SUPPLIER loss", supplierLoss, 6);
             emit log_named_decimal_uint("    attacker loss", attackerTotalLoss, 6);
             emit log_named_decimal_uint("    attacker spend", attackerTotalSpend, 6);

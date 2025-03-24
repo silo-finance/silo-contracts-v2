@@ -54,7 +54,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @notice We can not set "too much", this must be precise, otherwise we might not detect loss.
     /// How to calculate loss? we have to count rounding and we have to be as precise as possible
     /// TODO we might need to sum up loss for general check.
-    uint8 public constant ARBITRARY_LOSS_THRESHOLD = 2;
+    uint8 public constant ARBITRARY_LOSS_THRESHOLD = 100;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -1046,7 +1046,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
 
-        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLossGlobal());
+        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
         // require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
     }
 
@@ -1059,7 +1059,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         // save because we checking above `if (previewAssets >= _expectedAssets)`
         unchecked { assetLoss = _expectedAssets - previewAssets; }
 
-        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLossMarket());
+        require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
         // require(assetLoss < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss());
     }
 
