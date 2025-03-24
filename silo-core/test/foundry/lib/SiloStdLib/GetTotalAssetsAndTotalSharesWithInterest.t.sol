@@ -92,21 +92,11 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         COLLATERAL_SHARE_TOKEN.totalSupplyMock(0);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
 
-        uint160 daoAndDeployerRevenue;
-        uint32 interestRateTimestamp;
-        uint64 interestFraction;
-        uint256 protectedAssets;
-        uint256 collateralAssets;
-        uint256 debtAssets;
-
-        SILO.getSiloStorageMock(
-            daoAndDeployerRevenue,
-            interestRateTimestamp,
-            interestFraction,
-            protectedAssets,
-            collateralAssets,
-            debtAssets
-        );
+        SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+            _collateralAssets: 0,
+            _debtAssets: 0,
+            _interestFraction: 0
+        });
 
         (totalAssets, totalShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(_config(), ISilo.AssetType.Collateral);
@@ -140,21 +130,11 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         assertEq(totalAssets, 0);
         assertEq(totalShares, _totalSupply);
 
-        uint160 daoAndDeployerRevenue;
-        uint32 interestRateTimestamp;
-        uint64 interestFraction;
-        uint256 protectedAssets;
-        uint256 collateralAssets;
-        uint256 debtAssets;
-
-        SILO.getSiloStorageMock(
-            daoAndDeployerRevenue,
-            interestRateTimestamp,
-            interestFraction,
-            protectedAssets,
-            collateralAssets,
-            debtAssets
-        );
+        SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+            _collateralAssets: 0,
+            _debtAssets: 0,
+            _interestFraction: 0
+        });
 
         COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
@@ -207,21 +187,12 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         uint256 totalAssets;
         uint256 totalShares;
 
-        uint160 daoAndDeployerRevenue;
-        uint32 interestRateTimestamp;
-        uint64 interestFraction;
-        uint256 protectedAssets;
-        uint256 collateralAssets;
-
         for (uint256 index = 0; index < debtTestCasesIndex; index++) {
-            SILO.getSiloStorageMock(
-                daoAndDeployerRevenue,
-                interestRateTimestamp,
-                interestFraction,
-                protectedAssets,
-                collateralAssets,
-                debtTestCases[index].debtAssets
-            );
+            SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+                _collateralAssets: 0,
+                _debtAssets: debtTestCases[index].debtAssets,
+                _interestFraction: 0
+            });
 
             DEBT_SHARE_TOKEN.totalSupplyMock(_totalSupply);
             INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, debtTestCases[index].rcomp);
@@ -306,20 +277,13 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         uint256 totalAssets;
         uint256 totalShares;
 
-        uint160 daoAndDeployerRevenue;
-        uint32 interestRateTimestamp;
-        uint64 interestFraction;
-        uint256 protectedAssets;
-
         for (uint256 index = 0; index < collateralTestCasesIndex; index++) {
-            SILO.getSiloStorageMock(
-                daoAndDeployerRevenue,
-                interestRateTimestamp,
-                interestFraction,
-                protectedAssets,
-                collateralTestCases[index].collateralAssets,
-                collateralTestCases[index].debtAssets
-            );
+            SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+                _collateralAssets: collateralTestCases[index].collateralAssets,
+                _debtAssets: collateralTestCases[index].debtAssets,
+                _interestFraction: 0
+            });
+
             COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);
             INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, collateralTestCases[index].rcomp);
             daoFee = collateralTestCases[index].daoFee;

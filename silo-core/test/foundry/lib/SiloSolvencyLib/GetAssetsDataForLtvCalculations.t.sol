@@ -140,40 +140,46 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             );
         }
 
-        TokenMock debtShareTokenMock = new TokenMock(debtShareToken);
+        { // too deep
+            TokenMock debtShareTokenMock = new TokenMock(debtShareToken);
 
-        if (scenario.input.debtConfig.cachedBalance) {
-            cachedShareDebtBalance = scenario.input.debtConfig.debtShareBalanceOf;
-            debtShareTokenMock.totalSupplyMock(scenario.input.debtConfig.debtShareTotalSupply);
-        } else {
-            debtShareTokenMock.balanceOfAndTotalSupplyMock(
-                borrowerAddr,
-                scenario.input.debtConfig.debtShareBalanceOf,
-                scenario.input.debtConfig.debtShareTotalSupply
-            );
+            if (scenario.input.debtConfig.cachedBalance) {
+                cachedShareDebtBalance = scenario.input.debtConfig.debtShareBalanceOf;
+                debtShareTokenMock.totalSupplyMock(scenario.input.debtConfig.debtShareTotalSupply);
+            } else {
+                debtShareTokenMock.balanceOfAndTotalSupplyMock(
+                    borrowerAddr,
+                    scenario.input.debtConfig.debtShareBalanceOf,
+                    scenario.input.debtConfig.debtShareTotalSupply
+                );
+            }
         }
 
-        SiloMock siloMock0 = new SiloMock(silo0);
+        { // too deep
+            if (scenario.input.accrueInMemory) {
+                new SiloMock(silo0).getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+                    _collateralAssets: scenario.input.collateralConfig.totalCollateralAssets,
+                    _debtAssets: scenario.input.collateralConfig.totalDebtAssets,
+                    _interestFraction: 0
+                });
+            }
 
-        if (scenario.input.accrueInMemory) {
-            siloMock0.getCollateralAndDebtAssetsMock(
+            new SiloMock(silo0).getCollateralAndProtectedAssetsMock(
                 scenario.input.collateralConfig.totalCollateralAssets,
-                scenario.input.collateralConfig.totalDebtAssets
+                scenario.input.collateralConfig.totalProtectedAssets
             );
-        }
 
-        siloMock0.getCollateralAndProtectedAssetsMock(
-            scenario.input.collateralConfig.totalCollateralAssets,
-            scenario.input.collateralConfig.totalProtectedAssets
-        );
+            new SiloMock(silo1).getCollateralAndDebtTotalsWithInterestFactionStorageMock({
+                _collateralAssets: 0,
+                _debtAssets: scenario.input.debtConfig.totalDebtAssets,
+                _interestFraction: 0
+            });
 
-        SiloMock siloMock1 = new SiloMock(silo1);
-        siloMock1.totalMock(ISilo.AssetType.Debt, scenario.input.debtConfig.totalDebtAssets);
-
-        if (scenario.input.accrueInMemory) {
-            interestRateModelMock.getCompoundInterestRateMock(
-                silo1, block.timestamp, scenario.input.debtConfig.compoundInterestRate
-            );
+            if (scenario.input.accrueInMemory) {
+                interestRateModelMock.getCompoundInterestRateMock(
+                    silo1, block.timestamp, scenario.input.debtConfig.compoundInterestRate
+                );
+            }
         }
     }
 

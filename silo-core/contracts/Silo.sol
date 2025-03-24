@@ -111,9 +111,8 @@ contract Silo is ISilo, ShareCollateralToken {
         view
         virtual
         returns (
-            uint160 daoAndDeployerRevenue,
-            uint32 interestRateTimestamp,
-            uint64 interestFraction,
+            uint192 daoAndDeployerRevenue,
+            uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
@@ -143,13 +142,15 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function getCollateralAndDebtTotalsStorage()
+    function getCollateralAndDebtTotalsWithInterestFactionStorage()
         external
         view
         virtual
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction)
     {
-        (totalCollateralAssets, totalDebtAssets) = Views.getCollateralAndDebtAssets();
+        (
+            totalCollateralAssets, totalDebtAssets, interestFraction
+        ) = Views.getCollateralAndDebtTotalsWithInterestFaction();
     }
 
     // ERC4626

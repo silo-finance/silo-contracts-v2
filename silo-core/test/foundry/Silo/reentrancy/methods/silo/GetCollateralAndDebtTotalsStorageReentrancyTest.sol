@@ -19,7 +19,7 @@ contract GetCollateralAndDebtTotalsStorageReentrancyTest is MethodReentrancyTest
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().getCollateralAndDebtTotalsStorage();
-        TestStateLib.silo1().getCollateralAndDebtTotalsStorage();
+        TestStateLib.silo0().getCollateralAndDebtTotalsWithInterestFactionStorage();
+        TestStateLib.silo1().getCollateralAndDebtTotalsWithInterestFactionStorage();
     }
 }

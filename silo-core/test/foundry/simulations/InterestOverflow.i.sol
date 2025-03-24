@@ -55,7 +55,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         for (uint i;; i++) {
             // if we apply interest often, we will generate more interest in shorter time
             silo1.accrueInterest();
-            (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
             emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
 
@@ -92,13 +92,13 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(minted, dust, "minted assets");
 
             // this repay covers interest only
-            (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue before repay", daoAndDeployerRevenue, 36);
             // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             assertEq(daoAndDeployerRevenue, 1175280722581386981660173956027921342811554185216, "expected daoAndDeployerRevenue with 36 decimals");
             _repay(daoAndDeployerRevenue / 1e18, borrower);
 
-            (daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 36);
 
             // we have dust because
@@ -125,7 +125,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         {
             (address collateralShare,, address debtShare) = ISiloConfig(silo1.config()).getShareTokens(address(silo1));
-            (uint160 daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             assertGe(token1.balanceOf(address(silo1)), daoAndDeployerRevenue, "got balance for fees");
             silo1.withdrawFees();
 

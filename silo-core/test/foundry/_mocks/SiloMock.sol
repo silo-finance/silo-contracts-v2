@@ -12,9 +12,13 @@ contract SiloMock is Test {
         ADDRESS = _silo == address(0) ? makeAddr("SiloMockAddr") : _silo;
     }
 
-    function getCollateralAndDebtAssetsMock(uint256 _totalCollateralAssets, uint256 _totalDebtAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsStorage.selector);
-        vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets));
+    function getCollateralAndDebtAssetsMock(
+        uint256 _totalCollateralAssets,
+        uint256 _totalDebtAssets,
+        uint64 _interestFraction
+    ) external {
+        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsWithInterestFactionStorage.selector);
+        vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets, _interestFraction));
         vm.expectCall(ADDRESS, data);
     }
 
@@ -55,27 +59,16 @@ contract SiloMock is Test {
         vm.expectCall(ADDRESS, data);
     }
 
-    function getSiloStorageMock(
-        uint160 _daoAndDeployerRevenue,
-        uint32 _interestRateTimestamp,
-        uint64 _interestFraction,
-        uint256 _protectedAssets,
+    function getCollateralAndDebtTotalsWithInterestFactionStorageMock(
         uint256 _collateralAssets,
-        uint256 _debtAssets
+        uint256 _debtAssets,
+        uint64 _interestFraction
     )
         external
     {
         bytes memory data = abi.encodeWithSelector(ISilo.getSiloStorage.selector);
 
-        vm.mockCall(ADDRESS, data, abi.encode(
-        _daoAndDeployerRevenue,
-            _interestRateTimestamp,
-            _interestFraction,
-            _protectedAssets,
-            _collateralAssets,
-            _debtAssets
-        ));
-
+        vm.mockCall(ADDRESS, data, abi.encode(_collateralAssets, _debtAssets, _interestFraction));
         vm.expectCall(ADDRESS, data);
     }
 

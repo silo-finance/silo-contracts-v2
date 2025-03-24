@@ -61,8 +61,6 @@ contract ManualLiquidationHelper2TokensSTokensTest is ManualLiquidationHelperCom
         emit log_named_decimal_uint("max repay", silo1.maxRepay(BORROWER), 18);
         assertTrue(silo0.isSolvent(BORROWER), "borrower must be solvent after manual liquidation");
 
-        uint256 withdrawCollateral = token0.balanceOf(_tokenReceiver());
-
         assertEq(token0.balanceOf(_tokenReceiver()), 0, "token0.balanceOf");
         assertEq(token1.balanceOf(_tokenReceiver()), 0, "token1.balanceOf");
 

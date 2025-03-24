@@ -399,7 +399,7 @@ library Actions {
         // this check also verify if token is correct
         require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
-        // cast safe, because we checked `fee > type(uint160).max`
+        // cast safe, because we checked `fee36 <= type(uint160).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint160(fee36);
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);

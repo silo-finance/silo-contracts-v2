@@ -56,7 +56,9 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 1);
         uint256 interest = silo1.accrueInterest();
 
-        (uint160 daoAndDeployerRevenue,, uint64 interestFraction,,,) = silo1.getSiloStorage();
+        (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
         emit log_named_uint("interest", interest);
         emit log_named_uint("interestFraction", interestFraction);
         emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
@@ -86,7 +88,9 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 1);
         uint256 interest = silo1.accrueInterest();
 
-        (uint160 daoAndDeployerRevenue,, uint64 interestFraction,,,) = silo1.getSiloStorage();
+        (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
         emit log_named_uint("interest", interest);
         emit log_named_uint("interestFraction", interestFraction);
         emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
@@ -111,7 +115,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         _setUp(1, _decimals);
 
-        uint160 prevDaoAndDeployerRevenue;
+        uint192 prevDaoAndDeployerRevenue;
         uint64 prevInterestFraction;
 
         for (uint t = 1; t < 365 days; t++) {
@@ -123,7 +127,9 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
                 break;
             }
 
-            (uint160 daoAndDeployerRevenue,, uint64 interestFraction,,,) = silo1.getSiloStorage();
+            (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
             emit log_named_uint(string.concat("#", Strings.toString(t), " interest"), interest);
             emit log_named_uint(string.concat("#", Strings.toString(t), " interestFraction"), interestFraction);
             emit log_named_uint(string.concat("#", Strings.toString(t), " daoAndDeployerRevenue"), daoAndDeployerRevenue);
@@ -155,7 +161,9 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         uint256 interest = silo1.accrueInterest();
 
-        (uint160 daoAndDeployerRevenue,, uint64 interestFraction,,,) = silo1.getSiloStorage();
+        (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
         emit log_named_uint("#final interest", interest);
         emit log_named_uint("#final interestFraction", interestFraction);
         emit log_named_uint("#final daoAndDeployerRevenue", daoAndDeployerRevenue);
@@ -172,7 +180,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             vm.warp(block.timestamp + 1);
             silo1.accrueInterest();
 
-            (prevDaoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+            (prevDaoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
 
             vm.expectEmit(address(silo1));
             emit ISilo.WithdrawnFees(1e18, 1e18, false);
@@ -186,7 +194,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             }
         }
 
-        (daoAndDeployerRevenue,,,,,) = silo1.getSiloStorage();
+        (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
         assertLt(daoAndDeployerRevenue, 1e18, "[daoAndDeployerRevenue] only fraction left < 1e18");
 
         //

@@ -26,13 +26,10 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
         address silo = SILO.ADDRESS();
         address interestRateModel = INTEREST_RATE_MODEL.ADDRESS();
 
-        SILO.getSiloStorageMock({
-            _daoAndDeployerRevenue: 0,
-            _interestRateTimestamp: 0,
-            _interestFraction: 0,
-            _protectedAssets: 0,
+        SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
-            _debtAssets: 0
+            _debtAssets: 0,
+            _interestFraction: 0
         });
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
@@ -43,13 +40,10 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
 
         assertEq(SiloStdLib.getTotalDebtAssetsWithInterest(silo, interestRateModel), 0);
 
-        SILO.getSiloStorageMock({
-            _daoAndDeployerRevenue: 0,
-            _interestRateTimestamp: 0,
-            _interestFraction: 0,
-            _protectedAssets: 0,
+        SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
-            _debtAssets: 1e18
+            _debtAssets: 1e18,
+            _interestFraction: 0
         });
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);

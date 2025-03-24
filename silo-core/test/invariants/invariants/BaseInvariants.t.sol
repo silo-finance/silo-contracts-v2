@@ -27,7 +27,7 @@ abstract contract BaseInvariants is HandlerAggregator {
     }
 
     function assert_BASE_INVARIANT_C(address silo) internal {
-        (uint192 daoAndDeployerFees, uint32 interestRateTimestamp,,,,) = ISilo(silo).getSiloStorage();
+        (uint192 daoAndDeployerFees, uint64 interestRateTimestamp,,,) = ISilo(silo).getSiloStorage();
         if (interestRateTimestamp == 0) {
             assertEq(daoAndDeployerFees, 0, BASE_INVARIANT_C);
         }

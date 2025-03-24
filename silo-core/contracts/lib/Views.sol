@@ -90,13 +90,14 @@ library Views {
         );
     }
 
+    /// @return daoAndDeployerRevenue origin value is uint160
+    /// @return interestRateTimestamp origin value is uint32
     function getSiloStorage()
         internal
         view
         returns (
-            uint160 daoAndDeployerRevenue,
-            uint32 interestRateTimestamp,
-            uint64 interestFraction,
+            uint192 daoAndDeployerRevenue,
+            uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
@@ -106,7 +107,6 @@ library Views {
 
         daoAndDeployerRevenue = $.daoAndDeployerRevenue;
         interestRateTimestamp = $.interestRateTimestamp;
-        interestFraction = $.interestFraction;
         protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
         collateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         debtAssets = $.totalAssets[ISilo.AssetType.Debt];
@@ -141,15 +141,16 @@ library Views {
         totalProtectedAssets = $.totalAssets[ISilo.AssetType.Protected];
     }
 
-    function getCollateralAndDebtAssets()
+    function getCollateralAndDebtTotalsWithInterestFaction()
         internal
         view
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction)
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
+        interestFraction = $.interestFraction;
     }
 
     function copySiloConfig(

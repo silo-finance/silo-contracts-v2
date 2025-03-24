@@ -238,9 +238,8 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         external
         view
         returns (
-            uint160 daoAndDeployerRevenue,
-            uint32 interestRateTimestamp,
-            uint64 interestFraction,
+            uint192 daoAndDeployerRevenue,
+            uint64 interestRateTimestamp,
             uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
@@ -265,10 +264,11 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @notice Retrieves the total amounts of collateral and debt assets
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
-    function getCollateralAndDebtTotalsStorage()
+    /// @return interestFraction current uncounted fraction of interest (in 36 decimals points)
+    function getCollateralAndDebtTotalsWithInterestFactionStorage()
         external
         view
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets);
+        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction);
 
     /// @notice Implements IERC4626.convertToShares for each asset type
     function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);
