@@ -5,6 +5,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
+import {ISiloBackwardsCompatible} from "../interfaces/ISiloBackwardsCompatible.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
@@ -111,9 +112,20 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        (
-            uint256 collateralAssets, uint256 debtAssets, uint64 interestFraction
-        ) = ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage();
+        uint256 collateralAssets;
+        uint256 debtAssets;
+        uint64 interestFraction;
+
+        try ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage()
+            returns (uint256 _collateralAssets, uint256 _debtAssets, uint64 _interestFraction)
+        {
+            collateralAssets = _collateralAssets;
+            debtAssets = _debtAssets;
+            interestFraction = _interestFraction;
+        } catch {
+            // this is to support already deployed silos
+            (collateralAssets, debtAssets) = ISiloBackwardsCompatible(_silo).getCollateralAndDebtTotalsStorage();
+        }
 
         (totalCollateralAssetsWithInterest,,,,) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: collateralAssets,
@@ -156,9 +168,18 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        (
-            , uint256 debtAssets, uint64 interestFraction
-        ) = ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage();
+        uint256 debtAssets;
+        uint64 interestFraction;
+
+        try ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage()
+            returns (uint256, uint256 _debtAssets, uint64 _interestFraction)
+        {
+            debtAssets = _debtAssets;
+            interestFraction = _interestFraction;
+        } catch {
+            // this is to support already deployed silos
+            (, debtAssets) = ISiloBackwardsCompatible(_silo).getCollateralAndDebtTotalsStorage();
+        }
 
         (
             totalDebtAssetsWithInterest,,
