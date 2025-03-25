@@ -14,7 +14,7 @@ methods {
     function owner() external returns(address) envfree;
     function curator() external returns(address) envfree;
     function isAllocator(address) external returns(bool) envfree;
-    function skimRecipient() external returns(address) envfree;
+    //function skimRecipient() external returns(address) envfree;
 
     // HARNESS
     function pendingTimelock_() external returns(SiloVaultHarness.PendingUint192) envfree;

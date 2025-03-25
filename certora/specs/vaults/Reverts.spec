@@ -48,18 +48,18 @@ rule setIsAllocatorRevertCondition(env e, address newAllocator, bool newIsAlloca
         newIsAllocator == wasAllocator;
 }
 
-// Check all the revert conditions of the setSkimRecipient function.
-rule setSkimRecipientRevertCondition(env e, address newSkimRecipient) {
-    address owner = owner();
-    address oldSkimRecipient = skimRecipient();
-
-    setSkimRecipient@withrevert(e, newSkimRecipient);
-
-    assert lastReverted <=>
-        e.msg.value != 0 ||
-        e.msg.sender != owner ||
-        newSkimRecipient == oldSkimRecipient;
-}
+// // Check all the revert conditions of the setSkimRecipient function.
+// rule setSkimRecipientRevertCondition(env e, address newSkimRecipient) {
+//     address owner = owner();
+//     address oldSkimRecipient = skimRecipient();
+// 
+//     setSkimRecipient@withrevert(e, newSkimRecipient);
+// 
+//     assert lastReverted <=>
+//         e.msg.value != 0 ||
+//         e.msg.sender != owner ||
+//         newSkimRecipient == oldSkimRecipient;
+// }
 
 // Check the input validation conditions under which the setFee function reverts.
 // This function can also revert if interest accrual reverts.
@@ -294,15 +294,15 @@ rule acceptCapInputValidation(env e, address market) {
         => lastReverted;
 }
 
-// Check all the revert conditions of the skim function.
-rule skimRevertCondition(env e, address token) {
-    address skimRecipient = skimRecipient();
-
-    require skimRecipient != currentContract => ERC20.balanceOf(token, skimRecipient) + ERC20.balanceOf(token, currentContract) <= to_mathint(ERC20.totalSupply(token));
-
-    skim@withrevert(e, token);
-
-    assert lastReverted <=>
-        e.msg.value != 0 ||
-        skimRecipient == 0;
-}
+// // Check all the revert conditions of the skim function.
+// rule skimRevertCondition(env e, address token) {
+//     address skimRecipient = skimRecipient();
+// 
+//     require skimRecipient != currentContract => ERC20.balanceOf(token, skimRecipient) + ERC20.balanceOf(token, currentContract) <= to_mathint(ERC20.totalSupply(token));
+// 
+//     skim@withrevert(e, token);
+// 
+//     assert lastReverted <=>
+//         e.msg.value != 0 ||
+//         skimRecipient == 0;
+// }

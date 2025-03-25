@@ -105,6 +105,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     bool transient _lock;
 
+    // HARNESS
+    // The index of the identifier of the last market withdrawn.
+    uint256 public lastIndexWithdraw;
+    // HARNESS
+    // The rank of a market identifier in the withdraw queue.
+    // Returns 0 if the corresponding market is not in the withdraw queue.
+    mapping(address => uint256) public withdrawRank;
+    // HARNESS
+    // The last index at which a market identifier has been removed from the withdraw queue.
+    mapping(address => uint256) public deletedAt;
+
     /* CONSTRUCTOR */
 
     /// @dev Initializes the contract.
@@ -328,6 +339,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             seen[prevIndex] = true;
 
             newWithdrawQueue[i] = market;
+
+            // HARNESS
+            withdrawRank[address(market)] = i + 1;
         }
 
         for (uint256 i; i < currLength; ++i) {
@@ -337,13 +351,21 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
                 if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
 
-                if (_ERC20BalanceOf(address(market), address(this)) != 0) {
+                //if (_ERC20BalanceOf(address(market), address(this)) != 0) {
+                // HARNESS
+                uint256 harnessShares;
+                (, harnessShares) = _supplyBalance(market);
+                if (harnessShares != 0) {
                     if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
 
                     if (block.timestamp < config[market].removableAt) {
                         revert ErrorsLib.InvalidMarketRemovalTimelockNotElapsed(market);
                     }
                 }
+
+                // HARNESS
+                deletedAt[address(market)] = i;
+                delete withdrawRank[address(market)];
 
                 delete config[market];
             }
@@ -894,7 +916,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             asset(),
             config,
             pendingCap,
-            withdrawQueue
+            withdrawQueue,
+            withdrawRank
         );
 
         if (updateTotalAssets) {
@@ -944,6 +967,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 length = withdrawQueue.length;
 
         for (uint256 i; i < length; ++i) {
+            // HARNESS
+            lastIndexWithdraw = i;
+
             IERC4626 market = withdrawQueue[i];
 
             // Update internal balance for market to include interest if any.

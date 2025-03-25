@@ -32,7 +32,8 @@ library SiloVaultActionsLib {
         address _asset,
         mapping(IERC4626 => MarketConfig) storage _config,
         mapping(IERC4626 => PendingUint192) storage _pendingCap,
-        IERC4626[] storage _withdrawQueue
+        IERC4626[] storage _withdrawQueue,
+        mapping(address => uint256) storage _withdrawRank
     ) external returns (bool updateTotalAssets) {
         MarketConfig storage marketConfig = _config[_market];
         uint256 approveValue;
@@ -40,6 +41,9 @@ library SiloVaultActionsLib {
         if (_supplyCap > 0) {
             if (!marketConfig.enabled) {
                 _withdrawQueue.push(_market);
+
+                // HARNESS
+                _withdrawRank[address(_market)] = _withdrawQueue.length + 1;
 
                 if (_withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
 
