@@ -134,14 +134,14 @@ library SiloLendingLib {
 
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(
-            totalCollateralAssets,
-            totalDebtAssets,
-            rcomp,
-            _daoFee,
-            _deployerFee,
-            integral
-        );
+        ) = SiloMathLib.getCollateralAmountsWithInterest({
+            _collateralAssets: totalCollateralAssets,
+            _debtAssets: totalDebtAssets,
+            _rcomp: rcomp,
+            _daoFee: _daoFee,
+            _deployerFee: _deployerFee,
+            _integral: integral
+        });
 
         // update remaining contract state
         $.interestRateTimestamp = uint64(block.timestamp);

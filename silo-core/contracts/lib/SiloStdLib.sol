@@ -118,9 +118,14 @@ library SiloStdLib {
             debtAssets, rcomp, SiloStorageLib.getSiloStorage().interestFraction
         );
 
-        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee, integral
-        );
+        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest({
+            _collateralAssets: collateralAssets,
+            _debtAssets: debtAssets,
+            _rcomp: rcomp,
+            _daoFee: _daoFee,
+            _deployerFee: _deployerFee,
+            _integral: integral
+        });
     }
 
     /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
