@@ -179,7 +179,6 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function protocolFees(ISilo _silo) external view returns (uint256 daoAndDeployerRevenue) {
         (daoAndDeployerRevenue,,,,) = _silo.getSiloStorage();
-        daoAndDeployerRevenue /= _PRECISION_DECIMALS;
     }
 
     /// @inheritdoc ISiloLens
