@@ -432,38 +432,13 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
         siloConfig.turnOnReentrancyProtection();
 
-        address asset;
-        address daoFeeReceiver;
-        address deployerFeeReceiver;
-
-        (asset, daoRevenue, deployerRevenue, daoFeeReceiver, deployerFeeReceiver) = calculateFees(_silo);
-
-        redirectedDeployerFees = transferFees(daoFeeReceiver, deployerFeeReceiver, asset, daoRevenue, deployerRevenue);
-
-        siloConfig.turnOffReentrancyProtection();
-    }
-
-    function calculateFees(ISilo _silo)
-        internal
-        view
-        returns (
-            address asset,
-            uint256 daoRevenue,
-            uint256 deployerRevenue,
-            address daoFeeReceiver,
-            address deployerFeeReceiver
-        )
-    {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 earnedFees = $.daoAndDeployerRevenue / _FEE_DECIMALS;
         require(earnedFees != 0, ISilo.EarnedZero());
 
-        uint256 daoFee;
-        uint256 deployerFee;
-
         (
-            daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee, asset
+            address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee, address asset
         ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
         uint256 availableLiquidity;
@@ -490,44 +465,33 @@ library Actions {
                 deployerRevenue = earnedFees - daoRevenue;
             }
         }
-    }
-
-    function transferFees(
-        address _daoFeeReceiver,
-        address _deployerFeeReceiver,
-        address _asset,
-        uint256 _daoRevenue,
-        uint256 _deployerRevenue
-    )
-        internal
-        returns (bool redirectedDeployerFees)
-    {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-
-        uint256 earnedFees;
-        unchecked { earnedFees = _daoRevenue + _deployerRevenue; }
 
         // we will never underflow because:
         // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
         // and because we cast
-        unchecked { $.daoAndDeployerRevenue -= uint160((_daoRevenue + _deployerRevenue) * _FEE_DECIMALS); }
+        unchecked { $.daoAndDeployerRevenue -= uint160((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
 
-        if (_deployerFeeReceiver == address(0)) {
+        uint256 daoTransferAmount = daoRevenue;
+
+        if (deployerFeeReceiver == address(0)) {
             require(earnedFees != 0, ISilo.EarnedZero());
-            IERC20(_asset).safeTransfer(_daoFeeReceiver, earnedFees);
+
+            IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
-            require(_daoRevenue != 0, ISilo.DaoEarnedZero());
-            require(_deployerRevenue != 0, ISilo.DeployerEarnedZero());
+            require(daoRevenue != 0, ISilo.DaoEarnedZero());
+            require(deployerRevenue != 0, ISilo.DeployerEarnedZero());
 
             // trying to transfer to deployer (it might fail)
-            if (!_safeTransferInternal(IERC20(_asset), _deployerFeeReceiver, _deployerRevenue)) {
+            if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
                 // if transfer to deployer fails, send their portion to the DAO instead
-                unchecked { _daoRevenue += _deployerRevenue; }
+                daoTransferAmount = earnedFees;
                 redirectedDeployerFees = true;
             }
         }
 
-        IERC20(_asset).safeTransfer(_daoFeeReceiver, _daoRevenue);
+        IERC20(asset).safeTransfer(daoFeeReceiver, daoTransferAmount);
+
+        siloConfig.turnOffReentrancyProtection();
     }
 
     /// @notice Update hooks configuration for Silo
