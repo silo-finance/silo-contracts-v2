@@ -12,12 +12,16 @@ import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
 // forge test -vv --mc MaxLiquidationTest
 contract MaxLiquidationTest is Test, MaxRepayRawMath {
     uint256 internal constant _DECIMALS_POINTS = 1e18;
-    uint256 internal constant _LT = 0.85e18;
+    uint256 internal _LT = 0.85e18;
+
+    function setUp() public {
+        _LT = 0.85e18;
+    }
 
     /*
     forge test -vv --mt test_maxLiquidation_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 5000
+    /// forge-config: core_test.fuzz.runs = 5000
     function test_maxLiquidation_fuzz(
         uint128 _sumOfCollateralAssets,
         uint128 _sumOfCollateralValue,
@@ -201,6 +205,32 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         );
     }
 
+    /*
+    FOUNDRY_PROFILE=core-test  forge test -vv --mt test_maxLiquidation_case5
+    */
+    function test_maxLiquidation_case5() public {
+        _LT = 0.95e18;
+        uint128 sumOfCollateralAssets = 1_000_000e18;
+        uint128 sumOfCollateralValue = 1_000_000e18;
+        uint128 borrowerDebtAssets = 950_100e18;
+        uint64 liquidationFee = 0.035e18;
+        uint64 liquidationTargetLtv = 0.94e18;
+
+        (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) = _test_maxLiquidation(
+            sumOfCollateralAssets, sumOfCollateralValue, borrowerDebtAssets, liquidationFee, liquidationTargetLtv
+        );
+
+        assertEq(collateralToLiquidate, 385738_007380073800738004, "collateralToLiquidate");
+        assertEq(debtToRepay, 372693_726937269372693726, "debtToRepay");
+        assertEq(collateralToLiquidate - debtToRepay, 13044_280442804428044278, "profit");
+        assertEq(ltvAfter, 93_9999999999999999, "ltvAfter");
+        assertEq(
+            ltvAfter,
+            (borrowerDebtAssets - debtToRepay) * _DECIMALS_POINTS / (sumOfCollateralValue - collateralToLiquidate),
+            "ltvAfter"
+        );
+    }
+
     function _test_maxLiquidation(
         uint128 _sumOfCollateralAssets,
         uint128 _sumOfCollateralValue,
@@ -208,21 +238,28 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint64 _liquidationFee,
         uint64 _liquidationTargetLtv
     ) internal returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) {
+        emit log("vm.assume(_liquidationFee < 0.40e18)");
         vm.assume(_liquidationFee < 0.40e18); // some reasonable fee
+        emit log("vm.assume(_sumOfCollateralAssets > 0)");
         vm.assume(_sumOfCollateralAssets > 0);
         // for tiny assets we doing full liquidation because it is to small to get down to expected minimal LTV
+        emit log("vm.assume(_sumOfCollateralValue > 1)");
         vm.assume(_sumOfCollateralValue > 1);
+        emit log("vm.assume(_borrowerDebtAssets > 1)");
         vm.assume(_borrowerDebtAssets > 1);
 
         // prevent overflow revert in test
-        vm.assume(uint256(_borrowerDebtAssets) * _liquidationFee < type(uint128).max);
+        emit log("vm.assume(uint256(_borrowerDebtAssets) * _liquidationFee < type(uint128).max)");
+        vm.assume(uint256(_borrowerDebtAssets) * _liquidationFee < type(uint168).max);
 
+        emit log("vm.assume(_liquidationTargetLtv < _LT)");
         vm.assume(_liquidationTargetLtv < _LT);
 
         uint256 borrowerDebtValue = _borrowerDebtAssets; // assuming quote is debt token, so value is 1:1
         uint256 ltvBefore = borrowerDebtValue * 1e18 / _sumOfCollateralValue;
 
         // if ltv will be less, then this math should not be executed in contract
+        emit log("vm.assume(ltvBefore >= _LT)");
         vm.assume(ltvBefore >= _LT);
 
         (

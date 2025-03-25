@@ -20,5 +20,9 @@ library AddrKey {
     string constant public stS = "stS";
     string constant public ODOS_ROUTER = "ODOS_ROUTER";
     string constant public DAO = "DAO";
+    string constant public GROWTH_MULTISIG = "GROWTH_MULTISIG";
+    string constant public DEV_WALLET = "DEV_WALLET";
     string constant public scUSD = "scUSD";
+    string constant public EGGS = "EGGS";
+    string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
 }

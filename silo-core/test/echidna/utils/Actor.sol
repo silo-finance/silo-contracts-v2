@@ -211,7 +211,6 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         uint256 /* _tokensReceived */,
         uint256 /* _sharesBurned */
     ) internal pure {
-        // TODO
     }
 
     function _accountForClosedPosition(

@@ -98,7 +98,7 @@ echo "oracles: ChainlinkV3OracleFactory deployment done."
 #     --sender 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 \
 #     --ffi --broadcast --skip-simulation --rpc-url $SILO_DEPLOYMENT_NODE
 
-FOUNDRY_PROFILE=core CONFIG=FULL_CONFIG_TEST \
+FOUNDRY_PROFILE=core CONFIG=Silo_FULL_CONFIG_TEST \
     forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
     --sender 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 \
     --ffi --broadcast --skip-simulation --rpc-url $SILO_DEPLOYMENT_NODE

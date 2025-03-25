@@ -19,7 +19,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_sTokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_dust_1token_sTokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_1token(_collateral, _RECEIVE_STOKENS);
     }
@@ -27,7 +27,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_1token_tokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_dust_1token_tokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_1token(_collateral, !_RECEIVE_STOKENS);
     }
@@ -54,7 +54,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_sTokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_dust_2tokens_sTokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_2tokens(_collateral, _RECEIVE_STOKENS);
     }
@@ -62,7 +62,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_tokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_dust_2tokens_tokens_fuzz(uint8 _collateral) public {
         _maxLiquidation_dust_2tokens(_collateral, !_RECEIVE_STOKENS);
     }

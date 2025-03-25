@@ -15,7 +15,7 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 */
 contract BorrowNotPossibleTest is SiloLittleHelper, Test {
     function setUp() public {
-        _setUpLocalFixture(SiloConfigsNames.LOCAL_NOT_BORROWABLE);
+        _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_NOT_BORROWABLE);
 
         ISiloConfig.ConfigData memory cfg0 = silo0.config().getConfig(address(silo0));
         ISiloConfig.ConfigData memory cfg1 = silo0.config().getConfig(address(silo1));
@@ -58,7 +58,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_borrow_without_collateral
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_borrow_without_collateral(uint256 _depositAmount, uint256 _borrowAmount) public {
         vm.assume(_borrowAmount > 0);
         vm.assume(_depositAmount > _borrowAmount);

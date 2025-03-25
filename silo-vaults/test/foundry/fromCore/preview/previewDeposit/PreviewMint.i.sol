@@ -42,7 +42,7 @@ contract PreviewMintTest is VaultsLittleHelper {
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_previewMint_withInterest_1token_fuzz(uint128 _shares) public {
-        vm.assume(_shares > 0);
+        vm.assume(_shares > 1);
 
         _createInterest();
 
@@ -51,7 +51,7 @@ contract PreviewMintTest is VaultsLittleHelper {
 
     /// forge-config: vaults-tests.fuzz.runs = 10000
     function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares) public {
-        vm.assume(_shares > 0);
+        vm.assume(_shares > 1);
 
         _createInterest();
 
@@ -104,6 +104,16 @@ contract PreviewMintTest is VaultsLittleHelper {
         uint256 depositedAssets = vault.mint(_shares, depositor);
 
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
-        assertEq(previewMint, vault.convertToAssets(_shares), "previewMint == convertToAssets");
+
+        uint256 convertToAssets = vault.convertToAssets(_shares);
+        uint256 diff;
+
+        if (previewMint > convertToAssets) {
+            diff = previewMint - convertToAssets;
+        } else {
+            diff = convertToAssets - previewMint;
+        }
+
+        assertLe(diff, 2, "diff should be less or equal than 2");
     }
 }

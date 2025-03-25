@@ -17,15 +17,15 @@ import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
 import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
+import {TransientReentrancy} from "../_common/TransientReentrancy.sol";
+import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
+abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, IPartialLiquidation {
     using SafeERC20 for IERC20;
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
-
-    ISiloConfig public siloConfig;
 
     struct LiquidationCallParams {
         uint256 collateralShares;
@@ -33,18 +33,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
         bytes4 customError;
-    }
-
-    function initialize(ISiloConfig _siloConfig, bytes calldata) external virtual {
-        _initialize(_siloConfig);
-    }
-
-    function beforeAction(address, uint256, bytes calldata) external virtual {
-        // not in use
-    }
-
-    function afterAction(address, uint256, bytes calldata) external virtual {
-        // not in use
     }
 
     /// @inheritdoc IPartialLiquidation
@@ -57,6 +45,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     )
         external
         virtual
+        nonReentrant
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = siloConfig;
@@ -173,10 +162,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
     }
 
-    function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {
-        return (0, 0);
-    }
-
     /// @inheritdoc IPartialLiquidation
     function maxLiquidation(address _borrower)
         external
@@ -236,12 +221,5 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         if (shares == 0) return 0;
 
         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
-    }
-
-    function _initialize(ISiloConfig _siloConfig) internal virtual {
-        require(address(_siloConfig) != address(0), EmptySiloConfig());
-        require(address(siloConfig) == address(0), AlreadyConfigured());
-
-        siloConfig = _siloConfig;
     }
 }

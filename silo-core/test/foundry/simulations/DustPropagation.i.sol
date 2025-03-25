@@ -170,7 +170,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_dustPropagation_noInterest_twoUsers_fuzz(
         uint128 deposit1, uint128 deposit2
     ) public {
