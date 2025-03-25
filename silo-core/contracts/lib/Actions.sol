@@ -471,8 +471,6 @@ library Actions {
         // and because we cast
         unchecked { $.daoAndDeployerRevenue -= uint160((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
 
-        uint256 daoTransferAmount = daoRevenue;
-
         if (deployerFeeReceiver == address(0)) {
             require(earnedFees != 0, ISilo.EarnedZero());
 
@@ -482,14 +480,11 @@ library Actions {
             require(deployerRevenue != 0, ISilo.DeployerEarnedZero());
 
             // trying to transfer to deployer (it might fail)
-            if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
-                // if transfer to deployer fails, send their portion to the DAO instead
-                daoTransferAmount = earnedFees;
-                redirectedDeployerFees = true;
-            }
+            // if transfer to deployer fails, send their portion to the DAO instead
+            redirectedDeployerFees = !_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue);
         }
 
-        IERC20(asset).safeTransfer(daoFeeReceiver, daoTransferAmount);
+        IERC20(asset).safeTransfer(daoFeeReceiver, redirectedDeployerFees ? earnedFees : daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
     }
