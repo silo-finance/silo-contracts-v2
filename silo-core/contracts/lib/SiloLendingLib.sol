@@ -151,7 +151,6 @@ library SiloLendingLib {
         $.interestRateTimestamp = uint32(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
-        // even if we have 12 decimals,
         // fee is simply too small to overflow on cast to uint160, even if, we will get lower fee
         unchecked { $.daoAndDeployerRevenue += uint160(totalFees); }
     }

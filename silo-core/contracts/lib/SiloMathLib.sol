@@ -61,12 +61,17 @@ library SiloMathLib {
         ) = getDebtAmountsWithInterest(_debtAssets, _rcomp, _currentInterestFraction);
 
         uint256 fees;
+        uint256 collateralInterest;
 
-        // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
-        unchecked { fees = _daoFee + _deployerFee; }
-
-        daoAndDeployerRevenue = accruedInterest * fees;
-        uint256 collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
+        unchecked {
+            // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
+            fees = _daoFee + _deployerFee;
+            // if we didn't revert on accruedInterest calculations, which is `total * rcomp` then we will not overflow
+            // on `accruedInterest * fees`, otherwise `accruedInterest` will be 0 and `* fees` will not overflow as well
+            daoAndDeployerRevenue = accruedInterest * fees;
+            // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
+            collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
+        }
 
         // save to uncheck because variable can not be more than max
         uint256 cap = type(uint256).max - _collateralAssets;
@@ -106,23 +111,22 @@ library SiloMathLib {
                 // when overflow, return 0 interest
                 return (_totalDebtAssets, 0, 0);
             }
-        }
 
-        uint256 accruedInterest36 = _totalDebtAssets * _rcomp + _currentInterestFraction;
+            // safe to unchecked because we checked for overflow in above `if`
+            uint256 accruedInterest36 = _totalDebtAssets * _rcomp + _currentInterestFraction;
 
-        accruedInterest = accruedInterest36 / _PRECISION_DECIMALS;
-        // safe to cast, because max value after modulo will be 1e18 (_PRECISION_DECIMALS) and this is less than 2 ** 64
-        newInterestFraction = uint64(accruedInterest36 % _PRECISION_DECIMALS);
+            accruedInterest = accruedInterest36 / _PRECISION_DECIMALS;
+            // safe to cast, because max value after modulo will be 1e18 (_PRECISION_DECIMALS) and this is less than 2 ** 64
+            newInterestFraction = uint64(accruedInterest36 % _PRECISION_DECIMALS);
 
-        unchecked {
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.
             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;
+        }
 
-            // If overflow occurs, we skip accruing interest.
-            if (debtAssetsWithInterest < _totalDebtAssets) {
-                debtAssetsWithInterest = _totalDebtAssets;
-                accruedInterest = 0;
-            }
+        // If overflow occurs, we skip accruing interest.
+        if (debtAssetsWithInterest < _totalDebtAssets) {
+            debtAssetsWithInterest = _totalDebtAssets;
+            accruedInterest = 0;
         }
     }
 

@@ -438,7 +438,11 @@ library Actions {
         require(earnedFees != 0, ISilo.EarnedZero());
 
         (
-            address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee, address asset
+            address daoFeeReceiver,
+            address deployerFeeReceiver,
+            uint256 daoFee,
+            uint256 deployerFee,
+            address asset
         ) = SiloStdLib.getFeesAndFeeReceiversWithAsset(_silo);
 
         uint256 availableLiquidity;
@@ -457,19 +461,21 @@ library Actions {
             // deployer was never setup or deployer NFT has been burned
             daoRevenue = earnedFees;
         } else {
+            // split fees proportionally
+            daoRevenue *= daoFee;
+
             unchecked {
-                // split fees proportionally
                 // fees are % in decimal point so safe to uncheck
-                daoRevenue = earnedFees.mulDiv(daoFee, daoFee + deployerFee);
+                daoRevenue = daoRevenue / (daoFee + deployerFee);
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }
         }
 
         // we will never underflow because:
-        // `(daoRevenue + deployerRevenue) * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
-        // and because we cast
-        unchecked { $.daoAndDeployerRevenue -= uint160((daoRevenue + deployerRevenue) * _FEE_DECIMALS); }
+        // `earnedFees * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
+        // cast is only because we operating on uint256, but we using uin160 values
+        unchecked { $.daoAndDeployerRevenue -= uint160(earnedFees * _FEE_DECIMALS); }
 
         if (deployerFeeReceiver == address(0)) {
             require(earnedFees != 0, ISilo.EarnedZero());
