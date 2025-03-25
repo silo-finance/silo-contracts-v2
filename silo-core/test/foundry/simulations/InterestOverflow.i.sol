@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -157,8 +156,8 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
     }
 
     function _withdrawAndCheck(address _user, uint256 _deposited, uint256 _shares)
-    private
-    returns (uint256 withdrawn)
+        private
+        returns (uint256 withdrawn)
     {
         emit log_named_address("withdraw checks for", _user);
 
