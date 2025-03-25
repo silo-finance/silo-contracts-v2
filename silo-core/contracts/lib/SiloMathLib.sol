@@ -41,7 +41,8 @@ library SiloMathLib {
         uint256 _debtAssets,
         uint256 _rcomp,
         uint256 _daoFee,
-        uint256 _deployerFee
+        uint256 _deployerFee,
+        uint256 _integral
     )
         internal
         pure
@@ -53,6 +54,7 @@ library SiloMathLib {
         )
     {
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
+        accruedInterest += _integral;
 
         uint256 fees;
 
@@ -327,5 +329,26 @@ library SiloMathLib {
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+    }
+
+    function calculateFraction(
+        uint256 _total,
+        uint256 _percent,
+        uint64 _currentFraction
+    ) internal pure returns (uint256 integral, uint64 fraction) {
+        unchecked {
+            // safe to unchecked because: _currentFraction if never more than max uint256, div is safe
+            if ((type(uint256).max - _currentFraction) / _total <= _percent) {
+                // when overflow, return 0 interest
+                return (0, 0);
+            }
+
+            // safe to unchecked because we checked for overflow in above `if`
+            uint256 result36 = _total * _percent + _currentFraction;
+
+            // safe, because max value after modulo will be 1e18 (_PRECISION_DECIMALS) and this is less than 2 ** 64
+            fraction = uint64(result36 % _PRECISION_DECIMALS);
+            integral = fraction < _currentFraction ? 1 : 0;
+        }
     }
 }

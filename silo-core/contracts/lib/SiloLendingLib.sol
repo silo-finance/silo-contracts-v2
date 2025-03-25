@@ -129,6 +129,9 @@ library SiloLendingLib {
             emit IInterestRateModel.InterestRateModelError();
         }
 
+        uint256 integral;
+        (integral, $.interestFraction) = SiloMathLib.calculateFraction(totalDebtAssets, rcomp, $.interestFraction);
+
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest(
@@ -136,7 +139,8 @@ library SiloLendingLib {
             totalDebtAssets,
             rcomp,
             _daoFee,
-            _deployerFee
+            _deployerFee,
+            integral
         );
 
         // update remaining contract state
