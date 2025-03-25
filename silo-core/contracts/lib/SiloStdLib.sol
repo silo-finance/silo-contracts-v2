@@ -114,17 +114,13 @@ library SiloStdLib {
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
-        (uint256 integral, ) = SiloMathLib.calculateFraction(
-            debtAssets, rcomp, SiloStorageLib.getSiloStorage().interestFraction
-        );
-
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: collateralAssets,
             _debtAssets: debtAssets,
             _rcomp: rcomp,
             _daoFee: _daoFee,
             _deployerFee: _deployerFee,
-            _integral: integral
+            _fractions: SiloStorageLib.getSiloStorage().fractions
         });
     }
 

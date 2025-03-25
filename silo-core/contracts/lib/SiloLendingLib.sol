@@ -129,8 +129,7 @@ library SiloLendingLib {
             emit IInterestRateModel.InterestRateModelError();
         }
 
-        uint256 integral;
-        (integral, $.interestFraction) = SiloMathLib.calculateFraction(totalDebtAssets, rcomp, $.interestFraction);
+        ISilo.Fractions memory fractions = $.fractions;
 
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
@@ -140,10 +139,11 @@ library SiloLendingLib {
             _rcomp: rcomp,
             _daoFee: _daoFee,
             _deployerFee: _deployerFee,
-            _integral: integral
+            _fractions: fractions
         });
 
         // update remaining contract state
+        $.fractions = fractions;
         $.interestRateTimestamp = uint64(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
