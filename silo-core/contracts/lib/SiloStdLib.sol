@@ -27,9 +27,11 @@ library SiloStdLib {
         // all user set fees are in 18 decimals points
         (,, uint256 flashloanFee, address asset) = _config.getFeesWithAsset(address(this));
         require(_token == asset, ISilo.UnsupportedFlashloanToken());
+
         if (flashloanFee == 0) return 0;
 
         require(type(uint256).max / _amount >= flashloanFee, ISilo.FlashloanAmountTooBig());
+
         fee = _amount * flashloanFee / _PRECISION_DECIMALS;
 
         // round up
@@ -112,20 +114,9 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        uint256 collateralAssets;
-        uint256 debtAssets;
-        uint64 interestFraction;
-
-        try ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage()
-            returns (uint256 _collateralAssets, uint256 _debtAssets, uint64 _interestFraction)
-        {
-            collateralAssets = _collateralAssets;
-            debtAssets = _debtAssets;
-            interestFraction = _interestFraction;
-        } catch {
-            // this is to support already deployed silos
-            (collateralAssets, debtAssets) = ISiloBackwardsCompatible(_silo).getCollateralAndDebtTotalsStorage();
-        }
+        (
+            uint256 collateralAssets, uint256 debtAssets, uint64 interestFraction
+        ) = ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         (totalCollateralAssetsWithInterest,,,,) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: collateralAssets,
@@ -168,18 +159,9 @@ library SiloStdLib {
             // do not lock silo
         }
 
-        uint256 debtAssets;
-        uint64 interestFraction;
-
-        try ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage()
-            returns (uint256, uint256 _debtAssets, uint64 _interestFraction)
-        {
-            debtAssets = _debtAssets;
-            interestFraction = _interestFraction;
-        } catch {
-            // this is to support already deployed silos
-            (, debtAssets) = ISiloBackwardsCompatible(_silo).getCollateralAndDebtTotalsStorage();
-        }
+        (
+            , uint256 debtAssets, uint64 interestFraction
+        ) = ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         (
             totalDebtAssetsWithInterest,,
