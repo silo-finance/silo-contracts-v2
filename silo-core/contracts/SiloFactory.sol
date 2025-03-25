@@ -8,6 +8,7 @@ import {ERC721} from "openzeppelin5/token/ERC721/ERC721.sol";
 import {IShareTokenInitializable} from "./interfaces/IShareTokenInitializable.sol";
 import {ISiloFactory} from "./interfaces/ISiloFactory.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
+import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {Hook} from "./lib/Hook.sol";
 import {Views} from "./lib/Views.sol";
@@ -25,12 +26,23 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     uint256 public maxDeployerFee;
     uint256 public maxFlashloanFee;
     uint256 public maxLiquidationFee;
+
+    /// @dev default DAO fee receiver, will be used in case there is nothing set per silo or per asset
     address public daoFeeReceiver;
 
     string public baseURI;
 
     mapping(uint256 id => address siloConfig) public idToSiloConfig;
     mapping(address silo => bool) public isSilo;
+
+    /// @dev DAO fee receiver for silo, it has biggest priority over other setup for DAO fee receiver
+    mapping(address silo => address feeReceiverPerSilo) public siloDaoFeeReceivers;
+
+    /// @dev DAO fee receiver for asset, in case there is no setup for silo, this setup will be used
+    mapping(address asset => address feeReceiverPerAsset) public assetDaoFeeReceivers;
+
+    /// @dev counter of silos created by the wallet
+    mapping(address creator => uint256 siloCounter) public creatorSiloCounter;
 
     uint256 internal _siloId;
 
@@ -42,6 +54,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _siloId = 1;
 
         baseURI = "https://v2.app.silo.finance/markets/";
+        emit BaseURI(baseURI);
 
         _setDaoFee({_minFee: 0.05e18, _maxFee: 0.5e18});
         _setDaoFeeReceiver(_daoFeeReceiver);
@@ -51,17 +64,14 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
     }
 
-    function daoFeeRange() external view returns (Range memory) {
-        return _daoFeeRange;
-    }
-
     /// @inheritdoc ISiloFactory
     function createSilo( // solhint-disable-line function-max-lines
-        ISiloConfig.InitData memory _initData,
         ISiloConfig _siloConfig,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl
+        address _shareDebtTokenImpl,
+        address _deployer,
+        address _creator
     )
         external
         virtual
@@ -74,51 +84,43 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             ZeroAddress()
         );
 
-        ISiloConfig.ConfigData memory configData0;
-        ISiloConfig.ConfigData memory configData1;
-
-        (
-            configData0, configData1
-        ) = Views.copySiloConfig(_initData, _daoFeeRange, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
-
         uint256 nextSiloId = _siloId;
         // safe to uncheck, because we will not create 2 ** 256 of silos in a lifetime
         unchecked { _siloId++; }
 
-        configData0.silo = CloneDeterministic.silo0(_siloImpl, nextSiloId);
-        configData1.silo = CloneDeterministic.silo1(_siloImpl, nextSiloId);
-
-        _cloneShareTokens(
-            configData0,
-            configData1,
+        (ISilo silo0, ISilo silo1) = _createValidateSilosAndShareTokens(
+            _siloConfig,
+            _siloImpl,
             _shareProtectedCollateralTokenImpl,
             _shareDebtTokenImpl,
-            nextSiloId
+            _creator
         );
 
-        ISilo(configData0.silo).initialize(_siloConfig);
-        ISilo(configData1.silo).initialize(_siloConfig);
+        unchecked { creatorSiloCounter[_creator]++; }
 
-        _initializeShareTokens(configData0, configData1);
+        silo0.initialize(_siloConfig);
+        silo1.initialize(_siloConfig);
 
-        ISilo(configData0.silo).updateHooks();
-        ISilo(configData1.silo).updateHooks();
+        _initializeShareTokens(_siloConfig, silo0, silo1);
+
+        silo0.updateHooks();
+        silo1.updateHooks();
 
         idToSiloConfig[nextSiloId] = address(_siloConfig);
 
-        isSilo[configData0.silo] = true;
-        isSilo[configData1.silo] = true;
+        isSilo[address(silo0)] = true;
+        isSilo[address(silo1)] = true;
 
-        if (_initData.deployer != address(0)) {
-            _mint(_initData.deployer, nextSiloId);
+        if (_deployer != address(0)) {
+            _safeMint(_deployer, nextSiloId);
         }
 
         emit NewSilo(
             _siloImpl,
-            configData0.token,
-            configData1.token,
-            configData0.silo,
-            configData1.silo,
+            silo0.asset(),
+            silo1.asset(),
+            address(silo0),
+            address(silo1),
             address(_siloConfig)
         );
     }
@@ -156,6 +158,18 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
     }
 
     /// @inheritdoc ISiloFactory
+    function setDaoFeeReceiverForAsset(address _asset, address _newDaoFeeReceiver) external virtual onlyOwner {
+        _setDaoFeeReceiver(assetDaoFeeReceivers, _asset, _newDaoFeeReceiver);
+        emit DaoFeeReceiverChangedForSilo(_asset, _newDaoFeeReceiver);
+    }
+
+    /// @inheritdoc ISiloFactory
+    function setDaoFeeReceiverForSilo(address _silo, address _newDaoFeeReceiver) external virtual onlyOwner {
+        _setDaoFeeReceiver(siloDaoFeeReceivers, _silo, _newDaoFeeReceiver);
+        emit DaoFeeReceiverChangedForSilo(_silo, _newDaoFeeReceiver);
+    }
+
+    /// @inheritdoc ISiloFactory
     function setBaseURI(string calldata _newBaseURI) external virtual onlyOwner {
         baseURI = _newBaseURI;
         emit BaseURI(_newBaseURI);
@@ -166,10 +180,24 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         return _siloId;
     }
 
+    function daoFeeRange() external view virtual returns (Range memory) {
+        return _daoFeeRange;
+    }
+
     /// @inheritdoc ISiloFactory
-    function getFeeReceivers(address _silo) external view virtual returns (address dao, address deployer) {
+    function getFeeReceivers(address _silo)
+        external
+        view
+        virtual
+        returns (address daoReceiver, address deployerReceiver)
+    {
         uint256 siloID = ISilo(_silo).config().SILO_ID();
-        return (daoFeeReceiver, _ownerOf(siloID));
+
+        daoReceiver = siloDaoFeeReceivers[_silo];
+        if (daoReceiver == address(0)) daoReceiver = assetDaoFeeReceivers[ISilo(_silo).asset()];
+        if (daoReceiver == address(0)) daoReceiver = daoFeeReceiver;
+
+        deployerReceiver = _ownerOf(siloID);
     }
 
     /// @inheritdoc ISiloFactory
@@ -186,6 +214,33 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             Strings.toString(block.chainid),
             "/",
             Strings.toHexString(idToSiloConfig[tokenId])
+        );
+    }
+
+    function _createValidateSilosAndShareTokens(
+        ISiloConfig _siloConfig,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        address _creator
+    ) internal virtual returns (ISilo silo0, ISilo silo1) {
+        uint256 creatorSiloCounter = creatorSiloCounter[_creator];
+
+        silo0 = ISilo(CloneDeterministic.silo0(_siloImpl, creatorSiloCounter, _creator));
+        silo1 = ISilo(CloneDeterministic.silo1(_siloImpl, creatorSiloCounter, _creator));
+
+        (address siloFromConfig0, address siloFromConfig1) = _siloConfig.getSilos();
+
+        require(address(silo0) == siloFromConfig0 && address(silo1) == siloFromConfig1, ConfigMismatchSilo());
+
+        _cloneShareTokensAndValidate(
+            _siloConfig,
+            silo0,
+            silo1,
+            _shareProtectedCollateralTokenImpl,
+            _shareDebtTokenImpl,
+            creatorSiloCounter,
+            _creator
         );
     }
 
@@ -232,47 +287,80 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         emit DaoFeeReceiverChanged(_newDaoFeeReceiver);
     }
 
-    function _cloneShareTokens(
-        ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1,
-        address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl,
-        uint256 _nextSiloId
+    function _setDaoFeeReceiver(
+        mapping(address => address) storage _mapping,
+        address _mappingKey,
+        address _newDaoFeeReceiver
     ) internal virtual {
-        configData0.collateralShareToken = configData0.silo;
-        configData1.collateralShareToken = configData1.silo;
+        address currentValue = _mapping[_mappingKey];
+        require((uint160(currentValue) | uint160(_newDaoFeeReceiver)) != 0, DaoFeeReceiverZeroAddress());
+        require(currentValue != _newDaoFeeReceiver, SameDaoFeeReceiver());
 
-        configData0.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken0(
-            _shareProtectedCollateralTokenImpl, _nextSiloId
-        );
-
-        configData1.protectedShareToken = CloneDeterministic.shareProtectedCollateralToken1(
-            _shareProtectedCollateralTokenImpl, _nextSiloId
-        );
-
-        configData0.debtShareToken = CloneDeterministic.shareDebtToken0(_shareDebtTokenImpl, _nextSiloId);
-        configData1.debtShareToken = CloneDeterministic.shareDebtToken1(_shareDebtTokenImpl, _nextSiloId);
+        _mapping[_mappingKey] = _newDaoFeeReceiver;
     }
 
-    function _initializeShareTokens(
-        ISiloConfig.ConfigData memory configData0,
-        ISiloConfig.ConfigData memory configData1
+    function _cloneShareTokensAndValidate(
+        ISiloConfig _siloConfig,
+        ISilo _silo0,
+        ISilo _silo1,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        uint256 _creatorSiloCounter,
+        address _creator
     ) internal virtual {
+        address createdProtectedShareToken0 = CloneDeterministic.shareProtectedCollateralToken0(
+            _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
+        );
+
+        address createdProtectedShareToken1 = CloneDeterministic.shareProtectedCollateralToken1(
+            _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
+        );
+
+        address createdDebtShareToken0 = CloneDeterministic.shareDebtToken0(
+            _shareDebtTokenImpl, _creatorSiloCounter, _creator
+        );
+
+        address createdDebtShareToken1 = CloneDeterministic.shareDebtToken1(
+            _shareDebtTokenImpl, _creatorSiloCounter, _creator
+        );
+
+        _validateShareTokens(_siloConfig, address(_silo0), createdProtectedShareToken0, createdDebtShareToken0);
+        _validateShareTokens(_siloConfig, address(_silo1), createdProtectedShareToken1, createdDebtShareToken1);
+    }
+
+    function _validateShareTokens(
+        ISiloConfig _siloConfig,
+        address _silo,
+        address _createdProtectedShareToken,
+        address _createdDebtShareToken
+    ) internal virtual {
+        (
+            address protectedShareToken,
+            address collateralShareToken,
+            address debtShareToken
+        ) = _siloConfig.getShareTokens(_silo);
+
+        require(_silo == collateralShareToken, ConfigMismatchShareCollateralToken());
+        require(protectedShareToken == _createdProtectedShareToken, ConfigMismatchShareProtectedToken());
+        require(debtShareToken == _createdDebtShareToken, ConfigMismatchShareDebtToken());
+    }
+
+    function _initializeShareTokens(ISiloConfig _siloConfig, ISilo _silo0, ISilo _silo1) internal virtual {
         uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
 
-        // initialize configData0
-        ISilo silo0 = ISilo(configData0.silo);
-        address hookReceiver0 = configData0.hookReceiver;
+        // initialize silo0 share tokens
+        address hookReceiver0 = IShareToken(address(_silo0)).hookReceiver();
+        (address protectedShareToken0, , address debtShareToken0) = _siloConfig.getShareTokens(address(_silo0));
 
-        IShareTokenInitializable(configData0.protectedShareToken).initialize(silo0, hookReceiver0, protectedTokenType);
-        IShareTokenInitializable(configData0.debtShareToken).initialize(silo0, hookReceiver0, debtTokenType);
+        IShareTokenInitializable(protectedShareToken0).initialize(_silo0, hookReceiver0, protectedTokenType);
+        IShareTokenInitializable(debtShareToken0).initialize(_silo0, hookReceiver0, debtTokenType);
 
-        // initialize configData1
-        ISilo silo1 = ISilo(configData1.silo);
-        address hookReceiver1 = configData1.hookReceiver;
+        // initialize silo1 share tokens
+        address hookReceiver1 = IShareToken(address(_silo1)).hookReceiver();
+        (address protectedShareToken1, , address debtShareToken1) = _siloConfig.getShareTokens(address(_silo1));
 
-        IShareTokenInitializable(configData1.protectedShareToken).initialize(silo1, hookReceiver1, protectedTokenType);
-        IShareTokenInitializable(configData1.debtShareToken).initialize(silo1, hookReceiver1, debtTokenType);
+        IShareTokenInitializable(protectedShareToken1).initialize(_silo1, hookReceiver1, protectedTokenType);
+        IShareTokenInitializable(debtShareToken1).initialize(_silo1, hookReceiver1, debtTokenType);
     }
 }

@@ -84,11 +84,12 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         // deploy silo
         siloFactory.createSilo(
-            siloData["MOCK"],
             siloConfig,
             siloImpl,
             shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl
+            shareDebtTokenImpl,
+            siloData["MOCK"].deployer,
+            msg.sender
         );
 
         (_vault0, _vault1) = siloConfig.getSilos();
@@ -706,8 +707,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
     // Property: A slightly insolvent user cannot be fully liquidated, if he is below "dust" treshhold
     // it is hard to figure out, if this case is partial or we need to force full,
-    // we forcing full when `repayValue/_totalBorrowerDebtValue` > _DEBT_DUST_LEVEL
-    // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _DEBT_DUST_LEVEL`
+    // we forcing full when `repayValue/_totalBorrowerDebtValue` > _FULL_LIQUIDATION_THRESHOLD
+    // so max repay value under dust level is `repayValue = _totalBorrowerDebtValue * _FULL_LIQUIDATION_THRESHOLD`
     // based on this we will make decision if this is partial or full liquidation and we will run some checks
     function cannotFullyLiquidateSmallLtv(uint8 _actorIndex) public {
         emit LogUint256("[cannotFullyLiquidateSmallLtv] block.timestamp:", block.timestamp);
@@ -724,7 +725,7 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
 
         uint256 maxRepay = vault.maxRepay(address(actor));
         // we assume we do not have oracle and price is 1:1
-        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
+        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._FULL_LIQUIDATION_THRESHOLD / 1e18;
         (, uint256 debtToRepay,) = liquidationModule.maxLiquidation(address(actor));
 
         bool isPartial = debtToRepay < maxPartialRepayValue;

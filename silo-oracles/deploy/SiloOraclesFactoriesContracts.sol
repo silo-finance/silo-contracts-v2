@@ -11,6 +11,8 @@ library SiloOraclesFactoriesContracts {
     string public constant ERC4626_ORACLE_FACTORY = "ERC4626OracleFactory.sol";
     string public constant PYTH_AGGREGATOR_FACTORY = "PythAggregatorFactory.sol";
     string public constant ORACLE_SCALER_FACTORY = "OracleScalerFactory.sol";
+    string public constant PENDLE_PT_ORACLE_FACTORY = "PendlePTOracleFactory.sol";
+    string public constant PENDLE_PT_TO_ASSET_ORACLE_FACTORY = "PendlePTToAssetOracleFactory.sol";
 }
 
 library SiloOraclesFactoriesDeployments {

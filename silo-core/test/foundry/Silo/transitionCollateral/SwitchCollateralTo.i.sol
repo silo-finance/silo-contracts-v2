@@ -30,6 +30,9 @@ contract SwitchCollateralToTest is SiloLittleHelper, Test {
         _depositForBorrow(assets, borrower);
         _depositForBorrow(assets, depositor);
 
+        vm.expectEmit(address(silo1));
+        emit ISilo.CollateralTypeChanged(borrower);
+
         _borrow(assets / 2, borrower);
 
         ISiloConfig.ConfigData memory collateral;

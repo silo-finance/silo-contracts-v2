@@ -16,9 +16,7 @@ import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
 abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Ownable2Step {
     using Hook for uint256;
     using Hook for bytes;
-
-    uint24 internal constant _HOOKS_BEFORE_NOT_CONFIGURED = 0;
-
+    
     mapping(IShareToken => IGauge) public configuredGauges;
 
     constructor() Ownable(msg.sender) {
@@ -43,7 +41,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
         uint256 action = tokenType | Hook.SHARE_TOKEN_TRANSFER;
         hooksAfter = hooksAfter.addAction(action);
 
-        _setHookConfig(silo, _HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+        _setHookConfig(silo, uint24(_getHooksBefore(silo)), uint24(hooksAfter));
 
         configuredGauges[_shareToken] = _gauge;
 
@@ -64,7 +62,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
 
         hooksAfter = hooksAfter.removeAction(tokenType);
 
-        _setHookConfig(silo, _HOOKS_BEFORE_NOT_CONFIGURED, hooksAfter);
+        _setHookConfig(silo, uint24(_getHooksBefore(silo)), uint24(hooksAfter));
 
         delete configuredGauges[_shareToken];
 
@@ -81,7 +79,6 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
 
         require(theGauge != IGauge(address(0)), GaugeIsNotConfigured());
 
-        if (theGauge.is_killed()) return; // Do not revert if gauge is killed. Ignore the action.
         if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case
 
         Hook.AfterTokenTransfer memory input = _inputAndOutput.afterTokenTransferDecode();

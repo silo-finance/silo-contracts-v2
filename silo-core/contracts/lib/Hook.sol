@@ -207,6 +207,7 @@ library Hook {
     uint256 private constant PACKED_BOOL_LENGTH = 1;
 
     error FailedToParseBoolean();
+    error InvalidTokenType();
 
     /// @notice Checks if the action has a specific hook
     /// @param _action The action
@@ -217,7 +218,7 @@ library Hook {
     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, COLLATERAL_TOKEN) == true`
     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, WITHDRAW | COLLATERAL_TOKEN) == true`
     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {
-        return _action & _expectedHook == _expectedHook;
+        return (_action & _expectedHook) == _expectedHook;
     }
 
     /// @notice Adds a hook to an action
@@ -258,6 +259,11 @@ library Hook {
     /// @notice Returns the share token transfer action
     /// @param _tokenType The token type (COLLATERAL_TOKEN || PROTECTED_TOKEN || DEBT_TOKEN)
     function shareTokenTransfer(uint256 _tokenType) internal pure returns (uint256) {
+        require(
+            _tokenType == COLLATERAL_TOKEN || _tokenType == PROTECTED_TOKEN || _tokenType == DEBT_TOKEN,
+            InvalidTokenType()
+        );
+
         return SHARE_TOKEN_TRANSFER | _tokenType;
     }
 
