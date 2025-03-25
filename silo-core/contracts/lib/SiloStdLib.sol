@@ -9,6 +9,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
+import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library SiloStdLib {
     using SafeERC20 for IERC20;
@@ -113,8 +114,10 @@ library SiloStdLib {
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
+        (uint256 integral, ) = SiloMathLib.calculateFraction(debtAssets, rcomp, SiloStorageLib.getSiloStorage().interestFraction);
+
         (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
+            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee, integral
         );
     }
 

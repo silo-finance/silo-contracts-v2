@@ -105,6 +105,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         uint192 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
+        /// @dev interest value that we could not convert to full token in 36 decimals, max value for it is 1e18.
+        /// this value was not yet apply as interest for borrowers
+        uint64 interestFraction;
 
         /// @dev silo is just for one asset,
         /// but this one asset can be of three types: mapping key is uint256(AssetType), so we store `assets` by type.
