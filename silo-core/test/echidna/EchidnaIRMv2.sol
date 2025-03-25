@@ -42,7 +42,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
 
     /// @param assets map of assets
     struct SiloData {
-        uint160 daoAndDeployerRevenue;
+        uint192 daoAndDeployerRevenue;
         uint64 interestRateTimestamp;
     }
 

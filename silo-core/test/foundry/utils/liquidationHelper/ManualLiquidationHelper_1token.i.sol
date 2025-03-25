@@ -32,10 +32,10 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     forge test --ffi --mt test_executeLiquidation_1_token -vvv
     */
     function test_executeLiquidation_1_token_woBadDebt(
-        uint32 _addTimestamp
+        uint64 _addTimestamp
     ) public {
-//        uint32 _addTimestamp = 1478627871;
-        vm.assume(block.timestamp + _addTimestamp < type(uint32).max);
+//        uint64 _addTimestamp = 1478627871;
+        vm.assume(block.timestamp + _addTimestamp < type(uint64).max);
         vm.warp(block.timestamp + _addTimestamp);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
@@ -75,9 +75,9 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_executeLiquidation_1_token_BadDebt_fuzz(
-        uint32 _addTimestamp
+        uint64 _addTimestamp
     ) public {
-        vm.assume(block.timestamp + _addTimestamp < type(uint32).max);
+        vm.assume(block.timestamp + _addTimestamp < type(uint64).max);
         vm.warp(block.timestamp + _addTimestamp);
 
         uint256 ltv = siloLens.getLtv(silo1, BORROWER);

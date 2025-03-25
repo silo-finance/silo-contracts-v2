@@ -32,7 +32,8 @@ contract GetTotalAssetsWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
             _debtAssets: 0,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
@@ -44,7 +45,8 @@ contract GetTotalAssetsWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 1000e18,
             _debtAssets: 0,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1000e18);
@@ -52,7 +54,8 @@ contract GetTotalAssetsWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 1000e18,
             _debtAssets: 500e18,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1005e18);
@@ -60,7 +63,8 @@ contract GetTotalAssetsWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 1000e18,
             _debtAssets: 1000e18,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         daoFee = 0.01e18;

@@ -114,16 +114,17 @@ library SiloStdLib {
         }
 
         (
-            uint256 collateralAssets, uint256 debtAssets, uint64 interestFraction
+            uint256 collateralAssets, uint256 debtAssets, uint64 interestFraction, uint64 revenueFraction
         ) = ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage();
 
-        (totalCollateralAssetsWithInterest,,,,) = SiloMathLib.getCollateralAmountsWithInterest({
+        (totalCollateralAssetsWithInterest,,,,,) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: collateralAssets,
             _debtAssets: debtAssets,
             _rcomp: rcomp,
             _daoFee: _daoFee,
             _deployerFee: _deployerFee,
-            _currentInterestFraction: interestFraction
+            _currentInterestFraction: interestFraction,
+            _currentRevenueFraction: revenueFraction
         });
     }
 
@@ -159,7 +160,7 @@ library SiloStdLib {
         }
 
         (
-            , uint256 debtAssets, uint64 interestFraction
+            , uint256 debtAssets, uint64 interestFraction,
         ) = ISilo(_silo).getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         (

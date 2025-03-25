@@ -57,16 +57,21 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         uint256 interest = silo1.accrueInterest();
 
         (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-        (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
+        (
+            ,, uint64 interestFraction, uint64 revenueFraction
+        ) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         emit log_named_uint("interest", interest);
         emit log_named_uint("interestFraction", interestFraction);
+        emit log_named_uint("revenueFraction", revenueFraction);
         emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
 
         assertEq(interest, 1159717550, "interest");
         assertEq(interestFraction, 599999999747887489, "expect interestFraction");
 
-        assertEq(daoAndDeployerRevenue, 289929387_500000000000000000, "expect daoAndDeployerRevenue");
+        assertEq(revenueFraction, 500000000000000000, "expect revenueFraction");
+        assertEq(daoAndDeployerRevenue, 289929387, "expect daoAndDeployerRevenue");
 
         vm.expectEmit(address(silo1));
         uint256 daoFees = 173957632;
@@ -89,16 +94,21 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         uint256 interest = silo1.accrueInterest();
 
         (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-        (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
+        (
+            ,, uint64 interestFraction, uint64 revenueFraction
+        ) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         emit log_named_uint("interest", interest);
         emit log_named_uint("interestFraction", interestFraction);
+        emit log_named_uint("revenueFraction", revenueFraction);
         emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
 
         assertEq(interest, 1109842720, "interest");
         assertEq(interestFraction, 502466316910034951, "expect interestFraction");
 
-        assertEq(daoAndDeployerRevenue, 277460680_000000000000000000, "expect daoAndDeployerRevenue");
+        assertEq(revenueFraction, 0, "expect revenueFraction");
+        assertEq(daoAndDeployerRevenue, 277460680, "expect daoAndDeployerRevenue");
 
         vm.expectEmit(address(silo1));
         uint256 daoFees = 166476408;
@@ -117,6 +127,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         uint192 prevDaoAndDeployerRevenue;
         uint64 prevInterestFraction;
+        uint64 prevRevenueFraction;
         uint256 interest;
 
         for (uint t = 1; t < 24 hours; t++) {
@@ -130,10 +141,14 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             }
 
             (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
+            (
+                ,, uint64 interestFraction, uint64 revenueFraction
+            ) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
 
             emit log_named_uint(string.concat("#", Strings.toString(t), " interest"), interest);
             emit log_named_uint(string.concat("#", Strings.toString(t), " interestFraction"), interestFraction);
+            emit log_named_uint(string.concat("#", Strings.toString(t), " revenueFraction"), revenueFraction);
             emit log_named_uint(string.concat("#", Strings.toString(t), " daoAndDeployerRevenue"), daoAndDeployerRevenue);
 
             assertEq(
@@ -154,8 +169,15 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
                 string.concat("#", Strings.toString(t), "prevInterestFraction incrementing")
             );
 
+            assertGt(
+                revenueFraction,
+                prevRevenueFraction,
+                string.concat("#", Strings.toString(t), "prevRevenueFraction incrementing")
+            );
+
             prevDaoAndDeployerRevenue = daoAndDeployerRevenue;
             prevInterestFraction = interestFraction;
+            prevRevenueFraction = revenueFraction;
 
             vm.expectRevert();
             silo1.withdrawFees();
@@ -164,10 +186,14 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         assertGt(interest, 0, "expect some interest at this point");
 
         (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-        (,, uint64 interestFraction) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
+
+        (
+            ,, uint64 interestFraction, uint64 revenueFraction
+        ) = silo1.getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         emit log_named_uint("#final interest", interest);
         emit log_named_uint("#final interestFraction", interestFraction);
+        emit log_named_uint("#final revenueFraction", revenueFraction);
         emit log_named_uint("#final daoAndDeployerRevenue", daoAndDeployerRevenue);
 
         assertGt(daoAndDeployerRevenue, prevDaoAndDeployerRevenue, "prevDaoAndDeployerRevenue incrementing");

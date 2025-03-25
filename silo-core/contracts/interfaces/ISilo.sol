@@ -101,13 +101,15 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     struct SiloStorage {
         /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
-        /// but not yet withdrawn, max value of tokens is (2^160 / 1e36) = 1,461,501,637,330
-        uint160 daoAndDeployerRevenue;
-        /// @dev timestamp of the last interest accrual, max supported time: Sunday, 7 February 2106 06:28:15
-        uint32 interestRateTimestamp;
+        /// but not yet withdrawn
+        uint192 daoAndDeployerRevenue;
+        /// @dev timestamp of the last interest accrual
+        uint64 interestRateTimestamp;
         /// @dev interest value that we could not convert to full token in 36 decimals, max value for it is 1e18.
         /// this value was not yet apply as interest for borrowers
         uint64 interestFraction;
+        /// @dev revenue value that we could not convert to full token in 36 decimals, max value for it is 1e18.
+        uint64 revenueFraction;
 
         /// @dev silo is just for one asset,
         /// but this one asset can be of three types: mapping key is uint256(AssetType), so we store `assets` by type.
@@ -265,10 +267,16 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'
     /// @return totalDebtAssets The total amount of debt assets of type 'Debt'
     /// @return interestFraction current uncounted fraction of interest (in 36 decimals points)
+    /// @return revenueFraction current uncounted fraction of revenue (in 36 decimals points)
     function getCollateralAndDebtTotalsWithInterestFactionStorage()
         external
         view
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction);
+        returns (
+            uint256 totalCollateralAssets,
+            uint256 totalDebtAssets,
+            uint64 interestFraction,
+            uint64 revenueFraction
+        );
 
     /// @notice Implements IERC4626.convertToShares for each asset type
     function convertToShares(uint256 _assets, AssetType _assetType) external view returns (uint256 shares);

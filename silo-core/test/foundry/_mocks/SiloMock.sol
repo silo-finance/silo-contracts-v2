@@ -12,16 +12,6 @@ contract SiloMock is Test {
         ADDRESS = _silo == address(0) ? makeAddr("SiloMockAddr") : _silo;
     }
 
-    function getCollateralAndDebtAssetsMock(
-        uint256 _totalCollateralAssets,
-        uint256 _totalDebtAssets,
-        uint64 _interestFraction
-    ) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsWithInterestFactionStorage.selector);
-        vm.mockCall(ADDRESS, data, abi.encode(_totalCollateralAssets, _totalDebtAssets, _interestFraction));
-        vm.expectCall(ADDRESS, data);
-    }
-
     // ISilo.getCollateralAssets.selector: 0xa1ff9bee
     function getCollateralAssetsMock(uint256 _totalCollateralAssets) external {
         bytes memory data = abi.encodeWithSelector(ISilo.getCollateralAssets.selector);
@@ -62,14 +52,20 @@ contract SiloMock is Test {
     function getCollateralAndDebtTotalsWithInterestFactionStorageMock(
         uint256 _collateralAssets,
         uint256 _debtAssets,
-        uint64 _interestFraction
+        uint64 _interestFraction,
+        uint64 _revenueFraction
     )
         external
     {
         bytes memory data =
             abi.encodeWithSelector(ISilo.getCollateralAndDebtTotalsWithInterestFactionStorage.selector);
 
-        vm.mockCall(ADDRESS, data, abi.encode(_collateralAssets, _debtAssets, _interestFraction));
+        vm.mockCall(
+            ADDRESS,
+            data,
+            abi.encode(_collateralAssets, _debtAssets, _interestFraction, _revenueFraction)
+        );
+
         vm.expectCall(ADDRESS, data);
     }
 

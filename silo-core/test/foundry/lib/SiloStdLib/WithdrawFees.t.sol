@@ -63,7 +63,7 @@ contract WithdrawFeesTest is Test {
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
     function test_withdrawFees_revert_NoLiquidity() external {
-        _$().daoAndDeployerRevenue = uint160(1e18 * FEE_DECIMALS);
+        _$().daoAndDeployerRevenue = 1e18;
 
         uint256 daoFee;
         uint256 deployerFee;
@@ -115,7 +115,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), 1e18);
 
-        _$().daoAndDeployerRevenue = uint160(9 * FEE_DECIMALS);
+        _$().daoAndDeployerRevenue = 9;
 
         _setProtectedAssets(NO_PROTECTED_ASSETS);
 
@@ -133,7 +133,7 @@ contract WithdrawFeesTest is Test {
     function test_withdrawFees_pass() external {
         uint256 daoFee = 0.20e18;
         uint256 deployerFee = 0.20e18;
-        uint256 daoAndDeployerRevenue = uint160(1 * FEE_DECIMALS);
+        uint256 daoAndDeployerRevenue = 1;
         uint256 daoFees = daoAndDeployerRevenue/2;
 
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
@@ -170,7 +170,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), siloBalance);
 
-        _$().daoAndDeployerRevenue = uint160(siloBalance * FEE_DECIMALS); // fees are the same as balance
+        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
 
         uint256 protectedAssets = siloBalance / 3; // the third part of the balance is protected
 
@@ -200,7 +200,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), siloBalance);
 
-        _$().daoAndDeployerRevenue = uint160(siloBalance * FEE_DECIMALS) ; // fees are the same as balance
+        _$().daoAndDeployerRevenue = uint192(siloBalance); // fees are the same as balance
 
         token.transferResultFalseMock(deployer, siloBalance / 2); // transfer to deployer fails
         token.transferMock(dao, siloBalance); // dao gets all fees as transfer to deployer fails
@@ -230,7 +230,7 @@ contract WithdrawFeesTest is Test {
 
         token.balanceOfMock(address(this), 999e18);
 
-        _$().daoAndDeployerRevenue = uint160(1e18 * FEE_DECIMALS);
+        _$().daoAndDeployerRevenue = 1e18;
 
         if (_transferDao != 0) token.transferMock(dao, _transferDao);
         if (_transferDeployer != 0) token.transferMock(deployer, _transferDeployer);

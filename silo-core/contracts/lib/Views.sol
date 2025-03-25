@@ -90,8 +90,6 @@ library Views {
         );
     }
 
-    /// @return daoAndDeployerRevenue origin value is uint160
-    /// @return interestRateTimestamp origin value is uint32
     function getSiloStorage()
         internal
         view
@@ -144,13 +142,19 @@ library Views {
     function getCollateralAndDebtTotalsWithInterestFaction()
         internal
         view
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction)
+        returns (
+            uint256 totalCollateralAssets,
+            uint256 totalDebtAssets,
+            uint64 interestFraction,
+            uint64 revenueFraction
+        )
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
         interestFraction = $.interestFraction;
+        revenueFraction = $.revenueFraction;
     }
 
     function copySiloConfig(

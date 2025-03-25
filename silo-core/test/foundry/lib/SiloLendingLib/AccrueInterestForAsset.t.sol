@@ -29,7 +29,7 @@ contract AccrueInterestForAssetTest is Test {
     forge test -vv --mt test_accrueInterestForAsset_whenTimestampNotChanged
     */
     function test_accrueInterestForAsset_whenTimestampNotChanged() public {
-        uint32 currentTimestamp = 222;
+        uint64 currentTimestamp = 222;
         vm.warp(currentTimestamp);
 
         ISilo.SiloStorage storage $ = _$();
@@ -50,8 +50,8 @@ contract AccrueInterestForAssetTest is Test {
     forge test -vv --mt test_accrueInterestForAsset_withDataNoFee
     */
     function test_accrueInterestForAsset_withDataNoFee() public {
-        uint32 oldTimestamp = 111;
-        uint32 currentTimestamp = 222;
+        uint64 oldTimestamp = 111;
+        uint64 currentTimestamp = 222;
         vm.warp(currentTimestamp);
 
         uint256 rcomp = 0.01e18;
@@ -78,8 +78,8 @@ contract AccrueInterestForAssetTest is Test {
     forge test -vv --mt test_accrueInterestForAsset_withDataWithFees
     */
     function test_accrueInterestForAsset_withDataWithFees() public {
-        uint32 oldTimestamp = 111;
-        uint32 currentTimestamp = 222;
+        uint64 oldTimestamp = 111;
+        uint64 currentTimestamp = 222;
         vm.warp(currentTimestamp);
 
         uint256 rcomp = 0.01e18;

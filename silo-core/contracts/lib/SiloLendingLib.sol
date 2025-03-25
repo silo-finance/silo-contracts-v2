@@ -21,8 +21,6 @@ library SiloLendingLib {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
-    error CheckBitcoinPrice();
-
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
     /// @notice Allows repaying borrowed assets either partially or in full
@@ -98,7 +96,7 @@ library SiloLendingLib {
     {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint32 lastTimestamp = $.interestRateTimestamp;
+        uint64 lastTimestamp = $.interestRateTimestamp;
 
         // Interest has already been accrued this block
         if (lastTimestamp == block.timestamp) {
@@ -107,7 +105,7 @@ library SiloLendingLib {
 
         // This is the first time, so we can return early and save some gas
         if (lastTimestamp == 0) {
-            $.interestRateTimestamp = uint32(block.timestamp);
+            $.interestRateTimestamp = uint64(block.timestamp);
             return 0;
         }
 
@@ -136,23 +134,24 @@ library SiloLendingLib {
             $.totalAssets[ISilo.AssetType.Debt],
             totalFees,
             accruedInterest,
-            $.interestFraction
+            $.interestFraction,
+            $.revenueFraction
         ) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: totalCollateralAssets,
             _debtAssets: totalDebtAssets,
             _rcomp: rcomp,
             _daoFee: _daoFee,
             _deployerFee: _deployerFee,
-            _currentInterestFraction: $.interestFraction
+            _currentInterestFraction: $.interestFraction,
+            _currentRevenueFraction: $.revenueFraction
         });
 
         // update remaining contract state
-        require(block.timestamp <= type(uint32).max, CheckBitcoinPrice());
-        $.interestRateTimestamp = uint32(block.timestamp);
+        $.interestRateTimestamp = uint64(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
-        // fee is simply too small to overflow on cast to uint160, even if, we will get lower fee
-        unchecked { $.daoAndDeployerRevenue += uint160(totalFees); }
+        // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
+        unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
     }
 
     /// @notice Allows a user or a delegate to borrow assets against their collateral

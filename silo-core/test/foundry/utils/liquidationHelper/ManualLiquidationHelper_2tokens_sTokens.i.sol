@@ -35,8 +35,8 @@ contract ManualLiquidationHelper2TokensSTokensTest is ManualLiquidationHelperCom
     /*
     FOUNDRY_PROFILE=core-test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
-    function test_executeLiquidation_2_tokens(uint32 _addTimestamp) public {
-        vm.assume(block.timestamp + _addTimestamp < type(uint32).max);
+    function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
+        vm.assume(block.timestamp + _addTimestamp < type(uint64).max);
         vm.warp(block.timestamp + _addTimestamp);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);

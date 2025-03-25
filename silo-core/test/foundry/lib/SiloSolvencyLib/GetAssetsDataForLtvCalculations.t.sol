@@ -160,7 +160,8 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 new SiloMock(silo0).getCollateralAndDebtTotalsWithInterestFactionStorageMock({
                     _collateralAssets: scenario.input.collateralConfig.totalCollateralAssets,
                     _debtAssets: scenario.input.collateralConfig.totalDebtAssets,
-                    _interestFraction: 0
+                    _interestFraction: 0,
+                    _revenueFraction: 0
                 });
             }
 
@@ -175,7 +176,8 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
                 siloMock1.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
                     _collateralAssets: 0,
                     _debtAssets: scenario.input.debtConfig.totalDebtAssets,
-                    _interestFraction: 0
+                    _interestFraction: 0,
+                    _revenueFraction: 0
                 });
 
                 interestRateModelMock.getCompoundInterestRateMock(

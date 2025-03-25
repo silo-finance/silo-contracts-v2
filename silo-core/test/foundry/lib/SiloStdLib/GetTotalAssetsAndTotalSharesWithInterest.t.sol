@@ -95,7 +95,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
             _debtAssets: 0,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         (totalAssets, totalShares) =
@@ -133,7 +134,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
             _debtAssets: 0,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);
@@ -191,7 +193,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
                 _collateralAssets: 0,
                 _debtAssets: debtTestCases[index].debtAssets,
-                _interestFraction: 0
+                _interestFraction: 0,
+                _revenueFraction: 0
             });
 
             DEBT_SHARE_TOKEN.totalSupplyMock(_totalSupply);
@@ -281,7 +284,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
             SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
                 _collateralAssets: collateralTestCases[index].collateralAssets,
                 _debtAssets: collateralTestCases[index].debtAssets,
-                _interestFraction: 0
+                _interestFraction: 0,
+                _revenueFraction: 0
             });
 
             COLLATERAL_SHARE_TOKEN.totalSupplyMock(_totalSupply);

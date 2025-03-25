@@ -395,14 +395,13 @@ library Actions {
 
         // flashFee will revert for wrong token
         uint256 fee = SiloStdLib.flashFee(_shareStorage.siloConfig, _token, _amount);
-        uint256 fee36 = fee * _FEE_DECIMALS;
 
-        require(fee36 <= type(uint160).max, FeeOverflow());
+        require(fee <= type(uint192).max, FeeOverflow());
         // this check also verify if token is correct
         require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
-        // cast safe, because we checked `fee36 <= type(uint160).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint160(fee36);
+        // cast safe, because we checked `fee <= type(uint192).max`
+        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
         IERC20(_token).safeTransfer(address(_receiver), _amount);
 
@@ -434,7 +433,7 @@ library Actions {
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
-        uint256 earnedFees = $.daoAndDeployerRevenue / _FEE_DECIMALS;
+        uint256 earnedFees = $.daoAndDeployerRevenue;
         require(earnedFees != 0, ISilo.EarnedZero());
 
         (
@@ -472,9 +471,9 @@ library Actions {
         } // else deployer was never setup or deployer NFT has been burned and we stay with `daoRevenue = earnedFees;`
 
         // we will never underflow because:
-        // `earnedFees * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
-        // cast is only because we operating on uint256, but we using uin160 values
-        unchecked { $.daoAndDeployerRevenue -= uint160(earnedFees * _FEE_DECIMALS); }
+        // `earnedFees` max value is `daoAndDeployerRevenue`
+        // cast is only because we operating on uint256, but we using uin192 values
+        unchecked { $.daoAndDeployerRevenue -= uint192(earnedFees); }
 
         if (deployerFeeReceiver == address(0)) {
             require(earnedFees != 0, ISilo.EarnedZero());

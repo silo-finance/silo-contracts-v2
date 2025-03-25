@@ -29,7 +29,8 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
             _debtAssets: 0,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);
@@ -43,7 +44,8 @@ contract GetTotalDebtAssetsWithInterestTest is Test {
         SILO.getCollateralAndDebtTotalsWithInterestFactionStorageMock({
             _collateralAssets: 0,
             _debtAssets: 1e18,
-            _interestFraction: 0
+            _interestFraction: 0,
+            _revenueFraction: 0
         });
 
         INTEREST_RATE_MODEL.getCompoundInterestRateMock(silo, block.timestamp, 0);

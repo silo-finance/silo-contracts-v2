@@ -188,7 +188,7 @@ contract BorrowingHandler is BaseHandler {
 
         uint256 liquidity = ISilo(target).getLiquidity();
 
-        (uint256 collateralAssets,,) = ISilo(target).getCollateralAndDebtTotalsWithInterestFactionStorage();
+        (uint256 collateralAssets,,,) = ISilo(target).getCollateralAndDebtTotalsWithInterestFactionStorage();
 
         uint256 _assets = ISilo(target).convertToAssets(
             _shares,

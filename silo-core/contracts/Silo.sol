@@ -146,10 +146,15 @@ contract Silo is ISilo, ShareCollateralToken {
         external
         view
         virtual
-        returns (uint256 totalCollateralAssets, uint256 totalDebtAssets, uint64 interestFraction)
+        returns (
+            uint256 totalCollateralAssets,
+            uint256 totalDebtAssets,
+            uint64 interestFraction,
+            uint64 revenueFraction
+        )
     {
         (
-            totalCollateralAssets, totalDebtAssets, interestFraction
+            totalCollateralAssets, totalDebtAssets, interestFraction, revenueFraction
         ) = Views.getCollateralAndDebtTotalsWithInterestFaction();
     }
 

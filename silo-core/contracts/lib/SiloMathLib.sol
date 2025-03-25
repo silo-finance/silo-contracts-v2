@@ -33,6 +33,7 @@ library SiloMathLib {
     /// @param _daoFee The fee (in 18 decimals points) to be taken for the DAO
     /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
     /// @param _currentInterestFraction current uncounted fraction of interest (in 36 decimals points)
+    /// @param _currentRevenueFraction current uncounted fraction of revenue (in 36 decimals points)
     /// @return collateralAssetsWithInterest The total collateral assets including the accrued interest
     /// @return debtAssetsWithInterest The debt assets with accrued interest
     /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer (36 decimals)
@@ -44,7 +45,8 @@ library SiloMathLib {
         uint256 _rcomp,
         uint256 _daoFee,
         uint256 _deployerFee,
-        uint64 _currentInterestFraction
+        uint64 _currentInterestFraction,
+        uint64 _currentRevenueFraction
     )
         internal
         pure
@@ -53,36 +55,50 @@ library SiloMathLib {
             uint256 debtAssetsWithInterest,
             uint256 daoAndDeployerRevenue,
             uint256 accruedInterest,
-            uint64 newInterestFraction
+            uint64 newInterestFraction,
+            uint64 newRevenueFraction
         )
     {
         (
             debtAssetsWithInterest, accruedInterest, newInterestFraction
         ) = getDebtAmountsWithInterest(_debtAssets, _rcomp, _currentInterestFraction);
 
-        uint256 fees;
+        unchecked {
+            // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
+            uint256 fees = _daoFee + _deployerFee;
+            // safe to unchecked because: _currentInterestFraction if never more than max uint256, div is safe
+            if ((type(uint256).max - _currentInterestFraction) / accruedInterest > fees) {
+                // safe to unchecked because we checked for overflow in above `if`
+                uint256 revenue36 = accruedInterest * fees + _currentInterestFraction;
+
+                daoAndDeployerRevenue = revenue36 / _PRECISION_DECIMALS;
+                // safe to cast, because max value after modulo will be _PRECISION_DECIMALS, this is less than 2 ** 64
+                newRevenueFraction = uint64(revenue36 % _PRECISION_DECIMALS);
+            } else {
+                // on overflow we preserve state and `daoAndDeployerRevenue` will be 0
+                newRevenueFraction = _currentInterestFraction;
+            }
+        }
+
         uint256 collateralInterest;
 
         unchecked {
-            // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
-            fees = _daoFee + _deployerFee;
-            // if we didn't revert on accruedInterest calculations, which is `total * rcomp` then we will not overflow
-            // on `accruedInterest * fees`, otherwise `accruedInterest` will be 0 and `* fees` will not overflow as well
-            daoAndDeployerRevenue = accruedInterest * fees;
             // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
             collateralInterest = accruedInterest - (daoAndDeployerRevenue / _PRECISION_DECIMALS);
         }
 
-        // save to uncheck because variable can not be more than max
-        uint256 cap = type(uint256).max - _collateralAssets;
+        { // too deep
+            // save to uncheck because variable can not be more than max
+            uint256 cap = type(uint256).max - _collateralAssets;
 
-        if (cap < collateralInterest) {
-            // avoid overflow on interest
-            collateralInterest = cap;
+            if (cap < collateralInterest) {
+                // avoid overflow on interest
+                collateralInterest = cap;
+            }
+
+            // safe to uncheck because of cap
+            unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }
         }
-
-        // safe to uncheck because of cap
-        unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }
     }
 
     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow
