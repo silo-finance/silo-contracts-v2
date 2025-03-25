@@ -121,6 +121,10 @@ contract Silo is ISilo, ShareCollateralToken {
         return Views.getSiloStorage();
     }
 
+    function getFractionsStorage() external view returns (Fractions memory fractions) {
+        fractions = Views.getFractionsStorage();
+    }
+
     /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         totalCollateralAssets = _totalAssets();

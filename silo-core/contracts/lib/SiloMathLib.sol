@@ -42,7 +42,7 @@ library SiloMathLib {
         uint256 _rcomp,
         uint256 _daoFee,
         uint256 _deployerFee,
-        uint256 _integral
+        ISilo.Fractions memory _fractions
     )
         internal
         pure
@@ -53,15 +53,19 @@ library SiloMathLib {
             uint256 accruedInterest
         )
     {
+        uint256 integral;
+
+        (integral, _fractions.interest) = SiloMathLib.calculateFraction(_debtAssets, _rcomp, _fractions.interest);
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
-        accruedInterest += _integral;
+        accruedInterest += integral;
 
         uint256 fees;
 
         // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow
         unchecked { fees = _daoFee + _deployerFee; }
 
-        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);
+        (integral, _fractions.revenue) = SiloMathLib.calculateFraction(accruedInterest, fees, _fractions.revenue);
+        daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS) + integral;
 
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
         uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
