@@ -336,6 +336,10 @@ library SiloMathLib {
         uint256 _percent,
         uint64 _currentFraction
     ) internal pure returns (uint256 integral, uint64 fraction) {
+        if (_total == 0) {
+            return (0, _currentFraction);
+        }
+
         unchecked {
             // safe to unchecked because: _currentFraction if never more than max uint256, div is safe
             if ((type(uint256).max - _currentFraction) / _total <= _percent) {
