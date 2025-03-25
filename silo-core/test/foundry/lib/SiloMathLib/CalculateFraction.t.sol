@@ -43,7 +43,7 @@ contract CalculateFractionTest is Test {
 
         _calculateFraction_check({
             _total: 123456789, _percent: 0.0001e18, _currentFraction: 0.55e18,
-            _integral: 1, _fraction: 228900000000114700, _msg: "#5" // (123456789 * 0.0001e18 + 0.55e18)  % 1e18
+            _integral: 1, _fraction: 228900000000000000, _msg: "#5" // (123456789 * 0.0001e18 + 0.55e18)  % 1e18
         });
     }
 
