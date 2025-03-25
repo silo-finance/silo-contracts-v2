@@ -457,10 +457,9 @@ library Actions {
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 
-        if (deployerFeeReceiver == address(0)) {
-            // deployer was never setup or deployer NFT has been burned
-            daoRevenue = earnedFees;
-        } else {
+        daoRevenue = earnedFees;
+
+        if (deployerFeeReceiver != address(0)) {
             // split fees proportionally
             daoRevenue *= daoFee;
 
@@ -470,7 +469,7 @@ library Actions {
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }
-        }
+        } // else deployer was never setup or deployer NFT has been burned and we stay with `daoRevenue = earnedFees;`
 
         // we will never underflow because:
         // `earnedFees * _FEE_DECIMALS` max value is `daoAndDeployerRevenue`
