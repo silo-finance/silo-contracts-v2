@@ -470,11 +470,14 @@ library Actions {
             }
 
             // trying to transfer to deployer (it might fail)
-            // if transfer to deployer fails, send their portion to the DAO instead
-            redirectedDeployerFees = !_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue);
+            if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
+                // if transfer to deployer fails, send their portion to the DAO instead
+                daoRevenue = earnedFees;
+                redirectedDeployerFees = true;
+            }
         }
 
-        IERC20(asset).safeTransfer(daoFeeReceiver, redirectedDeployerFees ? earnedFees : daoRevenue);
+        IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
     }
