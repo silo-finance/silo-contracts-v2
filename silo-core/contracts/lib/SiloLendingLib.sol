@@ -125,6 +125,11 @@ library SiloLendingLib {
             _lastTimestamp: lastTimestamp
         });
 
+        if (rcomp == 0) {
+            $.interestRateTimestamp = uint64(block.timestamp);
+            return 0;
+        }
+
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest({
