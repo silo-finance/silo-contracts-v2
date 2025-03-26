@@ -17,7 +17,7 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
     forge test -vv --ffi --mc WithdrawFeesIntegrationTest
 */
 contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
-    uint256 constant INTEREST_TO_COMPARE = 10332;
+    uint256 constant INTEREST_TO_COMPARE = 103;
     uint256 constant INTEREST_TIME = 1 days;
 
     address user = makeAddr("user");
