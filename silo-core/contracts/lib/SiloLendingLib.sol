@@ -140,11 +140,10 @@ library SiloLendingLib {
             _deployerFee: _deployerFee
         });
 
-        // if accruedInterest is 0 then we had overflow so we don't do anything
         // if totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
         // about precision because there is enough amount of debt to generate double wei digit
         // of interest so we can safely ignore fractions
-        if (accruedInterest > 0 && _ROUNDING_THRESHOLD > totalDebtAssets) {
+        if (_ROUNDING_THRESHOLD > totalDebtAssets) {
             uint256 integralInterest;
             (
                 integralInterest, $.fractions.interest
