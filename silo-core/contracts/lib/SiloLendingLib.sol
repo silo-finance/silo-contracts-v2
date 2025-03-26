@@ -410,22 +410,24 @@ library SiloLendingLib {
         if (_totalDebtAssets >= _ROUNDING_THRESHOLD) return (_accruedInterest, _totalFees);
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        ISilo.Fractions memory fractions = $.fractions;
 
         uint256 integralInterest;
         uint256 integralRevenue;
 
         (
-            integralInterest, $.fractions.interest
-        ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, $.fractions.interest);
+            integralInterest, fractions.interest
+        ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, fractions.interest);
 
         accruedInterest = _accruedInterest + integralInterest;
 
         (
-            integralRevenue, $.fractions.revenue
-        ) = SiloMathLib.calculateFraction(accruedInterest, _fees, $.fractions.revenue);
+            integralRevenue, fractions.revenue
+        ) = SiloMathLib.calculateFraction(accruedInterest, _fees, fractions.revenue);
 
         totalFees = _totalFees + integralRevenue;
 
+        $.fractions = fractions;
         $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
 
         $.totalAssets[ISilo.AssetType.Collateral] =

@@ -188,7 +188,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         );
 
         vm.warp(block.timestamp + 6050);
-        emit log("warp...");
+        emit log("warp... 6050");
         (, prevDaoAndDeployerRevenue) = _printFractions(silo1.accrueInterest());
 
         vm.expectEmit(address(silo1));
