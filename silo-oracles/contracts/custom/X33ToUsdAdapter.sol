@@ -20,7 +20,7 @@ contract X33ToUsdAdapter is AggregatorV3Interface {
     IERC4626 public constant X33 = IERC4626(0x3333111A391cC08fa51353E9195526A70b333333);
 
     /// @dev Shadow / USD feed. 
-    AggregatorV3Interface public immutable SHADOW_USD_FEED;
+    AggregatorV3Interface public immutable SHADOW_USD_FEED; // solhint-disable-line var-name-mixedcase
 
     error InvalidShadowUsdFeed();
     error NotImplemented();
