@@ -86,7 +86,7 @@ abstract contract PostconditionsSpec {
     /// @notice related to silo properties RA_silo_solvent_after_borrow & RA_silo_solvent_after_repaying
     string constant BORROWING_GPOST_C = "BORROWING_GPOST_C: No action except liquidations can leave a user unhealthy.";
 
-    string constant BORROWING_HSPOST_D = "BORROWING_HSPOST_D: a user can always repay debt in full";
+    string constant BORROWING_HSPOST_D = "BORROWING_HSPOST_D: a user can always repay debt in full (+-1wei)";
 
     string constant BORROWING_HSPOST_E = "BORROWING_HSPOST_E: Not solvent users can not borrow"; // Included in BASE_GPOST_D
 
