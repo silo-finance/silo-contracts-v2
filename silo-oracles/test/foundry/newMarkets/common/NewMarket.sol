@@ -93,7 +93,6 @@ contract NewMarketTest is Forking {
         _collateralSilo.deposit(collateralAmount, address(this));
         _someoneDeposited(_debtToken, _debtSilo, 1e40);
 
-        
         uint256 maxBorrow = _debtSilo.maxBorrow(address(this));
 
         // silo0 is collateral as example, silo1 is debt.
