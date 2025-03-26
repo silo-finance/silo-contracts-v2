@@ -99,6 +99,8 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         uint64 interestRateTimestamp;
     }
 
+    /// @dev Interest and revenue may be rounded down to zero if the underlying token's decimal is low.
+    /// Because of that, we need to store fractions for further calculation to minimize losses.
     struct Fractions {
         /// @dev interest value that we could not convert to full token in 36 decimals, max value for it is 1e18.
         /// this value was not yet apply as interest for borrowers
