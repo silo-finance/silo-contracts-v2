@@ -116,7 +116,7 @@ contract NewMarketTest is Forking {
             0.01e18 // 1% deviation max
         );
 
-        if (_ltv!= 0) {
+        if (_ltv != 0) {
             _debtSilo.borrow(maxBorrow, address(this), address(this));
             assertTrue(_debtToken.balanceOf(address(this)) >= maxBorrow);
         }
