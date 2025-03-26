@@ -22,6 +22,7 @@ library SiloLendingLib {
     using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
+    uint256 internal constant _ROUNDING_THRESHOLD = 1e13;
 
     /// @notice Allows repaying borrowed assets either partially or in full
     /// @param _debtShareToken debt share token address
@@ -129,8 +130,6 @@ library SiloLendingLib {
             emit IInterestRateModel.InterestRateModelError();
         }
 
-        ISilo.Fractions memory fractions = $.fractions;
-
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
         ) = SiloMathLib.getCollateralAmountsWithInterest({
@@ -138,12 +137,33 @@ library SiloLendingLib {
             _debtAssets: totalDebtAssets,
             _rcomp: rcomp,
             _daoFee: _daoFee,
-            _deployerFee: _deployerFee,
-            _fractions: fractions
+            _deployerFee: _deployerFee
         });
 
+        // if accruedInterest is 0 then we had overflow so we don't do anything
+        // if totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
+        // about precision because there is enough amount of debt to generate double wei digit
+        // of interest so we can safely ignore fractions
+        if (accruedInterest > 0 && _ROUNDING_THRESHOLD > totalDebtAssets) {
+            uint256 integralInterest;
+            (
+                integralInterest, $.fractions.interest
+            ) = SiloMathLib.calculateFraction(totalDebtAssets, rcomp, $.fractions.interest);
+
+            uint256 integralRevenue;
+            (
+                integralRevenue, $.fractions.revenue
+            ) = SiloMathLib.calculateFraction(accruedInterest, _daoFee + _deployerFee, $.fractions.revenue);
+
+            accruedInterest += integralInterest;
+            $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
+            totalFees += integralRevenue;
+            $.totalAssets[ISilo.AssetType.Collateral] += integralInterest - integralRevenue;
+
+            // TODO cap?
+        }
+
         // update remaining contract state
-        $.fractions = fractions;
         $.interestRateTimestamp = uint64(block.timestamp);
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
