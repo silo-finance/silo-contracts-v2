@@ -180,11 +180,12 @@ rule integrityOfCreatedSilos(env e)
 {
     initializeGhosts();
     ISiloConfig.InitData initData;
+    address creator;
     address shareProtectedCollateralTokenImpl; address shareDebtTokenImpl;
     requireAllDifferent(shareProtectedCollateralTokenImpl, 
         shareDebtTokenImpl, theSiloConfig, siloImplAddress);
 
-    createSilo(e, initData, theSiloConfig, siloImplAddress, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+    createSilo(e, theSiloConfig, siloImplAddress, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, initData.deployer, creator);
     
     ISiloConfig.ConfigData configDataSilo0 = theSiloConfig.getConfig(e, silo0Address);
     ISiloConfig.ConfigData configDataSilo1 = theSiloConfig.getConfig(e, silo1Address);
