@@ -52,8 +52,6 @@ library SiloMathLib {
             uint256 accruedInterest
         )
     {
-        uint256 integral;
-
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
 
         uint256 fees;

@@ -9,7 +9,6 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
-import {SiloStorageLib} from "./SiloStorageLib.sol";
 
 library SiloStdLib {
     using SafeERC20 for IERC20;
