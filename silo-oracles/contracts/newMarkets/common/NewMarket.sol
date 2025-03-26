@@ -105,10 +105,10 @@ contract NewMarketTest is Forking {
         uint256 calculatedCollateralValue = _collateralPrice * tokensToDeposit;
         uint256 calculatedBorrowedValue = calculatedCollateralValue * _ltv / 10 ** 18;
         uint256 calculatedTokensToBorrow = calculatedBorrowedValue / _debtPrice;
-        uint256 calculatedMaxBorrow = calculatedTokensToBorrow * 10**TokenHelper.assertAndGetDecimals(address(_debtToken));
+        uint256 calculatedMaxBorrow = calculatedTokensToBorrow * 10 ** TokenHelper.assertAndGetDecimals(address(_debtToken));
 
         assertTrue(
-            calculatedMaxBorrow > 10**TokenHelper.assertAndGetDecimals(address(_debtToken)),
+            calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_debtToken)),
             "at least one token for precision"
         );
 
