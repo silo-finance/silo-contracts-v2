@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {X33ToUsdAdapter, IERC4626, AggregatorV3Interface} from "silo-oracles/contracts/custom/X33ToUsdAdapter.sol";
-import {TokensGenerator} from "../_common/TokensGenerator.sol";
+import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {X33ToUsdAdapterDeploy} from "silo-oracles/deploy/X33ToUsdAdapterDeploy.sol";
 import {PythAggregatorV3} from "pyth-sdk-solidity/PythAggregatorV3.sol";
@@ -10,13 +10,13 @@ import {PythAggregatorV3} from "pyth-sdk-solidity/PythAggregatorV3.sol";
 /*
     FOUNDRY_PROFILE=oracles forge test -vv --match-contract X33ToUsdAdapterTest
 */
-contract X33ToUsdAdapterTest is TokensGenerator {
+contract X33ToUsdAdapterTest is Forking {
     uint256 constant TEST_BLOCK = 16052525;
     IERC20Metadata constant X33 = IERC20Metadata(0x3333111A391cC08fa51353E9195526A70b333333);
     AggregatorV3Interface constant SHADOW_USD_FEED = AggregatorV3Interface(0x7216D86aed9832B2A5A3c2ca34F9a097F66b53D4);
     X33ToUsdAdapter adapter;
 
-    constructor() TokensGenerator(BlockChain.SONIC) {
+    constructor() Forking(BlockChain.SONIC) {
         initFork(TEST_BLOCK);
         X33ToUsdAdapterDeploy deploy = new X33ToUsdAdapterDeploy();
         deploy.disableDeploymentsSync();
