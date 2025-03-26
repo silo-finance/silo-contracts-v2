@@ -118,21 +118,12 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        uint256 rcomp;
-
-        try
-            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
-                totalCollateralAssets,
-                totalDebtAssets,
-                lastTimestamp
-            )
-            returns (uint256 interestRate)
-        {
-            rcomp = interestRate;
-        } catch {
-            // do not lock silo on interest calculation
-            emit IInterestRateModel.InterestRateModelError();
-        }
+        uint256 rcomp = getCompoundInterestRate({
+            _interestRateModel: _interestRateModel,
+            _totalCollateralAssets: totalCollateralAssets,
+            _totalDebtAssets: totalDebtAssets,
+            _lastTimestamp: lastTimestamp
+        });
 
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
@@ -144,30 +135,13 @@ library SiloLendingLib {
             _deployerFee: _deployerFee
         });
 
-        // if totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
-        // about precision because there is enough amount of debt to generate double wei digit
-        // of interest so we can safely ignore fractions
-        if (_ROUNDING_THRESHOLD > totalDebtAssets) {
-            uint256 integralInterest;
-            uint256 integralRevenue;
-
-            (
-                integralInterest, $.fractions.interest
-            ) = SiloMathLib.calculateFraction(totalDebtAssets, rcomp, $.fractions.interest);
-
-            accruedInterest += integralInterest;
-
-            (
-                integralRevenue, $.fractions.revenue
-            ) = SiloMathLib.calculateFraction(accruedInterest, _daoFee + _deployerFee, $.fractions.revenue);
-
-            totalFees += integralRevenue;
-
-            $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
-
-            $.totalAssets[ISilo.AssetType.Collateral] =
-                $.totalAssets[ISilo.AssetType.Collateral] + integralInterest - integralRevenue;
-        }
+        totalFees = applyFractions({
+            _totalDebtAssets: totalDebtAssets,
+            _rcomp: rcomp,
+            _accruedInterest: accruedInterest,
+            _fees: _daoFee + _deployerFee,
+            _totalFees: totalFees
+        });
 
         // update remaining contract state
         $.interestRateTimestamp = uint64(block.timestamp);
@@ -393,5 +367,63 @@ library SiloLendingLib {
         assets = SiloMathLib.convertToAssets(
             shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
         );
+    }
+
+    function getCompoundInterestRate(
+        address _interestRateModel,
+        uint256 _totalCollateralAssets,
+        uint256 _totalDebtAssets,
+        uint64 _lastTimestamp
+    ) internal returns (uint256 rcomp) {
+        try
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+                _totalCollateralAssets,
+                _totalDebtAssets,
+                _lastTimestamp
+            )
+            returns (uint256 interestRate)
+        {
+            rcomp = interestRate;
+        } catch {
+            // do not lock silo on interest calculation
+            emit IInterestRateModel.InterestRateModelError();
+        }
+    }
+
+    function applyFractions(
+        uint256 _totalDebtAssets,
+        uint256 _rcomp,
+        uint256 _accruedInterest,
+        uint256 _fees,
+        uint256 _totalFees
+    )
+        internal returns (uint256 totalFees)
+    {
+        // if _totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
+        // about precision because there is enough amount of debt to generate double wei digit
+        // of interest so we can safely ignore fractions
+        if (_ROUNDING_THRESHOLD <= _totalDebtAssets) return _totalFees;
+
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        uint256 integralInterest;
+        uint256 integralRevenue;
+
+        (
+            integralInterest, $.fractions.interest
+        ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, $.fractions.interest);
+
+        _accruedInterest += integralInterest;
+
+        (
+            integralRevenue, $.fractions.revenue
+        ) = SiloMathLib.calculateFraction(_accruedInterest, _fees, $.fractions.revenue);
+
+        totalFees += integralRevenue;
+
+        $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
+
+        $.totalAssets[ISilo.AssetType.Collateral] =
+            $.totalAssets[ISilo.AssetType.Collateral] + integralInterest - integralRevenue;
     }
 }
