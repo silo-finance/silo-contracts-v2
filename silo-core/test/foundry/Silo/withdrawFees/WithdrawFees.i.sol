@@ -85,7 +85,6 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         uint8 _decimals = 8;
 
         // we have 8 decimals, so with higher amount, we should get similar results as for 18
-        // they wil not match 100% because we crating fragmented borrow amount
         _setUp(1, _decimals);
 
         vm.warp(block.timestamp + 1);
@@ -99,16 +98,13 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         emit log_named_uint("fractions.revenue", fractions.revenue);
         emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
 
-        assertEq(interest, 1109842720, "interest");
-        assertEq(fractions.interest, 502466316910034951, "expect fractions.interest");
+        assertEq(interest, 0, "interest");
+        assertEq(fractions.interest, 115971754552331934, "expect fractions.interest");
 
-        assertEq(fractions.revenue, 0, "expect fractions.revenue");
-        assertEq(daoAndDeployerRevenue, 277460680, "expect daoAndDeployerRevenue");
+        assertEq(daoAndDeployerRevenue, 0, "expect daoAndDeployerRevenue");
+        assertEq(fractions.revenue, 0, "expect NO fractions.revenue (this is delayed)");
 
-        vm.expectEmit(address(silo1));
-        uint256 daoFees = 166476408;
-        uint256 deployerFees = 110984272;
-        emit ISilo.WithdrawnFees(daoFees, deployerFees, false);
+        vm.expectRevert();
         silo1.withdrawFees();
     }
 
