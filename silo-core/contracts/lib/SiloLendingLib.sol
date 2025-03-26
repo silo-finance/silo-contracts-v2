@@ -413,11 +413,11 @@ library SiloLendingLib {
             integralInterest, $.fractions.interest
         ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, $.fractions.interest);
 
-        _accruedInterest += integralInterest;
+        accruedInterest = _accruedInterest + integralInterest;
 
         (
             integralRevenue, $.fractions.revenue
-        ) = SiloMathLib.calculateFraction(_accruedInterest, _fees, $.fractions.revenue);
+        ) = SiloMathLib.calculateFraction(accruedInterest, _fees, $.fractions.revenue);
 
         totalFees += integralRevenue;
 
