@@ -331,6 +331,12 @@ library SiloMathLib {
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
     }
 
+    /// @dev Calculates the fraction of a given total and percentage
+    /// @param _total The total value to calculate the fraction from
+    /// @param _percent The percentage to calculate the fraction from
+    /// @param _currentFraction The current fraction to add to the result
+    /// @return integral The integral part of the fraction
+    /// @return fraction The fractional part of the fraction
     function calculateFraction(
         uint256 _total,
         uint256 _percent,
