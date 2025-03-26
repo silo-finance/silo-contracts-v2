@@ -58,6 +58,7 @@ library SiloMathLib {
         (integral, _fractions.interest) = SiloMathLib.calculateFraction(_debtAssets, _rcomp, _fractions.interest);
         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);
         accruedInterest += integral;
+        debtAssetsWithInterest += integral;
 
         uint256 fees;
 

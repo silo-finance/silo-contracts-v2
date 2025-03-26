@@ -97,8 +97,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
 
             // we repay revenue only, so that part that's not going to users as interest
-            // decrease by small amount because it is hard to calculate exact number with rounding losses
-            _repay( daoAndDeployerRevenue - 7, borrower);
+            _repay( daoAndDeployerRevenue, borrower);
 
             emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 36);
 

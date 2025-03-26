@@ -257,7 +257,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             sum += silo1.accrueInterest();
         }
 
-        assertEq(sum, INTEREST_TO_COMPARE - 2, "compare: per second, it should be (almost) equal");
+        assertEq(sum, INTEREST_TO_COMPARE, "compare: per second, it should be equal");
     }
 
     function _fragmentedAmount(uint256 _amount, uint8 _decimals) internal pure returns (uint256) {
