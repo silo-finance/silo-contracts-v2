@@ -24,6 +24,7 @@ library SiloLendingLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
     /// @dev If SILO has low total debt, interest might be lost to rounding for low deposits.
     /// Value is based on minimal deposit needed to accrue two digit wei interest for 1 second at 0.01% APR.
+    /// Example of calculations for 1 second at 0.01% APR and totalDebtAssets 1e13:
     /// 1e13 * (0.0001/365/24/3600*1e18) * 1 / 1e18 = 31.70979198376459
     uint256 internal constant _ROUNDING_THRESHOLD = 1e13;
 
