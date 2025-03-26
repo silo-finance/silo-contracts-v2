@@ -115,6 +115,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         uint192 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
+        /// @dev Interest and revenue fractions for more precise calculations
         Fractions fractions;
 
         /// @dev silo is just for one asset,
