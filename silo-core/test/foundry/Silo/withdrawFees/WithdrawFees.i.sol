@@ -132,14 +132,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
                 break;
             }
 
-            (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-
-            ISilo.Fractions memory fractions = silo1.getFractionsStorage();
-
-            emit log_named_uint(string.concat("#", Strings.toString(t), " interest"), interest);
-            emit log_named_uint(string.concat("#", Strings.toString(t), " fractions.interest"), fractions.interest);
-            emit log_named_uint(string.concat("#", Strings.toString(t), " fractions.revenue"), fractions.revenue);
-            emit log_named_uint(string.concat("#", Strings.toString(t), " daoAndDeployerRevenue"), daoAndDeployerRevenue);
+            (ISilo.Fractions memory fractions, uint192 daoAndDeployerRevenue) = _printFractions(interest);
 
             assertEq(
                 interest,
@@ -186,13 +179,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         assertGt(interest, 0, "expect some interest at this point");
 
-        (uint192 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-        ISilo.Fractions memory fractions = silo1.getFractionsStorage();
-
-        emit log_named_uint("#final interest", interest);
-        emit log_named_uint("#final fractions.interest", fractions.interest);
-        emit log_named_uint("#final fractions.revenue", fractions.revenue);
-        emit log_named_uint("#final daoAndDeployerRevenue", daoAndDeployerRevenue);
+        (ISilo.Fractions memory fractions, ) = _printFractions(interest);
 
         assertLt(
             fractions.interest,
@@ -200,11 +187,9 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
             "prevInterestFraction is result of modulo, so once we got interest it should circle-drop"
         );
 
-        vm.warp(block.timestamp + 60);
-
-        silo1.accrueInterest();
-
-        (prevDaoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        vm.warp(block.timestamp + 6050);
+        emit log("warp...");
+        (, prevDaoAndDeployerRevenue) = _printFractions(silo1.accrueInterest());
 
         vm.expectEmit(address(silo1));
         emit ISilo.WithdrawnFees(1, 1, false);
@@ -219,7 +204,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("# daoAndDeployerRevenue", prevDaoAndDeployerRevenue, 18);
 
-        (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
         assertLt(daoAndDeployerRevenue, 10 ** _decimals, "[daoAndDeployerRevenue] only fraction left < 1e18");
     }
 
@@ -262,6 +247,19 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         }
 
         return _amount;
+    }
+
+    function _printFractions(uint256 interest)
+        internal
+        returns (ISilo.Fractions memory fractions, uint192 daoAndDeployerRevenue)
+    {
+        (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+        fractions = silo1.getFractionsStorage();
+
+        emit log_named_uint("interest", interest);
+        emit log_named_uint("fractions.interest", fractions.interest);
+        emit log_named_uint("fractions.revenue", fractions.revenue);
+        emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
     }
 
     /*
