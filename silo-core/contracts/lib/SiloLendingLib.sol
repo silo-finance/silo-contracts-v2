@@ -148,16 +148,18 @@ library SiloLendingLib {
         // of interest so we can safely ignore fractions
         if (_ROUNDING_THRESHOLD > totalDebtAssets) {
             uint256 integralInterest;
+            uint256 integralRevenue;
+
             (
                 integralInterest, $.fractions.interest
             ) = SiloMathLib.calculateFraction(totalDebtAssets, rcomp, $.fractions.interest);
 
-            uint256 integralRevenue;
+            accruedInterest += integralInterest;
+
             (
                 integralRevenue, $.fractions.revenue
             ) = SiloMathLib.calculateFraction(accruedInterest, _daoFee + _deployerFee, $.fractions.revenue);
 
-            accruedInterest += integralInterest;
             $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
             totalFees += integralRevenue;
             $.totalAssets[ISilo.AssetType.Collateral] += integralInterest - integralRevenue;
