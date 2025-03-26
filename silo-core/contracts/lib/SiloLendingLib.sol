@@ -160,9 +160,12 @@ library SiloLendingLib {
                 integralRevenue, $.fractions.revenue
             ) = SiloMathLib.calculateFraction(accruedInterest, _daoFee + _deployerFee, $.fractions.revenue);
 
-            $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
             totalFees += integralRevenue;
-            $.totalAssets[ISilo.AssetType.Collateral] += integralInterest - integralRevenue;
+
+            $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
+
+            $.totalAssets[ISilo.AssetType.Collateral] =
+                $.totalAssets[ISilo.AssetType.Collateral] + integralInterest - integralRevenue;
         }
 
         // update remaining contract state

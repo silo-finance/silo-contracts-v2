@@ -267,4 +267,18 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         return _amount;
     }
+
+    /*
+    forge test -vv --ffi --mt test_plus_minus
+    */
+    function test_plus_minus() public {
+        uint256 integralInterest = 0;
+        uint256 integralRevenue = 1;
+        uint256 variable = 1; // must be at least one
+
+        vm.expectRevert();
+        variable += integralInterest - integralRevenue;
+
+        variable = variable + integralInterest - integralRevenue;
+    }
 }
