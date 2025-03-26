@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
@@ -15,6 +16,9 @@ import {ISiloIncentivesController} from "../interfaces/ISiloIncentivesController
   */
 abstract contract BaseIncentivesController is DistributionManager, ISiloIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
+    using SafeERC20 for IERC20;
+
+    uint256 public constant MAX_EMISSION_PER_SECOND = 1e30;
 
     mapping(address user => mapping(bytes32 programId => uint256 unclaimedRewards)) internal _usersUnclaimedRewards;
 
@@ -45,6 +49,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         onlyOwner
     {
         require(bytes(_incentivesProgramInput.name).length <= 32, TooLongProgramName());
+        require(_incentivesProgramInput.emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
         require(_incentivesProgramInput.distributionEnd >= block.timestamp, InvalidDistributionEnd());
 
         _createIncentiveProgram(_incentivesProgramInput);
@@ -57,6 +62,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         uint104 _emissionPerSecond
     ) external virtual onlyOwner {
         require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
+        require(_emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
 
         bytes32 programId = getProgramId(_incentivesProgram);
 
@@ -140,6 +146,9 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         if (_to == address(0)) revert InvalidToAddress();
 
         bytes32[] memory programIds = _getProgramsIds(_programNames);
+
+        _requireExistingPrograms(programIds);
+
         accruedRewards = _accrueRewardsForPrograms(msg.sender, programIds);
         _claimRewards(msg.sender, msg.sender, _to, accruedRewards);
     }
@@ -153,12 +162,18 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         returns (AccruedRewards[] memory accruedRewards)
     {
         bytes32[] memory programIds = _getProgramsIds(_programNames);
+
+        _requireExistingPrograms(programIds);
+
         accruedRewards = _accrueRewardsForPrograms(_user, programIds);
         _claimRewards(msg.sender, _user, _to, accruedRewards);
     }
 
     /// @inheritdoc ISiloIncentivesController
     function setClaimer(address _user, address _caller) external virtual onlyOwner {
+        require(_user != address(0), ZeroAddress());
+        require(_caller != address(0), ZeroAddress());
+
         _authorizedClaimers[_user] = _caller;
         emit ClaimerSet(_user, _caller);
     }
@@ -208,7 +223,7 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /**
-     * @dev Claims reward for an user on behalf, on all the assets of the lending pool, accumulating the pending rewards
+     * @dev Claims rewards on the user's behalf, on all the assets of the lending pool, accumulating the pending rewards
      * @param claimer Address to check and claim rewards
      * @param user Address to check and claim rewards
      * @param to Address that will be receiving the rewards
@@ -274,6 +289,17 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     }
 
     /**
+     * @dev Checks if the programs exist
+     * Reverts if any of the programs does not exist in the `_incentivesProgramIds` list
+     * @param _programIds The program ids
+     */
+    function _requireExistingPrograms(bytes32[] memory _programIds) internal view virtual {
+        for (uint256 i = 0; i < _programIds.length; i++) {
+            require(_incentivesProgramIds.contains(_programIds[i]), IncentivesProgramNotFound());
+        }
+    }
+
+    /**
      * @dev Returns the program ids for a list of program names
      * @param _programNames The program names
      * @return programIds The program ids
@@ -298,6 +324,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
      * @param amount Amount of rewards to transfer
      */
     function _transferRewards(address rewardToken, address to, uint256 amount) internal virtual {
-        IERC20(rewardToken).transfer(to, amount);
+        IERC20(rewardToken).safeTransfer(to, amount);
     }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
@@ -43,11 +44,11 @@ contract ShareDebtTokenNotInitializedTest is Test {
     */
     function test_sToken_noInit_mint() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
-        sToken.mint(address(1), address(1), 1);
+        sToken.mint(address(1), address(1), 3);
 
-        // counterexample
+        vm.expectRevert(Hook.InvalidTokenType.selector);
         vm.prank(address(0));
-        sToken.mint(address(1), address(1), 1);
+        sToken.mint(address(1), address(1), 3);
     }
 
     /*

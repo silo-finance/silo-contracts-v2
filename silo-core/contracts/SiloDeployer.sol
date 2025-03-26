@@ -57,13 +57,14 @@ contract SiloDeployer is ISiloDeployer {
         // deploy `SiloConfig` (with predicted addresses)
         siloConfig = _deploySiloConfig(_siloInitData);
         // create silo
-        SILO_FACTORY.createSilo(
-            _siloInitData,
-            siloConfig,
-            SILO_IMPL,
-            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            SHARE_DEBT_TOKEN_IMPL
-        );
+        SILO_FACTORY.createSilo({
+            _siloConfig: siloConfig,
+            _siloImpl: SILO_IMPL,
+            _shareProtectedCollateralTokenImpl: SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
+            _shareDebtTokenImpl: SHARE_DEBT_TOKEN_IMPL,
+            _deployer: _siloInitData.deployer,
+            _creator: msg.sender
+        });
         // initialize hook receiver only if it was cloned
         _initializeHookReceiver(_siloInitData, siloConfig, _clonableHookReceiver);
 
@@ -74,7 +75,7 @@ contract SiloDeployer is ISiloDeployer {
     /// @param _siloInitData Silo configuration for the silo creation
     /// @return siloConfig Deployed `SiloConfig`
     function _deploySiloConfig(ISiloConfig.InitData memory _siloInitData) internal returns (ISiloConfig siloConfig) {
-        uint256 nextSiloId = SILO_FACTORY.getNextSiloId();
+        uint256 creatorSiloCounter = SILO_FACTORY.creatorSiloCounter(msg.sender);
 
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
@@ -87,35 +88,52 @@ contract SiloDeployer is ISiloDeployer {
             SILO_FACTORY.maxLiquidationFee()
         );
 
-        configData0.silo = CloneDeterministic.predictSilo0Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
-        configData1.silo = CloneDeterministic.predictSilo1Addr(SILO_IMPL, nextSiloId, address(SILO_FACTORY));
+        configData0.silo = CloneDeterministic.predictSilo0Addr(
+            SILO_IMPL,
+            creatorSiloCounter,
+            address(SILO_FACTORY),
+            msg.sender
+        );
+
+        configData1.silo = CloneDeterministic.predictSilo1Addr(
+            SILO_IMPL,
+            creatorSiloCounter,
+            address(SILO_FACTORY),
+            msg.sender
+        );
 
         configData0.collateralShareToken = configData0.silo;
         configData1.collateralShareToken = configData1.silo;
 
         configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
             SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            nextSiloId,
-            address(SILO_FACTORY)
+            creatorSiloCounter,
+            address(SILO_FACTORY),
+            msg.sender
         );
 
         configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
             SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            nextSiloId,
-            address(SILO_FACTORY)
+            creatorSiloCounter,
+            address(SILO_FACTORY),
+            msg.sender
         );
 
         configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
             SHARE_DEBT_TOKEN_IMPL,
-            nextSiloId,
-            address(SILO_FACTORY)
+            creatorSiloCounter,
+            address(SILO_FACTORY),
+            msg.sender
         );
 
         configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
             SHARE_DEBT_TOKEN_IMPL,
-            nextSiloId,
-            address(SILO_FACTORY)
+            creatorSiloCounter,
+            address(SILO_FACTORY),
+            msg.sender
         );
+
+        uint256 nextSiloId = SILO_FACTORY.getNextSiloId();
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
@@ -140,21 +158,21 @@ contract SiloDeployer is ISiloDeployer {
     /// @param _siloInitData Silo configuration for the silo creation
     /// @param _oracles Oracles creation details (factory and creation tx input)
     function _createOracles(ISiloConfig.InitData memory _siloInitData, Oracles memory _oracles) internal {
-        _siloInitData.solvencyOracle0 = _siloInitData.solvencyOracle0 != address(0)
-            ? _siloInitData.solvencyOracle0
-            : _createOracle(_oracles.solvencyOracle0);
+        if (_siloInitData.solvencyOracle0 == address(0)) {
+            _siloInitData.solvencyOracle0 = _createOracle(_oracles.solvencyOracle0);
+        }
 
-        _siloInitData.maxLtvOracle0 = _siloInitData.maxLtvOracle0 != address(0)
-            ? _siloInitData.maxLtvOracle0
-            : _createOracle(_oracles.maxLtvOracle0);
+        if (_siloInitData.maxLtvOracle0 == address(0)) {
+            _siloInitData.maxLtvOracle0 = _createOracle(_oracles.maxLtvOracle0);
+        }
 
-        _siloInitData.solvencyOracle1 = _siloInitData.solvencyOracle1 != address(0)
-            ? _siloInitData.solvencyOracle1
-            : _createOracle(_oracles.solvencyOracle1);
+        if (_siloInitData.solvencyOracle1 == address(0)) {
+            _siloInitData.solvencyOracle1 = _createOracle(_oracles.solvencyOracle1);
+        }
 
-        _siloInitData.maxLtvOracle1 = _siloInitData.maxLtvOracle1 != address(0)
-            ? _siloInitData.maxLtvOracle1
-            : _createOracle(_oracles.maxLtvOracle1);
+        if (_siloInitData.maxLtvOracle1 == address(0)) {
+            _siloInitData.maxLtvOracle1 = _createOracle(_oracles.maxLtvOracle1);
+        }
     }
 
     /// @notice Create an oracle

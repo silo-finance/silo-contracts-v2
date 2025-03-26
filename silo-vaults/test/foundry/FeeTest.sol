@@ -65,7 +65,7 @@ contract FeeTest is IntegrationTest {
         uint256 interest = totalAssetsAfter - vault.lastTotalAssets();
         uint256 feeAssets = Math.mulDiv(interest, FEE, WAD);
 
-        return Math.mulDiv(feeAssets, vault.totalSupply() + 1, totalAssetsAfter - feeAssets + 1, Math.Rounding.Floor);
+        return Math.mulDiv(feeAssets, vault.totalSupply() + OFFSET_POW, totalAssetsAfter - feeAssets + 1, Math.Rounding.Floor);
     }
 
     /*
@@ -200,6 +200,36 @@ contract FeeTest is IntegrationTest {
 
         vm.prank(ONBEHALF);
         vault.withdraw(withdrawn, RECEIVER, ONBEHALF);
+
+        assertApproxEqAbs(vault.lastTotalAssets(), vault.totalAssets(), 1, "lastTotalAssets2");
+        assertEq(vault.balanceOf(FEE_RECIPIENT), feeShares, "vault.balanceOf(FEE_RECIPIENT)");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testClaimRewardsAccrueFee -vvv
+    */
+    function testClaimRewardsAccrueFee(uint256 deposited, uint256 withdrawn, uint256 blocks) public {
+        deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+        withdrawn = bound(withdrawn, MIN_TEST_ASSETS, deposited);
+        blocks = _boundBlocks(blocks);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(deposited, ONBEHALF);
+
+        assertApproxEqAbs(vault.lastTotalAssets(), vault.totalAssets(), 1, "lastTotalAssets1");
+
+        _forward(blocks);
+
+        uint256 feeShares = _feeShares();
+        vm.assume(feeShares != 0);
+
+        vm.expectEmit(address(vault));
+        // AccrueInterest(newTotalAssets: 10000418691750321042067128277 [1e28], feeShares: 83735545313645916835716363000 [8.373e28])
+        // AccrueInterest(newTotalAssets: 10000418691750321042067128277 [1e28], feeShares: 83735545313645916835716363 [8.373e25])
+        emit EventsLib.AccrueInterest(vault.totalAssets(), feeShares);
+
+        vm.prank(ONBEHALF);
+        vault.claimRewards();
 
         assertApproxEqAbs(vault.lastTotalAssets(), vault.totalAssets(), 1, "lastTotalAssets2");
         assertEq(vault.balanceOf(FEE_RECIPIENT), feeShares, "vault.balanceOf(FEE_RECIPIENT)");
@@ -342,7 +372,7 @@ contract FeeTest is IntegrationTest {
 
         uint256 feeShares = _feeShares();
         uint256 expectedShares =
-            Math.mulDiv(assets, vault.totalSupply() + feeShares + 1, vault.totalAssets() + 1, Math.Rounding.Floor);
+            Math.mulDiv(assets, vault.totalSupply() + feeShares + OFFSET_POW, vault.totalAssets() + 1, Math.Rounding.Floor);
         uint256 shares = vault.convertToShares(assets);
 
         assertEq(shares, expectedShares, "shares");
@@ -366,7 +396,7 @@ contract FeeTest is IntegrationTest {
 
         uint256 feeShares = _feeShares();
         uint256 expectedAssets =
-            Math.mulDiv(shares, vault.totalAssets() + 1, vault.totalSupply() + feeShares + 1, Math.Rounding.Floor);
+            Math.mulDiv(shares, vault.totalAssets() + 1, vault.totalSupply() + feeShares + OFFSET_POW, Math.Rounding.Floor);
         uint256 assets = vault.convertToAssets(shares);
 
         assertEq(assets, expectedAssets, "assets");

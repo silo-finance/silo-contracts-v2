@@ -35,7 +35,6 @@ common/addresses/anvil.json
 coverage
 !coverage/silo-core.txt
 !coverage/silo-oracles.txt
-lcov.info
 
 # echidna
 corpus/
@@ -52,3 +51,4 @@ silo-core/deploy/input/_importFromCsv/
 **/broadcast/
 **/broadcast/*
 !silo-core/broadcast/SiloDeployerDeploy.s.sol/**/run-latest.json
+emv-**/*

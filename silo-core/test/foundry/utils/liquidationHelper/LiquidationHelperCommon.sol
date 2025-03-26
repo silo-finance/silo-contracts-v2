@@ -24,7 +24,6 @@ abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     ILiquidationHelper.LiquidationData liquidationData;
-    // TODO write at least one tests with swap
     LiquidationHelper.DexSwapInput[] dexSwapInput;
 
     ISilo _flashLoanFrom;

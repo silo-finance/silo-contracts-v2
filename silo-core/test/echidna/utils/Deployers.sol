@@ -19,6 +19,7 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
@@ -202,11 +203,11 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deployGaugeHookReceiver() internal {
-        hookReceiver = IGaugeHookReceiver(address(new GaugeHookReceiver()));
+        hookReceiver = IGaugeHookReceiver(address(new SiloHookV1()));
     }
 
     function core_deploySiloLiquidation() internal {
-        liquidationModule = new PartialLiquidation();
+        liquidationModule = PartialLiquidation(address(new SiloHookV1()));
     }
 
     function core_deploySiloDeployer() internal {
@@ -230,6 +231,7 @@ contract Deployers is VyperDeployer, Data {
         address _shareDebtTokenImpl
     ) internal returns (ISiloConfig siloConfig) {
         uint256 nextSiloId = siloFactory.getNextSiloId();
+        uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
 
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
@@ -242,34 +244,43 @@ contract Deployers is VyperDeployer, Data {
             siloFactory.maxLiquidationFee()
         );
 
-        configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
-        configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, nextSiloId, address(siloFactory));
+        configData0.silo = CloneDeterministic.predictSilo0Addr(
+            _siloImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
+
+        configData1.silo = CloneDeterministic.predictSilo1Addr(
+            _siloImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
 
         configData0.collateralShareToken = configData0.silo;
         configData1.collateralShareToken = configData1.silo;
 
         configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
             _shareProtectedCollateralTokenImpl,
-            nextSiloId,
-            address(siloFactory)
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
         );
 
         configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
             _shareProtectedCollateralTokenImpl,
-            nextSiloId,
-            address(siloFactory)
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
         );
 
         configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
             _shareDebtTokenImpl,
-            nextSiloId,
-            address(siloFactory)
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
         );
 
         configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
             _shareDebtTokenImpl,
-            nextSiloId,
-            address(siloFactory)
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
         );
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));

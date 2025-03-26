@@ -27,7 +27,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_freshStart_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_previewRepay_freshStart_fuzz(
         uint112 _assetsOrShares,
         bool _partial
@@ -48,7 +48,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_debt_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_previewRepay_debt_fuzz(
         uint112 _assetsOrShares,
         bool _interest,
@@ -72,7 +72,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_min_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_previewRepay_min_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 1e18);
 
@@ -87,7 +87,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewRepay_max_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_previewRepay_max_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 1e18);
 

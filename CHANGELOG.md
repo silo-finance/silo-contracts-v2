@@ -5,7 +5,117 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- silo-core: add reentrancy protection for liquidation call
+- silo-vaults: fix max redeem
+
+## [2.0.1] - 2025-03-19
+### Fixed
+- silo-vaults: [Guardian role in the vault incentives module](https://github.com/silo-finance/silo-contracts-v2/commit/389b0575d01f33d745876f6cc26747c082de860b)
+
+## [2.0.0] - 2025-03-19
+### Added
+- silo-vaults: [Internal tracker for market allocations](https://github.com/silo-finance/silo-contracts-v2/commit/99d7ccd0ac1bc84e6667bae30bc5aa8e1f064bef)
+
+### Changed
+- silo-vaults: require asset decimals to be up to 18
+- silo-core: accrue fees on claiming rewards
+- silo-core: [fee receiver per silo per asset](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/d476473bdd090516752988ee065a0c369733beec)
+- silo-vaults: [add reentrancy protection on transfer](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/3ad3508a84c963e86476db3772fc2c7939185e93)
+- silo-vaults: [reset approval on market removal](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/2828124f549b8fefa6b577a20bf6d756a451a258)
+- silo-vaults: [vault incentives module timelock and permissions](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/ca9fe593fbc08fd33f3ce36c3729ad8dee630cd9)
+- silo-vaults: [revert action when zero assets or shares](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/313753ca599a66dade8e074ccdc6498a07651c73)
+- silo-vaults: [use offset 6](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/f9344efdec25f9afdf99595b1b1fe7128d572f8c)
+
+### Fixed
+- silo-core: allow to burn NFT only by owner
+- silo-core: revert on invalid token type in `Hook.shareTokenTransfer()`
+- silo-vaults: [M-01 VaultIncentivesModule initialization](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/8405901a68e8c85d2f543a48c7c0defdc3abf265)
+- incentives: [L-1 The function `_transferRewards` does not check return value](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/ac4afd92aaaae93ac0cf9387c7fc825055d6505a)
+- silo-vaults: [use `previewRedeem` instead of the `convertToAssets`](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/7cbc420472babe86d9e3ef70b4dbe50f18b6eb1c)
+- silo-vaults: [factory with reorgs protection](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/3c950ac432fa8a773868c9101fac2c1ebe2cc486)
+- silo-vaults: [L-06 Vault could be vulnerable to an inflation attack, add offset 3](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/2bf1a139485bf5f85676aca94a5c64e36f86a049)
+- silo-core: [immediate incentives distribution only notifier](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/3ba8d5673cf3d0e70e7b50022e2cecca4f847685)
+- silo-core: [require existing programs on rewards claims](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/79ada63f9544c9ec9cb6dc11e3105e60eb3f90e9)
+- silo-core: [fix daoRevenue value when fee receiver empty](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/58f6bc20cafcd0fce00d65f3d43db5a0853d9283)
+- silo-core: [GaugeHookReceiver send notifications even if killed](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/92f4975556afb3c5044cbdacb31a9c0b522e3ab0)
+- silo-core: [protected collateral protection](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/c84af3db2c0fa2568c941520292894f72b3ad40d)
+- silo-core: [Handling revert on deployer fee transfer](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/9f7de9c87c9a1a9feb1dba1685ec1c2ad8b66518)
+- silo-core: [SiloFactory reorg protection](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/2f328a82eef769f259a6ff0b2113524f6eae5544)
+- silo-vaults: setCap fn in the SiloVaultActionsLib
+
+### Updated
+- silo-core: Router with multicall
+- Silo hooks refactoring
+- silo-vaults: [use 18 decimals offset in idle vault](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/528bded8c406517fa5faf8a782be2b68e0a39a51)
+- silo-vaults: replace .transfer with low level call
+- silo-core: [switch collateral event on borrow](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/9e4afb3483ac5782c74191b3019cebca96d38321)
+
+### Removed
+- silo-vaults: [remove skim method](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/b6bc1e397e6d7bb7a0091ccc2cfad7293af98827)
+- silo-vaults: [remove loss check](https://github.com/silo-finance/silo-contracts-v2/pull/1114/commits/f9344efdec25f9afdf99595b1b1fe7128d572f8c)
+
+## [1.9.0] - 2025-02-28
+### Added
+- add method `getUsersHealth` to SiloLens
+
+## [1.8.0] - 2025-02-25
+### Added
+- SiloLens redeployment
+
+## [1.7.0] - 2025-02-26
+### Added
+- LBTC / scBTC market on Sonic
+- LBTC / WBTC market on Sonic
+
+## [1.6.0] - 2025-02-25
+### Added
+- SiloRouter deployment
+
+## [1.5.0] - 2025-02-19
+### Added
+- SiloLens deployment
+
+## [1.4.0] - 2025-02-18
+### Added
 - Router with multicall
+
+## [1.3.5] - 2025-02-07
+### Updated
+- stS/S market with 18 decimals share token on Sonic
+
+## [1.3.4] - 2025-02-07
+### Updated
+- deploy new `LiquidationHelper` 
+
+## [1.3.3] - 2025-02-06
+### Updated
+- adjustment for coverage to work
+
+## [1.3.2] - 2025-02-04
+### Added
+- Anon/USDC.e market sonic
+
+## [1.3.1] - 2025-02-04
+### Added
+- wstkscETH/ETH market sonic
+
+## [1.3.0] - 2025-02-04
+### Added
+- wanS/S market sonic
+
+## [1.2.0] - 2025-02-03
+### Added
+- silo-coracle: silo virtual asset name and symbol
+- silo-core: add flag that informs about full liquidation
+- silo lens redeployment
+- silo-oracles: ERC4626 price oracle
+- silo-oracles: Pyth aggregator factory
+- silo-oracles: OracleScaler to normalize amounts for 18 decimal
+- silo-core: manual liquidation helper
+- wS/USDC.e borrowable S market sonic
+- woS/S market sonic
+- wstkscUSD/USDC.e market sonic
 
 ## [1.1.0] - 2025-01-27
 ### Added

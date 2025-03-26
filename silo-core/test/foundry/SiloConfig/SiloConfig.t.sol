@@ -261,7 +261,7 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_getConfig_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 3
+    /// forge-config: core_test.fuzz.runs = 3
     function test_getConfig_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
@@ -325,7 +325,7 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_getDebtShareTokenAndAsset_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 3
+    /// forge-config: core_test.fuzz.runs = 3
     function test_getDebtShareTokenAndAsset_fuzz(uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
@@ -379,7 +379,7 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_getCollateralShareTokenAndAsset_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 3
+    /// forge-config: core_test.fuzz.runs = 3
     function test_getCollateralShareTokenAndAsset_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
@@ -430,6 +430,23 @@ contract SiloConfigTest is Test {
         configuredSilo = _siloConfig.borrowerCollateralSilo(borrower);
 
         assertEq(address(_silo1Default), configuredSilo);
+    }
+
+    /*
+    forge test -vv --mt test_setThisSiloAsCollateralSilo_returnValue
+    */
+    function test_setThisSiloAsCollateralSilo_returnValue() public {
+        address borrower = makeAddr("borrower");
+
+        vm.startPrank(_silo0Default);
+
+        assertTrue(_siloConfig.setThisSiloAsCollateralSilo(borrower), "change on initial set");
+        assertFalse(_siloConfig.setThisSiloAsCollateralSilo(borrower), "NO change on same value");
+        assertTrue(_siloConfig.setOtherSiloAsCollateralSilo(borrower), "change on changing to other silo");
+        assertFalse(_siloConfig.setOtherSiloAsCollateralSilo(borrower), "NO change on changing again");
+        assertTrue(_siloConfig.setThisSiloAsCollateralSilo(borrower), "change on switch back to this silo set");
+
+        vm.stopPrank();
     }
 
     /*
@@ -632,7 +649,7 @@ contract SiloConfigTest is Test {
     /*
     forge test -vv --mt test_onDebtTransfer_clone
     */
-    /// forge-config: core-test.fuzz.runs = 10
+    /// forge-config: core_test.fuzz.runs = 10
     function test_onDebtTransfer_clone(bool _silo0, bool sameAsset) public {
         address silo = _silo0 ? _silo0Default : _silo1Default;
 
@@ -793,7 +810,7 @@ contract SiloConfigTest is Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBefore_error_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_crossNonReentrantBefore_error_fuzz(address _callee) public {
         vm.assume(_callee != _silo0Default);
         vm.assume(_callee != _silo1Default);
@@ -833,7 +850,7 @@ contract SiloConfigTest is Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantAfter_error_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_crossNonReentrantAfter_error_fuzz(address _callee) public {
         vm.assume(_callee != _silo0Default);
         vm.assume(_callee != _silo1Default);
@@ -962,7 +979,7 @@ contract SiloConfigTest is Test {
     /*
     FOUNDRY_PROFILE=core-test forge test -vv --mt test_siloID_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 3
+    /// forge-config: core_test.fuzz.runs = 3
     function test_siloID_fuzz(
         uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,

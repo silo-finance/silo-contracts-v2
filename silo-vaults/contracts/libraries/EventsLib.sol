@@ -19,9 +19,6 @@ library EventsLib {
     /// @notice Emitted when `timelock` is set to `newTimelock`.
     event SetTimelock(address indexed caller, uint256 newTimelock);
 
-    /// @notice Emitted when `skimRecipient` is set to `newSkimRecipient`.
-    event SetSkimRecipient(address indexed newSkimRecipient);
-
     /// @notice Emitted `fee` is set to `newFee`.
     event SetFee(address indexed caller, uint256 newFee);
 
@@ -91,9 +88,6 @@ library EventsLib {
     /// @param feeShares The shares minted to the fee recipient.
     event AccrueInterest(uint256 newTotalAssets, uint256 feeShares);
 
-    /// @notice Emitted when an `amount` of `token` is transferred to the skim recipient by `caller`.
-    event Skim(address indexed caller, address indexed token, uint256 amount);
-
     /// @notice Emitted when a new SiloVault market is created.
     /// @param SiloVault The address of the SiloVault market.
     /// @param caller The caller of the function.
@@ -111,6 +105,8 @@ library EventsLib {
         string name,
         string symbol
     );
+
+    event CreateIdleVault(address indexed idleVault, address indexed vault);
 
     /// @notice Emitted during a public reallocation for each withdrawn-from market.
     event PublicWithdrawal(

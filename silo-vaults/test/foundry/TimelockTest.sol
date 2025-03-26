@@ -82,6 +82,9 @@ contract TimelockTest is IntegrationTest {
         createSiloVault(OWNER,timelock, address(loanToken), "SiloVault Vault", "MMV");
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeploySiloVaultBelowMinTimelock -vvv
+    */
     function testDeploySiloVaultBelowMinTimelock(uint256 timelock) public {
         timelock = bound(timelock, 0, ConstantsLib.MIN_TIMELOCK - 1);
 

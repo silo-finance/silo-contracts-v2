@@ -9,7 +9,7 @@ import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156Flas
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
-
+import {MarketConfig} from "../../contracts/libraries/PendingLib.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
 
@@ -28,11 +28,13 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDecimals -vvv
     */
     function testDecimals(uint8 decimals) public {
+        vm.assume(decimals <= 18);
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
-        assertEq(vault.decimals(), Math.max(18, decimals), "decimals");
+        assertEq(vault.decimals(), 18, "offset does not affect decimals");
+        assertEq(vault.DECIMALS_OFFSET(), 18 + 6 - decimals, "DECIMALS_OFFSET");
     }
 
     /*
@@ -82,6 +84,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         redeemed = bound(redeemed, 0, shares);
 
+        vm.assume(vault.convertToAssets(redeemed) != 0);
+
         vm.expectEmit();
         emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
         vm.prank(ONBEHALF);
@@ -95,6 +99,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdraw -vvv
     */
     function testWithdraw(uint256 deposited, uint256 withdrawn) public {
+        vm.assume(deposited != 0);
+        vm.assume(withdrawn != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
 
@@ -111,9 +118,50 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     }
 
     /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawMarketBalanceTracker -vvv
+    */
+    function testWithdrawMarketBalanceTracker() public {
+        uint256 length = vault.withdrawQueueLength();
+
+        IERC4626 market0 = vault.withdrawQueue(0);
+        IERC4626 market1 = vault.withdrawQueue(1);
+
+        MarketConfig memory config1 = vault.config(market1);
+
+        uint256 depositOverCap = 100;
+
+        uint256 depositAmount = config1.cap + depositOverCap;
+
+        vm.prank(SUPPLIER);
+        vault.deposit(depositAmount, ONBEHALF);
+
+        uint256 balanceBefore0 = vault.balanceTracker(market0);
+        uint256 balanceBefore1 = vault.balanceTracker(market1);
+
+        assertEq(balanceBefore0, depositOverCap, "balanceBefore0");
+        assertEq(balanceBefore1, config1.cap, "balanceBefore1");
+
+        uint256 withdrawOverCap = 300;
+
+        uint256 withdrawAmount = depositOverCap + withdrawOverCap;
+
+        vm.prank(ONBEHALF);
+        vault.withdraw(withdrawAmount, RECEIVER, ONBEHALF);
+
+        uint256 balanceAfter0 = vault.balanceTracker(market0);
+        uint256 balanceAfter1 = vault.balanceTracker(market1);
+
+        assertEq(balanceAfter0, 0, "balanceAfter0");
+        assertEq(balanceAfter1, config1.cap - withdrawOverCap, "balanceAfter1");
+    }
+
+    /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawIdle -vvv
     */
     function testWithdrawIdle(uint256 deposited, uint256 withdrawn) public {
+        vm.assume(deposited != 0);
+        vm.assume(withdrawn != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
 
@@ -136,6 +184,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemTooMuch -vvv
     */
     function testRedeemTooMuch(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.startPrank(SUPPLIER);
@@ -154,6 +204,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawAll -vvv
     */
     function testWithdrawAll(uint256 assets) public {
+        vm.assume(assets != 0);
+
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -174,6 +226,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemAll -vvv
     */
     function testRedeemAll(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -194,6 +248,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemNotDeposited -vvv
     */
     function testRedeemNotDeposited(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -208,6 +264,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemNotApproved -vvv
     */
     function testRedeemNotApproved(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -222,6 +280,8 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawNotApproved -vvv
     */
     function testWithdrawNotApproved(uint256 assets) public {
+        vm.assume(assets != 0);
+
         assets = bound(assets, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.prank(SUPPLIER);
@@ -415,7 +475,11 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         vault.deposit(vaultDepositAmount, ONBEHALF);
 
-        assertEq(vault.maxDeposit(SUPPLIER), cap - vaultDepositAmount, "maxDeposit should be 0");
+        assertEq(
+            vault.maxDeposit(address(0)),
+            cap - vaultDepositAmount,
+            "maxDeposit should be cap - vaultDepositAmount"
+        );
     }
 
     function onFlashLoan(address, address, uint256, uint256, bytes calldata) external view returns (bytes32) {

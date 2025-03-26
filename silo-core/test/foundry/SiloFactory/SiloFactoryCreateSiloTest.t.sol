@@ -2,18 +2,28 @@
 pragma solidity ^0.8.28;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {IERC721Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISilo, IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {IShareTokenInitializable} from "silo-core/contracts/interfaces/IShareTokenInitializable.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
+import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {Silo} from "silo-core/contracts/Silo.sol";
+import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 
@@ -68,9 +78,12 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertGe(configData0.daoFee, siloFactory.daoFeeRange().min, "configData0.daoFee.min");
         assertLe(configData0.daoFee, siloFactory.daoFeeRange().max, "configData0.daoFee.max");
         assertEq(configData0.deployerFee, initData.deployerFee, "configData0.deployerFee");
-        // TODO check for both tokens
-        // assertEq(configData0.token, initData.token0, "configData0.token");
-        // assertEq(configData0.hookReceiver, initData.hookReceiver, "configData0.hookReceiver");
+        assertEq(configData0.token, address(token0), "configData0.token");
+        assertEq(configData1.token, address(token1), "configData0.token");
+
+        assertTrue(configData0.hookReceiver != address(0), "configData0.hookReceiver");
+        assertEq(configData0.hookReceiver, configData1.hookReceiver, "hookReceiver");
+
         assertTrue(configData0.silo != address(0), "configData0.silo");
         assertTrue(configData0.protectedShareToken != address(0), "configData0.protectedShareToken");
         assertTrue(configData0.collateralShareToken != address(0), "configData0.collateralShareToken");
@@ -130,24 +143,58 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     function test_createSilo_zeroes() public {
         (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
 
-        address siloImpl = makeAddr("siloImpl");
-        address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
-        address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
         ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // silo config empty
         siloFactory.createSilo(
-            initData, ISiloConfig(address(0)), siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+            ISiloConfig(address(0)),
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl,
+            initData.deployer,
+            msg.sender
         );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // silo impl empty
-        siloFactory.createSilo(initData, config, address(0), shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+        siloFactory.createSilo(
+            config, address(0), shareProtectedCollateralTokenImpl, shareDebtTokenImpl, initData.deployer, msg.sender
+        );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareProtectedCollateralTokenImpl empty
-        siloFactory.createSilo(initData, config, siloImpl, address(0), shareDebtTokenImpl);
+        siloFactory.createSilo(
+            config, siloImpl, address(0), shareDebtTokenImpl, initData.deployer, msg.sender
+        );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareDebtTokenImpl empty
-        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, address(0));
+        siloFactory.createSilo(
+            config, siloImpl, shareProtectedCollateralTokenImpl, address(0), initData.deployer, msg.sender
+        );
+    }
+
+    /*
+    forge test -vv --ffi --mt test_createSilo_invalidReceiver
+    */
+    function test_createSilo_invalidReceiver() public {
+        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
+
+        address siloImpl = address(new Silo(siloFactory));
+        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        address shareDebtTokenImpl = address(new ShareDebtToken());
+
+        ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
+
+        _createSiloNewSiloEventMockCalls(
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl,
+            config
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721InvalidReceiver.selector, address(this)));
+        siloFactory.createSilo(config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, address(this), msg.sender);
     }
 
     /*
@@ -156,27 +203,148 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     function test_createSilo_NewSiloEvent() public {
         (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
 
-        address siloImpl = makeAddr("siloImpl");
+        address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = makeAddr("shareProtectedCollateralTokenImpl");
         address shareDebtTokenImpl = makeAddr("shareDebtTokenImpl");
 
         ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
 
-        initData.hookReceiver = makeAddr("hookReceiver");
-        initData.token0 = makeAddr("token0");
-        initData.token1 = makeAddr("token1");
-        
+        (address silo0, address silo1) = _createSiloNewSiloEventMockCalls(
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl,
+            config
+        );
+
         vm.expectEmit(true, true, true, false);
 
         emit NewSilo(
-            makeAddr("siloImpl"),
+            siloImpl,
             makeAddr("token0"),
             makeAddr("token1"),
-            address(0),
-            address(0),
-            makeAddr("siloConfig")
+            silo0,
+            silo1,
+            address(config)
         );
 
-        siloFactory.createSilo(initData, config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+        siloFactory.createSilo(
+            config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, initData.deployer, msg.sender
+        );
+    }
+
+    function _createSiloNewSiloEventMockCalls(
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl,
+        ISiloConfig _config
+    ) internal returns (address silo0, address silo1) {
+        uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
+
+        ISiloConfig.ConfigData memory configData0;
+        ISiloConfig.ConfigData memory configData1;
+        configData0.hookReceiver = makeAddr("hookReceiver");
+        configData1.hookReceiver = makeAddr("hookReceiver");
+
+        silo0 = CloneDeterministic.predictSilo0Addr(_siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
+        silo1 = CloneDeterministic.predictSilo1Addr(_siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
+
+        vm.label(silo0, "silo0");
+        vm.label(silo1, "silo1");
+
+        address protectedShareToken0 = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
+            _shareProtectedCollateralTokenImpl,
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
+        );
+
+        address protectedShareToken1 = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
+            _shareProtectedCollateralTokenImpl,
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
+        );
+
+        address debtShareToken0 = CloneDeterministic.predictShareDebtToken0Addr(
+            _shareDebtTokenImpl,
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
+        );
+
+        address debtShareToken1 = CloneDeterministic.predictShareDebtToken1Addr(
+            _shareDebtTokenImpl,
+            creatorSiloCounter,
+            address(siloFactory),
+            msg.sender
+        );
+
+        configData0.collateralShareToken = silo0;
+        configData0.protectedShareToken = protectedShareToken0;
+        configData0.debtShareToken = debtShareToken0;
+
+        configData1.collateralShareToken = silo1;
+        configData1.protectedShareToken = protectedShareToken1;
+        configData1.debtShareToken = debtShareToken1;
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo0)),
+            abi.encode(configData0)
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo1)),
+            abi.encode(configData1)
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getAssetForSilo.selector, address(silo0)),
+            abi.encode(makeAddr("token0"))
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getAssetForSilo.selector, address(silo1)),
+            abi.encode(makeAddr("token1"))
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, address(silo0)),
+            abi.encode(protectedShareToken0, address(silo0), debtShareToken0)
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, address(silo1)),
+            abi.encode(protectedShareToken1, address(silo1), debtShareToken1)
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ICrossReentrancyGuard.reentrancyGuardEntered.selector),
+            abi.encode(false)
+        );
+
+        vm.mockCall(
+            address(_config),
+            abi.encodeWithSelector(ISiloConfig.getSilos.selector),
+            abi.encode(address(silo0), address(silo1))
+        );
+
+        vm.mockCall(
+            configData0.hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector, address(silo0)),
+            abi.encode(0, 0)
+        );
+
+        vm.mockCall(
+            configData1.hookReceiver,
+            abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector, address(silo1)),
+            abi.encode(0, 0)
+        );
     }
 }

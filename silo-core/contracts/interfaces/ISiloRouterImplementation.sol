@@ -32,7 +32,9 @@ interface ISiloRouterImplementation {
     /// @param _amount The amount of native token to transfer
     function sendValue(address payable _to, uint256 _amount) external payable;
 
-    /// @notice Transfer all native token from the router to an address
+    /// @notice Transfer all native token from the router to an address. This action must be the last one in a sequence
+    /// of actions to ensure the absence of any left-overs. UI must automatically append this action if the native
+    /// token is used during interaction with silo.
     /// @param _to The address to transfer the native token to
     function sendValueAll(address payable _to) external payable;
 
@@ -44,9 +46,9 @@ interface ISiloRouterImplementation {
     /// @param _amount The amount of tokens to transfer
     function transfer(IERC20 _token, address _to, uint256 _amount) external payable;
 
-    /// @notice Transfer all tokens
+    /// @notice Transfer all tokens. This action must be the last one in a sequence of actions to ensure the absence
+    /// of any left-overs. UI must automatically append this action for all assets used during interaction with silo.
     /// @dev Anyone can transfer any token on behalf of the router.
-    /// The caller is responsible for ensuring that the operation will not leave any leftovers on the router's balance.
     /// @param _token The address of the token
     /// @param _to The address of the recipient
     function transferAll(IERC20 _token, address _to) external payable;
@@ -59,7 +61,6 @@ interface ISiloRouterImplementation {
 
     /// @notice Approve tokens for a specific spender
     /// @dev Anyone can approve any token on behalf of the router.
-    /// The caller is responsible for ensuring that the operation will not leave any leftovers on the router's balance.
     /// @param _token The address of the token
     /// @param _spender The address of the spender
     /// @param _amount The amount of tokens to approve
@@ -116,21 +117,14 @@ interface ISiloRouterImplementation {
     /// @notice Repay debt
     /// @param _silo The address of the silo
     /// @param _assets The amount of tokens to repay
-    /// @param _borrower The address of the borrower
-    function repay(ISilo _silo, uint256 _assets, address _borrower) external payable returns (uint256 shares);
+    function repay(ISilo _silo, uint256 _assets) external payable returns (uint256 shares);
 
     /// @notice Repay all debt
     /// @param _silo The address of the silo
-    /// @param _borrower The address of the borrower
-    function repayAll(ISilo _silo, address _borrower) external payable returns (uint256 shares);
+    function repayAll(ISilo _silo) external payable returns (uint256 shares);
 
     /// @notice Repay all debt using native token
     /// @param _native The address of the native token
     /// @param _silo The address of the silo
-    /// @param _borrower The address of the borrower
-    function repayAllNative(
-        IWrappedNativeToken _native,
-        ISilo _silo,
-        address _borrower
-    ) external payable returns (uint256 shares);
+    function repayAllNative(IWrappedNativeToken _native, ISilo _silo) external payable returns (uint256 shares);
 }

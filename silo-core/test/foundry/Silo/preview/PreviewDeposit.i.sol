@@ -28,7 +28,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_beforeInterest_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
@@ -45,7 +45,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets, bool _defaultType, uint8 _type) public {
         vm.assume(_assets > 0);
         vm.assume(_type == uint8(ISilo.AssetType.Collateral) || _type == uint8(ISilo.AssetType.Protected));
@@ -68,7 +68,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test_previewDeposit_withInterest
     */
-    /// forge-config: core-test.fuzz.runs = 10000
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_previewDeposit_withInterest_1token_fuzz(uint256 _assets, bool _protected) public {
         _previewDeposit_withInterest(_assets, _protected);
     }

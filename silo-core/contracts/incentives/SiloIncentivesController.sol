@@ -82,7 +82,7 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifierOrOwner {
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifier {
         if (_amount == 0) return;
 
         uint256 totalStaked = _shareToken().totalSupply();
