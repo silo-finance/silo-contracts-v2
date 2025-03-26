@@ -163,6 +163,9 @@ library SiloLensLib {
             ISiloConfig.ConfigData memory debtConfig
         ) = _siloConfig.getConfigsForSolvency(_borrower);
 
+        // if no debt collateralConfig and debtConfig are empty
+        if (collateralConfig.token == address(0)) return (0, 0);
+
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,
             debtConfig,

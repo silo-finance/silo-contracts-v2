@@ -202,7 +202,10 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getUtilization(ISilo _silo) external view returns (uint256) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
-        return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+
+        if (data.collateralAssets != 0) {
+            return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+        }
     }
 
     /// @inheritdoc ISiloLens
