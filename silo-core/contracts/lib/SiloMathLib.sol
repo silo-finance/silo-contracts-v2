@@ -64,8 +64,10 @@ library SiloMathLib {
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
         uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
 
+        uint256 cap;
         // save to uncheck because variable can not be more than max
-        uint256 cap = type(uint256).max - _collateralAssets;
+        // -1 accounts for potential fractional interest being added afterwards
+        unchecked { cap = type(uint256).max - _collateralAssets - 1; }
 
         if (cap < collateralInterest) {
             // avoid overflow on interest

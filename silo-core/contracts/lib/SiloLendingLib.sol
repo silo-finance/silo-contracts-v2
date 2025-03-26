@@ -161,8 +161,6 @@ library SiloLendingLib {
             $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
             totalFees += integralRevenue;
             $.totalAssets[ISilo.AssetType.Collateral] += integralInterest - integralRevenue;
-
-            // TODO cap?
         }
 
         // update remaining contract state
