@@ -9,7 +9,7 @@ import {X33ToUsdAdapterDeploy} from "silo-oracles/deploy/X33ToUsdAdapterDeploy.s
 import {PythAggregatorV3} from "pyth-sdk-solidity/PythAggregatorV3.sol";
 
 /*
-    FOUNDRY_PROFILE=oracles forge test -vv --match-contract X33ToUsdAdapterTest
+    FOUNDRY_PROFILE=oracles forge test -vv --match-contract X33ToUsdAdapterTest --ffi
 */
 contract X33ToUsdAdapterTest is Forking {
     uint256 constant TEST_BLOCK = 16052525;
@@ -42,11 +42,15 @@ contract X33ToUsdAdapterTest is Forking {
         assertEq(adapter.SHARES_QUOTE_SAMPLE(), 10 ** 18);
     }
 
+    function test_X33ToUsdAdapter_description() public view {
+        assertEq(adapter.description(), "x33 / USD adapter");
+    }
+
     function test_X33ToUsdAdapter_constructor_reverts() public {
         vm.expectRevert(X33ToUsdAdapter.InvalidShadowUsdFeed.selector);
         new X33ToUsdAdapter(AggregatorV3Interface(address(0)));
 
-        vm.warp(block.timestamp + 60 * 60 * 3);
+        vm.warp(block.timestamp + 60 * 60 * 24);
         vm.expectRevert(X33ToUsdAdapter.InvalidShadowUsdFeed.selector);
         new X33ToUsdAdapter(AggregatorV3Interface(address(0)));
 

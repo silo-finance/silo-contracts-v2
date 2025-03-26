@@ -29,7 +29,7 @@ contract X33ToUsdAdapter is AggregatorV3Interface {
         require(address(_shadowUsdFeed) != address(0), InvalidShadowUsdFeed());
 
         (, int256 answer,, uint256 updatedAt,) = _shadowUsdFeed.latestRoundData();
-        require(answer > 0 && block.timestamp - updatedAt < 2 hours, InvalidShadowUsdFeed());
+        require(answer > 0 && block.timestamp - updatedAt < 24 hours, InvalidShadowUsdFeed());
 
         SHADOW_USD_FEED = _shadowUsdFeed;
     }
