@@ -119,8 +119,7 @@ library SiloStdLib {
             _debtAssets: debtAssets,
             _rcomp: rcomp,
             _daoFee: _daoFee,
-            _deployerFee: _deployerFee,
-            _fractions: SiloStorageLib.getSiloStorage().fractions
+            _deployerFee: _deployerFee
         });
     }
 
