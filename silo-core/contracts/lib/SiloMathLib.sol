@@ -343,7 +343,7 @@ library SiloMathLib {
         unchecked {
             // safe to unchecked because: _currentFraction if never more than max uint256, div is safe
             if (type(uint256).max / _total <= _percent) {
-                // when overflow, return 0 interest
+                // when overflow, reset `_currentFraction ` to zero as part of circuit breaker
                 return (0, 0);
             }
 
