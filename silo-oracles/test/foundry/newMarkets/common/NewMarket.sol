@@ -97,7 +97,7 @@ contract NewMarketTest is Forking {
 
         // silo0 is collateral as example, silo1 is debt.
         // collateral / borrowed = LTV ->
-        // tokensToDeposit * collateralPrice / tokensToBorrow * borrowPrice = LTV
+        // tokensToBorrow * borrowPrice / tokensToDeposit * collateralPrice = LTV
         // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 = EXTERNAL_PRICE1 * tokensToBorrow
         // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 = EXTERNAL_PRICE1 * maxBorrow / 10**borrowTokensDecimals
         // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 * 10**borrowTokensDecimals = EXTERNAL_PRICE1 * maxBorrow
