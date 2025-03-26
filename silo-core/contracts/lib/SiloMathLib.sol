@@ -347,13 +347,14 @@ library SiloMathLib {
                 return (0, 0);
             }
 
-            // safe to unchecked because we checked for overflow in above `if`
-            // safe, because max value after modulo will be 1e18 - 1  (_PRECISION_DECIMALS - 1) and this is less than 2 ** 64
+            // `_total * _percent` safe to unchecked because we checked for overflow in above `if`
+            // `% _PRECISION_DECIMALS` safe, because max value after modulo will be 1e18 - 1  (_PRECISION_DECIMALS - 1)
+            // and this is less than 2 ** 64
             // calculate remainder for current interest
-            // integral is amount above 1e18 after adding _currentFraction and remainder
-            // fraction is what we get below 1e18
             uint256 remainder = (_total * _percent) % _PRECISION_DECIMALS;
+            // integral is amount above 1e18 after adding _currentFraction and remainder
             integral = (_currentFraction + remainder) / _PRECISION_DECIMALS;
+            // fraction is what we get below 1e18
             fraction = uint64((_currentFraction + remainder) % _PRECISION_DECIMALS);
         }
     }
