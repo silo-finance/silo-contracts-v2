@@ -135,7 +135,7 @@ library SiloLendingLib {
             _deployerFee: _deployerFee
         });
 
-        totalFees = applyFractions({
+        (accruedInterest, totalFees) = applyFractions({
             _totalDebtAssets: totalDebtAssets,
             _rcomp: rcomp,
             _accruedInterest: accruedInterest,
@@ -397,12 +397,12 @@ library SiloLendingLib {
         uint256 _fees,
         uint256 _totalFees
     )
-        internal returns (uint256 totalFees)
+        internal returns (uint256 accruedInterest, uint256 totalFees)
     {
         // if _totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
         // about precision because there is enough amount of debt to generate double wei digit
         // of interest so we can safely ignore fractions
-        if (_ROUNDING_THRESHOLD <= _totalDebtAssets) return _totalFees;
+        if (_totalDebtAssets >= _ROUNDING_THRESHOLD) return (_accruedInterest, _totalFees);
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
