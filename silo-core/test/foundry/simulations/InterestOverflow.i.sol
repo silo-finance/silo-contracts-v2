@@ -95,6 +95,11 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
             // this repay covers interest only
             (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            (uint256 daoFee, uint256 deployerFee,,) = silo1.config().getFeesWithAsset(address(silo1));
+
+            uint256 revenue = allInterest * (daoFee + deployerFee) / 1e18;
+            revenueLost = revenue - daoAndDeployerRevenue;
+            assertEq(revenue, daoAndDeployerRevenue, "we did not lost revenue");
 
             // we repay revenue only, so that part that's not going to users as interest
             _repay( daoAndDeployerRevenue, borrower);
@@ -129,7 +134,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(IShareToken(debtShare).totalSupply(), 0, "no debt");
             assertEq(IShareToken(collateralShare).totalSupply(), 0, "no collateralShares");
 
-            assertEq(token1.balanceOf(address(silo1)), 906688, "silo balance");
+            assertEq(token1.balanceOf(address(silo1)), 906695, "silo balance");
             assertEq(revenueLost, 0, "lost revenue");
         }
 
