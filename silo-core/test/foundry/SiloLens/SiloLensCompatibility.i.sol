@@ -24,7 +24,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
     mapping(bytes4 sig => bool isTested) internal _testedFunctions;
 
     function setUp() public {
-        vm.createSelectFork(getChainRpcUrl(ChainsLib.SONIC_ALIAS));
+        vm.createSelectFork(vm.envString("RPC_SONIC"));
 
         SiloLensDeploy deploy = new SiloLensDeploy();
         deploy.disableDeploymentsSync();
