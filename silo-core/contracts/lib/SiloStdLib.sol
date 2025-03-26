@@ -113,9 +113,13 @@ library SiloStdLib {
 
         (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
 
-        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest(
-            collateralAssets, debtAssets, rcomp, _daoFee, _deployerFee
-        );
+        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest({
+            _collateralAssets: collateralAssets,
+            _debtAssets: debtAssets,
+            _rcomp: rcomp,
+            _daoFee: _daoFee,
+            _deployerFee: _deployerFee
+        });
     }
 
     /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
