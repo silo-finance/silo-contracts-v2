@@ -59,10 +59,6 @@ contract NewMarketTest is Forking {
     }
 
     function test_newMarketTest_borrowSilo1ToSilo0() public {
-        if (MAX_LTV1 == 0) {
-            return;
-        }
-
         _borrowTest({
             _collateralSilo: SILO1,
             _collateralToken: TOKEN1,
@@ -110,8 +106,8 @@ contract NewMarketTest is Forking {
             calculatedTokensToBorrow * 10 ** TokenHelper.assertAndGetDecimals(address(_debtToken));
 
         assertTrue(
-            calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_debtToken)),
-            "at least one token for precision"
+            _ltv == 0 || calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_debtToken)),
+            "at least one token for precision or LTV is zero"
         );
 
         assertApproxEqRel(
@@ -120,8 +116,10 @@ contract NewMarketTest is Forking {
             0.01e18 // 1% deviation max
         );
 
-        _debtSilo.borrow(maxBorrow, address(this), address(this));
-        assertTrue(_debtToken.balanceOf(address(this)) >= maxBorrow);
+        if (_ltv!= 0) {
+            _debtSilo.borrow(maxBorrow, address(this), address(this));
+            assertTrue(_debtToken.balanceOf(address(this)) >= maxBorrow);
+        }
     }
 
     function _someoneDeposited(IERC20Metadata _token, ISilo _silo, uint256 _amount) internal {
