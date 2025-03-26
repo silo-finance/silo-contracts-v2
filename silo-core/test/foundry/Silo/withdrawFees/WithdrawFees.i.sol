@@ -41,7 +41,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         uint256 one = 10 ** _decimals;
 
-        _depositForBorrow(_amount* one, user);
+        _depositForBorrow(_amount * one, user);
         _deposit(_amount * one, borrower);
         _borrow(_fragmentedAmount(_amount * one / 2, _decimals - 1), borrower);
     }
@@ -66,9 +66,9 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         emit log_named_uint("daoAndDeployerRevenue", daoAndDeployerRevenue);
 
         assertEq(interest, 1159717550, "interest");
-        assertEq(fractions.interest, 599999999747887489, "expect fractions.interest");
+        assertEq(fractions.interest, 0, "expect NO fractions because of threshold");
 
-        assertEq(fractions.revenue, 500000000000000000, "expect fractions.revenue");
+        assertEq(fractions.revenue, 0, "expect NO fractions because of threshold");
         assertEq(daoAndDeployerRevenue, 289929387, "expect daoAndDeployerRevenue");
 
         vm.expectEmit(address(silo1));
@@ -86,7 +86,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         // we have 8 decimals, so with higher amount, we should get similar results as for 18
         // they wil not match 100% because we crating fragmented borrow amount
-        _setUp(1e10, _decimals);
+        _setUp(1, _decimals);
 
         vm.warp(block.timestamp + 1);
         uint256 interest = silo1.accrueInterest();
@@ -116,7 +116,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_fee_oneToken_6
     */
     function test_fee_oneToken_6() public {
-        uint8 _decimals = 8;
+        uint8 _decimals = 6;
 
         _setUp(1, _decimals);
 
@@ -224,14 +224,14 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("# daoAndDeployerRevenue", prevDaoAndDeployerRevenue, 18);
 
         (daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-        assertLt(daoAndDeployerRevenue, 1e18, "[daoAndDeployerRevenue] only fraction left < 1e18");
+        assertLt(daoAndDeployerRevenue, 10 ** _decimals, "[daoAndDeployerRevenue] only fraction left < 1e18");
     }
 
     /*
     forge test -vv --ffi --mt test_fee_compare_days
     */
     function test_fee_compare_days() public {
-        uint8 _decimals = 8;
+        uint8 _decimals = 6;
 
         _setUp(1, _decimals);
 
@@ -246,7 +246,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_fee_compare_second
     */
     function test_fee_compare_second() public {
-        uint8 _decimals = 8;
+        uint8 _decimals = 6;
 
         _setUp(1, _decimals);
 
