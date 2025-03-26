@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {X33ToUsdAdapter, IERC4626, AggregatorV3Interface} from "silo-oracles/contracts/custom/X33ToUsdAdapter.sol";
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -18,6 +19,7 @@ contract X33ToUsdAdapterTest is Forking {
 
     constructor() Forking(BlockChain.SONIC) {
         initFork(TEST_BLOCK);
+        AddrLib.init();
         X33ToUsdAdapterDeploy deploy = new X33ToUsdAdapterDeploy();
         deploy.disableDeploymentsSync();
         adapter = deploy.run();
