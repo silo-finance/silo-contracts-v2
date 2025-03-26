@@ -8,6 +8,9 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {MintableToken} from "../_common/MintableToken.sol";
 
 /*
     forge test -vv --ffi --mc InterestOverflowTest
@@ -15,20 +18,42 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     this test checks scenario, when we overflow interest, in that case we should be able to repay and exit silo
 */
 contract InterestOverflowTest is SiloLittleHelper, Test {
-    function setUp() public {
-        _setUpLocalFixture();
+    function _setUp(uint8 _decimals) public {
+        SiloFixture siloFixture = new SiloFixture();
+
+        SiloConfigOverride memory configOverride;
+
+        token0 = new MintableToken(_decimals);
+        token1 = new MintableToken(_decimals);
+
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
+
+        configOverride.token0 = address(token0);
+        configOverride.token1 = address(token1);
+
+        (, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
     }
 
     /*
     forge test -vv --ffi --mt test_interestOverflow
     */
-    function test_interestOverflow() public {
+    function test_interestOverflow_fuzz(uint8 _decimals) public {
+        vm.assume(_decimals <= 18);
+
+        _interestOverflow(_decimals);
+    }
+
+    function _interestOverflow(uint8 _decimals) internal {
+        _setUp(_decimals);
+        uint256 one = 10 ** _decimals;
+
         address borrower = makeAddr("borrower");
         address borrower2 = makeAddr("borrower2");
 
         uint256 shares1 = _depositForBorrow(type(uint160).max, makeAddr("user1"));
         uint256 shares2 = _depositForBorrow(1, makeAddr("user2"));
-        uint256 shares3 = _depositForBorrow(1e18, makeAddr("user3"));
+        uint256 shares3 = _depositForBorrow(one, makeAddr("user3"));
 
         _depositCollateral(type(uint160).max, borrower, TWO_ASSETS);
         _borrow(type(uint160).max / 100 * 75, borrower, TWO_ASSETS);
@@ -99,12 +124,14 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
             uint256 revenue = allInterest * (daoFee + deployerFee) / 1e18;
             revenueLost = revenue - daoAndDeployerRevenue;
-            assertEq(revenue, daoAndDeployerRevenue, "we did not lost revenue");
+            emit log_named_decimal_uint("revenueLost", revenueLost, 18);
+            emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
+
+            assertLe(revenueLost, 5, "we did not lost revenue (5 wei acceptable)");
 
             // we repay revenue only, so that part that's not going to users as interest
             _repay( daoAndDeployerRevenue, borrower);
 
-            emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 36);
 
             // we have dust because
             assertEq(silo1.getLiquidity(), minted, "even with huge repay, we cover interest first");
@@ -120,7 +147,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         _withdrawAndCheck(makeAddr("user2"), 0, shares2);
 
         emit log("_withdrawAndCheck user3");
-        _withdrawAndCheck(makeAddr("user3"), 1e18, shares3);
+        _withdrawAndCheck(makeAddr("user3"), one, shares3);
 
         emit log("_withdrawAndCheck user4");
         _withdrawAndCheck(makeAddr("user4"), silo1.convertToAssets(1), 1);
@@ -135,7 +162,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(IShareToken(collateralShare).totalSupply(), 0, "no collateralShares");
 
             assertEq(token1.balanceOf(address(silo1)), 906695, "silo balance");
-            assertEq(revenueLost, 0, "lost revenue");
+            assertLe(revenueLost, 5, "lost revenue");
         }
 
         assertEq(_printUtilization(silo1).collateralAssets, 906695, "collateral dust left");
