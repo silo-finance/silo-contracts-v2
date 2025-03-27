@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {console} from "forge-std/console.sol";
-
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ERC4626, Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
@@ -684,7 +682,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         for (uint256 i; i < length; ++i) {
             IERC4626 market = withdrawQueue[i];
             assets += _expectedSupplyAssets(market, address(this));
-            console.log("[totalAssets] market %s: %s", address(market), _expectedSupplyAssets(market, address(this)));
         }
     }
 
@@ -764,8 +761,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         returns (uint256 assets)
     {
         (uint256 feeShares, uint256 newTotalAssets) = _accruedFeeShares();
-        console.log("[_convertToAssets] feeShares %s, newTotalAssets %s", feeShares, newTotalAssets);
-
         assets = _convertToAssetsWithTotals(_shares, totalSupply() + feeShares, newTotalAssets, _rounding);
     }
 
@@ -821,8 +816,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Used in mint or deposit to deposit the underlying asset to ERC4626 vaults.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
         if (_shares == 0) revert ErrorsLib.InputZeroShares();
-        console.log("[_deposit] assets %s, vault shares %s", _assets, _shares);
-        console.log("[_deposit] one share == %s", convertToAssets(1));
 
         super._deposit(_caller, _receiver, _assets, _shares);
         // console.log("general check for loss:");
@@ -846,12 +839,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         override
     {
         _withdrawERC4626(_assets);
-
         super._withdraw(_caller, _receiver, _owner, _assets, _shares);
-
-        console.log("[_withdraw] vault: _assets %s (shares %s)", _assets, _shares);
-        console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(address(this)));
-        console.log("[_withdrawERC4626] balance of user", IERC20(asset()).balanceOf(_caller));
     }
 
     /* INTERNAL */
@@ -976,11 +964,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toWithdraw = UtilsLib.min(market.maxWithdraw(address(this)), _assets);
 
             if (toWithdraw > 0) {
-console.log("[_withdrawERC4626] before withdraw");
-console.log("[_withdrawERC4626] market balance %s (supply %s)", market.totalAssets(), market.totalSupply());
-console.log("[_withdrawERC4626] balance of market", IERC20(asset()).balanceOf(address(market)));
-console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(address(this)));
-
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) returns (uint256 shares) {
                     _assets -= toWithdraw;
@@ -990,11 +973,6 @@ console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(add
                     // we will still have 1wei in balanceTracker[market]. But, this dust can be covered
                     // by accrued interest over time.
                     balanceTracker[market] = UtilsLib.zeroFloorSub(balanceTracker[market], toWithdraw);
-                    console.log("[_withdrawERC4626] after withdraw");
-                    console.log("[_withdrawERC4626] from market %sew, amount %s (shares %s)", address(market), toWithdraw, shares);
-                    console.log("[_withdrawERC4626] market balance %s (supply %s)", market.totalAssets(), market.totalSupply());
-                    console.log("[_withdrawERC4626] balance of market", IERC20(asset()).balanceOf(address(market)));
-                    console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(address(this)));
                 } catch {
                 }
             }
@@ -1010,7 +988,6 @@ console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(add
     /// @dev Updates `lastTotalAssets` to `updatedTotalAssets`.
     function _updateLastTotalAssets(uint256 _updatedTotalAssets) internal virtual {
         lastTotalAssets = _updatedTotalAssets;
-        console.log("[_updateLastTotalAssets] lastTotalAssets", lastTotalAssets);
         emit EventsLib.UpdateLastTotalAssets(_updatedTotalAssets);
     }
 
@@ -1029,13 +1006,11 @@ console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(add
     /// (`newTotalAssets`).
     function _accruedFeeShares() internal view virtual returns (uint256 feeShares, uint256 newTotalAssets) {
         newTotalAssets = totalAssets();
-        console.log("[_accruedFeeShares] feeShares %s, newTotalAssets %s", feeShares, newTotalAssets);
 
         uint256 totalInterest = UtilsLib.zeroFloorSub(newTotalAssets, lastTotalAssets);
         if (totalInterest != 0 && fee != 0) {
             // It is acknowledged that `feeAssets` may be rounded down to 0 if `totalInterest * fee < WAD`.
             uint256 feeAssets = totalInterest.mulDiv(fee, WAD);
-            console.log("[_accruedFeeShares] *********** feeAssets %s", feeAssets);
 
             // The fee assets is subtracted from the total assets in this calculation to compensate for the fact
             // that total assets is already increased by the total interest (including the fee assets).
@@ -1135,8 +1110,6 @@ console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(add
 
         // price is manipulated when eg 1 share is worth 100 assets, so ratio assets/shares will be > 1.0
         uint256 ratio = _assets / _shares;
-
-        console.log("[_priceManipulationCheck] ratio %s", ratio);
 
         require(ratio < ARBITRARY_LOSS_THRESHOLD, ErrorsLib.AssetLoss(ratio));
     }
