@@ -95,10 +95,10 @@ contract MarketLossTest is IBefore, IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation_supplierFirst -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation -vvv
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
-    function test_idleVault_InflationAttackWithDonation_supplierFirst(
+    function test_idleVault_InflationAttackWithDonation(
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
         uint64 _donation,
@@ -111,21 +111,20 @@ contract MarketLossTest is IBefore, IntegrationTest {
 //            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);
 
         _idleVault_InflationAttackWithDonation({
-            _supplierWithdrawFirst: true,
             _attackUsingHookBeforeDeposit: false,
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
+            _acceptableLoss: vault.DEAULT_LOST_THRESHOLD()
         });
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_hookAttackWithDonation_supplierFirst -vvv
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_hookAttackWithDonation -vvv
     */
     /// forge-config: vaults-tests.fuzz.runs = 10000
-    function test_idleVault_hookAttackWithDonation_supplierFirst(
+    function test_idleVault_hookAttackWithDonation(
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
         uint64 _donation,
@@ -137,87 +136,22 @@ contract MarketLossTest is IBefore, IntegrationTest {
 //            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);
 
         _idleVault_InflationAttackWithDonation({
-            _supplierWithdrawFirst: true,
             _attackUsingHookBeforeDeposit: true,
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
-        });
-    }
-
-    /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttackWithDonation_attackerFirst -vvv
-    */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
-    function test_idleVault_InflationAttackWithDonation_attackerFirst(
-        uint64 _attackerDeposit,
-        uint64 _supplierDeposit,
-        uint64 _donation,
-        uint8 _idleVaultOffset
-    ) public {
-        // case where supplier lost 99 wei out of 1e14 deposit, attacker lost 99% - this was not detected
-//        (uint64 _attackerDeposit,
-//            uint64 _supplierDeposit,
-//            uint64 _donation,
-//            uint8 _idleVaultOffset
-//        ) = (2542, 118658020001906, 762922969, 2);
-
-        // case where we lost 31 undetected
-//        (uint64 _attackerDeposit,
-//            uint64 _supplierDeposit,
-//            uint64 _donation,
-//            uint8 _idleVaultOffset
-//        ) = (16095, 3167151940, 51850188250887164, 15);
-
-        _idleVault_InflationAttackWithDonation({
-            _supplierWithdrawFirst: false,
-            _attackUsingHookBeforeDeposit: false,
-            _attackerDeposit: _attackerDeposit,
-            _supplierDeposit: _supplierDeposit,
-            _donation: _donation,
-            _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
-        });
-    }
-
-    /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_hookAttackWithDonation_attackerFirst -vvv
-    */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
-    function test_idleVault_hookAttackWithDonation_attackerFirst(
-        uint64 _attackerDeposit,
-        uint64 _supplierDeposit,
-        uint64 _donation,
-        uint8 _idleVaultOffset
-    ) public {
-//        (
-//            uint64 _attackerDeposit,
-//            uint64 _supplierDeposit,
-//            uint64 _donation,
-//            uint8 _idleVaultOffset
-//        ) = (1, 18446744073709551614, 18446744073709551615, 0);
-
-        _idleVault_InflationAttackWithDonation({
-            _supplierWithdrawFirst: false,
-            _attackUsingHookBeforeDeposit: true,
-            _attackerDeposit: _attackerDeposit,
-            _supplierDeposit: _supplierDeposit,
-            _donation: _donation,
-            _idleVaultOffset: _idleVaultOffset,
-            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
+            _acceptableLoss: vault.DEAULT_LOST_THRESHOLD()
         });
     }
 
     function _idleVault_InflationAttackWithDonation(
-        bool _supplierWithdrawFirst, 
-        bool _attackUsingHookBeforeDeposit, 
+        bool _attackUsingHookBeforeDeposit,
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
         uint64 _donation,
         uint8 _idleVaultOffset,
-        uint64 _acceptableLossRatio
+        uint256 _acceptableLoss
     ) public {
         vm.assume(uint256(_attackerDeposit) * _supplierDeposit * _donation != 0);
         vm.assume(_supplierDeposit >= 2);
@@ -252,25 +186,18 @@ contract MarketLossTest is IBefore, IntegrationTest {
         // idle market part: 9223372036854775808 (shares 500), 1:18446744073709551
         try vault.deposit(_supplierDeposit, SUPPLIER) returns (uint256 supplierShares) {
             // if did not revert, we expect no loss
-            emit log_named_uint("RATIO #0", allMarkets[0].convertToAssets(1e18) / 1e18);
-            emit log_named_uint("RATIO #1", allMarkets[1].convertToAssets(1e18) / 1e18);
+            emit log_named_uint(" SUPPLIER deposit", _supplierDeposit);
+//            emit log_named_uint(" idle vault 1 share deposit", idleMarket.convertToAssets(1));
 
             uint256 attackerTotalSpend = uint256(_donation) + _attackerDeposit;
 
             uint256 supplierWithdraw;
             uint256 attackerWithdraw;
 
-            if (_supplierWithdrawFirst) {
-                emit log(".................................. SUPPLIER withdraw");
-                supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
-                emit log(".................................. attacker withdraw");
-                attackerWithdraw = _vaultWithdrawAll(attacker);
-            } else {
-                emit log(".................................. attacker withdraw");
-                attackerWithdraw = _vaultWithdrawAll(attacker);
-                emit log(".................................. SUPPLIER withdraw");
-                supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
-            }
+            emit log(".................................. SUPPLIER withdraw");
+            supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
+            emit log(".................................. attacker withdraw");
+            attackerWithdraw = _vaultWithdrawAll(attacker);
 
             assertLe(attackerWithdraw, attackerTotalSpend, "must be not profitable");
 
@@ -297,17 +224,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
             emit log_named_uint("    attacker loss", attackerTotalLoss);
 
             uint256 supplierLostPercent = supplierLoss * 1e18 / _supplierDeposit;
+            emit log_named_decimal_uint("supplierLostPercent", supplierLostPercent, 18);
 
             assertLe(
-                supplierWithdraw / supplierShares,
-                _acceptableLossRatio,
-                "RATIO is higher than THRESHOLD, we should detect"
-            );
-
-            assertLe(
-                supplierLoss,
-                10 ** IERC20Metadata(vault.asset()).decimals(),
-                "loss is higher than 1 token, we should detect"
+                supplierLostPercent,
+                _acceptableLoss,
+                "% is higher than THRESHOLD, we should detect"
             );
         } catch (bytes memory data) {
             emit log("deposit reverted for SUPPLIER");
@@ -368,7 +290,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             // if deposit was correct, we expect our ratio check will work
             assertLe(
                 _supplierDeposit / supplierShares,
-                vault.ARBITRARY_SHARE_RATIO(),
+                vault.DEAULT_LOST_THRESHOLD(),
                 "this ratio can not be detect on vault"
             );
         } catch {

@@ -16,12 +16,12 @@ contract ArbitraryShareRatioTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "ARBITRARY_SHARE_RATIO()";
+        description = "DEAULT_LOST_THRESHOLD()";
     }
 
     function _ensureItWillNotRevert() internal view {
         ISiloVault vault = TestStateLib.vault();
 
-        vault.ARBITRARY_SHARE_RATIO();
+        vault.DEAULT_LOST_THRESHOLD();
     }
 }

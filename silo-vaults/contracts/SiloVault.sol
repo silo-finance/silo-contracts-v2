@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {console} from "forge-std/console.sol";
+
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ERC4626, Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
@@ -49,11 +51,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* IMMUTABLES */
 
-    /// @notice asset to shares ratio for markets in deposit queue
-    /// @dev For manipulated vault/market (ie. during first deposit attack), this ratio will be huge.
+    /// @notice Default acceptable loss when depositing to market
+    /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
     /// In such case it is very probable that something bad is happening in the vault.
-    /// Most healthy vaults will have it way under 10. This value can be changed by vault owner if needed.
-    uint8 public constant ARBITRARY_SHARE_RATIO = 100;
+    /// This value can be changed by vault owner if needed.
+    /// 100% == 1e18
+    uint256 public constant DEAULT_LOST_THRESHOLD = 0.01e18;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -1088,7 +1091,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             shares = gotShares;
             success = true;
 
-            if (shares != 0) _priceManipulationCheck(shares, _assets);
+            if (_assets != 0) _priceManipulationCheck(_market, shares, _assets);
         } catch (bytes memory data) {
             if (_revertOnFail) RevertBytes.revertBytes(data, "D");
         }
@@ -1106,8 +1109,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {
-        uint256 ratio = _market.previewRedeem() / _shares;
+console.log("_assets", _assets);
+console.log("_shares", _shares);
+        uint256 previewAssets = _market.previewRedeem(_shares);
+        if (previewAssets >= _assets) return;
+console.log("previewAssets", previewAssets);
 
-        require(ratio < ARBITRARY_SHARE_RATIO, ErrorsLib.AssetLoss(ratio));
+        uint256 lossPercent = (_assets - previewAssets) * 1e18 / _assets;
+console.log("lossPercent", lossPercent);
+
+        require(lossPercent < DEAULT_LOST_THRESHOLD, ErrorsLib.AssetLoss(lossPercent));
     }
 }
