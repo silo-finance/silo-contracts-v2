@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IMethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodReentrancyTest.sol";
 import {IMethodsRegistry} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodsRegistry.sol";
 
+import {ArbitraryShareRatioTest} from "../methods/ArbitraryShareRatioTest.sol";
 import {SetCuratorReentrancyTest} from "../methods/SetCuratorReentrancyTest.sol";
 import {DecimalsReentrancyTest} from "../methods/DecimalsReentrancyTest.sol";
 import {DepositReentrancyTest} from "../methods/DepositReentrancyTest.sol";
@@ -83,6 +84,7 @@ contract SiloVaultMethodsRegistry is IMethodsRegistry {
     bytes4[] public supportedMethods;
 
     constructor() {
+        _registerMethod(new ArbitraryShareRatioTest());
         _registerMethod(new BalanceTrackerTest());
         _registerMethod(new AcceptGuardianTest());
         _registerMethod(new AcceptTimelockTest());
