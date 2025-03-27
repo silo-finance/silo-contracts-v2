@@ -817,9 +817,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_shares == 0) revert ErrorsLib.InputZeroShares();
 
         super._deposit(_caller, _receiver, _assets, _shares);
-        // console.log("general check for loss:");
-        // _priceManipulationCheck(_shares, _assets); TODO needed?
-
+        
         _supplyERC4626(_assets);
 
         // `lastTotalAssets + assets` may be a little off from `totalAssets()`.
