@@ -259,15 +259,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
     }
 
-    function syncBalanceTracker(IERC4626 _market, uint256 _expectedAssets, bool _override) external virtual onlyCuratorRole {
-        uint256 oldBalance = balanceTracker[_market];
-        uint256 newBalance = _override ? _expectedAssets : _expectedSupplyAssets(_market, address(this));
-
-        balanceTracker[_market] = newBalance;
-
-        emit EventsLib.SyncBalanceTracker(_market, oldBalance, newBalance);
-    }
-
     /* ONLY CURATOR FUNCTIONS */
 
     /// @inheritdoc ISiloVaultBase
@@ -303,6 +294,19 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         config[_market].removableAt = uint64(block.timestamp + timelock);
 
         emit EventsLib.SubmitMarketRemoval(_msgSender(), _market);
+    }
+
+    function syncBalanceTracker(
+        IERC4626 _market,
+        uint256 _expectedAssets,
+        bool _override
+    ) external virtual onlyCuratorRole {
+        uint256 oldBalance = balanceTracker[_market];
+        uint256 newBalance = _override ? _expectedAssets : _expectedSupplyAssets(_market, address(this));
+
+        balanceTracker[_market] = newBalance;
+
+        emit EventsLib.SyncBalanceTracker(_market, oldBalance, newBalance);
     }
 
     /* ONLY ALLOCATOR FUNCTIONS */

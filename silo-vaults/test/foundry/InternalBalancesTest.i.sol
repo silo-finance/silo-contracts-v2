@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
+import {ErrorsLib} from "silo-vaults/contracts/libraries/ErrorsLib.sol";
 import {MarketConfig} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {VaultsLittleHelper} from "./fromCore/_common/VaultsLittleHelper.sol";
 
@@ -12,6 +13,14 @@ import {VaultsLittleHelper} from "./fromCore/_common/VaultsLittleHelper.sol";
 */
 contract InternalBalancesTest is VaultsLittleHelper {
     event SyncBalanceTracker(IERC4626 indexed market, uint256 oldBalance, uint256 newBalance);
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_balanceTracker_Sync_Permissions -vvv
+    */
+    function test_balanceTracker_Sync_Permissions() public {
+        vm.expectRevert(ErrorsLib.NotCuratorRole.selector);
+        vault.syncBalanceTracker(IERC4626(address(0)), 0, false);
+    }
 
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_balanceTracker_Sync -vvv
@@ -63,5 +72,13 @@ contract InternalBalancesTest is VaultsLittleHelper {
         balanceAfter = vault.balanceTracker(market0);
 
         assertEq(balanceAfter, newBalance, "expect balanceAfter to be newBalance");
+
+        // override balance
+
+        vm.expectEmit(true, true, true, true);
+        emit SyncBalanceTracker(market0, newBalance, newBalance + 1);
+
+        vm.prank(owner);
+        vault.syncBalanceTracker(market0, newBalance + 1, true);
     }
 }
