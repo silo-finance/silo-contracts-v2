@@ -49,12 +49,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* IMMUTABLES */
 
-    /// @dev amount of tokens that is acceptable to be lost on deposit->withdraww action
-    /// if vault detect higher loss, action will be reverted
-    /// @notice we can not set "too much", this must be precise, otherwise we might not detect loss
-    /// how to calculate loss? we have to count rounding and we have to be as precise as possible
-    /// TODO we might need to sum up loss for general check.
-    uint8 public constant ARBITRARY_LOSS_THRESHOLD = 2;
+    /// @notice asset to shares ratio for markets in deposit queue
+    /// @dev For manipulated vault/market (ie. during first deposit attack), this ratio will be huge. In such case it is very probable that something bad is happening in the vault. Most healthy vaults will have it way under 10. This value can be changed by vault owner if needed.
+    uint8 public constant ARBITRARY_SHARE_RATIO = 10;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
