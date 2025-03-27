@@ -305,13 +305,17 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
             bytes4 errorType = bytes4(data);
 
-            if (errorType == ErrorsLib.AssetLoss.selector || errorType == ErrorsLib.ZeroShares.selector) {
+            if (
+                errorType == ErrorsLib.AssetLoss.selector ||
+                errorType == ErrorsLib.ZeroShares.selector
+            ) {
                 // ok
             } else {
                 revert("AssetLoss/ZeroShares is only acceptable revert here");
             }
         }
     }
+
 
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttack_permanentLoss -vvv
@@ -332,7 +336,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         _setCap(allMarkets[0], _supplierDeposit / 2);
 
         vm.prank(SUPPLIER);
-        vault.deposit(_supplierDeposit, SUPPLIER);
+        uint256 supplierShares = vault.deposit(_supplierDeposit, SUPPLIER);
 
         // simulate reallocation (withdraw from idle)
         vm.startPrank(address(vault));
@@ -360,6 +364,15 @@ contract MarketLossTest is IBefore, IntegrationTest {
             19, // NOTICE: 19 wei can be 50% loss for dust deposits
             "SUPPLIER should not lost (19 wei acceptable for fuzzing test to pass for extreme scenarios)"
         );
+
+//        if (supplierDiff > 2) {
+//            // can we detect that on vault?
+//            assertGt(
+//                _supplierDeposit / supplierShares,
+//                vault.ARBITRARY_LOSS_THRESHOLD(),
+//                "this ratio can not be detect on vault"
+//            );
+//        }
     }
 
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
