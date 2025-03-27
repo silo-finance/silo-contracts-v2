@@ -430,7 +430,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 balanceTracker[allocation.market] = newBalance;
 
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
-                (, uint256 suppliedShares) = _marketSupply(allocation.market, suppliedAssets, true);
+                (
+                    , uint256 suppliedShares
+                ) = _marketSupply({_market: allocation.market, _assets: suppliedAssets, _revertOnFail: true});
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -931,7 +933,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // As `_supplyBalance` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
                 if (newBalance <= supplyCap) {
-                    (bool success,) = _marketSupply(market, toSupply, false);
+                    // _marketSupply is using try/catch to skip markets that revert.
+                    (bool success,) = _marketSupply({_market: market, _assets: toSupply, _revertOnFail: true});
 
                     if (success) {
                         _assets -= toSupply;
@@ -962,7 +965,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             if (toWithdraw > 0) {
                 // Using try/catch to skip markets that revert.
-                try market.withdraw(toWithdraw, address(this), address(this)) returns (uint256 shares) {
+                try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
 
                     // Balances tracker can accumulate dust.
