@@ -259,6 +259,24 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
     }
 
+    /// @inheritdoc ISiloVault
+    function syncBalanceTracker(IERC4626 _market, uint256 _expectedAssets) external virtual onlyCuratorRole {
+        require(_expectedAssets != 0, ErrorsLib.ZeroExpectedAssets());
+
+        uint256 assets = _expectedSupplyAssets(_market, address(this));
+
+        // if assets less by 1% from expectedAssets
+        if (assets < _expectedAssets * 99 / 100) {
+            assets = _expectedAssets;
+        }
+
+        uint256 internalBalanceBefore = balanceTracker[_market];
+
+        balanceTracker[_market] = assets;
+
+        emit EventsLib.SyncBalanceTracker(_market, internalBalanceBefore, assets);
+    }
+
     /* ONLY CURATOR FUNCTIONS */
 
     /// @inheritdoc ISiloVaultBase
