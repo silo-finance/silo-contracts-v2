@@ -1091,7 +1091,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             if (_revertOnFail) RevertBytes.revertBytes(data, "price manipulation");
         }
 
-        if (success) _priceManipulationCheck(shares, _assets);
+        if (success) {
+            _priceManipulationCheck(shares, _assets);
+
+            if (_shares == 0) {
+                success = false;
+                if (_revertOnFail) revert(ErrorsLib.ZeroShares());
+            }
+        }
     }
 
     /// @dev to save code size ~500 B
@@ -1106,8 +1113,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _priceManipulationCheck(uint256 _shares, uint256 _assets) internal view {
-        require(_shares != 0, ErrorsLib.ZeroShares());
-
         // price is manipulated when eg 1 share is worth 100 assets, so ratio assets/shares will be > 1.0
         uint256 ratio = _assets / _shares;
 
