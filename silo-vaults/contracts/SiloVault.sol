@@ -1131,6 +1131,8 @@ console.log("[_withdrawERC4626] balance of vault", IERC20(asset()).balanceOf(add
     }
 
     function _priceManipulationCheck(uint256 _shares, uint256 _assets) internal view {
+        require(_shares != 0, ErrorsLib.ZeroShares());
+
         uint256 ratio = _assets / _shares;
 
         console.log("[_priceManipulationCheck] ratio %s", ratio);

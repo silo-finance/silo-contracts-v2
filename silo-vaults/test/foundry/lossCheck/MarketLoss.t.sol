@@ -111,7 +111,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             _supplierWithdrawFirst: true,
-            _attackOnBeforeDeposit: false,
+            _attackUsingHookBeforeDeposit: false,
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
@@ -137,7 +137,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             _supplierWithdrawFirst: true,
-            _attackOnBeforeDeposit: true,
+            _attackUsingHookBeforeDeposit: true,
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
@@ -172,12 +172,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             _supplierWithdrawFirst: false,
-            _attackOnBeforeDeposit: false,
+            _attackUsingHookBeforeDeposit: false,
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: 36
+            _acceptableLoss: vault.ARBITRARY_LOSS_THRESHOLD()
         });
     }
 
@@ -200,18 +200,18 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         _idleVault_InflationAttackWithDonation({
             _supplierWithdrawFirst: false,
-            _attackOnBeforeDeposit: true,
+            _attackUsingHookBeforeDeposit: true,
             _attackerDeposit: _attackerDeposit,
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: 36
+            _acceptableLoss: vault.ARBITRARY_LOSS_THRESHOLD()
         });
     }
 
     function _idleVault_InflationAttackWithDonation(
         bool _supplierWithdrawFirst, 
-        bool _attackOnBeforeDeposit, 
+        bool _attackUsingHookBeforeDeposit, 
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
         uint64 _donation,
@@ -239,7 +239,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         emit log_named_uint("recalculated _supplierDeposit", _supplierDeposit);
 
         // here we have frontrun with donation
-        if (_attackOnBeforeDeposit) donationAmount = _donation;
+        if (_attackUsingHookBeforeDeposit) donationAmount = _donation;
         else IERC20(idleMarket.asset()).transfer(address(idleMarket), _donation);
 
         vm.prank(SUPPLIER);
@@ -304,7 +304,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
             emit log("deposit reverted for SUPPLIER");
 
             bytes4 errorType = bytes4(data);
-            assertEq(errorType, ErrorsLib.AssetLoss.selector, "AssetLoss is only acceptable revert here");
+
+            if (errorType == ErrorsLib.AssetLoss.selector || errorType == ErrorsLib.ZeroShares.selector) {
+                // ok
+            } else {
+                revert("AssetLoss/ZeroShares is only acceptable revert here");
+            }
         }
     }
 
