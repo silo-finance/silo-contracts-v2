@@ -343,9 +343,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         // simulate reallocation (withdraw from idle)
         vm.startPrank(address(vault));
-        // TODO when I /2, this test pass, but when realocation is moving whole balance,
-        // ratio seems to be not detecting it
-        uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)) / 2, address(vault), address(vault));
+        // when redeem uses full balance, ratio will be correct even on donation, because market will be empty
+        // so we have to leave at least something in market, that's why -1
+        uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)) - 1, address(vault), address(vault));
         vm.stopPrank();
 
         // inflate price, possible eg on before deposit
@@ -374,11 +374,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         uint256 supplierDiff = supplierWithdraw > _supplierDeposit ? 0 : _supplierDeposit - supplierWithdraw;
         uint256 supplierLostPercent = supplierDiff * 1e18 / _supplierDeposit;
+        emit log_named_uint("supplierWithdraw", supplierWithdraw);
         emit log_named_uint("supplierLostPercent", supplierLostPercent);
 
         assertLe( // equal to cover case where  convertToAssets(1) == 0
             supplierDiff,
-            vault.convertToAssets(1),
+            vault.convertToAssets(1) + 1, // +1 to cover 1wei rounding error in case ratio is 1:1
             "SUPPLIER should not lost more than precision error"
         );
     }
