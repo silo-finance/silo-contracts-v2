@@ -219,5 +219,5 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
     function balanceTracker(IERC4626) external view returns (uint256);
 
     /// @notice Syncs the balance tracker for the market.
-    function syncBalanceTracker(IERC4626, uint256) external;
+    function syncBalanceTracker(IERC4626, uint256, bool) external;
 }
