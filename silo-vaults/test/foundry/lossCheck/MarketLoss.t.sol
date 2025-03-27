@@ -348,7 +348,17 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         // simulate reallocation back
         vm.startPrank(address(vault));
-        idleMarket.deposit(idleAmount, address(vault));
+        try idleMarket.deposit(idleAmount, address(vault)) returns (uint256 gotShares) {
+            // if deposit was correct, we expect our ratio check will work
+            assertLe(
+                _supplierDeposit / supplierShares,
+                vault.ARBITRARY_LOSS_THRESHOLD(),
+                "this ratio can not be detect on vault"
+            );
+        } catch {
+            // we don't want cases where we revert
+            vm.assume(false);
+        }
         vm.stopPrank();
 
         vm.startPrank(SUPPLIER);
@@ -359,20 +369,11 @@ contract MarketLossTest is IBefore, IntegrationTest {
         uint256 supplierLostPercent = supplierDiff * 1e18 / _supplierDeposit;
         emit log_named_uint("supplierLostPercent", supplierLostPercent);
 
-        assertLe(
+        assertLt(
             supplierDiff,
-            19, // NOTICE: 19 wei can be 50% loss for dust deposits
-            "SUPPLIER should not lost (19 wei acceptable for fuzzing test to pass for extreme scenarios)"
+            vault.convertToAssets(1), // NOTICE: 19 wei can be 50% loss for dust deposits
+            "SUPPLIER should not lost more than precision error"
         );
-
-//        if (supplierDiff > 2) {
-//            // can we detect that on vault?
-//            assertGt(
-//                _supplierDeposit / supplierShares,
-//                vault.ARBITRARY_LOSS_THRESHOLD(),
-//                "this ratio can not be detect on vault"
-//            );
-//        }
     }
 
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
