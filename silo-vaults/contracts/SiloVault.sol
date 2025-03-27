@@ -52,8 +52,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
     /// In such case it is very probable that something bad is happening in the vault.
     /// This value can be changed by vault owner if needed.
-    /// 100% == 1e18
-    uint256 public constant DEAULT_LOST_THRESHOLD = 0.01e18;
+    uint256 public constant DEAULT_LOST_THRESHOLD = 100;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -1049,27 +1048,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
             if (_assets != 0) _priceManipulationCheck(_market, shares, _assets);
         } catch (bytes memory data) {
-            if (_revertOnFail) RevertBytes.revertBytes(data, "D");
+            if (_revertOnFail) ErrorsLib.revertBytes(data);
         }
-    }
-
-    /// @dev to save code size ~500 B
-    function _ERC20BalanceOf(address _token, address _account) internal view returns (uint256 balance) {
-        balance = IERC20(_token).balanceOf(_account);
-    }
-
-    function _previewRedeem(IERC4626 _market, uint256 _shares) internal view returns (uint256 assets) {
-        if (_shares == 0) return 0;
-
-        assets = _market.previewRedeem(_shares);
     }
 
     function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {
         uint256 previewAssets = _market.previewRedeem(_shares);
         if (previewAssets >= _assets) return;
 
-        uint256 lossPercent = (_assets - previewAssets) * 1e18 / _assets;
-
-        require(lossPercent < DEAULT_LOST_THRESHOLD, ErrorsLib.AssetLoss(lossPercent));
+        unchecked {
+            uint256 loss = _assets - previewAssets;
+            require(loss < DEAULT_LOST_THRESHOLD, ErrorsLib.AssetLoss(loss));
+        }
     }
 }
