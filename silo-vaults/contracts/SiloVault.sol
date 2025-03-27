@@ -52,7 +52,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
     /// In such case it is very probable that something bad is happening in the vault.
     /// This value can be changed by vault owner if needed.
-    uint256 public constant DEAULT_LOST_THRESHOLD = 100;
+    uint256 public constant DEAULT_LOST_THRESHOLD = 1e6;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
