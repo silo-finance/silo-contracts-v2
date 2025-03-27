@@ -934,7 +934,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 // we have additional check to ensure that the market did not report wrong supply.
                 if (newBalance <= supplyCap) {
                     // _marketSupply is using try/catch to skip markets that revert.
-                    (bool success,) = _marketSupply({_market: market, _assets: toSupply, _revertOnFail: true});
+                    (bool success,) = _marketSupply({_market: market, _assets: toSupply, _revertOnFail: false});
 
                     if (success) {
                         _assets -= toSupply;
