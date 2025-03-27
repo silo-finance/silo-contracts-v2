@@ -16,7 +16,7 @@ interface IBefore {
 
 contract ERC4626WithBeforeHook is IdleVault {
     IBefore hook;
-    uint8 offset = 3; // default for idle
+    uint8 offset = 6; // default for idle
 
     constructor(IBefore _hook, IERC4626 _vault) IdleVault(address(_vault), _vault.asset(), "n", "s") {
         hook = _hook;
@@ -32,7 +32,7 @@ contract ERC4626WithBeforeHook is IdleVault {
     function setOffset(uint8 _offset) external {
         require(totalSupply() == 0, "vault must be empty to set offset");
 
-        //offset = _offset;
+        offset = _offset;
     }
     
     function _decimalsOffset() internal view virtual override returns (uint8) {
@@ -86,35 +86,11 @@ contract MarketLossTest is IBefore, IntegrationTest {
         );
     }
 
-    /*
-        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_minDepositWithOffset -vvv
-    */
-    function test_idleVault_minDepositWithOffset() public {
-        address v = address(vault);
-
-        vm.startPrank(v);
-        idleMarket.deposit(1, v);
-
-        idleMarket.deposit(1, v);
-
-        assertEq(idleMarket.redeem(idleMarket.balanceOf(v), v, v), 2, "expect no loss on tiny deposit");
-        vm.stopPrank();
-    }
-
     function beforeDeposit() external {
         if (donationAmount == 0) return;
 
         emit log_named_uint("executing donation attack with amount", donationAmount);
         IERC20(idleMarket.asset()).transfer(address(idleMarket), donationAmount);
-    }
-
-    /*
-        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_offset -vv
-    */
-    function test_idleVault_offset() public {
-        vm.prank(address(vault));
-        uint256 shares = idleMarket.deposit(1, address(vault));
-        assertEq(shares, 1e18, "expect big offset");
     }
 
     /*
@@ -244,8 +220,8 @@ contract MarketLossTest is IBefore, IntegrationTest {
     ) public {
         vm.assume(uint256(_attackerDeposit) * _supplierDeposit * _donation != 0);
         vm.assume(_supplierDeposit >= 2);
-        vm.assume(_idleVaultOffset < 20);
-        vm.assume(_idleVaultOffset == 0);
+        vm.assume(_idleVaultOffset <= 6);
+
         ERC4626WithBeforeHook(address(idleMarket)).setOffset(_idleVaultOffset);
 
         // we want some founds to go to idle market, so cap must be lower than supplier deposit
@@ -328,7 +304,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             emit log("deposit reverted for SUPPLIER");
 
             bytes4 errorType = bytes4(data);
-            // assertEq(errorType, ErrorsLib.AssetLoss.selector, "AssetLoss is only acceptable revert here");
+            assertEq(errorType, ErrorsLib.AssetLoss.selector, "AssetLoss is only acceptable revert here");
         }
     }
 

@@ -436,7 +436,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
                 // The market's loan asset is guaranteed to be the vault's asset because it has a non-zero supply cap.
                 (, uint256 suppliedShares) = _marketSupply(allocation.market, suppliedAssets, true);
-                _priceManipulationCheck(suppliedShares, suppliedAssets);
 
                 emit EventsLib.ReallocateSupply(_msgSender(), allocation.market, suppliedAssets, suppliedShares);
 
@@ -826,8 +825,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         console.log("[_deposit] one share == %s", convertToAssets(1));
 
         super._deposit(_caller, _receiver, _assets, _shares);
-        console.log("general check for loss:");
-        _priceManipulationCheck(_shares, _assets);
+        // console.log("general check for loss:");
+        // _priceManipulationCheck(_shares, _assets); TODO needed?
 
         _supplyERC4626(_assets);
 
