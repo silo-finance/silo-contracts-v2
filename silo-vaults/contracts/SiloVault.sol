@@ -53,7 +53,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev For manipulated vault/market (ie. during first deposit attack), this ratio will be huge.
     /// In such case it is very probable that something bad is happening in the vault.
     /// Most healthy vaults will have it way under 10. This value can be changed by vault owner if needed.
-    uint8 public constant ARBITRARY_SHARE_RATIO = 10;
+    uint8 public constant ARBITRARY_SHARE_RATIO = 100;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -1105,9 +1105,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         assets = _market.previewRedeem(_shares);
     }
 
-    function _priceManipulationCheck(uint256 _shares, uint256 _assets) internal view {
-        // price is manipulated when eg 1 share is worth 100 assets, so ratio assets/shares will be > 1.0
-        uint256 ratio = _assets / _shares;
+    function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {
+        uint256 ratio = _market.previewRedeem() / _shares;
 
         require(ratio < ARBITRARY_SHARE_RATIO, ErrorsLib.AssetLoss(ratio));
     }

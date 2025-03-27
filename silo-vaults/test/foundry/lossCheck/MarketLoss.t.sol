@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ErrorsLib} from "../../../contracts/libraries/ErrorsLib.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
@@ -116,7 +117,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
+            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -142,7 +143,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
+            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -177,7 +178,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
+            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -205,7 +206,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
+            _acceptableLossRatio: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -216,7 +217,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         uint64 _supplierDeposit,
         uint64 _donation,
         uint8 _idleVaultOffset,
-        uint64 _acceptableLoss
+        uint64 _acceptableLossRatio
     ) public {
         vm.assume(uint256(_attackerDeposit) * _supplierDeposit * _donation != 0);
         vm.assume(_supplierDeposit >= 2);
@@ -249,8 +250,10 @@ contract MarketLossTest is IBefore, IntegrationTest {
         // deposit amount 18446744073709551614
         // assets 18446744073709551614, vault shares 18446744073709551614000
         // idle market part: 9223372036854775808 (shares 500), 1:18446744073709551
-        try vault.deposit(_supplierDeposit, SUPPLIER) {
+        try vault.deposit(_supplierDeposit, SUPPLIER) returns (uint256 supplierShares) {
             // if did not revert, we expect no loss
+            emit log_named_uint("RATIO #0", allMarkets[0].convertToAssets(1e18) / 1e18);
+            emit log_named_uint("RATIO #1", allMarkets[1].convertToAssets(1e18) / 1e18);
 
             uint256 attackerTotalSpend = uint256(_donation) + _attackerDeposit;
 
@@ -296,9 +299,15 @@ contract MarketLossTest is IBefore, IntegrationTest {
             uint256 supplierLostPercent = supplierLoss * 1e18 / _supplierDeposit;
 
             assertLe(
+                supplierWithdraw / supplierShares,
+                _acceptableLossRatio,
+                "RATIO is higher than THRESHOLD, we should detect"
+            );
+
+            assertLe(
                 supplierLoss,
-                _acceptableLoss,
-                "loss is higher than THRESHOLD, we should detect"
+                10 ** IERC20Metadata(vault.asset()).decimals(),
+                "loss is higher than 1 token, we should detect"
             );
         } catch (bytes memory data) {
             emit log("deposit reverted for SUPPLIER");
