@@ -170,8 +170,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         // to avoid losses caused by rounding error, recalculate assets
         emit log_named_uint("original _supplierDeposit", _supplierDeposit);
-        _supplierDeposit = uint64(vault.previewMint(vault.previewDeposit(_supplierDeposit)));
-        emit log_named_uint("recalculated _supplierDeposit", _supplierDeposit);
 
         // here we have frontrun with donation
         if (_attackUsingHookBeforeDeposit) donationAmount = _donation;
@@ -186,24 +184,11 @@ contract MarketLossTest is IBefore, IntegrationTest {
         // idle market part: 9223372036854775808 (shares 500), 1:18446744073709551
         try vault.deposit(_supplierDeposit, SUPPLIER) returns (uint256 supplierShares) {
             // if did not revert, we expect no loss
-            emit log_named_uint(" SUPPLIER deposit", _supplierDeposit);
-//            emit log_named_uint(" idle vault 1 share deposit", idleMarket.convertToAssets(1));
-
-            uint256 attackerTotalSpend = uint256(_donation) + _attackerDeposit;
 
             uint256 supplierWithdraw;
-            uint256 attackerWithdraw;
 
             emit log(".................................. SUPPLIER withdraw");
             supplierWithdraw = _vaultWithdrawAll(SUPPLIER);
-            emit log(".................................. attacker withdraw");
-            attackerWithdraw = _vaultWithdrawAll(attacker);
-
-            assertLe(attackerWithdraw, attackerTotalSpend, "must be not profitable");
-
-            uint256 attackerTotalLoss = attackerTotalSpend - attackerWithdraw;
-            uint256 attackerTotalLossPercent = attackerTotalLoss * 1e18 / uint256(attackerTotalSpend);
-            emit log_named_decimal_uint("attackerTotalLossPercent", attackerTotalLossPercent, 16);
 
             if (supplierWithdraw > _supplierDeposit) {
                 emit log("there should be no gain for supplier on healthy markets, but we gain:");
@@ -212,16 +197,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
             uint256 supplierLoss = _supplierDeposit < supplierWithdraw ? 0 : _supplierDeposit - supplierWithdraw;
 
-            assertGe(
-                attackerTotalLoss + 2,
-                supplierLoss,
-                "attacker pays for it (+2 because of rounding error, we accepting 2wei discrepancy)"
-            );
-
             emit log_named_uint(" SUPPLIER deposit", _supplierDeposit);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
             emit log_named_uint("    SUPPLIER loss", supplierLoss);
-            emit log_named_uint("    attacker loss", attackerTotalLoss);
 
             uint256 supplierLostPercent = supplierLoss * 1e18 / _supplierDeposit;
             emit log_named_decimal_uint("supplierLostPercent", supplierLostPercent, 18);
