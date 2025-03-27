@@ -1088,7 +1088,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             success = true;
             shares = gotShares;
         } catch (bytes memory data) {
-            if (_revertOnFail) RevertBytes.revertBytes(data, "Deposit failed");
+            if (_revertOnFail) RevertBytes.revertBytes(data, "D");
         }
 
         if (success) {
