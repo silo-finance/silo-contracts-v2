@@ -205,7 +205,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             emit log_named_decimal_uint("supplierLostPercent", supplierLostPercent, 18);
 
             assertLe(
-                supplierLostPercent,
+                supplierLoss,
                 _acceptableLoss,
                 "% is higher than THRESHOLD, we should detect"
             );
@@ -262,19 +262,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         // simulate reallocation back
         vm.startPrank(address(vault));
-        try idleMarket.deposit(idleAmount, address(vault)) returns (uint256 gotShares) {
-            emit log_named_uint("_supplierDeposit / supplierShares", _supplierDeposit / supplierShares);
-
-            // if deposit was correct, we expect our ratio check will work
-            assertLe(
-                _supplierDeposit / supplierShares,
-                vault.DEAULT_LOST_THRESHOLD(),
-                "this ratio can not be detect on vault"
-            );
-        } catch {
-            // we don't want cases where we revert
-            vm.assume(false);
-        }
+        idleMarket.deposit(idleAmount, address(vault));
         vm.stopPrank();
 
         vm.startPrank(SUPPLIER);
@@ -283,13 +271,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         uint256 supplierDiff = supplierWithdraw > _supplierDeposit ? 0 : _supplierDeposit - supplierWithdraw;
         uint256 supplierLostPercent = supplierDiff * 1e18 / _supplierDeposit;
-        emit log_named_uint("supplierWithdraw", supplierWithdraw);
         emit log_named_uint("supplierLostPercent", supplierLostPercent);
 
-        assertLe( // equal to cover case where  convertToAssets(1) == 0
+        assertLe(
             supplierDiff,
-            vault.convertToAssets(1) + 1, // +1 to cover 1wei rounding error in case ratio is 1:1
-            "SUPPLIER should not lost more than precision error"
+            1, // NOTICE: 1 wei can be 50% loss for dust deposits
+            "SUPPLIER should not lost (1 wei acceptable for rounding)"
         );
     }
 
