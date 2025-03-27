@@ -31,7 +31,7 @@ interface IOwnable {
 interface ISiloVaultBase {
     function DECIMALS_OFFSET() external view returns (uint8);
 
-    function ARBITRARY_LOSS_THRESHOLD() external view returns (uint8);
+    function ARBITRARY_SHARE_RATIO() external view returns (uint8);
 
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
 

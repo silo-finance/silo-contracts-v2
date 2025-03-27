@@ -116,7 +116,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_LOSS_THRESHOLD()
+            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -142,7 +142,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_LOSS_THRESHOLD()
+            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -177,7 +177,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_LOSS_THRESHOLD()
+            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -205,7 +205,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.ARBITRARY_LOSS_THRESHOLD()
+            _acceptableLoss: vault.ARBITRARY_SHARE_RATIO()
         });
     }
 
@@ -352,7 +352,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             // if deposit was correct, we expect our ratio check will work
             assertLe(
                 _supplierDeposit / supplierShares,
-                vault.ARBITRARY_LOSS_THRESHOLD(),
+                vault.ARBITRARY_SHARE_RATIO(),
                 "this ratio can not be detect on vault"
             );
         } catch {
