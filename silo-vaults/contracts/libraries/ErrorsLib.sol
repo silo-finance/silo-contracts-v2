@@ -154,4 +154,14 @@ library ErrorsLib {
 
     /// @notice Thrown when projected withdraw is much less than what user deposit.
     error AssetLoss(uint256 loss);
+
+    function revertBytes(bytes memory _errMsg) internal pure {
+        if (_errMsg.length > 0) {
+            assembly { // solhint-disable-line no-inline-assembly
+                revert(add(32, _errMsg), mload(_errMsg))
+            }
+        }
+
+        revert();
+    }
 }
