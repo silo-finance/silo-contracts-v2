@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {CommonBase} from "forge-std/Base.sol";
 
-import {MainnetVeSiloDeploy} from "silo-core/deploy/mainnet-deploy/MainnetVeSiloDeploy.s.sol";
+import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
@@ -140,7 +140,7 @@ contract SiloFixture is StdCheats, CommonBase {
         )
     {
         if (!_mainNetDeployed) {
-            MainnetVeSiloDeploy mainnetDeploy = new MainnetVeSiloDeploy();
+            MainnetDeploy mainnetDeploy = new MainnetDeploy();
             mainnetDeploy.disableDeploymentsSync();
             mainnetDeploy.run();
             console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");

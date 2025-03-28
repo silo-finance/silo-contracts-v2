@@ -13,7 +13,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {MainnetVeSiloDeploy} from "silo-core/deploy/mainnet-deploy/MainnetVeSiloDeploy.s.sol";
+import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 
 import {
@@ -53,7 +53,7 @@ contract SiloDeployTest is IntegrationTest {
 
         Deployments.disableDeploymentsSync();
 
-        MainnetVeSiloDeploy mainnetDeploy = new MainnetVeSiloDeploy();
+        MainnetDeploy mainnetDeploy = new MainnetDeploy();
         mainnetDeploy.run();
 
         _siloDeploy = new SiloDeployWithGaugeHookReceiver();

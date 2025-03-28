@@ -20,7 +20,7 @@ echo "ve-silo deployment done."
 
 echo "Deploy silo-core. RPC: $SILO_DEPLOYMENT_NODE"
 FOUNDRY_PROFILE=core \
-    forge script silo-core/deploy/mainnet-deploy/MainnetVeSiloDeploy.s.sol \
+    forge script silo-core/deploy/MainnetDeploy.s.sol \
     --ffi --broadcast --skip-simulation --rpc-url $SILO_DEPLOYMENT_NODE
 
 exit_code=$?

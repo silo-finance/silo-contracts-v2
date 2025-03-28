@@ -9,7 +9,7 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/SiloFactory.sol";
-import {SiloFactoryVeSiloDeploy} from "silo-core/deploy/silo-factory/SiloFactoryVeSiloDeploy.s.sol";
+import {SiloFactoryDeploy} from "silo-core/deploy/SiloFactoryDeploy.s.sol";
 
 import {OracleMock} from "../_mocks/OracleMock.sol";
 
@@ -23,11 +23,11 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
     address internal _feeDistributor = makeAddr("FeeDistributor");
 
     function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryVeSiloDeploy` script
+        // Mock addresses that we need for the `SiloFactoryDeploy` script
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _timelock);
         AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, _feeDistributor);
 
-        SiloFactoryVeSiloDeploy siloFactoryDeploy = new SiloFactoryVeSiloDeploy();
+        SiloFactoryDeploy siloFactoryDeploy = new SiloFactoryDeploy();
         siloFactoryDeploy.disableDeploymentsSync();
         siloFactory = siloFactoryDeploy.run();
     }
