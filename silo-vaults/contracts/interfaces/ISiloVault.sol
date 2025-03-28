@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-import {MarketConfig, PendingUint192, PendingAddress} from "../libraries/PendingLib.sol";
+import {MarketConfig, PendingUint192, PendingAddress, ArbitraryLossThreshold} from "../libraries/PendingLib.sol";
 import {IVaultIncentivesModule} from "./IVaultIncentivesModule.sol";
 
 struct MarketAllocation {
@@ -31,7 +31,7 @@ interface IOwnable {
 interface ISiloVaultBase {
     function DECIMALS_OFFSET() external view returns (uint8);
 
-    function DEAULT_LOST_THRESHOLD() external view returns (uint256);
+    function DEFAULT_LOST_THRESHOLD() external view returns (uint256);
 
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
 
@@ -97,6 +97,9 @@ interface ISiloVaultBase {
     /// @dev Warning: Reverts if a market removal is pending.
     /// @dev In case the new cap is lower than the current one, the cap is set immediately.
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external;
+
+    /// @notice Set loss threshold for the market. No timelock.
+    function setArbitraryLossThreshold(IERC4626 _market, uint256 _loss) external;
 
     /// @notice Accepts the pending cap of the market defined by `marketParams`.
     function acceptCap(IERC4626 _market) external;
@@ -200,6 +203,8 @@ interface ISiloVaultStaticTyping is ISiloVaultBase {
 interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulticall {
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (MarketConfig memory);
+
+    function arbitraryLossThreshold(IERC4626) external view returns (ArbitraryLossThreshold memory);
 
     /// @notice Returns the pending guardian.
     function pendingGuardian() external view returns (PendingAddress memory);

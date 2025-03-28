@@ -11,10 +11,9 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
-
 import {
     MarketConfig,
+    ArbitraryLossThreshold,
     PendingUint192,
     PendingAddress,
     MarketAllocation,
@@ -52,7 +51,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
     /// In such case it is very probable that something bad is happening in the vault.
     /// This value can be changed by vault owner if needed.
-    uint256 public constant DEAULT_LOST_THRESHOLD = 1e6;
+    uint256 public constant DEFAULT_LOST_THRESHOLD = 1e6;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
@@ -94,6 +93,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// But this is only about internal balances. There is no interest loss on the vault.
     mapping(IERC4626 => uint256) public balanceTracker;
 
+    mapping(IERC4626 => ArbitraryLossThreshold) public arbitraryLossThreshold;
+
     /// @inheritdoc ISiloVaultBase
     uint96 public fee;
 
@@ -128,12 +129,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         string memory _name,
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
-        require(_asset != address(0), ErrorsLib.ZeroAddress());
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
 
-        uint256 decimals = TokenHelper.assertAndGetDecimals(_asset);
-        require(decimals <= 18, ErrorsLib.NotSupportedDecimals());
-        DECIMALS_OFFSET = uint8(UtilsLib.zeroFloorSub(18 + 6, decimals));
+        DECIMALS_OFFSET = SiloVaultActionsLib.vaultDecimals(_asset);
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -262,6 +260,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     /* ONLY CURATOR FUNCTIONS */
+
+    /// @inheritdoc ISiloVaultBase
+    function setArbitraryLossThreshold(IERC4626 _market, uint256 _lossThreshold) external virtual onlyCuratorRole {
+        SiloVaultActionsLib.setArbitraryLossThreshold(_lossThreshold, arbitraryLossThreshold[_market]);
+    }
 
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
@@ -1053,12 +1056,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {
-        uint256 previewAssets = _market.previewRedeem(_shares);
+        uint256 previewAssets = SiloVaultActionsLib.previewRedeem(_market, _shares);
         if (previewAssets >= _assets) return;
+
+        uint256 threshold = arbitraryLossThreshold[_market].threshold;
+        threshold = threshold == 0 ? DEFAULT_LOST_THRESHOLD : threshold;
 
         unchecked {
             uint256 loss = _assets - previewAssets;
-            require(loss < DEAULT_LOST_THRESHOLD, ErrorsLib.AssetLoss(loss));
+            require(loss < threshold, ErrorsLib.AssetLoss(loss));
         }
     }
 }
