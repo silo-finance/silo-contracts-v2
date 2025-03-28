@@ -37,7 +37,7 @@ contract InternalTest is BaseTest, SiloVault {
     function _expectedSupplyAssets(IERC4626 _market, address _user)
         internal
         view
-        override(BaseTest, SiloVault)
+        override
         returns (uint256 assets)
     {
         assets = BaseTest._expectedSupplyAssets(_market, _user);

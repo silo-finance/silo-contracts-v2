@@ -141,6 +141,15 @@ library SiloVaultActionsLib {
         assets = previewRedeem(_market, shares);
     }
 
+    /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
+    function expectedSupplyAssets(IERC4626 _market) internal view returns (uint256 assets) {
+        assets = previewRedeem(_market, ERC20BalanceOf(address(_market), address(this)));
+    }
+
+    function expectedSupplyAssets(IERC4626 _market, address _user) internal view returns (uint256 assets) {
+        assets = previewRedeem(_market, ERC20BalanceOf(address(_market), _user));
+    }
+
     /// @dev to save code size ~500 B
     function ERC20BalanceOf(address _token, address _account) internal view returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(_account);
@@ -161,5 +170,54 @@ library SiloVaultActionsLib {
         _arbitraryLossThreshold.threshold = _lossThreshold;
 
         emit EventsLib.SetArbitraryLossThreshold(msg.sender, _lossThreshold);
+    }
+
+    function syncBalanceTracker(
+        mapping(IERC4626 => uint256) storage _balanceTracker,
+        IERC4626 _market,
+        uint256 _expectedAssets,
+        bool _override
+    ) external {
+        uint256 oldBalance = _balanceTracker[_market];
+        uint256 newBalance = _override ? _expectedAssets : expectedSupplyAssets(_market);
+
+        _balanceTracker[_market] = newBalance;
+
+        emit EventsLib.SyncBalanceTracker(_market, oldBalance, newBalance);
+    }
+
+    function validateSupplyQueueEmitEvent(
+        IERC4626[] calldata _newSupplyQueue,
+        mapping(IERC4626 => MarketConfig) storage _config
+    ) external {
+        uint256 length = _newSupplyQueue.length;
+
+        if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
+
+        for (uint256 i; i < length; ++i) {
+            IERC4626 market = _newSupplyQueue[i];
+            if (_config[market].cap == 0) revert ErrorsLib.UnauthorizedMarket(market);
+        }
+
+        emit EventsLib.SetSupplyQueue(msg.sender, _newSupplyQueue);
+    }
+
+    function validateFeeRecipientEmitEvent(
+        address _newFeeRecipient,
+        address _currentFeeRecipient,
+        uint256 _fee
+    ) external {
+        if (_newFeeRecipient == _currentFeeRecipient) revert ErrorsLib.AlreadySet();
+        if (_newFeeRecipient == address(0) && _fee != 0) revert ErrorsLib.ZeroFeeRecipient();
+
+        emit EventsLib.SetFeeRecipient(_newFeeRecipient);
+    }
+
+    function setFeeValidateEmitEvent(uint256 _newFee, uint256 _currentFee, address _feeRecipient) external {
+        if (_newFee == _currentFee) revert ErrorsLib.AlreadySet();
+        if (_newFee > ConstantsLib.MAX_FEE) revert ErrorsLib.MaxFeeExceeded();
+        if (_newFee != 0 && _feeRecipient == address(0)) revert ErrorsLib.ZeroFeeRecipient();
+
+        emit EventsLib.SetFee(msg.sender, _newFee);
     }
 }

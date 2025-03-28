@@ -219,30 +219,23 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setFee(uint256 _newFee) external virtual onlyOwner {
-        if (_newFee == fee) revert ErrorsLib.AlreadySet();
-        if (_newFee > ConstantsLib.MAX_FEE) revert ErrorsLib.MaxFeeExceeded();
-        if (_newFee != 0 && feeRecipient == address(0)) revert ErrorsLib.ZeroFeeRecipient();
-
         // Accrue fee using the previous fee set before changing it.
         _updateLastTotalAssets(_accrueFee());
 
+        SiloVaultActionsLib.setFeeValidateEmitEvent(_newFee, fee, feeRecipient);
+
         // Safe "unchecked" cast because newFee <= MAX_FEE.
         fee = uint96(_newFee);
-
-        emit EventsLib.SetFee(_msgSender(), fee);
     }
 
     /// @inheritdoc ISiloVaultBase
     function setFeeRecipient(address _newFeeRecipient) external virtual onlyOwner {
-        if (_newFeeRecipient == feeRecipient) revert ErrorsLib.AlreadySet();
-        if (_newFeeRecipient == address(0) && fee != 0) revert ErrorsLib.ZeroFeeRecipient();
-
         // Accrue fee to the previous fee recipient set before changing it.
         _updateLastTotalAssets(_accrueFee());
 
-        feeRecipient = _newFeeRecipient;
+        SiloVaultActionsLib.validateFeeRecipientEmitEvent(_newFeeRecipient, feeRecipient, fee);
 
-        emit EventsLib.SetFeeRecipient(_newFeeRecipient);
+        feeRecipient = _newFeeRecipient;
     }
 
     /// @inheritdoc ISiloVaultBase
@@ -296,24 +289,23 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         emit EventsLib.SubmitMarketRemoval(_msgSender(), _market);
     }
 
+    function syncBalanceTracker(
+        IERC4626 _market,
+        uint256 _expectedAssets,
+        bool _override
+    ) external virtual onlyCuratorRole {
+        SiloVaultActionsLib.syncBalanceTracker(balanceTracker, _market, _expectedAssets, _override);
+    }
+
     /* ONLY ALLOCATOR FUNCTIONS */
 
     /// @inheritdoc ISiloVaultBase
     function setSupplyQueue(IERC4626[] calldata _newSupplyQueue) external virtual onlyAllocatorRole {
         _nonReentrantOn();
 
-        uint256 length = _newSupplyQueue.length;
-
-        if (length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
-
-        for (uint256 i; i < length; ++i) {
-            IERC4626 market = _newSupplyQueue[i];
-            if (config[market].cap == 0) revert ErrorsLib.UnauthorizedMarket(market);
-        }
+        SiloVaultActionsLib.validateSupplyQueueEmitEvent(_newSupplyQueue, config);
 
         supplyQueue = _newSupplyQueue;
-
-        emit EventsLib.SetSupplyQueue(_msgSender(), _newSupplyQueue);
 
         _nonReentrantOff();
     }
@@ -684,7 +676,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         for (uint256 i; i < length; ++i) {
             IERC4626 market = withdrawQueue[i];
-            assets += _expectedSupplyAssets(market, address(this));
+            assets += SiloVaultActionsLib.expectedSupplyAssets(market);
         }
     }
 
@@ -822,7 +814,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         virtual
         returns (uint256 marketBalance)
     {
-        marketBalance = _expectedSupplyAssets(_market, address(this));
+        marketBalance = SiloVaultActionsLib.expectedSupplyAssets(_market);
 
         if (marketBalance != 0 && marketBalance > balanceTracker[_market]) {
             balanceTracker[_market] = marketBalance;
@@ -865,7 +857,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         );
 
         if (updateTotalAssets) {
-            _updateLastTotalAssets(lastTotalAssets + _expectedSupplyAssets(_market, address(this)));
+            _updateLastTotalAssets(lastTotalAssets + SiloVaultActionsLib.expectedSupplyAssets(_market));
         }
     }
 
@@ -976,13 +968,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             feeShares =
                 _convertToSharesWithTotals(feeAssets, totalSupply(), newTotalAssets - feeAssets, Math.Rounding.Floor);
         }
-    }
-
-    /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
-    function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {
-        assets = SiloVaultActionsLib.previewRedeem(
-            _market, SiloVaultActionsLib.ERC20BalanceOf(address(_market), _user)
-        );
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
