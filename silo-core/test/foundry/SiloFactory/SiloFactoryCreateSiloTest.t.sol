@@ -67,7 +67,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         assertTrue(siloFactory.isSilo(address(silo0)));
         assertTrue(siloFactory.isSilo(address(silo1)));
 
-        address configFromFactory = siloFactory.idToSiloConfig(1);
+        address configFromFactory = siloFactory.idToSiloConfig(100);
         assertEq(configFromFactory, address(siloConfig));
         assertEq(configFromFactory, address(silo0.config()));
         assertEq(configFromFactory, address(silo1.config()));
@@ -134,7 +134,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
-        assertEq(siloFactory.ownerOf(1), initData.deployer);
+        assertEq(siloFactory.ownerOf(100), initData.deployer);
     }
 
     /*
