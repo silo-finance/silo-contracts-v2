@@ -35,6 +35,7 @@ methods {
     function _.SILO_ID() external => PER_CALLEE_CONSTANT;
     
     function _.tokenURI() external => NONDET;
+    function _.getShareTokens(address) external => DISPATCHER(true);  
     
 }
 

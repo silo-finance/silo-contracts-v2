@@ -33,24 +33,25 @@ methods {
     ) external => NONDET; /* expects bytes4 */
 
     function _.updateHooks() external => NONDET;
-    function _.config() external => configCVL(calledContract) expect address;
+    // function _.config() external => configCVL(calledContract) expect address;
     function _.SILO_ID() external => PER_CALLEE_CONSTANT;
     
     function _.tokenURI() external => NONDET;
     
+    function _.getShareTokens(address) external => DISPATCHER(true);        
 }
 
-//// summary: config ////
+// //// summary: config ////
 
-ghost configDet(address) returns address; 
+// ghost configDet(address) returns address; 
 
-function configCVL(address calledC) returns address {
-    if (already_initialized_1[calledC]) {
-        return configDet(calledC);
-    } else {
-        return 0;
-    }
-}
+// function configCVL(address calledC) returns address {
+//     if (already_initialized_1[calledC]) {
+//         return configDet(calledC);
+//     } else {
+//         return 0;
+//     }
+// }
 
 //// summary: cloneDeterministic ////
 
