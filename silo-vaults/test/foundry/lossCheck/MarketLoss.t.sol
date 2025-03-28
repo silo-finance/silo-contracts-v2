@@ -116,7 +116,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.DEAULT_LOST_THRESHOLD()
+            _acceptableLoss: vault.DEFAULT_LOST_THRESHOLD()
         });
     }
 
@@ -141,7 +141,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             _supplierDeposit: _supplierDeposit,
             _donation: _donation,
             _idleVaultOffset: _idleVaultOffset,
-            _acceptableLoss: vault.DEAULT_LOST_THRESHOLD()
+            _acceptableLoss: vault.DEFAULT_LOST_THRESHOLD()
         });
     }
 

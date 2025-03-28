@@ -6,13 +6,24 @@ import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
+import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+
 import {ErrorsLib} from "./ErrorsLib.sol";
 import {EventsLib} from "./EventsLib.sol";
-import {PendingUint192, MarketConfig} from "./PendingLib.sol";
+import {PendingUint192, MarketConfig, ArbitraryLossThreshold} from "./PendingLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 library SiloVaultActionsLib {
     using SafeERC20 for IERC20;
+
+    function vaultDecimals(address _asset) external view returns (uint8 decimalsOffset) {
+        require(_asset != address(0), ErrorsLib.ZeroAddress());
+
+        uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
+        require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
+        decimalsOffset = uint8(UtilsLib.zeroFloorSub(18 + 6, assetDecimals));
+    }
 
     function setIsAllocator(
         address _newAllocator,
@@ -139,5 +150,16 @@ library SiloVaultActionsLib {
         if (_shares == 0) return 0;
 
         assets = _market.previewRedeem(_shares);
+    }
+
+    function setArbitraryLossThreshold(
+        uint256 _lossThreshold,
+        ArbitraryLossThreshold storage _arbitraryLossThreshold
+    ) external {
+        if (_arbitraryLossThreshold.threshold == _lossThreshold) revert ErrorsLib.AlreadySet();
+
+        _arbitraryLossThreshold.threshold = _lossThreshold;
+
+        emit EventsLib.SetArbitraryLossThreshold(msg.sender, _lossThreshold);
     }
 }
