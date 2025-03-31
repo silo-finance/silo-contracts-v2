@@ -36,8 +36,9 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
 
     /// @inheritdoc IShareToken
     function mint(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {
-        // For `_spendReceiveApproval` `_spender` is the owner of the debt token
-        // which is the msg.sender when borrowing and `_owner` is the recipient of the debt
+        // For `_spendReceiveApproval`, `_spender` is the owner of the debt token
+        // which is the `msg.sender` when borrowing and `_owner` is the recipient of the debt
+        // because debt share token is minted to `_owner`
         if (_owner != _spender) _spendReceiveApproval(_spender, _owner, _amount);
         _mint(_owner, _amount);
     }
