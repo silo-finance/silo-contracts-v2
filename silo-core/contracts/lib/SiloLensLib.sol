@@ -113,10 +113,7 @@ library SiloLensLib {
       }
 
     function inDebt(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = _siloConfig.getConfigsForSolvency(_borrower);
+        (, ISiloConfig.ConfigData memory debtConfig) = _siloConfig.getConfigsForSolvency(_borrower);
 
         has = debtConfig.debtShareToken != address(0)
             && IShareToken(debtConfig.debtShareToken).balanceOf(_borrower) != 0;
@@ -162,6 +159,9 @@ library SiloLensLib {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         ) = _siloConfig.getConfigsForSolvency(_borrower);
+
+        // if no debt collateralConfig and debtConfig are empty
+        if (collateralConfig.token == address(0)) return (0, 0);
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.getAssetsDataForLtvCalculations(
             collateralConfig,
