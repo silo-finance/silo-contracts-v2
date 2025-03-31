@@ -50,6 +50,7 @@ import {IncentivesModuleTest} from "../methods/IncentivesModuleTest.sol";
 import {DecimalsOffsetTest} from "../methods/DecimalsOffsetTest.sol";
 import {DomainSeparatorTest} from "../methods/DomainSeparatorTest.sol";
 import {WithdrawReentrancyTest} from "../methods/WithdrawReentrancyTest.sol";
+import {SyncBalanceTrackerTest} from "../methods/SyncBalanceTrackerTest.sol";
 import {SubmitCapTest} from "../methods/SubmitCapTest.sol";
 import {SetFeeTest} from "../methods/SetFeeTest.sol";
 import {SetIsAllocatorTest} from "../methods/SetIsAllocatorTest.sol";
@@ -128,6 +129,7 @@ contract SiloVaultMethodsRegistry is IMethodsRegistry {
         _registerMethod(new TotalAssetsTest());
         _registerMethod(new TimelockTest());
         _registerMethod(new SymbolTest());
+        _registerMethod(new SyncBalanceTrackerTest());
         _registerMethod(new SupplyQueueLengthTest());
         _registerMethod(new SupplyQueueTest());
         _registerMethod(new PreviewDepositTest());

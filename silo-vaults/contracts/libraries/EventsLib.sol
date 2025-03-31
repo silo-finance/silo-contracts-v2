@@ -131,4 +131,7 @@ library EventsLib {
     event SetFlowCaps(address indexed sender, ISiloVault indexed vault, FlowCapsConfig[] config);
 
     event SetArbitraryLossThreshold(address indexed caller, uint256 acceptableLoss);
+
+    /// @notice Emitted when the balance tracker is synced for a market.
+    event SyncBalanceTracker(IERC4626 indexed market, uint256 oldBalance, uint256 newBalance);
 }
