@@ -6,7 +6,9 @@ run-name: Certora verification of ${{ github.event_name }}
 on:
   pull_request:
     branches:
-      - 'certora-audit-3'
+      - 'otakar/project4'
+#      - 'otakar/silo-factory'
+#      - 'otakar/router_specs'
   workflow_dispatch:
 
 jobs:
@@ -46,7 +48,7 @@ jobs:
           solc-select install 0.8.28
           solc-select use 0.8.28
 
-      # Also download the solc 0.8.28 binaries and name it solc8,28
+      # Also download the solc 0.8.28 binaries and name it solc8.28
       - name: Install solc-binary
         run: |
           wget https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux
@@ -459,7 +461,6 @@ jobs:
             command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
           }
           # ==== solvent_user ============================================
-          }
           - {
             name: solvent_checked_silo,
             command: 'silo/solvent_user.conf  --parametric_contracts Silo0'
