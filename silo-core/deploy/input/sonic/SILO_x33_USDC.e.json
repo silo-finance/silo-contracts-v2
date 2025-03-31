@@ -8,7 +8,7 @@
     "solvencyOracle0": "X33ADAPTER_x33_USD",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2.sol",
-    "interestRateModelConfig0": "-",
+    "interestRateModelConfig0": "bridgeETHv5",
     "maxLtv0": 5000,
     "lt0": 5500,
     "liquidationTargetLtv0": 5300,
