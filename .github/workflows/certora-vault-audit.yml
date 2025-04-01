@@ -4,19 +4,23 @@ name: Certora verification
 run-name: Certora verification of ${{ github.event_name }}
 
 on:
+  push:
+    branches:
+      - 'otakar/project4'
   pull_request:
-#    branches:
-#      - 'otakar/project4'
+    branches:
+      - 'otakar/project4'
 #      - 'otakar/silo-factory'
 #      - 'otakar/router_specs'
-#  workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       # check out the current version (recurse submodules)
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
