@@ -479,22 +479,71 @@ jobs:
             name: consistentState_supplyCapIsEnabled,
             command: 'certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled'
           }
-# certoraRun certora/config/vaults/consistentState.conf --exclude_rule supplyCapIsEnabled
-# 
-# certoraRun certora/config/vaults/distinctIdentifiers.conf 
-# certoraRun certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank
-# certoraRun certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ
-# certoraRun certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled
-# certoraRun certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2
-# certoraRun certora/config/vaults/immutability.conf 
-# certoraRun certora/config/vaults/lastUpdated.conf 
-# certoraRun certora/config/vaults/tokenApproval.conf 
-# certoraRun certora/config/vaults/liveness.conf --rule canPauseSupply
-# certoraRun certora/config/vaults/marketInteractions.conf 
-# certoraRun certora/config/vaults/pendingValues.conf 
-# certoraRun certora/config/vaults/range.conf 
-# certoraRun certora/config/vaults/reentrancy.conf 
-# certoraRun certora/config/vaults/reverts.conf 
-# certoraRun certora/config/vaults/roles.conf 
-# certoraRun certora/config/vaults/tokens.conf
-# certoraRun certora/config/vaults/timelock.conf --exclude_rule removableTime
+          - {
+            name: distinctIdentifiers,
+            command: 'certora/config/vaults/distinctIdentifiers.conf'
+          }
+          - {
+            name: enabled_nonZeroCapHasPositiveRank,
+            command: 'certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank'
+          }
+          - {
+            name: enabled_addedToSupplyQThenIsInWithdrawQ,
+            command: 'certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ'
+          }
+          - {
+            name: enabled_inWithdrawQueueIsEnabled,
+            command: 'certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled'
+          }
+          - {
+            name: enabled_inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue,
+            command: 'certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2'
+          }
+          - {
+            name: immutability,
+            command: 'certora/config/vaults/immutability.conf'
+          }
+          - {
+            name: lastUpdated,
+            command: 'certora/config/vaults/lastUpdated.conf'
+          }
+          - {
+            name: tokenApproval,
+            command: 'certora/config/vaults/tokenApproval.conf'
+          }
+          - {
+            name: liveness_canPauseSupply,
+            command: 'certora/config/vaults/liveness.conf --rule canPauseSupply'
+          }
+          - {
+            name: marketInteractions,
+            command: 'certora/config/vaults/marketInteractions.conf'
+          }
+          - {
+            name: pendingValues,
+            command: 'certora/config/vaults/pendingValues.conf'
+          }
+          - {
+            name: range,
+            command: 'certora/config/vaults/range.conf'
+          }
+          - {
+            name: reentrancy,
+            command: 'certora/config/vaults/reentrancy.conf'
+          }
+          - {
+            name: reverts,
+            command: 'certora/config/vaults/reverts.conf'
+          }
+          - {
+            name: roles,
+            command: 'certora/config/vaults/roles.conf'
+          }
+          - {
+            name: tokens,
+            command: 'certora/config/vaults/tokens.conf'
+          }
+          - {
+            name: timelock_excludeRemovableTime,
+            command: 'certora/config/vaults/timelock.conf --exclude_rule removableTime'
+          }
