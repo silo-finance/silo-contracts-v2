@@ -11,6 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {ArbitraryLossThreshold} from "../../contracts/libraries/PendingLib.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MAX_TEST_ASSETS, MIN_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
@@ -391,6 +392,35 @@ contract MarketTest is IntegrationTest {
         _setCap(allMarkets[3], CAP);
 
         assertEq(vault.lastTotalAssets(), deposited + additionalSupply);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_setArbitraryLossThreshold -vvv
+    */
+    function test_setArbitraryLossThreshold() public {
+        IERC4626 market = allMarkets[0];
+
+        vm.startPrank(CURATOR);
+
+        vm.expectRevert(ErrorsLib.AlreadySet.selector);
+        vault.setArbitraryLossThreshold(market, 0);
+
+        vault.setArbitraryLossThreshold(market, 100);
+
+        ArbitraryLossThreshold memory arbitraryLossThreshold = vault.arbitraryLossThreshold(market);
+
+        assertEq(arbitraryLossThreshold.threshold, 100, "arbitraryLossThreshold set");
+
+        vm.expectRevert(ErrorsLib.AlreadySet.selector);
+        vault.setArbitraryLossThreshold(market, 100);
+
+        vault.setArbitraryLossThreshold(market, 50);
+
+        arbitraryLossThreshold = vault.arbitraryLossThreshold(market);
+
+        assertEq(arbitraryLossThreshold.threshold, 50, "arbitraryLossThreshold set");
+
+        vm.stopPrank();
     }
 
     function testRevokeNoRevert() public {
