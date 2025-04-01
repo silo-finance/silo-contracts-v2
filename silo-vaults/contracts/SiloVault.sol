@@ -352,11 +352,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
                 if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
 
-                //if (SiloVaultActionsLib.ERC20BalanceOf(address(market), address(this)) != 0) {
-                // HARNESS
-                uint256 harnessShares;
-                (, harnessShares) = _supplyBalance(market);
-                if (harnessShares != 0) {
+                if (SiloVaultActionsLib.ERC20BalanceOf(address(market), address(this)) != 0) {
                     if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
 
                     if (block.timestamp < config[market].removableAt) {
