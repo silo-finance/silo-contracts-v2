@@ -63,11 +63,11 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     function test_createSilo() public {
         (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
 
-        assertEq(siloFactory.getNextSiloId(), 2);
+        assertEq(siloFactory.getNextSiloId(), 101);
         assertTrue(siloFactory.isSilo(address(silo0)));
         assertTrue(siloFactory.isSilo(address(silo1)));
 
-        address configFromFactory = siloFactory.idToSiloConfig(1);
+        address configFromFactory = siloFactory.idToSiloConfig(100);
         assertEq(configFromFactory, address(siloConfig));
         assertEq(configFromFactory, address(silo0.config()));
         assertEq(configFromFactory, address(silo1.config()));
@@ -134,7 +134,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         assertEq(abi.encode(irmConfigUsed1), abi.encode(irmConfigExpected1));
 
-        assertEq(siloFactory.ownerOf(1), initData.deployer);
+        assertEq(siloFactory.ownerOf(100), initData.deployer);
     }
 
     /*
