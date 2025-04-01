@@ -76,7 +76,7 @@ jobs:
         run: >
           message="$(git log -n 1 --pretty=format:'CI ${{matrix.params.name}} %h')";
           certoraRun \
-            ${{ matrix.params.command }} \
+            certora/config/${{ matrix.params.command }} \
             --wait_for_results \
             --msg "$(echo $message | sed 's/[^a-zA-Z0-9., _-]/ /g')"
         env:
@@ -90,7 +90,7 @@ jobs:
       matrix:
         params:
           # Each of these commands is passed to the "Verify rule" step above,
-          # which runs certoraRun on <contents of the command>
+          # which runs certoraRun on certora/config/<contents of the command>
           #
           # Note that each of these lines will appear as a separate run on
           # prover.certora.com
