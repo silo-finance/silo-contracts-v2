@@ -79,7 +79,7 @@ contract NewMarketTest is Forking {
         uint256 _debtPrice,
         uint256 _ltv
     ) internal {
-        uint256 tokensToDeposit = 100_000; // without decimals
+        uint256 tokensToDeposit = 100_000_000; // without decimals
         uint256 collateralAmount = 
             tokensToDeposit * 10 ** uint256(TokenHelper.assertAndGetDecimals(address(_collateralToken)));
 
