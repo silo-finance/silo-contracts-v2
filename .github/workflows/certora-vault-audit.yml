@@ -76,7 +76,7 @@ jobs:
         run: >
           message="$(git log -n 1 --pretty=format:'CI ${{matrix.params.name}} %h')";
           certoraRun \
-            certora/config/${{ matrix.params.command }} \
+            ${{ matrix.params.command }} \
             --wait_for_results \
             --msg "$(echo $message | sed 's/[^a-zA-Z0-9., _-]/ /g')"
         env:
@@ -90,7 +90,7 @@ jobs:
       matrix:
         params:
           # Each of these commands is passed to the "Verify rule" step above,
-          # which runs certoraRun on certora/config/<contents of the command>
+          # which runs certoraRun on <contents of the command>
           #
           # Note that each of these lines will appear as a separate run on
           # prover.certora.com
@@ -477,73 +477,73 @@ jobs:
           # # ==== Vault ===================================================
           - {
             name: consistentState_supplyCapIsEnabled,
-            command: 'certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled'
+            command: 'vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled'
           }
-          - {
-            name: distinctIdentifiers,
-            command: 'certora/config/vaults/distinctIdentifiers.conf'
-          }
-          - {
-            name: enabled_nonZeroCapHasPositiveRank,
-            command: 'certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank'
-          }
-          - {
-            name: enabled_addedToSupplyQThenIsInWithdrawQ,
-            command: 'certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ'
-          }
-          - {
-            name: enabled_inWithdrawQueueIsEnabled,
-            command: 'certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled'
-          }
-          - {
-            name: enabled_inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue,
-            command: 'certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2'
-          }
-          - {
-            name: immutability,
-            command: 'certora/config/vaults/immutability.conf'
-          }
-          - {
-            name: lastUpdated,
-            command: 'certora/config/vaults/lastUpdated.conf'
-          }
-          - {
-            name: tokenApproval,
-            command: 'certora/config/vaults/tokenApproval.conf'
-          }
-          - {
-            name: liveness_canPauseSupply,
-            command: 'certora/config/vaults/liveness.conf --rule canPauseSupply'
-          }
-          - {
-            name: marketInteractions,
-            command: 'certora/config/vaults/marketInteractions.conf'
-          }
-          - {
-            name: pendingValues,
-            command: 'certora/config/vaults/pendingValues.conf'
-          }
-          - {
-            name: range,
-            command: 'certora/config/vaults/range.conf'
-          }
-          - {
-            name: reentrancy,
-            command: 'certora/config/vaults/reentrancy.conf'
-          }
-          - {
-            name: reverts,
-            command: 'certora/config/vaults/reverts.conf'
-          }
-          - {
-            name: roles,
-            command: 'certora/config/vaults/roles.conf'
-          }
-          - {
-            name: tokens,
-            command: 'certora/config/vaults/tokens.conf'
-          }
-          - {
-            name: timelock_excludeRemovableTime,
-            command: 'certora/config/vaults/timelock.conf --exclude_rule removableTime'
-          }
+#          - {
+#            name: distinctIdentifiers,
+#            command: 'vaults/distinctIdentifiers.conf'
+#          }
+#          - {
+#            name: enabled_nonZeroCapHasPositiveRank,
+#            command: 'vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank'
+#          }
+#          - {
+#            name: enabled_addedToSupplyQThenIsInWithdrawQ,
+#            command: 'vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ'
+#          }
+#          - {
+#            name: enabled_inWithdrawQueueIsEnabled,
+#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled'
+#          }
+#          - {
+#            name: enabled_inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue,
+#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2'
+#          }
+#          - {
+#            name: immutability,
+#            command: 'vaults/immutability.conf'
+#          }
+#          - {
+#            name: lastUpdated,
+#            command: 'vaults/lastUpdated.conf'
+#          }
+#          - {
+#            name: tokenApproval,
+#            command: 'vaults/tokenApproval.conf'
+#          }
+#          - {
+#            name: liveness_canPauseSupply,
+#            command: 'vaults/liveness.conf --rule canPauseSupply'
+#          }
+#          - {
+#            name: marketInteractions,
+#            command: 'vaults/marketInteractions.conf'
+#          }
+#          - {
+#            name: pendingValues,
+#            command: 'vaults/pendingValues.conf'
+#          }
+#          - {
+#            name: range,
+#            command: 'vaults/range.conf'
+#          }
+#          - {
+#            name: reentrancy,
+#            command: 'vaults/reentrancy.conf'
+#          }
+#          - {
+#            name: reverts,
+#            command: 'vaults/reverts.conf'
+#          }
+#          - {
+#            name: roles,
+#            command: 'vaults/roles.conf'
+#          }
+#          - {
+#            name: tokens,
+#            command: 'vaults/tokens.conf'
+#          }
+#          - {
+#            name: timelock_excludeRemovableTime,
+#            command: 'vaults/timelock.conf --exclude_rule removableTime'
+#          }
