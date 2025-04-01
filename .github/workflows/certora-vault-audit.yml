@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - 'otakar/project4'
+#      - 'otakar/silo-factory'
+#      - 'otakar/router_specs'
   pull_request:
     branches:
       - 'otakar/project4'
