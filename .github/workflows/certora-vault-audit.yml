@@ -17,10 +17,6 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      statuses: write
-      pull-requests: write
     steps:
       # check out the current version (recurse submodules)
       - name: Checkout repository
