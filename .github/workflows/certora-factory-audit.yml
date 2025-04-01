@@ -16,8 +16,8 @@ on:
 env:
   FOUNDRY_PROFILE: ci
   CONFIGS: |
-    certora/config/SiloFactory/SiloFactory.conf --server production
-    certora/config/SiloFactory/SiloFactory.conf --server production --verify SiloFactoryHarness:certora/specs/SiloFactory/createSiloIntegrity.spec
+    certora/config/SiloFactory/SiloFactory.conf
+    certora/config/SiloFactory/SiloFactory.conf --verify SiloFactoryHarness:certora/specs/SiloFactory/createSiloIntegrity.spec
 
 jobs:
   verify:
