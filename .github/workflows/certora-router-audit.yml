@@ -6,10 +6,10 @@ run-name: Certora verification of ${{ github.event_name }}
 on:
   push:
     branches:
-      - 'otakar/silo-factory'
+      - 'otakar/router_specs'
   pull_request:
     branches:
-      - 'otakar/silo-factory'
+      - 'otakar/router_specs'
   workflow_dispatch:
 
 
