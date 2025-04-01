@@ -479,71 +479,71 @@ jobs:
             name: consistentState_supplyCapIsEnabled,
             command: 'vaults/consistentState.conf --rule supplyCapIsEnabled'
           }
-#          - {
-#            name: distinctIdentifiers,
-#            command: 'vaults/distinctIdentifiers.conf'
-#          }
-#          - {
-#            name: enabled_nonZeroCapHasPositiveRank,
-#            command: 'vaults/enabled.conf --rule nonZeroCapHasPositiveRank'
-#          }
-#          - {
-#            name: enabled_addedToSupplyQThenIsInWithdrawQ,
-#            command: 'vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ'
-#          }
-#          - {
-#            name: enabled_inWithdrawQueueIsEnabled,
-#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabled'
-#          }
-#          - {
-#            name: enabled_inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue,
-#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue'
-#          }
-#          - {
-#            name: immutability,
-#            command: 'vaults/immutability.conf'
-#          }
-#          - {
-#            name: lastUpdated,
-#            command: 'vaults/lastUpdated.conf'
-#          }
-#          - {
-#            name: tokenApproval,
-#            command: 'vaults/tokenApproval.conf'
-#          }
-#          - {
-#            name: liveness_canPauseSupply,
-#            command: 'vaults/liveness.conf --rule canPauseSupply'
-#          }
-#          - {
-#            name: marketInteractions,
-#            command: 'vaults/marketInteractions.conf'
-#          }
-#          - {
-#            name: pendingValues,
-#            command: 'vaults/pendingValues.conf'
-#          }
-#          - {
-#            name: range,
-#            command: 'vaults/range.conf'
-#          }
-#          - {
-#            name: reentrancy,
-#            command: 'vaults/reentrancy.conf'
-#          }
-#          - {
-#            name: reverts,
-#            command: 'vaults/reverts.conf'
-#          }
-#          - {
-#            name: roles,
-#            command: 'vaults/roles.conf'
-#          }
-#          - {
-#            name: tokens,
-#            command: 'vaults/tokens.conf'
-#          }
-#          - {
-#            name: timelock_excludeRemovableTime,
-#            command: 'vaults/timelock.conf --exclude_rule removableTime'
-#          }
+          - {
+            name: distinctIdentifiers,
+            command: 'vaults/distinctIdentifiers.conf'
+          }
+          - {
+            name: enabled_nonZeroCapHasPositiveRank,
+            command: 'vaults/enabled.conf --rule nonZeroCapHasPositiveRank'
+          }
+          - {
+            name: enabled_addedToSupplyQThenIsInWithdrawQ,
+            command: 'vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ'
+          }
+          - {
+            name: enabled_inWithdrawQueueIsEnabled,
+            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabled'
+          }
+          - {
+            name: enabled_inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue,
+            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue'
+          }
+          - {
+            name: immutability,
+            command: 'vaults/immutability.conf'
+          }
+          - {
+            name: lastUpdated,
+            command: 'vaults/lastUpdated.conf'
+          }
+          - {
+            name: tokenApproval,
+            command: 'vaults/tokenApproval.conf'
+          }
+          - {
+            name: liveness_canPauseSupply,
+            command: 'vaults/liveness.conf --rule canPauseSupply'
+          }
+          - {
+            name: marketInteractions,
+            command: 'vaults/marketInteractions.conf'
+          }
+          - {
+            name: pendingValues,
+            command: 'vaults/pendingValues.conf'
+          }
+          - {
+            name: range,
+            command: 'vaults/range.conf'
+          }
+          - {
+            name: reentrancy,
+            command: 'vaults/reentrancy.conf'
+          }
+          - {
+            name: reverts,
+            command: 'vaults/reverts.conf'
+          }
+          - {
+            name: roles,
+            command: 'vaults/roles.conf'
+          }
+          - {
+            name: tokens,
+            command: 'vaults/tokens.conf'
+          }
+          - {
+            name: timelock_excludeRemovableTime,
+            command: 'vaults/timelock.conf --exclude_rule removableTime'
+          }
