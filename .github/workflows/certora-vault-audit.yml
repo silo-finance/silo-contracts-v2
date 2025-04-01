@@ -477,7 +477,7 @@ jobs:
           # # ==== Vault ===================================================
           - {
             name: consistentState_supplyCapIsEnabled,
-            command: 'vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled'
+            command: 'vaults/consistentState.conf --rule supplyCapIsEnabled'
           }
 #          - {
 #            name: distinctIdentifiers,
@@ -485,19 +485,19 @@ jobs:
 #          }
 #          - {
 #            name: enabled_nonZeroCapHasPositiveRank,
-#            command: 'vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank'
+#            command: 'vaults/enabled.conf --rule nonZeroCapHasPositiveRank'
 #          }
 #          - {
 #            name: enabled_addedToSupplyQThenIsInWithdrawQ,
-#            command: 'vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ'
+#            command: 'vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ'
 #          }
 #          - {
 #            name: enabled_inWithdrawQueueIsEnabled,
-#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled'
+#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabled'
 #          }
 #          - {
 #            name: enabled_inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue,
-#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2'
+#            command: 'vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue'
 #          }
 #          - {
 #            name: immutability,
