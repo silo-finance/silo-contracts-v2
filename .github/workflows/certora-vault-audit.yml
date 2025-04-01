@@ -5,11 +5,11 @@ run-name: Certora verification of ${{ github.event_name }}
 
 on:
   pull_request:
-    branches:
-      - 'otakar/project4'
+#    branches:
+#      - 'otakar/project4'
 #      - 'otakar/silo-factory'
 #      - 'otakar/router_specs'
-  workflow_dispatch:
+#  workflow_dispatch:
 
 jobs:
   verify:
@@ -352,120 +352,145 @@ jobs:
           #   command: 'silo/maxCorectness.conf --rule maxWithdraw_noGreaterThanLiquidity'
           # }
           # ==== accrueInterest - per method ============================================
+          # - {
+          #   name: accruing_accrueInterestForConfig,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "accrueInterestForConfig(address,uint256,uint256)"'
+          # }
+          # - {
+          #   name: accruing_permit,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
+          # }
+          # - {
+          #   name: accruing_withdraw,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_redeem,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_initialize,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "initialize(address)"'
+          # }
+          # - {
+          #   name: accruing_approve,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "approve(address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_transfer,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "transfer(address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_borrowSameAsset,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "borrowSameAsset(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_borrow,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "borrow(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_redeem2,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_withdraw2,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_borrowShares,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "borrowShares(uint256,address,address)"'
+          # }
+          # - {
+          #   name: accruing_updateHooks,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "updateHooks()"'
+          # }
+          # - {
+          #   name: accruing_switchCollateralToThisSilo,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "switchCollateralToThisSilo()"'
+          # }
+          # - {
+          #   name: accruing_withdrawFees,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "withdrawFees()"'
+          # }
+          # - {
+          #   name: accruing_synchronizeHooks,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "synchronizeHooks(uint24,uint24)"'
+          # }
+          # - {
+          #   name: accruing_flashLoan,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "flashLoan(address,address,uint256,bytes)"'
+          # }
+          # - {
+          #   name: accruing_deposit,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_repayShares,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "repayShares(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_repay,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "repay(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_mint,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address)"'
+          # }
+          # - {
+          #   name: accruing_deposit2,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_mint2,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address,uint8)"'
+          # }
+          # - {
+          #   name: accruing_transferFrom,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "transferFrom(address,address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_burn,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "burn(address,address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_forwardTransferFromNoChecks,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "forwardTransferFromNoChecks(address,address,uint256)"'
+          # }
+          # - {
+          #   name: accruing_mint3,
+          #   command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
+          # }
+          # # ==== solvent_user ============================================
+          # - {
+          #   name: solvent_checked_silo,
+          #   command: 'silo/solvent_user.conf  --parametric_contracts Silo0'
+          # }
+          # - {
+          #   name: solvent_checked_not_silo,
+          #   command: 'silo/solvent_user.conf'
+          # }
+          # # ==============================================================
+          # # ==== Vault ===================================================
           - {
-            name: accruing_accrueInterestForConfig,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "accrueInterestForConfig(address,uint256,uint256)"'
+            name: consistentState_supplyCapIsEnabled,
+            command: 'certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled'
           }
-          - {
-            name: accruing_permit,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"'
-          }
-          - {
-            name: accruing_withdraw,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address,uint8)"'
-          }
-          - {
-            name: accruing_redeem,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address,uint8)"'
-          }
-          - {
-            name: accruing_initialize,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "initialize(address)"'
-          }
-          - {
-            name: accruing_approve,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "approve(address,uint256)"'
-          }
-          - {
-            name: accruing_transfer,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "transfer(address,uint256)"'
-          }
-          - {
-            name: accruing_borrowSameAsset,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "borrowSameAsset(uint256,address,address)"'
-          }
-          - {
-            name: accruing_borrow,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "borrow(uint256,address,address)"'
-          }
-          - {
-            name: accruing_redeem2,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "redeem(uint256,address,address)"'
-          }
-          - {
-            name: accruing_withdraw2,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "withdraw(uint256,address,address)"'
-          }
-          - {
-            name: accruing_borrowShares,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "borrowShares(uint256,address,address)"'
-          }
-          - {
-            name: accruing_updateHooks,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "updateHooks()"'
-          }
-          - {
-            name: accruing_switchCollateralToThisSilo,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "switchCollateralToThisSilo()"'
-          }
-          - {
-            name: accruing_withdrawFees,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "withdrawFees()"'
-          }
-          - {
-            name: accruing_synchronizeHooks,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "synchronizeHooks(uint24,uint24)"'
-          }
-          - {
-            name: accruing_flashLoan,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "flashLoan(address,address,uint256,bytes)"'
-          }
-          - {
-            name: accruing_deposit,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address)"'
-          }
-          - {
-            name: accruing_repayShares,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "repayShares(uint256,address)"'
-          }
-          - {
-            name: accruing_repay,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "repay(uint256,address)"'
-          }
-          - {
-            name: accruing_mint,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address)"'
-          }
-          - {
-            name: accruing_deposit2,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "deposit(uint256,address,uint8)"'
-          }
-          - {
-            name: accruing_mint2,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(uint256,address,uint8)"'
-          }
-          - {
-            name: accruing_transferFrom,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "transferFrom(address,address,uint256)"'
-          }
-          - {
-            name: accruing_burn,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "burn(address,address,uint256)"'
-          }
-          - {
-            name: accruing_forwardTransferFromNoChecks,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "forwardTransferFromNoChecks(address,address,uint256)"'
-          }
-          - {
-            name: accruing_mint3,
-            command: 'silo/customerSuggested.conf --rule accruingDoesntAffectShareBalance --method "mint(address,address,uint256)"'
-          }
-          # ==== solvent_user ============================================
-          - {
-            name: solvent_checked_silo,
-            command: 'silo/solvent_user.conf  --parametric_contracts Silo0'
-          }
-          - {
-            name: solvent_checked_not_silo,
-            command: 'silo/solvent_user.conf'
-          }
+# certoraRun certora/config/vaults/consistentState.conf --exclude_rule supplyCapIsEnabled
+# 
+# certoraRun certora/config/vaults/distinctIdentifiers.conf 
+# certoraRun certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank
+# certoraRun certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ
+# certoraRun certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled
+# certoraRun certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2
+# certoraRun certora/config/vaults/immutability.conf 
+# certoraRun certora/config/vaults/lastUpdated.conf 
+# certoraRun certora/config/vaults/tokenApproval.conf 
+# certoraRun certora/config/vaults/liveness.conf --rule canPauseSupply
+# certoraRun certora/config/vaults/marketInteractions.conf 
+# certoraRun certora/config/vaults/pendingValues.conf 
+# certoraRun certora/config/vaults/range.conf 
+# certoraRun certora/config/vaults/reentrancy.conf 
+# certoraRun certora/config/vaults/reverts.conf 
+# certoraRun certora/config/vaults/roles.conf 
+# certoraRun certora/config/vaults/tokens.conf
+# certoraRun certora/config/vaults/timelock.conf --exclude_rule removableTime
