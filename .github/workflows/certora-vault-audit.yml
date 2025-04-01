@@ -18,13 +18,13 @@ on:
 env:
   FOUNDRY_PROFILE: ci
   CONFIGS: |
-    certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled
+    certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled
     certora/config/vaults/consistentState.conf --exclude_rule supplyCapIsEnabled
     certora/config/vaults/distinctIdentifiers.conf 
-    certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank
-    certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ
-    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled
-    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2
+    certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank
+    certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ
+    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled
+    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue
     certora/config/vaults/immutability.conf 
     certora/config/vaults/lastUpdated.conf 
     certora/config/vaults/tokenApproval.conf 
