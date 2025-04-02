@@ -15,4 +15,8 @@ contract SiloFactoryVeSiloDeploy is SiloFactoryDeploy {
     function _getOwner() internal override returns (address owner) {
         owner = VeSiloDeployments.get(VeSiloContracts.TIMELOCK_CONTROLLER, ChainsLib.chainAlias());
     }
+
+    function _getFeeReceiver() internal override returns (address feeReceiver) {
+        feeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, ChainsLib.chainAlias());
+    }
 }

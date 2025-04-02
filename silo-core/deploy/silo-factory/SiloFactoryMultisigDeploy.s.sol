@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
@@ -14,6 +15,10 @@ import {SiloFactoryDeploy} from "./SiloFactoryDeploy.s.sol";
  */
 contract SiloFactoryMultisigDeploy is SiloFactoryDeploy {
     function _getOwner() internal override returns (address owner) {
-        owner = AddrLib.getAddr(AddrKey.DAO);
+        owner = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
+    }
+
+    function _getFeeReceiver() internal override returns (address feeReceiver) {
+        feeReceiver = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
     }
 }
