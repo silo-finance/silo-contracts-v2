@@ -37,6 +37,7 @@ import {SiloVaultActionsLib} from "./libraries/SiloVaultActionsLib.sol";
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice ERC4626 compliant vault allowing users to deposit assets to any ERC4626 vault.
+// TODO: inherit ISiloVault in SiloVault, check ISiloVaultStaticTyping
 contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultStaticTyping {
     uint256 constant WAD = 1e18;
 
@@ -54,6 +55,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     uint256 public constant DEFAULT_LOST_THRESHOLD = 1e6;
 
     /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
+    // TODO: fix natspec about max(0, 18 - underlyingDecimals) - it's no longer 0, 18 
     /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
     /// precision between shares and assets.
     uint8 public immutable DECIMALS_OFFSET;
@@ -86,13 +88,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
 
-    /// @dev Internal balance tracker to prevent assets loss if underlying market hacked
-    /// and started reporting wrong supply.
+    /// @dev Internal balance tracker to prevent assets loss if underlying market TODO: "is" hacked
+    /// and starts reporting wrong supply.
     /// max loss == supplyCap + un accrued interest.
+    // TODO: remove below, too confusing
     /// Un accrued interest loss present only if it is less than balanceTracker[market] - supplyAssets.
     /// But this is only about internal balances. There is no interest loss on the vault.
     mapping(IERC4626 => uint256) public balanceTracker;
 
+    // TODO: add natspec
     mapping(IERC4626 => ArbitraryLossThreshold) public arbitraryLossThreshold;
 
     /// @inheritdoc ISiloVaultBase
@@ -110,6 +114,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultBase
     uint256 public lastTotalAssets;
 
+    // TODO: add natspec
     bool transient _lock;
 
     /* CONSTRUCTOR */
@@ -224,7 +229,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         SiloVaultActionsLib.setFeeValidateEmitEvent(_newFee, fee, feeRecipient);
 
-        // Safe "unchecked" cast because newFee <= MAX_FEE.
+        // TODO:natspec
+        // Safe to cast because newFee <= MAX_FEE.
         fee = uint96(_newFee);
     }
 
@@ -289,6 +295,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         emit EventsLib.SubmitMarketRemoval(_msgSender(), _market);
     }
 
+    // TODO: natspec
     function syncBalanceTracker(
         IERC4626 _market,
         uint256 _expectedAssets,
@@ -501,7 +508,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     {
         _nonReentrantOn();
 
-        // Safe "unchecked" cast because pendingCap <= type(uint184).max.
+        // TODO: natspec
+        // Safe to cast because pendingCap <= type(uint184).max.
         _setCap(_market, uint184(pendingCap[_market].value));
 
         _nonReentrantOff();
@@ -1030,6 +1038,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         internal
         returns (bool success, uint256 shares)
     {
+        // TODO: approval exact amount here
+        // TODO: add comment that we approve only exact amount because we don't want transferFrom to bypass balanceTracker
         try _market.deposit(_assets, address(this)) returns (uint256 gotShares) {
             shares = gotShares;
             success = true;

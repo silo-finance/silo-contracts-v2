@@ -69,6 +69,7 @@ library SiloVaultActionsLib {
         }
 
         marketConfig.cap = _supplyCap;
+        // TODO: remove max approval
         IERC20(_asset).forceApprove(address(_market), approveValue);
 
         emit EventsLib.SetCap(msg.sender, _market, _supplyCap);
@@ -178,6 +179,7 @@ library SiloVaultActionsLib {
         uint256 _expectedAssets,
         bool _override
     ) external {
+        // TODO: add require for _override == false => _expectedAssets == 0
         uint256 oldBalance = _balanceTracker[_market];
         uint256 newBalance = _override ? _expectedAssets : expectedSupplyAssets(_market);
 
