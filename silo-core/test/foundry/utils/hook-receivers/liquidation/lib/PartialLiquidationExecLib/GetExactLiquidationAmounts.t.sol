@@ -199,7 +199,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     forge test -vv --mt test_getExactLiquidationAmounts_liquidation_fuzz
     goal here is to check if we can get unexpected reverts
     */
-    /// forge-config: core-test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_getExactLiquidationAmounts_liquidation_fuzz(
         uint128 _maxDebtToCover,
         uint128 _collateralUserBalanceOf,

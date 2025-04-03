@@ -5,11 +5,19 @@ import {Test} from "forge-std/Test.sol";
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
+contract HookImpl {
+    function shareTokenTransfer(uint256 _tokenType) external pure returns (uint256) {
+        return Hook.shareTokenTransfer(_tokenType);
+    }
+}
+
 /*
 forge test -vv --mc HookTest
 */
 contract HookTest is Test {
     using Hook for uint256;
+
+    HookImpl hookImpl = new HookImpl();
 
     function test_hook_addAction() public pure {
         assertEq(Hook.BORROW_SAME_ASSET, Hook.NONE.addAction(Hook.BORROW_SAME_ASSET));
@@ -26,6 +34,35 @@ contract HookTest is Test {
             Hook.TRANSITION_COLLATERAL | Hook.COLLATERAL_TOKEN,
             bitmap.addAction(Hook.COLLATERAL_TOKEN),
             "add COLLATERAL_TOKEN"
+        );
+    }
+
+    /*
+    FOUNDRY_PROFILE=core-test forge test --mt test_hook_shareTokenTransfer -vv
+    */
+    function test_hook_shareTokenTransfer() public {
+        vm.expectRevert(Hook.InvalidTokenType.selector);
+        hookImpl.shareTokenTransfer(0);
+
+        vm.expectRevert(Hook.InvalidTokenType.selector);
+        hookImpl.shareTokenTransfer(Hook.PROTECTED_TOKEN | Hook.COLLATERAL_TOKEN);
+
+        assertEq(
+            hookImpl.shareTokenTransfer(Hook.COLLATERAL_TOKEN),
+            Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN,
+            "COLLATERAL_TOKEN accepted"
+        );
+
+        assertEq(
+            hookImpl.shareTokenTransfer(Hook.PROTECTED_TOKEN),
+            Hook.SHARE_TOKEN_TRANSFER | Hook.PROTECTED_TOKEN,
+            "PROTECTED_TOKEN accepted"
+        );
+
+        assertEq(
+            hookImpl.shareTokenTransfer(Hook.DEBT_TOKEN),
+            Hook.SHARE_TOKEN_TRANSFER | Hook.DEBT_TOKEN,
+            "DEBT_TOKEN accepted"
         );
     }
 

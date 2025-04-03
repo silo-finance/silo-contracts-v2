@@ -241,8 +241,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             emit log("transition back");
 
-            // TODO here we using same value that we go, it will be nice to create another property, where we
-            // using any value
             (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
                 _type == uint8(ISilo.CollateralType.Collateral)
                     ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
@@ -460,7 +458,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         uint256 maxRepay = siloWithDebt.maxRepay(address(actor));
         // we assume we do not have oracle and price is 1:1
-        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._DEBT_DUST_LEVEL / 1e18;
+        uint256 maxPartialRepayValue = maxRepay * PartialLiquidationLib._FULL_LIQUIDATION_THRESHOLD / 1e18;
 
         (address collateral, address debt) = __liquidationTokens(address(siloWithDebt));
         partialLiquidation.liquidationCall(debt, collateral, actor, debtToRepay, false);

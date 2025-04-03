@@ -4,13 +4,14 @@ pragma solidity ^0.8.28;
 import {stdError} from "forge-std/StdError.sol";
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
-import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
+import {ArbitraryLossThreshold} from "../../contracts/libraries/PendingLib.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MAX_TEST_ASSETS, MIN_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
@@ -26,6 +27,29 @@ contract MarketTest is IntegrationTest {
         _setCap(allMarkets[0], CAP);
         _setCap(allMarkets[1], CAP);
         _setCap(allMarkets[2], CAP);
+    }
+
+
+    /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testAllowanceOnSetCap -vvv
+    */
+    function testAllowanceOnSetCap() public {
+        IERC4626 market = allMarkets[0];
+        IERC20 asset = IERC20(market.asset());
+
+        assertEq(
+            asset.allowance(address(vault), address(market)),
+            type(uint256).max,
+            "allowance is in use"
+        );
+
+        _setCap(market, 0);
+
+        assertEq(
+            asset.allowance(address(vault), address(market)),
+            0,
+            "allowance is ZERO when cap is 0"
+        );
     }
 
     function testMintAllCapsReached() public {
@@ -368,6 +392,35 @@ contract MarketTest is IntegrationTest {
         _setCap(allMarkets[3], CAP);
 
         assertEq(vault.lastTotalAssets(), deposited + additionalSupply);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_setArbitraryLossThreshold -vvv
+    */
+    function test_setArbitraryLossThreshold() public {
+        IERC4626 market = allMarkets[0];
+
+        vm.startPrank(CURATOR);
+
+        vm.expectRevert(ErrorsLib.AlreadySet.selector);
+        vault.setArbitraryLossThreshold(market, 0);
+
+        vault.setArbitraryLossThreshold(market, 100);
+
+        ArbitraryLossThreshold memory arbitraryLossThreshold = vault.arbitraryLossThreshold(market);
+
+        assertEq(arbitraryLossThreshold.threshold, 100, "arbitraryLossThreshold set");
+
+        vm.expectRevert(ErrorsLib.AlreadySet.selector);
+        vault.setArbitraryLossThreshold(market, 100);
+
+        vault.setArbitraryLossThreshold(market, 50);
+
+        arbitraryLossThreshold = vault.arbitraryLossThreshold(market);
+
+        assertEq(arbitraryLossThreshold.threshold, 50, "arbitraryLossThreshold set");
+
+        vm.stopPrank();
     }
 
     function testRevokeNoRevert() public {

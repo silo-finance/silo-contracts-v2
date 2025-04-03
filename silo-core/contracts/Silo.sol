@@ -122,6 +122,11 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
+    function getFractionsStorage() external view returns (Fractions memory fractions) {
+        fractions = Views.getFractionsStorage();
+    }
+
+    /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         totalCollateralAssets = _totalAssets();
     }
@@ -421,8 +426,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool collateralTypeChanged;
 
-        (assets, shares) = Actions.borrow(
+        (assets, shares, collateralTypeChanged) = Actions.borrow(
             BorrowArgs({
                 assets: _assets,
                 shares: 0,
@@ -432,6 +438,8 @@ contract Silo is ISilo, ShareCollateralToken {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo
@@ -457,8 +465,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 assets)
     {
         uint256 shares;
+        bool collateralTypeChanged;
 
-        (assets, shares) = Actions.borrow(
+        (assets, shares, collateralTypeChanged) = Actions.borrow(
             BorrowArgs({
                 assets: 0,
                 shares: _shares,
@@ -468,6 +477,8 @@ contract Silo is ISilo, ShareCollateralToken {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo
@@ -482,8 +493,9 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 shares)
     {
         uint256 assets;
+        bool collateralTypeChanged;
 
-        (assets, shares) = Actions.borrowSameAsset(
+        (assets, shares, collateralTypeChanged) = Actions.borrowSameAsset(
             BorrowArgs({
                 assets: _assets,
                 shares: 0,
@@ -493,6 +505,8 @@ contract Silo is ISilo, ShareCollateralToken {
         );
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
+
+        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
     }
 
     /// @inheritdoc ISilo
@@ -637,8 +651,9 @@ contract Silo is ISilo, ShareCollateralToken {
     /// @inheritdoc ISilo
     function withdrawFees() external virtual {
         _accrueInterest();
-        (uint256 daoFees, uint256 deployerFees) = Actions.withdrawFees(this);
-        emit WithdrawnFeed(daoFees, deployerFees);
+        (uint256 daoFees, uint256 deployerFees, bool redirectedDeployerFees) = Actions.withdrawFees(this);
+
+        emit WithdrawnFees(daoFees, deployerFees, redirectedDeployerFees);
     }
 
     function _totalAssets() internal view virtual returns (uint256 totalManagedAssets) {

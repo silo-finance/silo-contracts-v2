@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-import {MarketConfig, PendingUint192, PendingAddress} from "../libraries/PendingLib.sol";
+import {MarketConfig, PendingUint192, PendingAddress, ArbitraryLossThreshold} from "../libraries/PendingLib.sol";
 import {IVaultIncentivesModule} from "./IVaultIncentivesModule.sol";
 
 struct MarketAllocation {
@@ -31,6 +31,8 @@ interface IOwnable {
 interface ISiloVaultBase {
     function DECIMALS_OFFSET() external view returns (uint8);
 
+    function DEFAULT_LOST_THRESHOLD() external view returns (uint256);
+
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
 
     /// @notice method for claiming and distributing incentives rewards for all vault users
@@ -53,9 +55,6 @@ interface ISiloVaultBase {
 
     /// @notice The fee recipient.
     function feeRecipient() external view returns (address);
-
-    /// @notice The skim recipient.
-    function skimRecipient() external view returns (address);
 
     /// @notice The current timelock.
     function timelock() external view returns (uint256);
@@ -99,6 +98,9 @@ interface ISiloVaultBase {
     /// @dev In case the new cap is lower than the current one, the cap is set immediately.
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external;
 
+    /// @notice Set loss threshold for the market. No timelock.
+    function setArbitraryLossThreshold(IERC4626 _market, uint256 _loss) external;
+
     /// @notice Accepts the pending cap of the market defined by `marketParams`.
     function acceptCap(IERC4626 _market) external;
 
@@ -134,9 +136,6 @@ interface ISiloVaultBase {
     /// @notice Revokes the pending guardian.
     function revokePendingGuardian() external;
 
-    /// @notice Skims the vault `token` balance to `skimRecipient`.
-    function skim(address) external;
-
     /// @notice Sets `newAllocator` as an allocator or not (`newIsAllocator`).
     function setIsAllocator(address _newAllocator, bool _newIsAllocator) external;
 
@@ -148,9 +147,6 @@ interface ISiloVaultBase {
 
     /// @notice Sets `feeRecipient` to `newFeeRecipient`.
     function setFeeRecipient(address _newFeeRecipient) external;
-
-    /// @notice Sets `skimRecipient` to `newSkimRecipient`.
-    function setSkimRecipient(address _newSkimRecipient) external;
 
     /// @notice Sets `supplyQueue` to `newSupplyQueue`.
     /// @param _newSupplyQueue is an array of enabled markets, and can contain duplicate markets, but it would only
@@ -208,6 +204,8 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (MarketConfig memory);
 
+    function arbitraryLossThreshold(IERC4626) external view returns (ArbitraryLossThreshold memory);
+
     /// @notice Returns the pending guardian.
     function pendingGuardian() external view returns (PendingAddress memory);
 
@@ -216,4 +214,10 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
 
     /// @notice Returns the pending timelock.
     function pendingTimelock() external view returns (PendingUint192 memory);
+
+    /// @notice Returns the allocation of assets for the market.
+    function balanceTracker(IERC4626) external view returns (uint256);
+
+    /// @notice Syncs the balance tracker for the market.
+    function syncBalanceTracker(IERC4626, uint256, bool) external;
 }

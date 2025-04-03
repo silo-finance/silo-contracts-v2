@@ -13,7 +13,7 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_partial_1token_sTokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_partial_1token_sTokens() public {
         // I did not found cases for this scenario
     }
@@ -21,7 +21,7 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_partial_1token_tokens_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_partial_1token_tokens() public {
         // I did not found cases for this scenario
     }
@@ -29,7 +29,7 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_partial_2tokens_sToken_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_partial_2tokens_sToken() public {
         // I did not found cases for this scenario
     }
@@ -37,7 +37,7 @@ contract MaxLiquidationLTV100PartialTest is MaxLiquidationCommon {
     /*
     forge test -vv --ffi --mt test_maxLiquidation_LTV100_partial_2tokens_token_fuzz
     */
-    /// forge-config: core-test.fuzz.runs = 100
+    /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_LTV100_partial_2tokens_token() public {
         // I did not found cases for this scenario
     }

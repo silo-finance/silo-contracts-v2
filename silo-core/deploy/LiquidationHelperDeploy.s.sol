@@ -15,10 +15,10 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --broadcast --rpc-url $RPC_SONIC\
-        --verify
+        --ffi --rpc-url $RPC_SONIC \
+        --broadcast --verify
 
     NOTICE: remember to register it in Tower
 */
@@ -26,7 +26,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
     address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
 
-    address payable constant GNOSIS_SAFE_MAINNET = payable(0); // placeholder for integration tests
+    address payable constant GNOSIS_SAFE_MAINNET = payable(address(1)); // placeholder for integration tests
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
     address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d);
     address payable constant GNOSIS_SAFE_SONIC = payable(0x7461d8c0fDF376c847b651D882DEa4C73fad2e4B);
@@ -40,7 +40,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
 
         console2.log("[LiquidationHelperDeploy] nativeToken(): ", nativeToken);
         console2.log("[LiquidationHelperDeploy] exchangeProxy: ", exchangeProxy);
-        console2.log("[LiquidationHelperDeploy] tokensReceiver: ", tokenReceiver);
+        console2.log("[LiquidationHelperDeploy] tokenReceiver: ", tokenReceiver);
 
         vm.startBroadcast(deployerPrivateKey);
 

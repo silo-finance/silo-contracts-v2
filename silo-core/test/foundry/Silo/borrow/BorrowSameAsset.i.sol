@@ -86,9 +86,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         uint256 borrowForReceiver = 1;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, borrower, 0, borrowForReceiver)
-        ); // because we want to mint for receiver
+        vm.expectRevert(abi.encodeWithSelector(IShareToken.AmountExceedsAllowance.selector));
         vm.prank(borrower);
         silo0.borrowSameAsset(borrowForReceiver, borrower, makeAddr("receiver"));
     }
@@ -121,9 +119,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         uint256 borrowForReceiver = 1;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, borrower, 0, borrowForReceiver)
-        ); // because we want to mint for receiver
+        vm.expectRevert(abi.encodeWithSelector(IShareToken.AmountExceedsAllowance.selector));
         vm.prank(borrower);
         silo1.borrowSameAsset(borrowForReceiver, borrower, receiver);
     }
@@ -199,6 +195,9 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         uint256 notCollateral = 123;
         _depositCollateral(notCollateral, borrower, true /* to silo1 */);
         _deposit(assets, borrower, ISilo.CollateralType.Protected);
+
+        vm.expectEmit(address(silo0));
+        emit ISilo.CollateralTypeChanged(borrower);
 
         vm.prank(borrower);
         silo0.borrowSameAsset(1234, borrower, borrower);

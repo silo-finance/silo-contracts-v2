@@ -64,8 +64,10 @@ library SiloMathLib {
         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest
         uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;
 
+        uint256 cap;
         // save to uncheck because variable can not be more than max
-        uint256 cap = type(uint256).max - _collateralAssets;
+        // -1 accounts for potential fractional interest being added afterwards
+        unchecked { cap = type(uint256).max - _collateralAssets - 1; }
 
         if (cap < collateralInterest) {
             // avoid overflow on interest
@@ -327,5 +329,39 @@ library SiloMathLib {
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+    }
+
+    /// @dev Calculates the fraction of a given total and percentage
+    /// @param _total The total value to calculate the fraction from
+    /// @param _percent The percentage to calculate the fraction from
+    /// @param _currentFraction The current fraction to add to the result
+    /// @return integral The integral part of the fraction
+    /// @return fraction The fractional part of the fraction
+    function calculateFraction(
+        uint256 _total,
+        uint256 _percent,
+        uint64 _currentFraction
+    ) internal pure returns (uint256 integral, uint64 fraction) {
+        if (_total == 0) {
+            return (0, _currentFraction);
+        }
+
+        unchecked {
+            // safe to unchecked because: _currentFraction if never more than max uint256, div is safe
+            if (type(uint256).max / _total < _percent) {
+                // when overflow, reset `_currentFraction ` to zero as part of circuit breaker
+                return (0, 0);
+            }
+
+            // `_total * _percent` safe to unchecked because we checked for overflow in above `if`
+            // `% _PRECISION_DECIMALS` safe, because max value after modulo will be 1e18 - 1  (_PRECISION_DECIMALS - 1)
+            // and this is less than 2 ** 64
+            // calculate remainder for current interest
+            uint256 remainder = (_total * _percent) % _PRECISION_DECIMALS;
+            // integral is amount above 1e18 after adding _currentFraction and remainder
+            integral = (_currentFraction + remainder) / _PRECISION_DECIMALS;
+            // fraction is what we get below 1e18
+            fraction = uint64((_currentFraction + remainder) % _PRECISION_DECIMALS);
+        }
     }
 }

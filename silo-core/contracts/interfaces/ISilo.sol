@@ -99,12 +99,24 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         uint64 interestRateTimestamp;
     }
 
+    /// @dev Interest and revenue may be rounded down to zero if the underlying token's decimal is low.
+    /// Because of that, we need to store fractions for further calculation to minimize losses.
+    struct Fractions {
+        /// @dev interest value that we could not convert to full token in 36 decimals, max value for it is 1e18.
+        /// this value was not yet apply as interest for borrowers
+        uint64 interest;
+        /// @dev revenue value that we could not convert to full token in 36 decimals, max value for it is 1e18.
+        uint64 revenue;
+    }
+
     struct SiloStorage {
         /// @param daoAndDeployerRevenue Current amount of assets (fees) accrued by DAO and Deployer
         /// but not yet withdrawn
         uint192 daoAndDeployerRevenue;
         /// @dev timestamp of the last interest accrual
         uint64 interestRateTimestamp;
+        /// @dev Interest and revenue fractions for more precise calculations
+        Fractions fractions;
 
         /// @dev silo is just for one asset,
         /// but this one asset can be of three types: mapping key is uint256(AssetType), so we store `assets` by type.
@@ -162,11 +174,14 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     event FlashLoan(uint256 amount);
 
-    event WithdrawnFeed(uint256 daoFees, uint256 deployerFees);
+    event WithdrawnFees(uint256 daoFees, uint256 deployerFees, bool redirectedDeployerFees);
+
+    event DeployerFeesRedirected(uint256 deployerFees);
 
     error UnsupportedFlashloanToken();
     error FlashloanAmountTooBig();
     error NothingToWithdraw();
+    error ProtectedProtection();
     error NotEnoughLiquidity();
     error NotSolvent();
     error BorrowNotPossible();
@@ -236,6 +251,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
             uint256 collateralAssets,
             uint256 debtAssets
         );
+
+    /// @notice Direct access to silo storage fractions variables
+    function getFractionsStorage() external view returns (Fractions memory fractions);
 
     /// @notice Retrieves the total amount of collateral (borrowable) assets with interest
     /// @return totalCollateralAssets The total amount of assets of type 'Collateral'

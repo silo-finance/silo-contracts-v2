@@ -15,7 +15,6 @@ contract IntegrationTest is BaseTest {
         vault.setCurator(CURATOR);
         vault.setIsAllocator(ALLOCATOR, true);
         vault.setFeeRecipient(FEE_RECIPIENT);
-        vault.setSkimRecipient(SKIM_RECIPIENT);
         vm.stopPrank();
 
         _setCap(idleMarket, type(uint184).max);
@@ -106,6 +105,19 @@ contract IntegrationTest is BaseTest {
                 vault.setSupplyQueue(newSupplyQueue);
             }
         }
+    }
+
+    function _setCapSimple(IERC4626 market, uint256 newCap) internal {
+        uint256 cap = vault.config(market).cap;
+
+        vm.prank(CURATOR);
+        vault.submitCap(market, newCap);
+
+        if (newCap < cap) return;
+
+        vm.warp(block.timestamp + vault.timelock());
+
+        vault.acceptCap(market);
     }
 
     function _sortSupplyQueueIdleLast() internal {

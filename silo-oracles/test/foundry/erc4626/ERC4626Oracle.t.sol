@@ -56,6 +56,24 @@ contract ERC4626OracleTest is Test {
         oracle.quote(1 ether, address(1));
     }
 
+    // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_quote_revertsZeroPrice -vvv
+    function test_ERC4626Oracle_quote_revertsZeroPrice() public {
+        IERC4626 vault = IERC4626(_wosVault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+
+        vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
+        oracle.quote(0, address(vault));
+
+        vm.mockCall(
+            address(vault),
+            abi.encodeWithSelector(IERC4626.convertToAssets.selector),
+            abi.encode(0)
+        );
+
+        vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
+        oracle.quote(1 ether, address(vault));
+    }
+
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_quoteToken -vvv
     function test_ERC4626Oracle_quoteToken() public {
         IERC4626 vault = IERC4626(_wosVault);
