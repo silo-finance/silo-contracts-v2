@@ -262,6 +262,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function setArbitraryLossThreshold(IERC4626 _market, uint256 _lossThreshold) external virtual onlyCuratorRole {
+        // TODO: onlyGuardianRole
         SiloVaultActionsLib.setArbitraryLossThreshold(_lossThreshold, arbitraryLossThreshold[_market]);
     }
 
@@ -301,6 +302,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 _expectedAssets,
         bool _override
     ) external virtual onlyCuratorRole {
+        // TODO: use onlyGuardianRole
         SiloVaultActionsLib.syncBalanceTracker(balanceTracker, _market, _expectedAssets, _override);
     }
 
@@ -1010,6 +1012,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 _recipient: _to,
                 _recipientBalance: recipientBalance,
                 _totalSupply: total,
+                // TODO: indentation
                  _amount: _value
             });
         }

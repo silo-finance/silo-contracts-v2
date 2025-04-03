@@ -29,10 +29,13 @@ interface IOwnable {
 /// @dev This interface is used for factorizing ISiloVaultStaticTyping and ISiloVault.
 /// @dev Consider using the ISiloVault interface instead of this one.
 interface ISiloVaultBase {
+    // TODO: natspec
     function DECIMALS_OFFSET() external view returns (uint8);
 
+    // TODO: natspec
     function DEFAULT_LOST_THRESHOLD() external view returns (uint256);
 
+    // TODO: natspec
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
 
     /// @notice method for claiming and distributing incentives rewards for all vault users

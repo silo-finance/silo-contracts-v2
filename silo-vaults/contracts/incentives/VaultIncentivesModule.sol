@@ -19,7 +19,9 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
 
     ISiloVault public vault;
 
+    // TODO: natspec
     EnumerableSet.AddressSet internal _markets;
+    // TODO: natspec
     EnumerableSet.AddressSet internal _notificationReceivers;
 
     mapping(
@@ -42,6 +44,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     }
 
     function __VaultIncentivesModule_init(address _owner, ISiloVault _vault) external virtual initializer {
+        // TODO: inherit from SiloVault, remove Ownable2StepUpgradeable
         __Ownable_init(_owner);
 
         require(address(_vault) != address(0), AddressZero());
