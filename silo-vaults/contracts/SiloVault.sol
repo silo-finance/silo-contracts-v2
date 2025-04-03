@@ -1020,6 +1020,11 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         internal
         returns (bool success, uint256 shares)
     {
+        IERC20 asset = IERC20(asset());
+
+        // Approving the exact amount because we don't want `transferFrom` to bypass `balanceTracker`.
+        asset.forceApprove({spender: address(_market), value: _assets});
+
         try _market.deposit(_assets, address(this)) returns (uint256 gotShares) {
             shares = gotShares;
             success = true;
@@ -1028,6 +1033,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         } catch (bytes memory data) {
             if (_revertOnFail) ErrorsLib.revertBytes(data);
         }
+
+        // Reset approval regardless of the deposit success or failure.
+        asset.forceApprove({spender: address(_market), value: 0});
     }
 
     function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {

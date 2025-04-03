@@ -47,7 +47,6 @@ library SiloVaultActionsLib {
         IERC4626[] storage _withdrawQueue
     ) external returns (bool updateTotalAssets) {
         MarketConfig storage marketConfig = _config[_market];
-        uint256 approveValue;
 
         if (_supplyCap > 0) {
             if (!marketConfig.enabled) {
@@ -64,12 +63,9 @@ library SiloVaultActionsLib {
             }
 
             marketConfig.removableAt = 0;
-            // one time approval, so market can pull any amount of tokens from SiloVault in a future
-            approveValue = type(uint256).max;
         }
 
         marketConfig.cap = _supplyCap;
-        IERC20(_asset).forceApprove(address(_market), approveValue);
 
         emit EventsLib.SetCap(msg.sender, _market, _supplyCap);
 
