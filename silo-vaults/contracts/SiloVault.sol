@@ -261,11 +261,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
-        if (_market.asset() != asset()) revert ErrorsLib.InconsistentAsset(_market);
-        if (pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
-        if (config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
-        uint256 supplyCap = config[_market].cap;
-        if (_newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
+        uint256 supplyCap = SiloVaultActionsLib.submitCapValidate(_market, _newSupplyCap, asset(), config, pendingCap);
 
         if (_newSupplyCap < supplyCap) {
             _setCap(_market, SafeCast.toUint184(_newSupplyCap));
@@ -278,15 +274,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitMarketRemoval(IERC4626 _market) external virtual onlyCuratorRole {
-        if (config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
-        if (config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
-        if (!config[_market].enabled) revert ErrorsLib.MarketNotEnabled(_market);
-        if (pendingCap[_market].validAt != 0) revert ErrorsLib.PendingCap(_market);
-
+        SiloVaultActionsLib.submitMarketRemovalValidateEmitEvent(_market, config, pendingCap);
         // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
         config[_market].removableAt = uint64(block.timestamp + timelock);
-
-        emit EventsLib.SubmitMarketRemoval(_msgSender(), _market);
     }
 
     function syncBalanceTracker(
