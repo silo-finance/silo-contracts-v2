@@ -220,4 +220,31 @@ library SiloVaultActionsLib {
 
         emit EventsLib.SetFee(msg.sender, _newFee);
     }
+
+    function submitMarketRemovalValidateEmitEvent(
+        IERC4626 _market,
+        mapping(IERC4626 => MarketConfig) storage _config,
+        mapping(IERC4626 => PendingUint192) storage _pendingCap
+    ) external {
+        if (_config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
+        if (_config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
+        if (!_config[_market].enabled) revert ErrorsLib.MarketNotEnabled(_market);
+        if (_pendingCap[_market].validAt != 0) revert ErrorsLib.PendingCap(_market);
+
+        emit EventsLib.SubmitMarketRemoval(msg.sender, _market);
+    }
+
+    function submitCapValidate(
+        IERC4626 _market,
+        uint256 _newSupplyCap,
+        address _asset,
+        mapping(IERC4626 => MarketConfig) storage _config,
+        mapping(IERC4626 => PendingUint192) storage _pendingCap
+    ) external view returns (uint256 supplyCap) {
+        if (_market.asset() != _asset) revert ErrorsLib.InconsistentAsset(_market);
+        if (_pendingCap[_market].validAt != 0) revert ErrorsLib.AlreadyPending();
+        if (_config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
+        supplyCap = _config[_market].cap;
+        if (_newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
+    }
 }
