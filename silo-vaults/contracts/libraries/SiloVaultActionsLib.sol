@@ -178,6 +178,8 @@ library SiloVaultActionsLib {
         uint256 _expectedAssets,
         bool _override
     ) external {
+        if (_override == false && _expectedAssets != 0) revert ErrorsLib.InvalidOverride();
+
         uint256 oldBalance = _balanceTracker[_market];
         uint256 newBalance = _override ? _expectedAssets : expectedSupplyAssets(_market);
 
