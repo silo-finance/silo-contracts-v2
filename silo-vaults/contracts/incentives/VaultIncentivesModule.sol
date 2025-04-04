@@ -22,7 +22,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     /// @dev Markets that have incentives claiming logics.
     EnumerableSet.AddressSet internal _markets;
 
-    /// @dev Notification receivers that will be notified when a vault's balance changes.
+    /// @dev Notification receivers that will be notified when a vault's share token balance changes.
     EnumerableSet.AddressSet internal _notificationReceivers;
 
     /// @dev Pending claiming logics for each market.
