@@ -20,6 +20,7 @@ methods {
     function _.redeem(uint256, address, address) external => CONSTANT;
     function _.convertToAssets(uint256) external => CONSTANT;
     function _.approve(address, uint256) external => CONSTANT;
+    function _.previewRedeem(uint256) external => CONSTANT;
     function _.transferFrom(address, address, uint256) external => CONSTANT;
     function _.asset() external => CONSTANT;
 

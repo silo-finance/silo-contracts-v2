@@ -30,6 +30,14 @@ methods {
     // PATCH
     function withdrawRank(address) external returns(uint256) envfree;
     function deletedAt(address) external returns(uint256) envfree;
+
+    function _.mulDiv(uint256 x, uint256 y, uint256 denominator) internal => mulDiv_cvl(x, y, denominator) expect (uint256);
+
+}
+
+function mulDiv_cvl(uint256 x, uint256 y, uint256 denominator) returns uint256 {
+    require denominator != 0;
+    return require_uint256((x * y) / denominator);
 }
 
 function isPendingTimelockInRange() returns bool {
