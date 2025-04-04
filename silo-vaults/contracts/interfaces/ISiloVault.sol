@@ -36,7 +36,7 @@ interface ISiloVaultBase {
 
     /// @notice Default acceptable loss when depositing to market
     /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
-    /// In such case it is very probable that something bad is happening in the vault.
+    /// This threshold prevents the SiloVault from loss of funds in compromised markets with inflated shares to assets rate
     /// This value can be changed by vault owner if needed.
     function DEFAULT_LOST_THRESHOLD() external view returns (uint256);
 
