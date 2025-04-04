@@ -18,13 +18,18 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
 
     ISiloVault public vault;
 
+    /// @dev Markets that have incentives claiming logics.
     EnumerableSet.AddressSet internal _markets;
+
+    /// @dev Notification receivers that will be notified when a vault's share token balance changes.
     EnumerableSet.AddressSet internal _notificationReceivers;
 
+    /// @dev Pending claiming logics for each market.
     mapping(
         IERC4626 market => mapping(IIncentivesClaimingLogic logic => uint256 validAt)
     ) public pendingClaimingLogics;
 
+    /// @dev Incentives claiming logics for each market.
     mapping(IERC4626 market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
     constructor() {
