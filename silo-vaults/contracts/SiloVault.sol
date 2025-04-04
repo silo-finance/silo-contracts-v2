@@ -47,17 +47,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* IMMUTABLES */
 
-    /// @notice Default acceptable loss when depositing to market
-    /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
-    /// In such case it is very probable that something bad is happening in the vault.
-    /// This value can be changed by vault owner if needed.
+    /// @inheritdoc ISiloVaultBase
     uint256 public constant DEFAULT_LOST_THRESHOLD = 1e6;
 
-    /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
-    /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
-    /// precision between shares and assets.
+    /// @inheritdoc ISiloVaultBase
     uint8 public immutable DECIMALS_OFFSET;
 
+    /// @inheritdoc ISiloVaultBase
     IVaultIncentivesModule public immutable INCENTIVES_MODULE;
 
     /* STORAGE */
@@ -86,13 +82,13 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultStaticTyping
     PendingUint192 public pendingTimelock;
 
-    /// @dev Internal balance tracker to prevent assets loss if underlying market hacked
-    /// and started reporting wrong supply.
+    /// @dev Internal balance tracker to prevent assets loss if the underlying market is hacked
+    /// and starts reporting wrong supply.
     /// max loss == supplyCap + un accrued interest.
-    /// Un accrued interest loss present only if it is less than balanceTracker[market] - supplyAssets.
-    /// But this is only about internal balances. There is no interest loss on the vault.
     mapping(IERC4626 => uint256) public balanceTracker;
 
+    /// @notice Configurable arbitrary loss threshold for each market that
+    /// will be used in the `_priceManipulationCheck` fn to prevent assets loss.
     mapping(IERC4626 => ArbitraryLossThreshold) public arbitraryLossThreshold;
 
     /// @inheritdoc ISiloVaultBase
@@ -110,6 +106,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @inheritdoc ISiloVaultBase
     uint256 public lastTotalAssets;
 
+    /// @dev Reentrancy guard.
     bool transient _lock;
 
     /* CONSTRUCTOR */
@@ -224,7 +221,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         SiloVaultActionsLib.setFeeValidateEmitEvent(_newFee, fee, feeRecipient);
 
-        // Safe "unchecked" cast because newFee <= MAX_FEE.
+        // Safe to cast because newFee <= MAX_FEE.
         fee = uint96(_newFee);
     }
 
@@ -491,7 +488,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     {
         _nonReentrantOn();
 
-        // Safe "unchecked" cast because pendingCap <= type(uint184).max.
+        // Safe to cast because pendingCap <= type(uint184).max.
         _setCap(_market, uint184(pendingCap[_market].value));
 
         _nonReentrantOff();
@@ -992,7 +989,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 _recipient: _to,
                 _recipientBalance: recipientBalance,
                 _totalSupply: total,
-                 _amount: _value
+                _amount: _value
             });
         }
     }
