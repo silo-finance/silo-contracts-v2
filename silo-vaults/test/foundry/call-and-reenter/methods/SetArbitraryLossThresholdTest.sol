@@ -25,7 +25,7 @@ contract SetArbitraryLossThresholdTest is MethodReentrancyTest {
     function _ensureItIsProtected() internal {
         ISiloVault vault = TestStateLib.vault();
 
-        vm.expectRevert(ErrorsLib.NotCuratorRole.selector);
+        vm.expectRevert(ErrorsLib.NotGuardianRole.selector);
         vault.setArbitraryLossThreshold(IERC4626(address(0)), 100e18);
     }
 }

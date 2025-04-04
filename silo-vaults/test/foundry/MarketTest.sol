@@ -400,7 +400,10 @@ contract MarketTest is IntegrationTest {
     function test_setArbitraryLossThreshold() public {
         IERC4626 market = allMarkets[0];
 
-        vm.startPrank(CURATOR);
+        vm.startPrank(vault.owner());
+        vault.submitGuardian(GUARDIAN);
+
+        vm.startPrank(GUARDIAN);
 
         vm.expectRevert(ErrorsLib.AlreadySet.selector);
         vault.setArbitraryLossThreshold(market, 0);

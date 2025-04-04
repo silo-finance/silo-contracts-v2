@@ -177,6 +177,9 @@ interface ISiloVaultBase {
     /// @dev A supply in a reallocation step will make the reallocation revert if the amount is greater than the net
     /// amount from previous steps (i.e. total withdrawn minus total supplied).
     function reallocate(MarketAllocation[] calldata _allocations) external;
+
+    /// @notice Syncs the balance tracker for the market.
+    function syncBalanceTracker(IERC4626, uint256, bool) external;
 }
 
 /// @dev This interface is inherited by SiloVault so that function signatures are checked by the compiler.
@@ -217,7 +220,4 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
 
     /// @notice Returns the allocation of assets for the market.
     function balanceTracker(IERC4626) external view returns (uint256);
-
-    /// @notice Syncs the balance tracker for the market.
-    function syncBalanceTracker(IERC4626, uint256, bool) external;
 }
