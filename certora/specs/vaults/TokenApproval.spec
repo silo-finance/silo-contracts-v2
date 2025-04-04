@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import "ConsistentState.spec";
 
-using Vault0 as vault0;
 using ERC20Helper as ERC20;
 
 methods {
@@ -12,15 +11,13 @@ methods {
     
     function _.allowance(address owner, address spender) external => DISPATCHER(true);
     
-    function vault0.getTotalSupply(address) external returns(uint256) envfree;
-
-    function _.redeem(uint256 shares, address receiver, address owner) external => DISPATCHER(true); 
     //function _.approve(address spender, uint256 value) external => DISPATCHER(true);
-    function _.deposit(uint256, address) external => DISPATCHER(true);
-    function _.mint(uint256, address) external => DISPATCHER(true);
+    function _.deposit(uint256, address) external => NONDET;
+    function _.mint(uint256, address) external => NONDET;
+    function _.withdraw(uint256,address,address) external => NONDET;
+    function _.redeem(uint256 shares, address receiver, address owner) external => NONDET;
     function _.transferFrom(address, address, uint256) external => DISPATCHER(true);
     //function _.asset() external => DISPATCHER(true);
-    function _.withdraw(uint256,address,address) external => DISPATCHER(true);
     //function _.transfer(address,uint256) external => DISPATCHER(true);
     //function _.maxDeposit(address) external => DISPATCHER(true);
     //function _.maxWithdraw(address) external => DISPATCHER(true);
@@ -63,6 +60,9 @@ function cvlForceApprove(address token, address spender, uint256 amount) {
     token.approve(e, spender, amount);
 }
 
+invariant noCapThenNoApproval(address market)
+    config_(market).cap == 0 => ERC20.allowance(asset(), currentContract, market) == 0;
+
 // https://prover.certora.com/output/6893/ab48156c65684c99bab2436cdbde58db/?anonymousKey=05f0b5ed6865e1386cefacf72bd2345af0c919b0
 invariant notInWithdrawQThenNoApproval(address market)
     withdrawRank(market) == 0 => ERC20.allowance(asset(), currentContract, market) == 0
@@ -74,5 +74,12 @@ invariant notInWithdrawQThenNoApproval(address market)
         requireInvariant supplyCapIsEnabled(market);
         requireInvariant withdrawRankCorrect(market);
         requireInvariant noBadPendingCap(market);
+        requireInvariant noCapThenNoApproval(market);
     }
 }
+
+// new features
+// internal balances tracking
+// write rules for this. whoCanIncrease.., decrease, include also in integrity rules
+// also for
+// balanceTracker and other

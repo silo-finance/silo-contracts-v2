@@ -106,23 +106,3 @@ invariant addedToSupplyQThenIsInWithdrawQ(uint256 supplyQIndex)
             requireInvariant nonZeroCapHasPositiveRank(supplyQGetAt(supplyQIndex)); 
     }
 }
-
-// in progress ------------------
-
-persistent ghost mapping (address => bool) addedMarketIsInWithdrawQ;
-
-hook Sstore supplyQueue[INDEX uint i] address newMarket (address oldMarket) {
-    addedMarketIsInWithdrawQ[newMarket] = withdrawRank(newMarket) > 0;
-}
-
-invariant isInDepositQThenIsInWithdrawQ(address market)
-    addedMarketIsInWithdrawQ[market]
-    {
-        preserved setSupplyQueue(address[] newSupplyQueue) with (env e) {
-            requireInvariant nonZeroCapHasPositiveRank(market); 
-            require setSupplyQueueInputIsValid(newSupplyQueue); //safe assumption. See setSupplyQueueRevertsOnInvalidInput
-        }
-        preserved {
-            requireInvariant nonZeroCapHasPositiveRank(market); 
-    }
-}
