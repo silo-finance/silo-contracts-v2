@@ -155,6 +155,9 @@ library ErrorsLib {
     /// @notice Thrown when projected withdraw is much less than what user deposit.
     error AssetLoss(uint256 loss);
 
+    /// @notice Thrown when the override is invalid.
+    error InvalidOverride();
+
     function revertBytes(bytes memory _errMsg) internal pure {
         if (_errMsg.length > 0) {
             assembly { // solhint-disable-line no-inline-assembly

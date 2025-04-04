@@ -81,4 +81,15 @@ contract InternalBalancesTest is VaultsLittleHelper {
         vm.prank(owner);
         vault.syncBalanceTracker(market0, newBalance + 1, true);
     }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_balanceTracker_Sync_InvalidOverride -vvv
+    */
+    function test_balanceTracker_Sync_InvalidOverride() public {
+        address owner = Ownable(address(vault)).owner();
+
+        vm.prank(owner);
+        vm.expectRevert(ErrorsLib.InvalidOverride.selector);
+        vault.syncBalanceTracker(IERC4626(address(0)), 1, false);
+    }
 }
