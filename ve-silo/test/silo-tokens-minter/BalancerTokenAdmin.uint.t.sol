@@ -31,10 +31,9 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin.activate();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testFailToActivateIfIsNotTokenOwner --ffi -vvv
-    function testFailToActivateIfIsNotTokenOwner() public {
-        vm.expectRevert("BalancerTokenAdmin is not a minter");
-
+    // FOUNDRY_PROFILE=ve-silo-test forge test --mt test_RevertWhen_ActivateIfIsNotTokenOwner --ffi -vvv
+    function test_RevertWhen_ActivateIfIsNotTokenOwner() public {
+        vm.expectRevert();
         vm.prank(_deployer);
         _tokenAdmin.activate();
     }

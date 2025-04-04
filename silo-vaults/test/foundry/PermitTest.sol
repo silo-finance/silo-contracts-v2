@@ -136,7 +136,7 @@ contract PermitTest is IntegrationTest {
         assertEq(vault.allowance(owner, spender), type(uint256).max);
     }
 
-    function testFailInvalidAllowance(uint256 deadline) public {
+    function test_RevertWhen_InvalidAllowance(uint256 deadline) public {
         deadline = bound(deadline, block.timestamp, type(uint48).max);
 
         Permit memory permit = Permit({
@@ -152,11 +152,12 @@ contract PermitTest is IntegrationTest {
 
         vault.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
 
+        vm.expectRevert();
         vm.prank(spender);
         vault.transferFrom(owner, spender, 1e18); // attempt to transfer 1 vault
     }
 
-    function testFailInvalidBalance(uint256 deadline) public {
+    function test_RevertWhen_InvalidBalance(uint256 deadline) public {
         deadline = bound(deadline, block.timestamp, type(uint48).max);
 
         Permit memory permit = Permit({
@@ -172,6 +173,7 @@ contract PermitTest is IntegrationTest {
 
         vault.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
 
+        vm.expectRevert();
         vm.prank(spender);
         vault.transferFrom(owner, spender, 2e18); // attempt to transfer 2 tokens (owner only owns 1)
     }

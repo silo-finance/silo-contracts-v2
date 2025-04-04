@@ -37,3 +37,6 @@
 	path = gitmodules/pyth-sdk-solidity
 	url = https://github.com/pyth-network/pyth-crosschain.git
 	branch = xc-admin-v0.6.11
+[submodule "a16z-erc4626-tests"]
+	path = gitmodules/a16z-erc4626-tests
+	url = https://github.com/a16z/erc4626-tests

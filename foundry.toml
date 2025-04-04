@@ -4,11 +4,14 @@
 libs = [
     'gitmodules',
     'node_modules',
-    'silo-amm/node_modules'
 ]
 out = 'cache/foundry/out'
 evm_version = 'cancun'
 gas_limit = '40000000000'
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+allow_internal_expect_revert = true
 
 [profile.core]
 src = 'silo-core/contracts'
