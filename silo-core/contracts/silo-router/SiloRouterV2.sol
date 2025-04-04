@@ -6,19 +6,19 @@ import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
-import {ISiloRouter} from "../interfaces/ISiloRouter.sol";
+import {ISiloRouterV2} from "../interfaces/ISiloRouterV2.sol";
 
-/// @title SiloRouter
+/// @title SiloRouterV2
 /// @custom:security-contact security@silo.finance
 /// @notice Silo Router is a utility contract that aims to improve UX. It can batch any number or combination
 /// of actions (Deposit, Withdraw, Borrow, Repay) and execute them in a single transaction.
-/// @dev SiloRouter requires only first action asset to be approved
+/// @dev SiloRouterV2 requires only first action asset to be approved
 /// @dev Caller should ensure that the router balance is empty after multicall.
-contract SiloRouter is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouter {
+contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 {
     /// @notice The address of the implementation contract
     address public immutable IMPLEMENTATION;
 
-    /// @notice Constructor for the SiloRouter contract
+    /// @notice Constructor for the SiloRouterV2 contract
     /// @param _initialOwner The address of the initial owner
     /// @param _implementation The address of the implementation contract
     constructor (address _initialOwner, address _implementation) Ownable(_initialOwner) {
@@ -32,7 +32,7 @@ contract SiloRouter is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouter {
         // and we need to receive the withdrawn native token unconditionally
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterV2
     function multicall(bytes[] calldata data)
         external
         virtual
@@ -51,12 +51,12 @@ contract SiloRouter is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouter {
         return results;
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterV2
     function pause() external virtual onlyOwner {
         _pause();
     }
 
-    /// @inheritdoc ISiloRouter
+    /// @inheritdoc ISiloRouterV2
     function unpause() external virtual onlyOwner {
         _unpause();
     }
