@@ -158,6 +158,9 @@ library ErrorsLib {
     /// @notice Thrown when the override is invalid.
     error InvalidOverride();
 
+    /// @notice Thrown when the caller doesn't have the owner role.
+    error NotOwner();
+
     function revertBytes(bytes memory _errMsg) internal pure {
         if (_errMsg.length > 0) {
             assembly { // solhint-disable-line no-inline-assembly

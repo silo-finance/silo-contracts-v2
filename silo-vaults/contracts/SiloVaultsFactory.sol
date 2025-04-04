@@ -48,7 +48,7 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
             new SiloVault{salt: _salt()}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
 
-        vaultIncentivesModule.__VaultIncentivesModule_init(initialOwner, siloVault);
+        vaultIncentivesModule.__VaultIncentivesModule_init(siloVault);
 
         isSiloVault[address(siloVault)] = true;
 

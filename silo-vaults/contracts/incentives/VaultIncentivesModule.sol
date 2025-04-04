@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {
-    Ownable2StepUpgradeable, OwnableUpgradeable
-} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+import {Context} from "openzeppelin5/utils/Context.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.sol";
@@ -14,7 +13,7 @@ import {ErrorsLib} from "../libraries/ErrorsLib.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 
 /// @title Vault Incentives Module
-contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeable {
+contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     ISiloVault public vault;
@@ -32,6 +31,13 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         _disableInitializers();
     }
 
+    /// @dev Reverts if the caller doesn't have the owner role.
+    modifier onlyOwner() {
+        if (_msgSender() != owner()) revert ErrorsLib.NotOwner();
+
+        _;
+    }
+
     /// @dev Reverts if the caller doesn't have the guardian role.
     modifier onlyGuardianRole() {
         address guardian = vault.guardian();
@@ -41,9 +47,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         _;
     }
 
-    function __VaultIncentivesModule_init(address _owner, ISiloVault _vault) external virtual initializer {
-        __Ownable_init(_owner);
-
+    function __VaultIncentivesModule_init(ISiloVault _vault) external virtual initializer {
         require(address(_vault) != address(0), AddressZero());
 
         vault = _vault;
@@ -201,5 +205,10 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
                 }
             }
         }
+    }
+
+    /// @notice Owner is inherited from the SiloVault contract.
+    function owner() public view virtual returns (address) {
+        return vault.owner();
     }
 }
