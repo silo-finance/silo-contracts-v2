@@ -252,12 +252,23 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
     }
 
-    /* ONLY CURATOR FUNCTIONS */
+    /* ONLY GUARDIAN FUNCTIONS */
 
     /// @inheritdoc ISiloVaultBase
     function setArbitraryLossThreshold(IERC4626 _market, uint256 _lossThreshold) external virtual onlyGuardianRole {
         SiloVaultActionsLib.setArbitraryLossThreshold(_lossThreshold, arbitraryLossThreshold[_market]);
     }
+
+    /// @inheritdoc ISiloVaultBase
+    function syncBalanceTracker(
+        IERC4626 _market,
+        uint256 _expectedAssets,
+        bool _override
+    ) external virtual onlyGuardianRole {
+        SiloVaultActionsLib.syncBalanceTracker(balanceTracker, _market, _expectedAssets, _override);
+    }
+
+    /* ONLY CURATOR FUNCTIONS */
 
     /// @inheritdoc ISiloVaultBase
     function submitCap(IERC4626 _market, uint256 _newSupplyCap) external virtual onlyCuratorRole {
@@ -277,15 +288,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         SiloVaultActionsLib.submitMarketRemovalValidateEmitEvent(_market, config, pendingCap);
         // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
         config[_market].removableAt = uint64(block.timestamp + timelock);
-    }
-
-    /// @inheritdoc ISiloVaultBase
-    function syncBalanceTracker(
-        IERC4626 _market,
-        uint256 _expectedAssets,
-        bool _override
-    ) external virtual onlyGuardianRole {
-        SiloVaultActionsLib.syncBalanceTracker(balanceTracker, _market, _expectedAssets, _override);
     }
 
     /* ONLY ALLOCATOR FUNCTIONS */
