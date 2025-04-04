@@ -24,7 +24,8 @@ contract Deposit1stGasTest is Gas, Test {
             address(silo0),
             abi.encodeCall(ISilo.deposit, (ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "Deposit1st ever",
-            167935
+            167935,
+            1000
         );
     }
 }
