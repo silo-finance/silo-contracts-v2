@@ -183,6 +183,8 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         virtual
         returns (address[] memory logics)
     {
+        if (_marketsInput.length == 0) return logics;
+
         uint256 totalLogics;
 
         for (uint256 i = 0; i < _marketsInput.length; i++) {
