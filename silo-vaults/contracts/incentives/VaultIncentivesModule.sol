@@ -179,6 +179,8 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         virtual
         returns (address[] memory logics)
     {
+        if (_marketsInput.length == 0) return logics;
+
         uint256 totalLogics;
 
         for (uint256 i = 0; i < _marketsInput.length; i++) {

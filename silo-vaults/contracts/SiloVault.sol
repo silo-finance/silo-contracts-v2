@@ -974,12 +974,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         super._update(_from, _to, _value);
 
         if (_value == 0) return;
-        
+
         _afterTokenTransfer(_from, _to, _value);
     }
 
     function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
         address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
+
+        if (receivers.length == 0) return;
 
         uint256 total = totalSupply();
         uint256 senderBalance = _from == address(0) ? 0 : balanceOf(_from);
