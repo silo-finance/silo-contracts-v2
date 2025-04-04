@@ -18,7 +18,7 @@ contract InternalBalancesTest is VaultsLittleHelper {
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_balanceTracker_Sync_Permissions -vvv
     */
     function test_balanceTracker_Sync_Permissions() public {
-        vm.expectRevert(ErrorsLib.NotCuratorRole.selector);
+        vm.expectRevert(ErrorsLib.NotGuardianRole.selector);
         vault.syncBalanceTracker(IERC4626(address(0)), 0, false);
     }
 
