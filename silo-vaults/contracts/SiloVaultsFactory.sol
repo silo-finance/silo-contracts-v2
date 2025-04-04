@@ -59,7 +59,7 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
             new SiloVault(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
 
-        vaultIncentivesModule.__VaultIncentivesModule_init(initialOwner, siloVault);
+        vaultIncentivesModule.__VaultIncentivesModule_init(siloVault);
 
         isSiloVault[address(siloVault)] = true;
 
