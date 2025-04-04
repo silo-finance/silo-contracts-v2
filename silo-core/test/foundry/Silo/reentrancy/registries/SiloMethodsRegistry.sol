@@ -36,6 +36,7 @@ import {GetCollateralAndProtectedTotalsStorageReentrancyTest}
 import {GetCollateralAssetsReentrancyTest} from "../methods/silo/GetCollateralAssetsReentrancyTest.sol";
 import {GetDebtAssetsReentrancyTest} from "../methods/silo/GetDebtAssetsReentrancyTest.sol";
 import {GetLiquidityReentrancyTest} from "../methods/silo/GetLiquidityReentrancyTest.sol";
+import {GetFractionsStorageTest} from "../methods/silo/GetFractionsStorageTest.sol";
 import {HookReceiverTokenReentrancyTest} from "../methods/silo/HookReceiverTokenReentrancyTest.sol";
 import {HookSetupReentrancyTest} from "../methods/silo/HookSetupReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/silo/InitializeReentrancyTest.sol";
@@ -132,6 +133,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new GetCollateralAssetsReentrancyTest());
         _registerMethod(new GetDebtAssetsReentrancyTest());
         _registerMethod(new GetLiquidityReentrancyTest());
+        _registerMethod(new GetFractionsStorageTest());
         _registerMethod(new HookReceiverTokenReentrancyTest());
         _registerMethod(new HookSetupReentrancyTest());
         _registerMethod(new InitializeReentrancyTest());

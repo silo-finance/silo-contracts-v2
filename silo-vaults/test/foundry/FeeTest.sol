@@ -180,7 +180,10 @@ contract FeeTest is IntegrationTest {
     /*
     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawAccrueFee -vvv
     */
-    function testWithdrawAccrueFee(uint256 deposited, uint256 withdrawn, uint256 blocks) public {
+    function testWithdrawAccrueFee(
+        uint256 deposited, uint256 withdrawn, uint256 blocks
+    ) public {
+//        (uint256 deposited, uint256 withdrawn, uint256 blocks) = (4095403546134787364927493835650276036647856, 220433025230, 496682016805733960375124471420475239754471925361033367);
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, MIN_TEST_ASSETS, deposited);
         blocks = _boundBlocks(blocks);

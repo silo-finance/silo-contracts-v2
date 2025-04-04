@@ -56,7 +56,7 @@ contract GetFeesAndFeeReceiversWithAssetTest is SiloLittleHelper, IntegrationTes
 
         (address daoFeeReceiver, address deployerFeeReceiver) = siloFactory.getFeeReceivers(silo0);
 
-        uint256 siloId = 1;
+        uint256 siloId = 100;
         assertEq(daoFeeReceiver, siloFactory.daoFeeReceiver(), "daoFeeReceiver silo0");
         assertEq(deployerFeeReceiver, initData.deployer, "deployerFeeReceiver silo0");
         assertEq(deployerFeeReceiver, siloFactory.ownerOf(siloId), "ownerOf(siloId) silo0");

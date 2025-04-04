@@ -26,6 +26,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
+import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -197,9 +198,20 @@ contract Logger is Test {
             address ptToken = address(PendlePTOracle(address(_oracle)).PT_TOKEN());
             console2.log("\tPT token:", ptToken);
             console2.log("\tPT token symbol:", IERC20Metadata(ptToken).symbol());
-            address underlyingToken = address(PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN());
+
+            address underlyingToken;
+
+            try PendlePTToAssetOracle(address(_oracle)).SY_UNDERLYING_TOKEN() returns (address syUnderlyingToken) {
+                console2.log("\tSY underlying token:", syUnderlyingToken);
+                underlyingToken = syUnderlyingToken;
+            } catch {}
+
+            try PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN() returns (address ptUnderlyingToken) {
+                console2.log("\tPT underlying token:", ptUnderlyingToken);
+                underlyingToken = ptUnderlyingToken;
+            } catch {}
+
             address underlyingOracle = address(PendlePTOracle(address(_oracle)).UNDERLYING_ORACLE());
-            console2.log("\tPT underlying token:", underlyingToken);
             console2.log("\tPT underlying token symbol:", IERC20Metadata(underlyingToken).symbol());
             console2.log("\tUnderlying oracle:", underlyingOracle);
             console2.log("\n\tPendle underlying oracle info:");

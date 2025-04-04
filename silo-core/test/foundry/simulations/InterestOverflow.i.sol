@@ -8,6 +8,9 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {MintableToken} from "../_common/MintableToken.sol";
 
 /*
     forge test -vv --ffi --mc InterestOverflowTest
@@ -15,20 +18,42 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     this test checks scenario, when we overflow interest, in that case we should be able to repay and exit silo
 */
 contract InterestOverflowTest is SiloLittleHelper, Test {
-    function setUp() public {
-        _setUpLocalFixture();
+    function _setUp(uint8 _decimals) public {
+        SiloFixture siloFixture = new SiloFixture();
+
+        SiloConfigOverride memory configOverride;
+
+        token0 = new MintableToken(_decimals);
+        token1 = new MintableToken(_decimals);
+
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
+
+        configOverride.token0 = address(token0);
+        configOverride.token1 = address(token1);
+
+        (, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
     }
 
     /*
     forge test -vv --ffi --mt test_interestOverflow
     */
-    function test_interestOverflow() public {
+    function test_interestOverflow_fuzz(uint8 _decimals) public {
+        vm.assume(_decimals <= 18);
+
+        _interestOverflow(_decimals);
+    }
+
+    function _interestOverflow(uint8 _decimals) internal {
+        _setUp(_decimals);
+        uint256 one = 10 ** _decimals;
+
         address borrower = makeAddr("borrower");
         address borrower2 = makeAddr("borrower2");
 
         uint256 shares1 = _depositForBorrow(type(uint160).max, makeAddr("user1"));
         uint256 shares2 = _depositForBorrow(1, makeAddr("user2"));
-        uint256 shares3 = _depositForBorrow(1e18, makeAddr("user3"));
+        uint256 shares3 = _depositForBorrow(one, makeAddr("user3"));
 
         _depositCollateral(type(uint160).max, borrower, TWO_ASSETS);
         _borrow(type(uint160).max / 100 * 75, borrower, TWO_ASSETS);
@@ -52,17 +77,19 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("silo1.getLiquidity() 1", silo1.getLiquidity(), 18);
 
+        uint256 allInterest;
+
         for (uint i;; i++) {
             // if we apply interest often, we will generate more interest in shorter time
-            silo1.accrueInterest();
+            allInterest += silo1.accrueInterest();
             emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
 
             uint256 newLtv = siloLens.getLtv(silo1, borrower);
 
             if (ltvBefore != newLtv) {
                 ltvBefore = newLtv;
-                vm.warp(block.timestamp + 365 days);
-                emit log_named_uint("years pass", i);
+                vm.warp(block.timestamp + 10 days);
+                emit log_named_uint("days pass", i * 10);
                 _printUtilization(silo1);
 
             } else {
@@ -73,7 +100,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         emit log("additional time should make no difference:");
         vm.warp(block.timestamp + 365 days);
-        silo1.accrueInterest();
+        assertEq(silo1.accrueInterest(), 0, "when IRM overflows, there should be no more interest");
         _printUtilization(silo1);
 
         emit log_named_decimal_uint("LTV after", siloLens.getLtv(silo0, borrower), 16);
@@ -83,6 +110,8 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         assertGt(dust, 0, "ratio is so high, that even 0.001 share produces some assets");
         emit log_named_uint("dust", dust);
 
+        uint256 revenueLost;
+
         { // too deep
             // even when overflow, we can deposit
             // approval is +2 because of rounding UP on convertToAssets and mint
@@ -90,19 +119,23 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(minted, dust, "minted assets");
 
             // this repay covers interest only
-            // this number we can get by calling: (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-            _repay(441711400819186749521513037373171753665316175379320209, borrower);
-
             (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            (uint256 daoFee, uint256 deployerFee,,) = silo1.config().getFeesWithAsset(address(silo1));
+
+            uint256 revenue = allInterest * (daoFee + deployerFee) / 1e18;
+            revenueLost = revenue - daoAndDeployerRevenue;
+            emit log_named_decimal_uint("revenueLost", revenueLost, 18);
             emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
+
+            assertLe(revenueLost, 5, "we did not lost revenue (5 wei acceptable)");
+
+            // we repay revenue only, so that part that's not going to users as interest
+            _repay( daoAndDeployerRevenue, borrower);
+
 
             // we have dust because
             assertEq(silo1.getLiquidity(), minted, "even with huge repay, we cover interest first");
         }
-
-        // liquidity should allow to withdraw 1 share
-        _redeemAll(makeAddr("user2"), 1);
-        assertEq(silo1.getLiquidity(), 1, "no liquidity, it was enough only for redeem 1 share");
 
         _repay(silo1.maxRepay(borrower), borrower);
         _repay(silo1.maxRepay(borrower2), borrower2);
@@ -110,10 +143,11 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         emit log("_withdrawAndCheck user1");
         _withdrawAndCheck(makeAddr("user1"), 0, shares1);
 
-        _withdrawAndCheck(makeAddr("user2"), 0, shares2 - 1);
+        emit log("_withdrawAndCheck user2");
+        _withdrawAndCheck(makeAddr("user2"), 0, shares2);
 
         emit log("_withdrawAndCheck user3");
-        _withdrawAndCheck(makeAddr("user3"), 1e18, shares3);
+        _withdrawAndCheck(makeAddr("user3"), one, shares3);
 
         emit log("_withdrawAndCheck user4");
         _withdrawAndCheck(makeAddr("user4"), silo1.convertToAssets(1), 1);
@@ -127,7 +161,8 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(IShareToken(debtShare).totalSupply(), 0, "no debt");
             assertEq(IShareToken(collateralShare).totalSupply(), 0, "no collateralShares");
 
-            assertEq(token1.balanceOf(address(silo1)), 906695, "some dust/balance left");
+            assertEq(token1.balanceOf(address(silo1)), 906695, "silo balance");
+            assertLe(revenueLost, 5, "lost revenue");
         }
 
         assertEq(_printUtilization(silo1).collateralAssets, 906695, "collateral dust left");
@@ -165,6 +200,6 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertLe(_deposited, withdrawn + 1, "user should not lose"); // +1 for rounding
         }
 
-        assertEq(silo1.maxWithdraw(_user), 0, "max");
+        assertEq(silo1.maxWithdraw(_user), 0, "maxWithdraw should be 0 at the end");
     }
 }

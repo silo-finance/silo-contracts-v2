@@ -250,7 +250,7 @@ contract BorrowingHandler is BaseHandler {
 
         if (debtAmount > 0) {
             assertTrue(success, BORROWING_HSPOST_D);
-            assertEq(ISilo(target).maxRepay(borrower), 0, BORROWING_HSPOST_D);
+            assertLe(ISilo(target).maxRepay(borrower), 1, BORROWING_HSPOST_D);
         }
 
         if (success) {

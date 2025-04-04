@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {IMethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodReentrancyTest.sol";
 import {IMethodsRegistry} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodsRegistry.sol";
 
+import {ArbitraryLossThresholdTest} from "../methods/ArbitraryLossThresholdTest.sol";
+import {DefaultLossThresholdTest} from "../methods/DefaultLossThresholdTest.sol";
 import {SetCuratorReentrancyTest} from "../methods/SetCuratorReentrancyTest.sol";
 import {DecimalsReentrancyTest} from "../methods/DecimalsReentrancyTest.sol";
 import {DepositReentrancyTest} from "../methods/DepositReentrancyTest.sol";
@@ -48,11 +50,13 @@ import {IncentivesModuleTest} from "../methods/IncentivesModuleTest.sol";
 import {DecimalsOffsetTest} from "../methods/DecimalsOffsetTest.sol";
 import {DomainSeparatorTest} from "../methods/DomainSeparatorTest.sol";
 import {WithdrawReentrancyTest} from "../methods/WithdrawReentrancyTest.sol";
+import {SyncBalanceTrackerTest} from "../methods/SyncBalanceTrackerTest.sol";
 import {SubmitCapTest} from "../methods/SubmitCapTest.sol";
 import {SetFeeTest} from "../methods/SetFeeTest.sol";
 import {SetIsAllocatorTest} from "../methods/SetIsAllocatorTest.sol";
 import {SetFeeRecipientTest} from "../methods/SetFeeRecipientTest.sol";
 import {SetSupplyQueueTest} from "../methods/SetSupplyQueueTest.sol";
+import {SetArbitraryLossThresholdTest} from "../methods/SetArbitraryLossThresholdTest.sol";
 import {UpdateWithdrawQueueTest} from "../methods/UpdateWithdrawQueueTest.sol";
 import {TransferOwnershipTest} from "../methods/TransferOwnershipTest.sol";
 import {SubmitTimelockTest} from "../methods/SubmitTimelockTest.sol";
@@ -83,6 +87,8 @@ contract SiloVaultMethodsRegistry is IMethodsRegistry {
     bytes4[] public supportedMethods;
 
     constructor() {
+        _registerMethod(new ArbitraryLossThresholdTest());
+        _registerMethod(new DefaultLossThresholdTest());
         _registerMethod(new BalanceTrackerTest());
         _registerMethod(new AcceptGuardianTest());
         _registerMethod(new AcceptTimelockTest());
@@ -110,6 +116,7 @@ contract SiloVaultMethodsRegistry is IMethodsRegistry {
         _registerMethod(new SetIsAllocatorTest());
         _registerMethod(new SetFeeTest());
         _registerMethod(new SubmitCapTest());
+        _registerMethod(new SetArbitraryLossThresholdTest());
         _registerMethod(new WithdrawReentrancyTest());
         _registerMethod(new TransferFromTest());
         _registerMethod(new TransferTest());
@@ -122,6 +129,7 @@ contract SiloVaultMethodsRegistry is IMethodsRegistry {
         _registerMethod(new TotalAssetsTest());
         _registerMethod(new TimelockTest());
         _registerMethod(new SymbolTest());
+        _registerMethod(new SyncBalanceTrackerTest());
         _registerMethod(new SupplyQueueLengthTest());
         _registerMethod(new SupplyQueueTest());
         _registerMethod(new PreviewDepositTest());

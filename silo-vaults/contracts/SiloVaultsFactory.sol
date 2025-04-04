@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
 import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
 
@@ -16,14 +17,12 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice This contract allows to create SiloVault vaults, and to index them easily.
-contract SiloVaultsFactory is ISiloVaultsFactory {
+contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
     /* STORAGE */
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
 
     /// @inheritdoc ISiloVaultsFactory
     mapping(address => bool) public isSiloVault;
-
-    mapping(address owner => uint256 counter) public counter;
 
     /* CONSTRUCTOR */
 
@@ -41,25 +40,15 @@ contract SiloVaultsFactory is ISiloVaultsFactory {
         string memory name,
         string memory symbol
     ) external virtual returns (ISiloVault siloVault) {
-        bytes32 salt = keccak256(abi.encodePacked(
-            counter[msg.sender]++,
-            msg.sender,
-            initialOwner,
-            initialTimelock,
-            asset,
-            name,
-            symbol
-        ));
-
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, salt)
+            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt())
         );
 
         siloVault = ISiloVault(address(
-            new SiloVault(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
+            new SiloVault{salt: _salt()}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
         );
 
-        vaultIncentivesModule.__VaultIncentivesModule_init(initialOwner, siloVault);
+        vaultIncentivesModule.__VaultIncentivesModule_init(siloVault);
 
         isSiloVault[address(siloVault)] = true;
 

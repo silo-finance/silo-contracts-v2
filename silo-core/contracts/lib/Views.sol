@@ -110,6 +110,10 @@ library Views {
         debtAssets = $.totalAssets[ISilo.AssetType.Debt];
     }
 
+    function getFractionsStorage() internal view returns (ISilo.Fractions memory fractions) {
+        fractions = SiloStorageLib.getSiloStorage().fractions;
+    }
+
     function utilizationData() internal view returns (ISilo.UtilizationData memory) {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 

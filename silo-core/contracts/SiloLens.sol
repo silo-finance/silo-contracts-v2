@@ -130,12 +130,12 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function totalDepositsWithInterest(ISilo _silo) external view returns (uint256 totalDeposits) {
-        totalDeposits = _silo.totalAssets();
+    function totalDepositsWithInterest(ISilo _silo) external view returns (uint256 amount) {
+        amount = _silo.totalAssets();
     }
 
-    function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 totalBorrowAmount) {
-        totalBorrowAmount = _silo.getDebtAssets();
+    function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 amount) {
+        amount = _silo.getDebtAssets();
     }
 
     /// @inheritdoc ISiloLens
@@ -202,7 +202,10 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getUtilization(ISilo _silo) external view returns (uint256) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
-        return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+
+        if (data.collateralAssets != 0) {
+            return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+        }
     }
 
     /// @inheritdoc ISiloLens
