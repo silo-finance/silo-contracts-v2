@@ -113,12 +113,6 @@ contract SiloVaultHarness is SiloVault {
     function _afterTokenTransfer(address, address, uint256) internal virtual override {}
     function _claimRewards() internal virtual override {}
 
-    function supplyBalance(IERC4626 market) external view 
-        returns (uint256 assets, uint256 shares)
-    {
-        return _supplyBalance(market);
-    }
-
     function supplyQGetAt(uint256 index) external view returns (IERC4626)
     {
         return supplyQueue[index];
