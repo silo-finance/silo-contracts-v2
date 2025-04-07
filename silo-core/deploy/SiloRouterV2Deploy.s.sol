@@ -7,10 +7,9 @@ import {SiloRouterV2} from "silo-core/contracts/silo-router/SiloRouterV2.sol";
 import {SiloRouterV2Implementation} from "silo-core/contracts/silo-router/SiloRouterV2Implementation.sol";
 
 /**
-    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloRouterV2Deploy.s.sol \
-        --ffi --rpc-url http://127.0.0.1:8545 --broadcast --verify
+        --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract SiloRouterV2Deploy is CommonDeploy {
     function run() public returns (SiloRouterV2 siloRouterV2) {
