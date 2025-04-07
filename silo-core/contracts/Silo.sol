@@ -32,6 +32,7 @@ import {SiloStorageLib} from "./lib/SiloStorageLib.sol";
 /// is deployed twice for each asset for two-asset lending markets.
 /// Version: 2.0.0
 contract Silo is ISilo, ShareCollateralToken {
+    // TODO: remove
     using SafeERC20 for IERC20;
 
     ISiloFactory public immutable factory;
