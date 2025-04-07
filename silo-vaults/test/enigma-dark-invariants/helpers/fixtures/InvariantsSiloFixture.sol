@@ -45,7 +45,7 @@ contract InvariantsSiloFixture {
     IInterestRateModelV2.Config public presetIRMConfig;
     IInterestRateModelV2 public interestRateModelV2;
     address deployer_;
-
+    address creator_;
     address oracle0;
     address oracle1;
 
@@ -61,6 +61,7 @@ contract InvariantsSiloFixture {
         core_deployInterestRateModel();
 
         deployer_ = _deployer;
+        creator_ = msg.sender;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,12 @@ contract InvariantsSiloFixture {
 
         // deploy silo
         siloFactory.createSilo(
-            siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, siloInitData.deployer
+            siloConfig,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl,
+            siloInitData.deployer,
+            creator_
         );
 
         (address _vault0, address _vault1) = siloConfig.getSilos();
@@ -143,6 +149,8 @@ contract InvariantsSiloFixture {
     ) internal returns (ISiloConfig _siloConfig) {
         uint256 nextSiloId = siloFactory.getNextSiloId();
 
+        uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(creator_);
+
         ISiloConfig.ConfigData memory configData0;
         ISiloConfig.ConfigData memory configData1;
 
@@ -154,25 +162,25 @@ contract InvariantsSiloFixture {
             siloFactory.maxLiquidationFee()
         );
 
-        configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, nextSiloId, address(siloFactory));
-        configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, nextSiloId, address(siloFactory));
+        configData0.silo = CloneDeterministic.predictSilo0Addr(_siloImpl, creatorSiloCounter, address(siloFactory), creator_);
+        configData1.silo = CloneDeterministic.predictSilo1Addr(_siloImpl, creatorSiloCounter, address(siloFactory), creator_);
 
         configData0.collateralShareToken = configData0.silo;
         configData1.collateralShareToken = configData1.silo;
 
         configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            _shareProtectedCollateralTokenImpl, nextSiloId, address(siloFactory)
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), creator_
         );
 
         configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            _shareProtectedCollateralTokenImpl, nextSiloId, address(siloFactory)
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), creator_
         );
 
         configData0.debtShareToken =
-            CloneDeterministic.predictShareDebtToken0Addr(_shareDebtTokenImpl, nextSiloId, address(siloFactory));
+            CloneDeterministic.predictShareDebtToken0Addr(_shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), creator_);
 
         configData1.debtShareToken =
-            CloneDeterministic.predictShareDebtToken1Addr(_shareDebtTokenImpl, nextSiloId, address(siloFactory));
+            CloneDeterministic.predictShareDebtToken1Addr(_shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), creator_);
 
         _siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }

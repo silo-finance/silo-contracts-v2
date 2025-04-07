@@ -57,7 +57,7 @@ abstract contract SiloVaultHandler is BaseHandler {
             );
 
             /// @dev ACCOUNTING
-            assertEq(defaultVarsBefore.totalAssets + _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_C);// TODO pending: remove comment once test_replay_depositVault is checked
+            assertEq(defaultVarsBefore.totalAssets + _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_C);
         } else {
             revert("SiloVaultHandler: deposit failed");
         }

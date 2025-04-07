@@ -237,6 +237,60 @@ contract ResolvedReplays is BaseCryticToFoundry {
         Tester.mintVault(1, 0);
     }
 
+    function test_replay_assert_ERC4626_REDEEM_INVARIANT_C() public {
+        //@audit-ok reverts when siloVault tries to withdraw 667 assets which corresponds to 0 shares in silo -> ERC4626_REDEEM_INVARIANT_C
+        // Fixed at https://github.com/silo-finance/silo-contracts-v2/pull/1117/files
+        Tester.submitCap(3, 2);
+        _delay(609387);
+        Tester.acceptCap(2);
+        Tester.setSupplyQueue(6);
+        Tester.mintVault(1002, 0);
+        Tester.assert_ERC4626_REDEEM_INVARIANT_C();
+    }
+
+    function test_replay_assert_2ERC4626_MINT_INVARIANT_C() public {
+        // @audit-issue maxMint does not contemplate new _assetLossCheck
+        // ERC4626_MINT_INVARIANT_C: maxMint MUST return the maximum amount of shares mint would allow to be deposited to receiver and not cause a revert
+        Tester.donateUnderlyingToSilo(280616783206997876856059460550378850862082113793123850488202930457348, 3);
+        Tester.submitCap(13, 3);
+        _delay(315385);
+        _delay(99597);
+        Tester.submitCap(1, 0);
+        _delay(196990);
+        Tester.acceptCap(3);
+        _delay(410819);
+        Tester.acceptCap(0);
+        Tester.setSupplyQueue(7);
+        Tester.assert_ERC4626_MINT_INVARIANT_C();
+    }
+
+    function test_replay_assert_2ERC4626_DEPOSIT_INVARIANT_C() public {
+        // @audit-issue maxDeposit does not contemplate new Losscheck
+        Tester.submitCap(10, 3);
+        _delay(295731);
+        _delay(309236);
+        Tester.acceptCap(3);
+        Tester.donateUnderlyingToSilo(90247051179468352503002529262301907269102744738574963512139865524, 3);
+        Tester.submitCap(26, 2);
+        _delay(623796);
+        Tester.acceptCap(2);
+        Tester.setSupplyQueue(2);
+        Tester.assert_ERC4626_DEPOSIT_INVARIANT_C();
+    }
+
+    function test_replay_2assert_ERC4626_REDEEM_INVARIANT_C() public {
+        // @audit-issue "Error", val: "ERC4626_REDEEM_INVARIANT_C: maxRedeem MUST return the maximum amount of shares that could be transferred from owner through redeem and not cause a revert
+        // does not take into account require(shares != 0, ErrorsLib.ZeroShares()); from _convertToAssetsWithTotalsSafe which is only used in redeem and not in maxRedeem
+        Tester.submitCap(2, 2);
+        _delay(609387);
+        Tester.acceptCap(2);
+        Tester.setSupplyQueue(6);
+        Tester.mintVault(1002, 0);
+        Tester.assert_ERC4626_REDEEM_INVARIANT_C();
+    }
+
+    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     INVARIANTS REPLAY                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -63,7 +63,7 @@ contract BaseHandler is HookAggregator {
     }
 
     function _mintApproveAndMint(address _vault, address owner, uint256 amount) internal {
-        _mintAndApprove(address(vault.asset()), owner, _vault, vault.convertToAssets(amount) * 2);
+        _mintAndApprove(address(vault.asset()), owner, _vault, vault.previewMint(amount) * 2);
         vault.mint(amount, owner);
     }
 }
