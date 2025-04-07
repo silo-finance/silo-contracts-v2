@@ -88,7 +88,8 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
             siloImpl,
             shareProtectedCollateralTokenImpl,
             shareDebtTokenImpl,
-            siloData["MOCK"].deployer
+            siloData["MOCK"].deployer,
+            msg.sender
         );
 
         (_vault0, _vault1) = siloConfig.getSilos();

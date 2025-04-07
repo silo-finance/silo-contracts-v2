@@ -107,6 +107,19 @@ contract IntegrationTest is BaseTest {
         }
     }
 
+    function _setCapSimple(IERC4626 market, uint256 newCap) internal {
+        uint256 cap = vault.config(market).cap;
+
+        vm.prank(CURATOR);
+        vault.submitCap(market, newCap);
+
+        if (newCap < cap) return;
+
+        vm.warp(block.timestamp + vault.timelock());
+
+        vault.acceptCap(market);
+    }
+
     function _sortSupplyQueueIdleLast() internal {
         IERC4626[] memory supplyQueue = new IERC4626[](vault.supplyQueueLength());
 

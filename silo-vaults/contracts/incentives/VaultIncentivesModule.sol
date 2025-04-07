@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {
-    Ownable2StepUpgradeable, OwnableUpgradeable
-} from "openzeppelin5-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+import {Context} from "openzeppelin5/utils/Context.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.sol";
@@ -14,22 +13,34 @@ import {ErrorsLib} from "../libraries/ErrorsLib.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 
 /// @title Vault Incentives Module
-contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeable {
+contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     ISiloVault public vault;
 
+    /// @dev Markets that have incentives claiming logics.
     EnumerableSet.AddressSet internal _markets;
+
+    /// @dev Notification receivers that will be notified when a vault's share token balance changes.
     EnumerableSet.AddressSet internal _notificationReceivers;
 
+    /// @dev Pending claiming logics for each market.
     mapping(
         IERC4626 market => mapping(IIncentivesClaimingLogic logic => uint256 validAt)
     ) public pendingClaimingLogics;
 
+    /// @dev Incentives claiming logics for each market.
     mapping(IERC4626 market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
     constructor() {
         _disableInitializers();
+    }
+
+    /// @dev Reverts if the caller doesn't have the owner role.
+    modifier onlyOwner() {
+        if (_msgSender() != owner()) revert ErrorsLib.NotOwner();
+
+        _;
     }
 
     /// @dev Reverts if the caller doesn't have the guardian role.
@@ -41,9 +52,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         _;
     }
 
-    function __VaultIncentivesModule_init(address _owner, ISiloVault _vault) external virtual initializer {
-        __Ownable_init(_owner);
-
+    function __VaultIncentivesModule_init(ISiloVault _vault) external virtual initializer {
         require(address(_vault) != address(0), AddressZero());
 
         vault = _vault;
@@ -53,7 +62,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     function submitIncentivesClaimingLogic(
         IERC4626 _market,
         IIncentivesClaimingLogic _logic
-    ) external virtual onlyGuardianRole {
+    ) external virtual onlyOwner {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
         require(pendingClaimingLogics[_market][_logic] == 0, LogicAlreadyPending());
@@ -88,7 +97,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
     function removeIncentivesClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic)
         external
         virtual
-        onlyGuardianRole
+        onlyOwner
     {
         require(_claimingLogics[_market].contains(address(_logic)), LogicNotFound());
 
@@ -179,6 +188,8 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
         virtual
         returns (address[] memory logics)
     {
+        if (_marketsInput.length == 0) return logics;
+
         uint256 totalLogics;
 
         for (uint256 i = 0; i < _marketsInput.length; i++) {
@@ -201,5 +212,10 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Ownable2StepUpgradeabl
                 }
             }
         }
+    }
+
+    /// @notice Owner is inherited from the SiloVault contract.
+    function owner() public view virtual returns (address) {
+        return vault.owner();
     }
 }

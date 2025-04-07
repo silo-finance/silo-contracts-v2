@@ -25,10 +25,11 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
-    { access = "read", path = "./cache/foundry/" },
-    { access = "read", path = "./silo-core/test/foundry/data/" },
-    { access = "read", path = "./silo-core/deploy/input/" },
-    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json" },
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
 [profile.core-with-invariants]
@@ -49,10 +50,11 @@ out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
 fs_permissions = [
-    { access = "read", path = "./cache/foundry/" },
-    { access = "read", path = "./silo-core/test/foundry/data/" },
-    { access = "read", path = "./silo-core/deploy/input/" },
-    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json" },
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
 [profile.default.fmt]

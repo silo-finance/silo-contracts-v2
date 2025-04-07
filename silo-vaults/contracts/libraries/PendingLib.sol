@@ -24,6 +24,10 @@ struct PendingAddress {
     uint64 validAt;
 }
 
+struct ArbitraryLossThreshold {
+    uint256 threshold;
+}
+
 /// @title PendingLib
 /// @dev Forked with gratitude from Morpho Labs.
 /// @author Silo Labs
