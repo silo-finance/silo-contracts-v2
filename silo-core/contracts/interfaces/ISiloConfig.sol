@@ -209,6 +209,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _borrower The address of the borrower for which the debt silo is being retrieved
     function getDebtSilo(address _borrower) external view returns (address debtSilo);
 
+    // TODO: fix natspec - review all file
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
     /// @param borrower borrower address for which debtConfig will be returned
     /// @return collateralConfig The configuration data for collateral silo (empty if there is no debt).

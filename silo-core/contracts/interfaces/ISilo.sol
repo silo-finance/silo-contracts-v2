@@ -9,6 +9,7 @@ import {ISiloFactory} from "./ISiloFactory.sol";
 
 import {IHookReceiver} from "./IHookReceiver.sol";
 
+// TODO: remove IERC20
 // solhint-disable ordering
 interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     /// @dev Interest accrual happens on each deposit/withdraw/borrow/repay. View methods work on storage that might be
