@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [2.0.2] - 2025-04-07
+### Added
+- silo-core: restore current router deployments, SiloRouterV2 renaming
+
 ## [2.0.1] - 2025-03-19
 ### Fixed
 - silo-vaults: [Guardian role in the vault incentives module](https://github.com/silo-finance/silo-contracts-v2/commit/389b0575d01f33d745876f6cc26747c082de860b)
