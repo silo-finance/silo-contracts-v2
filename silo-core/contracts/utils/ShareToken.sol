@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+// TODO: remove imports when possible
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import {ERC20Upgradeable} from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -104,22 +105,27 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.transferWithChecks = true;
     }
 
+    // TODO: natspec
     function silo() external view virtual returns (ISilo) {
         return _getSilo();
     }
 
+    // TODO: natspec
     function siloConfig() external view virtual returns (ISiloConfig) {
         return _getSiloConfig();
     }
 
+    // TODO: natspec
     function hookSetup() external view virtual returns (HookSetup memory) {
         return ShareTokenLib.getShareTokenStorage().hookSetup;
     }
 
+    // TODO: natspec
     function hookReceiver() external view virtual returns (address) {
         return ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver;
     }
 
+    // TODO: write test for transferring from/to address(0)
     /// @inheritdoc ERC20Upgradeable
     function transferFrom(address _from, address _to, uint256 _amount)
         public
@@ -134,6 +140,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOffReentrancyProtection();
     }
 
+    // TODO: write test for transferring to address(0)
     /// @inheritdoc ERC20Upgradeable
     function transfer(address _to, uint256 _amount)
         public
@@ -148,6 +155,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         siloConfigCached.turnOffReentrancyProtection();
     }
 
+    // TODO: natspec
     function approve(address spender, uint256 value)
         public
         virtual
@@ -213,6 +221,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         return ShareTokenLib.symbol();
     }
 
+    // TODO: natspec
     function balanceOfAndTotalSupply(address _account) public view virtual returns (uint256, uint256) {
         return (balanceOf(_account), totalSupply());
     }
