@@ -56,6 +56,7 @@ invariant withdrawRankCorrect(address market)
 invariant enabledHasPositiveRank(address market)
     config_(market).enabled => withdrawRank(market) > 0;
 
+
 // Check that enabled markets are in the withdraw queue.
 rule enabledIsInWithdrawQueue(address market) {
     require config_(market).enabled;

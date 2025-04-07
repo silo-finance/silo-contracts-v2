@@ -45,6 +45,10 @@ contract SiloVaultHarness is SiloVault {
         return pendingCap[id];
     }
 
+    function balanceTracker_(IERC4626 id) external view returns (uint256) {
+        return balanceTracker[id];
+    }
+
     function minTimelock() external pure returns (uint256) {
         return ConstantsLib.MIN_TIMELOCK;
     }

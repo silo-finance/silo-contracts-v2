@@ -22,6 +22,7 @@ methods {
     function pendingGuardian_() external returns(SiloVaultHarness.PendingAddress) envfree;
     function config_(address) external returns(SiloVaultHarness.MarketConfig) envfree;
     function pendingCap_(address) external returns(SiloVaultHarness.PendingUint192) envfree;
+    function balanceTracker_(address) external returns(uint256) envfree;
     function minTimelock() external returns(uint256) envfree;
     function maxTimelock() external returns(uint256) envfree;
     function maxQueueLength() external returns(uint256) envfree;
@@ -33,11 +34,18 @@ methods {
 
     function _.mulDiv(uint256 x, uint256 y, uint256 denominator) internal => mulDiv_cvl(x, y, denominator) expect (uint256);
 
+    function _.zeroFloorSub(uint256 x, uint256 y) internal => zeroFloorSub_cvl(x, y) expect (uint256);
+
 }
 
 function mulDiv_cvl(uint256 x, uint256 y, uint256 denominator) returns uint256 {
     require denominator != 0;
     return require_uint256((x * y) / denominator);
+}
+
+function zeroFloorSub_cvl(uint256 x, uint256 y) returns uint256 {
+    if (x > y) return require_uint256(x - y);
+    else return 0;
 }
 
 function isPendingTimelockInRange() returns bool {
