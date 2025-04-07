@@ -376,6 +376,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
                 uint256 withdrawnAssets;
                 uint256 withdrawnShares;
+                address asset = asset();
+                uint256 balanceBefore = SiloVaultActionsLib.ERC20BalanceOf(asset, address(this));
 
                 if (shares != 0) {
                     withdrawnAssets = allocation.market.redeem(shares, address(this), address(this));
@@ -384,6 +386,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                     withdrawnAssets = withdrawn;
                     withdrawnShares = allocation.market.withdraw(withdrawn, address(this), address(this));
                 }
+
+                // Ensure we received what was expected/reported on withdraw.
+                _checkAfterWithdraw(asset, balanceBefore, withdrawnAssets);
 
                 // Balances tracker can accumulate dust.
                 // For example, if a user has deposited 100wei and withdrawn 99wei (because of rounding),
@@ -905,9 +910,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 toWithdraw = UtilsLib.min(market.maxWithdraw(address(this)), _assets);
 
             if (toWithdraw > 0) {
+                address asset = asset();
+                uint256 balanceBefore = SiloVaultActionsLib.ERC20BalanceOf(asset, address(this));
                 // Using try/catch to skip markets that revert.
                 try market.withdraw(toWithdraw, address(this), address(this)) {
                     _assets -= toWithdraw;
+
+                    // Ensure we received what was expected on withdraw.
+                    _checkAfterWithdraw(asset, balanceBefore, toWithdraw);
 
                     // Balances tracker can accumulate dust.
                     // For example, if a user has deposited 100wei and withdrawn 99wei (because of rounding),
@@ -1051,5 +1061,15 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 loss = _assets - previewAssets;
             require(loss < threshold, ErrorsLib.AssetLoss(loss));
         }
+    }
+
+    /// @dev Check that ensures that we received what was expected/reported on withdraw.
+    /// @param _asset The asset that was withdrawn.
+    /// @param _balanceBefore The balance of the asset before the withdrawal.
+    /// @param _withdrawnAssets The amount of assets that were withdrawn.
+    function _checkAfterWithdraw(address _asset, uint256 _balanceBefore, uint256 _withdrawnAssets) internal view {
+        uint256 balanceAfter = SiloVaultActionsLib.ERC20BalanceOf(_asset, address(this));
+
+        if (_balanceBefore + _withdrawnAssets != balanceAfter) revert ErrorsLib.FailedToWithdraw();
     }
 }
