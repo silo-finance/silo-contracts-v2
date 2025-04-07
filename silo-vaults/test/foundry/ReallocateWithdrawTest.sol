@@ -102,6 +102,51 @@ contract ReallocateWithdrawTest is IntegrationTest {
         assertEq(balanceAfterIdle, expectedIdle, "wrong idle balance after");
     }
 
+    /**
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateRedeemFailedToWithdraw -vvv
+     */
+    function testReallocateRedeemFailedToWithdraw() public {
+        allocations.push(MarketAllocation(allMarkets[0], 0));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
+
+        uint256 balance = allMarkets[0].balanceOf(address(vault));
+
+        bytes memory data = abi.encodeWithSelector(IERC4626.redeem.selector, balance, address(vault), address(vault));
+
+        vm.mockCall(address(allMarkets[0]), data, abi.encode(1e18)); // report wrong amount
+        vm.expectCall(address(allMarkets[0]), data);
+
+        vm.prank(ALLOCATOR);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.FailedToWithdraw.selector));
+        vault.reallocate(allocations);
+    }
+
+    /**
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawFailedToWithdraw -vvv
+     */
+    function testReallocateWithdrawFailedToWithdraw() public {
+        uint256 balance = allMarkets[0].balanceOf(address(vault));
+        uint256 maxAssetsToWithdraw = allMarkets[0].previewRedeem(balance);
+        uint256 assets = maxAssetsToWithdraw / 2;
+
+        allocations.push(MarketAllocation(allMarkets[0], assets));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
+
+        bytes memory data = abi.encodeWithSelector(
+            IERC4626.withdraw.selector,
+            assets,
+            address(vault),
+            address(vault)
+        );
+
+        vm.mockCall(address(allMarkets[0]), data, abi.encode(maxAssetsToWithdraw)); // report wrong amount
+        vm.expectCall(address(allMarkets[0]), data);
+
+        vm.prank(ALLOCATOR);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.FailedToWithdraw.selector));
+        vault.reallocate(allocations);
+    }
+
     /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateInternalSupplyCapExceeded -vvv
     */

@@ -156,6 +156,35 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     }
 
     /*
+     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawFailedToWithdraw -vvv
+    */
+    function testWithdrawFailedToWithdraw() public {
+        IERC4626 market = vault.withdrawQueue(0);
+        MarketConfig memory config = vault.config(market);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(config.cap, ONBEHALF);
+
+        uint256 balanceBefore = market.balanceOf(address(vault));
+        uint256 maxAssetsToWithdraw = market.previewRedeem(balanceBefore);
+        uint256 assets = maxAssetsToWithdraw / 2;
+
+        bytes memory data = abi.encodeWithSelector(
+            IERC4626.withdraw.selector,
+            assets,
+            address(vault),
+            address(vault)
+        );
+
+        vm.mockCall(address(market), data, abi.encode(maxAssetsToWithdraw)); // report wrong amount
+        vm.expectCall(address(market), data);
+
+        vm.prank(ONBEHALF);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.FailedToWithdraw.selector));
+        vault.withdraw(assets, RECEIVER, ONBEHALF);
+    }
+
+    /*
      FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawIdle -vvv
     */
     function testWithdrawIdle(uint256 deposited, uint256 withdrawn) public {
