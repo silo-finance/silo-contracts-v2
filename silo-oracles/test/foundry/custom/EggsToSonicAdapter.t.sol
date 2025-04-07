@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {EggsToSonicAdapter, IEggsLike} from "silo-oracles/contracts/custom/EggsToSonicAdapter.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";

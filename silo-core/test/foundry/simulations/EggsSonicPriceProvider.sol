@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.29;
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 contract SiloVirtualAsset18Decimals {
     function name() external pure returns (string memory) {

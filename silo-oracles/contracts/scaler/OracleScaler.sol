@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
