@@ -142,4 +142,13 @@ contract IntegrationTest is BaseTest {
         vm.prank(ALLOCATOR);
         vault.setSupplyQueue(supplyQueue);
     }
+
+    function _sortSupplyQueueOnlyIdle() internal {
+        IERC4626[] memory supplyQueue = new IERC4626[](vault.supplyQueueLength());
+
+        supplyQueue[0] = idleMarket;
+
+        vm.prank(ALLOCATOR);
+        vault.setSupplyQueue(supplyQueue);
+    }
 }
