@@ -249,6 +249,15 @@ library SiloVaultActionsLib {
         supplyCap = _config[_market].cap;
         if (_newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
     }
+
+    function updatePendingGuardian(PendingAddress storage _pendingGuardian, address _newGuardian, uint256 _timelock)
+        external
+    {
+        _pendingGuardian.update(_newGuardian, _timelock);
+
+        emit EventsLib.SubmitGuardian(_newGuardian);
+    }
+
     function updatePendingTimelock(PendingUint192 storage _pendingTimelock, uint256 _newTimelock, uint256 _timelock)
         external
     {

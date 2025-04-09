@@ -240,9 +240,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (guardian == address(0)) {
             _setGuardian(_newGuardian);
         } else {
-            pendingGuardian.update(_newGuardian, timelock);
-
-            emit EventsLib.SubmitGuardian(_newGuardian);
+            SiloVaultActionsLib.updatePendingGuardian(pendingGuardian, _newGuardian, timelock);
         }
     }
 
