@@ -280,9 +280,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitMarketRemoval(IERC4626 _market) external virtual onlyCuratorRole {
-        SiloVaultActionsLib.submitMarketRemovalValidateEmitEvent(_market, config, pendingCap);
-        // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
-        config[_market].removableAt = uint64(block.timestamp + timelock);
+        SiloVaultActionsLib.submitMarketRemovalValidateEmitEvent(_market, config, pendingCap, timelock);
     }
 
     /* ONLY ALLOCATOR FUNCTIONS */

@@ -226,7 +226,8 @@ library SiloVaultActionsLib {
     function submitMarketRemovalValidateEmitEvent(
         IERC4626 _market,
         mapping(IERC4626 => MarketConfig) storage _config,
-        mapping(IERC4626 => PendingUint192) storage _pendingCap
+        mapping(IERC4626 => PendingUint192) storage _pendingCap,
+        uint256 _timelock
     ) external {
         if (_config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
         if (_config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
@@ -234,6 +235,9 @@ library SiloVaultActionsLib {
         if (_pendingCap[_market].validAt != 0) revert ErrorsLib.PendingCap(_market);
 
         emit EventsLib.SubmitMarketRemoval(msg.sender, _market);
+
+        // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
+        _config[_market].removableAt = uint64(block.timestamp + _timelock);
     }
 
     function submitCapValidate(
