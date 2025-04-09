@@ -196,6 +196,105 @@ contract MarketTest is IntegrationTest {
         assertEq(address(vault.withdrawQueue(3)), address(expectedWithdrawQueue[3]));
     }
 
+    // FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketTest --mt testConceptFromC4 -vvv
+    function testConceptFromC4() public {
+        address depositor = address(55555);
+        address newUser = address(111111);
+        uint256 indexToRemove = 2;
+        IERC4626 marketToRemove = IERC4626(allMarkets[indexToRemove]);
+
+        /* move market to 0 index in supply queue, so depositor can deposit */
+
+        assertEq(address(vault.supplyQueue(3)), address(marketToRemove), "market to supply is at index 3");
+
+        IERC4626[] memory indexes = new IERC4626[](2);
+        indexes[0] = marketToRemove;
+        indexes[1] = allMarkets[indexToRemove - 1]; // other market
+
+        vm.prank(ALLOCATOR);
+        vault.setSupplyQueue(indexes);
+        assertEq(address(vault.supplyQueue(0)), address(marketToRemove), "market to supply is the first");
+
+        /* deposit to market to be removed */
+
+        uint256 toDeposit = 123 * 10**18;
+        assertTrue(vault.config(marketToRemove).cap > toDeposit);
+
+        address vaultAsset = vault.asset();
+        deal(vaultAsset, depositor, 10**18);
+        vm.prank(depositor);
+        IERC20(vaultAsset).approve(address(vault), toDeposit);
+        vm.prank(depositor);
+        vault.deposit(toDeposit, address(depositor));
+
+        assertEq(vault.totalAssets(), toDeposit, "deposit successful");
+        assertTrue(vault.totalSupply() > 0, "vault has deposits");
+        assertEq(vault.balanceOf(depositor), vault.totalSupply(), "depositor is only depositor");
+        assertEq(marketToRemove.totalAssets(), toDeposit, "removed market has deposits");
+
+        assertEq(
+            marketToRemove.balanceOf(address(vault)),
+            marketToRemove.totalSupply(),
+            "removed market minted shares for the vault"
+        );
+
+        assertEq(IERC20(vaultAsset).balanceOf(address(marketToRemove)), toDeposit, "removed market has deposit");
+
+        vm.prank(OWNER);
+        vault.submitCap(marketToRemove, 0);
+        assertEq(vault.config(marketToRemove).cap, 0);
+
+        /* remove the market */
+
+        vm.prank(OWNER);
+        vault.submitMarketRemoval(marketToRemove);
+        uint256 removableAt = vault.config(marketToRemove).removableAt;
+        vm.warp(removableAt);
+        assertEq(address(vault.withdrawQueue(3)), address(marketToRemove), "market to remove is at index 3");
+        
+        uint256[] memory newIndexes = new uint256[](3);
+        newIndexes[0] = 0;
+        newIndexes[1] = 1;
+        newIndexes[2] = 2;
+
+        vm.prank(ALLOCATOR);
+        vault.updateWithdrawQueue(newIndexes);
+
+        vm.expectRevert();
+        vault.withdrawQueue(3);
+
+        /* market is removed now, newUser deposits */
+
+        uint256 newUserDeposit = toDeposit;
+        deal(vaultAsset, newUser, newUserDeposit);
+
+        vm.prank(newUser);
+        IERC20(vaultAsset).approve(address(vault), newUserDeposit);
+        vm.prank(newUser);
+        vault.deposit(newUserDeposit, newUser);
+
+        assertEq(vault.totalAssets(), newUserDeposit);
+        assertEq(vault.previewRedeem(vault.balanceOf(newUser)), newUserDeposit);
+
+        /* bring market back */ 
+
+        vm.prank(OWNER);
+        vault.submitCap(marketToRemove, toDeposit + newUserDeposit);
+        vm.warp(block.timestamp + vault.timelock());
+        vault.acceptCap(marketToRemove);
+        assertEq(vault.config(marketToRemove).cap, toDeposit + newUserDeposit);
+        assertEq(address(vault.withdrawQueue(3)), address(marketToRemove), "market to remove is back at index 3");
+        assertEq(vault.totalAssets(), newUserDeposit + toDeposit);
+        assertEq(vault.previewRedeem(vault.balanceOf(newUser)), newUserDeposit * 2 - 1, "newUser x2 - 1 wei");
+
+        /* newUser withdraws with profits */
+
+        uint256 balanceBefore = IERC20(vaultAsset).balanceOf(newUser);
+        vm.prank(newUser);
+        vault.withdraw(newUserDeposit * 2 - 1, newUser, newUser);
+        assertEq(IERC20(vaultAsset).balanceOf(newUser) - balanceBefore, newUserDeposit * 2 - 1, "got profit");
+    }
+
     function testUpdateWithdrawQueueRemovingDisabledMarket() public {
         _setCap(allMarkets[2], 0);
 
