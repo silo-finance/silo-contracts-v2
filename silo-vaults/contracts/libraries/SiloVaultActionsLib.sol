@@ -11,11 +11,15 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {ErrorsLib} from "./ErrorsLib.sol";
 import {EventsLib} from "./EventsLib.sol";
-import {PendingUint192, MarketConfig, ArbitraryLossThreshold} from "./PendingLib.sol";
+import {PendingLib, PendingUint192, MarketConfig, ArbitraryLossThreshold} from "./PendingLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
+
+import {PendingAddress} from "../interfaces/ISiloVault.sol";
 
 library SiloVaultActionsLib {
     using SafeERC20 for IERC20;
+    using PendingLib for PendingAddress;
+    using PendingLib for PendingUint192;
 
     function vaultDecimals(address _asset) external view returns (uint8 decimalsOffset) {
         require(_asset != address(0), ErrorsLib.ZeroAddress());
@@ -244,5 +248,13 @@ library SiloVaultActionsLib {
         if (_config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
         supplyCap = _config[_market].cap;
         if (_newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
+    }
+    function updatePendingTimelock(PendingUint192 storage _pendingTimelock, uint256 _newTimelock, uint256 _timelock)
+        external
+    {
+        // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
+        _pendingTimelock.update(uint184(_newTimelock), _timelock);
+
+        emit EventsLib.SubmitTimelock(_newTimelock);
     }
 }
