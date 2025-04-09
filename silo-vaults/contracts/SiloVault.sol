@@ -829,12 +829,14 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             // Update internal balance for market to include interest if any.
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
             uint256 supplyAssets = _updateInternalBalanceForMarket(market);
+            uint256 internalBalanceTracker = balanceTracker[market];
+            uint256 maxAssets = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, internalBalanceTracker), _assets);
 
-            uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
+            uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), maxAssets);
             toSupply = UtilsLib.min(market.maxDeposit(address(this)), toSupply);
 
             if (toSupply != 0) {
-                uint256 newBalance = balanceTracker[market] + toSupply;
+                uint256 newBalance = internalBalanceTracker + toSupply;
                 // As `_supplyBalance` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
                 if (newBalance <= supplyCap) {
