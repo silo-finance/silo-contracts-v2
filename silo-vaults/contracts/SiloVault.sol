@@ -207,7 +207,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_newTimelock > timelock) {
             _setTimelock(_newTimelock);
         } else {
-            SiloVaultActionsLib.updatePendingTimelock(pendingTimelock, _newTimelock, timelock);
+            // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
+            pendingTimelock.update(uint184(_newTimelock), timelock);
+
+            emit EventsLib.SubmitTimelock(_newTimelock);
         }
     }
 

@@ -257,13 +257,4 @@ library SiloVaultActionsLib {
 
         emit EventsLib.SubmitGuardian(_newGuardian);
     }
-
-    function updatePendingTimelock(PendingUint192 storage _pendingTimelock, uint256 _newTimelock, uint256 _timelock)
-        external
-    {
-        // Safe "unchecked" cast because newTimelock <= MAX_TIMELOCK.
-        _pendingTimelock.update(uint184(_newTimelock), _timelock);
-
-        emit EventsLib.SubmitTimelock(_newTimelock);
-    }
 }
