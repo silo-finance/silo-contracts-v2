@@ -992,6 +992,12 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     {
         IERC20 asset = IERC20(asset());
 
+        if (_market.previewDeposit(_assets) == 0) {
+            if (_revertOnFail) revert ZeroShares();
+
+            return (false, 0);
+        }
+
         // Approving the exact amount because we don't want `transferFrom` to bypass `balanceTracker`.
         asset.forceApprove({spender: address(_market), value: _assets});
 
