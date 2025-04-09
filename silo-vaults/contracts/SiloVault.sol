@@ -272,9 +272,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (_newSupplyCap < supplyCap) {
             _setCap(_market, SafeCast.toUint184(_newSupplyCap));
         } else {
-            pendingCap[_market].update(SafeCast.toUint184(_newSupplyCap), timelock);
-
-            emit EventsLib.SubmitCap(_msgSender(), _market, _newSupplyCap);
+            SiloVaultActionsLib.updatePendingCap(pendingCap, _market, _newSupplyCap, timelock);
         }
     }
 
