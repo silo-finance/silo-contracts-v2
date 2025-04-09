@@ -5,7 +5,6 @@ import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
-import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
@@ -257,18 +256,5 @@ library SiloVaultActionsLib {
         _pendingGuardian.update(_newGuardian, _timelock);
 
         emit EventsLib.SubmitGuardian(_newGuardian);
-    }
-
-    function updatePendingCap(
-        mapping(IERC4626 => PendingUint192) storage _pendingCap,
-        IERC4626 _market,
-        uint256 _newSupplyCap,
-        uint256 _timelock
-    )
-        external
-    {
-        _pendingCap[_market].update(SafeCast.toUint184(_newSupplyCap), _timelock);
-
-        emit EventsLib.SubmitCap(msg.sender, _market, _newSupplyCap);
     }
 }
