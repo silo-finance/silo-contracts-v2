@@ -243,7 +243,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         if (guardian == address(0)) {
             _setGuardian(_newGuardian);
         } else {
-            SiloVaultActionsLib.updatePendingGuardian(pendingGuardian, _newGuardian, timelock);
+            pendingGuardian.update(_newGuardian, timelock);
+
+            emit EventsLib.SubmitGuardian(_newGuardian);
         }
     }
 
@@ -280,7 +282,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     function submitMarketRemoval(IERC4626 _market) external virtual onlyCuratorRole {
-        SiloVaultActionsLib.submitMarketRemoval(_market, config, pendingCap, timelock);
+        SiloVaultActionsLib.submitMarketRemovalValidateEmitEvent(_market, config, pendingCap);
+        // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
+        config[_market].removableAt = uint64(block.timestamp + timelock);
     }
 
     /* ONLY ALLOCATOR FUNCTIONS */
@@ -300,7 +304,45 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function updateWithdrawQueue(uint256[] calldata _indexes) external virtual onlyAllocatorRole {
         _nonReentrantOn();
 
-        withdrawQueue = SiloVaultActionsLib.updateWithdrawQueue(config, pendingCap, withdrawQueue, _indexes);
+        uint256 newLength = _indexes.length;
+        uint256 currLength = withdrawQueue.length;
+
+        bool[] memory seen = new bool[](currLength);
+        IERC4626[] memory newWithdrawQueue = new IERC4626[](newLength);
+
+        for (uint256 i; i < newLength; ++i) {
+            uint256 prevIndex = _indexes[i];
+
+            // If prevIndex >= currLength, it will revert with native "Index out of bounds".
+            IERC4626 market = withdrawQueue[prevIndex];
+            if (seen[prevIndex]) revert ErrorsLib.DuplicateMarket(market);
+            seen[prevIndex] = true;
+
+            newWithdrawQueue[i] = market;
+        }
+
+        for (uint256 i; i < currLength; ++i) {
+            if (!seen[i]) {
+                IERC4626 market = withdrawQueue[i];
+
+                if (config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
+                if (pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
+
+                if (SiloVaultActionsLib.ERC20BalanceOf(address(market), address(this)) != 0) {
+                    if (config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
+
+                    if (block.timestamp < config[market].removableAt) {
+                        revert ErrorsLib.InvalidMarketRemovalTimelockNotElapsed(market);
+                    }
+                }
+
+                delete config[market];
+            }
+        }
+
+        withdrawQueue = newWithdrawQueue;
+
+        emit EventsLib.SetWithdrawQueue(_msgSender(), newWithdrawQueue);
 
         _nonReentrantOff();
     }
