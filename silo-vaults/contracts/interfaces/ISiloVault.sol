@@ -185,7 +185,8 @@ interface ISiloVaultBase {
     /// @dev Sender is expected to pass `assets = type(uint256).max` with the last MarketAllocation of `allocations` to
     /// supply all the remaining withdrawn liquidity, which would ensure that `totalWithdrawn` = `totalSupplied`.
     /// @dev A supply in a reallocation step will make the reallocation revert if the amount is greater than the net
-    /// amount from previous steps (i.e. total withdrawn minus total supplied).
+    /// amount from previous steps (i.e. total withdrawn minus total supplied). This function reverts if the assets
+    /// to be deposited would cause the SiloVault's deposits of the corresponding market to exceed its supply cap.
     function reallocate(MarketAllocation[] calldata _allocations) external;
 
     /// @notice Syncs the balance tracker for the market.
