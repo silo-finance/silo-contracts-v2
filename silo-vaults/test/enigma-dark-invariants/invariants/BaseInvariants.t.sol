@@ -86,7 +86,7 @@ abstract contract BaseInvariants is HandlerAggregator {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function assert_INV_TIMELOCK_A() internal {
-        assertLt(vault.pendingTimelock().value, vault.timelock(), INV_TIMELOCK_B);
+        assertLt(vault.pendingTimelock().value, vault.timelock(), INV_TIMELOCK_A);
     }
 
     function assert_INV_TIMELOCK_D() internal {

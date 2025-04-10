@@ -192,7 +192,7 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         vault.redeem(vault.balanceOf(address(this)), address(this), address(this));
 
-        assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H)
+        assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
