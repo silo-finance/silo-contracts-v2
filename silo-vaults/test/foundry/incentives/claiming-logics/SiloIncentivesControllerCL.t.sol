@@ -43,6 +43,30 @@ contract SiloIncentivesControllerCLTest is Test {
         assertTrue(SiloIncentivesControllerCLFactory(factory).createdInFactory(address(incentivesControllerCL)));
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testCreateIncentivesControllerCLSameOrder -vvv
+    */
+    function testCreateIncentivesControllerCLSameOrder() public {
+        address devWallet = makeAddr("dev wallet");
+        address otherWallet = makeAddr("other wallet");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(devWallet);
+        SiloIncentivesControllerCL logic1 = factory.createIncentivesControllerCL(
+            _vaultIncentivesController, _siloIncentivesController
+        );
+
+        vm.revertTo(snapshot);
+
+        vm.prank(otherWallet);
+        SiloIncentivesControllerCL logic2 = factory.createIncentivesControllerCL(
+            _vaultIncentivesController, _siloIncentivesController
+        );
+
+        assertNotEq(address(logic1), address(logic2), "logic1 == logic2");
+    }
+
     // FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mt test_incentivesClaimingLogicZeroAddress
     function test_incentivesClaimingLogicZeroAddress() public {
         vm.expectRevert(IIncentivesClaimingLogic.VaultIncentivesControllerZeroAddress.selector);

@@ -25,4 +25,5 @@ library AddrKey {
     string constant public scUSD = "scUSD";
     string constant public EGGS = "EGGS";
     string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
+    string constant public PYTH_SHADOW_USD_aggregator = "PYTH_SHADOW_USD_aggregator";
 }
