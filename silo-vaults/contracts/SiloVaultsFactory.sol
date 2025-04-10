@@ -41,10 +41,6 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         string memory _name,
         string memory _symbol
     ) external virtual returns (ISiloVault siloVault) {
-        VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt())
-        );
-
         siloVault = SiloVaultsFactoryLib.createSiloVault(
             VAULT_INCENTIVES_MODULE_IMPLEMENTATION,
             _initialOwner,
