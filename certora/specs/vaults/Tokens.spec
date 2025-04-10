@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import "LastUpdated.spec";
 
+using SiloVaultHarness as siloVaultHarness;
+
 methods {
     function _.transfer(address, uint256) external => DISPATCHER(true);
     function _.transferFrom(address, address, uint256) external => DISPATCHER(true);
@@ -152,3 +154,84 @@ rule reallocateTokenChange(env e, SiloVaultHarness.MarketAllocation[] allocation
     assert balanceSenderAfter == balanceSenderBefore;
 }
 
+ghost mathint balanceTrackerChange;
+ghost mathint vaultBalanceIncrease;
+ghost mathint vaultBalanceDecrease;
+
+hook Sstore SiloVaultHarness.balanceTracker[KEY address market] uint256 newBalance (uint256 oldBalance) {
+    balanceTrackerChange = balanceTrackerChange + newBalance - oldBalance;
+}
+
+// we just want to track the increases and decreases of SiloVault's balance
+hook Sstore Token0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) {
+    if (user == siloVaultHarness)
+    {
+        if (newBalance > oldBalance) vaultBalanceIncrease = vaultBalanceIncrease + newBalance - oldBalance;
+        if (newBalance < oldBalance) vaultBalanceDecrease = vaultBalanceDecrease - newBalance + oldBalance;
+    }
+}
+
+// After calling any external function, if the sum of deltas of all balanceTracker[market] 
+// (sum of balanceTracker[market] before minus sum of balanceTracker[market] after) 
+// is negative then balanceOf(asset, SiloVault) must increase by at least sumDelta (before the funds are sent to the receiver). 
+// This should hold for every function except syncBalanceTracker() 
+rule balanceTrackerDecreasesThenBalanceIncreases(env e, method f)
+    filtered { f -> !f.isView && f.selector != sig:syncBalanceTracker(address,uint256,bool).selector }
+{
+    require e.msg.sender != vault0;
+    require balanceTrackerChange == 0;
+    require vaultBalanceIncrease == 0;
+    require vaultBalanceDecrease == 0;
+    address asset = asset();
+    calldataarg args;
+    f(e, args);
+
+    // if the balanceTracker goes down, the SiloVault really received the funds
+    assert balanceTrackerChange < 0 => vaultBalanceIncrease >= -balanceTrackerChange;    
+}
+
+// Shows that SiloVault doesn't hoard the tokens, i.e., that it sends outs everything that it receives.
+rule vaultBalanceNeutral(env e, method f)
+    filtered { f -> !f.isView }
+{
+    require e.msg.sender != siloVaultHarness;
+    require e.msg.sender != vault0;
+    address receiver;
+    require receiver != siloVaultHarness;
+    address asset = asset();
+    uint256 balance_pre = ERC20.balanceOf(asset, siloVaultHarness);
+    dispatchCall(e, f, receiver);
+    uint256 balance_post = ERC20.balanceOf(asset, siloVaultHarness);
+    
+    assert balance_pre == balance_post; 
+}
+
+// a manual dispatcher that allows to constrain the receiver
+function dispatchCall(env e, method f, address receiver)
+{
+    if (f.selector == sig:withdraw(uint256, address, address).selector)
+    {
+        uint256 _assets; address _owner;
+        withdraw(e, _assets, receiver, _owner);
+    }
+    else if (f.selector == sig:redeem(uint256, address, address).selector)
+    {
+        uint256 _shares; address _owner;
+        redeem(e, _shares, receiver, _owner);
+    }
+    else if (f.selector == sig:deposit(uint256, address).selector)
+    {
+        uint256 _assets;
+        deposit(e, _assets, receiver);
+    }
+    else if (f.selector == sig:mint(uint256, address).selector)
+    {
+        uint256 _shares;
+        mint(e, _shares, receiver);
+    }
+    else
+    {
+        calldataarg args;
+        f(e, args);
+    }
+}

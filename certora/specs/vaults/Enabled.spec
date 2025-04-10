@@ -56,7 +56,6 @@ invariant withdrawRankCorrect(address market)
 invariant enabledHasPositiveRank(address market)
     config_(market).enabled => withdrawRank(market) > 0;
 
-
 // Check that enabled markets are in the withdraw queue.
 rule enabledIsInWithdrawQueue(address market) {
     require config_(market).enabled;
@@ -105,5 +104,35 @@ invariant addedToSupplyQThenIsInWithdrawQ(uint256 supplyQIndex)
         }
         preserved {
             requireInvariant nonZeroCapHasPositiveRank(supplyQGetAt(supplyQIndex)); 
+    }
+}
+
+// Rules below are in development
+
+// TODO
+invariant balanceTrackerLessThanCap(address market)
+    balanceTracker_(market) <= config_(market).cap
+    filtered { f -> f.selector != sig:syncBalanceTracker(address,uint256,bool).selector }
+    {
+    preserved {
+        requireInvariant withdrawRankCorrect(market);
+        requireInvariant enabledHasPositiveRank(market); 
+        requireInvariant nonZeroCapHasPositiveRank(market);
+        requireInvariant noBadPendingCap(market);
+        requireInvariant noBadPendingTimelock();
+    }
+    
+}
+
+// TODO
+invariant balanceTrackedThenEnabled(address market)
+    balanceTracker_(market) > 0 => config_(market).enabled
+    {
+    preserved {
+        requireInvariant withdrawRankCorrect(market);
+        requireInvariant enabledHasPositiveRank(market); 
+        requireInvariant nonZeroCapHasPositiveRank(market);
+        requireInvariant noBadPendingCap(market);
+        requireInvariant noBadPendingTimelock();
     }
 }

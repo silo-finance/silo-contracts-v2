@@ -17,6 +17,8 @@ certoraRun certora/config/vaults/range.conf
 certoraRun certora/config/vaults/reentrancy.conf 
 certoraRun certora/config/vaults/reverts.conf 
 certoraRun certora/config/vaults/roles.conf
-certoraRun certora/config/vaults/tokens.conf
+certoraRun certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
+certoraRun certora/config/vaults/tokens.conf --rule vaultBalanceNeutral --msg vaultBalanceNeutral --parametric_contracts SiloVaultHarness
 certoraRun certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness   ####
+
 certoraRun certora/config/vaults/timelock.conf --exclude_rule removableTime
