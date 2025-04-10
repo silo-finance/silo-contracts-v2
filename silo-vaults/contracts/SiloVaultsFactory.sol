@@ -34,18 +34,20 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
 
     /// @inheritdoc ISiloVaultsFactory
     function createSiloVault(
-        address initialOwner,
-        uint256 initialTimelock,
-        address asset,
-        string memory name,
-        string memory symbol
+        address _initialOwner,
+        uint256 _initialTimelock,
+        address _asset,
+        string memory _name,
+        string memory _symbol
     ) external virtual returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt())
         );
 
         siloVault = ISiloVault(address(
-            new SiloVault{salt: _salt()}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
+            new SiloVault{salt: _salt()}(
+                _initialOwner, _initialTimelock, vaultIncentivesModule, _asset, _name, _symbol
+            ))
         );
 
         vaultIncentivesModule.__VaultIncentivesModule_init(siloVault);
@@ -53,7 +55,7 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         isSiloVault[address(siloVault)] = true;
 
         emit EventsLib.CreateSiloVault(
-            address(siloVault), msg.sender, initialOwner, initialTimelock, asset, name, symbol
+            address(siloVault), msg.sender, _initialOwner, _initialTimelock, _asset, _name, _symbol
         );
     }
 }
