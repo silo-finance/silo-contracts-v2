@@ -83,10 +83,7 @@ function initializeCVL_1(address calledSilo, address siloConfig) {
     already_initialized_1[calledSilo] = true;
 }
 
-ghost mapping(address => bool) already_initialized_3
-{
-    init_state axiom forall address a. already_initialized_3[a] == false;
-}
+ghost mapping(address => bool) already_initialized_3;
 
 function initializeCVL_3(address calledC, address _silo, address _hookReceiver, uint24 _tokenType) {
     // make sure this is never called on the same inputs twice

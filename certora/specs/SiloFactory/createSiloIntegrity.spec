@@ -165,8 +165,6 @@ function mirrorStorage_3(address calledC, address _silo, address _hookReceiver, 
     transferWithChecksByContractStorage[calledC] = true;
 }
 
-//// rules ////
-
 function requireAllDifferent(address a1, address a2, address a3, address a4)
 {
     require a1 != a2 &&
@@ -176,6 +174,8 @@ function requireAllDifferent(address a1, address a2, address a3, address a4)
         a2 != a4 &&
         a3 != a4;
 }
+
+//// rules ////
 
 rule integrityOfCreatedSilos(env e)
 {
