@@ -45,7 +45,7 @@ contract Setup is BaseTest {
         siloVaultsFactory = new SiloVaultsFactory();
 
         // Deploy Silo Vault
-        vault = siloVaultsFactory.createSiloVault(OWNER, TIMELOCK,address(asset), "SiloVault Vault", "MMV");
+        vault = siloVaultsFactory.createSiloVault(OWNER, TIMELOCK, address(asset), "SiloVault Vault", "MMV");
         vaults.push(vault);
         suiteAssets.push(address(vault));
 
@@ -200,15 +200,4 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          LOGGING                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    function _logMarkets() internal {
-        _logSeparator();
-        _logArray("unsortedMarkets", unsortedMarkets);
-        _logArray("markets", markets);
-        _logArray("loanMarketsArray", loanMarketsArray);
-        _logArray("collateralMarketsArray", collateralMarketsArray);
-        _logArray("silos", silos);
-        _logArray("vaults", vaults);
-        _logSeparator();
-    }
 }

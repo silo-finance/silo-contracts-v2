@@ -30,6 +30,8 @@ abstract contract BaseCryticToFoundry is Invariants, Setup {
     }
 
     function setUp() public {
+        console.log("Test contract address:", address(this));
+        console.log("Test contract address:", address(this));
         // Deploy protocol contracts
         _setUp();
 

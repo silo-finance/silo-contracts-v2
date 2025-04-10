@@ -53,15 +53,7 @@ abstract contract InvariantsSpec {
 
     /// @notice related to certora PendingValues properties
     string constant INV_TIMELOCK_A =
-        "INV_TIMELOCK_A: having no pending timelock value is equivalent to having its valid timestamp at 0"; //TODO
-
-    /// @notice related to certora PendingValues properties
-    string constant INV_TIMELOCK_B =
-        "INV_TIMELOCK_B: pending timelock value is always strictly smaller than the current timelock value";
-
-    /// @notice related to certora PendingValues properties
-    string constant INV_TIMELOCK_C =
-        "INV_TIMELOCK_C: when its valid timestamp at 0 the pending guardian is the zero address"; //TODO
+        "INV_TIMELOCK_A: pending timelock value is always strictly smaller than the current timelock value";
 
     /// @notice related to certora PendingValues properties
     string constant INV_TIMELOCK_D =

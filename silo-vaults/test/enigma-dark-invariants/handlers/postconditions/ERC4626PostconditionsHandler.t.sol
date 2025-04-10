@@ -130,7 +130,7 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         vault.redeem(mintedShares, address(this), address(this));
 
-        assertLe(mintedShares, _shares, ERC4626_ROUNDTRIP_INVARIANT_C); // TODO pending: remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C is checked
+        assertLe(mintedShares, _shares, ERC4626_ROUNDTRIP_INVARIANT_C);
     }
 
     function assert_ERC4626_ROUNDTRIP_INVARIANT_D(uint256 _shares) external {
@@ -192,7 +192,7 @@ abstract contract ERC4626PostconditionsHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         vault.redeem(vault.balanceOf(address(this)), address(this), address(this));
 
-        assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H);// TODO pending: remove comment once test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_H is checked
+        assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H)
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -140,7 +140,7 @@ abstract contract SiloVaultHandler is BaseHandler {
             /// @dev ACCOUNTING
             assertGe(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_B);
 
-            assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D);// TODO peding: remove comment once test_replay_withdrawVault is checked
+            assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D);
         } else {
             revert("SiloVaultHandler: withdraw failed");
         }
@@ -182,13 +182,20 @@ abstract contract SiloVaultHandler is BaseHandler {
 
             /// @dev ACCOUNTING
             assertGe(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_B);
-            assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D); // TODO pending: remove comment once test_replay_redeemVault is checked
+            assertEq(defaultVarsBefore.totalAssets - _assets, defaultVarsAfter.totalAssets, HSPOST_ACCOUNTING_D);
         } else {
             revert("SiloVaultHandler: redeem failed");
         }
     }
 
-    function claimRewards() external {// TODO add hooks here?
-        vault.claimRewards();
+    function claimRewards() external {
+        _before();
+
+        try vault.claimRewards() {}
+        catch (bytes memory reason) {
+            assertTrue(false, NR_BASE_INVARIANT_F);
+        }
+
+        _after();
     }
 }

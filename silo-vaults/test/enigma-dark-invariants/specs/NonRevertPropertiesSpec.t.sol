@@ -19,20 +19,5 @@ abstract contract NonRevertPropertiesSpec {
     //                                          BASE                                             //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice related to certora Timelock properties
-    string constant NR_BASE_INVARIANT_B = "NR_BASE_INVARIANT_B: nextGuardianUpdateTime does not revert"; //TODO
-
-    /// @notice related to certora Timelock properties
-    string constant NR_BASE_INVARIANT_C = "NR_BASE_INVARIANT_C: nextCapIncreaseTime does not revert"; //TODO
-
-    /// @notice related to certora Timelock properties
-    string constant NR_BASE_INVARIANT_D = "NR_BASE_INVARIANT_D: nextTimelockDecreaseTime does not revert"; //TODO
-
-    /// @notice related to certora Timelock properties
-    string constant NR_BASE_INVARIANT_E = "NR_BASE_INVARIANT_E: nextRemovableTime does not revert"; //TODO
-
-    string constant NR_BASE_INVARIANT_F = "NR_BASE_INVARIANT_F: claimRewards does not revert"; //TODO
-
-
-    // TODO add cases for deposit / mint, etc
+    string constant NR_BASE_INVARIANT_F = "NR_BASE_INVARIANT_F: claimRewards does not revert";
 }

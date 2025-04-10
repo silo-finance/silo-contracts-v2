@@ -79,7 +79,6 @@ abstract contract SiloVaultPermissionedHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _generateRandomMarketArray(uint8 seed) internal returns (IERC4626[] memory) {
-        // TODO check coverage improvements
         uint256 randomLength = clampLe(seed, markets.length);
 
         IERC4626[] memory randomArray = new IERC4626[](randomLength);

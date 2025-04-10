@@ -245,6 +245,17 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                        LOGS HELPERS                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    function _logMarkets() internal {
+        _logSeparator();
+        _logArray("unsortedMarkets", unsortedMarkets);
+        _logArray("markets", markets);
+        _logArray("loanMarketsArray", loanMarketsArray);
+        _logArray("collateralMarketsArray", collateralMarketsArray);
+        _logArray("silos", silos);
+        _logArray("vaults", vaults);
+        _logSeparator();
+    }
+
     function _logWithdrawalQueue() internal {
         uint256 length = vault.withdrawQueueLength();
         _logSeparatorInternal();

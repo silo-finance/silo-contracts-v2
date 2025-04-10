@@ -8,6 +8,7 @@ abstract contract PropertiesConstants {
     address constant USER3 = address(0x30000);
     uint256 constant INITIAL_BALANCE = 1000e30;
     uint184 constant MAX_UNDERLYING_SUPPLY = type(uint128).max;
+    address constant ECHIDNA_TEST_ADDRESS = 0x00a329c0648769A73afAc7F9381E08FB43dBEA72;
 
     // Protocol constants
     int256 constant BLOCK_TIME = 1;

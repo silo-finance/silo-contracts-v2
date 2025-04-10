@@ -185,6 +185,8 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
     function assert_GPOST_ACCOUNTING_A() internal {
         if (msg.sig != ISiloVaultHandler.withdrawVault.selector && msg.sig != ISiloVaultHandler.redeemVault.selector) {
+            console.log("defaultVarsAfter.totalAssets: ", defaultVarsAfter.totalAssets);
+            console.log("defaultVarsBefore.totalAssets: ", defaultVarsBefore.totalAssets);
             assertGe(defaultVarsAfter.totalAssets, defaultVarsBefore.totalAssets, GPOST_ACCOUNTING_A);
         }
     }

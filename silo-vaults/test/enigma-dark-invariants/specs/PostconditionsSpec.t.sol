@@ -53,10 +53,10 @@ abstract contract PostconditionsSpec {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     string constant HSPOST_USER_A =
-        "HSPOST_USER_A: After a deposit or mint, deposited assets should be credited to the vaults in the supply queue that haven't reached the cap"; //TODO
+        "HSPOST_USER_A: After a deposit or mint, deposited assets should be credited to the vaults in the supply queue that haven't reached the cap"; // Discarded
 
     string constant HSPOST_USER_B =
-        "HSPOST_USER_B: After a withdraw or redeem, assets should be withdrawn from the vaults in the withdrawal queue following the queue order"; //TODO
+        "HSPOST_USER_B: After a withdraw or redeem, assets should be withdrawn from the vaults in the withdrawal queue following the queue order"; // Discarded
 
     string constant HSPOST_USER_E =
         "HSPOST_USER_E: After a deposit or mint, the user balance should increase by the shares minted";
@@ -109,8 +109,6 @@ abstract contract PostconditionsSpec {
 
     string constant HSPOST_ACCOUNTING_D =
         "HSPOST_ACCOUNTING_D: After a withdraw or redeem, the totalAssets should decrease by the amount withdrawn";
-
-    // TODO establish a relationship between totalAssets before and after
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       REENTRANCY                                          //

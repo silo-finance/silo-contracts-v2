@@ -25,7 +25,7 @@ contract InProgressReplays is BaseCryticToFoundry {
     //                                  POSTCONDITIONS REPLAY                                    //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    // ERC4626
+    // ERC4626 MAX deposit / Mint
 
     function test_replay_assert_ERC4626_DEPOSIT_INVARIANT_C() public {
         // @audit-issue maxDeposit does not contemplate new Losscheck
@@ -49,6 +49,8 @@ contract InProgressReplays is BaseCryticToFoundry {
         Tester.setSupplyQueue(11);
         Tester.assert_ERC4626_MINT_INVARIANT_C();
     }
+
+    // ERC4626 ROUNDTRIP
 
     function test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_H() public {
         //@audit-issue Invalid: 4370004370000>2185002185000 failed, reason: ERC4626_ROUNDTRIP_INVARIANT_H: s = withdraw(a), s' = deposit(a), s' <= s
@@ -96,10 +98,44 @@ contract InProgressReplays is BaseCryticToFoundry {
         Tester.assert_ERC4626_ROUNDTRIP_INVARIANT_G(4370000);
     }
 
-    // ACCOUNTING
+    function test_replay_assert_ERC4626_ROUNDTRIP_INVARIANT_C() public {
+        // @audit-issue Invalid: 395404>327236 failed, reason: ERC4626_ROUNDTRIP_INVARIANT_C: deposit(redeem(s)) <= s
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(332369);
+        Tester.donateUnderlyingToSilo(1524785991, 71);
+        _delay(332369);
+        Tester.deposit(1524785993, 40, 255);
+        _delay(305572);
+        Tester.submitCap(1524785991, 114);
+        _delay(415353);
+        Tester.submitCap(4370001, 85);
+        _delay(361136);
+        Tester.acceptCap(58);
+        _delay(358061);
+        Tester.submitCap(4370001, 255);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(434894);
+        Tester.donateSharesToVault(4370000, 102);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(379552);
+        Tester.acceptCap(255);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(322374);
+        Tester.setSupplyQueue(122);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        Tester.acceptCap(229);
+        _delay(67960);
+        Tester.assert_ERC4626_MINT_INVARIANT_C();
+        _delay(49735);
+        Tester.setSupplyQueue(33);
+        _delay(547623);
+        Tester.assert_ERC4626_ROUNDTRIP_INVARIANT_C(327236);
+    }
+
+    // ACCOUNTING deposits / withdrawals
 
     function test_replay_4depositVault() public {
-        // Invalid: 1!=0, reason: HSPOST_ACCOUNTING_C: After a deposit or mint, the totalAssets should increase by the amount deposited
+        // @audit-issue Invalid: 1!=0, reason: HSPOST_ACCOUNTING_C: After a deposit or mint, the totalAssets should increase by the amount deposited
         Tester.submitCap(1, 3);
         _delay(605468);
         Tester.acceptCap(3);
@@ -146,61 +182,66 @@ contract InProgressReplays is BaseCryticToFoundry {
         Tester.redeemVault(1, 0);
     }
 
-    // BUGGED REPLAYS
+    // ACCOUNTING totalAssets
 
-    function test_replay_2reallocateTo() public {
-        // TODO check why this reverts in echidna but not in
-        // Invalid: 0<1 failed, reason: GPOST_ACCOUNTING_A: totalAssets should always increase unless a withdrawal occurs
-        Tester.submitCap(1, 1);
-        _delay(611025);
-        Tester.submitCap(1, 0);
+    function test_replay_2withdrawFees() public {
+        // @audit-issue GPOST_ACCOUNTING_A: totalAssets should always increase unless a withdrawal occurs
+        Tester.deposit(1524785993, 24, 139);
+        Tester.borrowSameAsset(4370001, 1, 79);
+        Tester.submitCap(1177779859, 9);
+        _delay(436727);
+        Tester.donateSharesToVault(6636461356179863684125329761750295507025434252276924616483267239112809, 0);
+        _delay(289607);
         Tester.acceptCap(1);
-        _delay(621878);
-        Tester.acceptCap(0);
-        Tester.setSupplyQueue(12);
-        Tester.deposit(34550, 0, 3);
-        Tester.mintVault(1, 0);
-        Tester.borrowSameAsset(25818, 0, 3);
-        Tester.setFlowCaps(
-            [
-                FlowCaps(40335021944728680946129100601457107, 5),
-                FlowCaps(1153792200385088713581931128542273, 372),
-                FlowCaps(0, 8643),
-                FlowCaps(0, 41934776819969954726385498882748940)
-            ]
-        );
-        _delay(11692);
-        Tester.reallocateTo(
-            1, [uint128(0), uint128(64602806634386535667174091600377), uint128(68826297618660977371916128251)]
-        );
+        Tester.setSupplyQueue(1);
+        Tester.assert_ERC4626_ROUNDTRIP_INVARIANT_A(20);
+        _delay(58368);
+        Tester.depositVault(820905169, 0);
+        _delay(36901);
+        Tester.claimRewards();
+        Tester.withdrawFees(7);
     }
 
-    function test_replay_withdrawFees() public {
-        // TODO check why this reverts in echidna but not in foundry
-        // Invalid: 2010604<2010605 failed, reason: GPOST_ACCOUNTING_A: totalAssets should always increase unless a withdrawal occurs
-        Tester.submitCap(1, 1);
-        _delay(127251);
-        Tester.deposit(1012732488, 78, 188);
-        _delay(490446);
+    function test_replay_borrowSameAsset() public {
+        // @audit-issue Invalid: 820905175<820905176 failed, reason: GPOST_ACCOUNTING_A: totalAssets should always increase unless a withdrawal occurs
+        Tester.deposit(472326162, 123, 139);
+        Tester.borrowSameAsset(4370001, 0, 13);
+        Tester.submitCap(1315974944, 33);
+        _delay(512439);
+        _delay(120198);
         Tester.acceptCap(1);
-        Tester.submitCap(51681381, 69);
-        _delay(414579);
-        Tester.deposit(4370001, 255, 255);
-        Tester.mint(1524785993, 63, 255);
-        _delay(352626);
-        Tester.setSupplyQueue(21);
-        Tester.acceptCap(45);
-        Tester.borrow(2856892, 141, 97);
-        Tester.assert_ERC4626_MINT_INVARIANT_C();
-        _delay(336113);
-        Tester.donateUnderlyingToSilo(36571, 45);
-        _delay(67703);
-        Tester.onERC721Received(address(0), address(0), 57406029, "");
-        Tester.depositVault(2008655, 22);
-        _delay(318197);
-        Tester.approve(2354381657608461442095472565996231246535041913832423155980856080700948501023, 0, 0);
-        _delay(1900714);
-        Tester.withdrawFees(153);
+        Tester.setSupplyQueue(1);
+        _delay(12432);
+        Tester.claimRewards();
+        Tester.assert_ERC4626_ROUNDTRIP_INVARIANT_C(1066387);
+        Tester.depositVault(820905169, 0);
+        _delay(198598);
+        Tester.borrowSameAsset(2, 0, 7);
+    }
+
+    function test_replay_2reallocateTo() public {
+        // @audit-issue Invalid: 1<2 failed, reason: GPOST_ACCOUNTING_A: totalAssets should always increase unless a withdrawal occurs
+        Tester.mint(182395, 0, 1);
+        Tester.deposit(1554, 0, 123);
+        Tester.submitCap(19402, 14);
+        _delay(289103);
+        Tester.submitCap(1, 1);
+        _delay(321151);
+        Tester.acceptCap(2);
+        _delay(359157);
+        Tester.donateSharesToVault(2034, 2);
+        Tester.acceptCap(1);
+        Tester.setFlowCaps(
+            [
+                FlowCaps(2, 2000999613920889324139923272930),
+                FlowCaps(73688566600440228608076879, 251961596674309237310094453587804),
+                FlowCaps(0, 15974),
+                FlowCaps(16968530276661978480792371370807, 1278041159934950460843423752951418)
+            ]
+        );
+        Tester.reallocateTo(
+            1, [uint128(5148266763524718801906570585435046), uint128(712608292928486105902163280761023), uint128(31)]
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
