@@ -489,6 +489,12 @@ contract MarketTest is IntegrationTest {
 
         vm.mockCall(
             anyMarket,
+            abi.encodeWithSelector(IERC4626.previewDeposit.selector, maxAnyDeposit),
+            abi.encode(anyShares)
+        );
+
+        vm.mockCall(
+            anyMarket,
             abi.encodeWithSelector(IERC4626.deposit.selector, 1, address(vault)),
             abi.encode(anyShares)
         );
@@ -517,6 +523,12 @@ contract MarketTest is IntegrationTest {
         prepareAnyMarketSetup();
 
         uint256 depositAmount = type(uint32).max;
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.maxDeposit.selector, address(vault)),
+            abi.encode(depositAmount)
+        );
 
         vm.mockCall(
             anyMarket,
