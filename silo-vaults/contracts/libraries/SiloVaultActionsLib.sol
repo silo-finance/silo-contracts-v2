@@ -223,7 +223,7 @@ library SiloVaultActionsLib {
         emit EventsLib.SetFee(msg.sender, _newFee);
     }
 
-    function submitMarketRemovalValidateEmitEvent(
+    function submitMarketRemoval(
         IERC4626 _market,
         mapping(IERC4626 => MarketConfig) storage _config,
         mapping(IERC4626 => PendingUint192) storage _pendingCap,
