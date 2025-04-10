@@ -58,6 +58,9 @@ library ErrorsLib {
     /// @notice Thrown when the supply cap has been exceeded on `market` during a reallocation of funds.
     error SupplyCapExceeded(IERC4626 market);
 
+    /// @notice Thrown when the supply cap has been exceeded on `market` during a reallocation of funds.
+    error InternalSupplyCapExceeded(IERC4626 market);
+
     /// @notice Thrown when the fee to set exceeds the maximum fee.
     error MaxFeeExceeded();
 
@@ -151,4 +154,14 @@ library ErrorsLib {
 
     /// @notice Thrown when projected withdraw is much less than what user deposit.
     error AssetLoss(uint256 loss);
+
+    function revertBytes(bytes memory _errMsg) internal pure {
+        if (_errMsg.length > 0) {
+            assembly { // solhint-disable-line no-inline-assembly
+                revert(add(32, _errMsg), mload(_errMsg))
+            }
+        }
+
+        revert();
+    }
 }

@@ -147,5 +147,82 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
+    },
+    "PYTH_ylstETH_ETH": {
+        "baseToken": "ylstETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "PYTH_ylstETH_ETH_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "REDSTONE_scETH_ETH": {
+        "baseToken": "scETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "REDSTONE_scETH_ETH_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_HARDCODE_ylBTCLST_scBTC": {
+        "baseToken": "ylBTCLST",
+        "quoteToken": "scBTC",
+        "primaryAggregator": "PYTH_ylBTCLST_BTC_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_wstkscUSD_scUSD": {
+        "baseToken": "wstkscUSD",
+        "quoteToken": "scUSD",
+        "primaryAggregator": "PYTH_wstkscUSD_scUSD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "REDSTONE_USDC_USD": {
+        "baseToken": "USDC.e",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_USDC_USD_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
+    "REDSTONE_scUSD_USD": {
+        "baseToken": "scUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_scUSD_USDC_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "REDSTONE_USDC_USD_aggregator",
+        "secondaryHeartbeat": 22001,
+        "normalizationDivider": 1e4,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "PYTH_wstkscETH_scETH": {
+        "baseToken": "wstkscETH",
+        "quoteToken": "scETH",
+        "primaryAggregator": "PYTH_wstkscETH_scETH_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }

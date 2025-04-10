@@ -32,6 +32,7 @@ fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
     { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
@@ -56,6 +57,7 @@ fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
     { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 

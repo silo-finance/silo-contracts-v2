@@ -24,13 +24,12 @@ rule depositWithdrawInverse(env e)
 
 rule borrowRepayInverse(env e)
 {
-    require originalCaller == e.msg.sender;
     require e.msg.value == 0;
     uint256 _assets; address silo; address receiver;
 
     storage init = lastStorage;
     borrow(e, silo, _assets, receiver);
-    repay(e, silo,_assets);
+    repay(e, silo, _assets);
     storage after = lastStorage;
     assert init == after;
     satisfy true;
@@ -137,7 +136,7 @@ rule repayDoesntAffectOthers(env e, address other)
     uint256 receivedSharesOtherBefore = receivedShares[other];
     uint256 receivedProtSharesOtherBefore = receivedProtShares[other];
 
-    repay(e, silo,_assets);
+    repay(e, silo, _assets);
 
     uint256 depositedCollateralOtherAfter = depositedCollateral[other];
     uint256 depositedProtCollateralOtherAfter = depositedProtCollateral[other];

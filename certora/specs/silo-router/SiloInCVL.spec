@@ -13,9 +13,15 @@ methods
     function _.repay(uint256 _assets, address _borrower) external 
         => simpleRepayCVL(_assets, _borrower) expect (uint256);
     
+    // we deliberatelly ignore the "token". See comments on safeTransferFromCVL.
+    function _.safeTransferFrom(address token, address from, address to, uint256 amount) internal 
+        => safeTransferFromCVL(from, to, amount) expect void;
 }
 
-// todo add comments
+// keeps track of all calls to Silo methods and stores the arguments
+// e.g. when deposit(x) is called it stores here that totalSilo0Col increases by x, etc.
+// the changes are NOT EXACT. We ommit many factors like interest, rounding, share <-> asset conversion, etc.
+// these are not supposed to mirror the storage of Silo but rather log which methods were called on Silo
 ghost uint256 totalSilo0Col;
 ghost uint256 totalSilo0ProtCol;
 ghost uint256 totalSilo0Debt;
@@ -27,7 +33,6 @@ ghost mapping(address => uint256) depositedProtCollateral;
 ghost mapping(address => uint256) debtSharesHolding;
 ghost mapping(address => uint256) receivedShares;
 ghost mapping(address => uint256) receivedProtShares;
-
 
 function simpleDepositCVL(uint256 _assets, address _receiver, ISilo.CollateralType _collateralType) returns uint256
 {
@@ -82,5 +87,23 @@ function simpleRepayCVL(uint256 _assets, address borrower) returns uint256
     return shares;
 }
 
+// Any of the tokens could be transfered so here we just pretend that
+// ALL of them were transfered. This is a safe approach, an over-approximation
+// that's good enought for our purposes.
+function safeTransferFromCVL(address from, address to, uint256 amount)
+{
+    depositedCollateral[from] = require_uint256(depositedCollateral[from] - amount);
+    depositedProtCollateral[from] = require_uint256(depositedProtCollateral[from] - amount);
+    debtSharesHolding[from] = require_uint256(debtSharesHolding[from] - amount);
+    receivedShares[from] = require_uint256(receivedShares[from] - amount);
+    receivedProtShares[from] = require_uint256(receivedProtShares[from] - amount);
+
+    depositedCollateral[to] = require_uint256(depositedCollateral[to] + amount);
+    depositedProtCollateral[to] = require_uint256(depositedProtCollateral[to] + amount);
+    debtSharesHolding[to] = require_uint256(debtSharesHolding[to] + amount);
+    receivedShares[to] = require_uint256(receivedShares[to] + amount);
+    receivedProtShares[to] = require_uint256(receivedProtShares[to] + amount);
+
+}
  
 
