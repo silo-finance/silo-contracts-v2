@@ -456,9 +456,9 @@ contract MarketTest is IntegrationTest {
         IERC20 asset = IERC20(vault.asset());
 
         // market with failed deposit should have no allowance
-        assertEq(asset.allowance(address(vault), anyMarket), 0, "[0] allowance should be ZERO");
+        assertEq(asset.allowance(address(vault), anyMarket), 1, "[0] allowance should be ZERO");
         // market with successful deposit should have no allowance
-        assertEq(asset.allowance(address(vault), address(secondMarket)), 0, "[1] allowance should be ZERO");
+        assertEq(asset.allowance(address(vault), address(secondMarket)), 1, "[1] allowance should be ZERO");
     }
 
     /*

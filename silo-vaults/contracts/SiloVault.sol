@@ -1011,7 +1011,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         }
 
         // Reset approval regardless of the deposit success or failure.
-        asset.forceApprove({spender: address(_market), value: 0});
+        // Setting to 1 wei to support tokens that revert when approving 0
+        asset.forceApprove({spender: address(_market), value: 1});
     }
 
     function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {
