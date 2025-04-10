@@ -96,15 +96,15 @@ contract DepositTest is VaultsLittleHelper {
 
         bytes memory data = abi.encodeWithSelector(IERC4626.previewRedeem.selector, sharesBalance);
 
-        // vault hacked and started to report wrong supply, user could loose 50%
-        vm.mockCall(address(market0), data, abi.encode(currentPreviewRedeem / 2));
+        // vault hacked and started to report wrong supply, based on which we can deploy all tokens again
+        vm.mockCall(address(market0), data, abi.encode(0));
         vm.expectCall(address(market0), data);
 
         _deposit(depositBelowCap * 2, depositor);
 
         uint256 balanceAfter1 = vault.balanceTracker(market1);
 
-        assertEq(balanceAfter0, vault.balanceTracker(market0), "expect no deposit to market0");
-        assertEq(balanceAfter1, depositBelowCap * 2, "expect deposit to market1");
+        assertEq(balanceAfter0 + depositBelowCap, vault.balanceTracker(market0), "expect deposit to market0 up to internal CAP");
+        assertEq(balanceAfter1, depositBelowCap, "expect deposit to market1");
     }
 }
