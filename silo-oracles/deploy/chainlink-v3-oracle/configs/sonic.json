@@ -213,5 +213,16 @@
         "normalizationDivider": 1e4,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "PYTH_wstkscETH_scETH": {
+        "baseToken": "wstkscETH",
+        "quoteToken": "scETH",
+        "primaryAggregator": "PYTH_wstkscETH_scETH_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }

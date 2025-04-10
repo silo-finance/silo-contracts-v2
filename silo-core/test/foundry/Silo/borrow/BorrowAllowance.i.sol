@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
@@ -38,9 +39,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
     forge test --ffi -vv --mt test_borrow_WithoutAllowance_1
     */
     function test_borrow_WithoutAllowance_1() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IShareToken.AmountExceedsAllowance.selector));
         silo1.borrow(ASSETS, RECEIVER, BORROWER);
     }
 
@@ -51,7 +50,7 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
 
         vm.prank(BORROWER);
-        IShareToken(debtShareToken).approve(address(this), ASSETS);
+        ShareDebtToken(debtShareToken).setReceiveApproval(address(this), ASSETS);
 
         assertEq(IShareToken(debtShareToken).balanceOf(BORROWER), 0, "BORROWER no debt before");
         assertEq(IShareToken(debtShareToken).balanceOf(DEPOSITOR), 0, "DEPOSITOR no debt before");
@@ -67,6 +66,9 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(RECEIVER), ASSETS / 2, "RECEIVER got tokens after");
 
-        assertEq(IShareToken(debtShareToken).allowance(BORROWER, address(this)), ASSETS / 2, "allowance reduced");
+        assertEq(
+            ShareDebtToken(debtShareToken).receiveAllowance(address(this), BORROWER), ASSETS / 2,
+            "allowance reduced"
+        );
     }
 }
