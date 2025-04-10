@@ -21,7 +21,6 @@ import {SiloVaultsFactoryDeploy} from "../../../deploy/SiloVaultsFactoryDeploy.s
 
 import {SiloVault} from "../../../contracts/SiloVault.sol";
 import {IdleVault} from "../../../contracts/IdleVault.sol";
-import {IdleVaultsFactory} from "../../../contracts/IdleVaultsFactory.sol";
 import {SiloVaultsFactory} from "../../../contracts/SiloVaultsFactory.sol";
 
 import {ISiloVault} from "../../../contracts/interfaces/ISiloVault.sol";
@@ -70,10 +69,8 @@ contract BaseTest is SiloLittleHelper, Test {
         factoryDeploy.disableDeploymentsSync();
         siloVaultsFactory = factoryDeploy.run();
 
-        vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
+        (vault, idleMarket) = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
-        IdleVaultsFactory factory = new IdleVaultsFactory();
-        idleMarket = factory.createIdleVault(vault);
         vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
@@ -87,8 +84,8 @@ contract BaseTest is SiloLittleHelper, Test {
         address asset,
         string memory name,
         string memory symbol
-    ) public returns (ISiloVault) {
-        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
+    ) public returns (ISiloVault v, IERC4626 i) {
+        (v, i) = siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol, true);
     }
 
     function _createNewMarkets() public virtual {

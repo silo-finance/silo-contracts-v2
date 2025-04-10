@@ -5,11 +5,11 @@ import {IERC4626, IERC20, IERC20Metadata} from "openzeppelin5/interfaces/IERC462
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {IdleVaultsFactoryDeploy} from "silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol";
+import {SiloVaultsFactoryDeploy} from "silo-vaults/deploy/SiloVaultsFactoryDeploy.s.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {IdleVault} from "../../contracts/IdleVault.sol";
-import {IdleVaultsFactory} from "../../contracts/IdleVaultsFactory.sol";
+import {SiloVaultsFactory} from "../../contracts/SiloVaultsFactory.sol";
 
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
@@ -48,9 +48,9 @@ contract IdleVaultTest is IntegrationTest {
         FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVaultDeploy_sameOrder -vvv
     */
     function test_idleVaultDeploy_sameOrder() public {
-        IdleVaultsFactoryDeploy deploy = new IdleVaultsFactoryDeploy();
+        SiloVaultsFactoryDeploy deploy = new SiloVaultsFactoryDeploy();
         deploy.disableDeploymentsSync();
-        IdleVaultsFactory factory = deploy.run();
+        SiloVaultsFactory factory = deploy.run();
 
         address idleMarket = makeAddr("idle market");
 
@@ -70,12 +70,12 @@ contract IdleVaultTest is IntegrationTest {
         uint256 snapshot = vm.snapshot();
 
         vm.prank(devWallet);
-        IdleVault idleVault1 = factory.createIdleVault(IERC4626(idleMarket));
+        IERC4626 idleVault1 = factory.createIdleVault(IERC4626(idleMarket));
 
         vm.revertTo(snapshot);
 
         vm.prank(otherWallet);
-        IdleVault idleVault2 = factory.createIdleVault(IERC4626(idleMarket));
+        IERC4626 idleVault2 = factory.createIdleVault(IERC4626(idleMarket));
 
         assertNotEq(address(idleVault1), address(idleVault2), "idleVault1 == idleVault2");
     }

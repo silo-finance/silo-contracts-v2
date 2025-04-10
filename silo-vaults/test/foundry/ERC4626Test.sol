@@ -31,7 +31,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.assume(decimals <= 18);
         vm.mockCall(address(loanToken), abi.encodeWithSignature("decimals()"), abi.encode(decimals));
 
-        vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
+        (vault,) = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         assertEq(vault.decimals(), 18, "offset does not affect decimals");
         assertEq(vault.DECIMALS_OFFSET(), 18 + 6 - decimals, "DECIMALS_OFFSET");

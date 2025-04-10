@@ -32,9 +32,9 @@ interface ISiloVaultsFactory {
         string memory _name,
         string memory _symbol,
         bool _withIdle
-    ) external returns (ISiloVault siloVault, IdleVault idleVault);
+    ) external returns (ISiloVault siloVault, IERC4626 idleVault);
 
     /// @notice Creates a new IdleVault.
     /// @param _vault vault address for which idle vault will be created
-    function createIdleVault(IERC4626 _vault) external virtual returns (IdleVault idleVault);
+    function createIdleVault(IERC4626 _vault) external returns (IERC4626 idleVault);
 }

@@ -34,7 +34,7 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule());
     }
 
-    function createIdleVault(IERC4626 _vault) public virtual returns (IdleVault idleVault) {
+    function createIdleVault(IERC4626 _vault) public virtual returns (IERC4626 idleVault) {
         idleVault = new IdleVault{salt: _salt()}(
             address(_vault),
             _vault.asset(),
@@ -55,7 +55,7 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         string memory _name,
         string memory _symbol,
         bool _withIdle
-    ) external virtual returns (ISiloVault siloVault, IdleVault idleVault) {
+    ) external virtual returns (ISiloVault siloVault, IERC4626 idleVault) {
         siloVault = SiloVaultsFactoryLib.createSiloVault(
             VAULT_INCENTIVES_MODULE_IMPLEMENTATION,
             _initialOwner,

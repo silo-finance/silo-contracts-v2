@@ -33,7 +33,7 @@ contract DeploymentTest is IntegrationTest {
         assumeNotZeroAddress(owner);
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        ISiloVault newVault = createSiloVault(owner, initialTimelock, address(loanToken), name, symbol);
+        (ISiloVault newVault,) = createSiloVault(owner, initialTimelock, address(loanToken), name, symbol);
 
         assertEq(newVault.owner(), owner, "owner");
         assertEq(newVault.timelock(), initialTimelock, "timelock");

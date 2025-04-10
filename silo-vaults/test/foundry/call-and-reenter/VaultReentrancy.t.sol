@@ -108,12 +108,13 @@ contract VaultReentrancyTest is Test {
         address vaultInitialOwner = makeAddr("VaultOwner");
 
         // Vault deployment and configuration
-        vault = factory.createSiloVault(
+        (vault,) = factory.createSiloVault(
             vaultInitialOwner,
             1 days,
             address(configOverride.token0),
             "Test Vault1",
-            "TV1"
+            "TV1",
+            false
         );
 
         uint256 cap = 100e18;
