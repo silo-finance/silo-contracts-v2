@@ -7,6 +7,7 @@ import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
 import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
 
+import {SiloVaultsFactoryLib} from "./libraries/SiloVaultsFactoryLib.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {SiloVault} from "./SiloVault.sol";
@@ -44,18 +45,16 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
             Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt())
         );
 
-        siloVault = ISiloVault(address(
-            new SiloVault{salt: _salt()}(
-                _initialOwner, _initialTimelock, vaultIncentivesModule, _asset, _name, _symbol
-            ))
+        siloVault = SiloVaultsFactoryLib.createSiloVault(
+            VAULT_INCENTIVES_MODULE_IMPLEMENTATION,
+            _initialOwner,
+            _initialTimelock,
+             _asset,
+            _name,
+            _symbol,
+            _salt()
         );
-
-        vaultIncentivesModule.__VaultIncentivesModule_init(siloVault);
 
         isSiloVault[address(siloVault)] = true;
-
-        emit EventsLib.CreateSiloVault(
-            address(siloVault), msg.sender, _initialOwner, _initialTimelock, _asset, _name, _symbol
-        );
     }
 }
