@@ -6,8 +6,6 @@ import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 library SiloVaultsContracts {
     string public constant SILO_VAULTS_FACTORY = "SiloVaultsFactory.sol";
     string public constant PUBLIC_ALLOCATOR = "PublicAllocator.sol";
-    string public constant IDLE_VAULTS_FACTORY = "IdleVaultsFactory.sol";
-    string public constant SILO_VAULTS_DEPLOYER = "SiloVaultsDeployer.sol";
     string public constant SILO_INCENTIVES_CONTROLLER_CL_FACTORY = "SiloIncentivesControllerCLFactory.sol";
 }
 
