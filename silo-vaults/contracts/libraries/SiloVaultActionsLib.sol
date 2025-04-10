@@ -236,7 +236,7 @@ library SiloVaultActionsLib {
 
         emit EventsLib.SubmitMarketRemoval(msg.sender, _market);
 
-        // Safe "unchecked" cast because timelock <= MAX_TIMELOCK.
+        // Safe to cast because timelock <= MAX_TIMELOCK.
         _config[_market].removableAt = uint64(block.timestamp + _timelock);
     }
 
