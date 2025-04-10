@@ -831,6 +831,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             uint256 supplyAssets = _updateInternalBalanceForMarket(market);
 
             uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
+            toSupply = UtilsLib.min(market.maxDeposit(address(this)), toSupply);
 
             if (toSupply != 0) {
                 uint256 newBalance = balanceTracker[market] + toSupply;
