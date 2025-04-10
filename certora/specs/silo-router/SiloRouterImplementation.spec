@@ -154,3 +154,33 @@ rule repayDoesntAffectOthers(env e, address other)
         receivedSharesOtherBefore == receivedSharesOtherAfter &&
         receivedProtSharesOtherBefore == receivedProtSharesOtherAfter;
 }
+
+rule transferFromDoesntAffectOthers(env e, address to, address other)
+{
+    address token; uint256 amount;
+    require originalCaller == e.msg.sender;
+    require e.msg.value == 0;
+    require other != e.msg.sender;
+    require other != to;
+    require other != token;
+
+    uint256 depositedCollateralOtherBefore = depositedCollateral[other];
+    uint256 depositedProtCollateralOtherBefore = depositedProtCollateral[other];
+    uint256 debtSharesHoldingOtherBefore = debtSharesHolding[other];
+    uint256 receivedSharesOtherBefore = receivedShares[other];
+    uint256 receivedProtSharesOtherBefore = receivedProtShares[other];
+
+    transferFrom(e, token, to, amount);
+
+    uint256 depositedCollateralOtherAfter = depositedCollateral[other];
+    uint256 depositedProtCollateralOtherAfter = depositedProtCollateral[other];
+    uint256 debtSharesHoldingOtherAfter = debtSharesHolding[other];
+    uint256 receivedSharesOtherAfter = receivedShares[other];
+    uint256 receivedProtSharesOtherAfter = receivedProtShares[other]; 
+
+    assert depositedCollateralOtherBefore == depositedCollateralOtherAfter &&
+        depositedProtCollateralOtherBefore == depositedProtCollateralOtherAfter &&
+        debtSharesHoldingOtherBefore == debtSharesHoldingOtherAfter && 
+        receivedSharesOtherBefore == receivedSharesOtherAfter &&
+        receivedProtSharesOtherBefore == receivedProtSharesOtherAfter;
+}
