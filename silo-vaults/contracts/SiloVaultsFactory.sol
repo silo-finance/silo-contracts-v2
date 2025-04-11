@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {Clones} from "openzeppelin5/proxy/Clones.sol";
-import {IERC4626, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
-import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
 import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
 
 import {SiloVaultsFactoryLib} from "./libraries/SiloVaultsFactoryLib.sol";
-import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {SiloVault} from "./SiloVault.sol";
-import {IdleVault} from "./IdleVault.sol";
+import {IdleVaultsFactory} from "./IdleVaultsFactory.sol";
 
 import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 
