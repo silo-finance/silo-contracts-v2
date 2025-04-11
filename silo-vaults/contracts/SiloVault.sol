@@ -525,6 +525,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function transfer(address _to, uint256 _value) public virtual override(ERC20, IERC20) returns (bool success) {
         _nonReentrantOn();
 
+        _updateLastTotalAssets(_accrueFee());
+
         success = ERC20.transfer(_to, _value);
 
         _nonReentrantOff();
@@ -538,6 +540,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         returns (bool success)
     {
         _nonReentrantOn();
+
+        _updateLastTotalAssets(_accrueFee());
 
         success = ERC20.transferFrom(_from, _to, _value);
 
