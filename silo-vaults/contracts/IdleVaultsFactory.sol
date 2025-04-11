@@ -13,8 +13,10 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 import {IdleVault} from "./IdleVault.sol";
 
 abstract contract IdleVaultsFactory is Create2Factory, IIdleVaultsFactory {
+    /// @inheritdoc IIdleVaultsFactory
     mapping(address => bool) public isIdleVault;
 
+    /// @inheritdoc IIdleVaultsFactory
     function createIdleVault(IERC4626 _vault) public virtual returns (IERC4626 idleVault) {
         idleVault = new IdleVault{salt: _salt()}(
             address(_vault),
