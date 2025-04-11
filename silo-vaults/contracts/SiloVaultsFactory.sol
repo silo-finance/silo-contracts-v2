@@ -21,30 +21,14 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice This contract allows to create SiloVault vaults, and to index them easily.
-contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
+contract SiloVaultsFactory is IdleVaultsFactory, ISiloVaultsFactory {
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
 
     /// @inheritdoc ISiloVaultsFactory
     mapping(address => bool) public isSiloVault;
 
-    /// @inheritdoc ISiloVaultsFactory
-    mapping(address => bool) public isIdleVault;
-
     constructor() {
         VAULT_INCENTIVES_MODULE_IMPLEMENTATION = address(new VaultIncentivesModule());
-    }
-
-    function createIdleVault(IERC4626 _vault) public virtual returns (IERC4626 idleVault) {
-        idleVault = new IdleVault{salt: _salt()}(
-            address(_vault),
-            _vault.asset(),
-            string.concat("IdleVault for ", IERC20Metadata(address(_vault)).name()),
-            string.concat("IV-", IERC20Metadata(address(_vault)).symbol())
-        );
-
-        isIdleVault[address(idleVault)] = true;
-
-        emit EventsLib.CreateIdleVault(address(idleVault), address(_vault));
     }
 
     /// @inheritdoc ISiloVaultsFactory
