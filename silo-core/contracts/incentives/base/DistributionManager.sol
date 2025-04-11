@@ -119,12 +119,12 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     function getProgramId(string memory _programName) public pure virtual returns (bytes32) {
         uint256 length = bytes(_programName).length;
 
-        // support any non empty string, or a hex string representing an address
-        require(length != 0 && (length <= 32 || length == 42), InvalidIncentivesProgramName());
-
-        if (length == 42) {
+        if (length == 42) { // expecting a hex string representing an address
             return _getProgramIdForAddress(AddressUtilsLib.fromHexString(_programName));
         }
+
+        // support any non empty string up to 32 characters
+        require(length != 0 && length <= 32, InvalidIncentivesProgramName());
 
         return bytes32(abi.encodePacked(_programName));
     }

@@ -13,6 +13,7 @@ import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncen
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
+import {AddressUtilsLib} from "silo-core/contracts/lib/AddressUtilsLib.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
@@ -1032,6 +1033,33 @@ contract SiloIncentivesControllerTest is Test {
 
         assertEq(ERC20Mock(_rewardToken).balanceOf(address(_controller)), 0, "to have no balance");
         assertEq(ERC20Mock(_rewardToken).balanceOf(_owner), amount, "owner must have max balance");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_InvalidIncentivesProgramName
+    function test_getProgramId_InvalidIncentivesProgramName() public {
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
+        _controller.getProgramId("");
+
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
+        _controller.getProgramId("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_InvalidAddressString
+    function test_getProgramId_InvalidAddressString() public {
+        vm.expectRevert(abi.encodeWithSelector(AddressUtilsLib.InvalidAddressString.selector));
+        _controller.getProgramId("0xxx34567890123456789012345678901234567890");
+    }
+
+    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getProgramId_success
+    function test_getProgramId_success() public view {
+        bytes32 programId = _controller.getProgramId(_PROGRAM_NAME);
+        assertEq(programId, bytes32(abi.encodePacked(_PROGRAM_NAME)), "invalid string conversion");
+
+        string memory addressAsString = Strings.toHexString(_rewardToken);
+        bytes32 programId2 = _controller.getProgramId(addressAsString);
+
+        bytes32 addressAsBytes32 = bytes32(uint256(uint160(_rewardToken)));
+        assertEq(programId2, addressAsBytes32, "invalid address conversion");
     }
 
     function _claimRewards(address _user, address _to, string memory _programName) internal {
