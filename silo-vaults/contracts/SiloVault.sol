@@ -326,6 +326,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
                 if (!config[allocation.market].enabled) revert ErrorsLib.MarketNotEnabled(allocation.market);
 
                 // Guarantees that unknown frontrunning donations can be withdrawn, in order to disable a market.
+                // However, setting `allocation.assets` to 0 does not guarantee successful fund reallocation if the
+                // withdrawn assets would cause the following markets to exceed their supply caps during reallocation.
                 uint256 shares;
                 if (allocation.assets == 0) {
                     shares = supplyShares;
