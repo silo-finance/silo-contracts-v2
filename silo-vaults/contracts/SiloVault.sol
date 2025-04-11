@@ -829,23 +829,31 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             // Update internal balance for market to include interest if any.
             // `supplyAssets` needs to be rounded up for `toSupply` to be rounded down.
             uint256 supplyAssets = _updateInternalBalanceForMarket(market);
-            uint256 internalBalanceTracker = balanceTracker[market];
-            uint256 maxAssets = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, internalBalanceTracker), _assets);
 
-            uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), maxAssets);
-            toSupply = UtilsLib.min(market.maxDeposit(address(this)), toSupply);
+            // Check if we are not reaching the supply cap. If so, supply up to the cap.
+            uint256 toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, supplyAssets), _assets);
 
             if (toSupply != 0) {
-                uint256 newBalance = internalBalanceTracker + toSupply;
-                // As `_supplyBalance` reads the balance directly from the market,
+                // As `_updateInternalBalanceForMarket` reads the balance directly from the market,
                 // we have additional check to ensure that the market did not report wrong supply.
-                if (newBalance <= supplyCap) {
-                    // _marketSupply is using try/catch to skip markets that revert.
+                uint256 internalBalanceTracker = balanceTracker[market];
+
+                // As `internalBalanceTracker` is always >= `supplyAssets`
+                // to deposit up to the internal balance we need to recalculate `toSupply`.
+                toSupply = UtilsLib.min(UtilsLib.zeroFloorSub(supplyCap, internalBalanceTracker), toSupply);
+
+                if (toSupply != 0) {
+                    // If caps are not reached, cap the amount to supply to the max deposit amount of the market.
+                    toSupply = UtilsLib.min(market.maxDeposit(address(this)), toSupply);
+                    // Skip the market if max deposit is 0.
+                    if (toSupply == 0) continue;
+
+                    // `_marketSupply` is using try/catch to skip markets that revert.
                     (bool success,) = _marketSupply({_market: market, _assets: toSupply, _revertOnFail: false});
 
                     if (success) {
                         _assets -= toSupply;
-                        balanceTracker[market] = newBalance;
+                        balanceTracker[market] = internalBalanceTracker + toSupply;
                     }
                 }
             }
