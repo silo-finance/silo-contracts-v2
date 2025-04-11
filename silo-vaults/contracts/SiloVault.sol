@@ -997,9 +997,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     {
         IERC20 asset = IERC20(asset());
 
-        if (_market.previewDeposit(_assets) == 0) {
-            if (_revertOnFail) revert ErrorsLib.ZeroShares();
-
+        if (!_revertOnFail && _market.previewDeposit(_assets) == 0) {
             return (false, 0);
         }
 
@@ -1007,6 +1005,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         asset.forceApprove({spender: address(_market), value: _assets});
 
         try _market.deposit(_assets, address(this)) returns (uint256 gotShares) {
+            require(gotShares != 0, ErrorsLib.ZeroShares());
+
             shares = gotShares;
             success = true;
 
