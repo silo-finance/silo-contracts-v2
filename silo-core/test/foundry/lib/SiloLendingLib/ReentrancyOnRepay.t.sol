@@ -16,7 +16,7 @@ import {
     SiloLendingLibConsumerNonVulnerable
 } from "silo-core/test/foundry/_mocks/SiloLendingLib/SiloLendingLibConsumerNonVulnerable.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --mc ReentrancyOnRepayTest --ffi
+// FOUNDRY_PROFILE=core_test forge test -vv --mc ReentrancyOnRepayTest --ffi
 contract ReentrancyOnRepayTest is Test {
     SiloLendingLibConsumerVulnerable internal _vulnerable;
     SiloLendingLibConsumerNonVulnerable internal _nonVulnerable;
@@ -65,7 +65,7 @@ contract ReentrancyOnRepayTest is Test {
 
     // solhint-disable-next-line func-name-mixedcase
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloLendingLib_non_vulnerable --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_SiloLendingLib_non_vulnerable --ffi
     */
     function test_SiloLendingLib_non_vulnerable() public {
         uint256 totalDebtBefore = _nonVulnerable.getTotalDebt();

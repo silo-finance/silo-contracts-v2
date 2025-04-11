@@ -8,7 +8,7 @@ import {MarketConfig} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {VaultsLittleHelper} from "../_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc DepositTest -vv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc DepositTest -vv
 */
 contract DepositTest is VaultsLittleHelper {
     /*
@@ -32,7 +32,7 @@ contract DepositTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_balanceTracker -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_deposit_balanceTracker -vvv
     */
     function test_deposit_balanceTracker() public {
         uint256 length = vault.supplyQueueLength();
@@ -64,7 +64,7 @@ contract DepositTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_deposit_balanceTracker_MarketReportedWrongSupply -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_deposit_balanceTracker_MarketReportedWrongSupply -vvv
     */
     function test_deposit_balanceTracker_MarketReportedWrongSupply() public {
         uint256 length = vault.supplyQueueLength();

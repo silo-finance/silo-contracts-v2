@@ -69,7 +69,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run tests
-                run: FOUNDRY_PROFILE=vaults-tests forge test --no-match-test "_skip_" -v --ffi
+                run: FOUNDRY_PROFILE=vaults_tests forge test --no-match-test "_skip_" -v --ffi
 
             -   name: Sizes
                 run: |

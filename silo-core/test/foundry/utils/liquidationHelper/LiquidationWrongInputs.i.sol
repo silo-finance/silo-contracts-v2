@@ -9,7 +9,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationWrongSiloTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationWrongSiloTest
 */
 contract LiquidationWrongInputsTest is SiloLittleHelper, Test {
     ISiloConfig internal _siloConfig;

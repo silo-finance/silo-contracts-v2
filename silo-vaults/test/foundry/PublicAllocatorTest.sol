@@ -42,7 +42,7 @@ library SortWithdrawals {
 
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc PublicAllocatorTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc PublicAllocatorTest -vvv
 */
 contract PublicAllocatorTest is IntegrationTest {
     IPublicAllocator public publicAllocator;

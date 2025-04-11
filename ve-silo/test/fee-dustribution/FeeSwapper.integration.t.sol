@@ -18,7 +18,7 @@ import {UniswapSwapperTest} from "ve-silo/test/fee-dustribution/UniswapSwapper.i
 import {Manageable} from "ve-silo/contracts/access/Manageable.sol";
 import {FeeSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/FeeSwapper.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc FeeSwapperTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc FeeSwapperTest --ffi -vvv
 contract FeeSwapperTest is IntegrationTest {
     uint256 constant internal _FORKING_BLOCK_NUMBER = 18040200;
     address constant internal _SNX_WHALE = 0x5Fd79D46EBA7F351fe49BFF9E87cdeA6c821eF9f;
@@ -115,7 +115,7 @@ contract FeeSwapperTest is IntegrationTest {
         _feeSwapper.swapFees(inputs, data);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSwapFeesAndDeposit --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSwapFeesAndDeposit --ffi -vvv
     function testGetSiloTokens() public {
         uint256 amount = 1e18;
         deal(getAddress(AddrKey.WETH), address(_feeSwapper), amount);
@@ -143,7 +143,7 @@ contract FeeSwapperTest is IntegrationTest {
         assertEq(tokenBalance, amount, "Token balance differs from the expected tokens amount");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSwapFeesAndDeposit --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSwapFeesAndDeposit --ffi -vvv
     function testSwapFeesAndDeposit() public {
         _preconfigureSwap();
         address[] memory inputs = _swapInputs();

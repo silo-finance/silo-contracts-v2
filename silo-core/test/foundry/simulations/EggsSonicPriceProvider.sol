@@ -28,7 +28,7 @@ interface IEggs {
     function leverage(uint256 sonic, uint256 numberOfDays) external payable;
 }
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc EggsSonicPriceProvider
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc EggsSonicPriceProvider
 contract EggsSonicPriceProvider is IntegrationTest {
     IEggs internal _eggs = IEggs(0xf26Ff70573ddc8a90Bd7865AF8d7d70B8Ff019bC);
     address internal _eggsWhale = 0x66A8289bdD968D1157eB1a608f60a87759632cd6;

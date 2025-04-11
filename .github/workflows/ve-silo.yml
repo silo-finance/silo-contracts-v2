@@ -97,4 +97,4 @@ jobs:
           FOUNDRY_PROFILE=ve-silo forge build --sizes
 
       - name: Forge test
-        run: FOUNDRY_PROFILE=ve-silo-test forge test --ffi -vvv
+        run: FOUNDRY_PROFILE=ve_silo_test forge test --ffi -vvv

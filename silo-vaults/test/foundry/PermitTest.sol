@@ -7,7 +7,7 @@ import {SigUtils, Permit} from "./helpers/SigUtils.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc PermitTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc PermitTest -vvv
 */
 contract PermitTest is IntegrationTest {
     uint256 internal constant OWNER_PK = 0xA11CE;

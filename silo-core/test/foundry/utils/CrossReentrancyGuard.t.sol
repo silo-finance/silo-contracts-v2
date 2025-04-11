@@ -12,7 +12,7 @@ contract CrossReentrancyGuardImpl is CrossReentrancyGuard {
 }
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --mc CrossReentrancyGuardTest
+FOUNDRY_PROFILE=core_test forge test -vv --mc CrossReentrancyGuardTest
 */
 contract CrossReentrancyGuardTest is Test {
     // this test purpose is make coverage for `_onlySiloOrTokenOrHookReceiver` method

@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc MaxRedeemTest
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc MaxRedeemTest
 */
 contract MaxRedeemTest is VaultsLittleHelper {
     address immutable depositor;
@@ -14,7 +14,7 @@ contract MaxRedeemTest is VaultsLittleHelper {
     }
     
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxRedeem_zero
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxRedeem_zero
     */
     function test_maxRedeem_zero() public view {
         uint256 maxRedeem = vault.maxRedeem(depositor);
@@ -22,9 +22,9 @@ contract MaxRedeemTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxRedeem_deposit_fuzz
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxRedeem_deposit_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_maxRedeem_deposit_fuzz(
         uint112 _assets,
         uint16 _assets2
@@ -43,9 +43,9 @@ contract MaxRedeemTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxRedeem_whenBorrow
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxRedeem_whenBorrow
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_maxRedeem_whenBorrow_1token_fuzz(
         uint128 _collateral,
         uint128 _toBorrow
@@ -62,9 +62,9 @@ contract MaxRedeemTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxRedeem_whenInterest_
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxRedeem_whenInterest_
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_maxRedeem_whenInterest_fuzz(
         uint128 _collateral,
         uint128 _toBorrow

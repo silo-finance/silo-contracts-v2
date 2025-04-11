@@ -18,7 +18,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 // solhint-disable ordering
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ShareTokenCommonTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc ShareTokenCommonTest
 */
 contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable {
     address public user = makeAddr("someUser");
@@ -43,7 +43,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_approveAndAllowance
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_approveAndAllowance
     */
     function test_approveAndAllowance() public {
         _executeForAllShareTokens(_approveAndAllowance);
@@ -63,7 +63,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_balanceOfAndTotalSupply
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_balanceOfAndTotalSupply
     */
     function test_balanceOfAndTotalSupply() public {
         _executeForAllShareTokens(_balanceOfAndTotalSupply);
@@ -88,7 +88,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenMintPermissions
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenMintPermissions
     */
     function test_shareTokenMintPermissions() public {
         _executeForAllShareTokens(_shareTokenMintPermissions);
@@ -100,7 +100,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenMint
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenMint
     */
     function test_shareTokenMint() public {
         _executeForAllShareTokens(_shareTokenMint);
@@ -117,7 +117,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_burnPermissions
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_burnPermissions
     */
     function test_burnPermissions() public {
         _executeForAllShareTokens(_burnPermissions);
@@ -129,7 +129,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenBurn
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenBurn
     */
     function test_shareTokenBurn() public {
         _executeForAllShareTokens(_shareTokenBurn);
@@ -152,7 +152,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenBurnAllowance
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenBurnAllowance
     */
     function test_shareTokenBurnAllowance() public {
         _executeForAllCollateralShareTokens(_shareTokenBurnAllowance);
@@ -175,7 +175,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_domainSeparator
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_domainSeparator
     */
     function test_domainSeparator() public {
         _executeForAllShareTokens(_domainSeparator);
@@ -196,7 +196,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_eip712Domain
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_eip712Domain
     */
     function test_eip712Domain() public {
         _executeForAllShareTokens(_eip712Domain);
@@ -215,7 +215,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_hookReceiver
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_hookReceiver
     */
     function test_hookReceiver() public {
         _executeForAllShareTokens(_hookReceiver);
@@ -227,7 +227,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_synchronizeHooksPermissions
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_synchronizeHooksPermissions
     */
     function test_synchronizeHooksPermissions() public {
         _executeForAllShareTokens(_synchronizeHooksPermissions);
@@ -239,7 +239,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_hookReceiver
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_hookReceiver
     */
     function test_hookSetupAndSynchronizeHooks() public {
         _executeForAllShareTokens(_hookSetupAndSynchronizeHooks);
@@ -271,7 +271,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSilo
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenSilo
     */
     function test_shareTokenSilo() public view {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
@@ -288,7 +288,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSiloConfig
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenSiloConfig
     */
     function test_shareTokenSiloConfig() public {
         _executeForAllShareTokens(_shareTokenSiloConfig);
@@ -300,7 +300,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_collateralShareTokenDecimals
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_collateralShareTokenDecimals
     */
     function test_collateralShareTokenDecimals() public view {
         (address protected0, address collateral0,) = siloConfig.getShareTokens(address(silo0));
@@ -321,7 +321,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenName
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenName
     */
     function test_shareTokenName() public view {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
@@ -338,7 +338,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenSymbol
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenSymbol
     */
     function test_shareTokenSymbol() public view {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(silo0));
@@ -355,7 +355,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareTokenPermitAndNonces
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_shareTokenPermitAndNonces
     */
     function test_shareTokenPermitAndNonces() public {
         _executeForAllShareTokens(_shareTokenPermitAndNonces);
@@ -386,7 +386,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPermissions
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_forwardTransferFromNoChecksPermissions
     */
     function test_forwardTransferFromNoChecksPermissions() public {
         _executeForAllShareTokens(_forwardTransferFromNoChecksPermissions);
@@ -398,14 +398,14 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo0
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo0
     */
     function test_forwardTransferFromNoChecks_silo0() public {
         _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo0));
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo1
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_forwardTransferFromNoChecks_silo1
     */
     function test_forwardTransferFromNoChecks_silo1() public {
         _executeForAllShareTokens(_forwardTransferFromNoChecks, address(silo1));

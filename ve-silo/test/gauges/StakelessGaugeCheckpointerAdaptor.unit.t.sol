@@ -20,7 +20,7 @@ contract ERC20Mint is ERC20 {
     }
 }
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc StakelessGaugeCheckpointerAdaptorTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc StakelessGaugeCheckpointerAdaptorTest --ffi -vvv
 contract StakelessGaugeCheckpointerAdaptorTest is IntegrationTest {
     ERC20Mint internal _linkTokenMock = new ERC20Mint("Chainlink Token", "LINK");
     IStakelessGaugeCheckpointerAdaptor internal _checkpointerAdaptor;

@@ -6,7 +6,7 @@ import {ERC4626Test} from "a16z-erc4626-tests/ERC4626.test.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ERC4626ComplianceTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ERC4626ComplianceTest -vvv
 */
 contract ERC4626ComplianceTest is IntegrationTest, ERC4626Test {
     function setUp() public override(IntegrationTest, ERC4626Test) {

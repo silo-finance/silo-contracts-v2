@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationLTV100FullTest} from "./MaxLiquidation_LTV100Full.i.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxLiquidationLTV100FullWithChunksTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxLiquidationLTV100FullWithChunksTest
 
     this tests are MaxLiquidationLTV100FullWith cases, difference is, we splitting max liquidation in chunks
 */

@@ -8,11 +8,11 @@ import {MarketConfig} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {VaultsLittleHelper} from "../_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc MintTest
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc MintTest
 */
 contract MintTest is VaultsLittleHelper {
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_mint
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_mint
     */
     function test_mint() public {
         uint256 shares = 1e18;
@@ -26,7 +26,7 @@ contract MintTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_mint_balanceTracker -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_mint_balanceTracker -vvv
     */
     function test_mint_balanceTracker() public {
         uint256 length = vault.supplyQueueLength();

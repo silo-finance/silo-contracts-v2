@@ -21,7 +21,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 // - `getConfigsForSolvency`           debt silo1  | not the same asset
 // - `getConfigsForSolvency`           debt silo1  | the same asset
 //
-// FOUNDRY_PROFILE=core-test forge test -vv --mc OrderedConfigsTest
+// FOUNDRY_PROFILE=core_test forge test -vv --mc OrderedConfigsTest
 contract OrderedConfigsTest is Test {
     bool constant internal _SAME_ASSET = true;
 
@@ -78,7 +78,7 @@ contract OrderedConfigsTest is Test {
         siloConfig = new SiloConfig(_siloId, _configDataInput0, _configDataInput1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawNoDebt
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testOrderedConfigsWithdrawNoDebt
     function testOrderedConfigsWithdrawNoDebt() public view {
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
@@ -97,7 +97,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, address(0));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo0NotSameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo0NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo0NotSameAsset() public {
         _mockShareTokensBalances(_siloUser, 1, 0);
 
@@ -123,7 +123,7 @@ contract OrderedConfigsTest is Test {
         _assertForSilo1DebtSilo0NotSameAsset(collateralConfig, debtConfig);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo1NotSameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testOrderedConfigsWithdrawDebtSilo1NotSameAsset
     function testOrderedConfigsWithdrawDebtSilo1NotSameAsset() public {
         _mockShareTokensBalances(_siloUser, 0, 1);
 
@@ -149,7 +149,7 @@ contract OrderedConfigsTest is Test {
         _assertForSilo1DebtSilo1NotSameAsset(collateralConfig, debtConfig);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo0SameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo0SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo0SameAsset() public {
         _mockShareTokensBalances(_siloUser, 1, 0);
 
@@ -175,7 +175,7 @@ contract OrderedConfigsTest is Test {
         _assertForSilo1DebtSilo0SameAsset(collateralConfig, debtConfig);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testOrderedConfigsWithdrawWithDebtSilo1SameAsset
     function testOrderedConfigsWithdrawWithDebtSilo1SameAsset() public {
         _mockShareTokensBalances(_siloUser, 0, 1);
 
@@ -199,7 +199,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, _silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testOrderedConfigsBorrowNoDebtNotSameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testOrderedConfigsBorrowNoDebtNotSameAsset
     function testOrderedConfigsBorrowNoDebtNotSameAsset() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -215,7 +215,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, _silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsNoDebt
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testGetConfigsNoDebt
     function testGetConfigsNoDebt() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -226,7 +226,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, address(0));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo0NotSameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testGetConfigsDebtSilo0NotSameAsset
     function testGetConfigsDebtSilo0NotSameAsset() public {
         _mockShareTokensBalances(_siloUser, 1, 0);
 
@@ -242,7 +242,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, _silo0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo0SameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testGetConfigsDebtSilo0SameAsset
     function testGetConfigsDebtSilo0SameAsset() public {
         _mockShareTokensBalances(_siloUser, 1, 0);
 
@@ -258,7 +258,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, _silo0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSil1NotSameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testGetConfigsDebtSil1NotSameAsset
     function testGetConfigsDebtSil1NotSameAsset() public {
         _mockShareTokensBalances(_siloUser, 0, 1);
 
@@ -274,7 +274,7 @@ contract OrderedConfigsTest is Test {
         assertEq(debtConfig.silo, _silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt testGetConfigsDebtSilo1SameAsset
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt testGetConfigsDebtSilo1SameAsset
     function testGetConfigsDebtSilo1SameAsset() public {
         _mockShareTokensBalances(_siloUser, 0, 1);
 

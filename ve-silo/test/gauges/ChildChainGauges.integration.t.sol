@@ -18,7 +18,7 @@ import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 import {IMinterLike as IMinter} from "ve-silo/test/gauges/interfaces/IMinterLike.sol";
 import {IVotingEscrowDelegationProxyLike} from "ve-silo/test/gauges/interfaces/IVotingEscrowDelegationProxyLike.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc ChildChainGaugesTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc ChildChainGaugesTest --ffi -vvv
 contract ChildChainGaugesTest is IntegrationTest {
     uint256 internal constant _BOB_BAL = 20e18;
     uint256 internal constant _ALICE_BAL = 20e18;
@@ -123,7 +123,7 @@ contract ChildChainGaugesTest is IntegrationTest {
         );
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testTransferTokensToTheMinter --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testTransferTokensToTheMinter --ffi -vvv
     function testTransferTokensToTheMinter() public {
         ISiloChildChainGauge gauge = _createGauge();
 
@@ -156,7 +156,7 @@ contract ChildChainGaugesTest is IntegrationTest {
         assertEq(_siloToken.balanceOf(address(_l2BalancerPseudoMinter)), tokensAmount);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testAnyOneCanCheckpoint --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testAnyOneCanCheckpoint --ffi -vvv
     function testAnyOneCanCheckpoint() public {
         address someUser1 = makeAddr("Some user 1");
         address someUser2 = makeAddr("Some user 2");
@@ -177,7 +177,7 @@ contract ChildChainGaugesTest is IntegrationTest {
     }
 
     /// @notice Should update stats for two users
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testUpdateUsers --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testUpdateUsers --ffi -vvv
     function testUpdateUsers() public {
         ISiloChildChainGauge gauge = _createGauge();
 

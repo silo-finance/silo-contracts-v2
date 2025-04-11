@@ -10,7 +10,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
- FOUNDRY_PROFILE=core-test forge test -vv --mc ActionsInitializeTest --ffi
+ FOUNDRY_PROFILE=core_test forge test -vv --mc ActionsInitializeTest --ffi
 */
 contract ActionsInitializeTest is Test, SiloLittleHelper {
     ISiloConfig siloConfig;
@@ -20,7 +20,7 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_actions_initialize_WrongSilo --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_actions_initialize_WrongSilo --ffi
     */
     function test_actions_initialize_WrongSilo() public {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
@@ -28,7 +28,7 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_actions_initialize_pass --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_actions_initialize_pass --ffi
     */
     function test_actions_initialize_pass() public {
         ISiloConfig.ConfigData memory mockedCfg = siloConfig.getConfig(address(silo0));
@@ -48,7 +48,7 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_actions_initialize_SiloInitialized --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_actions_initialize_SiloInitialized --ffi
     */
     function test_actions_initialize_SiloInitialized() public {
         ISiloConfig.ConfigData memory mockedCfg = siloConfig.getConfig(address(silo0));
