@@ -118,6 +118,11 @@ library SiloVaultActionsLib {
 
             uint256 internalBalance = _balanceTracker[market];
 
+            if (assets > internalBalance) {
+                // mimic the same behavior as we have in `deposit`
+                internalBalance = assets;
+            }
+
             // We reached a cap of the market by internal balance, so we can't supply more
             if (internalBalance >= supplyCap) continue;
 
