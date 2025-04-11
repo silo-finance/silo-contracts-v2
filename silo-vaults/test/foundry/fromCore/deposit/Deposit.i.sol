@@ -69,7 +69,7 @@ contract DepositTest is VaultsLittleHelper {
     function test_deposit_balanceTracker_MarketReportedWrongSupply() public {
         uint256 length = vault.supplyQueueLength();
 
-        assertGt(length, 1, "supplyQueueLength less than 2");
+        assertGe(length, 2, "supplyQueueLength less than 2");
 
         IERC4626 market0 = vault.supplyQueue(0);
         IERC4626 market1 = vault.supplyQueue(1);
@@ -91,21 +91,20 @@ contract DepositTest is VaultsLittleHelper {
 
         assertEq(balanceAfter0, depositAmount, "invalid balanceAfter0");
 
-        // simulate hacked market
-        // vault hacked and started to report wrong supply
         uint256 sharesBalance = market0.balanceOf(address(vault));
         uint256 currentPreviewRedeem = market0.previewRedeem(sharesBalance);
 
         bytes memory data = abi.encodeWithSelector(IERC4626.previewRedeem.selector, sharesBalance);
 
-        vm.mockCall(address(market0), data, abi.encode(currentPreviewRedeem / 2));
+        // vault hacked and started to report wrong supply, based on which we can deploy all tokens again
+        vm.mockCall(address(market0), data, abi.encode(0));
         vm.expectCall(address(market0), data);
 
         _deposit(depositBelowCap * 2, depositor);
 
         uint256 balanceAfter1 = vault.balanceTracker(market1);
 
-        assertEq(balanceAfter0, vault.balanceTracker(market0), "expect no deposit to market0");
-        assertEq(balanceAfter1, depositBelowCap * 2, "expect deposit to market1");
+        assertEq(balanceAfter0 + depositBelowCap, vault.balanceTracker(market0), "expect deposit to market0 up to internal CAP");
+        assertEq(balanceAfter1, depositBelowCap, "expect deposit to market1");
     }
 }
