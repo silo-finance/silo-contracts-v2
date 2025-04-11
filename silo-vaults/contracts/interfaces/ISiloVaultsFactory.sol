@@ -4,7 +4,6 @@ pragma solidity >=0.5.0;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISiloVault} from "./ISiloVault.sol";
-import {IdleVault} from "../IdleVault.sol";
 
 /// @title ISiloVaultsFactory
 /// @dev Forked with gratitude from Morpho Labs.
@@ -14,9 +13,6 @@ import {IdleVault} from "../IdleVault.sol";
 interface ISiloVaultsFactory {
     /// @notice Whether a SiloVault vault was created with the factory.
     function isSiloVault(address _target) external view returns (bool);
-
-    /// @notice Whether a IdleVault vault was created with the factory.
-    function isIdleVault(address _target) external view returns (bool);
 
     /// @notice Creates a new SiloVault vault.
     /// @param _initialOwner The owner of the vault.
@@ -33,8 +29,4 @@ interface ISiloVaultsFactory {
         string memory _symbol,
         bool _withIdle
     ) external returns (ISiloVault siloVault, IERC4626 idleVault);
-
-    /// @notice Creates a new IdleVault.
-    /// @param _vault vault address for which idle vault will be created
-    function createIdleVault(IERC4626 _vault) external returns (IERC4626 idleVault);
 }
