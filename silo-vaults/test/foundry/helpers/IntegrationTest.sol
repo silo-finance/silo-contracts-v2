@@ -120,6 +120,14 @@ contract IntegrationTest is BaseTest {
         vault.acceptCap(market);
     }
 
+    function _setOneMarketToSupplyQueue(IERC4626 market) internal {
+        IERC4626[] memory supplyQueue = new IERC4626[](1);
+        supplyQueue[0] = market;
+
+        vm.prank(ALLOCATOR);
+        vault.setSupplyQueue(supplyQueue);
+    }
+
     function _sortSupplyQueueIdleLast() internal {
         IERC4626[] memory supplyQueue = new IERC4626[](vault.supplyQueueLength());
 

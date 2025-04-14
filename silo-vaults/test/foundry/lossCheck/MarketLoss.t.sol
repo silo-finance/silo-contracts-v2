@@ -179,9 +179,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         emit log("SUPPLIER doing deposit");
 
-        // deposit amount 18446744073709551614
-        // assets 18446744073709551614, vault shares 18446744073709551614000
-        // idle market part: 9223372036854775808 (shares 500), 1:18446744073709551
         try vault.deposit(_supplierDeposit, SUPPLIER) returns (uint256 supplierShares) {
             // if did not revert, we expect no loss
 
@@ -215,6 +212,8 @@ contract MarketLossTest is IBefore, IntegrationTest {
             bytes4 errorType = bytes4(data);
 
             if (
+                // AllCapsReached: in case we got 0 shares in idle because of price manipulation
+                errorType == ErrorsLib.AllCapsReached.selector ||
                 errorType == ErrorsLib.AssetLoss.selector ||
                 errorType == ErrorsLib.ZeroShares.selector
             ) {

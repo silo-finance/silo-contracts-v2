@@ -39,8 +39,8 @@ contract MarketTest is IntegrationTest {
 
         assertEq(
             asset.allowance(address(vault), address(market)),
-            type(uint256).max,
-            "allowance is in use"
+            0,
+            "allowance is ZERO after setCap"
         );
 
         _setCap(market, 0);
@@ -400,7 +400,10 @@ contract MarketTest is IntegrationTest {
     function test_setArbitraryLossThreshold() public {
         IERC4626 market = allMarkets[0];
 
-        vm.startPrank(CURATOR);
+        vm.startPrank(vault.owner());
+        vault.submitGuardian(GUARDIAN);
+
+        vm.startPrank(GUARDIAN);
 
         vm.expectRevert(ErrorsLib.AlreadySet.selector);
         vault.setArbitraryLossThreshold(market, 0);
@@ -423,6 +426,124 @@ contract MarketTest is IntegrationTest {
         vm.stopPrank();
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_noAllowanceIfDepositFailed -vvv
+    */
+    function test_noAllowanceIfDepositFailed() public {
+        address anyMarket = makeAddr("any market");
+        IERC4626 secondMarket = allMarkets[0];
+
+        prepareAnyMarketSetup();
+
+        uint256 depositAmount = type(uint32).max;
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.maxDeposit.selector, address(vault)),
+            abi.encode(type(uint128).max)
+        );
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.previewDeposit.selector, depositAmount),
+            abi.encode(1)
+        );
+
+        // simulate deposit failure
+        vm.mockCallRevert(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.deposit.selector, depositAmount, address(vault)),
+            abi.encode(false)
+        );
+
+        vm.prank(SUPPLIER);
+        vault.deposit(depositAmount, SUPPLIER);
+
+        IERC20 asset = IERC20(vault.asset());
+
+        // market with failed deposit should have no allowance
+        assertEq(asset.allowance(address(vault), anyMarket), 1, "[0] allowance should be ZERO");
+        // market with successful deposit should have no allowance
+        assertEq(asset.allowance(address(vault), address(secondMarket)), 1, "[1] allowance should be ZERO");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_MaxDepositCap -vvv
+    */
+    function test_MaxDepositCap() public {
+        address anyMarket = makeAddr("any market");
+        IERC4626 secondMarket = allMarkets[0];
+
+        prepareAnyMarketSetup();
+
+        uint256 depositAmount = type(uint32).max;
+
+        uint256 maxAnyDeposit = 1;
+        uint256 anyShares = 1000;
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.maxDeposit.selector, address(vault)),
+            abi.encode(maxAnyDeposit)
+        );
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.previewDeposit.selector, maxAnyDeposit),
+            abi.encode(anyShares)
+        );
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.deposit.selector, 1, address(vault)),
+            abi.encode(anyShares)
+        );
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.previewRedeem.selector, anyShares),
+            abi.encode(maxAnyDeposit)
+        );
+
+        vm.prank(SUPPLIER);
+        vault.deposit(depositAmount, SUPPLIER);
+
+        IERC20 asset = IERC20(vault.asset());
+
+        assertEq(asset.balanceOf(address(secondMarket)), depositAmount - 1, "because of maxDeposit second market got all - 1");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_noDepositWhenPreviewZero -vvv
+    */
+    function test_noDepositWhenPreviewZero() public {
+        address anyMarket = makeAddr("any market");
+        IERC4626 secondMarket = allMarkets[0];
+
+        prepareAnyMarketSetup();
+
+        uint256 depositAmount = type(uint32).max;
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.maxDeposit.selector, address(vault)),
+            abi.encode(depositAmount)
+        );
+
+        vm.mockCall(
+            anyMarket,
+            abi.encodeWithSelector(IERC4626.previewDeposit.selector, depositAmount),
+            abi.encode(0)
+        );
+
+        vm.prank(SUPPLIER);
+        vault.deposit(depositAmount, SUPPLIER);
+
+        IERC20 asset = IERC20(vault.asset());
+
+        assertEq(asset.balanceOf(address(secondMarket)), depositAmount, "second market got all");
+    }
+
     function testRevokeNoRevert() public {
         vm.startPrank(OWNER);
         vault.revokePendingTimelock();
@@ -430,5 +551,24 @@ contract MarketTest is IntegrationTest {
         vault.revokePendingCap(IERC4626(address(0)));
         vault.revokePendingMarketRemoval(IERC4626(address(0)));
         vm.stopPrank();
+    }
+
+    function prepareAnyMarketSetup() private {
+        address anyMarket = makeAddr("any market");
+
+        IERC4626[] memory supplyQueue = new IERC4626[](2);
+        supplyQueue[0] = IERC4626(anyMarket);
+        supplyQueue[1] = allMarkets[0];
+
+        vm.mockCall(anyMarket, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(vault.asset()));
+        vm.mockCall(anyMarket, abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), abi.encode(0));
+
+        _setCap(supplyQueue[0], type(uint64).max);
+        _setCap(supplyQueue[1], type(uint64).max);
+
+        vm.prank(ALLOCATOR);
+        vault.setSupplyQueue(supplyQueue);
+
+        assertEq(address(vault.supplyQueue(0)), address(supplyQueue[0]));
     }
 }

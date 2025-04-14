@@ -155,6 +155,15 @@ library ErrorsLib {
     /// @notice Thrown when projected withdraw is much less than what user deposit.
     error AssetLoss(uint256 loss);
 
+    /// @notice Thrown when the override is invalid.
+    error InvalidOverride();
+
+    /// @notice Thrown when the caller doesn't have the owner role.
+    error NotOwner();
+
+    /// @notice Thrown if withdrawn assets are not equal to the sum of the balance before and the withdrawn amount.
+    error FailedToWithdraw();
+
     function revertBytes(bytes memory _errMsg) internal pure {
         if (_errMsg.length > 0) {
             assembly { // solhint-disable-line no-inline-assembly

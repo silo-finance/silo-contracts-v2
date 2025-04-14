@@ -1,0 +1,77 @@
+# A workflow file for running Certora verification through GitHub actions.
+# Find results for each push in the "Actions" tab on the GitHub website.
+name: Certora verification
+run-name: Certora verification of ${{ github.event_name }}
+
+on:
+  push:
+    branches:
+      - 'otakar/router_specs'
+  pull_request:
+    branches:
+      - 'otakar/router_specs'
+  workflow_dispatch:
+
+
+env:
+  FOUNDRY_PROFILE: ci
+  CONFIGS: |
+    certora/config/silo-router/SiloRouter.conf
+    certora/config/silo-router/SiloRouterImplementation.conf
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      # check out the current version (recurse submodules)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      # install Certora dependencies and CLI
+      - name: Install python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+          # cache: 'pip'
+
+      # NOTE: useing certora-cli-beta for now!
+      - name: Install certora
+        run: pip3 install certora-cli-beta
+
+      # the following is only necessary if your project depends on contracts
+      # installed using yarn
+      - name: Install yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn
+
+      # Install solc-select 0.8.28
+      - name: Install solc-select
+        run: |
+          pip install solc-select
+          solc-select install 0.8.28
+          solc-select use 0.8.28
+
+      # Also download the solc 0.8.28 binaries and name it solc8.28
+      - name: Install solc-binary
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux
+          sudo mv solc-static-linux /usr/local/bin/solc8.28
+          chmod +x /usr/local/bin/solc8.28
+
+      - name: run configs
+        uses: Certora/certora-run-action@v1
+        with:
+          use-alpha: false
+          configurations: ${{ env.CONFIGS }}
+          solc-versions: 0.8.28
+          solc-remove-version-prefix: "0."
+          job-name: "Verified Rules"
+          certora-key: ${{ secrets.CERTORAKEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
