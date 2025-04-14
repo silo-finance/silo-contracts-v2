@@ -164,6 +164,9 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IERC4626
+    /// @notice Returns the total amount of the underlying asset that is “managed” by Vault.
+    /// When accrue interest in memory, we can expect result to be overestimated by 1wei, because on view method
+    /// we do not apply math for fractions.
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
         totalManagedAssets = _totalAssets();
     }
