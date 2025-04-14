@@ -10,7 +10,7 @@ import {BalancerTokenAdmin, IBalancerToken}
 
 import {Manageable} from "ve-silo/contracts/access/Manageable.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc BalancerTokenAdminTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc BalancerTokenAdminTest --ffi -vvv
 contract BalancerTokenAdminTest is IntegrationTest {
     uint256 constant internal _INITIAL_SUPPLY = 1000;
 
@@ -25,25 +25,25 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin = new BalancerTokenAdmin(IBalancerToken(_token));
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdmintActivatePermissions --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdmintActivatePermissions --ffi -vvv
     function testBalanceTokenAdmintActivatePermissions() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _tokenAdmin.activate();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt test_RevertWhen_ActivateIfIsNotTokenOwner --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt test_RevertWhen_ActivateIfIsNotTokenOwner --ffi -vvv
     function test_RevertWhen_ActivateIfIsNotTokenOwner() public {
         vm.expectRevert();
         vm.prank(_deployer);
         _tokenAdmin.activate();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdmintOwnerCanActivate --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdmintOwnerCanActivate --ffi -vvv
     function testBalanceTokenAdmintOwnerCanActivate() public {
         _activate();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdmintFailToActivateTwice --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdmintFailToActivateTwice --ffi -vvv
     function testBalanceTokenAdmintFailToActivateTwice() public {
         _activate();
 
@@ -53,7 +53,7 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin.activate();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdmintInitialParams --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdmintInitialParams --ffi -vvv
     function testBalanceTokenAdmintInitialParams() public {
         _activate();
 
@@ -62,7 +62,7 @@ contract BalancerTokenAdminTest is IntegrationTest {
         assertEq(_tokenAdmin.getInflationRate(), _tokenAdmin.INITIAL_RATE());
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testMiningParametersUpdateRevertEpoch --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testMiningParametersUpdateRevertEpoch --ffi -vvv
     function testMiningParametersUpdateRevertEpoch() public {
         _activate();
 
@@ -70,7 +70,7 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin.updateMiningParameters();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testMiningParametersUpdateEpochFinished --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testMiningParametersUpdateEpochFinished --ffi -vvv
     function testMiningParametersUpdateEpochFinished() public {
         _activate();
 
@@ -91,7 +91,7 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin.updateMiningParameters();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdminMintPermissions --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdminMintPermissions --ffi -vvv
     function testBalanceTokenAdminMintPermissions() public {
         _activate();
 
@@ -99,7 +99,7 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin.mint(address(0), 0);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdminMintAmountExceeds --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdminMintAmountExceeds --ffi -vvv
     function testBalanceTokenAdminMintAmountExceeds() public {
         _activate();
 
@@ -112,7 +112,7 @@ contract BalancerTokenAdminTest is IntegrationTest {
         _tokenAdmin.mint(to, amount);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testBalanceTokenAdminMint --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testBalanceTokenAdminMint --ffi -vvv
     function testBalanceTokenAdminMint() public {
         _activate();
 

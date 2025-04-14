@@ -20,7 +20,7 @@ bytes32 constant TOKENS_SENDER_INTERFACE_HASH = keccak256("ERC777TokensSender");
 bytes32 constant TOKENS_RECIPIENT_INTERFACE_HASH = keccak256("ERC777TokensRecipient");
 
 /*
-FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReentrancyTest -vvv
+FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ReentrancyTest -vvv
 */
 contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
     address internal attacker = makeAddr("attacker");

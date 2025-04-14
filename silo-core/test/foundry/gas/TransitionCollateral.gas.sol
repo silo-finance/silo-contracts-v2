@@ -24,7 +24,7 @@ contract TransitionCollateralTest is Gas, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_gas_transitionCollateral
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_gas_transitionCollateral
     */
     function test_gas_transitionCollateral() public {
         _action(

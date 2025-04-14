@@ -32,7 +32,7 @@ import {CCIPGaugeFactory} from "ve-silo/contracts/gauges/ccip/CCIPGaugeFactory.s
 import {IChainlinkPriceFeedLike} from "ve-silo/test/gauges/interfaces/IChainlinkPriceFeedLike.sol";
 import {CCIPTransferMessageLib} from "./CCIPTransferMessageLib.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeCheckpointer --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc CCIPGaugeCheckpointer --ffi -vvv
 contract CCIPGaugeCheckpointer is IntegrationTest {
     string constant internal _GAUGE_TYPE = "Ethereum";
 
@@ -121,7 +121,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _snapshotId = vm.snapshot();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeLINK --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testCheckpointSingleGaugeLINK --ffi -vvv
     function testCheckpointSingleGaugeLINK() public {
         _setupGauge();
         _beforeCheckpointGaugeWithLINK(_gauge, address(this));
@@ -138,7 +138,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _ensureThereIsNoLeftovers(address(_gauge));
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeLINKWithFrontLoadedETH --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testCheckpointSingleGaugeLINKWithFrontLoadedETH --ffi -vvv
     function testCheckpointSingleGaugeLINKWithFrontLoadedETH() public {
         // Front-loading 1 wei of ether to the gauge balance before it will be created
         uint256 amountOfEthToFrontLoad = 1;
@@ -165,7 +165,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _ensureThereIsNoLeftovers(address(gaugeWithETH));
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeETHWithExtraFee --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testCheckpointSingleGaugeETHWithExtraFee --ffi -vvv
     function testCheckpointSingleGaugeETHWithExtraFee() public {
         _setupGauge();
 
@@ -204,7 +204,7 @@ contract CCIPGaugeCheckpointer is IntegrationTest {
         _ensureThereIsNoLeftovers(gauge);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testCheckpointSingleGaugeETH --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testCheckpointSingleGaugeETH --ffi -vvv
     function testCheckpointSingleGaugeETH() public {
         _setupGauge();
 

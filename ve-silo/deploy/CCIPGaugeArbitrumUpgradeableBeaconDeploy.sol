@@ -16,7 +16,7 @@ import {IMainnetBalancerMinter} from "ve-silo/contracts/silo-tokens-minter/inter
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/deploy/CCIPGaugeArbitrumUpgradeableBeaconDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

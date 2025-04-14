@@ -31,7 +31,7 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 // solhint-disable func-name-mixedcase
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloFactoryCreateSiloAddrValidationsTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloFactoryCreateSiloAddrValidationsTest
 */
 contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
     enum ExpectedRevertPlaces {
@@ -66,7 +66,7 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createSilo_success_creatorSiloCounter
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createSilo_success_creatorSiloCounter
     */
     function test_createSiloSuccessCreatorSiloCounter() public {
         _createSiloMockCalls(
@@ -93,7 +93,7 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createSilo_invalidSilo
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createSilo_invalidSilo
     */
     function test_createSilo_invalidSilo() public {
         // invalid silo0
@@ -142,7 +142,7 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createSilo_invalidCollateralShareTokens
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createSilo_invalidCollateralShareTokens
     */
     function test_createSilo_invalidCollateralShareTokens() public {
         // invalid collateralShareToken0
@@ -191,7 +191,7 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createSilo_invalidDebtShareTokens
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createSilo_invalidDebtShareTokens
     */
     function test_createSilo_invalidDebtShareTokens() public {
         // invalid debtShareToken0

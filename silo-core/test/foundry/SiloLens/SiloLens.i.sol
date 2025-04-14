@@ -19,7 +19,7 @@ import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol"
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloLensIntegrationTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloLensIntegrationTest
 */
 contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -37,7 +37,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_utilization_75 -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_siloLens_utilization_75 -vv
     */
     function test_siloLens_utilization_75() public {
 
@@ -231,7 +231,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_skip_siloLens_apr_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_skip_siloLens_apr_fuzz -vv
     */
     function test_skip_siloLens_apr_fuzz(uint8 _utilization) public {
         // 50 because `defaultAsset` config optimal utilization is 50

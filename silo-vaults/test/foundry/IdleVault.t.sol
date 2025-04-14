@@ -14,14 +14,14 @@ import {IdleVaultsFactory} from "../../contracts/IdleVaultsFactory.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc IdleVaultTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc IdleVaultTest -vvv
 */
 contract IdleVaultTest is IntegrationTest {
     address attacker = makeAddr("attacker");
     uint256 donationAmount;
 
     /*
-        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_minDepositWithOffset -vvv
+        FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_idleVault_minDepositWithOffset -vvv
     */
     function test_idleVault_minDepositWithOffset() public {
         address v = address(vault);
@@ -36,7 +36,7 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     /*
-        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_offset -vv
+        FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_idleVault_offset -vv
     */
     function test_idleVault_offset() public {
         vm.prank(address(vault));
@@ -45,7 +45,7 @@ contract IdleVaultTest is IntegrationTest {
     }
 
     /*
-        FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVaultDeploy_sameOrder -vvv
+        FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_idleVaultDeploy_sameOrder -vvv
     */
     function test_idleVaultDeploy_sameOrder() public {
         IdleVaultsFactoryDeploy deploy = new IdleVaultsFactoryDeploy();

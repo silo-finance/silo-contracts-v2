@@ -13,7 +13,7 @@ uint256 constant CAP2 = 100e18;
 uint256 constant INITIAL_DEPOSIT = 4 * CAP2;
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReallocateIdleTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ReallocateIdleTest -vvv
 */
 contract ReallocateIdleTest is IntegrationTest {
     MarketAllocation[] internal allocations;

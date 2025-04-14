@@ -19,7 +19,7 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc TransitionCollateralReentrancyTest
+FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mc TransitionCollateralReentrancyTest
 */
 contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLiquidation {
     using Hook for uint256;
@@ -88,7 +88,7 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral2protected_liquidationReverts
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral2protected_liquidationReverts
     */
     function test_transitionCollateral2protected_liquidationReverts() public {
         address borrower = makeAddr("borrower");

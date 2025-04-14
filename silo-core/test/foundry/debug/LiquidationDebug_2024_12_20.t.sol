@@ -8,7 +8,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
-// FOUNDRY_PROFILE=core-test forge test --mc LiquidationDebug_2024_12_20 --ffi -vvv
+// FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2024_12_20 --ffi -vvv
 contract LiquidationDebug_2024_12_20 is IntegrationTest {
     address constant internal _SILO_ADDR = 0x7abd3124E1e2F5f8aBF8b862d086647A5141bf4c;
     IPartialLiquidation constant internal hook = IPartialLiquidation(0x2D2628f0434a5ed57601f6506d492849260193bA);
@@ -33,7 +33,7 @@ contract LiquidationDebug_2024_12_20 is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --mc LiquidationDebug_2024_12_20 --mt test_liquidation_20241220 --ffi -vvv
+    FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2024_12_20 --mt test_liquidation_20241220 --ffi -vvv
     3487244284551604
     1133332483347470
 

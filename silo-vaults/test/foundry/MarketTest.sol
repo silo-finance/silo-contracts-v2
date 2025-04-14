@@ -17,7 +17,7 @@ import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP, MAX_TEST_ASSETS, MIN_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketTest -vvv
 */
 contract MarketTest is IntegrationTest {
 
@@ -31,7 +31,7 @@ contract MarketTest is IntegrationTest {
 
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testAllowanceOnSetCap -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testAllowanceOnSetCap -vvv
     */
     function testAllowanceOnSetCap() public {
         IERC4626 market = allMarkets[0];
@@ -86,7 +86,7 @@ contract MarketTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSubmitCapInconsistentAsset -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSubmitCapInconsistentAsset -vvv
     */
     function testSubmitCapInconsistentAsset() public {
         IERC4626 market = IERC4626(makeAddr("any market"));
@@ -359,7 +359,7 @@ contract MarketTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testEnableMarketWithLiquidity -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testEnableMarketWithLiquidity -vvv
     */
     function testEnableMarketWithLiquidity(uint256 deposited, uint256 additionalSupply, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -395,7 +395,7 @@ contract MarketTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_setArbitraryLossThreshold -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_setArbitraryLossThreshold -vvv
     */
     function test_setArbitraryLossThreshold() public {
         IERC4626 market = allMarkets[0];
@@ -427,7 +427,7 @@ contract MarketTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_noAllowanceIfDepositFailed -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_noAllowanceIfDepositFailed -vvv
     */
     function test_noAllowanceIfDepositFailed() public {
         address anyMarket = makeAddr("any market");
@@ -468,7 +468,7 @@ contract MarketTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_MaxDepositCap -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_MaxDepositCap -vvv
     */
     function test_MaxDepositCap() public {
         address anyMarket = makeAddr("any market");
@@ -514,7 +514,7 @@ contract MarketTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_noDepositWhenPreviewZero -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_noDepositWhenPreviewZero -vvv
     */
     function test_noDepositWhenPreviewZero() public {
         address anyMarket = makeAddr("any market");

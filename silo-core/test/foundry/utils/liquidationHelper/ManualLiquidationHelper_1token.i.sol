@@ -9,7 +9,7 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ManualLiquidationHelperCommon} from "./ManualLiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ManualLiquidationHelper1TokenTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc ManualLiquidationHelper1TokenTest
 */
 contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     uint256 constant LIQUIDATION_UNDERESTIMATION = 1;
@@ -71,7 +71,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test  --ffi --mt test_executeLiquidation_1_token_BadDebt -vv
+    FOUNDRY_PROFILE=core_test forge test  --ffi --mt test_executeLiquidation_1_token_BadDebt -vv
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_executeLiquidation_1_token_BadDebt_fuzz(

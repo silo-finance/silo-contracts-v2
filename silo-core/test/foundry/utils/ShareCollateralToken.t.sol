@@ -14,7 +14,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test --ffi -vv --mc ShareCollateralTokenTest
+FOUNDRY_PROFILE=core_test forge test --ffi -vv --mc ShareCollateralTokenTest
 */
 contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     ISiloConfig public siloConfig;
@@ -43,7 +43,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_collateralShareToken_decimals
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_collateralShareToken_decimals
     */
     function test_collateralShareToken_decimals() public view {
         _checkDecimals(shareCollateralToken0, token0);
@@ -62,7 +62,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transfer_zero_whenDeposit_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_sToken_transfer_zero_whenDeposit_
     */
     function test_sToken_transfer_zero_whenDeposit_collateral() public {
         _sToken_transfer_zero_whenDeposit(ISilo.CollateralType.Collateral);
@@ -80,7 +80,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transfer_whenDeposit_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_sToken_transfer_whenDeposit_
     */
     function test_sToken_transfer_whenDeposits_collateral() public {
         _sToken_transfer_withDeposits(ISilo.CollateralType.Collateral);
@@ -103,7 +103,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transfer_whenSolvent_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_sToken_transfer_whenSolvent_
     */
     function test_sToken_transfer_whenSolvent_collateral_1() public {
         _sToken_transfer_whenSolvent(ISilo.CollateralType.Collateral, SAME_ASSET);
@@ -142,7 +142,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transfer_NotSolvent_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_sToken_transfer_NotSolvent_
     */
     function test_sToken_transfer_NotSolvent_collateral_1() public {
         _sToken_transfer_NotSolvent(ISilo.CollateralType.Collateral, SAME_ASSET);
@@ -196,7 +196,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transferFrom_whenSolvent_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_sToken_transferFrom_whenSolvent_
     */
     function test_sToken_transferFrom_whenSolvent_collateral_1() public {
         _sToken_transferFrom_whenSolvent(ISilo.CollateralType.Collateral, SAME_ASSET);
@@ -246,7 +246,7 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_sToken_transferFrom_whenNotSolvent_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_sToken_transferFrom_whenNotSolvent_
     */
     function test_sToken_transferFrom_whenNotSolvent_collateral_1() public {
         _sToken_transferFrom_NotSolvent(ISilo.CollateralType.Collateral, SAME_ASSET);

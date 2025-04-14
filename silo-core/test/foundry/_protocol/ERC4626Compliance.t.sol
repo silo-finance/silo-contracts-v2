@@ -6,7 +6,7 @@ import {ERC4626Test} from "a16z-erc4626-tests/ERC4626.test.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
- FOUNDRY_PROFILE=core-test forge test --ffi --mc ERC4626ComplianceTest -vvv
+ FOUNDRY_PROFILE=core_test forge test --ffi --mc ERC4626ComplianceTest -vvv
 */
 contract ERC4626ComplianceTest is SiloLittleHelper, ERC4626Test {
     function setUp() public override {

@@ -25,7 +25,7 @@ import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultInc
 import {CAP} from "../helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc VaultRewardsIntegrationTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc VaultRewardsIntegrationTest -vvv
 */
 contract VaultRewardsIntegrationSetup is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);

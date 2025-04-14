@@ -20,10 +20,10 @@ import {Registries} from "./registries/Registries.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
 import {TestStateLib} from "./TestState.sol";
 
-// FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc VaultReentrancyTest
+// FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc VaultReentrancyTest
 contract VaultReentrancyTest is Test {
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_coverage_for_vault_reentrancy
+    // FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_coverage_for_vault_reentrancy
     function test_coverage_for_vault_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
@@ -53,7 +53,7 @@ contract VaultReentrancyTest is Test {
         assertTrue(allCovered, "All methods should be covered");
     }
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mt test_vault_calls_and_reentrancy
+    // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mt test_vault_calls_and_reentrancy
     function test_vault_calls_and_reentrancy() public {
         ISiloVault vault = _deploySiloAndVaultWithOverrides();
         Registries registries = new Registries();

@@ -8,7 +8,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ManualLiquidationHelper2TokensTest} from "./ManualLiquidationHelper_2tokens.i.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ManualLiquidationHelper2TokensReceiverTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc ManualLiquidationHelper2TokensReceiverTest
 */
 contract ManualLiquidationHelper2TokensReceiverTest is ManualLiquidationHelper2TokensTest {
     function _executeLiquidation() internal override {

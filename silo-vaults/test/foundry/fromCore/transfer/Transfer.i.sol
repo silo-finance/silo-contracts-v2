@@ -9,11 +9,11 @@ import {MarketConfig} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {VaultsLittleHelper} from "../_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc TransferTest -vv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc TransferTest -vv
 */
 contract TransferTest is VaultsLittleHelper {
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_transferAccrueFee
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_transferAccrueFee
     */
     function test_transferAccrueFee() public {
         address depositor = makeAddr("Depositor");
@@ -42,7 +42,7 @@ contract TransferTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_transferFromAccrueFee
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_transferFromAccrueFee
     */
     function test_transferFromAccrueFee() public {
         address depositor = makeAddr("Depositor");

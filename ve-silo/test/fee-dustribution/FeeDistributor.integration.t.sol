@@ -12,7 +12,7 @@ import {VotingEscrowTest} from "ve-silo/test/voting-escrow/VotingEscrow.integrat
 import {IFeeDistributor} from "ve-silo/contracts/fees-distribution/interfaces/IFeeDistributor.sol";
 import {ERC20Mint} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc FeeDistributorTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc FeeDistributorTest --ffi -vvv
 contract FeeDistributorTest is IntegrationTest {
     uint256 constant internal _VE_SILO_TOKENS_BAL = 100e18;
     uint256 constant internal _TOKENS_TO_DISTRIBUTE = 1000_000e18;

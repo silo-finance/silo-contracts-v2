@@ -9,7 +9,7 @@ import {GaugeControllerDeploy} from "ve-silo/deploy/GaugeControllerDeploy.s.sol"
 import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc GaugeControllerTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc GaugeControllerTest --ffi -vvv
 contract GaugeControllerTest is IntegrationTest {
     string constant internal _ETHEREUM = "Ethereum";
     int128 constant internal _GAUGE_TYPE = 0;

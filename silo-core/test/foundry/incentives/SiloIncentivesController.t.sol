@@ -15,7 +15,7 @@ import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfac
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {AddressUtilsLib} from "silo-core/contracts/lib/AddressUtilsLib.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
     SiloIncentivesController internal _controller;
 
@@ -54,7 +54,7 @@ contract SiloIncentivesControllerTest is Test {
         _PRECISION = _controller.TEN_POW_PRECISION();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
     function test_createIncentivesProgram_OwnableUnauthorizedAccount() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
 
@@ -66,7 +66,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_EmissionPerSecondTooHigh
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_EmissionPerSecondTooHigh
     function test_createIncentivesProgram_EmissionPerSecondTooHigh() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.EmissionPerSecondTooHigh.selector));
 
@@ -79,7 +79,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_invalidDistributionEnd
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_invalidDistributionEnd
     function test_createIncentivesProgram_invalidDistributionEnd() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
 
@@ -92,7 +92,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
     function test_createIncentivesProgram_InvalidIncentivesProgramName() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
 
@@ -105,7 +105,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidRewardToken
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidRewardToken
     function test_createIncentivesProgram_InvalidRewardToken() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidRewardToken.selector));
 
@@ -118,7 +118,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_tooLongProgramName
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_tooLongProgramName
     function test_createIncentivesProgram_tooLongProgramName() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.TooLongProgramName.selector));
 
@@ -131,7 +131,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createIncentivesProgram_Success
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_Success
     function test_createIncentivesProgram_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
 
@@ -171,7 +171,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(_controller.getAllProgramsNames(), programsNames);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramAlreadyExists
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramAlreadyExists
     function test_updateIncentivesProgram_IncentivesProgramAlreadyExists() public {
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -192,7 +192,7 @@ contract SiloIncentivesControllerTest is Test {
         }));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_EmissionPerSecondTooHigh
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_EmissionPerSecondTooHigh
     function test_updateIncentivesProgram_EmissionPerSecondTooHigh() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.EmissionPerSecondTooHigh.selector));
 
@@ -200,7 +200,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp + 1000), 1e30);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_InvalidDistributionEnd
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_InvalidDistributionEnd
     function test_updateIncentivesProgram_InvalidDistributionEnd() public {
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -216,7 +216,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp - 1), 1000e18);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramNotFound
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramNotFound
     function test_updateIncentivesProgram_IncentivesProgramNotFound() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramNotFound.selector));
 
@@ -224,7 +224,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.updateIncentivesProgram(_PROGRAM_NAME, uint40(block.timestamp + 1000), 1000e18);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_handleAction_for_to
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_handleAction_for_to
     function test_handleAction_for_to() public {
         ERC20Mock(_rewardToken).mint(address(_controller), 20e18);
 
@@ -287,7 +287,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(ERC20Mock(_rewardToken).balanceOf(user2), 10e18, "invalid user2 balance");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setDistributionEnd_Success
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setDistributionEnd_Success
     function test_setDistributionEnd_Success() public {
         vm.prank(_owner);
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
@@ -337,7 +337,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(details.index, indexBefore, "invalid index");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_decrease_rewards
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_decrease_rewards
     function test_decrease_rewards() public {
         ERC20Mock(_rewardToken).mint(address(_controller), 11e18);
 
@@ -418,7 +418,7 @@ contract SiloIncentivesControllerTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_updateIncentivesProgram_Success
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_Success
     */
     function test_updateIncentivesProgram_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
@@ -462,21 +462,21 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(detailsAfter.lastUpdateTimestamp, block.timestamp, "invalid lastUpdateTimestamp");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_OnlyNotifier
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_afterTokenTransfer_OnlyNotifier
     function test_afterTokenTransfer_OnlyNotifier() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector));
 
         _controller.afterTokenTransfer(address(0), 0, address(0), 0, 0, 0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_ShouldNotRevert
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_afterTokenTransfer_ShouldNotRevert
     function test_afterTokenTransfer_ShouldNotRevert() public {
         vm.prank(_notifier);
         _controller.afterTokenTransfer(address(0), 0, address(0), 0, 0, 0);
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_afterTokenTransfer_Success
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_afterTokenTransfer_Success
     */
     function test_afterTokenTransfer_Success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
@@ -533,7 +533,7 @@ contract SiloIncentivesControllerTest is Test {
         assertNotEq(rewards, 0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_permissions
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_permissions
     function test_immediateDistribution_permissions() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector));
         _controller.immediateDistribution(_rewardToken, 100e18);
@@ -551,7 +551,7 @@ contract SiloIncentivesControllerTest is Test {
     // user3 deposit 100
     // claimRewards (user1 - 1500, user2 - 500, user3 - 0)
     //
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_scenario_1_for_immediateDistribution
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_scenario_1_for_immediateDistribution
     function test_scenario_1_for_immediateDistribution() public {
         string memory programName = Strings.toHexString(_rewardToken);
 
@@ -662,7 +662,7 @@ contract SiloIncentivesControllerTest is Test {
     // user3 deposit 100
     // claimRewards (user1 - 1450, user2 - 550, user3 - 0)
     //
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_scenario_2_for_immediateDistribution
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_scenario_2_for_immediateDistribution
     function test_scenario_2_for_immediateDistribution() public {
         string memory programName = Strings.toHexString(_rewardToken);
 
@@ -785,7 +785,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(ERC20Mock(_rewardToken).balanceOf(user3), expectedRewardsUser3, "invalid user3 balance");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_createIncentivesProgram
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_createIncentivesProgram
     function test_immediateDistribution_createIncentivesProgram() public {
         string memory programName = Strings.toHexString(_rewardToken);
 
@@ -796,13 +796,13 @@ contract SiloIncentivesControllerTest is Test {
         _controller.immediateDistribution(_rewardToken, 1e18);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_doNotRevert_when_amount_is_0
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_doNotRevert_when_amount_is_0
     function test_immediateDistribution_doNotRevert_when_amount_is_0() public {
         vm.prank(_notifier);
         _controller.immediateDistribution(_rewardToken, 0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_immediateDistribution_not_allowed_for_owner
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_not_allowed_for_owner
     function test_immediateDistribution_not_allowed_for_owner() public {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector));
 
@@ -810,13 +810,13 @@ contract SiloIncentivesControllerTest is Test {
         _controller.immediateDistribution(_rewardToken, 1e18);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_onlyOwner
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setClaimer_onlyOwner
     function test_setClaimer_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _controller.setClaimer(user1, address(this));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_zeroAddress
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setClaimer_zeroAddress
     function test_setClaimer_zeroAddress() public {
         vm.prank(_owner);
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
@@ -827,14 +827,14 @@ contract SiloIncentivesControllerTest is Test {
         _controller.setClaimer(user1, address(0));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_wrong_notifier
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_wrong_notifier
     function test_wrong_notifier() public {
         // vm.expectRevert(abi.encodeWithSelector(IDistributionManager.WrongDecimals.selector));
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
         SiloIncentivesController(_factory.create(_owner, address(0)));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setClaimer_success
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setClaimer_success
     function test_setClaimer_success() public {
         vm.expectEmit(address(_controller));
         emit ClaimerSet(user1, address(this));
@@ -845,7 +845,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(_controller.getClaimer(user1), address(this), "invalid claimer");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewards_programNotFound
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewards_programNotFound
     function test_claimRewards_programNotFound() public {
         string[] memory programsNames = new string[](1);
         programsNames[0] = "Some other program";
@@ -853,7 +853,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.claimRewards(user1, programsNames);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_onlyAuthorizedClaimers
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_onlyAuthorizedClaimers
     function test_claimRewardsOnBehalf_onlyAuthorizedClaimers() public {
         string[] memory programsNames = new string[](1);
         programsNames[0] = _PROGRAM_NAME;
@@ -861,7 +861,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.claimRewardsOnBehalf(user1, user2, programsNames);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_programNotFound
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_programNotFound
     function test_claimRewardsOnBehalf_programNotFound() public {
          vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
@@ -872,7 +872,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.claimRewardsOnBehalf(user1, user2, programsNames);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_inputsValidation
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_inputsValidation
     function test_claimRewardsOnBehalf_inputsValidation() public {
         vm.prank(_owner);
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
@@ -888,7 +888,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.claimRewardsOnBehalf(user1, address(0), programsNames);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_success
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_success
     function test_claimRewardsOnBehalf_success() public {
         ERC20Mock(_notifier).mint(address(this), _TOTAL_SUPPLY);
 
@@ -916,7 +916,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_claimRewards_toSomeoneElse
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewards_toSomeoneElse
     function test_claimRewards_toSomeoneElse() public {
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -933,7 +933,7 @@ contract SiloIncentivesControllerTest is Test {
         _claimRewards(user1, user2, programName);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getRewardsBalance_DifferentRewardsTokens
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_getRewardsBalance_DifferentRewardsTokens
     function test_getRewardsBalance_DifferentRewardsTokens() public {
         uint256 distributionEnd = block.timestamp + 100 days;
         uint104 emissionPerSecond = 1e18;
@@ -954,7 +954,7 @@ contract SiloIncentivesControllerTest is Test {
         _controller.getRewardsBalance(user1, programsNames);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_getRewardsBalance_success
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_getRewardsBalance_success
     function test_getRewardsBalance_success() public {
         uint256 distributionEnd = block.timestamp + 100 days;
         uint104 emissionPerSecond = 1e18;
@@ -1008,20 +1008,20 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(rewards, expectedRewards / 2, "expected rewards / 2");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_setDistributionEnd_invalidDistributionEnd
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setDistributionEnd_invalidDistributionEnd
     function test_setDistributionEnd_invalidDistributionEnd() public {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
         vm.prank(_owner);
         _controller.setDistributionEnd(_PROGRAM_NAME, uint40(block.timestamp - 1));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test --ffi --mt test_rescueRewards_onlyOwner -vvv
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_rescueRewards_onlyOwner -vvv
     function test_rescueRewards_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _controller.rescueRewards(_rewardToken);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test --ffi --mt test_rescueRewards_success -vvv
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_rescueRewards_success -vvv
     function test_rescueRewards_success() public {
         uint256 amount = 1000e18;
         ERC20Mock(_rewardToken).mint(address(_controller), amount);

@@ -13,7 +13,7 @@ import {TIMELOCK} from "./helpers/BaseTest.sol";
 uint256 constant FEE = 0.1 ether; // 10%
 
 /*
-FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc RevokeTest -vvv
+FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc RevokeTest -vvv
 */
 contract RevokeTest is IntegrationTest {
     function setUp() public override {
