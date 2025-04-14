@@ -1,5 +1,5 @@
 # Deploy ve-silo
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/deployments/L2WithMocksDeploy.s.sol \
     --ffi --broadcast --rpc-url https://optimism-mainnet.infura.io/v3/<_key_>
 

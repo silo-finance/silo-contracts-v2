@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloHookReceiverHarness} from "silo-core/test/foundry/_mocks/SiloHookReceiverHarness.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloHookReceiverTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloHookReceiverTest
 */
 contract SiloHookReceiverTest is Test {
     uint24 public constant HOOKS_BEFORE = 100;
@@ -29,7 +29,7 @@ contract SiloHookReceiverTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_hookReceiver_setHookConfig
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hookReceiver_setHookConfig
     */
     function test_hookReceiver_setHookConfig() public {
         vm.expectEmit(true, true, true, true);
@@ -40,7 +40,7 @@ contract SiloHookReceiverTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_hookReceiver_getters
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hookReceiver_getters
     */
     function test_hookReceiver_getters() public {
         hookReceiver.setHookConfig(silo, HOOKS_BEFORE, HOOKS_AFTER);

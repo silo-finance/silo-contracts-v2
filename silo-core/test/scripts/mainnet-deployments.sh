@@ -5,7 +5,7 @@ source ./.env
 set +e
 
 echo "Deploy ve-silo. RPC: $SILO_DEPLOYMENT_NODE"
-FOUNDRY_PROFILE=ve-silo \
+FOUNDRY_PROFILE=ve_silo \
     forge script ve-silo/deploy/MainnetDeploy.s.sol \
     --ffi --broadcast --skip-simulation --rpc-url $SILO_DEPLOYMENT_NODE
 

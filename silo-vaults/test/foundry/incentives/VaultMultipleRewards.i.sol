@@ -29,7 +29,7 @@ import {IntegrationTest} from "../helpers/IntegrationTest.sol";
 import {CAP} from "../helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc VaultMultipleRewardsTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc VaultMultipleRewardsTest -vvv
 */
 contract VaultMultipleRewardsTest is IntegrationTest {
     ISiloConfig siloConfig;
@@ -113,7 +113,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_noRewardsWhenVaultWasNotAbleToDepositToIncentiviseSilo -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_vaults_noRewardsWhenVaultWasNotAbleToDepositToIncentiviseSilo -vv
     */
     function test_vaults_noRewardsWhenVaultWasNotAbleToDepositToIncentiviseSilo() public {
         uint256 rewardsPerSec = 1e18;
@@ -199,7 +199,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_claimFromMultiplePrograms -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_vaults_claimFromMultiplePrograms -vv
     */
     function test_vaults_claimFromMultiplePrograms() public {
         uint256 rewardsPerSec = 12345678e8;

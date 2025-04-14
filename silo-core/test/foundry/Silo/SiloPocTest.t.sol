@@ -41,7 +41,7 @@ contract SiloPocTest is Test {
     }
 
     /// @dev Example of how you can access the silo config
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_poc_print_silo_market_config
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_poc_print_silo_market_config
     function test_poc_print_silo_market_config() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
 

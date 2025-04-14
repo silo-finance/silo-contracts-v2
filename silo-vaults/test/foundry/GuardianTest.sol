@@ -13,7 +13,7 @@ import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {TIMELOCK, CAP} from "./helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc GuardianTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc GuardianTest -vvv
 */
 contract GuardianTest is IntegrationTest {
     function setUp() public override {

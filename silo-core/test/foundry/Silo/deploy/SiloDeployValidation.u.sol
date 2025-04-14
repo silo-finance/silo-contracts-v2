@@ -8,7 +8,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloDeployValidation
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployValidation
 contract SiloDeployValidation is IntegrationTest {
     // the name of the hook receiver smart contract in the SiloConfigsNames.LOCAL_INVALID_HOOK
     string constant internal _INVALID_HOOK_RECEIVER = "InvalidHookReceiver";
@@ -23,7 +23,7 @@ contract SiloDeployValidation is IntegrationTest {
         _siloDeploy.useConfig(SiloConfigsNames.SILO_LOCAL_INVALID_CONTRACTS);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_invalidHookReceiver
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_invalidHookReceiver
     function test_invalidHookReceiver() public {
         vm.expectRevert(abi.encodeWithSelector(
             SiloConfigData.DeployedContractNotFound.selector,
@@ -33,7 +33,7 @@ contract SiloDeployValidation is IntegrationTest {
         _siloDeploy.run();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_invalidIRM
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_invalidIRM
     function test_invalidIRM() public {
         // mocking contracts that are before an interest rate model
         AddrLib.setAddress(_INVALID_HOOK_RECEIVER, makeAddr(_INVALID_HOOK_RECEIVER));

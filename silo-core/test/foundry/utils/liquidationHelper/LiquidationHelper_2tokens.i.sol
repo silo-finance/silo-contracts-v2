@@ -8,7 +8,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {LiquidationHelperCommon} from "./LiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper1TokenTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationHelper1TokenTest
 */
 contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     uint256 constant LIQUIDATION_UNDERESTIMATION = 2;
@@ -34,7 +34,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
     function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
         vm.warp(block.timestamp + _addTimestamp);

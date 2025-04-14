@@ -20,7 +20,7 @@ import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
 contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
@@ -54,7 +54,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
         (bool entered) = siloConfig.reentrancyGuardEntered();

@@ -15,7 +15,7 @@ import {TIMELOCK, CAP} from "./helpers/BaseTest.sol";
 uint256 constant FEE = 0.1 ether; // 10%
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc TimelockTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc TimelockTest -vvv
 */
 contract TimelockTest is IntegrationTest {
     function setUp() public override {
@@ -83,7 +83,7 @@ contract TimelockTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeploySiloVaultBelowMinTimelock -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testDeploySiloVaultBelowMinTimelock -vvv
     */
     function testDeploySiloVaultBelowMinTimelock(uint256 timelock) public {
         timelock = bound(timelock, 0, ConstantsLib.MIN_TIMELOCK - 1);

@@ -16,7 +16,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --match-contract SiloVerifierScriptTest --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --match-contract SiloVerifierScriptTest --ffi
 */
 contract SiloVerifierScriptTest is Test {
     ISiloConfig constant WS_USDC_CONFIG = ISiloConfig(0x062A36Bbe0306c2Fd7aecdf25843291fBAB96AD2);

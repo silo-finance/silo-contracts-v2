@@ -93,7 +93,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run single test to build cache for contracts
-                run: FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloStoragePointer
+                run: FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloStoragePointer
 
             -   name: Run Forge build
                 run: |
@@ -158,7 +158,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:
@@ -208,7 +208,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: ${{ matrix.match-contract }}
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
 
     MaxLiquidationTest:
         strategy:
@@ -257,7 +257,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: ${{ matrix.match-test }}
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
 
     SiloLensCompatibilityTest:
         strategy:
@@ -300,4 +300,4 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: ${{ matrix.match-contract }}
-                run: FOUNDRY_PROFILE=core-test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv

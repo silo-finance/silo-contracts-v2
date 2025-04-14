@@ -8,9 +8,9 @@ import {SiloHookV1Deploy} from "silo-core/deploy/SiloHookV1Deploy.s.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloHookV1DeployTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloHookV1DeployTest
 contract SiloHookV1DeployTest is Test {
-    // fFOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_siloHookV1Deploy_run
+    // fFOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloHookV1Deploy_run
     function test_siloHookV1Deploy_run() public {
         SiloHookV1Deploy deploy = new SiloHookV1Deploy();
         deploy.disableDeploymentsSync();

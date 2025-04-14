@@ -6,7 +6,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket235
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket235
 */
 contract CantinaTicket235 is CantinaTicket {
     function testCollateralTransitionExploit() public {

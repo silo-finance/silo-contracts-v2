@@ -6,7 +6,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {ChildChainTokenTest} from "./ChildChainTokenTest.t.sol";
 import {MiloTokenChildChainDeploy} from "ve-silo/deploy/MiloTokenChildChainDeploy.s.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc MiloChildChainTokenTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc MiloChildChainTokenTest --ffi -vvv
 contract MiloChildChainTokenTest is ChildChainTokenTest {
     function _deployToken() internal override {
         MiloTokenChildChainDeploy deployment = new MiloTokenChildChainDeploy();

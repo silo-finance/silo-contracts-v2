@@ -14,7 +14,7 @@ import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncen
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 /*
-FOUNDRY_PROFILE=vaults-tests forge test --mc VaultIncentivesModuleTest -vv
+FOUNDRY_PROFILE=vaults_tests forge test --mc VaultIncentivesModuleTest -vv
 */
 contract VaultIncentivesModuleTest is Test {
     bool internal constant _ALL_PROGRAMS_STOPPED = true;
@@ -66,7 +66,7 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_new -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_new -vvv
     */
     function test_IncentivesModule_new() public {
         VaultIncentivesModule module = new VaultIncentivesModule();
@@ -75,7 +75,7 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_init -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_init -vvv
     */
     function test_IncentivesModule_init() public {
         address module = Clones.clone(address(new VaultIncentivesModule()));
@@ -90,7 +90,7 @@ contract VaultIncentivesModuleTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_initOnce -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_initOnce -vvv
     */
     function test_IncentivesModule_initOnce() public {
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
