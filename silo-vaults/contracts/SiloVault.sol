@@ -1029,7 +1029,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // Reset approval regardless of the deposit success or failure.
         // Setting to 1 wei to support tokens that revert when approving 0
-        address(asset).call(abi.encodeWithSelector(IERC20.approve.selector, address(_market), 1);
+        // we don't care if this call will fail or not
+        address(asset).call(abi.encodeWithSelector(IERC20.approve.selector, address(_market), 1));
     }
 
     function _priceManipulationCheck(IERC4626 _market, uint256 _shares, uint256 _assets) internal view {

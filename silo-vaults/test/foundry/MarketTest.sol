@@ -76,6 +76,42 @@ contract MarketTest is IntegrationTest {
         vault.deposit(1, RECEIVER);
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi -vv --mt testDepositResetApprovalReverts
+    */
+    function testDepositResetApprovalReverts() public {
+        uint256 amount = 123;
+
+        bytes memory data = abi.encodeWithSelector(IERC20.approve.selector, address(idleMarket), 1);
+        vm.expectCall(address(loanToken), data);
+        vm.mockCallRevert(address(loanToken), data, "");
+
+        vm.prank(SUPPLIER);
+        uint256 someShares = vault.deposit(amount, SUPPLIER);
+
+        assertGt(someShares, 0, "deposit did not revert");
+
+        assertEq(
+            loanToken.allowance(address(vault), address(idleMarket)),
+            amount,
+            "allowance was not reset because of revert"
+        );
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi -vv --mt testDepositResetApprovalNotReverts
+    */
+    function testDepositResetApprovalNotReverts() public {
+        vm.prank(SUPPLIER);
+        vault.deposit(2222, SUPPLIER);
+
+        assertEq(
+            loanToken.allowance(address(vault), address(idleMarket)),
+            1,
+            "allowance reset when no revert revert"
+        );
+    }
+
     function testSubmitCapOverflow(uint256 seed, uint256 cap) public {
         IERC4626 market = _randomMarket(seed);
         cap = bound(cap, uint256(type(uint184).max) + 1, type(uint256).max);
