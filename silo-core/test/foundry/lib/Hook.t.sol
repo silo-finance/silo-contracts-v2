@@ -38,7 +38,7 @@ contract HookTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --mt test_hook_shareTokenTransfer -vv
+    FOUNDRY_PROFILE=core_test forge test --mt test_hook_shareTokenTransfer -vv
     */
     function test_hook_shareTokenTransfer() public {
         vm.expectRevert(Hook.InvalidTokenType.selector);

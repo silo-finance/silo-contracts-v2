@@ -92,9 +92,8 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         uint256 borrowForReceiver = 1;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, borrower, 0, borrowForReceiver)
-        ); // because we want to mint for receiver
+        // because we want to mint for receiver
+        vm.expectRevert(abi.encodeWithSelector(IShareToken.AmountExceedsAllowance.selector));
         vm.prank(borrower);
         silo0.borrow(borrowForReceiver, borrower, makeAddr("receiver"));
     }
@@ -135,9 +134,8 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         uint256 borrowForReceiver = 1;
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, borrower, 0, borrowForReceiver)
-        ); // because we want to mint for receiver
+        // because we want to mint for receiver
+        vm.expectRevert(abi.encodeWithSelector(IShareToken.AmountExceedsAllowance.selector));
         vm.prank(borrower);
         silo1.borrow(borrowForReceiver, borrower, receiver);
     }

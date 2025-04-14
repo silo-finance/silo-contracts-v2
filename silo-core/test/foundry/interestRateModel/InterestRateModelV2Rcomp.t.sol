@@ -52,7 +52,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_IRM_getConfig_withData
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_IRM_getConfig_withData
     */
     function test_IRM_getConfig_withData() public {
         address silo = address(this);
@@ -81,7 +81,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_IRM_getSetup
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_IRM_getSetup
     */
     function test_IRM_getSetup() public {
         address silo = address(this);

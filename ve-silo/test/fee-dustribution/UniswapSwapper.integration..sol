@@ -11,7 +11,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {UniswapSwapperDeploy} from "ve-silo/deploy/UniswapSwapperDeploy.s.sol";
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc UniswapSwapperTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc UniswapSwapperTest --ffi -vvv
 contract UniswapSwapperTest is IntegrationTest {
     uint256 constant internal _FORKING_BLOCK_NUMBER = 18040200;
 

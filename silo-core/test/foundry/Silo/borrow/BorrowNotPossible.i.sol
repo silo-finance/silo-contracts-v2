@@ -56,7 +56,7 @@ contract BorrowNotPossibleTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_borrow_without_collateral
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_borrow_without_collateral
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_borrow_without_collateral(uint256 _depositAmount, uint256 _borrowAmount) public {

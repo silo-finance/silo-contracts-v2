@@ -86,7 +86,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_previewBorrow_max_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_previewBorrow_max_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_previewBorrow_max_fuzz(uint64 _assetsOrShares, bool _interest) public {

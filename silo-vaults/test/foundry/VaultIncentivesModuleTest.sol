@@ -14,7 +14,7 @@ import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncen
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 /*
-FOUNDRY_PROFILE=vaults-tests forge test --mc VaultIncentivesModuleTest -vv
+FOUNDRY_PROFILE=vaults_tests forge test --mc VaultIncentivesModuleTest -vv
 */
 contract VaultIncentivesModuleTest is Test {
     bool internal constant _ALL_PROGRAMS_STOPPED = true;
@@ -44,7 +44,7 @@ contract VaultIncentivesModuleTest is Test {
 
     function setUp() public {
         incentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
-        incentivesModule.__VaultIncentivesModule_init(_deployer, ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(ISiloVault(_vault));
 
         vm.mockCall(
             address(incentivesModule.vault()),
@@ -57,33 +57,44 @@ contract VaultIncentivesModuleTest is Test {
             abi.encodeWithSelector(ISiloVaultBase.guardian.selector),
             abi.encode(_guardian)
         );
+
+        vm.mockCall(
+            address(incentivesModule.vault()),
+            abi.encodeWithSelector(Ownable.owner.selector),
+            abi.encode(_deployer)
+        );
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_new -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_new -vvv
     */
     function test_IncentivesModule_new() public {
         VaultIncentivesModule module = new VaultIncentivesModule();
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        module.__VaultIncentivesModule_init(address(1), ISiloVault(_vault));
+        module.__VaultIncentivesModule_init(ISiloVault(_vault));
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_init -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_init -vvv
     */
     function test_IncentivesModule_init() public {
         address module = Clones.clone(address(new VaultIncentivesModule()));
-        assertEq(VaultIncentivesModule(module).owner(), address(0), "cloned contract has NO owner");
 
-        VaultIncentivesModule(module).__VaultIncentivesModule_init(address(1), ISiloVault(_vault));
+        vm.expectRevert(); // not initialized, vault is not set
+        VaultIncentivesModule(module).owner();
 
-        assertEq(VaultIncentivesModule(module).owner(), address(1), "valid owner");
+        VaultIncentivesModule(module).__VaultIncentivesModule_init(ISiloVault(_vault));
+
+        assertEq(VaultIncentivesModule(module).owner(), _deployer, "valid owner");
         assertEq(address(VaultIncentivesModule(module).vault()), _vault, "valid vault");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_initOnce -vvv
+    */
     function test_IncentivesModule_initOnce() public {
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        incentivesModule.__VaultIncentivesModule_init(address(1), ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(ISiloVault(_vault));
     }
 
     /*
@@ -186,7 +197,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_submitIncentivesClaimingLogic_OnlyOwner -vvv
     */
     function test_submitIncentivesClaimingLogic_OnlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
     }
 
@@ -236,7 +247,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_removeIncentivesClaimingLogic_onlyOwner -vvv
     */
     function test_removeIncentivesClaimingLogic_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.removeIncentivesClaimingLogic(_market1, _logic1);
     }
 
@@ -312,7 +323,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_addNotificationReceiver_onlyOwner -vvv
     */
     function test_addNotificationReceiver_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
     }
 
@@ -358,7 +369,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_removeNotificationReceiver_onlyOwner -vvv
     */
     function test_removeNotificationReceiver_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1), _ALL_PROGRAMS_STOPPED);
     }
 
@@ -366,18 +377,18 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_vaultIncentivesModule_ownershipTransfer -vvv
     */
     function test_vaultIncentivesModule_ownershipTransfer() public {
+        Ownable2Step ownableModule = Ownable2Step(address(incentivesModule));
+
+        assertEq(ownableModule.owner(), _deployer);
+
         address newOwner = makeAddr("NewOwner");
 
-        Ownable2Step module = Ownable2Step(address(incentivesModule));
+        vm.mockCall(
+            address(incentivesModule.vault()),
+            abi.encodeWithSelector(Ownable.owner.selector),
+            abi.encode(newOwner)
+        );
 
-        vm.prank(_deployer);
-        module.transferOwnership(newOwner);
-
-        assertEq(module.pendingOwner(), newOwner);
-
-        vm.prank(newOwner);
-        module.acceptOwnership();
-
-        assertEq(module.owner(), newOwner);
+        assertEq(ownableModule.owner(), newOwner);
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc MaxWithdrawTest
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc MaxWithdrawTest
 */
 contract MaxWithdrawTest is VaultsLittleHelper {
     address immutable depositor;
@@ -22,9 +22,9 @@ contract MaxWithdrawTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_maxWithdraw_deposit_fuzz(
         uint112 _assets,
         uint16 _assets2
@@ -43,9 +43,9 @@ contract MaxWithdrawTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxWithdraw_notEnoughLiquidity_fuzz
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxWithdraw_notEnoughLiquidity_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_maxWithdraw_notEnoughLiquidity_fuzz(
         uint128 _collateral,
         uint64 _percentToReduceLiquidity
@@ -65,9 +65,9 @@ contract MaxWithdrawTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_maxWithdraw_whenInterest_
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_maxWithdraw_whenInterest_
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_maxWithdraw_whenInterest_fuzz(uint128 _collateral) public {
         vm.assume(_collateral > 0);
 

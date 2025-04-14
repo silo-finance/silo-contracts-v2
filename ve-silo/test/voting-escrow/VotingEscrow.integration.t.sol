@@ -15,7 +15,7 @@ import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {VotingEscrowChildChainDeploy} from "ve-silo/deploy/VotingEscrowChildChainDeploy.s.sol";
 import {ERC20Mint as ERC20} from "ve-silo/test/_mocks/ERC20Mint.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc VotingEscrowTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc VotingEscrowTest --ffi -vvv
 contract VotingEscrowTest is IntegrationTest {
     IVeSilo internal _votingEscrow;
     IVeBoost internal _veBoost;
@@ -93,7 +93,7 @@ contract VotingEscrowTest is IntegrationTest {
         assertEq(_veBoost.VE(), address(_votingEscrow), "An invalid VotingEscrow address");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testLockPeriodsForCreateLock --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testLockPeriodsForCreateLock --ffi -vvv
     function testLockPeriodsForCreateLock() public {
         uint256 tokensAmount = 11 ether;
 
@@ -111,7 +111,7 @@ contract VotingEscrowTest is IntegrationTest {
         _votingEscrow.create_lock(tokensAmount, timestamp + 1 weeks);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testLockPeriodsIncreaseUnlockTime --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testLockPeriodsIncreaseUnlockTime --ffi -vvv
     function testLockPeriodsIncreaseUnlockTime() public {
         uint256 tokensAmount = 11 ether;
 

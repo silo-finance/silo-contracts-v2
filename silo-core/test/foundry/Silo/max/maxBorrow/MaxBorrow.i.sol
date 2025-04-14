@@ -13,7 +13,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxBorrowTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxBorrowTest
 */
 contract MaxBorrowTest is SiloLittleHelper, Test {
     using Strings for uint256;

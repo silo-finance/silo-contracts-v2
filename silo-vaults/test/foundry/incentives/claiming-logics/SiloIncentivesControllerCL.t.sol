@@ -22,7 +22,7 @@ import {
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 
-// FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mc SiloIncentivesControllerCLTest
+// FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mc SiloIncentivesControllerCLTest
 contract SiloIncentivesControllerCLTest is Test {
     SiloIncentivesControllerCL public incentivesControllerCL;
     SiloIncentivesControllerCLFactory public factory;
@@ -43,7 +43,31 @@ contract SiloIncentivesControllerCLTest is Test {
         assertTrue(SiloIncentivesControllerCLFactory(factory).createdInFactory(address(incentivesControllerCL)));
     }
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mt test_incentivesClaimingLogicZeroAddress
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testCreateIncentivesControllerCLSameOrder -vvv
+    */
+    function testCreateIncentivesControllerCLSameOrder() public {
+        address devWallet = makeAddr("dev wallet");
+        address otherWallet = makeAddr("other wallet");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(devWallet);
+        SiloIncentivesControllerCL logic1 = factory.createIncentivesControllerCL(
+            _vaultIncentivesController, _siloIncentivesController
+        );
+
+        vm.revertTo(snapshot);
+
+        vm.prank(otherWallet);
+        SiloIncentivesControllerCL logic2 = factory.createIncentivesControllerCL(
+            _vaultIncentivesController, _siloIncentivesController
+        );
+
+        assertNotEq(address(logic1), address(logic2), "logic1 == logic2");
+    }
+
+    // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mt test_incentivesClaimingLogicZeroAddress
     function test_incentivesClaimingLogicZeroAddress() public {
         vm.expectRevert(IIncentivesClaimingLogic.VaultIncentivesControllerZeroAddress.selector);
         factory.createIncentivesControllerCL(address(0), _siloIncentivesController);
@@ -52,7 +76,7 @@ contract SiloIncentivesControllerCLTest is Test {
         factory.createIncentivesControllerCL(_vaultIncentivesController, address(0));
     }
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mt test_claimRewardsAndDistribute
+    // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mt test_claimRewardsAndDistribute
     function test_claimRewardsAndDistribute() public {
         address rewardToken1 = makeAddr("RewardToken1");
         address rewardToken2 = makeAddr("RewardToken2");

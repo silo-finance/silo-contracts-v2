@@ -12,7 +12,7 @@ import {VeSiloMocksContracts} from "ve-silo/test/_mocks/for-testnet-deployments/
 import {IVeSilo} from "ve-silo/contracts/voting-escrow/interfaces/IVeSilo.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/scripts/SendEthToProposer.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

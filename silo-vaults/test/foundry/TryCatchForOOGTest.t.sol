@@ -37,7 +37,7 @@ contract Oveflows {
 }
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc TryCatchForOOGTest
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc TryCatchForOOGTest
 */
 contract TryCatchForOOGTest is Test {
     Oveflows oveflows;

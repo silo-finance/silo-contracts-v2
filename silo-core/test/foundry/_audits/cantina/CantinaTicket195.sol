@@ -13,7 +13,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket195
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket195
 */
 contract CantinaTicket195 is CantinaTicket {
     SiloIncentivesController internal _controller;

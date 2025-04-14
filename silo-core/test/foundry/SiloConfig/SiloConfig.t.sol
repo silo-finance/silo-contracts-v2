@@ -808,7 +808,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBefore_error_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_crossNonReentrantBefore_error_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_crossNonReentrantBefore_error_fuzz(address _callee) public {
@@ -828,7 +828,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantBeforePermissions
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_crossNonReentrantBeforePermissions
     */
     function test_crossNonReentrantBeforePermissions() public {
         // Permissions check error
@@ -848,7 +848,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantAfter_error_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_crossNonReentrantAfter_error_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_crossNonReentrantAfter_error_fuzz(address _callee) public {
@@ -869,7 +869,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_crossNonReentrantAfterPermissions
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_crossNonReentrantAfterPermissions
     */
     function test_crossNonReentrantAfterPermissions() public {
         // _onlySiloOrTokenOrLiquidation permissions check for the crossNonReentrantAfter fn
@@ -886,7 +886,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_hasDebtInOtherSilo
     */
     function test_hasDebtInOtherSilo() public {
         address user = makeAddr("user");
@@ -911,7 +911,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_wrongSilo
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_hasDebtInOtherSilo_wrongSilo
     */
     function test_hasDebtInOtherSilo_wrongSilo() public {
         address user = makeAddr("user");
@@ -922,7 +922,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_getDebtSilo
     */
     function test_getDebtSilo() public {
         address user = makeAddr("user");
@@ -948,7 +948,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_getDebtSilo_notDebt
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_getDebtSilo_notDebt
     */
     function test_getDebtSilo_notDebt() public {
         address user = makeAddr("user");
@@ -961,7 +961,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_hasDebtInOtherSilo_noDebt
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_hasDebtInOtherSilo_noDebt
     */
     function test_hasDebtInOtherSilo_noDebt() public {
         address user = makeAddr("user");
@@ -977,7 +977,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_siloID_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_siloID_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 3
     function test_siloID_fuzz(
@@ -990,7 +990,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_turnOnReentrancyProtection_revertCrossReentrantCall
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_turnOnReentrancyProtection_revertCrossReentrantCall
     */
     function test_turnOnReentrancyProtection_revertCrossReentrantCall() public {
         vm.prank(_silo0Default);
@@ -1002,7 +1002,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_turnOffReentrancyProtection_revertCrossReentrancyNotActive
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_turnOffReentrancyProtection_revertCrossReentrancyNotActive
     */
     function test_turnOffReentrancyProtection_revertCrossReentrancyNotActive() public {
         vm.prank(_silo0Default);
@@ -1011,7 +1011,7 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_reentrancyGuardEntered
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_reentrancyGuardEntered
     */
     function test_reentrancyGuardEntered() public {
         assertFalse(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return false");

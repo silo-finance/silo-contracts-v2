@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {Nonces} from "openzeppelin5/utils/Nonces.sol";
 
 import {SiloVault} from "../../contracts/SiloVault.sol";
 import {SiloVaultsFactory} from "../../contracts/SiloVaultsFactory.sol";
@@ -13,7 +14,7 @@ import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc SiloVaultsFactoryTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc SiloVaultsFactoryTest -vvv
 */
 contract SiloVaultsFactoryTest is IntegrationTest {
     SiloVaultsFactory factory;
@@ -47,7 +48,7 @@ contract SiloVaultsFactoryTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testCreateSiloVaultTwice -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testCreateSiloVaultTwice -vvv
     */
     function testCreateSiloVaultTwice(
         address initialOwner,
@@ -76,7 +77,7 @@ contract SiloVaultsFactoryTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testCreateSiloVaultDifferentOwner -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testCreateSiloVaultDifferentOwner -vvv
     */
     function testCreateSiloVaultDifferentOwner() public {
         address initialOwner = makeAddr("initial owner");
@@ -84,7 +85,6 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         string memory name = "test";
         string memory symbol = "test";
 
-        vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
         address devWallet = makeAddr("dev wallet");
@@ -92,15 +92,7 @@ contract SiloVaultsFactoryTest is IntegrationTest {
 
         address implementation = factory.VAULT_INCENTIVES_MODULE_IMPLEMENTATION();
 
-        bytes32 salt = keccak256(abi.encodePacked(
-            factory.counter(devWallet),
-            devWallet,
-            initialOwner,
-            initialTimelock,
-            address(loanToken),
-            name,
-            symbol
-        ));
+        bytes32 salt = keccak256(abi.encodePacked(devWallet, Nonces(address(factory)).nonces(devWallet)));
 
         address predictedIncentivesModuleAddress = Clones.predictDeterministicAddress(
             implementation,
@@ -127,5 +119,34 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         );
 
         assertEq(address(siloVault2.INCENTIVES_MODULE()), predictedIncentivesModuleAddress, "unexpected address");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testCreateSiloVaultSameOrder -vvv
+    */
+    function testCreateSiloVaultSameOrder() public {
+        address initialOwner = makeAddr("initial owner");
+        uint256 initialTimelock = ConstantsLib.MIN_TIMELOCK;
+        string memory name = "test";
+        string memory symbol = "test";
+
+        address devWallet = makeAddr("dev wallet");
+        address otherWallet = makeAddr("other wallet");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(devWallet);
+        ISiloVault siloVault = factory.createSiloVault(
+            initialOwner, initialTimelock, address(loanToken), name, symbol
+        );
+
+        vm.revertTo(snapshot);
+
+        vm.prank(otherWallet);
+        ISiloVault siloVault2 = factory.createSiloVault(
+            initialOwner, initialTimelock, address(loanToken), name, symbol
+        );
+
+        assertNotEq(address(siloVault), address(siloVault2), "siloVault == siloVault2");
     }
 }

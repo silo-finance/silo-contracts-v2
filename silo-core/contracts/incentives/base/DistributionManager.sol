@@ -12,7 +12,7 @@ import {ISiloIncentivesController} from "../interfaces/ISiloIncentivesController
 import {IDistributionManager} from "../interfaces/IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 import {TokenHelper} from "../../lib/TokenHelper.sol";
-
+import {AddressUtilsLib} from "../../lib/AddressUtilsLib.sol";
 /**
  * @title DistributionManager
  * @notice Accounting contract to manage multiple staking distributions
@@ -117,7 +117,14 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     /// @inheritdoc IDistributionManager
     function getProgramId(string memory _programName) public pure virtual returns (bytes32) {
-        require(bytes(_programName).length != 0, InvalidIncentivesProgramName());
+        uint256 length = bytes(_programName).length;
+
+        if (length == 42) { // expecting a hex string representing an address
+            return _getProgramIdForAddress(AddressUtilsLib.fromHexString(_programName));
+        }
+
+        // support any non empty string up to 32 characters
+        require(length != 0 && length <= 32, InvalidIncentivesProgramName());
 
         return bytes32(abi.encodePacked(_programName));
     }
@@ -338,5 +345,14 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     {
         userBalance = _shareToken().balanceOf(_user);
         totalSupply = _shareToken().totalSupply();
+    }
+
+    /**
+     * @dev Returns the id of an incentives program (converts address to bytes32)
+     * @param _addressAsName The address of the reward token for immediate distribution
+     * @return The id of the incentives program
+     */
+    function _getProgramIdForAddress(address _addressAsName) internal pure virtual returns (bytes32) {
+        return bytes32(uint256(uint160(_addressAsName)));
     }
 }

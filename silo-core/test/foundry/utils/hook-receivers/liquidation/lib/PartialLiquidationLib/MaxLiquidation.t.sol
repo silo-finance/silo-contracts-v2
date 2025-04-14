@@ -206,7 +206,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test  forge test -vv --mt test_maxLiquidation_case5
+    FOUNDRY_PROFILE=core_test  forge test -vv --mt test_maxLiquidation_case5
     */
     function test_maxLiquidation_case5() public {
         _LT = 0.95e18;

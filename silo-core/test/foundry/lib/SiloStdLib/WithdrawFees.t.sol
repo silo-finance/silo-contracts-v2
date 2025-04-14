@@ -15,7 +15,7 @@ import {SiloFactoryMock} from "../../_mocks/SiloFactoryMock.sol";
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc WithdrawFeesTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc WithdrawFeesTest
 */
 contract WithdrawFeesTest is Test {
     uint256 constant public NO_PROTECTED_ASSETS = 0;
@@ -47,7 +47,7 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdrawFees_revert_WhenNoData
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_withdrawFees_revert_WhenNoData
     */
     function test_withdrawFees_revert_WhenNoData() external {
         _reset();
@@ -59,7 +59,7 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdrawFees_revert_NoLiquidity
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_withdrawFees_revert_NoLiquidity
     */
     function test_withdrawFees_revert_NoLiquidity() external {
         _$().daoAndDeployerRevenue = 1;
@@ -180,7 +180,7 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_withdraw_to_deployer_fails
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_withdraw_to_deployer_fails
     */
     function test_withdraw_to_deployer_fails() external {
         uint256 daoFee = 0.1e18;

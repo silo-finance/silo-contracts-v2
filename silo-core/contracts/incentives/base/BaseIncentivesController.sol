@@ -52,7 +52,9 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
         require(_incentivesProgramInput.emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
         require(_incentivesProgramInput.distributionEnd >= block.timestamp, InvalidDistributionEnd());
 
-        _createIncentiveProgram(_incentivesProgramInput);
+        bytes32 programId = getProgramId(_incentivesProgramInput.name);
+
+        _createIncentiveProgram(programId, _incentivesProgramInput);
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -273,17 +275,16 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
      * @param _incentivesProgramInput The incentives program creation input
      */
     function _createIncentiveProgram(
+        bytes32 _programId,
         DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput
     ) internal virtual {
-        bytes32 programId = getProgramId(_incentivesProgramInput.name);
-
         require(_incentivesProgramInput.rewardToken != address(0), InvalidRewardToken());
-        require(_incentivesProgramIds.add(programId), IncentivesProgramAlreadyExists());
+        require(_incentivesProgramIds.add(_programId), IncentivesProgramAlreadyExists());
 
-        incentivesPrograms[programId].rewardToken = _incentivesProgramInput.rewardToken;
-        incentivesPrograms[programId].distributionEnd = _incentivesProgramInput.distributionEnd;
-        incentivesPrograms[programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
-        incentivesPrograms[programId].lastUpdateTimestamp = uint40(block.timestamp);
+        incentivesPrograms[_programId].rewardToken = _incentivesProgramInput.rewardToken;
+        incentivesPrograms[_programId].distributionEnd = _incentivesProgramInput.distributionEnd;
+        incentivesPrograms[_programId].emissionPerSecond = _incentivesProgramInput.emissionPerSecond;
+        incentivesPrograms[_programId].lastUpdateTimestamp = uint40(block.timestamp);
 
         emit IncentivesProgramCreated(_incentivesProgramInput.name);
     }

@@ -18,7 +18,7 @@ contract PreviewMintTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewMint_beforeInterest
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_previewMint_beforeInterest_fuzz(uint256 _shares) public {
         vm.assume(_shares > 0);
 
@@ -28,7 +28,7 @@ contract PreviewMintTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewMint_afterNoInterest_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_previewMint_afterNoInterest_fuzz(
         uint128 _depositAmount,
         uint128 _shares
@@ -40,7 +40,7 @@ contract PreviewMintTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewMint_withInterest_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_previewMint_withInterest_1token_fuzz(uint128 _shares) public {
         vm.assume(_shares > 1);
 
@@ -49,7 +49,7 @@ contract PreviewMintTest is VaultsLittleHelper {
         _assertPreviewMint(_shares);
     }
 
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_previewMint_withInterest_2tokens_fuzz(uint128 _shares) public {
         vm.assume(_shares > 1);
 

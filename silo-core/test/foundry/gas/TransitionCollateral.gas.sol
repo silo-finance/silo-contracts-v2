@@ -24,7 +24,7 @@ contract TransitionCollateralTest is Gas, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_gas_transitionCollateral
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_gas_transitionCollateral
     */
     function test_gas_transitionCollateral() public {
         _action(
@@ -32,7 +32,7 @@ contract TransitionCollateralTest is Gas, Test {
             address(silo0),
             abi.encodeCall(ISilo.transitionCollateral, (ASSETS, BORROWER, ISilo.CollateralType.Collateral)),
             "transitionCollateral (when debt)",
-            292907 // 74K for interest
+            292000 // 74K for interest
         );
     }
 }
