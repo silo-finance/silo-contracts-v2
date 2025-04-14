@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - silo-core: add reentrancy protection for liquidation call
 - silo-vaults: fix max redeem
 - silo-vaults: ensure that deposit not generate zero shares
-- silo-vaults: reset approve to 1 wei to support tokens that revert when approving 0
+- silo-vaults: reset approve to 1 wei to support tokens that revert when approving 0, ensure we do not revert on reset
 - silo-vaults: account for `maxDeposit` when doing deposit
 - silo-vaults: ensure we can deposit 100% of the CAP 
 
