@@ -404,12 +404,15 @@ library SiloLendingLib {
     )
         internal returns (uint256 accruedInterest, uint256 totalFees)
     {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+        bool totalCollateralEdgeCase = totalCollateralAssets == type(uint256).max || totalCollateralAssets == 0;
+
         // if _totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
         // about precision because there is enough amount of debt to generate double wei digit
-        // of interest so we can safely ignore fractions
-        if (_totalDebtAssets >= _ROUNDING_THRESHOLD) return (_accruedInterest, _totalFees);
+        // of interest per second so we can safely ignore fractions
+        if (_totalDebtAssets >= _ROUNDING_THRESHOLD || totalCollateralEdgeCase) return (_accruedInterest, _totalFees);
 
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         ISilo.Fractions memory fractions = $.fractions;
 
         uint256 integralInterest;
