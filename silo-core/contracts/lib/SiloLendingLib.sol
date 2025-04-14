@@ -412,6 +412,8 @@ library SiloLendingLib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
+        // `accrueInterestForAsset` should never revert,
+        // so we check edge cases for revert and do early return instead of checking each calculation individually
         if (totalCollateralAssets == type(uint256).max || totalCollateralAssets == 0) {
             return (_accruedInterest, _totalFees);
         }
