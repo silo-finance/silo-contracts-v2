@@ -435,8 +435,6 @@ library SiloLendingLib {
 
         $.fractions = fractions;
         $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
-
-        (, uint256 accruedCollateral) = integralInterest.trySub(integralRevenue);
-        $.totalAssets[ISilo.AssetType.Collateral] = totalCollateralAssets + accruedCollateral;
+        $.totalAssets[ISilo.AssetType.Collateral] = totalCollateralAssets + integralInterest - integralRevenue;
     }
 }
