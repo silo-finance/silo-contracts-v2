@@ -413,7 +413,7 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
         // `accrueInterestForAsset` should never revert,
-        // so we check edge cases for revert and do early return instead of checking each calculation individually
+        // so we check edge cases for revert and do early return instead of checking each calculation individually for underflow/overflow
         if (totalCollateralAssets == type(uint256).max || totalCollateralAssets == 0) {
             return (_accruedInterest, _totalFees);
         }
