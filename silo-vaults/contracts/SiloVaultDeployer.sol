@@ -11,7 +11,6 @@ import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFactory.sol";
 import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
-import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
 import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";

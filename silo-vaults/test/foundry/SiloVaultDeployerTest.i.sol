@@ -8,12 +8,23 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
+import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFactory.sol";
+import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {SiloVaultsDeployerDeploy} from "silo-vaults/deploy/SiloVaultsDeployerDeploy.s.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {SiloIncentivesControllerCLFactoryDeploy} from "silo-vaults/deploy/SiloIncentivesControllerCLFactoryDeploy.s.sol";
 import {SiloVaultsFactoryDeploy} from "silo-vaults/deploy/SiloVaultsFactoryDeploy.s.sol";
 import {IdleVaultsFactoryDeploy} from "silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol";
+import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
+
+import {
+    ISiloIncentivesControllerFactory
+} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
+
+import {
+    ISiloIncentivesControllerCLFactory
+} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLFactory.sol";
 
 /*
 FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc SiloVaultDeployerTest -vv
@@ -42,6 +53,19 @@ contract SiloVaultDeployerTest is IntegrationTest {
 
         SiloVaultsDeployerDeploy deployerDeploy = new SiloVaultsDeployerDeploy();
         _deployer = deployerDeploy.run();
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_withIdleVault -vv
+    */
+    function test_SiloVaultDeployer_createSiloVault_withIdleVault() public {
+        ISiloVault vault;
+        IERC4626 idleVault;
+
+        (vault,, idleVault) = _deployer.createSiloVault(_params());
+
+        assertEq(IdleVault(address(idleVault)).ONLY_DEPOSITOR(), address(vault));
+        assertEq(IdleVault(address(idleVault)).asset(), vault.asset());
     }
 
     /*
