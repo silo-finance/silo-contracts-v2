@@ -78,7 +78,7 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
 
         // 1. Deploy Silo Incentives Controller
         incentivesController = ISiloIncentivesController(SILO_INCENTIVES_CONTROLLER_FACTORY.create({
-            _owner: params.initialOwner,
+            _owner: params.incentivesControllerOwner,
             _notifier: predictedAddress,
             _externalSalt: salt
         }));

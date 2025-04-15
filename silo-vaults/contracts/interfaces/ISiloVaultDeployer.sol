@@ -15,6 +15,7 @@ interface ISiloVaultDeployer {
         address initialOwner; // initial owner of the vault
         uint256 initialTimelock; // initial timelock of the vault
         address asset; // asset of the vault
+        address incentivesControllerOwner; // owner of the incentives controller
         string name; // name of the vault
         string symbol; // symbol of the vault
         ISilo[] silosWithIncentives; // silos with incentives for initial configuration

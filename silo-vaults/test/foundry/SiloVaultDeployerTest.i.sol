@@ -49,6 +49,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
     */
     function test_SiloVaultDeployer_createSiloVault_withIncentivesInit() public {
         address initialOwner = makeAddr("initialOwner");
+        address incentivesControllerOwner = makeAddr("incentivesControllerOwner");
         uint256 initialTimelock = 1 weeks;
         string memory name = "name";
         string memory symbol = "symbol";
@@ -60,6 +61,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
         ISiloVaultDeployer.CreateSiloVaultParams memory params = ISiloVaultDeployer.CreateSiloVaultParams({
             initialOwner: initialOwner,
             initialTimelock: initialTimelock,
+            incentivesControllerOwner: incentivesControllerOwner,
             asset: _USDC,
             name: name,
             symbol: symbol,
