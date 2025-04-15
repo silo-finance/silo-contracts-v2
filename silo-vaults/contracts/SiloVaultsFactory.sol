@@ -2,7 +2,9 @@
 pragma solidity 0.8.28;
 
 import {Create2} from "openzeppelin5/utils/Create2.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
 import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
@@ -41,8 +43,8 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         string memory _symbol,
         bytes32 _externalSalt,
         address _notificationReceiver,
-        address[] memory _claimingLogics,
-        address[] memory _marketsWithIncentives
+        IIncentivesClaimingLogic[] memory _claimingLogics,
+        IERC4626[] memory _marketsWithIncentives
     ) external virtual returns (ISiloVault siloVault) {
         siloVault = SiloVaultFactoryActionsLib.createSiloVault({
             _initialOwner: _initialOwner,

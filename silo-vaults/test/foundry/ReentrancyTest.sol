@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {IERC1820Implementer} from "openzeppelin5/interfaces/IERC1820Implementer.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {SiloVault} from "../../contracts/SiloVault.sol";
 import {ISiloVault, MarketAllocation} from "../../contracts/interfaces/ISiloVault.sol";
 import {ERC1820Registry} from "../../contracts/mocks/ERC1820Registry.sol";
@@ -62,7 +63,9 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
             "SiloVault Vault",
             "MMV",
             bytes32(0),
-            address(0), new address[](0), new address[](0)
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         vm.startPrank(OWNER);

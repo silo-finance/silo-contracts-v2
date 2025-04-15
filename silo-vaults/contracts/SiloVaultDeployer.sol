@@ -3,8 +3,10 @@ pragma solidity 0.8.28;
 
 import {Nonces} from "openzeppelin5/utils/Nonces.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFactory.sol";
@@ -46,45 +48,39 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         IDLE_VAULTS_FACTORY = _idleVaultsFactory;
     }
 
-    function createSiloVault(
-        address _initialOwner,
-        uint256 _initialTimelock,
-        address _asset,
-        string memory _name,
-        string memory _symbol
-    ) external returns (
+    function createSiloVault(CreateSiloVaultParams memory params) external returns (
         ISiloVault vault,
         ISiloIncentivesController incentivesController
     ) {
         bytes32 salt = _salt();
 
         address predictedAddress = _predictSiloVaultAddress({
-            _initialOwner: _initialOwner,
-            _initialTimelock: _initialTimelock,
-            _asset: _asset,
-            _name: _name,
-            _symbol: _symbol,
+            _initialOwner: params.initialOwner,
+            _initialTimelock: params.initialTimelock,
+            _asset: params.asset,
+            _name: params.name,
+            _symbol: params.symbol,
             _externalSalt: salt
         });
 
         incentivesController = ISiloIncentivesController(SILO_INCENTIVES_CONTROLLER_FACTORY.create({
-            _owner: _initialOwner,
+            _owner: params.initialOwner,
             _notifier: predictedAddress,
             _externalSalt: salt
         }));
 
-        address notifier = address(incentivesController);
-        address[] memory claimingLogics;
-        address[] memory marketsWithIncentives;
+        address notificationReceiver = address(incentivesController);
+        IIncentivesClaimingLogic[] memory claimingLogics;
+        IERC4626[] memory marketsWithIncentives;
 
         vault = SILO_VAULTS_FACTORY.createSiloVault({
-            _initialOwner: _initialOwner,
-            _initialTimelock: _initialTimelock,
-            _asset: _asset,
-            _name: _name,
-            _symbol: _symbol,
+            _initialOwner: params.initialOwner,
+            _initialTimelock: params.initialTimelock,
+            _asset: params.asset,
+            _name: params.name,
+            _symbol: params.symbol,
             _externalSalt: salt,
-            _notificationReceiver: notifier,
+            _notificationReceiver: notificationReceiver,
             _claimingLogics: claimingLogics,
             _marketsWithIncentives: marketsWithIncentives
         });

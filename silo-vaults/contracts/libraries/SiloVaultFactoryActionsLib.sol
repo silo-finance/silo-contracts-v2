@@ -2,7 +2,9 @@
 pragma solidity ^0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {SiloVault} from "silo-vaults/contracts/SiloVault.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
@@ -17,8 +19,8 @@ library SiloVaultFactoryActionsLib {
         bytes32 _salt,
         address _notificationReceiver,
         address _incentivesModuleImplementation,
-        address[] memory _claimingLogics,
-        address[] memory _marketsWithIncentives
+        IIncentivesClaimingLogic[] memory _claimingLogics,
+        IERC4626[] memory _marketsWithIncentives
     ) external returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.cloneDeterministic(_incentivesModuleImplementation, _salt)

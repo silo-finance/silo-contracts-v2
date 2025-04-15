@@ -3,7 +3,9 @@ pragma solidity ^0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Nonces} from "openzeppelin5/utils/Nonces.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {SiloVault} from "../../contracts/SiloVault.sol";
 import {SiloVaultsFactory} from "../../contracts/SiloVaultsFactory.sol";
 import {VaultIncentivesModule} from "../../contracts/incentives/VaultIncentivesModule.sol";
@@ -42,8 +44,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertTrue(factory.isSiloVault(address(siloVault)), "isSiloVault");
@@ -76,8 +78,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertTrue(factory.isSiloVault(address(siloVault1)), "isSiloVault1");
@@ -90,8 +92,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertTrue(factory.isSiloVault(address(siloVault2)), "isSiloVault2");
@@ -136,8 +138,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertTrue(factory.isSiloVault(address(siloVault1)), "isSiloVault1");
@@ -151,8 +153,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertTrue(factory.isSiloVault(address(siloVault2)), "isSiloVault2");
@@ -189,8 +191,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         vm.revertTo(snapshot);
@@ -204,8 +206,8 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertNotEq(address(siloVault), address(siloVault2), "siloVault == siloVault2");

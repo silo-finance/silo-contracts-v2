@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+
 import {ISiloVault} from "./ISiloVault.sol";
 
 /// @title ISiloVaultsFactory
@@ -32,7 +36,7 @@ interface ISiloVaultsFactory {
         string memory _symbol,
         bytes32 _externalSalt,
         address _notificationReceiver,
-        address[] memory _claimingLogics,
-        address[] memory _marketsWithIncentives
+        IIncentivesClaimingLogic[] memory _claimingLogics,
+        IERC4626[] memory _marketsWithIncentives
     ) external returns (ISiloVault SiloVault);
 }

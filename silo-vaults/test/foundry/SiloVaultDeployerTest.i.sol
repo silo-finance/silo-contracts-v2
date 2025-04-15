@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
 import {SiloVaultsDeployerDeploy} from "silo-vaults/deploy/SiloVaultsDeployerDeploy.s.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
@@ -43,6 +45,17 @@ contract SiloVaultDeployerTest is IntegrationTest {
         string memory name = "name";
         string memory symbol = "symbol";
 
-        _deployer.createSiloVault(initialOwner, initialTimelock, _USDC, name, symbol);
+        ISilo[] memory silosWithIncentives = new ISilo[](0);
+
+        ISiloVaultDeployer.CreateSiloVaultParams memory params = ISiloVaultDeployer.CreateSiloVaultParams({
+            initialOwner: initialOwner,
+            initialTimelock: initialTimelock,
+            asset: _USDC,
+            name: name,
+            symbol: symbol,
+            silosWithIncentives: silosWithIncentives
+        });
+
+        _deployer.createSiloVault(params);
     }
 }

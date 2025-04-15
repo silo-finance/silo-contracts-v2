@@ -5,9 +5,9 @@ import {Test} from "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
@@ -96,8 +96,8 @@ contract BaseTest is SiloLittleHelper, Test {
             symbol,
             bytes32(0),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
     }
 

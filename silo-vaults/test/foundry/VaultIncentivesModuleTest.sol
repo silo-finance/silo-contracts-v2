@@ -6,6 +6,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ErrorsLib} from "silo-vaults/contracts/libraries/ErrorsLib.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVault, ISiloVaultBase} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
@@ -47,8 +48,8 @@ contract VaultIncentivesModuleTest is Test {
         incentivesModule.__VaultIncentivesModule_init(
             ISiloVault(_vault),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         vm.mockCall(
@@ -79,8 +80,8 @@ contract VaultIncentivesModuleTest is Test {
         module.__VaultIncentivesModule_init(
             ISiloVault(_vault),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
     }
 
@@ -96,8 +97,8 @@ contract VaultIncentivesModuleTest is Test {
         VaultIncentivesModule(module).__VaultIncentivesModule_init(
             ISiloVault(_vault),
             address(0),
-            new address[](0),
-            new address[](0)
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
         );
 
         assertEq(VaultIncentivesModule(module).owner(), _deployer, "valid owner");
@@ -112,8 +113,9 @@ contract VaultIncentivesModuleTest is Test {
         incentivesModule.__VaultIncentivesModule_init(
             ISiloVault(_vault),
             address(0),
-            new address[](0),
-            new address[](0));
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
+        );
     }
 
     /*
