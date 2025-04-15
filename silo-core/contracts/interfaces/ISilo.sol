@@ -190,6 +190,7 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
     error AboveMaxLtv();
     error SiloInitialized();
     error OnlyHookReceiver();
+    error OnlyKeyringWhitelisted();
     error NoLiquidity();
     error InputCanBeAssetsOrShares();
     error CollateralSiloAlreadySet();
@@ -446,4 +447,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
 
     /// @notice Withdraws earned fees and distributes them to the DAO and deployer fee receivers
     function withdrawFees() external;
+
+    /// @notice Sets the keyring config for the silo
+    /// @param _keyringChecker Address of the keyring checker
+    /// @param _keyringPolicyId PolicyId of the keyring
+    function setKeyringConfig(address _keyringChecker, uint256 _keyringPolicyId) external;
 }
