@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -32,6 +33,8 @@ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc SiloVaultDeployerTest -vv
 contract SiloVaultDeployerTest is IntegrationTest {
     uint256 constant internal _BLOCK_TO_FORK = 20329560;
     address constant internal _USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
+    address constant internal _WS = 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38;
+    address constant internal _USDC_WHALE = 0x578Ee1ca3a8E1b54554Da1Bf7C583506C4CD11c6;
 
     ISiloVaultDeployer internal _deployer;
 
@@ -109,6 +112,57 @@ contract SiloVaultDeployerTest is IntegrationTest {
         assertEq(allClaimingLogics.length, 2, "All claiming logics are not initialized");
         assertNotEq(allClaimingLogics[0], address(0), "First claiming logic is empty address");
         assertNotEq(allClaimingLogics[1], address(0), "Second claiming logic is empty address");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_integration -vv
+    */
+    function test_SiloVaultDeployer_createSiloVault_integration() public {
+        ISiloVaultDeployer.CreateSiloVaultParams memory params = _params();
+
+        ISiloVault vault;
+        ISiloIncentivesController incentivesController;
+
+        (vault, incentivesController,) = _deployer.createSiloVault(params);
+
+        IERC4626 market = IERC4626(address(params.silosWithIncentives[1]));
+        uint256 supplyCap = type(uint128).max;
+
+        vm.prank(params.initialOwner);
+        vault.submitCap(market, supplyCap);
+
+        vm.warp(block.timestamp + vault.timelock());
+
+        vault.acceptCap(market);
+
+        IERC4626[] memory supplyQueue = new IERC4626[](1);
+        supplyQueue[0] = market;
+
+        vm.prank(params.initialOwner);
+        vault.setSupplyQueue(supplyQueue);
+
+        address depositor = makeAddr("depositor");
+        uint256 amount = 10_000e6;
+
+        vm.prank(_USDC_WHALE);
+        IERC20(_USDC).transfer(depositor, amount);
+
+        vm.prank(depositor);
+        IERC20(_USDC).approve(address(vault), type(uint256).max);
+
+        vm.prank(depositor);
+        vault.deposit(10_000e6, depositor);
+
+        vm.warp(block.timestamp + 100 days);
+
+        vault.claimRewards();
+
+        assertEq(IERC20(_WS).balanceOf(depositor), 0, "Expect have no tokens");
+
+        vm.prank(depositor);
+        incentivesController.claimRewards(depositor);
+
+        assertNotEq(IERC20(_WS).balanceOf(depositor), 0, "Expect to receive rewards");
     }
 
     function _params() internal returns (ISiloVaultDeployer.CreateSiloVaultParams memory params) {
