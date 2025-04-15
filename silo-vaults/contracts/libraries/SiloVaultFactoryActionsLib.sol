@@ -9,7 +9,15 @@ import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {SiloVault} from "silo-vaults/contracts/SiloVault.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
 
+/// @title Silo Vault Factory Actions Library
 library SiloVaultFactoryActionsLib {
+    /// @dev Creates a new Silo Vault.
+    /// @param _initialOwner The initial owner of the vault.
+    /// @param _initialTimelock The initial timelock of the vault.
+    /// @param _asset The asset of the vault.
+    /// @param _name The name of the vault.
+    /// @param _symbol The symbol of the vault.
+    /// @param _salt The salt for the deployment.
     function createSiloVault(
         address _initialOwner,
         uint256 _initialTimelock,
@@ -40,6 +48,11 @@ library SiloVaultFactoryActionsLib {
         );
     }
 
+    /// @dev Predicts the address of the Silo Vault.
+    /// @param _constructorArgs The constructor arguments for the Silo Vault encoded via abi.encode.
+    /// @param _salt The salt for the deployment.
+    /// @param _deployer The deployer of the Silo Vault.
+    /// @return vaultAddress The address of the Silo Vault.
     function predictSiloVaultAddress(bytes memory _constructorArgs, bytes32 _salt, address _deployer)
         external
         pure
