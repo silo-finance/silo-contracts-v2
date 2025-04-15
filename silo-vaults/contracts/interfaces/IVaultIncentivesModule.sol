@@ -88,4 +88,3 @@ interface IVaultIncentivesModule {
     /// @return markets
     function getConfiguredMarkets() external view returns (address[] memory markets);
 }
-
