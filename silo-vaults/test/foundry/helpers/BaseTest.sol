@@ -88,7 +88,17 @@ contract BaseTest is SiloLittleHelper, Test {
         string memory name,
         string memory symbol
     ) public returns (ISiloVault) {
-        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol, bytes32(0));
+        return siloVaultsFactory.createSiloVault(
+            owner,
+            initialTimelock,
+            asset,
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
     }
 
     function _createNewMarkets() public virtual {

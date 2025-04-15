@@ -20,8 +20,7 @@ import {
 
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
-
-import {console2} from "forge-std/console2.sol";
+import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";
 
 /// @title SiloVaultDeployer
 contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
@@ -74,13 +73,20 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
             _externalSalt: salt
         }));
 
+        address notifier = address(incentivesController);
+        address[] memory claimingLogics;
+        address[] memory marketsWithIncentives;
+
         vault = SILO_VAULTS_FACTORY.createSiloVault({
             _initialOwner: _initialOwner,
             _initialTimelock: _initialTimelock,
             _asset: _asset,
             _name: _name,
             _symbol: _symbol,
-            _externalSalt: salt
+            _externalSalt: salt,
+            _notificationReceiver: notifier,
+            _claimingLogics: claimingLogics,
+            _marketsWithIncentives: marketsWithIncentives
         });
 
         require(address(vault) == predictedAddress, VaultAddressMismatch());
@@ -95,16 +101,15 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         bytes32 _externalSalt
     ) internal view returns (address predictedAddress) {
         uint256 nonce = Nonces(address(SILO_VAULTS_FACTORY)).nonces(address(this));
-        bytes32 incentivesModuleSalt = _siloVaultFactorySaltPreview(_externalSalt, nonce++);
-        bytes32 vaultSalt = _siloVaultFactorySaltPreview(_externalSalt, nonce++);
+        bytes32 salt = _siloVaultFactorySaltPreview(_externalSalt, nonce++);
 
         address predictedIncentivesModuleAddress = Clones.predictDeterministicAddress(
             SILO_VAULTS_FACTORY.VAULT_INCENTIVES_MODULE_IMPLEMENTATION(),
-            incentivesModuleSalt,
+            salt,
             address(SILO_VAULTS_FACTORY)
         );
 
-        predictedAddress = SILO_VAULTS_FACTORY.predictSiloVaultAddress({
+        predictedAddress = SiloVaultFactoryActionsLib.predictSiloVaultAddress({
             _constructorArgs: abi.encode(
                 _initialOwner,
                 _initialTimelock,
@@ -113,10 +118,10 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
                 _name,
                 _symbol
             ),
-            _saltVault: vaultSalt
+            _salt: salt,
+            _deployer: address(SILO_VAULTS_FACTORY)
         });
     }
-
 
     function _siloVaultFactorySaltPreview(bytes32 _externalSalt, uint256 _nonce) internal view returns (bytes32 salt) {
         salt = keccak256(abi.encodePacked(address(this), _nonce, _externalSalt));

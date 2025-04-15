@@ -34,8 +34,17 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        ISiloVault siloVault =
-            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0));
+        ISiloVault siloVault = factory.createSiloVault(
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         assertTrue(factory.isSiloVault(address(siloVault)), "isSiloVault");
 
@@ -59,13 +68,31 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         vm.assume(address(initialOwner) != address(0));
         initialTimelock = bound(initialTimelock, ConstantsLib.MIN_TIMELOCK, ConstantsLib.MAX_TIMELOCK);
 
-        ISiloVault siloVault1 =
-            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0));
+        ISiloVault siloVault1 = factory.createSiloVault(
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         assertTrue(factory.isSiloVault(address(siloVault1)), "isSiloVault1");
 
-        ISiloVault siloVault2 =
-            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0));
+        ISiloVault siloVault2 = factory.createSiloVault(
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         assertTrue(factory.isSiloVault(address(siloVault2)), "isSiloVault2");
 
@@ -101,14 +128,32 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         );
 
         vm.prank(otherWallet);
-        ISiloVault siloVault1 =
-            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0));
+        ISiloVault siloVault1 = factory.createSiloVault(
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         assertTrue(factory.isSiloVault(address(siloVault1)), "isSiloVault1");
 
         vm.prank(devWallet);
-        ISiloVault siloVault2 =
-            factory.createSiloVault(initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0));
+        ISiloVault siloVault2 = factory.createSiloVault(
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         assertTrue(factory.isSiloVault(address(siloVault2)), "isSiloVault2");
 
@@ -137,14 +182,30 @@ contract SiloVaultsFactoryTest is IntegrationTest {
 
         vm.prank(devWallet);
         ISiloVault siloVault = factory.createSiloVault(
-            initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0)
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
         );
 
         vm.revertTo(snapshot);
 
         vm.prank(otherWallet);
         ISiloVault siloVault2 = factory.createSiloVault(
-            initialOwner, initialTimelock, address(loanToken), name, symbol, bytes32(0)
+            initialOwner,
+            initialTimelock,
+            address(loanToken),
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new address[](0),
+            new address[](0)
         );
 
         assertNotEq(address(siloVault), address(siloVault2), "siloVault == siloVault2");

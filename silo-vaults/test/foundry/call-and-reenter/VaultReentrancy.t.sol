@@ -114,7 +114,10 @@ contract VaultReentrancyTest is Test {
             address(configOverride.token0),
             "Test Vault1",
             "TV1",
-            bytes32(0)
+            bytes32(0),
+            address(vault),
+            new address[](0),
+            new address[](0)
         );
 
         uint256 cap = 100e18;

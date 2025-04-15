@@ -44,7 +44,12 @@ contract VaultIncentivesModuleTest is Test {
 
     function setUp() public {
         incentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
-        incentivesModule.__VaultIncentivesModule_init(ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         vm.mockCall(
             address(incentivesModule.vault()),
@@ -71,7 +76,12 @@ contract VaultIncentivesModuleTest is Test {
     function test_IncentivesModule_new() public {
         VaultIncentivesModule module = new VaultIncentivesModule();
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        module.__VaultIncentivesModule_init(ISiloVault(_vault));
+        module.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
     }
 
     /*
@@ -83,7 +93,12 @@ contract VaultIncentivesModuleTest is Test {
         vm.expectRevert(); // not initialized, vault is not set
         VaultIncentivesModule(module).owner();
 
-        VaultIncentivesModule(module).__VaultIncentivesModule_init(ISiloVault(_vault));
+        VaultIncentivesModule(module).__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new address[](0),
+            new address[](0)
+        );
 
         assertEq(VaultIncentivesModule(module).owner(), _deployer, "valid owner");
         assertEq(address(VaultIncentivesModule(module).vault()), _vault, "valid vault");
@@ -94,7 +109,11 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_IncentivesModule_initOnce() public {
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        incentivesModule.__VaultIncentivesModule_init(ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new address[](0),
+            new address[](0));
     }
 
     /*

@@ -21,20 +21,18 @@ interface ISiloVaultsFactory {
     /// @param _name The name of the vault.
     /// @param _symbol The symbol of the vault.
     /// @param _externalSalt The external salt to use for the creation of the SiloVault vault.
+    /// @param _notificationReceiver The notification receiver for the vault pre-configuration.
+    /// @param _claimingLogics Incentive claiming logics for the vault pre-configuration.
+    /// @param _marketsWithIncentives The markets with incentives for the vault pre-configuration.
     function createSiloVault(
         address _initialOwner,
         uint256 _initialTimelock,
         address _asset,
         string memory _name,
         string memory _symbol,
-        bytes32 _externalSalt
+        bytes32 _externalSalt,
+        address _notificationReceiver,
+        address[] memory _claimingLogics,
+        address[] memory _marketsWithIncentives
     ) external returns (ISiloVault SiloVault);
-
-    /// @notice Predicts the address of a SiloVault vault.
-    /// @param _constructorArgs The constructor arguments of the SiloVault vault.
-    /// @param _saltVault The salt to use for the creation of the SiloVault vault.
-    function predictSiloVaultAddress(
-        bytes memory _constructorArgs,
-        bytes32 _saltVault
-    ) external view returns (address predictedAddress);
 }

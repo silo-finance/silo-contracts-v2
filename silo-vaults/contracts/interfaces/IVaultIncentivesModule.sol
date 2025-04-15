@@ -26,6 +26,7 @@ interface IVaultIncentivesModule {
     error MarketAlreadySet();
     error MarketNotConfigured();
     error AllProgramsNotStopped();
+    error InvalidClaimingLogicsLength();
 
     /// @notice Submit an incentives claiming logic for the vault.
     /// @notice Add an incentives claiming logic for the vault.

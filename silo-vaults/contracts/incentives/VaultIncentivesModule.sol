@@ -52,10 +52,28 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         _;
     }
 
-    function __VaultIncentivesModule_init(ISiloVault _vault) external virtual initializer {
+    function __VaultIncentivesModule_init(
+        ISiloVault _vault,
+        address _notificationReceiver,
+        address[] memory _claimingLogics,
+        address[] memory _marketsWithIncentives
+    ) external virtual initializer {
         require(address(_vault) != address(0), AddressZero());
+        require(_claimingLogics.length == _marketsWithIncentives.length, InvalidClaimingLogicsLength());
 
         vault = _vault;
+
+        if (_notificationReceiver != address(0)) {
+            require(_notificationReceivers.add(address(_notificationReceiver)), NotificationReceiverAlreadyAdded());
+            emit NotificationReceiverAdded(address(_notificationReceiver));
+        }
+
+        for (uint256 i = 0; i < _claimingLogics.length; i++) {
+            IERC4626 market = IERC4626(_marketsWithIncentives[i]);
+            IIncentivesClaimingLogic claimingLogic = IIncentivesClaimingLogic(_claimingLogics[i]);
+
+            _addClaimingLogic(market, claimingLogic);
+        }
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -82,15 +100,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         uint256 validAt = pendingClaimingLogics[_market][_logic];
         require(validAt != 0 && validAt < block.timestamp, CantAcceptLogic());
 
-        if (_claimingLogics[_market].length() == 0) {
-            _markets.add(address(_market));
-        }
-
-        _claimingLogics[_market].add(address(_logic));
-
-        delete pendingClaimingLogics[_market][_logic];
-
-        emit IncentivesClaimingLogicAdded(_market, _logic);
+        _addClaimingLogic(_market, _logic);
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -217,5 +227,17 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
     /// @notice Owner is inherited from the SiloVault contract.
     function owner() public view virtual returns (address) {
         return vault.owner();
+    }
+
+    function _addClaimingLogic(IERC4626 _market, IIncentivesClaimingLogic _logic) internal {
+        if (_claimingLogics[_market].length() == 0) {
+            _markets.add(address(_market));
+        }
+
+        _claimingLogics[_market].add(address(_logic));
+
+        delete pendingClaimingLogics[_market][_logic];
+
+        emit IncentivesClaimingLogicAdded(_market, _logic);
     }
 }
