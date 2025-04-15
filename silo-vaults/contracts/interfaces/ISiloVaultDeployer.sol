@@ -29,6 +29,18 @@ interface ISiloVaultDeployer {
     error VaultAddressMismatch();
     error GaugeIsNotConfigured(address silo);
 
+    /// @notice Emitted when a new Silo Vault is created.
+    /// @param vault The address of the deployed Silo Vault.
+    /// @param incentivesController The address of the deployed Silo Incentives Controller.
+    /// @param idleVault The address of the deployed Idle Vault.
+    event CreateSiloVault(address indexed vault, address incentivesController, address idleVault);
+
+    /// @notice Emitted when a new Incentives Claiming Logic is created.
+    /// @param vault The address of the deployed Silo Vault.
+    /// @param market The address of the market.
+    /// @param claimingLogic The address of the deployed Incentives Claiming Logic.
+    event CreateIncentivesCL(address indexed vault, address market, address claimingLogic);
+
     /// @notice Create a new Silo Vault and incentives controller for the vault.
     /// Performs initial configuration of the vault incentives module for the given markets.
     /// @param params The parameters for the Silo Vault deployment.

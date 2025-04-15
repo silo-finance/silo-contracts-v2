@@ -92,7 +92,8 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         (claimingLogics, marketsWithIncentives) = _deployClaimingLogics({
             _silosWithIncentives: params.silosWithIncentives,
             _salt: salt,
-            _vaultIncentivesController: address(incentivesController)
+            _vaultIncentivesController: address(incentivesController),
+            _vault: predictedAddress
         });
 
         // 3. Deploy Silo Vault
@@ -114,18 +115,22 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         idleVault = IERC4626(address(
             IDLE_VAULTS_FACTORY.createIdleVault({_vault: IERC4626(address(vault)), _externalSalt: salt})
         ));
+
+        emit CreateSiloVault(address(vault), address(incentivesController), address(idleVault));
     }
 
     /// @dev Deploy claiming logic ONLY for the collateral share token
     /// @param _silosWithIncentives The silos with incentives to deploy claiming logics for.
     /// @param _salt The salt for the deployment.
     /// @param _vaultIncentivesController The vault incentives controller address.
+    /// @param _vault The vault address.
     /// @return claimingLogics The deployed claiming logics.
     /// @return marketsWithIncentives The deployed markets with incentives.
     function _deployClaimingLogics(
         ISilo[] memory _silosWithIncentives,
         bytes32 _salt,
-        address _vaultIncentivesController
+        address _vaultIncentivesController,
+        address _vault
     )
         internal
         returns (
@@ -152,6 +157,8 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
             claimingLogics[i] = IIncentivesClaimingLogic(claimingLogic);
 
             marketsWithIncentives[i] = IERC4626(silo);
+
+            emit CreateIncentivesCL(address(_vault), address(silo), address(claimingLogic));
         }
     }
 

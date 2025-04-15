@@ -48,25 +48,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_withIncentivesInit -vv
     */
     function test_SiloVaultDeployer_createSiloVault_withIncentivesInit() public {
-        address initialOwner = makeAddr("initialOwner");
-        address incentivesControllerOwner = makeAddr("incentivesControllerOwner");
-        uint256 initialTimelock = 1 weeks;
-        string memory name = "name";
-        string memory symbol = "symbol";
-
-        ISilo[] memory silosWithIncentives = new ISilo[](2);
-        silosWithIncentives[0] = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df); // S/USDC(8) market USDC silo
-        silosWithIncentives[1] = ISilo(0x322e1d5384aa4ED66AeCa770B95686271de61dc3); // S/USDC(20) market USDC silo
-
-        ISiloVaultDeployer.CreateSiloVaultParams memory params = ISiloVaultDeployer.CreateSiloVaultParams({
-            initialOwner: initialOwner,
-            initialTimelock: initialTimelock,
-            incentivesControllerOwner: incentivesControllerOwner,
-            asset: _USDC,
-            name: name,
-            symbol: symbol,
-            silosWithIncentives: silosWithIncentives
-        });
+        ISiloVaultDeployer.CreateSiloVaultParams memory params = _params();
 
         ISiloVault vault;
         ISiloIncentivesController incentivesController;
@@ -80,22 +62,50 @@ contract SiloVaultDeployerTest is IntegrationTest {
         assertEq(notificationReceivers.length, 1, "Notification receiver is not initialized");
         assertEq(notificationReceivers[0], address(incentivesController), "Notification receiver is not the incentives controller");
 
-        address[] memory claimingLogics = incentivesModule.getMarketIncentivesClaimingLogics(IERC4626(address(silosWithIncentives[0])));
+        address[] memory claimingLogics = incentivesModule.getMarketIncentivesClaimingLogics(
+            IERC4626(address(params.silosWithIncentives[0]))
+        );
+
         assertEq(claimingLogics.length, 1, "Claiming logic for the first market is not initialized");
         assertNotEq(claimingLogics[0], address(0), "Claiming logic for the first market is empty address");
 
-        claimingLogics = incentivesModule.getMarketIncentivesClaimingLogics(IERC4626(address(silosWithIncentives[1])));
+        claimingLogics = incentivesModule.getMarketIncentivesClaimingLogics(
+            IERC4626(address(params.silosWithIncentives[1]))
+        );
+
         assertEq(claimingLogics.length, 1, "Claiming logic for the second market is not initialized");
         assertNotEq(claimingLogics[0], address(0), "Claiming logic for the second market is empty address");
 
         address[] memory markets = incentivesModule.getConfiguredMarkets();
         assertEq(markets.length, 2, "Markets are not initialized");
-        assertEq(markets[0], address(silosWithIncentives[0]), "First market is not initialized");
-        assertEq(markets[1], address(silosWithIncentives[1]), "Second market is not initialized");
+        assertEq(markets[0], address(params.silosWithIncentives[0]), "First market is not initialized");
+        assertEq(markets[1], address(params.silosWithIncentives[1]), "Second market is not initialized");
 
         address[] memory allClaimingLogics = incentivesModule.getAllIncentivesClaimingLogics();
         assertEq(allClaimingLogics.length, 2, "All claiming logics are not initialized");
         assertNotEq(allClaimingLogics[0], address(0), "First claiming logic is empty address");
         assertNotEq(allClaimingLogics[1], address(0), "Second claiming logic is empty address");
+    }
+
+    function _params() internal returns (ISiloVaultDeployer.CreateSiloVaultParams memory params) {
+        address initialOwner = makeAddr("initialOwner");
+        address incentivesControllerOwner = makeAddr("incentivesControllerOwner");
+        uint256 initialTimelock = 1 weeks;
+        string memory name = "name";
+        string memory symbol = "symbol";
+
+        ISilo[] memory silosWithIncentives = new ISilo[](2);
+        silosWithIncentives[0] = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df); // S/USDC(8) market USDC silo
+        silosWithIncentives[1] = ISilo(0x322e1d5384aa4ED66AeCa770B95686271de61dc3); // S/USDC(20) market USDC silo
+
+        params = ISiloVaultDeployer.CreateSiloVaultParams({
+            initialOwner: initialOwner,
+            initialTimelock: initialTimelock,
+            incentivesControllerOwner: incentivesControllerOwner,
+            asset: _USDC,
+            name: name,
+            symbol: symbol,
+            silosWithIncentives: silosWithIncentives
+        });
     }
 }
