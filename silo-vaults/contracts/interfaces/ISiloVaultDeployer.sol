@@ -7,14 +7,18 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 
+/// @title ISiloVaultDeployer
+/// @dev Deploys Silo Vault,Idle Vault, and Silo Incentives Controllers together with
+/// initial configuration of the vault incentives module for the given markets in the single transaction.
 interface ISiloVaultDeployer {
     struct CreateSiloVaultParams {
-        address initialOwner;
-        uint256 initialTimelock;
-        address asset;
-        string name;
-        string symbol;
-        ISilo[] silosWithIncentives;
+        address initialOwner; // initial owner of the vault
+        uint256 initialTimelock; // initial timelock of the vault
+        address asset; // asset of the vault
+        string name; // name of the vault
+        string symbol; // symbol of the vault
+        ISilo[] silosWithIncentives; // silos with incentives for initial configuration
+        // if `silosWithIncentives` empty initial configuration will be skipped
     }
 
     error EmptySiloVaultFactory();
@@ -24,6 +28,11 @@ interface ISiloVaultDeployer {
     error VaultAddressMismatch();
     error GaugeIsNotConfigured(address silo);
 
+    /// @notice Create a new Silo Vault and incentives controller for the vault.
+    /// Performs initial configuration of the vault incentives module for the given markets.
+    /// @param params The parameters for the Silo Vault deployment.
+    /// @return vault The deployed Silo Vault.
+    /// @return incentivesController The deployed Silo Incentives Controller.
     function createSiloVault(CreateSiloVaultParams memory params) external returns (
         ISiloVault vault,
         ISiloIncentivesController incentivesController
