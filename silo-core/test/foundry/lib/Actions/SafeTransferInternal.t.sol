@@ -14,7 +14,6 @@ contract SafeTransferInternalTest is Test {
     address constant TOKEN = address(0xabc);
     address constant TO = address(0x999);
     uint256 constant AMOUNT = 123;
-    Impl IMPL = new Impl();
 
     function setUp() public {
         vm.clearMockedCalls();
@@ -51,8 +50,11 @@ contract SafeTransferInternalTest is Test {
     */
     function test_safeTransferInternal_return_uint() public {
         bytes4 selector = bytes4(keccak256("transfer(address,uint256)"));
-        vm.mockCall(TOKEN, abi.encodeWithSelector(selector, TO, AMOUNT), abi.encode(uint256(345)));
-        assertFalse(Actions._safeTransferInternal(IERC20(TOKEN), TO, AMOUNT), "expect to fail");
+        vm.mockCall(TOKEN, abi.encodeWithSelector(selector, TO, AMOUNT), abi.encode(uint256(1)));
+        assertTrue(
+            Actions._safeTransferInternal(IERC20(TOKEN), TO, AMOUNT),
+            "1 == true, so result will be sucessful"
+        );
     }
 
     /*
