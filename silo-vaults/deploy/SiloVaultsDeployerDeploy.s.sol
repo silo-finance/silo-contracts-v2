@@ -59,6 +59,6 @@ contract SiloVaultsDeployerDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(deployer), SiloVaultsContracts.SILO_VAULTS_DEPLOYER);
+        _registerDeployment(address(deployer), SiloVaultsContracts.SILO_VAULT_DEPLOYER);
     }
 }
