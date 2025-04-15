@@ -11,6 +11,13 @@ import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFactory.sol";
 import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
+import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
+import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 import {
     ISiloIncentivesControllerFactory
@@ -19,13 +26,6 @@ import {
 import {
     ISiloIncentivesControllerCLFactory
 } from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLFactory.sol";
-
-import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
-import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 /// @title SiloVaultDeployer
 contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
@@ -61,7 +61,8 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         external
         returns (
             ISiloVault vault,
-            ISiloIncentivesController incentivesController
+            ISiloIncentivesController incentivesController,
+            IERC4626 idleVault
         )
     {
         bytes32 salt = _salt();
@@ -75,6 +76,7 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
             _externalSalt: salt
         });
 
+        // 1. Deploy Silo Incentives Controller
         incentivesController = ISiloIncentivesController(SILO_INCENTIVES_CONTROLLER_FACTORY.create({
             _owner: params.initialOwner,
             _notifier: predictedAddress,
@@ -86,13 +88,14 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         IIncentivesClaimingLogic[] memory claimingLogics;
         IERC4626[] memory marketsWithIncentives;
 
-        (claimingLogics, marketsWithIncentives) = _deployClaimingLogics(
-            params.silosWithIncentives,
-            salt,
-            address(incentivesController),
-            address(incentivesController)
-        );
+        // 2. Deploy claiming logics
+        (claimingLogics, marketsWithIncentives) = _deployClaimingLogics({
+            _silosWithIncentives: params.silosWithIncentives,
+            _salt: salt,
+            _vaultIncentivesController: address(incentivesController)
+        });
 
+        // 3. Deploy Silo Vault
         vault = SILO_VAULTS_FACTORY.createSiloVault({
             _initialOwner: params.initialOwner,
             _initialTimelock: params.initialTimelock,
@@ -106,20 +109,23 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         });
 
         require(address(vault) == predictedAddress, VaultAddressMismatch());
+
+        // 4. Deploy Idle Vault
+        idleVault = IERC4626(address(
+            IDLE_VAULTS_FACTORY.createIdleVault({_vault: IERC4626(address(vault)), _externalSalt: salt})
+        ));
     }
 
     /// @dev Deploy claiming logic ONLY for the collateral share token
     /// @param _silosWithIncentives The silos with incentives to deploy claiming logics for.
     /// @param _salt The salt for the deployment.
     /// @param _vaultIncentivesController The vault incentives controller address.
-    /// @param _siloIncentivesController The silo incentives controller address.
     /// @return claimingLogics The deployed claiming logics.
     /// @return marketsWithIncentives The deployed markets with incentives.
     function _deployClaimingLogics(
         ISilo[] memory _silosWithIncentives,
         bytes32 _salt,
-        address _vaultIncentivesController,
-        address _siloIncentivesController
+        address _vaultIncentivesController
     )
         internal
         returns (
@@ -139,7 +145,7 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
 
             address claimingLogic = address(SILO_INCENTIVES_CONTROLLER_CL_FACTORY.createIncentivesControllerCL({
                 _vaultIncentivesController: _vaultIncentivesController,
-                _siloIncentivesController: _siloIncentivesController,
+                _siloIncentivesController: gauge,
                 _externalSalt: _salt
             }));
 

@@ -13,6 +13,7 @@ import {SiloVaultsDeployerDeploy} from "silo-vaults/deploy/SiloVaultsDeployerDep
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {SiloIncentivesControllerCLFactoryDeploy} from "silo-vaults/deploy/SiloIncentivesControllerCLFactoryDeploy.s.sol";
 import {SiloVaultsFactoryDeploy} from "silo-vaults/deploy/SiloVaultsFactoryDeploy.s.sol";
+import {IdleVaultsFactoryDeploy} from "silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol";
 
 /*
 FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc SiloVaultDeployerTest -vv
@@ -29,6 +30,9 @@ contract SiloVaultDeployerTest is IntegrationTest {
         SiloIncentivesControllerFactoryDeploy factoryDeploy = new SiloIncentivesControllerFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
         factoryDeploy.run();
+
+        IdleVaultsFactoryDeploy idleVaultsFactoryDeploy = new IdleVaultsFactoryDeploy();
+        idleVaultsFactoryDeploy.run();
 
         SiloIncentivesControllerCLFactoryDeploy clFactoryDeploy = new SiloIncentivesControllerCLFactoryDeploy();
         clFactoryDeploy.run();
@@ -65,7 +69,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
         ISiloVault vault;
         ISiloIncentivesController incentivesController;
 
-        (vault, incentivesController) = _deployer.createSiloVault(params);
+        (vault, incentivesController,) = _deployer.createSiloVault(params);
 
         IVaultIncentivesModule incentivesModule = vault.INCENTIVES_MODULE();
 

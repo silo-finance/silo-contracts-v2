@@ -33,8 +33,10 @@ interface ISiloVaultDeployer {
     /// @param params The parameters for the Silo Vault deployment.
     /// @return vault The deployed Silo Vault.
     /// @return incentivesController The deployed Silo Incentives Controller.
+    /// @return idleVault The deployed Idle Vault.
     function createSiloVault(CreateSiloVaultParams memory params) external returns (
         ISiloVault vault,
-        ISiloIncentivesController incentivesController
+        ISiloIncentivesController incentivesController,
+        IERC4626 idleVault
     );
 }
