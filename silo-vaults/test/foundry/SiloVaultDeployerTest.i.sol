@@ -151,7 +151,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
         IERC20(_USDC).approve(address(vault), type(uint256).max);
 
         vm.prank(depositor);
-        vault.deposit(10_000e6, depositor);
+        vault.deposit(amount, depositor);
 
         vm.warp(block.timestamp + 100 days);
 
