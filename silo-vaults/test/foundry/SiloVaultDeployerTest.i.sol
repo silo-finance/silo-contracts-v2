@@ -41,7 +41,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault -vv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_withIncentivesInit -vv
     */
     function test_SiloVaultDeployer_createSiloVault_withIncentivesInit() public {
         address initialOwner = makeAddr("initialOwner");
@@ -81,5 +81,15 @@ contract SiloVaultDeployerTest is IntegrationTest {
         claimingLogics = incentivesModule.getMarketIncentivesClaimingLogics(IERC4626(address(silosWithIncentives[1])));
         assertEq(claimingLogics.length, 1, "Claiming logic for the second market is not initialized");
         assertNotEq(claimingLogics[0], address(0), "Claiming logic for the second market is empty address");
+
+        address[] memory markets = incentivesModule.getConfiguredMarkets();
+        assertEq(markets.length, 2, "Markets are not initialized");
+        assertEq(markets[0], address(silosWithIncentives[0]), "First market is not initialized");
+        assertEq(markets[1], address(silosWithIncentives[1]), "Second market is not initialized");
+
+        address[] memory allClaimingLogics = incentivesModule.getAllIncentivesClaimingLogics();
+        assertEq(allClaimingLogics.length, 2, "All claiming logics are not initialized");
+        assertNotEq(allClaimingLogics[0], address(0), "First claiming logic is empty address");
+        assertNotEq(allClaimingLogics[1], address(0), "Second claiming logic is empty address");
     }
 }
