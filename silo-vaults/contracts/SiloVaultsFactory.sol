@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {Create2} from "openzeppelin5/utils/Create2.sol";
 
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
@@ -39,14 +40,14 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         address asset,
         string memory name,
         string memory symbol,
-        bytes32 _externalSalt
+        bytes32 externalSalt
     ) external virtual returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt(_externalSalt))
+            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt(externalSalt))
         );
 
         siloVault = ISiloVault(address(
-            new SiloVault{salt: _salt(_externalSalt)}(
+            new SiloVault{salt: _salt(externalSalt)}(
                 initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol
             )
         ));
@@ -58,5 +59,20 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         emit EventsLib.CreateSiloVault(
             address(siloVault), msg.sender, initialOwner, initialTimelock, asset, name, symbol
         );
+    }
+
+    /// @inheritdoc ISiloVaultsFactory
+    function predictSiloVaultAddress(
+        bytes memory _constructorArgs,
+        bytes32 _saltVault
+    ) external view returns (address predictedAddress) {
+        predictedAddress = _calculateCreate2Address({
+            _factory: address(this),
+            _salt: _saltVault,
+            _initCodeHash: keccak256(abi.encodePacked(
+                type(SiloVault).creationCode,
+                _constructorArgs
+            ))
+        });
     }
 }

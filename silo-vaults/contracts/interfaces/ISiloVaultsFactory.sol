@@ -9,6 +9,8 @@ import {ISiloVault} from "./ISiloVault.sol";
 /// @custom:contact security@silo.finance
 /// @notice Interface of SiloVault's factory.
 interface ISiloVaultsFactory {
+    function VAULT_INCENTIVES_MODULE_IMPLEMENTATION() external view returns (address);
+
     /// @notice Whether a SiloVault vault was created with the factory.
     function isSiloVault(address _target) external view returns (bool);
 
@@ -27,4 +29,12 @@ interface ISiloVaultsFactory {
         string memory _symbol,
         bytes32 _externalSalt
     ) external returns (ISiloVault SiloVault);
+
+    /// @notice Predicts the address of a SiloVault vault.
+    /// @param _constructorArgs The constructor arguments of the SiloVault vault.
+    /// @param _saltVault The salt to use for the creation of the SiloVault vault.
+    function predictSiloVaultAddress(
+        bytes memory _constructorArgs,
+        bytes32 _saltVault
+    ) external view returns (address predictedAddress);
 }

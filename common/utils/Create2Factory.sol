@@ -18,4 +18,17 @@ contract Create2Factory is Nonces {
             _externalSalt
         ));
     }
+
+    function _calculateCreate2Address(
+        address _factory,
+        bytes32 _salt,
+        bytes32 _initCodeHash
+    ) internal view returns (address predictedAddress) {
+        predictedAddress = address(uint160(uint256(keccak256(abi.encodePacked(
+            bytes1(0xff),
+            _factory,
+            _salt,
+            _initCodeHash
+        )))));
+    }
 }
