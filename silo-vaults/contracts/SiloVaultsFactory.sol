@@ -38,15 +38,18 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         uint256 initialTimelock,
         address asset,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        bytes32 _externalSalt
     ) external virtual returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
-            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt())
+            Clones.cloneDeterministic(VAULT_INCENTIVES_MODULE_IMPLEMENTATION, _salt(_externalSalt))
         );
 
         siloVault = ISiloVault(address(
-            new SiloVault{salt: _salt()}(initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol))
-        );
+            new SiloVault{salt: _salt(_externalSalt)}(
+                initialOwner, initialTimelock, vaultIncentivesModule, asset, name, symbol
+            )
+        ));
 
         vaultIncentivesModule.__VaultIncentivesModule_init(siloVault);
 

@@ -47,7 +47,7 @@ contract SiloIncentivesControllerTest is Test {
 
         _factory = deployer.run();
 
-        _controller = SiloIncentivesController(_factory.create(_owner, _notifier));
+        _controller = SiloIncentivesController(_factory.create(_owner, _notifier, bytes32(0)));
 
         assertTrue(_factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
 
@@ -831,7 +831,7 @@ contract SiloIncentivesControllerTest is Test {
     function test_wrong_notifier() public {
         // vm.expectRevert(abi.encodeWithSelector(IDistributionManager.WrongDecimals.selector));
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
-        SiloIncentivesController(_factory.create(_owner, address(0)));
+        SiloIncentivesController(_factory.create(_owner, address(0), bytes32(0)));
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setClaimer_success

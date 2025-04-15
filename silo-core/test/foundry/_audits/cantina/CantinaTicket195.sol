@@ -42,7 +42,7 @@ contract CantinaTicket195 is CantinaTicket {
 
         SiloIncentivesControllerFactory factory = deployer.run();
 
-        _controller = SiloIncentivesController(factory.create(_owner, _notifier));
+        _controller = SiloIncentivesController(factory.create(_owner, _notifier, bytes32(0)));
 
         assertTrue(factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
     }

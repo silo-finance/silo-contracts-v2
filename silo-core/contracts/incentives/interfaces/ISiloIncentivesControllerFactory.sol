@@ -7,8 +7,9 @@ interface ISiloIncentivesControllerFactory {
     /// @notice Creates a new SiloIncentivesController instance.
     /// @param _owner The address of the owner of the SiloIncentivesController.
     /// @param _notifier The address of the notifier of the SiloIncentivesController.
+    /// @param _externalSalt The external salt to use for the creation of the SiloIncentivesController instance.
     /// @return The address of the newly created SiloIncentivesController.
-    function create(address _owner, address _notifier) external returns (address);
+    function create(address _owner, address _notifier, bytes32 _externalSalt) external returns (address);
 
     /// @notice Checks if a given address is a SiloIncentivesController.
     /// @param _controller The address to check.

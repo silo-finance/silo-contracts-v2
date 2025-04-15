@@ -73,7 +73,7 @@ contract BaseTest is SiloLittleHelper, Test {
         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
-        idleMarket = factory.createIdleVault(vault);
+        idleMarket = factory.createIdleVault(vault, bytes32(0));
         vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
@@ -88,7 +88,7 @@ contract BaseTest is SiloLittleHelper, Test {
         string memory name,
         string memory symbol
     ) public returns (ISiloVault) {
-        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
+        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol, bytes32(0));
     }
 
     function _createNewMarkets() public virtual {

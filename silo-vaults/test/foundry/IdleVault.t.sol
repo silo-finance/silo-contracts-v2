@@ -70,12 +70,12 @@ contract IdleVaultTest is IntegrationTest {
         uint256 snapshot = vm.snapshot();
 
         vm.prank(devWallet);
-        IdleVault idleVault1 = factory.createIdleVault(IERC4626(idleMarket));
+        IdleVault idleVault1 = factory.createIdleVault(IERC4626(idleMarket), bytes32(0));
 
         vm.revertTo(snapshot);
 
         vm.prank(otherWallet);
-        IdleVault idleVault2 = factory.createIdleVault(IERC4626(idleMarket));
+        IdleVault idleVault2 = factory.createIdleVault(IERC4626(idleMarket), bytes32(0));
 
         assertNotEq(address(idleVault1), address(idleVault2), "idleVault1 == idleVault2");
     }
