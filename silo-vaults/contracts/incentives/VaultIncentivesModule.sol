@@ -55,11 +55,11 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
     function __VaultIncentivesModule_init(
         ISiloVault _vault,
         address _notificationReceiver,
-        IIncentivesClaimingLogic[] memory _claimingLogics,
-        IERC4626[] memory _marketsWithIncentives
+        IIncentivesClaimingLogic[] memory _initialClaimingLogics,
+        IERC4626[] memory _initialMarketsWithIncentives
     ) external virtual initializer {
         require(address(_vault) != address(0), AddressZero());
-        require(_claimingLogics.length == _marketsWithIncentives.length, InvalidClaimingLogicsLength());
+        require(_initialClaimingLogics.length == _initialMarketsWithIncentives.length, InvalidClaimingLogicsLength());
 
         vault = _vault;
 
@@ -68,8 +68,8 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
             emit NotificationReceiverAdded(address(_notificationReceiver));
         }
 
-        for (uint256 i = 0; i < _claimingLogics.length; i++) {
-            _addClaimingLogic(_marketsWithIncentives[i], _claimingLogics[i]);
+        for (uint256 i = 0; i < _initialClaimingLogics.length; i++) {
+            _addClaimingLogic(_initialMarketsWithIncentives[i], _initialClaimingLogics[i]);
         }
     }
 

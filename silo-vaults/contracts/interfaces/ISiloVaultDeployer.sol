@@ -22,6 +22,7 @@ interface ISiloVaultDeployer {
     error EmptySiloIncentivesControllerFactory();
     error EmptySiloIncentivesControllerCLFactory();
     error VaultAddressMismatch();
+    error GaugeIsNotConfigured(address silo);
 
     function createSiloVault(CreateSiloVaultParams memory params) external returns (
         ISiloVault vault,

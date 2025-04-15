@@ -23,6 +23,9 @@ import {
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
 import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 /// @title SiloVaultDeployer
 contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
@@ -48,10 +51,13 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         IDLE_VAULTS_FACTORY = _idleVaultsFactory;
     }
 
-    function createSiloVault(CreateSiloVaultParams memory params) external returns (
-        ISiloVault vault,
-        ISiloIncentivesController incentivesController
-    ) {
+    function createSiloVault(CreateSiloVaultParams memory params)
+        external
+        returns (
+            ISiloVault vault,
+            ISiloIncentivesController incentivesController
+        )
+    {
         bytes32 salt = _salt();
 
         address predictedAddress = _predictSiloVaultAddress({
@@ -70,8 +76,16 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         }));
 
         address notificationReceiver = address(incentivesController);
+
         IIncentivesClaimingLogic[] memory claimingLogics;
         IERC4626[] memory marketsWithIncentives;
+
+        (claimingLogics, marketsWithIncentives) = _deployClaimingLogics(
+            params.silosWithIncentives,
+            salt,
+            address(incentivesController),
+            address(incentivesController)
+        );
 
         vault = SILO_VAULTS_FACTORY.createSiloVault({
             _initialOwner: params.initialOwner,
@@ -86,6 +100,41 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         });
 
         require(address(vault) == predictedAddress, VaultAddressMismatch());
+    }
+
+    /// @dev Deploy claiming logic ONLY for collateral share token
+    function _deployClaimingLogics(
+        ISilo[] memory _silosWithIncentives,
+        bytes32 _salt,
+        address _vaultIncentivesController,
+        address _siloIncentivesController
+    )
+        internal
+        returns (
+            IIncentivesClaimingLogic[] memory claimingLogics,
+            IERC4626[] memory marketsWithIncentives
+        )
+    {
+        claimingLogics = new IIncentivesClaimingLogic[](_silosWithIncentives.length);
+        marketsWithIncentives = new IERC4626[](_silosWithIncentives.length);
+
+        for (uint256 i = 0; i < _silosWithIncentives.length; i++) {
+            address silo = address(_silosWithIncentives[i]);
+            address hookReceiver = IShareToken(silo).hookReceiver();
+            address gauge = address(IGaugeHookReceiver(hookReceiver).configuredGauges(IShareToken(silo)));
+
+            require(address(gauge) != address(0), GaugeIsNotConfigured(silo));
+
+            address claimingLogic = address(SILO_INCENTIVES_CONTROLLER_CL_FACTORY.createIncentivesControllerCL({
+                _vaultIncentivesController: _vaultIncentivesController,
+                _siloIncentivesController: _siloIncentivesController,
+                _externalSalt: _salt
+            }));
+
+            claimingLogics[i] = IIncentivesClaimingLogic(claimingLogic);
+
+            marketsWithIncentives[i] = IERC4626(silo);
+        }
     }
 
     function _predictSiloVaultAddress(
