@@ -3,11 +3,6 @@ name: Clear GitHub Actions Caches
 on:
   workflow_dispatch:  # Allows manual triggering of the workflow
 
-  push:
-    branches: [ master, develop ]
-
-  pull_request:
-
 jobs:
   clear-action-caches:
     runs-on: ubuntu-latest
