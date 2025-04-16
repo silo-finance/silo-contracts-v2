@@ -18,6 +18,7 @@ import {SiloIncentivesControllerCLFactoryDeploy} from "silo-vaults/deploy/SiloIn
 import {SiloVaultsFactoryDeploy} from "silo-vaults/deploy/SiloVaultsFactoryDeploy.s.sol";
 import {IdleVaultsFactoryDeploy} from "silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol";
 import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 
 import {
     ISiloIncentivesControllerFactory
@@ -176,6 +177,10 @@ contract SiloVaultDeployerTest is IntegrationTest {
         silosWithIncentives[0] = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df); // S/USDC(8) market USDC silo
         silosWithIncentives[1] = ISilo(0x322e1d5384aa4ED66AeCa770B95686271de61dc3); // S/USDC(20) market USDC silo
 
+        address trustedFactory = makeAddr("trustedFactory");
+        IIncentivesClaimingLogicFactory[] memory trustedFactories = new IIncentivesClaimingLogicFactory[](1);
+        trustedFactories[0] = IIncentivesClaimingLogicFactory(trustedFactory);
+
         params = ISiloVaultDeployer.CreateSiloVaultParams({
             initialOwner: initialOwner,
             initialTimelock: initialTimelock,
@@ -183,6 +188,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
             asset: _USDC,
             name: name,
             symbol: symbol,
+            trustedFactories: trustedFactories,
             silosWithIncentives: silosWithIncentives
         });
     }
