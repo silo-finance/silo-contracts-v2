@@ -595,11 +595,9 @@ contract VaultIncentivesModuleTest is Test {
             abi.encode(true)
         );
 
-        vm.expectEmit(true, true, true, true);
-        emit IncentivesClaimingLogicAdded(_market1, _logic1);
-
         vm.prank(_deployer);
         incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
+        incentivesModule.acceptIncentivesClaimingLogic(_market1, _logic1);
 
         vm.mockCall(
             address(_trustedFactory),
@@ -607,11 +605,14 @@ contract VaultIncentivesModuleTest is Test {
             abi.encode(true)
         );
 
-        vm.expectEmit(true, true, true, true);
-        emit IncentivesClaimingLogicAdded(_market2, _logic2);
-
         vm.prank(_curator);
         incentivesModule.submitIncentivesClaimingLogic(_market2, _logic2);
+        incentivesModule.acceptIncentivesClaimingLogic(_market2, _logic2);
+
+        address[] memory claimingLogics = incentivesModule.getAllIncentivesClaimingLogics();
+        assertEq(claimingLogics.length, 2, "failed to add claiming logics");
+        assertEq(claimingLogics[0], address(_logic1), "failed to add claiming logic 1");
+        assertEq(claimingLogics[1], address(_logic2), "failed to add claiming logic 2");
     }
 
     /*

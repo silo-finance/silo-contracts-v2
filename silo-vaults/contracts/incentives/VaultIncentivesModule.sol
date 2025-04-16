@@ -92,16 +92,17 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
         require(pendingClaimingLogics[_market][_logic] == 0, LogicAlreadyPending());
 
-        if (_logicCreatedInTrustedFactory(_logic)) {
-            require(_isOwnerOrCurator(), ErrorsLib.NotCuratorRole());
-            // If the logic was created in a trusted factory we skip the timelock.
-            _addClaimingLogic(_market, _logic);
-            return;
-        }
-
-        require(_isOwner(), ErrorsLib.NotOwner());
-
         uint256 timelock = vault.timelock();
+
+        if (_logicCreatedInTrustedFactory(_logic)) {
+            // The Silo Vault curator can submit a claiming logic created in a trusted factory.
+            require(_isOwnerOrCurator(), ErrorsLib.NotCuratorRole());
+            // If the logic was created in a trusted factory, we skip the timelock.
+            timelock = 0;
+        } else {
+            // Only an owner can submit a claiming logic created in an untrusted factory with a timelock.
+            require(_isOwner(), ErrorsLib.NotOwner());
+        }
 
         unchecked { pendingClaimingLogics[_market][_logic] = block.timestamp + timelock; }
 
@@ -114,7 +115,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         IIncentivesClaimingLogic _logic
     ) external virtual {
         uint256 validAt = pendingClaimingLogics[_market][_logic];
-        require(validAt != 0 && validAt < block.timestamp, CantAcceptLogic());
+        require(validAt != 0 && validAt <= block.timestamp, CantAcceptLogic());
 
         _addClaimingLogic(_market, _logic);
     }
