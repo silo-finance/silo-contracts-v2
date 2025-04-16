@@ -27,6 +27,9 @@ contract VaultIncentivesModuleTest is Test {
     address internal _solution1 = makeAddr("Solution1");
     address internal _solution2 = makeAddr("Solution2");
 
+    IIncentivesClaimingLogicFactory internal _trustedFactory =
+        IIncentivesClaimingLogicFactory(makeAddr("TrustedFactory"));
+
     IIncentivesClaimingLogic internal _logic1 = IIncentivesClaimingLogic(makeAddr("Logic1"));
     IIncentivesClaimingLogic internal _logic2 = IIncentivesClaimingLogic(makeAddr("Logic2"));
 
@@ -35,6 +38,7 @@ contract VaultIncentivesModuleTest is Test {
 
     address internal _deployer = makeAddr("_deployer");
     address internal _guardian = makeAddr("_guardian");
+    address internal _curator = makeAddr("_curator");
     address internal _vault = makeAddr("_vault");
 
     event IncentivesClaimingLogicAdded(IERC4626 indexed market, IIncentivesClaimingLogic logic);
@@ -67,6 +71,12 @@ contract VaultIncentivesModuleTest is Test {
             address(incentivesModule.vault()),
             abi.encodeWithSelector(ISiloVaultBase.guardian.selector),
             abi.encode(_guardian)
+        );
+
+        vm.mockCall(
+            address(incentivesModule.vault()),
+            abi.encodeWithSelector(ISiloVaultBase.curator.selector),
+            abi.encode(_curator)
         );
 
         vm.mockCall(
@@ -423,11 +433,11 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_submitTrustedFactory_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.prank(_guardian);
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -444,10 +454,10 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_submitTrustedFactory_success() public {
         vm.expectEmit(true, true, true, true);
-        emit TrustedFactorySubmitted(IIncentivesClaimingLogicFactory(_solution1));
+        emit TrustedFactorySubmitted(_trustedFactory);
 
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -455,11 +465,11 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_submitTrustedFactory_alreadyPending() public {
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.prank(_deployer);
         vm.expectRevert(IVaultIncentivesModule.FactoryAlreadyPending.selector);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -467,7 +477,7 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_revokePendingTrustedFactory_onlyGuardian() public {
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotGuardianRole.selector));
-        incentivesModule.revokePendingTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.revokePendingTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -475,13 +485,13 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_revokePendingTrustedFactory_success() public {
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.expectEmit(true, true, true, true);
-        emit TrustedFactoryRevoked(IIncentivesClaimingLogicFactory(_solution1));
+        emit TrustedFactoryRevoked(_trustedFactory);
 
         vm.prank(_guardian);
-        incentivesModule.revokePendingTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.revokePendingTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -489,15 +499,15 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_acceptTrustedFactory_cantAcceptFactory() public {
         vm.expectRevert(IVaultIncentivesModule.CantAcceptFactory.selector);
-        incentivesModule.acceptTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
 
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.warp(block.timestamp + _timelock - 1);
 
         vm.expectRevert(IVaultIncentivesModule.CantAcceptFactory.selector);
-        incentivesModule.acceptTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -505,15 +515,15 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_acceptTrustedFactory_success() public {
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.warp(block.timestamp + _timelock + 1);
 
         vm.expectEmit(true, true, true, true);
-        emit TrustedFactoryAccepted(IIncentivesClaimingLogicFactory(_solution1));
+        emit TrustedFactoryAccepted(_trustedFactory);
 
         vm.prank(_guardian);
-        incentivesModule.acceptTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -521,11 +531,11 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_removeTrustedFactory_onlyOwner() public {
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
-        incentivesModule.removeTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.removeTrustedFactory(_trustedFactory);
 
         vm.prank(_guardian);
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
-        incentivesModule.removeTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.removeTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -533,17 +543,17 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_removeTrustedFactory_success() public {
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.warp(block.timestamp + _timelock + 1);
 
-        incentivesModule.acceptTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
 
         vm.expectEmit(true, true, true, true);
-        emit TrustedFactoryRemoved(IIncentivesClaimingLogicFactory(_solution1));
+        emit TrustedFactoryRemoved(_trustedFactory);
 
         vm.prank(_deployer);
-        incentivesModule.removeTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.removeTrustedFactory(_trustedFactory);
     }
 
     /*
@@ -551,16 +561,73 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_trustedFactories_getters() public {
         vm.prank(_deployer);
-        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
         vm.warp(block.timestamp + _timelock + 1);
 
-        incentivesModule.acceptTrustedFactory(IIncentivesClaimingLogicFactory(_solution1));
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
 
         address[] memory factories = incentivesModule.getTrustedFactories();
         assertEq(factories.length, 1);
         assertEq(factories[0], _solution1);
 
-        assertTrue(incentivesModule.isTrustedFactory(IIncentivesClaimingLogicFactory(_solution1)));
+        assertTrue(incentivesModule.isTrustedFactory(_trustedFactory));
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitIncentivesClaimingLogic_logicCreatedInTrustedFactory -vvv
+    */
+    function test_submitIncentivesClaimingLogic_logicCreatedInTrustedFactory() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        vm.mockCall(
+            address(_trustedFactory),
+            abi.encodeWithSelector(IIncentivesClaimingLogicFactory.createdInFactory.selector, address(_logic1)),
+            abi.encode(true)
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IncentivesClaimingLogicAdded(_market1, _logic1);
+
+        vm.prank(_deployer);
+        incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
+
+        vm.mockCall(
+            address(_trustedFactory),
+            abi.encodeWithSelector(IIncentivesClaimingLogicFactory.createdInFactory.selector, address(_logic2)),
+            abi.encode(true)
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IncentivesClaimingLogicAdded(_market2, _logic2);
+
+        vm.prank(_curator);
+        incentivesModule.submitIncentivesClaimingLogic(_market2, _logic2);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitIncentivesClaimingLogic_onlyCurator -vvv
+    */
+    function test_submitIncentivesClaimingLogic_onlyCurator() public {
+         vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        vm.mockCall(
+            address(_trustedFactory),
+            abi.encodeWithSelector(IIncentivesClaimingLogicFactory.createdInFactory.selector, address(_logic1)),
+            abi.encode(true)
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotCuratorRole.selector));
+        incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
     }
 }

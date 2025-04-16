@@ -82,10 +82,19 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
     function submitIncentivesClaimingLogic(
         IERC4626 _market,
         IIncentivesClaimingLogic _logic
-    ) external virtual onlyOwner {
+    ) external virtual {
         require(address(_logic) != address(0), AddressZero());
         require(!_claimingLogics[_market].contains(address(_logic)), LogicAlreadyAdded());
         require(pendingClaimingLogics[_market][_logic] == 0, LogicAlreadyPending());
+
+        if (_logicCreatedInTrustedFactory(_logic)) {
+            require(_isOwnerOrCurator(), ErrorsLib.NotCuratorRole());
+            // If the logic was created in a trusted factory we skip the timelock.
+            _addClaimingLogic(_market, _logic);
+            return;
+        }
+
+        require(_isOwner(), ErrorsLib.NotOwner());
 
         uint256 timelock = vault.timelock();
 
@@ -298,11 +307,26 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         emit IncentivesClaimingLogicAdded(_market, _logic);
     }
 
-    function _isOwnerOrGuardian() internal view returns (bool) {
-        return _msgSender() == owner() || _msgSender() == vault.guardian();
+    function _logicCreatedInTrustedFactory(IIncentivesClaimingLogic _logic) internal view returns (bool result) {
+        uint256 length = _trustedFactories.length();
+
+        for (uint256 i = 0; i < length; i++) {
+            IIncentivesClaimingLogicFactory factory = IIncentivesClaimingLogicFactory(_trustedFactories.at(i));
+            if (factory.createdInFactory(_logic)) {
+                return true;
+            }
+        }
     }
 
-    function _isOwner() internal view returns (bool) {
-        return _msgSender() == owner();
+    function _isOwnerOrCurator() internal view returns (bool result) {
+        result = _msgSender() == owner() || _msgSender() == vault.curator();
+    }
+
+    function _isOwnerOrGuardian() internal view returns (bool result) {
+        result = _msgSender() == owner() || _msgSender() == vault.guardian();
+    }
+
+    function _isOwner() internal view returns (bool result) {
+        result = _msgSender() == owner();
     }
 }
