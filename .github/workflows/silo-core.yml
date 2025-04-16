@@ -238,11 +238,6 @@ jobs:
                     path: ./gitmodules/
                     key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
-            -   name: Install solidity
-                run: |
-                    pip3 install solc-select
-                    solc-select install 0.8.29
-
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
                 with:
