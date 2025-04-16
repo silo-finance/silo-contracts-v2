@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - silo-vaults: account for `maxDeposit` when doing deposit
 - silo-vaults: ensure we can deposit 100% of the CAP 
 
+## [2.1.0] - 2025-04-16
+### Fixed
+- silo-core: [Restore current router deployments, SiloRouterV2 renaming](https://github.com/silo-finance/silo-contracts-v2/commit/4d4b2c24e2c111e6b00efe25a76618499a271417)
+
 ## [2.0.1] - 2025-03-19
 ### Fixed
 - silo-vaults: [Guardian role in the vault incentives module](https://github.com/silo-finance/silo-contracts-v2/commit/389b0575d01f33d745876f6cc26747c082de860b)
