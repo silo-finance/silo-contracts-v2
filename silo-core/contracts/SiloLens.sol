@@ -232,7 +232,7 @@ contract SiloLens is ISiloLens {
 
             aprs[i] = APR({
                 borrowAPR: SiloLensLib.getBorrowAPR(silo),
-                depositAPR: SiloLensLib.getBorrowAPR(silo)
+                depositAPR: SiloLensLib.getDepositAPR(silo)
             });
         }
     }

@@ -127,8 +127,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.totalDeposits(silo1), deposit1, "totalDeposits after borrow are the same");
 
         vm.warp(block.timestamp + 65 days);
-
-
+        
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after 65 days #0");
         assertEq(siloLens.getBorrowAPR(silo1), 6_605018041910688000, "getBorrowAPR after 65 days #1");
 
