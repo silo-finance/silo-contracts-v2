@@ -8,6 +8,7 @@ import {Context} from "openzeppelin5/utils/Context.sol";
 
 import {IVaultIncentivesModule} from "../interfaces/IVaultIncentivesModule.sol";
 import {IIncentivesClaimingLogic} from "../interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "../interfaces/IIncentivesClaimingLogicFactory.sol";
 import {INotificationReceiver} from "../interfaces/INotificationReceiver.sol";
 import {ErrorsLib} from "../libraries/ErrorsLib.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
@@ -32,22 +33,26 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
     /// @dev Incentives claiming logics for each market.
     mapping(IERC4626 market => EnumerableSet.AddressSet incentivesClaimingLogics) internal _claimingLogics;
 
+    /// @dev Trusted incentives claiming logics factories.
+    EnumerableSet.AddressSet internal _trustedFactories;
+
+    /// @dev Timelock for trusted incentives claiming logics factories.
+    mapping(IIncentivesClaimingLogicFactory factory => uint256 validAt) internal _pendingTrustedFactories;
+
     constructor() {
         _disableInitializers();
     }
 
     /// @dev Reverts if the caller doesn't have the owner role.
     modifier onlyOwner() {
-        if (_msgSender() != owner()) revert ErrorsLib.NotOwner();
+        require(_isOwner(), ErrorsLib.NotOwner());
 
         _;
     }
 
     /// @dev Reverts if the caller doesn't have the guardian role.
     modifier onlyGuardianRole() {
-        address guardian = vault.guardian();
-
-        if (_msgSender() != owner() && _msgSender() != guardian) revert ErrorsLib.NotGuardianRole();
+        require(_isOwnerOrGuardian(), ErrorsLib.NotGuardianRole());
 
         _;
     }
@@ -129,6 +134,46 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
     }
 
     /// @inheritdoc IVaultIncentivesModule
+    function submitTrustedFactory(IIncentivesClaimingLogicFactory _factory) external virtual onlyOwner {
+        require(address(_factory) != address(0), AddressZero());
+        require(!_trustedFactories.contains(address(_factory)), FactoryAlreadyTrusted());
+        require(_pendingTrustedFactories[_factory] == 0, FactoryAlreadyPending());
+
+        uint256 timelock = vault.timelock();
+
+        unchecked { _pendingTrustedFactories[_factory] = block.timestamp + timelock; }
+
+        emit TrustedFactorySubmitted(_factory);
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function acceptTrustedFactory(IIncentivesClaimingLogicFactory _factory) external virtual {
+        uint256 validAt = _pendingTrustedFactories[_factory];
+        require(validAt != 0 && validAt < block.timestamp, CantAcceptFactory());
+
+        _trustedFactories.add(address(_factory));
+
+        delete _pendingTrustedFactories[_factory];
+
+        emit TrustedFactoryAccepted(_factory);
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function revokePendingTrustedFactory(IIncentivesClaimingLogicFactory _factory) external virtual onlyGuardianRole {
+        delete _pendingTrustedFactories[_factory];
+
+        emit TrustedFactoryRevoked(_factory);
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function removeTrustedFactory(IIncentivesClaimingLogicFactory _factory) external virtual onlyOwner {
+        require(_trustedFactories.remove(address(_factory)), FactoryNotFound());
+
+        emit TrustedFactoryRemoved(_factory);
+    }
+    
+
+    /// @inheritdoc IVaultIncentivesModule
     function addNotificationReceiver(INotificationReceiver _notificationReceiver) external virtual onlyOwner {
         require(address(_notificationReceiver) != address(0), AddressZero());
         require(_notificationReceivers.add(address(_notificationReceiver)), NotificationReceiverAlreadyAdded());
@@ -186,6 +231,21 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         logics = _claimingLogics[market].values();
     }
 
+    /// @inheritdoc IVaultIncentivesModule
+    function getTrustedFactories() external view virtual returns (address[] memory factories) {
+        factories = _trustedFactories.values();
+    }
+
+    /// @inheritdoc IVaultIncentivesModule
+    function isTrustedFactory(IIncentivesClaimingLogicFactory _factory)
+        external
+        view
+        virtual
+        returns (bool isTrusted)
+    {
+        isTrusted = _trustedFactories.contains(address(_factory));
+    }
+
     /// @dev Internal function to get the incentives claiming logics for a given market.
     /// @param _marketsInput The markets to get the incentives claiming logics for.
     /// @return logics The incentives claiming logics.
@@ -236,5 +296,13 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         delete pendingClaimingLogics[_market][_logic];
 
         emit IncentivesClaimingLogicAdded(_market, _logic);
+    }
+
+    function _isOwnerOrGuardian() internal view returns (bool) {
+        return _msgSender() == owner() || _msgSender() == vault.guardian();
+    }
+
+    function _isOwner() internal view returns (bool) {
+        return _msgSender() == owner();
     }
 }
