@@ -76,14 +76,12 @@ src = 've-silo/contracts'
 out = 'cache/foundry/out/ve-silo'
 broadcast = 've-silo/broadcast'
 evm_version = 'paris'
-solc_version = "0.8.29"
 
 [profile.ve_silo_test]
 src = 've-silo/test'
 out = 'cache/foundry/out/ve-silo'
 broadcast = 've-silo/broadcast'
 evm_version = 'paris'
-solc_version = "0.8.29"
 
 [profile.vaults]
 src = 'silo-vaults/contracts'
