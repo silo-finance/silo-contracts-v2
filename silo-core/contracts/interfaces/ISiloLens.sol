@@ -17,6 +17,11 @@ interface ISiloLens {
         uint256 ltv;
     }
 
+    struct APR {
+        uint256 depositAPR;
+        uint256 borrowAPR;
+    }
+
     error InvalidAsset();
 
     /// @dev calculates solvency
@@ -234,6 +239,11 @@ interface ISiloLens {
     /// @param _silo Address of the silo
     /// @return depositAPR The interest rate value in 18 decimals points. 10**18 is equal to 100% per year.
     function getDepositAPR(ISilo _silo) external view returns (uint256 depositAPR);
+
+    /// @notice Calculates current deposit and borrow interest rates (bulk method).
+    /// @param _silos Addresses of the silos
+    /// @return aprs The interest rate values in 18 decimals points. 10**18 is equal to 100% per year.
+    function getAPRs(ISilo[] calldata _silos) external view returns (APR[] memory aprs);
 
     /// @dev gets interest rates model object
     /// @param _silo Silo address from which to read data

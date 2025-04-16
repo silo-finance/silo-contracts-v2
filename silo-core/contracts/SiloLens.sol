@@ -223,6 +223,20 @@ contract SiloLens is ISiloLens {
         return SiloLensLib.getDepositAPR(_silo);
     }
 
+    /// @inheritdoc ISiloLens
+    function getAPRs(ISilo[] calldata _silos) external view virtual returns (APR[] memory aprs) {
+        aprs = new APR[](_silos.length);
+
+        for (uint256 i; i < _silos.length; i++) {
+            ISilo silo = _silos[i];
+
+            aprs[i] = APR({
+                borrowAPR: SiloLensLib.getBorrowAPR(silo),
+                depositAPR: SiloLensLib.getDepositAPR(silo)
+            });
+        }
+    }
+
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
         irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
     }

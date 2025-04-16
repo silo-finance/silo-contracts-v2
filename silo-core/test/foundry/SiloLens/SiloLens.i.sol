@@ -134,6 +134,13 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after 65 days #0");
         assertEq(siloLens.getDepositAPR(silo1), 4_625564840811145381, "getDepositAPR after 65 days #1");
 
+        ISilo[] memory silos = new ISilo[](1);
+        silos[0] = silo1;
+
+        ISiloLens.APR[] memory aprs = siloLens.getAPRs(silos);
+        assertEq(aprs[0].borrowAPR, 6_605018041910688000, "apr.getBorrowAPR after 65 days #1");
+        assertEq(aprs[0].depositAPR, 4_625564840811145381, "aps.getDepositAPR after 65 days #1");
+
         assertLt(siloLens.getDepositAPR(silo1), siloLens.getBorrowAPR(silo1), "deposit APR should be less than borrow");
 
         assertFalse(siloLens.isSolvent(silo0, borrower), "borrower is NOT solvent @0");
