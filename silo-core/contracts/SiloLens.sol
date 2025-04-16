@@ -233,11 +233,16 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getDepositAPRs(ISilo[] calldata _silos) external view virtual returns (uint256[] memory depositAPRs) {
-        depositAPRs = new uint256[]();
+    function getAPRs(ISilo[] calldata _silos) external view virtual returns (APR[] memory aprs) {
+        aprs = new APR[](_silos.length);
 
         for (uint256 i; i < _silos.length; i++) {
-            depositAPRs[i] = SiloLensLib.getDepositAPR(_silos[i]);
+            ISilo silo = _silos[i];
+
+            aprs[i] = APR({
+                borrowAPR: SiloLensLib.getBorrowAPR(silo),
+                depositAPR: SiloLensLib.getBorrowAPR(silo)
+            });
         }
     }
 
