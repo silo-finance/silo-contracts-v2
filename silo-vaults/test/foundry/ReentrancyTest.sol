@@ -7,6 +7,7 @@ import {IERC1820Implementer} from "openzeppelin5/interfaces/IERC1820Implementer.
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {SiloVault} from "../../contracts/SiloVault.sol";
 import {ISiloVault, MarketAllocation} from "../../contracts/interfaces/ISiloVault.sol";
 import {ERC1820Registry} from "../../contracts/mocks/ERC1820Registry.sol";
@@ -65,7 +66,8 @@ contract ReentrancyTest is IntegrationTest, IERC1820Implementer {
             bytes32(0),
             address(0),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
 
         vm.startPrank(OWNER);

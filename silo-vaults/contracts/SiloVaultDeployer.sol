@@ -7,13 +7,13 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFactory.sol";
 import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
-import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
@@ -82,8 +82,6 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
             _externalSalt: salt
         }));
 
-        address notificationReceiver = address(incentivesController);
-
         IIncentivesClaimingLogic[] memory claimingLogics;
         IERC4626[] memory marketsWithIncentives;
 
@@ -96,16 +94,13 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         });
 
         // 3. Deploy Silo Vault
-        vault = SILO_VAULTS_FACTORY.createSiloVault({
-            _initialOwner: params.initialOwner,
-            _initialTimelock: params.initialTimelock,
-            _asset: params.asset,
-            _name: params.name,
-            _symbol: params.symbol,
-            _externalSalt: salt,
-            _notificationReceiver: notificationReceiver,
+        vault = _deploySiloVault({
+            _params: params,
+            _salt: salt,
+            _notificationReceiver: address(incentivesController),
             _claimingLogics: claimingLogics,
-            _marketsWithIncentives: marketsWithIncentives
+            _marketsWithIncentives: marketsWithIncentives,
+            _trustedFactories: params.trustedFactories
         });
 
         require(address(vault) == predictedAddress, VaultAddressMismatch());
@@ -116,6 +111,35 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
         ));
 
         emit CreateSiloVault(address(vault), address(incentivesController), address(idleVault));
+    }
+
+    /// @dev Deploys the Silo Vault.
+    /// @param _params The parameters for the deployment.
+    /// @param _salt The salt for the deployment.
+    /// @param _notificationReceiver The notification receiver for the pre-configuration.
+    /// @param _claimingLogics The claiming logics for the pre-configuration.
+    /// @param _marketsWithIncentives The markets with incentives for the pre-configuration.
+    /// @param _trustedFactories The trusted factories for the pre-configuration.
+    function _deploySiloVault(
+        CreateSiloVaultParams memory _params,
+        bytes32 _salt,
+        address _notificationReceiver,
+        IIncentivesClaimingLogic[] memory _claimingLogics,
+        IERC4626[] memory _marketsWithIncentives,
+        IIncentivesClaimingLogicFactory[] memory _trustedFactories
+    ) internal returns (ISiloVault vault) {
+        vault = SILO_VAULTS_FACTORY.createSiloVault({
+            _initialOwner: _params.initialOwner,
+            _initialTimelock: _params.initialTimelock,
+            _asset: _params.asset,
+            _name: _params.name,
+            _symbol: _params.symbol,
+            _externalSalt: _salt,
+            _notificationReceiver: _notificationReceiver,
+            _claimingLogics: _claimingLogics,
+            _marketsWithIncentives: _marketsWithIncentives,
+            _trustedFactories: _trustedFactories
+        });
     }
 
     /// @dev Deploy claiming logic ONLY for the collateral share token
@@ -186,7 +210,7 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
             address(SILO_VAULTS_FACTORY)
         );
 
-        predictedAddress = SiloVaultFactoryActionsLib.predictSiloVaultAddress({
+        predictedAddress = SILO_VAULTS_FACTORY.predictSiloVaultAddress({
             _constructorArgs: abi.encode(
                 _initialOwner,
                 _initialTimelock,

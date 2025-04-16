@@ -18,6 +18,7 @@ import {SiloIncentivesControllerCLFactoryDeploy} from "silo-vaults/deploy/SiloIn
 import {SiloVaultsFactoryDeploy} from "silo-vaults/deploy/SiloVaultsFactoryDeploy.s.sol";
 import {IdleVaultsFactoryDeploy} from "silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol";
 import {IdleVault} from "silo-vaults/contracts/IdleVault.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 
 import {
     ISiloIncentivesControllerFactory
@@ -115,6 +116,23 @@ contract SiloVaultDeployerTest is IntegrationTest {
     }
 
     /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_withTrustedFactories -vv
+    */
+    function test_SiloVaultDeployer_createSiloVault_withTrustedFactories() public {
+        ISiloVaultDeployer.CreateSiloVaultParams memory params = _params();
+
+        ISiloVault vault;
+
+        (vault,,) = _deployer.createSiloVault(params);
+
+        IVaultIncentivesModule incentivesModule = vault.INCENTIVES_MODULE();
+
+        address[] memory trustedFactories = incentivesModule.getTrustedFactories();
+        assertEq(trustedFactories.length, 1, "Trusted factories are not initialized");
+        assertEq(trustedFactories[0], address(params.trustedFactories[0]), "Trusted factory is not initialized");
+     }
+
+    /*
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_integration -vv
     */
     function test_SiloVaultDeployer_createSiloVault_integration() public {
@@ -176,6 +194,10 @@ contract SiloVaultDeployerTest is IntegrationTest {
         silosWithIncentives[0] = ISilo(0x4E216C15697C1392fE59e1014B009505E05810Df); // S/USDC(8) market USDC silo
         silosWithIncentives[1] = ISilo(0x322e1d5384aa4ED66AeCa770B95686271de61dc3); // S/USDC(20) market USDC silo
 
+        address trustedFactory = makeAddr("trustedFactory");
+        IIncentivesClaimingLogicFactory[] memory trustedFactories = new IIncentivesClaimingLogicFactory[](1);
+        trustedFactories[0] = IIncentivesClaimingLogicFactory(trustedFactory);
+
         params = ISiloVaultDeployer.CreateSiloVaultParams({
             initialOwner: initialOwner,
             initialTimelock: initialTimelock,
@@ -183,6 +205,7 @@ contract SiloVaultDeployerTest is IntegrationTest {
             asset: _USDC,
             name: name,
             symbol: symbol,
+            trustedFactories: trustedFactories,
             silosWithIncentives: silosWithIncentives
         });
     }

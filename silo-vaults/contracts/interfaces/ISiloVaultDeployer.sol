@@ -6,6 +6,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 
 /// @title ISiloVaultDeployer
 /// @dev Deploys Silo Vault,Idle Vault, and Silo Incentives Controllers together with
@@ -18,6 +19,7 @@ interface ISiloVaultDeployer {
         address incentivesControllerOwner; // owner of the incentives controller
         string name; // name of the vault
         string symbol; // symbol of the vault
+        IIncentivesClaimingLogicFactory[] trustedFactories; // trusted factories for initial configuration
         ISilo[] silosWithIncentives; // silos with incentives for initial configuration
         // if `silosWithIncentives` empty initial configuration will be skipped
     }
