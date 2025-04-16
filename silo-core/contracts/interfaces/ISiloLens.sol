@@ -230,10 +230,20 @@ interface ISiloLens {
     /// @return borrowAPR The interest rate value in 18 decimals points. 10**18 is equal to 100% per year
     function getBorrowAPR(ISilo _silo) external view returns (uint256 borrowAPR);
 
+    /// @notice Calculates current borrow interest rate (bulk method)
+    /// @param _silos Addresses of the silos
+    /// @return borrowAPRs The interest rate values in 18 decimals points. 10**18 is equal to 100% per year
+    function getBorrowAPRs(ISilo[] calldata _silos) external view virtual returns (uint256[] memory borrowAPRs);
+
     /// @notice Calculates current deposit interest rate.
     /// @param _silo Address of the silo
     /// @return depositAPR The interest rate value in 18 decimals points. 10**18 is equal to 100% per year.
     function getDepositAPR(ISilo _silo) external view returns (uint256 depositAPR);
+
+    /// @notice Calculates current deposit interest rate (bulk method)
+    /// @param _silos Addresses of the silos
+    /// @return depositAPRs The interest rate values in 18 decimals points. 10**18 is equal to 100% per year.
+    function getDepositAPRs(ISilo[] calldata _silos) external view virtual returns (uint256[] memory depositAPRs);
 
     /// @dev gets interest rates model object
     /// @param _silo Silo address from which to read data
