@@ -84,6 +84,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_getInterestRateModel, _silo);
         _testFn(_getBorrowAPR, _silo);
         _testFn(_getDepositAPR, _silo);
+        _testFn(_getAPRs, _silo);
         _testFn(_getModel, _silo);
         _testFn(_maxLiquidation, _silo, _borrower);
         _testFn(_getFeesAndFeeReceivers, _silo);
@@ -316,6 +317,14 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         // expect do not revert
         _lens.getDepositAPR(_silo);
         sig = ISiloLens.getDepositAPR.selector;
+    }
+
+    function _getAPRs(ISilo _silo) internal view returns (bytes4 sig) {
+        ISilo[] memory silos = new ISilo[](1);
+        silos[0] = _silo;
+        // expect do not revert
+        _lens.getAPRs(silos);
+        sig = ISiloLens.getAPRs.selector;
     }
 
     function _getModel(ISilo _silo) internal view returns (bytes4 sig) {
