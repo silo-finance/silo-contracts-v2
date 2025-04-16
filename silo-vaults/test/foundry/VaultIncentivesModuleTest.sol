@@ -6,6 +6,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ErrorsLib} from "silo-vaults/contracts/libraries/ErrorsLib.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVault, ISiloVaultBase} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
@@ -44,7 +45,12 @@ contract VaultIncentivesModuleTest is Test {
 
     function setUp() public {
         incentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
-        incentivesModule.__VaultIncentivesModule_init(ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
+        );
 
         vm.mockCall(
             address(incentivesModule.vault()),
@@ -71,7 +77,12 @@ contract VaultIncentivesModuleTest is Test {
     function test_IncentivesModule_new() public {
         VaultIncentivesModule module = new VaultIncentivesModule();
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        module.__VaultIncentivesModule_init(ISiloVault(_vault));
+        module.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
+        );
     }
 
     /*
@@ -83,7 +94,12 @@ contract VaultIncentivesModuleTest is Test {
         vm.expectRevert(); // not initialized, vault is not set
         VaultIncentivesModule(module).owner();
 
-        VaultIncentivesModule(module).__VaultIncentivesModule_init(ISiloVault(_vault));
+        VaultIncentivesModule(module).__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
+        );
 
         assertEq(VaultIncentivesModule(module).owner(), _deployer, "valid owner");
         assertEq(address(VaultIncentivesModule(module).vault()), _vault, "valid vault");
@@ -94,7 +110,12 @@ contract VaultIncentivesModuleTest is Test {
     */
     function test_IncentivesModule_initOnce() public {
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        incentivesModule.__VaultIncentivesModule_init(ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0)
+        );
     }
 
     /*

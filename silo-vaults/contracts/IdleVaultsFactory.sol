@@ -17,8 +17,8 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 contract IdleVaultsFactory is Create2Factory {
     mapping(address => bool) public isIdleVault;
 
-    function createIdleVault(IERC4626 _vault) external virtual returns (IdleVault idleVault) {
-        idleVault = new IdleVault{salt: _salt()}(
+    function createIdleVault(IERC4626 _vault, bytes32 _externalSalt) external virtual returns (IdleVault idleVault) {
+        idleVault = new IdleVault{salt: _salt(_externalSalt)}(
             address(_vault),
             _vault.asset(),
             string.concat("IdleVault for ", IERC20Metadata(address(_vault)).name()),

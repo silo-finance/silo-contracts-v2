@@ -37,7 +37,8 @@ contract SiloIncentivesControllerCLTest is Test {
 
         incentivesControllerCL = factory.createIncentivesControllerCL(
             _vaultIncentivesController,
-            _siloIncentivesController
+            _siloIncentivesController,
+            bytes32(0)
         );
 
         assertTrue(SiloIncentivesControllerCLFactory(factory).createdInFactory(address(incentivesControllerCL)));
@@ -54,14 +55,18 @@ contract SiloIncentivesControllerCLTest is Test {
 
         vm.prank(devWallet);
         SiloIncentivesControllerCL logic1 = factory.createIncentivesControllerCL(
-            _vaultIncentivesController, _siloIncentivesController
+            _vaultIncentivesController,
+            _siloIncentivesController,
+            bytes32(0)
         );
 
         vm.revertTo(snapshot);
 
         vm.prank(otherWallet);
         SiloIncentivesControllerCL logic2 = factory.createIncentivesControllerCL(
-            _vaultIncentivesController, _siloIncentivesController
+            _vaultIncentivesController,
+            _siloIncentivesController,
+            bytes32(0)
         );
 
         assertNotEq(address(logic1), address(logic2), "logic1 == logic2");
@@ -70,10 +75,10 @@ contract SiloIncentivesControllerCLTest is Test {
     // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mt test_incentivesClaimingLogicZeroAddress
     function test_incentivesClaimingLogicZeroAddress() public {
         vm.expectRevert(IIncentivesClaimingLogic.VaultIncentivesControllerZeroAddress.selector);
-        factory.createIncentivesControllerCL(address(0), _siloIncentivesController);
+        factory.createIncentivesControllerCL(address(0), _siloIncentivesController, bytes32(0));
 
         vm.expectRevert(IIncentivesClaimingLogic.SiloIncentivesControllerZeroAddress.selector);
-        factory.createIncentivesControllerCL(_vaultIncentivesController, address(0));
+        factory.createIncentivesControllerCL(_vaultIncentivesController, address(0), bytes32(0));
     }
 
     // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mt test_claimRewardsAndDistribute

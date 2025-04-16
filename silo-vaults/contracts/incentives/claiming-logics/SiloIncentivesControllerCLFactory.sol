@@ -12,9 +12,13 @@ contract SiloIncentivesControllerCLFactory is Create2Factory, ISiloIncentivesCon
     /// @inheritdoc ISiloIncentivesControllerCLFactory
     function createIncentivesControllerCL(
         address _vaultIncentivesController,
-        address _siloIncentivesController
+        address _siloIncentivesController,
+        bytes32 _externalSalt
     ) external returns (SiloIncentivesControllerCL logic) {
-        logic = new SiloIncentivesControllerCL{salt: _salt()}(_vaultIncentivesController, _siloIncentivesController);
+        logic = new SiloIncentivesControllerCL{salt: _salt(_externalSalt)}(
+            _vaultIncentivesController,
+            _siloIncentivesController
+        );
 
         createdInFactory[address(logic)] = true;
 
