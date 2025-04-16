@@ -16,7 +16,7 @@ interface IVaultIncentivesModule {
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
     event TrustedFactorySubmitted(IIncentivesClaimingLogicFactory factory);
-    event TrustedFactoryAccepted(IIncentivesClaimingLogicFactory factory);
+    event TrustedFactoryAdded(IIncentivesClaimingLogicFactory factory);
     event TrustedFactoryRevoked(IIncentivesClaimingLogicFactory factory);
     event TrustedFactoryRemoved(IIncentivesClaimingLogicFactory factory);
 

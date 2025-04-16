@@ -8,6 +8,7 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
@@ -97,7 +98,8 @@ contract BaseTest is SiloLittleHelper, Test {
             bytes32(0),
             address(0),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
     }
 

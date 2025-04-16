@@ -4,6 +4,7 @@ pragma solidity >=0.5.0;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 
 import {ISiloVault} from "./ISiloVault.sol";
 
@@ -28,6 +29,7 @@ interface ISiloVaultsFactory {
     /// @param _notificationReceiver The notification receiver for the vault pre-configuration.
     /// @param _claimingLogics Incentive claiming logics for the vault pre-configuration.
     /// @param _marketsWithIncentives The markets with incentives for the vault pre-configuration.
+    /// @param _trustedFactories Trusted factories for the vault pre-configuration.
     function createSiloVault(
         address _initialOwner,
         uint256 _initialTimelock,
@@ -37,6 +39,7 @@ interface ISiloVaultsFactory {
         bytes32 _externalSalt,
         address _notificationReceiver,
         IIncentivesClaimingLogic[] memory _claimingLogics,
-        IERC4626[] memory _marketsWithIncentives
+        IERC4626[] memory _marketsWithIncentives,
+        IIncentivesClaimingLogicFactory[] memory _trustedFactories
     ) external returns (ISiloVault SiloVault);
 }

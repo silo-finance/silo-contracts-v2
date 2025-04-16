@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {IMethodsRegistry} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodReentrancyTest.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
@@ -117,7 +118,8 @@ contract VaultReentrancyTest is Test {
             bytes32(0),
             address(vault),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
 
         uint256 cap = 100e18;

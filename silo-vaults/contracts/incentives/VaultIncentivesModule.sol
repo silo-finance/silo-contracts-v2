@@ -61,7 +61,8 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         ISiloVault _vault,
         address _notificationReceiver,
         IIncentivesClaimingLogic[] memory _initialClaimingLogics,
-        IERC4626[] memory _initialMarketsWithIncentives
+        IERC4626[] memory _initialMarketsWithIncentives,
+        IIncentivesClaimingLogicFactory[] memory _initialTrustedFactories
     ) external virtual initializer {
         require(address(_vault) != address(0), AddressZero());
         require(_initialClaimingLogics.length == _initialMarketsWithIncentives.length, InvalidClaimingLogicsLength());
@@ -75,6 +76,10 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
 
         for (uint256 i = 0; i < _initialClaimingLogics.length; i++) {
             _addClaimingLogic(_initialMarketsWithIncentives[i], _initialClaimingLogics[i]);
+        }
+
+        for (uint256 i = 0; i < _initialTrustedFactories.length; i++) {
+            _addTrustedFactory(_initialTrustedFactories[i]);
         }
     }
 
@@ -160,11 +165,7 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         uint256 validAt = _pendingTrustedFactories[_factory];
         require(validAt != 0 && validAt < block.timestamp, CantAcceptFactory());
 
-        _trustedFactories.add(address(_factory));
-
-        delete _pendingTrustedFactories[_factory];
-
-        emit TrustedFactoryAccepted(_factory);
+        _addTrustedFactory(_factory);
     }
 
     /// @inheritdoc IVaultIncentivesModule
@@ -305,6 +306,14 @@ contract VaultIncentivesModule is IVaultIncentivesModule, Initializable, Context
         delete pendingClaimingLogics[_market][_logic];
 
         emit IncentivesClaimingLogicAdded(_market, _logic);
+    }
+
+    function _addTrustedFactory(IIncentivesClaimingLogicFactory _factory) internal {
+        _trustedFactories.add(address(_factory));
+
+        delete _pendingTrustedFactories[_factory];
+
+        emit TrustedFactoryAdded(_factory);
     }
 
     function _logicCreatedInTrustedFactory(IIncentivesClaimingLogic _logic) internal view returns (bool result) {

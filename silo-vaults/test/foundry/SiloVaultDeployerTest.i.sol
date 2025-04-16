@@ -116,6 +116,23 @@ contract SiloVaultDeployerTest is IntegrationTest {
     }
 
     /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_withTrustedFactories -vv
+    */
+    function test_SiloVaultDeployer_createSiloVault_withTrustedFactories() public {
+        ISiloVaultDeployer.CreateSiloVaultParams memory params = _params();
+
+        ISiloVault vault;
+
+        (vault,,) = _deployer.createSiloVault(params);
+
+        IVaultIncentivesModule incentivesModule = vault.INCENTIVES_MODULE();
+
+        address[] memory trustedFactories = incentivesModule.getTrustedFactories();
+        assertEq(trustedFactories.length, 1, "Trusted factories are not initialized");
+        assertEq(trustedFactories[0], address(params.trustedFactories[0]), "Trusted factory is not initialized");
+     }
+
+    /*
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_SiloVaultDeployer_createSiloVault_integration -vv
     */
     function test_SiloVaultDeployer_createSiloVault_integration() public {

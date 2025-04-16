@@ -5,6 +5,7 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {SiloVault} from "silo-vaults/contracts/SiloVault.sol";
 import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncentivesModule.sol";
@@ -18,6 +19,11 @@ library SiloVaultFactoryActionsLib {
     /// @param _name The name of the vault.
     /// @param _symbol The symbol of the vault.
     /// @param _salt The salt for the deployment.
+    /// @param _notificationReceiver The notification receiver for the vault pre-configuration.
+    /// @param _incentivesModuleImplementation The implementation of the vault incentives module.
+    /// @param _claimingLogics The claiming logics for the vault pre-configuration.
+    /// @param _marketsWithIncentives The markets with incentives for the vault pre-configuration.
+    /// @param _trustedFactories The trusted factories for the vault pre-configuration.
     function createSiloVault(
         address _initialOwner,
         uint256 _initialTimelock,
@@ -28,7 +34,8 @@ library SiloVaultFactoryActionsLib {
         address _notificationReceiver,
         address _incentivesModuleImplementation,
         IIncentivesClaimingLogic[] memory _claimingLogics,
-        IERC4626[] memory _marketsWithIncentives
+        IERC4626[] memory _marketsWithIncentives,
+        IIncentivesClaimingLogicFactory[] memory _trustedFactories
     ) external returns (ISiloVault siloVault) {
         VaultIncentivesModule vaultIncentivesModule = VaultIncentivesModule(
             Clones.cloneDeterministic(_incentivesModuleImplementation, _salt)
@@ -40,12 +47,13 @@ library SiloVaultFactoryActionsLib {
             )
         ));
 
-        vaultIncentivesModule.__VaultIncentivesModule_init(
-            siloVault,
-            _notificationReceiver,
-            _claimingLogics,
-            _marketsWithIncentives
-        );
+        vaultIncentivesModule.__VaultIncentivesModule_init({
+            _vault: siloVault,
+            _notificationReceiver: _notificationReceiver,
+            _initialClaimingLogics: _claimingLogics,
+            _initialMarketsWithIncentives: _marketsWithIncentives,
+            _initialTrustedFactories: _trustedFactories
+        });
     }
 
     /// @dev Predicts the address of the Silo Vault.

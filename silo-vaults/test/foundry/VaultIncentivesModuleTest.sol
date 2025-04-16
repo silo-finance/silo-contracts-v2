@@ -48,7 +48,7 @@ contract VaultIncentivesModuleTest is Test {
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
     event TrustedFactorySubmitted(IIncentivesClaimingLogicFactory factory);
-    event TrustedFactoryAccepted(IIncentivesClaimingLogicFactory factory);
+    event TrustedFactoryAdded(IIncentivesClaimingLogicFactory factory);
     event TrustedFactoryRevoked(IIncentivesClaimingLogicFactory factory);
     event TrustedFactoryRemoved(IIncentivesClaimingLogicFactory factory);
 
@@ -58,7 +58,8 @@ contract VaultIncentivesModuleTest is Test {
             ISiloVault(_vault),
             address(0),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
 
         vm.mockCall(
@@ -96,7 +97,8 @@ contract VaultIncentivesModuleTest is Test {
             ISiloVault(_vault),
             address(0),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
     }
 
@@ -113,7 +115,8 @@ contract VaultIncentivesModuleTest is Test {
             ISiloVault(_vault),
             address(0),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
 
         assertEq(VaultIncentivesModule(module).owner(), _deployer, "valid owner");
@@ -129,7 +132,8 @@ contract VaultIncentivesModuleTest is Test {
             ISiloVault(_vault),
             address(0),
             new IIncentivesClaimingLogic[](0),
-            new IERC4626[](0)
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
     }
 
@@ -520,7 +524,7 @@ contract VaultIncentivesModuleTest is Test {
         vm.warp(block.timestamp + _timelock + 1);
 
         vm.expectEmit(true, true, true, true);
-        emit TrustedFactoryAccepted(_trustedFactory);
+        emit TrustedFactoryAdded(_trustedFactory);
 
         vm.prank(_guardian);
         incentivesModule.acceptTrustedFactory(_trustedFactory);
@@ -569,7 +573,7 @@ contract VaultIncentivesModuleTest is Test {
 
         address[] memory factories = incentivesModule.getTrustedFactories();
         assertEq(factories.length, 1);
-        assertEq(factories[0], _solution1);
+        assertEq(factories[0], address(_trustedFactory));
 
         assertTrue(incentivesModule.isTrustedFactory(_trustedFactory));
     }
