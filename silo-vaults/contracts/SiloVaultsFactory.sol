@@ -68,4 +68,20 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
             address(siloVault), msg.sender, _initialOwner, _initialTimelock, _asset, _name, _symbol
         );
     }
+
+    /// @inheritdoc ISiloVaultsFactory
+    function predictSiloVaultAddress(bytes memory _constructorArgs, bytes32 _salt, address _deployer)
+        external
+        pure
+        returns (address vaultAddress)
+    {
+        bytes32 initCodeHash = SiloVaultFactoryActionsLib.initCodeHash(_constructorArgs);
+
+        vaultAddress = address(uint160(uint256(keccak256(abi.encodePacked(
+            bytes1(0xff),
+            _deployer,
+            _salt,
+            initCodeHash
+        )))));
+    }
 }

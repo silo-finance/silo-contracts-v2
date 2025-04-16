@@ -56,23 +56,13 @@ library SiloVaultFactoryActionsLib {
         });
     }
 
-    /// @dev Predicts the address of the Silo Vault.
     /// @param _constructorArgs The constructor arguments for the Silo Vault encoded via abi.encode.
-    /// @param _salt The salt for the deployment.
-    /// @param _deployer The deployer of the Silo Vault.
-    /// @return vaultAddress The address of the Silo Vault.
-    function predictSiloVaultAddress(bytes memory _constructorArgs, bytes32 _salt, address _deployer)
+    /// @return initCodeHash The init code hash of the Silo Vault.
+    function initCodeHash(bytes memory _constructorArgs)
         external
         pure
-        returns (address vaultAddress)
+        returns (bytes32 initCodeHash)
     {
-        bytes32 initCodeHash = keccak256(abi.encodePacked(type(SiloVault).creationCode, _constructorArgs));
-
-         vaultAddress = address(uint160(uint256(keccak256(abi.encodePacked(
-            bytes1(0xff),
-            _deployer,
-            _salt,
-            initCodeHash
-        )))));
+        initCodeHash = keccak256(abi.encodePacked(type(SiloVault).creationCode, _constructorArgs));
     }
 }

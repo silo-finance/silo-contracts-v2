@@ -14,7 +14,6 @@ import {ISiloVaultsFactory} from "silo-vaults/contracts/interfaces/ISiloVaultsFa
 import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
-import {SiloVaultFactoryActionsLib} from "silo-vaults/contracts/libraries/SiloVaultFactoryActionsLib.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
@@ -211,7 +210,7 @@ contract SiloVaultDeployer is ISiloVaultDeployer, Create2Factory {
             address(SILO_VAULTS_FACTORY)
         );
 
-        predictedAddress = SiloVaultFactoryActionsLib.predictSiloVaultAddress({
+        predictedAddress = SILO_VAULTS_FACTORY.predictSiloVaultAddress({
             _constructorArgs: abi.encode(
                 _initialOwner,
                 _initialTimelock,

@@ -42,4 +42,14 @@ interface ISiloVaultsFactory {
         IERC4626[] memory _marketsWithIncentives,
         IIncentivesClaimingLogicFactory[] memory _trustedFactories
     ) external returns (ISiloVault SiloVault);
+
+    /// @dev Predicts the address of the Silo Vault.
+    /// @param _constructorArgs The constructor arguments for the Silo Vault encoded via abi.encode.
+    /// @param _salt The salt for the deployment.
+    /// @param _deployer The deployer of the Silo Vault.
+    /// @return vaultAddress The address of the Silo Vault.
+    function predictSiloVaultAddress(bytes memory _constructorArgs, bytes32 _salt, address _deployer)
+        external
+        pure
+        returns (address vaultAddress);
 }
