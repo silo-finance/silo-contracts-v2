@@ -66,8 +66,7 @@ library SiloMathLib {
 
         uint256 cap;
         // save to uncheck because variable can not be more than max
-        // -1 accounts for potential fractional interest being added afterwards
-        unchecked { cap = type(uint256).max - _collateralAssets - 1; }
+        unchecked { cap = type(uint256).max - _collateralAssets; }
 
         if (cap < collateralInterest) {
             // avoid overflow on interest
