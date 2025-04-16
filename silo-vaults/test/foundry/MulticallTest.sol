@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.29;
 
 import {ConstantsLib} from "../../contracts/libraries/ConstantsLib.sol";
 import {ISiloVaultBase} from "../../contracts/interfaces/ISiloVault.sol";

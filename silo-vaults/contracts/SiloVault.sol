@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ERC4626, Math} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";

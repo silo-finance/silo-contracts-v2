@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {PythAggregatorFactory} from "silo-oracles/contracts/pyth/PythAggregatorFactory.sol";
 import {IPythAggregatorFactory} from "silo-oracles/contracts/interfaces/IPythAggregatorFactory.sol";

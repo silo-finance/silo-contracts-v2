@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";

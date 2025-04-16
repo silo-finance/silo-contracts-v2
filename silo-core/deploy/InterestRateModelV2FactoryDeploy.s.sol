@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
@@ -16,7 +16,7 @@ import {
 
     FOUNDRY_PROFILE=core forge verify-contract 0xDA91d956498d667f5DB71eEcd58Ba02C4B960a53 \
     silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol:InterestRateModelV2Factory \
-    --compiler-version 0.8.28 \
+    --compiler-version 0.8.29 \
     --rpc-url $RPC_ARBITRUM \
     --watch
  */

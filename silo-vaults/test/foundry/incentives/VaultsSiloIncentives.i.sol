@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.29;
 
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";

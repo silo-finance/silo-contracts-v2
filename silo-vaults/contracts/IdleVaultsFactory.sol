@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IERC4626, IERC20Metadata} from "openzeppelin5/interfaces/IERC4626.sol";

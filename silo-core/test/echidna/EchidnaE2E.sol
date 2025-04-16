@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.29;
 
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
