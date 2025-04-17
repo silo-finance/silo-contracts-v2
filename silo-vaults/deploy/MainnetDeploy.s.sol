@@ -5,17 +5,19 @@ import {SiloVaultsFactoryDeploy} from "./SiloVaultsFactoryDeploy.s.sol";
 import {PublicAllocatorDeploy} from "./PublicAllocatorDeploy.s.sol";
 import {IdleVaultsFactoryDeploy} from "./IdleVaultsFactoryDeploy.s.sol";
 import {SiloIncentivesControllerCLFactoryDeploy} from "./SiloIncentivesControllerCLFactoryDeploy.s.sol";
+import {SiloVaultsDeployerDeploy} from "./SiloVaultsDeployerDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/MainnetDeploy.s.sol:MainnetDeploy \
-        --ffi --rpc-url $RPC_SONIC --verify --broadcast
+        --ffi --rpc-url $RPC_SONIC--verify --broadcast
  */
 contract MainnetDeploy {
     function run() public {
         SiloVaultsFactoryDeploy siloVaultsFactoryDeploy = new SiloVaultsFactoryDeploy();
         PublicAllocatorDeploy publicAllocatorDeploy = new PublicAllocatorDeploy();
         IdleVaultsFactoryDeploy idleVaultsFactoryDeploy = new IdleVaultsFactoryDeploy();
+        SiloVaultsDeployerDeploy siloVaultsDeployerDeploy = new SiloVaultsDeployerDeploy();
 
         SiloIncentivesControllerCLFactoryDeploy siloIncentivesControllerCLFactoryDeploy =
             new SiloIncentivesControllerCLFactoryDeploy();
@@ -24,5 +26,6 @@ contract MainnetDeploy {
         publicAllocatorDeploy.run();
         idleVaultsFactoryDeploy.run();
         siloIncentivesControllerCLFactoryDeploy.run();
+        siloVaultsDeployerDeploy.run();
     }
 }
