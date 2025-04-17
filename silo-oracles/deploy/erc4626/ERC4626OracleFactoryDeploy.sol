@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleFactory.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";

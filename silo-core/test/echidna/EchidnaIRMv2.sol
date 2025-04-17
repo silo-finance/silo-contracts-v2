@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";

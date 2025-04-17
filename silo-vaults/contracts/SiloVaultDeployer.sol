@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {Nonces} from "openzeppelin5/utils/Nonces.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";

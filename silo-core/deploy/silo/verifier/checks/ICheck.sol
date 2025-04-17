@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 interface ICheck {
     /// @dev check name to log when check passes or fails. Must describe the `execute()` function For example,

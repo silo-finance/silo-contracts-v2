@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 

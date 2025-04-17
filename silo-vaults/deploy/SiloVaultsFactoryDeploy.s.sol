@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {SiloVaultsContracts} from "silo-vaults/common/SiloVaultsContracts.sol";
 
@@ -20,7 +20,7 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
 
     ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=vaults forge verify-contract \
     0xdA72ab48AD4389B427b44d0dad393D5E5b209514 silo-vaults/contracts/SiloVault.sol:SiloVault \
-    --chain 42161 --watch --compiler-version v0.8.29+commit.7893614a \
+    --chain 42161 --watch --compiler-version v0.8.28+commit.7893614a \
     --constructor-args <cast abi-encode output>
 
 */

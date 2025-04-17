@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";

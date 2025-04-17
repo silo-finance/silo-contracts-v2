@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";

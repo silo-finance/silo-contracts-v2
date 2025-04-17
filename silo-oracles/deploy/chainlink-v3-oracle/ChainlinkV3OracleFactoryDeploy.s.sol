@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 
@@ -14,7 +14,7 @@ ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
 
 FOUNDRY_PROFILE=oracles forge verify-contract 0x17B0FD3eB9CFbdA5B46A0C896e28b3F0c5a7F61d \
     ChainlinkV3OracleFactory \
-    --compiler-version 0.8.29 \
+    --compiler-version 0.8.28 \
     --rpc-url $RPC_SONIC \
     --watch
  */

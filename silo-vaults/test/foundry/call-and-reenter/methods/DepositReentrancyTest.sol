@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {MaliciousToken} from "silo-vaults/test/foundry/call-and-reenter/MaliciousToken.sol";
 import {MethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/methods/MethodReentrancyTest.sol";

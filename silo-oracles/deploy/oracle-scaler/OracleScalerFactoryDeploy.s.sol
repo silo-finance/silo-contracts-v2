@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {OracleScalerFactory} from "silo-oracles/contracts/scaler/OracleScalerFactory.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";

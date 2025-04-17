@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {PRBMathSD59x18} from "silo-core/contracts/lib/PRBMathSD59x18.sol";
 import {PRBMathCommon} from "silo-core/contracts/lib/PRBMathCommon.sol";
