@@ -1,7 +1,7 @@
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 contract SiloFactoryHarness is SiloFactory {
     constructor(address _daoFeeReceiver)

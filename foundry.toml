@@ -17,7 +17,6 @@ allow_internal_expect_revert = true
 src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -31,7 +30,6 @@ src = 'silo-core/contracts'
 test = 'silo-core/test/foundry'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -46,7 +44,6 @@ src = 'silo-core/contracts'
 test = 'silo-core/test/invariants'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -58,7 +55,6 @@ fs_permissions = [
 src = 'silo-core/test'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -87,7 +83,6 @@ evm_version = 'paris'
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-core/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -99,7 +94,6 @@ fs_permissions = [
 src = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-vaults/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -112,7 +106,6 @@ src = 'silo-vaults/contracts'
 test = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-core/broadcast'
-solc_version = "0.8.29"
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},

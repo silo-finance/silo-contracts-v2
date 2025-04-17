@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {ERC4626Test} from "a16z-erc4626-tests/ERC4626.test.sol";
 

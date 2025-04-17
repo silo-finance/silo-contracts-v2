@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {console2} from "forge-std/console2.sol";
 
@@ -18,7 +18,7 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
     ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC \
     forge verify-contract 0xE05966aee69CeCD677a30f469812Ced650cE3b5E \
         SiloLens \
-        --compiler-version 0.8.29 \
+        --compiler-version 0.8.28 \
         --rpc-url $RPC_SONIC \
         --watch
 

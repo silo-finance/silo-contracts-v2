@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {X33ToUsdAdapter, IERC4626, AggregatorV3Interface} from "silo-oracles/contracts/custom/X33ToUsdAdapter.sol";
