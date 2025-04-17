@@ -22,6 +22,11 @@ library SiloLendingLib {
     using Math for uint256;
 
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
+    /// @dev If SILO has low total debt, interest might be lost to rounding for low deposits.
+    /// Value is based on minimal deposit needed to accrue two digit wei interest for 1 second at 0.01% APR.
+    /// Example of calculations for 1 second at 0.01% APR and totalDebtAssets 1e13:
+    /// 1e13 * (0.0001/365/24/3600*1e18) * 1 / 1e18 = 31.70979198376459
+    uint256 internal constant _ROUNDING_THRESHOLD = 1e13;
 
     /// @notice Allows repaying borrowed assets either partially or in full
     /// @param _debtShareToken debt share token address
@@ -113,31 +118,35 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        uint256 rcomp;
+        uint256 rcomp = getCompoundInterestRate({
+            _interestRateModel: _interestRateModel,
+            _totalCollateralAssets: totalCollateralAssets,
+            _totalDebtAssets: totalDebtAssets,
+            _lastTimestamp: lastTimestamp
+        });
 
-        try
-            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
-                totalCollateralAssets,
-                totalDebtAssets,
-                lastTimestamp
-            )
-            returns (uint256 interestRate)
-        {
-            rcomp = interestRate;
-        } catch {
-            // do not lock silo on interest calculation
-            emit IInterestRateModel.InterestRateModelError();
+        if (rcomp == 0) {
+            $.interestRateTimestamp = uint64(block.timestamp);
+            return 0;
         }
 
         (
             $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest(
-            totalCollateralAssets,
-            totalDebtAssets,
-            rcomp,
-            _daoFee,
-            _deployerFee
-        );
+        ) = SiloMathLib.getCollateralAmountsWithInterest({
+            _collateralAssets: totalCollateralAssets,
+            _debtAssets: totalDebtAssets,
+            _rcomp: rcomp,
+            _daoFee: _daoFee,
+            _deployerFee: _deployerFee
+        });
+
+        (accruedInterest, totalFees) = applyFractions({
+            _totalDebtAssets: totalDebtAssets,
+            _rcomp: rcomp,
+            _accruedInterest: accruedInterest,
+            _fees: _daoFee + _deployerFee,
+            _totalFees: totalFees
+        });
 
         // update remaining contract state
         $.interestRateTimestamp = uint64(block.timestamp);
@@ -363,5 +372,72 @@ library SiloLendingLib {
         assets = SiloMathLib.convertToAssets(
             shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
         );
+    }
+
+    function getCompoundInterestRate(
+        address _interestRateModel,
+        uint256 _totalCollateralAssets,
+        uint256 _totalDebtAssets,
+        uint64 _lastTimestamp
+    ) internal returns (uint256 rcomp) {
+        try
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+                _totalCollateralAssets,
+                _totalDebtAssets,
+                _lastTimestamp
+            )
+            returns (uint256 interestRate)
+        {
+            rcomp = interestRate;
+        } catch {
+            // do not lock silo on interest calculation
+            emit IInterestRateModel.InterestRateModelError();
+        }
+    }
+
+    function applyFractions(
+        uint256 _totalDebtAssets,
+        uint256 _rcomp,
+        uint256 _accruedInterest,
+        uint256 _fees,
+        uint256 _totalFees
+    )
+        internal returns (uint256 accruedInterest, uint256 totalFees)
+    {
+        // if _totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
+        // about precision because there is enough amount of debt to generate double wei digit
+        // of interest per second so we can safely ignore fractions
+        if (_totalDebtAssets >= _ROUNDING_THRESHOLD) return (_accruedInterest, _totalFees);
+
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+
+        // `accrueInterestForAsset` should never revert,
+        // so we check edge cases for revert and do early return
+        // instead of checking each calculation individually for underflow/overflow
+        if (totalCollateralAssets == type(uint256).max || totalCollateralAssets == 0) {
+            return (_accruedInterest, _totalFees);
+        }
+
+        ISilo.Fractions memory fractions = $.fractions;
+
+        uint256 integralInterest;
+        uint256 integralRevenue;
+
+        (
+            integralInterest, fractions.interest
+        ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, fractions.interest);
+
+        accruedInterest = _accruedInterest + integralInterest;
+
+        (
+            integralRevenue, fractions.revenue
+        ) = SiloMathLib.calculateFraction(accruedInterest, _fees, fractions.revenue);
+
+        totalFees = _totalFees + integralRevenue;
+
+        $.fractions = fractions;
+        $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
+        $.totalAssets[ISilo.AssetType.Collateral] = totalCollateralAssets + integralInterest - integralRevenue;
     }
 }

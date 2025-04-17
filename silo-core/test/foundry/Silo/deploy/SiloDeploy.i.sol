@@ -13,7 +13,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
+import {MainnetVeSiloDeploy} from "silo-core/deploy/mainnet-deploy/MainnetVeSiloDeploy.s.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 
 import {
@@ -26,7 +26,7 @@ import {
 
 import {DIAOracleFactoryMock} from "silo-core/test/foundry/_mocks/oracles-factories/DIAOracleFactoryMock.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloDeployTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployTest
 contract SiloDeployTest is IntegrationTest {
    uint256 internal constant _FORKING_BLOCK_NUMBER = 19780370;
 
@@ -53,7 +53,7 @@ contract SiloDeployTest is IntegrationTest {
 
         Deployments.disableDeploymentsSync();
 
-        MainnetDeploy mainnetDeploy = new MainnetDeploy();
+        MainnetVeSiloDeploy mainnetDeploy = new MainnetVeSiloDeploy();
         mainnetDeploy.run();
 
         _siloDeploy = new SiloDeployWithGaugeHookReceiver();
@@ -66,7 +66,7 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).run();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_hooks_are_initialized
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
     function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
@@ -74,7 +74,7 @@ contract SiloDeployTest is IntegrationTest {
          _verifyHookReceiversForSilo(silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_oracles_deploy
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
     function test_oracles_deploy() public view { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 

@@ -57,7 +57,7 @@ contract HookContract {
 }
 
 /*
- FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerTest
+ FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerTest
 */
 contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     SiloIncentivesController internal _controller;
@@ -113,14 +113,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_parallel_programs_1user -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_parallel_programs_1user -vvv
     */
     function test_scenario_parallel_programs_1user() public {
         _test_scenario_parallel_programs(false);
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_parallel_programs_2users -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_parallel_programs_2users -vvv
     */
     function test_scenario_parallel_programs_2users() public {
         _test_scenario_parallel_programs(true);
@@ -217,14 +217,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_programs_1user -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_two_programs_1user -vvv
     */
     function test_scenario_two_programs_1user() public {
         _test_scenario_two_programs(false);
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_programs_2users -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_two_programs_2users -vvv
     */
     function test_scenario_two_programs_2users() public {
         _test_scenario_two_programs(true);
@@ -338,14 +338,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_different_programs_1user -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_two_different_programs_1user -vvv
     */
     function test_scenario_two_different_programs_1user() public {
         _test_scenario_two_different_programs(false);
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_two_different_programs_2users -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_two_different_programs_2users -vvv
     */
     function test_scenario_two_different_programs_2users() public {
         _test_scenario_two_different_programs(true);
@@ -462,7 +462,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_scenario_single_program -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_single_program -vvv
     */
     function test_scenario_single_program() public {
         _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({

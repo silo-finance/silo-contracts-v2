@@ -11,7 +11,7 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxBorrowSharesTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxBorrowSharesTest
 */
 contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;

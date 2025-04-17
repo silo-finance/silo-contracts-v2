@@ -5,7 +5,7 @@ import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
 import {CAP} from "../../../helpers/BaseTest.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc MaxMintTest
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc MaxMintTest
 */
 contract MaxMintTest is VaultsLittleHelper {
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;

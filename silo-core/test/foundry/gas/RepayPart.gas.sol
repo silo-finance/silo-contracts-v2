@@ -29,7 +29,8 @@ contract RepayPartGasTest is Gas, Test {
             address(silo1),
             abi.encodeWithSignature("repay(uint256,address)", ASSETS / 2, BORROWER),
             "RepayPart partial (no interest)",
-            85797
+            85680,
+            1000
         );
     }
 }

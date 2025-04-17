@@ -70,7 +70,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
+          version: stable
 
       - name: yarn install
         run: yarn install
@@ -97,4 +97,4 @@ jobs:
           FOUNDRY_PROFILE=ve-silo forge build --sizes
 
       - name: Forge test
-        run: FOUNDRY_PROFILE=ve-silo-test forge test --ffi -vvv
+        run: FOUNDRY_PROFILE=ve_silo_test forge test --ffi -vvv

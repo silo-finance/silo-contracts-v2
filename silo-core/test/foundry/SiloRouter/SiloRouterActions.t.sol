@@ -20,7 +20,7 @@ import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol"
 
 // solhint-disable function-max-lines
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloRouterV2ActionsTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloRouterV2ActionsTest
 contract SiloRouterV2ActionsTest is IntegrationTest {
     using ShareTokenDecimalsPowLib for uint256;
 
@@ -100,7 +100,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         vm.label(debtToken1, "debtToken1");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_pause_unpause
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_pause_unpause
     function test_siloRouterV2_pause_unpause() public {
         assertFalse(router.paused(), "Router should not be paused");
 
@@ -127,7 +127,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertFalse(router.paused(), "Router should not be paused");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_wrapAndTransfer_nativeToken
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_wrapAndTransfer_nativeToken
     function test_siloRouterV2_wrapAndTransfer_nativeToken() public {
         address receiver = makeAddr("Receiver");
 
@@ -146,7 +146,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(nativeToken.balanceOf(receiver), _S_BALANCE, "Receiver should have native tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_unwrapAndTransfer_nativeToken
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_unwrapAndTransfer_nativeToken
     function test_siloRouterV2_unwrapAndTransfer_nativeToken() public {
         assertEq(wsWhale.balance, 0, "Account should not have any native tokens");
 
@@ -167,7 +167,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(receiver.balance, _S_BALANCE, "Account should have native tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_unwrapAndSendAll_nativeToken
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_unwrapAndSendAll_nativeToken
     function test_siloRouterV2_unwrapAndSendAll_nativeToken() public {
         assertEq(wsWhale.balance, 0, "Account should not have any native tokens");
 
@@ -190,7 +190,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(receiver.balance, someAmount, "Account should have native tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_approve
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_approve
     function test_siloRouterV2_approve() public {
         assertEq(nativeToken.allowance(address(router), address(this)), 0, "Router should not have any allowance");
 
@@ -207,7 +207,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         );
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_transfer
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_transfer
     function test_siloRouterV2_transfer() public {
         assertEq(nativeToken.balanceOf(address(this)), 0, "Account should not have any native tokens");
 
@@ -225,7 +225,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(nativeToken.balanceOf(address(this)), _S_BALANCE, "Account should have native tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_transferFrom
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_transferFrom
     function test_siloRouterV2_transferFrom() public {
         assertEq(nativeToken.balanceOf(address(this)), 0, "Account should not have any native tokens");
 
@@ -241,7 +241,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(nativeToken.balanceOf(address(this)), _S_BALANCE, "Account should have native tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_depositFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_depositFlow
     function test_siloRouterV2_depositFlow() public {
         assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have any collateral tokens");
 
@@ -256,7 +256,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_depositNativeFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_depositNativeFlow
     function test_siloRouterV2_depositNativeFlow() public {
         assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have any collateral tokens");
 
@@ -274,7 +274,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_withdrawFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_withdrawFlow
     function test_siloRouterV2_withdrawFlow() public {
         uint256 depositorBalance = IERC20(token0).balanceOf(depositor);
 
@@ -299,7 +299,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(IERC20(token0).balanceOf(depositor), depositorBalance - 1, "Account should have tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_withdrawNativeAndUnwrapFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_withdrawNativeAndUnwrapFlow
     function test_siloRouterV2_withdrawNativeAndUnwrapFlow() public {
         vm.prank(depositor);
         IERC20(token0).approve(address(silo0), _S_BALANCE);
@@ -326,7 +326,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(depositor.balance, toWithdraw, "Account should have tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_withdrawAllFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_withdrawAllFlow
     function test_siloRouterV2_withdrawAllFlow() public {
         uint256 depositorBalance = IERC20(token0).balanceOf(depositor);
 
@@ -352,7 +352,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(IERC20(token0).balanceOf(depositor), depositorBalance - 1, "Account should have tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_withdrawAllAndUnwrapFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_withdrawAllAndUnwrapFlow
     function test_siloRouterV2_withdrawAllAndUnwrapFlow() public {
         vm.prank(depositor);
         IERC20(token0).approve(address(silo0), _S_BALANCE);
@@ -378,7 +378,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have collateral tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_borrowFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_borrowFlow
     function test_siloRouterV2_borrowFlow() public {
         vm.prank(borrower);
         IERC20(token0).approve(address(silo0), _TOKEN0_AMOUNT);
@@ -403,7 +403,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(IERC20(token1).balanceOf(borrower), borrowAmount, "Account should have tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_borrowNativeAndUnwrapFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_borrowNativeAndUnwrapFlow
     function test_siloRouterV2_borrowNativeAndUnwrapFlow() public {
         vm.prank(wethWhale);
         IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
@@ -433,7 +433,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(borrower.balance, borrowAmount, "Account should have tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_borrowSameAssetFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_borrowSameAssetFlow
     function test_siloRouterV2_borrowSameAssetFlow() public {
         vm.prank(borrower);
         IERC20(token0).approve(address(silo0), _TOKEN0_AMOUNT);
@@ -460,7 +460,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(IERC20(token0).balanceOf(borrower), balanceBefore + borrowAmount, "Account should have tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_repayFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_repayFlow
     function test_siloRouterV2_repayFlow() public {
         vm.prank(wethWhale);
         IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
@@ -499,7 +499,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertLt(IERC20(debtToken0).balanceOf(borrower), debtBalanceBefore, "Account should have less debt tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_repayNativeWrapFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_repayNativeWrapFlow
     function test_siloRouterV2_repayNativeWrapFlow() public {
         vm.prank(wethWhale);
         IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
@@ -538,7 +538,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertLt(IERC20(debtToken0).balanceOf(borrower), debtBalanceBefore, "Account should have less debt tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_repayAllFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_repayAllFlow
     function test_siloRouterV2_repayAllFlow() public {
         vm.prank(wethWhale);
         IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
@@ -570,7 +570,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_repayAllNativeFlow
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_repayAllNativeFlow
     function test_siloRouterV2_repayAllNativeFlow() public {
         vm.prank(wethWhale);
         IERC20(token1).transfer(borrower, _TOKEN1_AMOUNT);
@@ -613,7 +613,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(address(router).balance, 0, "Router should not have any native tokens");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_pause_allActions_viaMulticall
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_pause_allActions_viaMulticall
     function test_siloRouterV2_pause_allActions_viaMulticall() public {
         vm.prank(routerOwner);
         router.pause();
@@ -651,7 +651,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         router.multicall(data);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_siloRouterV2_multicall_reentrancy
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_multicall_reentrancy
     function test_siloRouterV2_multicall_reentrancy() public {
         bytes[] memory data = new bytes[](1);
 

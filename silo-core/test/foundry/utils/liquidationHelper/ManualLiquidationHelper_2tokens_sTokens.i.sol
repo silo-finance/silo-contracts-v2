@@ -8,7 +8,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ManualLiquidationHelperCommon} from "./ManualLiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc ManualLiquidationHelper2TokensSTokensTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc ManualLiquidationHelper2TokensSTokensTest
 */
 contract ManualLiquidationHelper2TokensSTokensTest is ManualLiquidationHelperCommon {
     uint256 constant LIQUIDATION_UNDERESTIMATION = 2;
@@ -33,7 +33,7 @@ contract ManualLiquidationHelper2TokensSTokensTest is ManualLiquidationHelperCom
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
     function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
         vm.warp(block.timestamp + _addTimestamp);

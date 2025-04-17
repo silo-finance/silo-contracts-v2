@@ -7,7 +7,7 @@ import {ISiloVaultBase} from "../../contracts/interfaces/ISiloVault.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MulticallTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MulticallTest -vvv
 */
 contract MulticallTest is IntegrationTest {
     bytes[] internal data;

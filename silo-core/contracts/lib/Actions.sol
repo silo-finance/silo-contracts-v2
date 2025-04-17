@@ -470,14 +470,11 @@ library Actions {
             }
 
             // trying to transfer to deployer (it might fail)
-            if (!_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue)) {
-                // if transfer to deployer fails, send their portion to the DAO instead
-                daoRevenue = earnedFees;
-                redirectedDeployerFees = true;
-            }
+            // if transfer to deployer fails, send their portion to the DAO instead
+            redirectedDeployerFees = !_safeTransferInternal(IERC20(asset), deployerFeeReceiver, deployerRevenue);
         }
 
-        IERC20(asset).safeTransfer(daoFeeReceiver, daoRevenue);
+        IERC20(asset).safeTransfer(daoFeeReceiver, redirectedDeployerFees ? earnedFees : daoRevenue);
 
         siloConfig.turnOffReentrancyProtection();
     }
@@ -694,11 +691,11 @@ library Actions {
     /**
      * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
      * non-reverting calls are assumed to be successful.
-     * Copied from openzeppelin5/contracts/token/ERC20/utils/SafeERC20.sol and modified to return call result
      */
-    function _safeTransferInternal(IERC20 token, address to, uint256 value) internal returns (bool result) {
-        bytes memory data = abi.encodeCall(token.transfer, (to, value));
-        bytes memory returndata = address(token).functionCall(data);
+    function _safeTransferInternal(IERC20 _token, address _to, uint256 _value) internal returns (bool result) {
+        bytes memory data = abi.encodeCall(_token.transfer, (_to, _value));
+        (bool success, bytes memory returndata) = address(_token).call(data);
+        if (!success) return false;
 
         result = returndata.length == 0 || abi.decode(returndata, (bool));
     }

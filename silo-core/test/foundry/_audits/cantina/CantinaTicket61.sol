@@ -3,11 +3,12 @@ pragma solidity ^0.8.28;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket61
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket61
 */
 contract CantinaTicket61 is CantinaTicket {
     function testDebtApproval() public {
@@ -23,7 +24,7 @@ contract CantinaTicket61 is CantinaTicket {
         ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(silo1));
 
         vm.prank(alice);
-        IShareToken(config.debtShareToken).approve(bob, 1e18);
+        ShareDebtToken(config.debtShareToken).setReceiveApproval(bob, 1e18);
 
         uint256 aliceDebtBefore = IShareToken(config.debtShareToken).balanceOf(alice);
         /*

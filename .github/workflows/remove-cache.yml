@@ -1,0 +1,39 @@
+name: Clear GitHub Actions Caches
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  clear-action-caches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List all caches
+        id: list_caches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching cache list for repository: ${{ github.repository }}"
+          curl -s -H "Accept: application/vnd.github+json" \
+               -H "Authorization: token $GITHUB_TOKEN" \
+               "https://api.github.com/repos/${{ github.repository }}/actions/caches" > caches.json
+          echo "Caches fetched:"
+          cat caches.json
+
+      - name: Delete all caches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract cache IDs using jq
+          CACHE_IDS=$(jq -r '.actions_caches[].id' caches.json)
+          
+          if [ -z "$CACHE_IDS" ]; then
+            echo "No caches found to delete."
+          else
+            for cache_id in $CACHE_IDS; do
+              echo "Deleting cache with ID: $cache_id"
+              curl -s -X DELETE -H "Accept: application/vnd.github+json" \
+                   -H "Authorization: token $GITHUB_TOKEN" \
+                   "https://api.github.com/repos/${{ github.repository }}/actions/caches/$cache_id"
+            done
+            echo "Finished deleting caches."
+          fi

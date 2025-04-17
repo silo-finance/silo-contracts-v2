@@ -13,7 +13,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy, VeSiloContracts} from "./_CommonDeploy.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/deploy/ChildChainGaugeFactoryDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

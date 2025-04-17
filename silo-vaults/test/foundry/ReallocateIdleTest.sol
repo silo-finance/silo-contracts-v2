@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.28;
 
+import {IERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
+
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {MarketAllocation} from "../../contracts/interfaces/ISiloVault.sol";
@@ -11,7 +13,7 @@ uint256 constant CAP2 = 100e18;
 uint256 constant INITIAL_DEPOSIT = 4 * CAP2;
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReallocateIdleTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ReallocateIdleTest -vvv
 */
 contract ReallocateIdleTest is IntegrationTest {
     MarketAllocation[] internal allocations;

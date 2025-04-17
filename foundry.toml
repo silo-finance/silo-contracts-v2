@@ -4,11 +4,14 @@
 libs = [
     'gitmodules',
     'node_modules',
-    'silo-amm/node_modules'
 ]
 out = 'cache/foundry/out'
 evm_version = 'cancun'
 gas_limit = '40000000000'
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+allow_internal_expect_revert = true
 
 [profile.core]
 src = 'silo-core/contracts'
@@ -22,7 +25,7 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
-[profile.core-with-test]
+[profile.core_with_test]
 src = 'silo-core/contracts'
 test = 'silo-core/test/foundry'
 out = 'cache/foundry/out/silo-core'
@@ -32,6 +35,7 @@ fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
     { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
@@ -47,7 +51,7 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
-[profile.core-test]
+[profile.core_test]
 src = 'silo-core/test'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
@@ -56,19 +60,20 @@ fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
     { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
 ]
 
 [profile.default.fmt]
 line_length=119
 
-[profile.ve-silo]
+[profile.ve_silo]
 src = 've-silo/contracts'
 out = 'cache/foundry/out/ve-silo'
 broadcast = 've-silo/broadcast'
 evm_version = 'paris'
 
-[profile.ve-silo-test]
+[profile.ve_silo_test]
 src = 've-silo/test'
 out = 'cache/foundry/out/ve-silo'
 broadcast = 've-silo/broadcast'
@@ -85,7 +90,7 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
-[profile.vaults-tests]
+[profile.vaults_tests]
 src = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'
 broadcast = 'silo-vaults/broadcast'
@@ -96,7 +101,7 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
-[profile.vaults-with-tests]
+[profile.vaults_with_tests]
 src = 'silo-vaults/contracts'
 test = 'silo-vaults/test/foundry'
 out = 'cache/foundry/out/silo-vaults'

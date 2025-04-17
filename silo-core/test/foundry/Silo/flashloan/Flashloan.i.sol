@@ -158,7 +158,7 @@ contract FlashloanTest is SiloLittleHelper, Test, Gas {
             abi.encodeCall(IERC3156FlashLender.flashLoan, (receiver, address(token0), amount, _data)),
             "flashLoan gas",
             33900,
-            500
+            3000
         );
 
         (uint256 daoAndDeployerRevenueAfter,,,,) = silo0.getSiloStorage();

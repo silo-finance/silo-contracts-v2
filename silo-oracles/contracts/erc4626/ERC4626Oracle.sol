@@ -10,6 +10,7 @@ contract ERC4626Oracle is ISiloOracle {
     address public immutable UNDERLYING;
 
     error AssetNotSupported();
+    error ZeroPrice();
 
     constructor(IERC4626 _vault) {
         VAULT = _vault;
@@ -26,6 +27,8 @@ contract ERC4626Oracle is ISiloOracle {
         if (_baseToken != address(VAULT)) revert AssetNotSupported();
 
         quoteAmount = VAULT.convertToAssets(_baseAmount);
+
+        if (quoteAmount == 0) revert ZeroPrice();
     }
 
     /// @inheritdoc ISiloOracle

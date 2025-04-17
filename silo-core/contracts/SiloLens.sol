@@ -130,12 +130,12 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function totalDepositsWithInterest(ISilo _silo) external view returns (uint256 totalDeposits) {
-        totalDeposits = _silo.totalAssets();
+    function totalDepositsWithInterest(ISilo _silo) external view returns (uint256 amount) {
+        amount = _silo.totalAssets();
     }
 
-    function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 totalBorrowAmount) {
-        totalBorrowAmount = _silo.getDebtAssets();
+    function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 amount) {
+        amount = _silo.getDebtAssets();
     }
 
     /// @inheritdoc ISiloLens
@@ -202,7 +202,10 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getUtilization(ISilo _silo) external view returns (uint256) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
-        return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+
+        if (data.collateralAssets != 0) {
+            return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+        }
     }
 
     /// @inheritdoc ISiloLens
@@ -218,6 +221,20 @@ contract SiloLens is ISiloLens {
     /// @inheritdoc ISiloLens
     function getDepositAPR(ISilo _silo) external view virtual returns (uint256 depositAPR) {
         return SiloLensLib.getDepositAPR(_silo);
+    }
+
+    /// @inheritdoc ISiloLens
+    function getAPRs(ISilo[] calldata _silos) external view virtual returns (APR[] memory aprs) {
+        aprs = new APR[](_silos.length);
+
+        for (uint256 i; i < _silos.length; i++) {
+            ISilo silo = _silos[i];
+
+            aprs[i] = APR({
+                borrowAPR: SiloLensLib.getBorrowAPR(silo),
+                depositAPR: SiloLensLib.getDepositAPR(silo)
+            });
+        }
     }
 
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {

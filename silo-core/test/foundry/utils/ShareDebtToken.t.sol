@@ -14,7 +14,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test --ffi -vv --mc ShareDebtTokenTest
+FOUNDRY_PROFILE=core_test forge test --ffi -vv --mc ShareDebtTokenTest
 */
 contract ShareDebtTokenTest is Test, SiloLittleHelper {
     ISiloConfig public siloConfig;
@@ -32,7 +32,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debt_decimals
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debt_decimals
     */
     function test_debt_decimals() public view {
         assertEq(
@@ -43,7 +43,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_address_zero
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_address_zero
     */
     function test_debtToken_transfer_address_zero() public {
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(0)));
@@ -51,7 +51,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_address_zero
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_address_zero
     */
     function test_debtToken_transfer_address_zero_withAmount() public {
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(0)));
@@ -59,7 +59,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
     */
     function test_debtToken_transfer_amountZero_noDebt() public {
         (address collateralSenderBefore, address collateralReceiverBefore) = _getCollateralState();
@@ -71,7 +71,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_amountZero
     */
     function test_transfer_amountZero_withSenderDebt_1token() public {
         _transfer_amountZero_withSenderDebt(SAME_ASSET);
@@ -126,7 +126,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_noAllowance
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_noAllowance
     */
     function test_debtToken_transfer_noAllowance() public {
         _depositCollateral(2, address(this), false);
@@ -138,7 +138,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withLowAllowance
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withLowAllowance
     */
     function test_debtToken_transfer_withLowAllowance() public {
         _depositCollateral(20, address(this), TWO_ASSETS);
@@ -153,7 +153,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_noCollateral
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_noCollateral
     */
     function test_debtToken_transfer_withAllowance_noCollateral_1token() public {
         _transfer_withAllowance_noCollateral(SAME_ASSET);
@@ -176,7 +176,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_notSolvent
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_notSolvent
     */
     function test_debtToken_transfer_withAllowance_notSolvent_1token() public {
         _transfer_withAllowance_notSolvent(SAME_ASSET);
@@ -200,7 +200,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_differentCollateral
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_differentCollateral
     */
     function test_debtToken_transfer_withAllowance_differentCollateral_1token() public {
         _transfer_withAllowance_differentCollateral(SAME_ASSET);
@@ -224,7 +224,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_sameCollateral
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_sameCollateral
     */
     function test_debtToken_transfer_withAllowance_sameCollateral_1token() public {
         _transfer_withAllowance_sameCollateral(SAME_ASSET);
@@ -252,7 +252,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_withSameDebt_1token
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_withSameDebt_1token
     */
     function test_debtToken_transfer_withAllowance_withSameDebt_1token() public {
         _transfer_withAllowance_withSameDebt(SAME_ASSET);
@@ -282,7 +282,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_withDifferentDebt_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_withAllowance_withDifferentDebt_
     */
     function test_debtToken_transfer_withAllowance_withDifferentDebt_1token() public {
         _transfer_withAllowance_withDifferentDebt(SAME_ASSET);
@@ -307,7 +307,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferAll
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transferAll
     */
     function test_debtToken_transferAll_1token() public {
         _transferAll(SAME_ASSET);
@@ -343,7 +343,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transfer_debtExistInOtherSilo_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transfer_debtExistInOtherSilo_
     */
     function test_debtToken_transfer_debtExistInOtherSilo_1token() public {
         _transferAll(SAME_ASSET);
@@ -374,7 +374,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_shareDebtToken_allowance
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_shareDebtToken_allowance
     */
     function test_shareDebtToken_allowance() public {
         address user = makeAddr("user");
@@ -420,7 +420,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_allowance
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transferFrom_allowance
     */
     function test_debtToken_transferFrom_allowance() public {
         address borrower = makeAddr("Borrower");
@@ -435,7 +435,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt test_debtToken_transferFrom_
+    FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debtToken_transferFrom_
     */
     function test_debtToken_transferFrom_1token() public {
         _debtToken_transferFrom(SAME_ASSET);

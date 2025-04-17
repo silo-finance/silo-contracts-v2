@@ -18,7 +18,7 @@ contract PreviewDepositTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewDeposit_beforeInterest_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_previewDeposit_beforeInterest_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
 
@@ -32,7 +32,7 @@ contract PreviewDepositTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewDeposit_afterNoInterest
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_previewDeposit_afterNoInterest_fuzz(uint128 _assets) public {
         vm.assume(_assets > 0);
 

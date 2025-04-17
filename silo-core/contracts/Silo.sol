@@ -122,6 +122,11 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
+    function getFractionsStorage() external view returns (Fractions memory fractions) {
+        fractions = Views.getFractionsStorage();
+    }
+
+    /// @inheritdoc ISilo
     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {
         totalCollateralAssets = _totalAssets();
     }
@@ -159,6 +164,9 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IERC4626
+    /// @notice Returns the total amount of the underlying asset that is “managed” by Vault.
+    /// When accrue interest in memory, in extreme scenario result may be overestimated by 1wei, because on view method
+    /// we do not apply math for fractions.
     function totalAssets() external view virtual returns (uint256 totalManagedAssets) {
         totalManagedAssets = _totalAssets();
     }

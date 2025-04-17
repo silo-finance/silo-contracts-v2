@@ -31,7 +31,7 @@ import {
     ISiloFactoryWithFeeDetails as ISiloFactory
 } from "ve-silo/contracts/silo-tokens-minter/interfaces/ISiloFactoryWithFeeDetails.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc MainnetBalancerMinterTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc MainnetBalancerMinterTest --ffi -vvv
 contract MainnetBalancerMinterTest is IntegrationTest {
     uint256 internal constant _WEIGHT_CAP = 1e18;
     uint256 internal constant _BOB_BALANCE = 1e18;
@@ -109,7 +109,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _feesTest = new FeesManagerTest();
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSetMinterApproval --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSetMinterApproval --ffi -vvv
     function testSetMinterApproval() public {
         address minter = makeAddr("Minter");
         address user = makeAddr("User");
@@ -129,7 +129,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         assertFalse(_minter.allowed_to_mint_for(other, user), "other acc should not be approved");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testRemoveMinterApproval --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testRemoveMinterApproval --ffi -vvv
     function testRemoveMinterApproval() public {
         address minter = makeAddr("Minter");
         address user = makeAddr("User");
@@ -148,7 +148,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         assertFalse(_minter.allowed_to_mint_for(minter, user), "Minter should not be approved");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testToogleMinterApproval --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testToogleMinterApproval --ffi -vvv
     function testToogleMinterApproval() public {
         address minter = makeAddr("Minter");
         address user = makeAddr("User");
@@ -169,7 +169,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         assertFalse(_minter.allowed_to_mint_for(minter, user), "Minter should not be approved");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testMintForWhenCallerIsNotApproved --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testMintForWhenCallerIsNotApproved --ffi -vvv
     function testMintForWhenCallerIsNotApproved() public {
         _mockFees();
 
@@ -182,7 +182,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _minter.mintManyFor(new address[](0), _bob);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSignatureApprovalSet --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSignatureApprovalSet --ffi -vvv
     function testSignatureApprovalSet() public {
         address minter = makeAddr("Minter");
         VmSafe.Wallet memory user = vm.createWallet("Proof signer");
@@ -205,7 +205,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         assertTrue(_minter.allowed_to_mint_for(minter, user.addr), "Minter should be approved");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSignatureApprovalExpired --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSignatureApprovalExpired --ffi -vvv
     function testSignatureApprovalExpired() public {
         address minter = makeAddr("Minter");
         VmSafe.Wallet memory user = vm.createWallet("Proof signer");
@@ -225,7 +225,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _minter.setMinterApprovalWithSignature(minter, true, user.addr, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSignatureApprovalInvalidSignatureOtherMinter --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSignatureApprovalInvalidSignatureOtherMinter --ffi -vvv
     function testSignatureApprovalInvalidSignatureOtherMinter() public {
         address minter = makeAddr("Minter");
         VmSafe.Wallet memory user = vm.createWallet("Proof signer");
@@ -243,7 +243,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _minter.setMinterApprovalWithSignature(minter, true, user.addr, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSignatureApprovalInvalidSignatureOtherUser --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSignatureApprovalInvalidSignatureOtherUser --ffi -vvv
     function testSignatureApprovalInvalidSignatureOtherUser() public {
         address minter = makeAddr("Minter");
         VmSafe.Wallet memory user = vm.createWallet("Proof signer");
@@ -262,7 +262,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _minter.setMinterApprovalWithSignature(minter, true, user.addr, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSignatureApprovalInvalidSignatureOppositApproval --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSignatureApprovalInvalidSignatureOppositApproval --ffi -vvv
     function testSignatureApprovalInvalidSignatureOppositApproval() public {
         address minter = makeAddr("Minter");
         VmSafe.Wallet memory user = vm.createWallet("Proof signer");
@@ -280,7 +280,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
         _minter.setMinterApprovalWithSignature(minter, true, user.addr, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testSignatureApprovalInvalidSignatureEmptyAddr --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testSignatureApprovalInvalidSignatureEmptyAddr --ffi -vvv
     function testSignatureApprovalInvalidSignatureEmptyAddr() public {
         address minter = makeAddr("Minter");
         VmSafe.Wallet memory user = vm.createWallet("Proof signer");
@@ -319,7 +319,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     }
 
     /// @notice Should mint tokens
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testMintForNoFees --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testMintForNoFees --ffi -vvv
     function testMintForNoFees() public {
         // without fees
         vm.mockCall(
@@ -343,7 +343,7 @@ contract MainnetBalancerMinterTest is IntegrationTest {
     }
 
     /// @notice Should mint tokens and collect fees
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testMintForWithFees --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testMintForWithFees --ffi -vvv
     function testMintForWithFees() public {
         // with fees
         // 10% - to DAO

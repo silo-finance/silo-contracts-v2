@@ -8,7 +8,7 @@ import {IFeeSwap} from "ve-silo/contracts/fees-distribution/interfaces/IFeeSwap.
 import {UniswapSwapper} from "ve-silo/contracts/fees-distribution/fee-swapper/swappers/UniswapSwapper.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/deploy/UniswapSwapperDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

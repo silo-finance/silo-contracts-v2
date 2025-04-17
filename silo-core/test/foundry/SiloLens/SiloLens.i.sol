@@ -19,7 +19,7 @@ import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol"
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloLensIntegrationTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloLensIntegrationTest
 */
 contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -37,7 +37,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_siloLens_utilization_75 -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_siloLens_utilization_75 -vv
     */
     function test_siloLens_utilization_75() public {
 
@@ -133,6 +133,13 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after 65 days #0");
         assertEq(siloLens.getDepositAPR(silo1), 4_625564840811145381, "getDepositAPR after 65 days #1");
+
+        ISilo[] memory silos = new ISilo[](1);
+        silos[0] = silo1;
+
+        ISiloLens.APR[] memory aprs = siloLens.getAPRs(silos);
+        assertEq(aprs[0].borrowAPR, 6_605018041910688000, "apr.getBorrowAPR after 65 days #1");
+        assertEq(aprs[0].depositAPR, 4_625564840811145381, "aps.getDepositAPR after 65 days #1");
 
         assertLt(siloLens.getDepositAPR(silo1), siloLens.getBorrowAPR(silo1), "deposit APR should be less than borrow");
 
@@ -231,7 +238,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi --mt test_skip_siloLens_apr_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_skip_siloLens_apr_fuzz -vv
     */
     function test_skip_siloLens_apr_fuzz(uint8 _utilization) public {
         // 50 because `defaultAsset` config optimal utilization is 50

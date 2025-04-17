@@ -7,7 +7,7 @@ import {ISiloToken} from "ve-silo/contracts/governance/interfaces/ISiloToken.sol
 import {MiloToken} from "ve-silo/contracts/governance/milo-token/MiloToken.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/deploy/MiloTokenDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */
