@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";

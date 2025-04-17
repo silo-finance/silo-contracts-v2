@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.28;
 
 import {IERC4626, IERC20} from "openzeppelin5/interfaces/IERC4626.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";

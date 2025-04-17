@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
@@ -22,14 +22,14 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
     ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core forge verify-contract \
     0xe2eB6FD7743521d834650699d1419B247d3B34ef Actions \
-    --chain 42161 --watch --compiler-version 0.8.29
+    --chain 42161 --watch --compiler-version 0.8.28
 
     contracts verification:
 
     FOUNDRY_PROFILE=core forge verify-contract 0x058A54bF6560038ca2CB58d6CDaF17c5d93cD436 \
     silo-core/contracts/utils/ShareDebtToken.sol:ShareDebtToken \
     --libraries silo-core/contracts/lib/ShareTokenLib.sol:ShareTokenLib:0xC65Ca9496257CEC7d9d1802e3af60f62e12CD46B \
-    --compiler-version 0.8.29 \
+    --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
 
@@ -44,7 +44,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
     --libraries silo-core/contracts/lib/ShareCollateralTokenLib.sol:ShareCollateralTokenLib:0x939E48510C64307201aB90dE70b9405c138E8bf9 \
     --constructor-args <cast abi-encode output> \
-    --compiler-version 0.8.29 \
+    --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
 
@@ -52,7 +52,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     silo-core/contracts/utils/ShareProtectedCollateralToken.sol:ShareProtectedCollateralToken \
     --libraries silo-core/contracts/lib/ShareTokenLib.sol:ShareTokenLib:0xC65Ca9496257CEC7d9d1802e3af60f62e12CD46B \
     --libraries silo-core/contracts/lib/ShareCollateralTokenLib.sol:ShareCollateralTokenLib:0x939E48510C64307201aB90dE70b9405c138E8bf9 \
-    --compiler-version 0.8.29 \
+    --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
 
@@ -63,7 +63,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     silo-core/contracts/SiloFactory.sol:SiloFactory \
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
     --constructor-args <cast abi-encode output> \
-    --compiler-version 0.8.29 \
+    --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
 
@@ -79,7 +79,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
     silo-core/contracts/SiloDeployer.sol:SiloDeployer \
     --libraries silo-core/contracts/lib/Views.sol:Views:0x029E2F45ada84d3734b7D030D4d8bf9E169A00D7 \
     --constructor-args <cast abi-encode output> \
-    --compiler-version 0.8.29 \
+    --compiler-version 0.8.28 \
     --rpc-url $RPC_ARBITRUM \
     --watch
  */
