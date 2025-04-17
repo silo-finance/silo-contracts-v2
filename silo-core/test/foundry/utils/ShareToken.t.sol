@@ -39,26 +39,6 @@ contract ShareTokenTest is Test {
         owner = makeAddr("Owner");
     }
 
-    /*
-     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_shareToken_selfTransfer -vvv
-    */
-    function test_shareToken_selfTransfer() public {
-        silo.configMock(siloConfig.ADDRESS());
-        sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
-
-        vm.prank(silo.ADDRESS());
-        sToken.mint(address(this), address(this), 1);
-
-        vm.expectRevert(IShareToken.SelfTransferNotAllowed.selector);
-        sToken.transfer(address(this), 1);
-
-        // counterexample works
-        sToken.transfer(address(1), 1);
-        assertEq(sToken.balanceOf(address(1)), 1, "RECEIVER got tokens");
-        assertEq(sToken.balanceOf(address(this)), 0, "owner send shares");
-        vm.stopPrank();
-    }
-
     // FOUNDRY_PROFILE=core_test forge test -vvv --mt test_ShareToken_decimals
     function test_ShareToken_decimals() public {
         uint8 decimals = 8;

@@ -22,7 +22,7 @@ contract TransferCollateralTest is Gas, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_gas_transferCollateral
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_gas_transferCollateral
     */
     function test_gas_transferCollateral() public {
         (, address collateralShareToken, ) = ISiloConfig(silo0.config()).getShareTokens(address(silo0));
@@ -30,9 +30,9 @@ contract TransferCollateralTest is Gas, Test {
         _action(
             BORROWER,
             address(collateralShareToken),
-            abi.encodeCall(IERC20.transfer, (BORROWER, 1)),
+            abi.encodeCall(IERC20.transfer, (address(123), 1)),
             "TransferCollateral (when debt)",
-            111618
+            133577
         );
     }
 }
