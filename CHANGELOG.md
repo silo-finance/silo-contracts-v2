@@ -5,16 +5,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-### Updated
-- silo-core: store fraction of interest and fraction of fees
 
-### Fixed
+## [2.2.0] - 2025-04-17
+- silo-vaults: Silo Vaults Deployer
+- silo-vaults: Incentives claiming logics trusted factories
+- silo-vaults: Deflation attack
+- silo-vaults: Wrong calculation of toSupply which is supplied to a market will lead to less supply for some markets
+- silo-vaults: Fee not Accrued In Transfer Functions Leads to Reward Loss
+- silo-vaults: Supply function doesn't account for market maxDeposit when providing assets to it
+- silo-vaults: SiloVault.sol :: Markets with assets that revert on zero approvals cannot be removed
+- silo-vaults: SiloVault.maxDeposit and SiloVault.maxMint don't comply with ERC4626 
+- silo-vaults: L-01 Factories using CREATE opcode create contracts vulnerable to reorgs
+- silo-vaults: Improvement: exact approvals on deposit
+- silo-vaults: Improvement: Incentives module owner is the silo vault owner (Ownable2Step removed)
+- silo-vaults: Changed permissions: setArbitraryLossThreshold fn and syncBalanceTracker fn only guardian 
+- silo-vaults: Acceptable loss configuration
+- silo-vaults: internal balances sync
+- silo-vaults: syncBalanceTracker fn require valid override input
+- silo-vaults: approval on deposit
+- silo-vaults: create2 factories
+- silo-vaults: Incentives module owner is the silo vault owner
+- silo-core: [M-01] catch when fee transfer is not successful
+- silo-core: address as programId on immediate rewards distribution
+- silo-core: store fraction of interest and fraction of fees
 - silo-core: add reentrancy protection for liquidation call
-- silo-vaults: fix max redeem
-- silo-vaults: ensure that deposit not generate zero shares
-- silo-vaults: reset approve to 1 wei to support tokens that revert when approving 0
-- silo-vaults: account for `maxDeposit` when doing deposit
-- silo-vaults: ensure we can deposit 100% of the CAP 
+- silo-core: PT-aSonUSDC-14AUG2025 / scUSD market
+- silo-core: PT-wstkscETH/scETH market
+- silo-core: sfrxUSD / scUSD new market
+- silo-core: WBTC / USDC Silo
+- silo-core: x33 asset adapter
+- silo-core: x33 new Silo
+- silo-core: add bulk methods for APR in SiloLens
+- silo-core: ERC4626 price provider update
+- silo-core: SiloFactory initial silo id 100
+- silo-core: restore current router deployments
+- silo-core: DebtShareToken with receive approval on mint
+- bump: solidity to 0.8.29
 
 ## [2.1.0] - 2025-04-16
 ### Fixed
