@@ -32,6 +32,23 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
     }
 
     /*
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_shareDebtToken_selfTransfer -vvv
+    */
+    function test_shareDebtToken_selfTransfer() public {
+        address silo = address(shareDebtToken.silo());
+        address receiver = makeAddr("receiver");
+
+        vm.prank(silo);
+        shareDebtToken.mint(address(this), address(this), 1);
+
+        vm.expectRevert(IShareToken.SelfTransferNotAllowed.selector);
+        shareDebtToken.transfer(address(this), 1);
+
+        vm.prank(receiver);
+        shareDebtToken.setReceiveApproval(address(this), 1);
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_debt_decimals
     */
     function test_debt_decimals() public view {

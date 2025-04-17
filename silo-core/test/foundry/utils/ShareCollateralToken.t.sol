@@ -43,6 +43,38 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
     }
 
     /*
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_shareCollateralToken_selfTransfer -vvv
+    */
+    function test_shareCollateralToken_selfTransfer() public {
+        address receiver = makeAddr("receiver");
+
+        vm.prank(address(shareCollateralToken1.silo()));
+        shareCollateralToken1.mint(address(this), address(this), 1);
+
+        vm.expectRevert(IShareToken.SelfTransferNotAllowed.selector);
+        shareCollateralToken1.transfer(address(this), 1);
+
+        // counterexample
+        shareCollateralToken1.transfer(receiver, 1);
+    }
+
+    /*
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_shareProtectedToken_selfTransfer -vvv
+    */
+    function test_shareProtectedToken_selfTransfer() public {
+        address receiver = makeAddr("receiver");
+
+        vm.prank(address(shareProtectedToken1.silo()));
+        shareProtectedToken1.mint(address(this), address(this), 1);
+
+        vm.expectRevert(IShareToken.SelfTransferNotAllowed.selector);
+        shareProtectedToken1.transfer(address(this), 1);
+
+        // counterexample
+        shareProtectedToken1.transfer(receiver, 1);
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_collateralShareToken_decimals
     */
     function test_collateralShareToken_decimals() public view {

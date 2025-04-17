@@ -76,6 +76,23 @@ contract MarketTest is IntegrationTest {
         vault.deposit(1, RECEIVER);
     }
 
+    /*
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSelfTransfer -vvv
+    */
+    function testSelfTransfer() public {
+        vm.startPrank(SUPPLIER);
+        uint256 shares = vault.deposit(1e18, SUPPLIER);
+
+        vm.expectRevert(ErrorsLib.SelfTransferNotAllowed.selector);
+        vault.transfer(SUPPLIER, 1);
+
+        // counterexample works
+        vault.transfer(RECEIVER, shares);
+        assertEq(vault.balanceOf(RECEIVER), shares, "RECEIVER got tokens");
+        assertEq(vault.balanceOf(SUPPLIER), 0, "SUPPLIER send shares");
+        vm.stopPrank();
+    }
+
     function testSubmitCapOverflow(uint256 seed, uint256 cap) public {
         IERC4626 market = _randomMarket(seed);
         cap = bound(cap, uint256(type(uint184).max) + 1, type(uint256).max);

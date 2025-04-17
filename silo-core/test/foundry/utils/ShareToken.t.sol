@@ -10,6 +10,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IShareTokenInitializable} from "silo-core/contracts/interfaces/IShareTokenInitializable.sol";
 
 import {HookReceiverMock} from "../_mocks/HookReceiverMock.sol";
@@ -36,6 +37,26 @@ contract ShareTokenTest is Test {
         siloConfig = new SiloConfigMock(address(0));
         hookReceiverMock = new HookReceiverMock(address(0));
         owner = makeAddr("Owner");
+    }
+
+    /*
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_shareToken_selfTransfer -vvv
+    */
+    function test_shareToken_selfTransfer() public {
+        silo.configMock(siloConfig.ADDRESS());
+        sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
+
+        vm.prank(silo.ADDRESS());
+        sToken.mint(address(this), address(this), 1);
+
+        vm.expectRevert(IShareToken.SelfTransferNotAllowed.selector);
+        sToken.transfer(address(this), 1);
+
+        // counterexample works
+        sToken.transfer(address(1), 1);
+        assertEq(sToken.balanceOf(address(1)), 1, "RECEIVER got tokens");
+        assertEq(sToken.balanceOf(address(this)), 0, "owner send shares");
+        vm.stopPrank();
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --mt test_ShareToken_decimals

@@ -164,6 +164,9 @@ library ErrorsLib {
     /// @notice Thrown if withdrawn assets are not equal to the sum of the balance before and the withdrawn amount.
     error FailedToWithdraw();
 
+    /// @notice Thrown on self transfer.
+    error SelfTransferNotAllowed();
+
     function revertBytes(bytes memory _errMsg) internal pure {
         if (_errMsg.length > 0) {
             assembly { // solhint-disable-line no-inline-assembly

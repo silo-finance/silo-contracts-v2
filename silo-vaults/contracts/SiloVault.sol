@@ -946,6 +946,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
+        require(_from != _to, ErrorsLib.SelfTransferNotAllowed());
+
         // on deposit, claim must be first action, new user should not get reward
 
         // on withdraw, claim must be first action, user that is leaving should get rewards

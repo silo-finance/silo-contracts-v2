@@ -44,6 +44,7 @@ interface IShareToken is IERC20Metadata {
     error RecipientNotSolventAfterTransfer();
     error SenderNotSolventAfterTransfer();
     error ZeroTransfer();
+    error SelfTransferNotAllowed();
 
     /// @notice method for SiloConfig to synchronize hooks
     /// @param _hooksBefore hooks bitmap to trigger hooks BEFORE action
