@@ -235,7 +235,9 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     /// @inheritdoc ERC20Upgradeable
     function _update(address from, address to, uint256 value) internal virtual override {
         require(value != 0, ZeroTransfer());
-        require(from != to, SelfTransferNotAllowed());
+
+        IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();
+        if ($.transferWithChecks) require(from != to, SelfTransferNotAllowed());
 
         _beforeTokenTransfer(from, to, value);
 
