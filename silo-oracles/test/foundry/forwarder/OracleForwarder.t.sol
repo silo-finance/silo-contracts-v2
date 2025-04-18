@@ -128,8 +128,12 @@ contract OracleForwarderTest is Test {
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_OracleForwarder_reorg
     function test_OracleForwarder_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
         uint256 snapshot = vm.snapshot();
 
+        vm.prank(eoa1);
         IOracleForwarder oracle1 = _factory.createOracleForwarder(
             ISiloOracle(address(_oracleMock1)),
             _owner,
@@ -138,6 +142,7 @@ contract OracleForwarderTest is Test {
 
         vm.revertTo(snapshot);
 
+        vm.prank(eoa2);
         IOracleForwarder oracle2 = _factory.createOracleForwarder(
             ISiloOracle(address(_oracleMock2)),
             _owner,
