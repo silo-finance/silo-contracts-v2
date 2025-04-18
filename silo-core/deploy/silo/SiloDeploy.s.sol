@@ -227,7 +227,7 @@ contract SiloDeploy is CommonDeploy {
         );
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IUniswapV3Factory.create, config, (bytes32(0)));
+        txData.txInput = abi.encodeCall(IUniswapV3Factory.create, (config, bytes32(0)));
     }
 
     function _chainLinkTxData(string memory _oracleConfigName)
@@ -247,7 +247,7 @@ contract SiloDeploy is CommonDeploy {
         );
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, config, (bytes32(0)));
+        txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
     }
 
     function _diaTxData(string memory _oracleConfigName)
@@ -267,7 +267,7 @@ contract SiloDeploy is CommonDeploy {
         );
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, config, (bytes32(0)));
+        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
     }
 
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
