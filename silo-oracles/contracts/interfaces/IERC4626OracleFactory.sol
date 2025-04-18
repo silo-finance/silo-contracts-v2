@@ -8,5 +8,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 interface IERC4626OracleFactory {
     event ERC4626OracleCreated(ISiloOracle indexed oracle);
 
-    function createERC4626Oracle(IERC4626 _vault) external returns (ISiloOracle oracle);
+    function createERC4626Oracle(
+        IERC4626 _vault,
+        bytes32 _externalSalt
+    ) external returns (ISiloOracle oracle);
 }
