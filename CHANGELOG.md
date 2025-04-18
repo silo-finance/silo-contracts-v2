@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.1.0-rc.2] - 2025-04-18
+- silo-vaults: deployment min timelock 1 day
+
 ## [3.1.0-rc.1] - 2025-04-18
 - silo-vaults: deployment min timelock 1 min
 
