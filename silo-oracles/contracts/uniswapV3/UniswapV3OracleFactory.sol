@@ -7,13 +7,14 @@ import {IUniswapV3Pool} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 
 import {Clones} from "../lib/Clones.sol";
 
+import {Create2Factory} from "../_common/Create2Factory.sol";
 import {OracleFactory} from "../_common/OracleFactory.sol";
 import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
 import {UniswapV3OracleConfig} from "../uniswapV3/UniswapV3OracleConfig.sol";
 import {UniswapV3Oracle} from "../uniswapV3/UniswapV3Oracle.sol";
 import {IERC20BalanceOf} from "../interfaces/IERC20BalanceOf.sol";
 
-contract UniswapV3OracleFactory is OracleFactory {
+contract UniswapV3OracleFactory is OracleFactory, Create2Factory {
     /// @dev UniswapV3 factory contract
     IUniswapV3Factory public immutable UNISWAPV3_FACTORY; // solhint-disable-line var-name-mixedcase
 
@@ -26,10 +27,10 @@ contract UniswapV3OracleFactory is OracleFactory {
     /// @dev you need to make sure, that pool you are using is valid and can provide a TWAP price
     /// this method does no verify it, you can verify by calling `verifyPool`
     /// @param _config UniswapV3DeploymentConfig configuration data
-    function create(IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config)
-        external
-        virtual
-        returns (UniswapV3Oracle oracle)
+    function create(
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory _config,
+        bytes32 _externalSalt
+    ) external virtual returns (UniswapV3Oracle oracle)
     {
         bytes32 id = hashConfig(_config);
         address oracleConfig = getConfigAddress[id];
@@ -42,7 +43,7 @@ contract UniswapV3OracleFactory is OracleFactory {
         uint16 requiredCardinality = verifyConfig(_config);
 
         oracleConfig = address(new UniswapV3OracleConfig(_config, requiredCardinality));
-        oracle = UniswapV3Oracle(Clones.clone(ORACLE_IMPLEMENTATION));
+        oracle = UniswapV3Oracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
 
         _saveOracle(address(oracle), oracleConfig, id);
 
