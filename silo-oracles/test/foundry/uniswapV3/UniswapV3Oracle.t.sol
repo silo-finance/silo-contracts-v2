@@ -31,7 +31,7 @@ contract UniswapV3OracleTest is UniswapPools {
             120
         );
 
-        PRICE_PROVIDER = factory.create(config);
+        PRICE_PROVIDER = factory.create(config, bytes32(0));
     }
 
     /*
@@ -82,7 +82,7 @@ contract UniswapV3OracleTest is UniswapPools {
             address(tokens["WETH"]),
             15,
             120
-        ));
+        ), bytes32(0));
 
         uint32[] memory secondAgos = new uint32[](2);
 
@@ -128,7 +128,7 @@ contract UniswapV3OracleTest is UniswapPools {
             120
         );
 
-        UniswapV3Oracle oracle = factory.create(config);
+        UniswapV3Oracle oracle = factory.create(config, bytes32(0));
 
         gasStart = gasleft();
         priceView = oracle.quote(1e18, address(tokens["WETH"]));

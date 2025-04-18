@@ -27,7 +27,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_DIA_DECIMALS
     */
-    function test_DIAOracleFactory_DIA_DECIMALS() public {
+    function test_DIAOracleFactory_DIA_DECIMALS() public view {
         assertEq(ORACLE_FACTORY.DIA_DECIMALS(), 8);
     }
 
@@ -42,7 +42,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quote_RDPXinUSDT
     */
     function test_DIAOracleFactory_quote_RDPXinUSDT() public {
-        DIAOracle oracle = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0));
+        DIAOracle oracle = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));
 
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
         emit log_named_decimal_uint("RDPX/USD", price, 18);
@@ -56,7 +56,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(1e8, 0);
         cfg.quoteToken = IERC20Metadata(address(tokens["TUSD"]));
 
-        DIAOracle oracle = ORACLE_FACTORY.create(cfg);
+        DIAOracle oracle = ORACLE_FACTORY.create(cfg, bytes32(0));
 
         uint256 gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
@@ -77,7 +77,7 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         cfg.invertSecondPrice = true;
 
         uint256 gasStart = gasleft();
-        DIAOracle oracle = ORACLE_FACTORY.create(cfg);
+        DIAOracle oracle = ORACLE_FACTORY.create(cfg, bytes32(0));
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas for creation", gasStart - gasEnd);
@@ -95,5 +95,22 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         emit log_named_decimal_uint("RDPX/ETH", price, 18);
         emit log_named_uint("gas used", gasStart - gasEnd);
         assertEq(price, 10104984720670688, "RDPX/ETH price 0.01ETH");
+    }
+
+    function test_DIAOracleFactory_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        DIAOracle oracle1 = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        DIAOracle oracle2 = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));
+
+        assertNotEq(address(oracle1), address(oracle2), "oracle1 == oracle2");
     }
 }

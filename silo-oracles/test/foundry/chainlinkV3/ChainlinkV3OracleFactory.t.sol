@@ -35,7 +35,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_quote_DYDXinUSDT
     */
     function test_ChainlinkV3OracleFactory_quote_DYDXinUSDT() public {
-        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0));
+        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
 
         uint256 price = oracle.quote(1e18, address(tokens["DYDX"]));
         emit log_named_decimal_uint("DYDX/USD", price, 6);
@@ -47,7 +47,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_quote_SPELLinUSD
     */
     function test_ChainlinkV3OracleFactory_quote_SPELLinUSD() public {
-        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_spellUsdChainlinkV3Config(1e20, 0));
+        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_spellUsdChainlinkV3Config(1e20, 0), bytes32(0));
 
         uint256 gasStart = gasleft();
         uint256 price = oracle.quote(1e18, address(tokens["SPELL"]));
@@ -63,7 +63,7 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
     */
     function test_ChainlinkV3OracleFactory_quote_SPELLinETH() public {
         uint256 gasStart = gasleft();
-        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_spellEthChainlinkV3Config(1, 1));
+        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_spellEthChainlinkV3Config(1, 1), bytes32(0));
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas creation", gasStart - gasEnd);
@@ -75,5 +75,25 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
         emit log_named_decimal_uint("SPELL/ETH", price, 18);
         assertEq(price, 235285547785, ", SPELL/USD price is ~$0.000403 => ETH@1716 => SPELL/ETH ~ 0.000403/1716 => 0.00000023");
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_reorg
+    */
+    function test_ChainlinkV3OracleFactory_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        ChainlinkV3Oracle oracle1 = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        ChainlinkV3Oracle oracle2 = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
+
+        assertNotEq(address(oracle1), address(oracle2), "oracle1 == oracle2");
     }
 }

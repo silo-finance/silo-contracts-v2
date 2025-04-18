@@ -5,22 +5,22 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {OracleFactory} from "../_common/OracleFactory.sol";
 import {IChainlinkV3Oracle} from "../interfaces/IChainlinkV3Oracle.sol";
 import {ChainlinkV3Oracle} from "../chainlinkV3/ChainlinkV3Oracle.sol";
 import {ChainlinkV3OracleConfig} from "../chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
 
-contract ChainlinkV3OracleFactory is OracleFactory {
+contract ChainlinkV3OracleFactory is Create2Factory, OracleFactory {
     constructor() OracleFactory(address(new ChainlinkV3Oracle())) {
         // noting to configure
     }
 
-    function create(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config)
-        external
-        virtual
-        returns (ChainlinkV3Oracle oracle)
-    {
+    function create(
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,
+        bytes32 _externalSalt
+    ) external virtual returns (ChainlinkV3Oracle oracle) {
         bytes32 id = hashConfig(_config);
         ChainlinkV3OracleConfig oracleConfig = ChainlinkV3OracleConfig(getConfigAddress[id]);
 
@@ -33,7 +33,7 @@ contract ChainlinkV3OracleFactory is OracleFactory {
         verifyHeartbeat(_config);
 
         oracleConfig = new ChainlinkV3OracleConfig(_config);
-        oracle = ChainlinkV3Oracle(Clones.clone(ORACLE_IMPLEMENTATION));
+        oracle = ChainlinkV3Oracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
 

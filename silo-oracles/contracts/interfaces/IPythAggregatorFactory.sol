@@ -15,8 +15,12 @@ interface IPythAggregatorFactory {
     /// @notice Deploy aggregator for a specific price id. Reverts if the aggregator is already deployed. This function
     /// is permissionless.
     /// @param _priceId Pyth feed price id.
+    /// @param _externalSalt The external salt to be used together with factory salt
     /// @return aggregator PythAggregatorV3 address deployed by this function call.
-    function deploy(bytes32 _priceId) external returns (AggregatorV3Interface);
+    function deploy(
+        bytes32 _priceId,
+        bytes32 _externalSalt
+    ) external returns (AggregatorV3Interface);
 
     /// @dev Emitted when the aggregator is deployed.
     /// @param priceId Pyth feed price id.

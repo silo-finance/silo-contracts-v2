@@ -38,7 +38,7 @@ contract OracleScalerDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = OracleScalerFactory(factory).createOracleScaler(quoteToken);
+        oracle = OracleScalerFactory(factory).createOracleScaler(quoteToken, bytes32(0));
 
         vm.stopBroadcast();
 

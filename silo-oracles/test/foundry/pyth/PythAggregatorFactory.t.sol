@@ -33,7 +33,7 @@ contract PythAggregatorFactoryTest is TokensGenerator {
 
     function test_PythAggregatorFactory_deploy_correctness() public {
         PythAggregatorFactory factory = new PythAggregatorFactory(PYTH);
-        AggregatorV3Interface ethAggregator = factory.deploy(PYTH_ETH_USD_PRICE_ID);
+        AggregatorV3Interface ethAggregator = factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
 
         (, int256 answer,, uint256 updatedAt,) = ethAggregator.latestRoundData();
         uint8 decimals = ethAggregator.decimals();
@@ -42,7 +42,7 @@ contract PythAggregatorFactoryTest is TokensGenerator {
         assertEq(answer / int256(10 ** uint256(decimals)), 3345, "Price of ETH is correct with decimals");
         assertTrue(block.timestamp - updatedAt < 100, "Price of ETH is recently updated, less than 100s ago");
 
-        AggregatorV3Interface sAggregator = factory.deploy(PYTH_S_USD_PRICE_ID);
+        AggregatorV3Interface sAggregator = factory.deploy(PYTH_S_USD_PRICE_ID, bytes32(0));
         (, answer,,,) = sAggregator.latestRoundData();
         decimals = sAggregator.decimals();
 
@@ -52,10 +52,10 @@ contract PythAggregatorFactoryTest is TokensGenerator {
 
     function test_PythAggregatorFactory_deploy_revertsOnDuplicate() public {
         PythAggregatorFactory factory = new PythAggregatorFactory(PYTH);
-        factory.deploy(PYTH_ETH_USD_PRICE_ID);
+        factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
 
         vm.expectRevert(IPythAggregatorFactory.AggregatorAlreadyExists.selector);
-        factory.deploy(PYTH_ETH_USD_PRICE_ID);
+        factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
     }
 
     function test_PythAggregatorFactory_deploy_emitsEvent() public {
@@ -63,14 +63,36 @@ contract PythAggregatorFactoryTest is TokensGenerator {
         vm.expectEmit(true, false, false, false);
         emit AggregatorDeployed(PYTH_ETH_USD_PRICE_ID, AggregatorV3Interface(address(0)));
 
-        factory.deploy(PYTH_ETH_USD_PRICE_ID);
+        factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
     }
 
     function test_PythAggregatorFactory_aggregators() public {
         PythAggregatorFactory factory = new PythAggregatorFactory(PYTH);
         assertEq(address(factory.aggregators(PYTH_ETH_USD_PRICE_ID)), address(0), "Aggregator is not created yet");
 
-        AggregatorV3Interface ethAggregator = factory.deploy(PYTH_ETH_USD_PRICE_ID);
+        AggregatorV3Interface ethAggregator = factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
         assertEq(address(factory.aggregators(PYTH_ETH_USD_PRICE_ID)), address(ethAggregator), "Aggregator updated");
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_PythAggregatorFactory_reorg -vv
+    */
+    function test_PythAggregatorFactory_reorg() public {
+        PythAggregatorFactory factory = new PythAggregatorFactory(PYTH);
+
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        AggregatorV3Interface ethAggregator1 = factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        AggregatorV3Interface ethAggregator2 = factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
+
+        assertNotEq(address(ethAggregator1), address(ethAggregator2), "ethAggregator1 == ethAggregator2");
     }
 }
