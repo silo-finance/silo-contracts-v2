@@ -37,10 +37,6 @@ contract SiloTokenMigration is Ownable2Step, Pausable, TransientReentrancy {
         _unpause();
     }
 
-    function unpause() external onlyOwner {
-        _unpause();
-    }
-
     // TODO do we need this one or only transferSiloOwnership?
     /**
      * @dev Leaves the `NEW_SILO` contract without owner. It will not be possible to call
