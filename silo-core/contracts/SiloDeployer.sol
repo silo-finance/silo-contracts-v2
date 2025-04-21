@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
-import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
@@ -137,7 +136,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
         uint256 nextSiloId = SILO_FACTORY.getNextSiloId();
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
+        siloConfig = ISiloConfig(address(new SiloConfig{salt: _salt()}(nextSiloId, configData0, configData1)));
     }
 
     /// @notice Create IRMs and update `_siloInitData`
@@ -211,7 +210,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         );
 
         if (_hookReceiverImplementation != address(0)) {
-            _siloInitData.hookReceiver = Clones.clone(_hookReceiverImplementation);
+            _siloInitData.hookReceiver = Clones.cloneDeterministic(_hookReceiverImplementation, _salt());
         }
     }
 
