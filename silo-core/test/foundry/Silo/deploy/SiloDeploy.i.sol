@@ -7,6 +7,8 @@ import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
+import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
+import {IChainlinkV3Factory} from "silo-oracles/contracts/interfaces/IChainlinkV3Factory.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -88,6 +90,23 @@ contract SiloDeployTest is IntegrationTest {
             _uniV3OracleFactoryMock.MOCK_ORACLE_ADDR(),
             "Should have an Uniswap oracle as a fallback"
         );
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_encodeCallWithSalt -vv
+    function test_encodeCallWithSalt() public {
+        bytes32 salt = keccak256(bytes("some string"));
+
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config;
+
+        bytes memory callDataForModification = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
+        bytes memory callDataExpected = abi.encodeCall(IChainlinkV3Factory.create, (config, salt));
+
+        assembly {
+            let pointer := add(add(callDataForModification, 0x20), sub(mload(callDataForModification), 0x20))
+            mstore(pointer, salt)
+        }
+
+        assertEq(keccak256(callDataForModification), keccak256(callDataExpected), "failed to update the salt");
     }
 
     function _verifyHookReceiversForSilo(address _silo) internal view {

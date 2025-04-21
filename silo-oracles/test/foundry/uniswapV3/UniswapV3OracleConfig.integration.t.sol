@@ -39,7 +39,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
             BLOCK_TIME
         );
 
-        UNISWAPV3_ORACLE_FACTORY.create(config);
+        UNISWAPV3_ORACLE_FACTORY.create(config, bytes32(0));
     }
 
     /*
