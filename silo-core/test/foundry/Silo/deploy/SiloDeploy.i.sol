@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {Vm} from "forge-std/Vm.sol";
+
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
@@ -107,6 +109,37 @@ contract SiloDeployTest is IntegrationTest {
         }
 
         assertEq(keccak256(callDataForModification), keccak256(callDataExpected), "failed to update the salt");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloConfig_and_hookReceiver_reorg
+    function test_siloConfig_and_hookReceiver_reorg() public {
+        Vm.Wallet memory wallet1 = vm.createWallet("eoa1");
+        Vm.Wallet memory wallet2 = vm.createWallet("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        ISiloConfig siloConfig1 = _siloDeploy
+            .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
+            .usePrivateKey(wallet1.privateKey)
+            .run();
+
+        (address silo0,) = siloConfig1.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfigData1 = siloConfig1.getConfig(silo0);
+
+        vm.revertTo(snapshot);
+
+        ISiloConfig siloConfig2 = _siloDeploy
+            .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
+            .usePrivateKey(wallet2.privateKey)
+            .run();
+
+        (silo0,) = siloConfig2.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfigData2 = siloConfig2.getConfig(silo0);
+
+        assertNotEq(address(siloConfig1), address(siloConfig2), "Silo configs should be different");
+        assertNotEq(siloConfigData1.hookReceiver, siloConfigData2.hookReceiver, "Hook receiver should be different");
     }
 
     function _verifyHookReceiversForSilo(address _silo) internal view {
