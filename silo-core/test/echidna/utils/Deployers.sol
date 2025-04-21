@@ -199,7 +199,7 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deployInterestRateModel() internal {
-        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
+        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0], bytes32(0));
     }
 
     function core_deployGaugeHookReceiver() internal {
