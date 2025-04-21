@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // Interfaces
 import {ISilo} from "silo-core/contracts/Silo.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
 
 // Libraries
 import {Vm} from "forge-std/Base.sol";
@@ -41,6 +42,11 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     modifier monotonicTimestamp() virtual {
         // Implement monotonic timestamp if needed
         _;
+    }
+
+    /// @dev Makes this Tester contract able to receive ERC721 using safeTransfer
+    function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

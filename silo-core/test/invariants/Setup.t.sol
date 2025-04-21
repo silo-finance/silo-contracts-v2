@@ -1,24 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
-
 // Utils
 import {Actor} from "./utils/Actor.sol";
 
 // Contracts
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {SiloInternal} from "../echidna/internal_testing/SiloInternal.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {
-    IGaugeHookReceiver,
-    GaugeHookReceiver
-} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
@@ -49,47 +42,64 @@ import {ISilo} from "silo-core/contracts/Silo.sol";
 import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
-contract Setup is BaseTest, IERC721Receiver {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
+contract Setup is BaseTest {
     function _setUp() internal {
-        // Deploy protocol contracts and protocol actors
-        _deployProtocolCore();
-    }
-
-    /// @notice Deploy protocol core contracts
-    function _deployProtocolCore() internal {
-        // Deploy protocol core contracts
-        core_setUp(address(this));
-
         // Deploy assets
         _deployAssets();
+
+        // Deploy protocol core contracts
+        _deployCoreProtocol(address(this));
+
         // Deploy Oracles
         _deployOracles();
 
-        // Create silos
+        // Deploy Silos
+        _deploySilos();
+
+        // Deploy External contracts
+        _deployExternalContracts();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          SETUP FUNCTIONS                                  //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _deployAssets() internal {
+        _asset0 = new TestERC20("Test Token0", "TT0", 18);
+        _asset1 = new TestERC20("Test Token1", "TT1", 6);
+        baseAssets.push(address(_asset0));
+        baseAssets.push(address(_asset1));
+    }
+
+    function _deployCoreProtocol(address feeReceiver) internal {
+        core_deploySiloLiquidation();
+        core_deploySiloFactory(feeReceiver);
+        core_deployInterestRateConfigFactory();
+        core_deployInterestRateModel();
+        core_deploySiloDeployer();
+    }
+
+    function _deployOracles() internal {
+        oracle0 = address(new MockSiloOracle(address(_asset0), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
+        oracle1 = address(new MockSiloOracle(address(_asset1), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
+    }
+
+    function _deploySilos() internal {
+        // Setup initData
         _initData(address(_asset0), address(_asset1));
 
-        address siloImpl = address(new Silo(siloFactory));
-        address siloImplInternal = address(new SiloInternal(siloFactoryInternal));
-
-        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
-        address shareDebtTokenImpl = address(new ShareDebtToken());
-
-        // deploy silo config
+        // Deploy silo config
         siloConfig =
             _deploySiloConfig(siloData["MOCK"], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
 
-        // deploy silo
+        // Deploy silos
         siloFactory.createSilo(
-            siloConfig, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, siloData["MOCK"].deployer, msg.sender
+            siloConfig,
+            siloImpl,
+            shareProtectedCollateralTokenImpl,
+            shareDebtTokenImpl,
+            siloData["MOCK"].deployer,
+            msg.sender
         );
 
         (_vault0, _vault1) = siloConfig.getSilos();
@@ -119,21 +129,166 @@ contract Setup is BaseTest, IERC721Receiver {
 
         protectedTokens.push(protectedCollateralToken0);
         protectedTokens.push(protectedCollateralToken1);
+    }
 
-        // Deploy and initialize the liquidation module & mock flashloan receiver
-        liquidationModule = PartialLiquidation(vault0.config().getConfig(_vault0).hookReceiver);
-
+    /// @notice Setup liquidation module and flashLoan receiver
+    function _deployExternalContracts() internal {
         flashLoanReceiver = address(new MockFlashLoanReceiver());
     }
 
-    function core_setUp(address feeReceiver) internal {
-        core_deploySiloLiquidation();
-        core_deploySiloFactory(feeReceiver);
-        core_deployInterestRateConfigFactory();
-        core_deployInterestRateModel();
-        core_deployGaugeHookReceiver();
-        core_deploySiloDeployer();
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                   SILO-CORE SETUP FUNCTIONS                               //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function core_deploySiloLiquidation() internal {
+        liquidationModule = PartialLiquidation(address(new SiloHookV1()));
     }
+
+    function core_deploySiloFactory(address feeReceiver) internal {
+        address daoFeeReceiver = feeReceiver == address(0) ? address(0) : feeReceiver;
+
+        siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
+    }
+
+    function core_deployInterestRateConfigFactory() internal {
+        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(address(new InterestRateModelV2Factory()));
+    }
+
+    function core_deployInterestRateModel() internal {
+        // set preset IRM configs
+        presetIRMConfigs.push(
+            IInterestRateModelV2.Config({
+                uopt: 500000000000000000,
+                ucrit: 900000000000000000,
+                ulow: 300000000000000000,
+                ki: 146805,
+                kcrit: 317097919838,
+                klow: 105699306613,
+                klin: 4439370878,
+                beta: 69444444444444,
+                ri: 0,
+                Tcrit: 0
+            })
+        );
+
+        // Deploy interestRateModel
+        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
+    }
+
+    function core_deploySiloDeployer() internal {
+        siloImpl = address(new Silo(siloFactory));
+        shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        shareDebtTokenImpl = address(new ShareDebtToken());
+
+        siloDeployer = ISiloDeployer(
+            address(
+                new SiloDeployer(
+                    interestRateModelV2ConfigFactory,
+                    siloFactory,
+                    siloImpl,
+                    shareProtectedCollateralTokenImpl,
+                    shareDebtTokenImpl
+                )
+            )
+        );
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                            HELPERS                                        //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _deploySiloConfig(
+        ISiloConfig.InitData memory _siloInitData,
+        address _siloImpl,
+        address _shareProtectedCollateralTokenImpl,
+        address _shareDebtTokenImpl
+    ) internal returns (ISiloConfig siloConfig_) {
+        uint256 nextSiloId = siloFactory.getNextSiloId();
+        uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
+
+        ISiloConfig.ConfigData memory configData0;
+        ISiloConfig.ConfigData memory configData1;
+
+        (configData0, configData1) = Views.copySiloConfig(
+            _siloInitData,
+            siloFactory.daoFeeRange(),
+            siloFactory.maxDeployerFee(),
+            siloFactory.maxFlashloanFee(),
+            siloFactory.maxLiquidationFee()
+        );
+
+        configData0.silo =
+            CloneDeterministic.predictSilo0Addr(_siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
+
+        configData1.silo =
+            CloneDeterministic.predictSilo1Addr(_siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
+
+        configData0.collateralShareToken = configData0.silo;
+        configData1.collateralShareToken = configData1.silo;
+
+        configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
+
+        configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
+
+        configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
+
+        configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
+        );
+
+        siloConfig_ = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
+    }
+
+    function _initData(address mock0, address mock1) internal {
+        // The FULL data relies on addresses set in _setupBasicData()
+        siloData["FULL"] = ISiloConfig.InitData({
+            deployer: address(this),
+            daoFee: 0.15e18,
+            deployerFee: 0.1e18,
+            token0: address(_asset0),
+            solvencyOracle0: oracle0,
+            maxLtvOracle0: oracle0,
+            interestRateModel0: address(interestRateModelV2),
+            maxLtv0: 0.75e18,
+            lt0: 0.85e18,
+            liquidationTargetLtv0: 0.85e18 * 0.9e18 / 1e18,
+            liquidationFee0: 0.05e18,
+            flashloanFee0: 0.01e18,
+            callBeforeQuote0: true,
+            hookReceiver: address(liquidationModule),
+            token1: address(_asset1),
+            solvencyOracle1: oracle1,
+            maxLtvOracle1: oracle1,
+            interestRateModel1: address(interestRateModelV2),
+            maxLtv1: 0.85e18,
+            lt1: 0.95e18,
+            liquidationTargetLtv1: 0.95e18 * 0.9e18 / 1e18,
+            liquidationFee1: 0.025e18,
+            flashloanFee1: 0.01e18,
+            callBeforeQuote1: true
+        });
+
+        // We set up the mock data, without oracles and receivers
+        ISiloConfig.InitData memory mocks = siloData["FULL"];
+        mocks.token0 = mock0;
+        mocks.token1 = mock1;
+        mocks.maxLtvOracle0 = address(0);
+        mocks.maxLtvOracle1 = address(0);
+        mocks.callBeforeQuote0 = false;
+        mocks.callBeforeQuote1 = false;
+
+        siloData["MOCK"] = mocks;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          ACTOR SETUP                                      //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice Deploy protocol actors and initialize their balances
     function _setUpActors() internal {
@@ -181,175 +336,5 @@ contract Setup is BaseTest, IERC721Receiver {
         (success,) = address(_actor).call{value: INITIAL_ETH_BALANCE}("");
         assert(success);
         actorAddress = address(_actor);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                  SILO CUSTOM SETUP FUNCTIONS                              //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    function core_deploySiloFactory(address feeReceiver) internal {
-        uint256 daoFee = 0.15e18;
-        address daoFeeReceiver = feeReceiver == address(0) ? address(0) : feeReceiver;
-
-        siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
-        siloFactoryInternal = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
-    }
-
-    function core_deployInterestRateConfigFactory() internal {
-        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(address(new InterestRateModelV2Factory()));
-        // set preset IRM configs
-        presetIRMConfigs.push(
-            IInterestRateModelV2.Config({
-                uopt: 500000000000000000,
-                ucrit: 900000000000000000,
-                ulow: 300000000000000000,
-                ki: 146805,
-                kcrit: 317097919838,
-                klow: 105699306613,
-                klin: 4439370878,
-                beta: 69444444444444,
-                ri: 0,
-                Tcrit: 0
-            })
-        );
-    }
-
-    function core_deployInterestRateModel() internal {
-        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
-    }
-
-    function core_deployGaugeHookReceiver() internal {
-        hookReceiver = IGaugeHookReceiver(address(new SiloHookV1()));
-    }
-
-    function core_deploySiloLiquidation() internal {
-        liquidationModule = PartialLiquidation(address(new SiloHookV1()));
-    }
-
-    function core_deploySiloDeployer() internal {
-        address siloImpl = address(new Silo(siloFactory));
-        address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
-        address shareDebtTokenImpl = address(new ShareDebtToken());
-
-        siloDeployer = ISiloDeployer(
-            address(
-                new SiloDeployer(
-                    interestRateModelV2ConfigFactory,
-                    siloFactory,
-                    siloImpl,
-                    shareProtectedCollateralTokenImpl,
-                    shareDebtTokenImpl
-                )
-            )
-        );
-    }
-
-    function _deploySiloConfig(
-        ISiloConfig.InitData memory _siloInitData,
-        address _siloImpl,
-        address _shareProtectedCollateralTokenImpl,
-        address _shareDebtTokenImpl
-    ) internal returns (ISiloConfig siloConfig) {
-        uint256 nextSiloId = siloFactory.getNextSiloId();
-        uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
-
-        ISiloConfig.ConfigData memory configData0;
-        ISiloConfig.ConfigData memory configData1;
-
-        (configData0, configData1) = Views.copySiloConfig(
-            _siloInitData,
-            siloFactory.daoFeeRange(),
-            siloFactory.maxDeployerFee(),
-            siloFactory.maxFlashloanFee(),
-            siloFactory.maxLiquidationFee()
-        );
-
-        configData0.silo = CloneDeterministic.predictSilo0Addr(
-            _siloImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
-        );
-
-        configData1.silo = CloneDeterministic.predictSilo1Addr(
-            _siloImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
-        );
-
-        configData0.collateralShareToken = configData0.silo;
-        configData1.collateralShareToken = configData1.silo;
-
-        configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
-
-        configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
-
-        configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
-            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
-
-        configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
-            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
-
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
-    }
-
-    function _deployAssets() internal {
-        _asset0 = new TestERC20("Test Token0", "TT0", 18);
-        _asset1 = new TestERC20("Test Token1", "TT1", 6);
-        baseAssets.push(address(_asset0));
-        baseAssets.push(address(_asset1));
-    }
-
-    function _deployOracles() internal {
-        oracle0 = address(new MockSiloOracle(address(_asset0), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
-        oracle1 = address(new MockSiloOracle(address(_asset1), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
-    }
-
-    function _initData(address mock0, address mock1) internal {
-        // The FULL data relies on addresses set in _setupBasicData()
-        siloData["FULL"] = ISiloConfig.InitData({
-            deployer: address(this),
-            daoFee: 0.15e18,
-            deployerFee: 0.1000e18,
-            token0: address(_asset0),
-            solvencyOracle0: oracle0,
-            maxLtvOracle0: oracle0,
-            interestRateModel0: address(interestRateModelV2),
-            maxLtv0: 0.7500e18,
-            lt0: 0.8500e18,
-            liquidationTargetLtv0: 0.8500e18 * 0.9e18 / 1e18,
-            liquidationFee0: 0.0500e18,
-            flashloanFee0: 0.0100e18,
-            callBeforeQuote0: true,
-            hookReceiver: address(liquidationModule),
-            token1: address(_asset1),
-            solvencyOracle1: oracle1,
-            maxLtvOracle1: oracle1,
-            interestRateModel1: address(interestRateModelV2),
-            maxLtv1: 0.8500e18,
-            lt1: 0.9500e18,
-            liquidationTargetLtv1: 0.9500e18 * 0.9e18 / 1e18,
-            liquidationFee1: 0.0250e18,
-            flashloanFee1: 0.0100e18,
-            callBeforeQuote1: true
-        });
-
-        // We set up the mock data, without oracles and receivers
-        ISiloConfig.InitData memory mocks = siloData["FULL"];
-        mocks.token0 = mock0;
-        mocks.token1 = mock1;
-        mocks.maxLtvOracle0 = address(0);
-        mocks.maxLtvOracle1 = address(0);
-        mocks.callBeforeQuote0 = false;
-        mocks.callBeforeQuote1 = false;
-
-        siloData["MOCK"] = mocks;
     }
 }

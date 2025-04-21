@@ -6,9 +6,9 @@ codeSize: 224576
 #multi-abi: true
 
 #balanceAddr is default balance for addresses
-balanceAddr: 0xffffffffffffffffffffffff
+balanceAddr: 0x1000000000000000000000000
 #balanceContract overrides balanceAddr for the contract address (2^128 = ~3e38)
-balanceContract: 0xffffffffffffffffffffffffffffffffffffffffffffffff
+balanceContract: 0x1000000000000000000000000000000000000000000000000
 
 #testLimit is the number of test sequences to run
 testLimit: 20000000
@@ -26,7 +26,7 @@ propMaxGas: 1000000000
 testMaxGas: 1000000000
 
 # list of methods to filter
-#filterFunctions: ["openCdpExt"]
+filterFunctions: [ "Tester.onERC721Received(address,address,uint256,bytes)" ]
 # by default, blacklist methods in filterFunctions
 #filterBlacklist: false
 
@@ -37,7 +37,7 @@ stopOnFail: false
 coverage: true
 
 # list of file formats to save coverage reports in; default is all possible formats
-coverageFormats: ["lcov", "html"]
+coverageFormats: [ "html" ]
 
 #directory to save the corpus; by default is disabled
 corpusDir: "test/invariants/_corpus/echidna/default/_data/corpus"
@@ -45,12 +45,12 @@ corpusDir: "test/invariants/_corpus/echidna/default/_data/corpus"
 #mutConsts: [100, 1, 1]
 
 #remappings
-cryticArgs: ["--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=gitmodules/crytic/properties/ forge-std/=gitmodules/forge-std/src/ ds-test/=gitmodules/forge-std/lib/ds-test/src/ openzeppelin/=gitmodules/openzeppelin-contracts/contracts/", "--compile-libraries=(Pretty,0xf01),(Strings,0xf02), (SiloERC4626Lib,0x1f),(SiloLendingLib,0x2f), (SiloSolvencyLib,0x5f),(SiloStdLib,0x6f),(ShareTokenLib,0x7f),(Views,0x8f),(Actions,0x9f), (ShareCollateralTokenLib,0xf03)"]
+cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=gitmodules/crytic/properties/ forge-std/=gitmodules/forge-std/src/ ds-test/=gitmodules/forge-std/lib/ds-test/src/ openzeppelin/=gitmodules/openzeppelin-contracts/contracts/", "--compile-libraries=(Pretty,0xf01),(Strings,0xf02), (SiloERC4626Lib,0x1f),(SiloLendingLib,0x2f), (SiloSolvencyLib,0x5f),(SiloStdLib,0x6f),(ShareTokenLib,0x7f),(Views,0x8f),(Actions,0x9f), (ShareCollateralTokenLib,0xf03)" ]
 
-deployContracts: [["0xf01", "Pretty"], ["0xf02", "Strings"], ["0x1f", "SiloERC4626Lib"], ["0x2f", "SiloLendingLib"], ["0x5f", "SiloSolvencyLib"], ["0x6f", "SiloStdLib"], ["0x7f", "ShareTokenLib"], ["0x8f", "Views"], ["0x9f", "Actions"], ["0xf03", "ShareCollateralTokenLib"]]
+deployContracts: [ [ "0xf01", "Pretty" ], [ "0xf02", "Strings" ], [ "0x1f", "SiloERC4626Lib" ], [ "0x2f", "SiloLendingLib" ], [ "0x5f", "SiloSolvencyLib" ], [ "0x6f", "SiloStdLib" ], [ "0x7f", "ShareTokenLib" ], [ "0x8f", "Views" ], [ "0x9f", "Actions" ], [ "0xf03", "ShareCollateralTokenLib" ] ]
 
 # maximum value to send to payable functions
-maxValue: 100000000000000000000000 # 100000 eth
+maxValue: 1e+23 # 100000 eth
 
 #quiet produces (much) less verbose output
 quiet: true
