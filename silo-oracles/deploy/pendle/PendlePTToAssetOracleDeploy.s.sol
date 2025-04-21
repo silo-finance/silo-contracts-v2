@@ -18,6 +18,9 @@ FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=PYTH_REDSTONE_wstkscETH_ETH MARKE
     forge script silo-oracles/deploy/pendle/PendlePTToAssetOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
+/// @dev PendlePTToAssetOracle must be used only in exceptional cases, described here
+/// https://docs.pendle.finance/Developers/Contracts/StandardizedYield#non-standard-sys
+/// Regular PendlePTOracle oracle must be used otherwise.
 contract PendlePTToAssetOracleDeploy is CommonDeploy {
     PendlePTToAssetOracleFactory factory;
     ISiloOracle underlyingOracle;
