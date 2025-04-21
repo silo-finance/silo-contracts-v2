@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
@@ -14,7 +15,7 @@ import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol
 import {Views} from "silo-core/contracts/lib/Views.sol";
 
 /// @notice Silo Deployer
-contract SiloDeployer is ISiloDeployer {
+contract SiloDeployer is Create2Factory, ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
@@ -147,8 +148,10 @@ contract SiloDeployer is ISiloDeployer {
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
     ) internal {
-        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0);
-        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1);
+        bytes32 irmFactorySalt = _salt();
+
+        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0, irmFactorySalt);
+        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1, irmFactorySalt);
 
         _siloInitData.interestRateModel0 = address(interestRateModel0);
         _siloInitData.interestRateModel1 = address(interestRateModel1);
