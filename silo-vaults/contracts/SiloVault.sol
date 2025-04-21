@@ -309,6 +309,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function reallocate(MarketAllocation[] calldata _allocations) external virtual onlyAllocatorRole {
         _nonReentrantOn();
 
+        _updateLastTotalAssets(_accrueFee());
+
         uint256 totalSupplied;
         uint256 totalWithdrawn;
 
