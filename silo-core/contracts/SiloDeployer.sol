@@ -15,7 +15,7 @@ import {Views} from "silo-core/contracts/lib/Views.sol";
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 
 /// @notice Silo Deployer
-contract SiloDeployer is ISiloDeployer {
+contract SiloDeployer is Create2Factory, ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
