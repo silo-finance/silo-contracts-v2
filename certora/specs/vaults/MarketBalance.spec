@@ -20,11 +20,16 @@ methods {
         => cvlTransferFrom(token, from, to, value) expect (bool, bytes memory);
     
     function _.forceApprove(address, address, uint256) internal => NONDET;
+
+    // methods on markets
+    function _.previewRedeem(uint256 shares) external => previewRedeem_cvl(shares) expect (uint256);
+
 }
  
 function cvlTransfer(address token, address to, uint256 value) returns (bool, bytes) {
     env e;
     require e.msg.sender == currentContract;
+    require e.msg.value == 0;
     require e.msg.value == 0;
     token.transfer(e, to, value);
     bool success;
@@ -61,4 +66,105 @@ rule onlySpecicifiedMethodsCanDecreaseMarketBalance(env e, method f, address mar
         f.selector == sig:reallocate(SiloVaultHarness.MarketAllocation[]).selector);
     uint balanceAfter = ERC20.balanceOf(asset, currentContract);
     assert balanceAfter < balanceBefore => isAllowedToDecreaseBalance;
+}
+
+persistent ghost previewRedeemGhost(uint256) returns uint256 {       
+    axiom forall uint256 x. forall uint256 y. x < y => previewRedeemGhost(x) <= previewRedeemGhost(y);
+}
+
+function previewRedeem_cvl(uint256 _shares) returns uint256
+{
+    return previewRedeemGhost(_shares);
+}
+
+function requireConsistentState(address user, address token)
+{
+    require token != user;
+
+    require require_uint256(ERC20.balanceOf(token, user) + ERC20.balanceOf(token, siloVaultHarness))
+        <= ERC20.totalSupply(token);
+    require (supplyQLength() > 0) => (
+        supplyQGetAt(0) != siloVaultHarness &&
+        require_uint256(ERC20.balanceOf(token, user) + 
+        ERC20.balanceOf(token, siloVaultHarness) +
+        ERC20.balanceOf(token, supplyQGetAt(0))) <= ERC20.totalSupply(token));
+
+    require (supplyQLength() > 1) => (
+        supplyQGetAt(0) != siloVaultHarness &&
+        supplyQGetAt(1) != siloVaultHarness &&
+        require_uint256(ERC20.balanceOf(token, user) + 
+        ERC20.balanceOf(token, siloVaultHarness) +
+        ERC20.balanceOf(token, supplyQGetAt(0)) +
+        ERC20.balanceOf(token, supplyQGetAt(1))) <= ERC20.totalSupply(token));
+
+    require (withdrawQLength() > 0) => (
+        withdrawQGetAt(0) != siloVaultHarness &&
+        require_uint256(ERC20.balanceOf(token, user) + 
+        ERC20.balanceOf(token, siloVaultHarness) +
+        ERC20.balanceOf(token, withdrawQGetAt(0))) <= ERC20.totalSupply(token));
+
+    require (withdrawQLength() > 1) => (
+        withdrawQGetAt(0) != siloVaultHarness &&
+        withdrawQGetAt(1) != siloVaultHarness &&
+        require_uint256(ERC20.balanceOf(token, user) + 
+        ERC20.balanceOf(token, siloVaultHarness) +
+        ERC20.balanceOf(token, withdrawQGetAt(0)) +
+        ERC20.balanceOf(token, withdrawQGetAt(1))) <= ERC20.totalSupply(token));
+}
+
+rule sharePriceDoesntDecrease(env e, method f)
+    filtered { f -> !f.isView }
+{
+    // address receiver;
+    requireConsistentState(e.msg.sender, siloVaultHarness);
+    requireConsistentState(e.msg.sender, asset());
+
+    uint256 totalAssets_pre = totalAssets(e); //lastTotalAssets(e); 
+    uint256 totalShares_pre = totalSupply(e);
+    calldataarg args;
+    f(e, args);
+    uint256 totalAssets_post = lastTotalAssets(e); // totalAssets(e);
+    uint256 totalShares_post = totalSupply(e);
+
+    // totalAssets_pre / totalShares_pre  <= totalAssets_post / totalShares_post
+    assert totalAssets_pre * totalShares_post  <= totalAssets_post * totalShares_pre;
+    
+}
+
+rule whoCanDecreaseTotalAssets(env e, method f)
+    filtered { f -> !f.isView }
+{
+    // address receiver;
+    requireConsistentState(e.msg.sender, siloVaultHarness);
+    requireConsistentState(e.msg.sender, asset());
+
+    uint256 totalAssets_pre = totalAssets(e); //lastTotalAssets(e); 
+    //uint256 totalShares_pre = totalSupply(e);
+    calldataarg args;
+    f(e, args);
+    uint256 totalAssets_post = lastTotalAssets(e); // totalAssets(e);
+    //uint256 totalShares_post = totalSupply(e);
+
+    // totalAssets_pre / totalShares_pre  <= totalAssets_post / totalShares_post
+    //assert totalAssets_pre * totalShares_post  <= totalAssets_post * totalShares_pre;
+    assert totalAssets_post >= totalAssets_pre;
+}
+
+rule totalAssets_lastTotalAssets(env e, method f)
+    filtered { f -> !f.isView }
+{
+    // address receiver;
+    requireConsistentState(e.msg.sender, siloVaultHarness);
+    requireConsistentState(e.msg.sender, asset());
+
+    uint256 totalAssets_pre = totalAssets(e); //lastTotalAssets(e); 
+    uint256 lasttotalAssets_pre = lastTotalAssets(e); 
+    //uint256 totalShares_pre = totalSupply(e);
+    calldataarg args;
+    f(e, args);
+    uint256 totalAssets_post = totalAssets(e); //lastTotalAssets(e); 
+    uint256 lasttotalAssets_post = lastTotalAssets(e); 
+    
+    assert totalAssets_pre == lasttotalAssets_pre =>
+        totalAssets_post == lasttotalAssets_post;
 }
