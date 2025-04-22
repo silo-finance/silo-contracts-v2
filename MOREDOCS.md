@@ -126,7 +126,7 @@ brew install lcov
 rm lcov.info
 mkdir coverage
 
-FOUNDRY_PROFILE=core-with-test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log
+FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log
 cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
 genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
 
@@ -136,7 +136,7 @@ cat coverage/silo-oracles-report.log | grep -i 'silo-oracles/contracts/' > cover
 genhtml -o coverage/silo-oracles/ lcov.info
 
 rm lcov.info
-FOUNDRY_PROFILE=vaults-with-tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000
+FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000
 cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt
 genhtml --ignore-errors inconsistent -ignore-errors range -o  coverage/silo-vaults/ lcov.info
 ```
@@ -165,11 +165,11 @@ git submodule add --name crytic-properties https://github.com/crytic/properties 
 
 ```shell
 # generate snapshot file
-FOUNDRY_PROFILE=core-test forge snapshot --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+FOUNDRY_PROFILE=core_test forge snapshot --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 # check gas difference
-FOUNDRY_PROFILE=core-test forge snapshot --desc --check --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+FOUNDRY_PROFILE=core_test forge snapshot --desc --check --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 # better view, with % change
-FOUNDRY_PROFILE=core-test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
+FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```
 
 ## Deployment

@@ -40,6 +40,11 @@ coverage
 corpus/
 crytic-export/
 
+# certora
+.certora_internal
+certora/harness/vaults/contracts
+emv*
+
 silo-core/deploy/input/_importFromCsv/
 !silo-core/deploy/input/_importFromCsv/marketImport.py
 

@@ -12,7 +12,7 @@ import {
 } from "ve-silo/contracts/gauges/ccip/arbitrum/CCIPGaugeArbitrumUpgradeableBeacon.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/deployments/CCIPGaugeFactoryAnyChainDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

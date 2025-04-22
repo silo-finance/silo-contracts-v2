@@ -36,7 +36,7 @@ contract Oracle is ISiloOracle {
 }
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloDecimalsTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDecimalsTest
 */
 contract SiloDecimalsTest is SiloLittleHelper, Test {
     Oracle token0Oracle;

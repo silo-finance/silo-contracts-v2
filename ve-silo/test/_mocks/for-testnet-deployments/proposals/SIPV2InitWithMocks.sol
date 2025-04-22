@@ -10,7 +10,7 @@ import {Proposal} from "proposals/contracts/Proposal.sol";
 import {Constants} from "proposals/sip/_common/Constants.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/test/_mocks/for-testnet-deployments/proposals/SIPV2InitWithMocks.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
 

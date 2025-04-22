@@ -18,7 +18,7 @@ import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/Liq
 import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
 
 /*
- FOUNDRY_PROFILE=core-test forge test --ffi --mc LiquidationHelperDebug20250113_0x0a25ac -vv
+ FOUNDRY_PROFILE=core_test forge test --ffi --mc LiquidationHelperDebug20250113_0x0a25ac -vv
 
 https://sonicscan.org/tx/0x0a25acfed112e7388a293d1e934b398ac097ce458cdae0bb2c8258b319494c73
 

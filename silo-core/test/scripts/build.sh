@@ -1,5 +1,5 @@
-FOUNDRY_PROFILE=core-test forge clean
-FOUNDRY_PROFILE=core-test forge build --build-info 
+FOUNDRY_PROFILE=core_test forge clean
+FOUNDRY_PROFILE=core_test forge build --build-info
 
 exit_code=$?
 

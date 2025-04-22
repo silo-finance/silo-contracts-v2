@@ -2,9 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {IMethodsRegistry} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodReentrancyTest.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
@@ -20,10 +21,10 @@ import {Registries} from "./registries/Registries.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
 import {TestStateLib} from "./TestState.sol";
 
-// FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc VaultReentrancyTest
+// FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc VaultReentrancyTest
 contract VaultReentrancyTest is Test {
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_coverage_for_vault_reentrancy
+    // FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_coverage_for_vault_reentrancy
     function test_coverage_for_vault_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
@@ -53,7 +54,7 @@ contract VaultReentrancyTest is Test {
         assertTrue(allCovered, "All methods should be covered");
     }
 
-    // FOUNDRY_PROFILE=vaults-tests forge test -vvv --ffi --mt test_vault_calls_and_reentrancy
+    // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mt test_vault_calls_and_reentrancy
     function test_vault_calls_and_reentrancy() public {
         ISiloVault vault = _deploySiloAndVaultWithOverrides();
         Registries registries = new Registries();
@@ -113,7 +114,12 @@ contract VaultReentrancyTest is Test {
             1 days,
             address(configOverride.token0),
             "Test Vault1",
-            "TV1"
+            "TV1",
+            bytes32(0),
+            address(vault),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
         );
 
         uint256 cap = 100e18;

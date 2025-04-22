@@ -16,7 +16,7 @@ import {IncentivesControllerWithRevert} from "../mocks/IncentivesControllerWithR
 import {IncentivesClaimingLogicWithRevert} from "../mocks/IncentivesClaimingLogicWithRevert.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc VaultsSiloIncentivesTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc VaultsSiloIncentivesTest -vvv
 */
 contract VaultsSiloIncentivesTest is IntegrationTest {
     MintableToken internal reward1 = new MintableToken(18);
@@ -33,7 +33,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_revert_claimRewards -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_revert_claimRewards -vvv
     */
     function test_revert_claimRewards() public {
         IncentivesClaimingLogicWithRevert claimingLogic = new IncentivesClaimingLogicWithRevert();
@@ -57,7 +57,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_revert_notificationFailed -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_revert_notificationFailed -vvv
     */
     function test_revert_notificationFailed() public {
         address user = makeAddr("user");

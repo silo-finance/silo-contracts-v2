@@ -12,7 +12,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-// FOUNDRY_PROFILE=core-test forge test --mc SiloLensCompatibilityTest --ffi -vv
+// FOUNDRY_PROFILE=core_test forge test --mc SiloLensCompatibilityTest --ffi -vv
 contract SiloLensCompatibilityTest is IntegrationTest {
     ISiloLens internal _lens;
     address internal _borrower = makeAddr("borrower");
@@ -33,7 +33,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _initializeSilosForChain(ChainsLib.SONIC_ALIAS);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test --mt test_siloLens_compatibility --ffi -vv
+    // FOUNDRY_PROFILE=core_test forge test --mt test_siloLens_compatibility --ffi -vv
     function test_siloLens_compatibility() public {
         uint256 chainsLength = _chainsToTest.length;
 
@@ -84,6 +84,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_getInterestRateModel, _silo);
         _testFn(_getBorrowAPR, _silo);
         _testFn(_getDepositAPR, _silo);
+        _testFn(_getAPRs, _silo);
         _testFn(_getModel, _silo);
         _testFn(_maxLiquidation, _silo, _borrower);
         _testFn(_getFeesAndFeeReceivers, _silo);
@@ -316,6 +317,14 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         // expect do not revert
         _lens.getDepositAPR(_silo);
         sig = ISiloLens.getDepositAPR.selector;
+    }
+
+    function _getAPRs(ISilo _silo) internal view returns (bytes4 sig) {
+        ISilo[] memory silos = new ISilo[](1);
+        silos[0] = _silo;
+        // expect do not revert
+        _lens.getAPRs(silos);
+        sig = ISiloLens.getAPRs.selector;
     }
 
     function _getModel(ISilo _silo) internal view returns (bytes4 sig) {

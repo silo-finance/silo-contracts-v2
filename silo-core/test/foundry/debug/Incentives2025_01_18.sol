@@ -24,7 +24,7 @@ import {
     ISiloIncentivesControllerGaugeLikeFactory
 } from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGaugeLikeFactory.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc Incentives20250118Test
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc Incentives20250118Test
 contract Incentives20250118Test is IntegrationTest {
     SiloIncentivesController internal _controller = SiloIncentivesController(0x31bFB77eF861d9273658d5e943a7BF2E2c8B0b7f);
     Silo internal _silo = Silo(payable(0x4E216C15697C1392fE59e1014B009505E05810Df));
@@ -35,7 +35,7 @@ contract Incentives20250118Test is IntegrationTest {
     string internal constant _PROGRAM_NAME = "wS_sUSDC_007";
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_user_0x84d0F74d21a89F86b67e9a38d8559d0b4e10F12d
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_user_0x84d0F74d21a89F86b67e9a38d8559d0b4e10F12d
     */
     function test_user_0x84d0F74d21a89F86b67e9a38d8559d0b4e10F12d() public {
         uint256[] memory claimBlocks = new uint256[](10);
@@ -94,7 +94,7 @@ contract Incentives20250118Test is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_user_0x56f2C4CB8518d0a4Ec749593dF574f7597A36140
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_user_0x56f2C4CB8518d0a4Ec749593dF574f7597A36140
     */
     function test_user_0x56f2C4CB8518d0a4Ec749593dF574f7597A36140() public {
         uint256[] memory claimBlocks = new uint256[](4);
@@ -147,7 +147,7 @@ contract Incentives20250118Test is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_code_replacement
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_code_replacement
 
     uint256 blockToFork = 4321258;
     address _user = 0xB214dc646Ff531c61911F78389f5E49C2087991e;
@@ -219,7 +219,7 @@ contract Incentives20250118Test is IntegrationTest {
         );
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_one_more_scenario
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_one_more_scenario
     function test_one_more_scenario() public {
         uint256 blockToFork = 4406293; // Jan-18-2025 02:11:29 PM +UTC
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);

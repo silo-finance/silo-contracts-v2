@@ -15,7 +15,7 @@ import {
     SiloERC4626LibConsumerNonVulnerable
 } from "silo-core/test/foundry/_mocks/SiloERC4626Lib/SiloERC4626LibConsumerNonVulnerable.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --mc ReentrancyOnDepositTest --ffi
+// FOUNDRY_PROFILE=core_test forge test -vv --mc ReentrancyOnDepositTest --ffi
 contract ReentrancyOnDepositTest is Test {
     SiloERC4626LibConsumerVulnerable internal _vulnerable;
     SiloERC4626LibConsumerNonVulnerable internal _nonVulnerable;
@@ -41,7 +41,7 @@ contract ReentrancyOnDepositTest is Test {
 
     // solhint-disable-next-line func-name-mixedcase
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloERC4626Lib_deposit_vulnerable --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_SiloERC4626Lib_deposit_vulnerable --ffi
     */
     function test_SiloERC4626Lib_deposit_vulnerable() public {
         uint256 totalCollateral = _vulnerable.getTotalCollateral();
@@ -69,7 +69,7 @@ contract ReentrancyOnDepositTest is Test {
 
     // solhint-disable-next-line func-name-mixedcase
     /*
-    FOUNDRY_PROFILE=core-test forge test -vv --mt test_SiloERC4626Lib_deposit_non_vulnerable --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_SiloERC4626Lib_deposit_non_vulnerable --ffi
     */
     function test_SiloERC4626Lib_deposit_non_vulnerable() public {
         uint256 totalCollateral = _nonVulnerable.getTotalCollateral();

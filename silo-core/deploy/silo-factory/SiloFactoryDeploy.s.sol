@@ -14,7 +14,7 @@ abstract contract SiloFactoryDeploy is CommonDeploy {
     function run() public returns (ISiloFactory siloFactory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address daoFeeReceiver = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, ChainsLib.chainAlias());
+        address daoFeeReceiver = _getFeeReceiver();
         address owner = _getOwner();
 
         vm.startBroadcast(deployerPrivateKey);
@@ -28,4 +28,5 @@ abstract contract SiloFactoryDeploy is CommonDeploy {
     }
 
     function _getOwner() internal virtual returns (address owner) {}
+    function _getFeeReceiver() internal virtual returns (address feeReceiver) {}
 }

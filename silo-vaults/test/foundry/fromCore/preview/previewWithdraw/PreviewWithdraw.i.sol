@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {VaultsLittleHelper} from "../../_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mc PreviewWithdrawTest
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mc PreviewWithdrawTest
 */
 contract PreviewWithdrawTest is VaultsLittleHelper {
     address immutable depositor;
@@ -16,7 +16,7 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_previewWithdraw_noInterestNoDebt_fuzz(
         uint128 _assetsOrShares,
         bool _partial
@@ -34,11 +34,11 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_previewWithdraw_debt_fuzz
     same asset: we check preview on same silo
     two assets: we need to borrow on silo0 in addition
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_previewWithdraw_debt_fuzz(
         uint128 _assetsOrShares,
         bool _interest,
@@ -74,7 +74,7 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_random_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_previewWithdraw_random_fuzz(uint64 _assetsOrShares, bool _interest) public {
         vm.assume(_assetsOrShares > 0);
 
@@ -94,9 +94,9 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
+    FOUNDRY_PROFILE=vaults_tests forge test -vv --ffi --mt test_previewWithdraw_min_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_previewWithdraw_min_fuzz(uint112 _assetsOrShares, bool _interest) public {
         if (_useRedeem()) vm.assume(_assetsOrShares >= OFFSET_POW);
         else vm.assume(_assetsOrShares > 0);
@@ -121,7 +121,7 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
     /*
     forge test -vv --ffi --mt test_previewWithdraw_max_fuzz
     */
-    /// forge-config: vaults-tests.fuzz.runs = 1000
+    /// forge-config: vaults_tests.fuzz.runs = 1000
     function test_previewWithdraw_max_fuzz(uint64 _assets, bool _interest) public {
         vm.assume(_assets > 0);
 

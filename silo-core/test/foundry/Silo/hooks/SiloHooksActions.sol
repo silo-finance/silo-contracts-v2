@@ -18,7 +18,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {HookReceiverAllActionsWithEvents as HookMock} from "../../_mocks/HookReceiverAllActionsWithEvents.sol";
 
-/// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloHooksActionsTest
+/// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mc SiloHooksActionsTest
 contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
     using Hook for uint256;
     using ShareTokenDecimalsPowLib for uint256;
@@ -53,7 +53,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         return FLASHLOAN_CALLBACK;
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBeforeAfterHookActions
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testDepositFnBeforeAfterHookActions
     function testDepositFnBeforeAfterHookActions() public {
         uint256 beforeActions = Hook.depositAction(COLLATERAL);
         uint256 afterActions = Hook.depositAction(PROTECTED);
@@ -73,7 +73,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, COLLATERAL);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnBeforeAndAfterHookActions
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testDepositFnBeforeAndAfterHookActions
     function testDepositFnBeforeAndAfterHookActions() public {
         uint256 beforeActions = Hook.depositAction(COLLATERAL)
             .addAction(Hook.depositAction(PROTECTED));
@@ -95,7 +95,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, PROTECTED);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testDepositFnAllHookActions
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testDepositFnAllHookActions
     function testDepositFnAllHookActions() public {
         uint256 beforeActions = Hook.depositAction(COLLATERAL)
             .addAction(Hook.depositAction(PROTECTED));
@@ -119,7 +119,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloDepositWithoutHook(silo1, token1, _depositor, _depositor, amount, PROTECTED);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWithdrawFnBeforeAfterHookActions
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testWithdrawFnBeforeAfterHookActions
     function testWithdrawFnBeforeAfterHookActions() public {
         uint256 beforeActions = Hook.withdrawAction(COLLATERAL);
         uint256 afterActions = Hook.withdrawAction(PROTECTED);
@@ -144,7 +144,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, COLLATERAL);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWithdrawFnBeforeAndAfterHookActions
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testWithdrawFnBeforeAndAfterHookActions
     function testWithdrawFnBeforeAndAfterHookActions() public {
         uint256 beforeActions = Hook.withdrawAction(COLLATERAL).addAction(Hook.withdrawAction(PROTECTED));
         
@@ -170,7 +170,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, COLLATERAL);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testWithdrawFnAllHookActions
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testWithdrawFnAllHookActions
     function testWithdrawFnAllHookActions() public {
         uint256 beforeActions = Hook.withdrawAction(COLLATERAL).addAction(Hook.withdrawAction(PROTECTED));
         
@@ -198,7 +198,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloWithdrawWithoutHook(silo1, _depositor, _depositor, _depositor, amount, COLLATERAL);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testBorrowSameAssetAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testBorrowSameAssetAllHooks
     function testBorrowSameAssetAllHooks() public {
         uint256 beforeActions = Hook.BORROW_SAME_ASSET;
 
@@ -214,7 +214,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloBorrowSameAssetAllHooks(silo0, _borrower, _borrower, borrowAmount);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRepayBeforeHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testRepayBeforeHooks
     function testRepayBeforeHooks() public {
         uint256 beforeActions = Hook.REPAY;
 
@@ -249,7 +249,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloRepayNoHooks(silo1, token1, _borrower, _borrower, borrowAmount);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRepayAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testRepayAllHooks
     function testRepayAllHooks() public {
         uint256 beforeActions = Hook.REPAY;
         uint256 afterAction = beforeActions.addAction(Hook.shareTokenTransfer(Hook.DEBT_TOKEN));
@@ -271,7 +271,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _siloRepayAllHooks(silo1, token1, _borrower, _borrower, borrowAmount);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testFlashLoanAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testFlashLoanAllHooks
     function testFlashLoanAllHooks() public {
         uint256 beforeActions = Hook.FLASH_LOAN;
         uint256 afterAction = beforeActions;
@@ -300,7 +300,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo1.flashLoan(IERC3156FlashBorrower(address(this)), address(token1), flashLoanAmount, data);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetBeforeHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSwitchCollateralSameAssetBeforeHooks
     function testSwitchCollateralSameAssetBeforeHooks() public {
         uint256 beforeActions = Hook.SWITCH_COLLATERAL;
 
@@ -332,7 +332,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo1.switchCollateralToThisSilo();
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetAfterHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSwitchCollateralSameAssetAfterHooks
     function testSwitchCollateralSameAssetAfterHooks() public {
         uint256 afterActions = Hook.SWITCH_COLLATERAL;
 
@@ -364,7 +364,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo1.switchCollateralToThisSilo();
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralSameAssetHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSwitchCollateralSameAssetHooks
     function testSwitchCollateralSameAssetHooks() public {
         uint256 beforeActions = Hook.SWITCH_COLLATERAL;
         uint256 afterAction = beforeActions;
@@ -394,7 +394,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.switchCollateralToThisSilo();
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSwitchCollateralTwoAssetsHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSwitchCollateralTwoAssetsHooks
     function testSwitchCollateralTwoAssetsHooks() public {
         uint256 beforeActions = Hook.SWITCH_COLLATERAL;
         uint256 afterAction = beforeActions;
@@ -424,7 +424,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         silo0.switchCollateralToThisSilo();
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionCollateralToProtectedAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testTransitionCollateralToProtectedAllHooks
     function testTransitionCollateralToProtectedAllHooks() public {
         uint256 beforeActions = Hook.transitionCollateralAction(COLLATERAL);
 
@@ -442,7 +442,7 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _transitionCollateralAllHooks(silo0, _depositor, depositAmount, COLLATERAL);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testTransitionProtectedToCollateralAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testTransitionProtectedToCollateralAllHooks
     function testTransitionProtectedToCollateralAllHooks() public {
         uint256 beforeActions = Hook.transitionCollateralAction(PROTECTED);
 
@@ -460,13 +460,13 @@ contract SiloHooksActionsTest is SiloLittleHelper, Test, HookMock {
         _transitionCollateralAllHooks(silo0, _depositor, depositAmount, PROTECTED);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidationReceiveSTokenFalseAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testLiquidationReceiveSTokenFalseAllHooks
     function testLiquidationReceiveSTokenFalseAllHooks() public {
         bool receiveSToken = false;
         _liquidationTest(receiveSToken);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testLiquidationReceiveSTokenTrueAllHooks
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testLiquidationReceiveSTokenTrueAllHooks
     function testLiquidationReceiveSTokenTrueAllHooks() public {
         bool receiveSToken = true;
         _liquidationTest(receiveSToken);

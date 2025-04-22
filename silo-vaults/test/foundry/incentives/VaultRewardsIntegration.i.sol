@@ -13,11 +13,11 @@ import {INotificationReceiver} from "../../../contracts/interfaces/INotification
 import {VaultRewardsIntegrationSetup} from "./VaultRewardsIntegrationSetup.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc VaultRewardsIntegrationTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc VaultRewardsIntegrationTest -vvv
 */
 contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_noRevert -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_vaults_rewards_noRevert -vv
     */
     function test_vaults_rewards_noRevert() public {
         uint256 amount = 1e18;
@@ -53,7 +53,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_onDeposit -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_vaults_rewards_onDeposit -vv
     */
     function test_vaults_rewards_onDeposit() public {
         _setupIncentives();
@@ -143,7 +143,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_vaults_rewards_calculations -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_vaults_rewards_calculations -vv
     */
     function test_vaults_rewards_calculations() public {
         _setupIncentives();
@@ -208,7 +208,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution_pass -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_1secondDistribution_pass -vv
     */
     function test_1secondDistribution_pass() public {
         uint128 depositAmount = 123e18;
@@ -246,7 +246,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_1secondDistribution_fuzz -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_1secondDistribution_fuzz -vv
     */
     function test_1secondDistribution_fuzz(uint128 _depositAmount, uint128 _rewardsPerSec) public {
         vm.assume(_rewardsPerSec > 1e3 && _rewardsPerSec < 1e30);
@@ -284,7 +284,7 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_pastDistributionEnd_afterDeposit -vv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_pastDistributionEnd_afterDeposit -vv
     */
     function _assertNoRewards(address _user, string memory _program) internal {
 

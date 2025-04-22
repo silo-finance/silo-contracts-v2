@@ -224,5 +224,38 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "REDSTONE_HARDCODE_sfrxUSD_scUSD": {
+        "baseToken": "sfrxUSD",
+        "quoteToken": "scUSD",
+        "primaryAggregator": "REDSTONE_sfrxUSD_frxUSD_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e20,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_WBTC_USD": {
+        "baseToken": "WBTC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_BTC_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e2,
+        "invertSecondPrice": false
+    },
+    "X33ADAPTER_x33_USD": {
+        "baseToken": "x33",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "X33_USD_ADAPTER",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }

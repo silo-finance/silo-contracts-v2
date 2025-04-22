@@ -9,7 +9,7 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket148
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket148
 */
 contract CantinaTicket148 is CantinaTicket {
     MintableToken internal WETH;

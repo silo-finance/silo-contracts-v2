@@ -9,21 +9,21 @@ import {MarketConfig} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {VaultsLittleHelper} from "./fromCore/_common/VaultsLittleHelper.sol";
 
 /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc InternalBalancesTest -vv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc InternalBalancesTest -vv
 */
 contract InternalBalancesTest is VaultsLittleHelper {
     event SyncBalanceTracker(IERC4626 indexed market, uint256 oldBalance, uint256 newBalance);
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_balanceTracker_Sync_Permissions -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_balanceTracker_Sync_Permissions -vvv
     */
     function test_balanceTracker_Sync_Permissions() public {
-        vm.expectRevert(ErrorsLib.NotCuratorRole.selector);
+        vm.expectRevert(ErrorsLib.NotGuardianRole.selector);
         vault.syncBalanceTracker(IERC4626(address(0)), 0, false);
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_balanceTracker_Sync -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_balanceTracker_Sync -vvv
     */
     function test_balanceTracker_Sync() public {
         uint256 length = vault.supplyQueueLength();
@@ -80,5 +80,16 @@ contract InternalBalancesTest is VaultsLittleHelper {
 
         vm.prank(owner);
         vault.syncBalanceTracker(market0, newBalance + 1, true);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_balanceTracker_Sync_InvalidOverride -vvv
+    */
+    function test_balanceTracker_Sync_InvalidOverride() public {
+        address owner = Ownable(address(vault)).owner();
+
+        vm.prank(owner);
+        vm.expectRevert(ErrorsLib.InvalidOverride.selector);
+        vault.syncBalanceTracker(IERC4626(address(0)), 1, false);
     }
 }

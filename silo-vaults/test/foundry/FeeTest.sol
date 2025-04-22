@@ -19,7 +19,7 @@ import {CAP, NB_MARKETS, MIN_TEST_ASSETS, MAX_TEST_ASSETS, TIMELOCK} from "./hel
 uint256 constant FEE = 0.2 ether; // 20%
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc FeeTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc FeeTest -vvv
 */
 contract FeeTest is IntegrationTest {
     function setUp() public override {
@@ -46,7 +46,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFee -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFee -vvv
     */
     function testSetFee(uint256 fee) public {
         fee = bound(fee, 0, ConstantsLib.MAX_FEE);
@@ -69,7 +69,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testAccrueFeeWithinABlock -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testAccrueFeeWithinABlock -vvv
     */
     function testAccrueFeeWithinABlock(uint256 deposited, uint256 withdrawn) public {
         deposited = bound(deposited, MIN_TEST_ASSETS + 1, MAX_TEST_ASSETS);
@@ -89,7 +89,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDepositAccrueFee -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testDepositAccrueFee -vvv
     */
     function testDepositAccrueFee(uint256 deposited, uint256 newDeposit, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -117,7 +117,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testMintAccrueFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testMintAccrueFee -vvv
     */
     function testMintAccrueFee(uint256 deposited, uint256 newDeposit, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -147,7 +147,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testRedeemAccrueFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testRedeemAccrueFee -vvv
     */
     function testRedeemAccrueFee(uint256 deposited, uint256 withdrawn, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -178,7 +178,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testWithdrawAccrueFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testWithdrawAccrueFee -vvv
     */
     function testWithdrawAccrueFee(
         uint256 deposited, uint256 withdrawn, uint256 blocks
@@ -209,7 +209,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testClaimRewardsAccrueFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testClaimRewardsAccrueFee -vvv
     */
     function testClaimRewardsAccrueFee(uint256 deposited, uint256 withdrawn, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -239,7 +239,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeAccrueFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeAccrueFee -vvv
     */
     function testSetFeeAccrueFee(uint256 deposited, uint256 fee, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -266,7 +266,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeRecipientAccrueFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeRecipientAccrueFee -vvv
     */
     function testSetFeeRecipientAccrueFee(uint256 deposited, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -296,7 +296,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeNotOwner -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeNotOwner -vvv
     */
     function testSetFeeNotOwner(uint256 fee) public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
@@ -304,7 +304,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeMaxFeeExceeded -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeMaxFeeExceeded -vvv
     */
     function testSetFeeMaxFeeExceeded(uint256 fee) public {
         fee = bound(fee, ConstantsLib.MAX_FEE + 1, type(uint256).max);
@@ -315,7 +315,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeAlreadySet -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeAlreadySet -vvv
     */
     function testSetFeeAlreadySet() public {
         vm.prank(OWNER);
@@ -324,7 +324,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeZeroFeeRecipient -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeZeroFeeRecipient -vvv
     */
     function testSetFeeZeroFeeRecipient(uint256 fee) public {
         fee = bound(fee, 1, ConstantsLib.MAX_FEE);
@@ -341,7 +341,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetFeeRecipientAlreadySet -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetFeeRecipientAlreadySet -vvv
     */
     function testSetFeeRecipientAlreadySet() public {
         vm.prank(OWNER);
@@ -350,7 +350,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetZeroFeeRecipientWithFee -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetZeroFeeRecipientWithFee -vvv
     */
     function testSetZeroFeeRecipientWithFee() public {
         vm.prank(OWNER);
@@ -359,7 +359,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testConvertToAssetsWithFeeAndInterest -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testConvertToAssetsWithFeeAndInterest -vvv
     */
     function testConvertToAssetsWithFeeAndInterest(uint256 deposited, uint256 assets, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
@@ -383,7 +383,7 @@ contract FeeTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testConvertToSharesWithFeeAndInterest -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testConvertToSharesWithFeeAndInterest -vvv
     */
     function testConvertToSharesWithFeeAndInterest(uint256 deposited, uint256 shares, uint256 blocks) public {
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);

@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxLiquidationLTV100FullTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxLiquidationLTV100FullTest
 
     cases where we go from solvent to 100% and we must do full liquidation
 */

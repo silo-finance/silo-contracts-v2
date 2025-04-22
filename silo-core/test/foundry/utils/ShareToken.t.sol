@@ -19,7 +19,7 @@ import {SiloConfigMock} from "../_mocks/SiloConfigMock.sol";
 import {ERC20UpgradableMock} from "../_mocks/ERC20UpgradableMock.sol";
 
 // solhint-disable func-name-mixedcase
-// FOUNDRY_PROFILE=core-test forge test -vv --mc ShareTokenTest
+// FOUNDRY_PROFILE=core_test forge test -vv --mc ShareTokenTest
 contract ShareTokenTest is Test {
     uint256 constant internal _DEBT_TOKE_BEFORE_ACTION = 0;
     uint256 constant internal _DEBT_TOKE_AFTER_ACTION = Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
@@ -38,7 +38,7 @@ contract ShareTokenTest is Test {
         owner = makeAddr("Owner");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_ShareToken_decimals
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt test_ShareToken_decimals
     function test_ShareToken_decimals() public {
         uint8 decimals = 8;
         Token token = new Token(decimals);
@@ -55,7 +55,7 @@ contract ShareTokenTest is Test {
         assertEq(sToken.decimals(), token.decimals(), "expect valid decimals");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_notRevertWhenNoHook
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt test_notRevertWhenNoHook
     function test_notRevertWhenNoHook() public {
         silo.configMock(siloConfig.ADDRESS());
         sToken.initialize(ISilo(silo.ADDRESS()), address(0), uint24(Hook.DEBT_TOKEN));
@@ -64,7 +64,7 @@ contract ShareTokenTest is Test {
         sToken.mint(owner, owner, 1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_hookCall
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt test_hookCall
     function test_hookCall() public {
         address siloAddr = silo.ADDRESS();
 
@@ -87,7 +87,7 @@ contract ShareTokenTest is Test {
         sToken.mint(owner, owner, amount);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --mt test_decreaseAllowance
+    // FOUNDRY_PROFILE=core_test forge test -vvv --mt test_decreaseAllowance
     function test_decreaseAllowance() public {
         uint256 allowance = 100e18;
         address recipient = makeAddr("Recipient");
@@ -110,7 +110,7 @@ contract ShareTokenTest is Test {
         assertEq(sToken.receiveAllowance(owner, recipient), 0, "expect have no allowance");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_CallOnBehalfOfShareToken
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_CallOnBehalfOfShareToken
     function test_CallOnBehalfOfShareToken() public {
         address upgradableMock = address(new ERC20UpgradableMock());
         address siloAddr = silo.ADDRESS();

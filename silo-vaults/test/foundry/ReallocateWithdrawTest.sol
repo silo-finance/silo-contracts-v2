@@ -18,7 +18,7 @@ uint256 constant CAP2 = 100e18;
 uint256 constant INITIAL_DEPOSIT = 4 * CAP2;
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc ReallocateWithdrawTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ReallocateWithdrawTest -vvv
 */
 contract ReallocateWithdrawTest is IntegrationTest {
     MarketAllocation[] internal allocations;
@@ -37,7 +37,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawMax -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateWithdrawMax -vvv
     */
     function testReallocateWithdrawMax() public {
         allocations.push(MarketAllocation(allMarkets[0], 0));
@@ -67,7 +67,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateBalanceTrackerChanges -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateBalanceTrackerChanges -vvv
     */
     function testReallocateBalanceTrackerChanges() public {
         allocations.push(MarketAllocation(allMarkets[0], 0));
@@ -102,8 +102,53 @@ contract ReallocateWithdrawTest is IntegrationTest {
         assertEq(balanceAfterIdle, expectedIdle, "wrong idle balance after");
     }
 
+    /**
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateRedeemFailedToWithdraw -vvv
+     */
+    function testReallocateRedeemFailedToWithdraw() public {
+        allocations.push(MarketAllocation(allMarkets[0], 0));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
+
+        uint256 balance = allMarkets[0].balanceOf(address(vault));
+
+        bytes memory data = abi.encodeWithSelector(IERC4626.redeem.selector, balance, address(vault), address(vault));
+
+        vm.mockCall(address(allMarkets[0]), data, abi.encode(1e18)); // report wrong amount
+        vm.expectCall(address(allMarkets[0]), data);
+
+        vm.prank(ALLOCATOR);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.FailedToWithdraw.selector));
+        vault.reallocate(allocations);
+    }
+
+    /**
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateWithdrawFailedToWithdraw -vvv
+     */
+    function testReallocateWithdrawFailedToWithdraw() public {
+        uint256 balance = allMarkets[0].balanceOf(address(vault));
+        uint256 maxAssetsToWithdraw = allMarkets[0].previewRedeem(balance);
+        uint256 assets = maxAssetsToWithdraw / 2;
+
+        allocations.push(MarketAllocation(allMarkets[0], assets));
+        allocations.push(MarketAllocation(idleMarket, type(uint256).max));
+
+        bytes memory data = abi.encodeWithSelector(
+            IERC4626.withdraw.selector,
+            assets,
+            address(vault),
+            address(vault)
+        );
+
+        vm.mockCall(address(allMarkets[0]), data, abi.encode(maxAssetsToWithdraw)); // report wrong amount
+        vm.expectCall(address(allMarkets[0]), data);
+
+        vm.prank(ALLOCATOR);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.FailedToWithdraw.selector));
+        vault.reallocate(allocations);
+    }
+
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateInternalSupplyCapExceeded -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateInternalSupplyCapExceeded -vvv
     */
     function testReallocateInternalSupplyCapExceeded() public {
         allocations.push(MarketAllocation(allMarkets[0], 0));
@@ -125,7 +170,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawMarketNotEnabled -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateWithdrawMarketNotEnabled -vvv
     */
     function testReallocateWithdrawMarketNotEnabled() public {
         MintableToken loanToken2 = new MintableToken(18);
@@ -145,7 +190,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawSupply -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateWithdrawSupply -vvv
     */
     function testReallocateWithdrawSupply(uint256[3] memory newAssets) public {
         uint256[3] memory totalSupplyAssets;
@@ -207,7 +252,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateWithdrawIncreaseSupply -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateWithdrawIncreaseSupply -vvv
     */
     function testReallocateWithdrawIncreaseSupply() public {
         _setCap(allMarkets[2], 3 * CAP2);
@@ -240,7 +285,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateUnauthorizedMarket -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateUnauthorizedMarket -vvv
     */
     function testReallocateUnauthorizedMarket(uint256[3] memory suppliedAssets) public {
         suppliedAssets[0] = bound(suppliedAssets[0], 1, CAP2);
@@ -263,7 +308,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateSupplyCapExceeded -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateSupplyCapExceeded -vvv
     */
     function testReallocateSupplyCapExceeded() public {
         allocations.push(MarketAllocation(allMarkets[0], 0));
@@ -278,7 +323,7 @@ contract ReallocateWithdrawTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testReallocateInconsistentReallocation -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testReallocateInconsistentReallocation -vvv
     */
     function testReallocateInconsistentReallocation(uint256 rewards) public {
         rewards = bound(rewards, 1, MAX_TEST_ASSETS);

@@ -23,7 +23,7 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc GaugeHookReceiverTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     IGaugeHookReceiver internal _hookReceiver;
     ISiloConfig internal _siloConfig;
@@ -58,7 +58,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _dao = timelock;
     }
 
-    // FOUNDRY_PROFILE=core-test forge test --ffi -vvv --mt testReInitialization
+    // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt testReInitialization
     function testReInitialization() public {
         address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.SILO_HOOK_V1);
 
@@ -73,7 +73,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.initialize(ISiloConfig(address(0)), data);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverInitialization
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHookReceiverInitialization
     function testHookReceiverInitialization() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
@@ -81,12 +81,12 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _testHookReceiverInitializationForSilo(silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverTransferOwnership
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHookReceiverTransferOwnership
     function testHookReceiverTransferOwnership() public {
         assertTrue(_test_transfer2StepOwnership(address(_hookReceiver), _dao));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHookReceiverPermissions
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHookReceiverPermissions
     function testHookReceiverPermissions() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _hookReceiver.setGauge(IGauge(_gauge), IShareToken(address(0)));
@@ -95,7 +95,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.removeGauge(IShareToken(address(0)));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSetGaugeValidation
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSetGaugeValidation
     function testSetGaugeValidation() public {
         // Revert without reason as `_gauge` do not have `shareToken()` fn
         vm.expectRevert();
@@ -126,7 +126,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.setGauge(IGauge(_gauge), IShareToken(invalidShareToken));
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSetGaugePass
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSetGaugePass
     function testSetGaugePass() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
         (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
@@ -166,7 +166,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         assertEq(uint256(silo1Hooks.hooksAfter), 0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testRemoveGauge
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testRemoveGauge
     function testRemoveGauge() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
         (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
@@ -209,7 +209,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         assertEq(uint256(silo1Hooks.hooksAfter), 0);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testAfterTokenTransfer
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testAfterTokenTransfer
     function testAfterTokenTransfer() public {
         (address silo0,) = _siloConfig.getSilos();
         (,,address debtShareToken) = _siloConfig.getShareTokens(silo0);

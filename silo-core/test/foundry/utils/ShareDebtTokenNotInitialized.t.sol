@@ -10,7 +10,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 // solhint-disable func-name-mixedcase
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --mc ShareDebtTokenNotInitializedTest
+FOUNDRY_PROFILE=core_test forge test -vv --mc ShareDebtTokenNotInitializedTest
 */
 contract ShareDebtTokenNotInitializedTest is Test {
     ShareDebtToken public immutable sToken;
@@ -20,14 +20,14 @@ contract ShareDebtTokenNotInitializedTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --mt test_sToken_noInit_silo
+    FOUNDRY_PROFILE=core_test forge test -vvv --mt test_sToken_noInit_silo
     */
     function test_sToken_noInit_silo() public view {
         assertEq(address(sToken.silo()), address(0));
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --mt test_sToken_noInit_mint_zero
+    FOUNDRY_PROFILE=core_test forge test -vvv --mt test_sToken_noInit_mint_zero
     */
     function test_sToken_noInit_mint_zero() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
@@ -40,7 +40,7 @@ contract ShareDebtTokenNotInitializedTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --mt test_sToken_noInit_mint
+    FOUNDRY_PROFILE=core_test forge test -vvv --mt test_sToken_noInit_mint
     */
     function test_sToken_noInit_mint() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0
@@ -52,7 +52,7 @@ contract ShareDebtTokenNotInitializedTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --mt test_sToken_noInit_burn
+    FOUNDRY_PROFILE=core_test forge test -vvv --mt test_sToken_noInit_burn
     */
     function test_sToken_noInit_burn() public {
         vm.expectRevert(IShareToken.OnlySilo.selector); // silo is 0

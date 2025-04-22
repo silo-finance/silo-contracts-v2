@@ -6,7 +6,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 import {BaseGaugeFactoryMock} from "ve-silo/test/_mocks/BaseGaugeFactoryMock.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc BaseGaugeFactoryTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc BaseGaugeFactoryTest --ffi -vvv
 contract BaseGaugeFactoryTest is IntegrationTest {
     bytes32 constant internal _EVENT = keccak256("GaugeCreated(address)");
 

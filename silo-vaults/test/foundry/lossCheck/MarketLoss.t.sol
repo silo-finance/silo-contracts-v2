@@ -42,7 +42,7 @@ contract ERC4626WithBeforeHook is IdleVault {
 }
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest -vvv
 */
 contract MarketLossTest is IBefore, IntegrationTest {
     address attacker = makeAddr("attacker");
@@ -95,9 +95,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation -vvv
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_idleVault_InflationAttackWithDonation(
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
@@ -121,9 +121,9 @@ contract MarketLossTest is IBefore, IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc MarketLossTest --mt test_idleVault_hookAttackWithDonation -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest --mt test_idleVault_hookAttackWithDonation -vvv
     */
-    /// forge-config: vaults-tests.fuzz.runs = 10000
+    /// forge-config: vaults_tests.fuzz.runs = 10000
     function test_idleVault_hookAttackWithDonation(
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
@@ -179,9 +179,6 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         emit log("SUPPLIER doing deposit");
 
-        // deposit amount 18446744073709551614
-        // assets 18446744073709551614, vault shares 18446744073709551614000
-        // idle market part: 9223372036854775808 (shares 500), 1:18446744073709551
         try vault.deposit(_supplierDeposit, SUPPLIER) returns (uint256 supplierShares) {
             // if did not revert, we expect no loss
 
@@ -215,6 +212,8 @@ contract MarketLossTest is IBefore, IntegrationTest {
             bytes4 errorType = bytes4(data);
 
             if (
+                // AllCapsReached: in case we got 0 shares in idle because of price manipulation
+                errorType == ErrorsLib.AllCapsReached.selector ||
                 errorType == ErrorsLib.AssetLoss.selector ||
                 errorType == ErrorsLib.ZeroShares.selector
             ) {
@@ -227,7 +226,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt test_idleVault_InflationAttack_permanentLoss -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_idleVault_InflationAttack_permanentLoss -vvv
 
     1. withdraw from idle
     2. inflate price
