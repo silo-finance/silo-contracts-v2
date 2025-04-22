@@ -14,6 +14,7 @@ import {SiloVaultsContracts, SiloVaultsDeployments} from "silo-vaults/common/Sil
 import {ISiloVaultDeployer} from "silo-vaults/contracts/interfaces/ISiloVaultDeployer.sol";
 import {ISiloVaultBase} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+
 /**
 FOUNDRY_PROFILE=vaults \
     SILO_VAULT_DEPLOYER=<deployer_address> \
