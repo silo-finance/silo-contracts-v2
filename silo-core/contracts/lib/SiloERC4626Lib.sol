@@ -192,7 +192,7 @@ library SiloERC4626Lib {
             );
 
             if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) {
-                // return (assets, shares);
+                // for protected, we don't have to check liquidity but we need to recalculate for dust
             } else {
                 assets = liquidity;
 
