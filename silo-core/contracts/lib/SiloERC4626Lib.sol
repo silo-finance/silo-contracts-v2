@@ -228,8 +228,8 @@ library SiloERC4626Lib {
     console2.log("_totalAssets", _totalAssets);
     console2.log("convertToAssets", SiloMathLib.convertToAssets(
         shares,
-        shareTokenTotalSupply,
         _totalAssets,
+        shareTokenTotalSupply,
         Rounding.MAX_WITHDRAW_TO_ASSETS,
         ISilo.AssetType(uint8(_collateralType))
     ));
