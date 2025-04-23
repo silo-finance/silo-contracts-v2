@@ -25,39 +25,23 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
     }
 
     /*
-        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_dust
-
-
-        there might be a case where conversion from assets <=> shares is not returning same amounts eg:
-        // _assets.mulDiv(_newTotalSupply + 10 ** _decimalsOffset(), _newTotalAssets + 1, _rounding);
-        convert to shares ==> 1 * (1002 + 1e3) / (2 + 1) = 667.3
-        convert to assets ==> 667 * (2 + 1) / (1002 + 1e3) = 0.9995
-        so when user will use 667 withdrawal will fail, this is why we have to cross check:
-
-        assets = _shares.mulDiv(_newTotalAssets + 1, _newTotalSupply + 10 ** _decimalsOffset(), _rounding);
-        shares = 667
-        _newTotalAssets = 1
-        _newTotalSupply = 1002
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_protected_dust
     */
-    function test_maxWithdraw_dust() public {
-        uint256 protectedTotalSupply = 1002;
-        uint256 protectedTotalAssets = 2;
+    function test_maxWithdraw_protected_dust() public {
+        _maxWithdraw_dust(ISilo.CollateralType.Protected);
+    }
 
-        _deposit(1, address(1), ISilo.CollateralType.Protected);
-        _deposit(1, address(this), ISilo.CollateralType.Protected);
+    function _maxWithdraw_dust(ISilo.CollateralType _type) internal {
+        address depositor = makeAddr("depositor");
 
-        (address protectedShareToken,,) = silo0.config().getShareTokens(address(silo0));
+        _deposit(1, depositor, _type);
 
-//        vm.mockCall(
-//            address(protectedShareToken),
-//            abi.encodeWithSelector(IERC20.totalSupply.selector),
-//            abi.encode(protectedTotalSupply)
-//        );
+        (address protectedShareToken, address collateralShareToken,,) = silo0.config().getShareTokens(address(silo0));
+        address shareToken = _type == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
 
-//        assertEq(IShareToken(protectedShareToken).totalSupply(), protectedTotalSupply, "totalSupply");
-//        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), protectedTotalAssets, "totalAssets");
+        vm.prank(depositor);
+        IShareToken(shareToken).transfer(address(this), 667);
 
-        // without fix, maxRedeem returned 667
-        assertEq(silo0.maxRedeem(address(this), ISilo.CollateralType.Protected), 0, "max redeem should return 0 on dust shares");
+        assertEq(silo0.maxRedeem(address(this), _type), 0, "max redeem should return 0 on dust shares");
     }
 }
