@@ -11,7 +11,7 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 
 /*
  FOUNDRY_PROFILE=core_test forge test --ffi --mc LiquidationHelperDebug20250129_0xbc7405 -vv

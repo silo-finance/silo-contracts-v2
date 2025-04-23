@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
+import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloHookV1} from "silo-core/contracts/interfaces/ISiloHookV1.sol";
 
 /**
