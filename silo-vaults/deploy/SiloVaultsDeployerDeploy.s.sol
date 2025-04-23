@@ -25,7 +25,34 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
 /*
 FOUNDRY_PROFILE=vaults \
     forge script silo-vaults/deploy/SiloVaultsDeployerDeploy.s.sol:SiloVaultsDeployerDeploy \
-    --ffi --rpc-url $_RPC_SONIC --verify --broadcast
+    --ffi --rpc-url $RPC_SONIC --verify --broadcast
+
+Deployed smart contracts verification:
+
+- IdleVault from the CreateIdleVault event
+    FOUNDRY_PROFILE=vaults forge verify-contract <contract_address> \
+        silo-vaults/contracts/IdleVault.sol:IdleVault \
+        --constructor-args <cast abi-encode output> \
+        --compiler-version 0.8.28 \
+        --rpc-url $RPC_SONIC \
+        --watch
+
+- SiloVault from the CreateSiloVault event
+    FOUNDRY_PROFILE=vaults forge verify-contract <contract_address> \
+        silo-vaults/contracts/SiloVault.sol:SiloVault \
+        --libraries silo-vaults/contracts/libraries/SiloVaultActionsLib.sol:SiloVaultActionsLib:<lib_address> \
+        --constructor-args <cast abi-encode output> \
+        --compiler-version 0.8.28 \
+        --rpc-url $RPC_SONIC \
+        --watch
+
+- IncentivesController from the CreateSiloVault event
+    FOUNDRY_PROFILE=core forge verify-contract <contract_address> \
+        silo-core/contracts/incentives/SiloIncentivesController.sol:SiloIncentivesController \
+        --constructor-args <cast abi-encode output> \
+        --compiler-version 0.8.28 \
+        --rpc-url $RPC_SONIC \
+        --watch
 */
 contract SiloVaultsDeployerDeploy is CommonDeploy {
     function run() public returns (ISiloVaultDeployer deployer) {

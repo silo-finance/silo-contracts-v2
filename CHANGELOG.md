@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.1.0] - 2025-04-23
+- silo-vaults: deployment sonic
+- silo-core: SiloDeployer hook and config reorg
+- silo-core: InterestRateModelV2Factory reorg protection
+- silo-oracles: factories reorg protection
+
 ## [3.1.0-rc.2] - 2025-04-18
 - silo-vaults: deployment min timelock 1 day
 

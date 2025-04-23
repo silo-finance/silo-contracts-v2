@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {InterestRateModelV2} from "./InterestRateModelV2.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
@@ -11,7 +12,7 @@ import {InterestRateModelV2Config} from "./InterestRateModelV2Config.sol";
 
 /// @title InterestRateModelV2Factory
 /// @dev It creates InterestRateModelV2Config.
-contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
+contract InterestRateModelV2Factory is Create2Factory, IInterestRateModelV2Factory {
     /// @dev DP is 18 decimal points used for integer calculations
     uint256 public constant DP = 1e18;
 
@@ -28,7 +29,7 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
     }
 
     /// @inheritdoc IInterestRateModelV2Factory
-    function create(IInterestRateModelV2.Config calldata _config)
+    function create(IInterestRateModelV2.Config calldata _config, bytes32 _externalSalt)
         external
         virtual
         returns (bytes32 configHash, IInterestRateModelV2 irm)
@@ -43,9 +44,11 @@ contract InterestRateModelV2Factory is IInterestRateModelV2Factory {
 
         verifyConfig(_config);
 
-        address configContract = address(new InterestRateModelV2Config(_config));
+        bytes32 salt = _salt(_externalSalt);
 
-        irm = IInterestRateModelV2(Clones.clone(IRM));
+        address configContract = address(new InterestRateModelV2Config{salt: salt}(_config));
+
+        irm = IInterestRateModelV2(Clones.cloneDeterministic(IRM, salt));
         IInterestRateModel(address(irm)).initialize(configContract);
 
         irmByConfigHash[configHash] = irm;

@@ -62,27 +62,27 @@ contract OracleScalerTest is Test {
         TestERC20 tokenTooManyDecimals = new TestERC20("", "", 18);
 
         vm.expectRevert(OracleScaler.TokenDecimalsTooLarge.selector);
-        factory.createOracleScaler(address(tokenTooManyDecimals));
+        factory.createOracleScaler(address(tokenTooManyDecimals), bytes32(0));
     }
 
     function test_OracleScaler_constructorScaleFactor() public {
         for (uint8 decimals; decimals < 18; decimals++) {
             TestERC20 token = new TestERC20("", "", decimals);
-            OracleScaler scaler = OracleScaler(address(factory.createOracleScaler(address(token))));
+            OracleScaler scaler = OracleScaler(address(factory.createOracleScaler(address(token), bytes32(0))));
 
             assertEq(scaler.SCALE_FACTOR(), 10 ** uint256(18 - decimals), "scale factor is correct for all cases");
         }
     }
 
     function test_OracleScaler_quoteToken() public {
-        ISiloOracle scaler = factory.createOracleScaler(USDC);
+        ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
 
         scaler.beforeQuote(address(0)); // does not revert
         assertEq(scaler.quoteToken(), USDC, "quote token is right");
     }
 
     function test_OracleScaler_quote() public {
-        ISiloOracle scaler = factory.createOracleScaler(USDC);
+        ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
 
         assertEq(scaler.quote(10 ** 6, USDC), 10 ** 18, "scaling works as expected for one USDC");
         assertEq(scaler.quote(1, USDC), 10 ** 12, "scaling works as expected for one wei");
@@ -93,9 +93,26 @@ contract OracleScalerTest is Test {
     }
 
     function test_OracleScaler_quoteReverts() public {
-        ISiloOracle scaler = factory.createOracleScaler(USDC);
+        ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
 
         vm.expectRevert(OracleScaler.AssetNotSupported.selector);
         scaler.quote(0, address(0));
+    }
+
+    function test_OracleScaler_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        ISiloOracle scaler1 = factory.createOracleScaler(USDC, bytes32(0));
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        ISiloOracle scaler2 = factory.createOracleScaler(USDC, bytes32(0));
+
+        assertNotEq(address(scaler1), address(scaler2), "scaler1 == scaler2");
     }
 }
