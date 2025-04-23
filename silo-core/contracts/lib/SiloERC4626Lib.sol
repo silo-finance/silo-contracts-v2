@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -183,6 +186,11 @@ library SiloERC4626Lib {
                 ? IShareToken(depositConfig.protectedShareToken).balanceOf(_owner)
                 : IShareToken(depositConfig.collateralShareToken).balanceOf(_owner);
 
+            console2.log("convertToAssets:");
+            console2.log("shares", shares);
+            console2.log("_totalAssets", _totalAssets);
+            console2.log("shareTokenTotalSupply", shareTokenTotalSupply);
+
             assets = SiloMathLib.convertToAssets(
                 shares,
                 _totalAssets,
@@ -191,20 +199,22 @@ library SiloERC4626Lib {
                 ISilo.AssetType(uint256(_collateralType))
             );
 
-            if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
+            if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) {
+                // return (assets, shares);
+            } else {
+                assets = liquidity;
 
-            assets = liquidity;
-
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalAssets,
-                shareTokenTotalSupply,
-                // when we doing withdraw, we using Rounding.Ceil, because we want to burn as many shares
-                // however here, we will be using shares as input to withdraw, if we round up, we can overflow
-                // because we will want to withdraw too much, so we have to use Rounding.Floor
-                Rounding.MAX_WITHDRAW_TO_SHARES,
-                ISilo.AssetType.Collateral
-            );
+                shares = SiloMathLib.convertToShares(
+                    assets,
+                    _totalAssets,
+                    shareTokenTotalSupply,
+                    // when we doing withdraw, we using Rounding.Ceil, because we want to burn as many shares
+                    // however here, we will be using shares as input to withdraw, if we round up, we can overflow
+                    // because we will want to withdraw too much, so we have to use Rounding.Floor
+                    Rounding.MAX_WITHDRAW_TO_SHARES,
+                    ISilo.AssetType.Collateral
+                );
+            }
         } else {
             (assets, shares) = maxWithdrawWhenDebt(
                 collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _collateralType, _totalAssets
@@ -217,17 +227,17 @@ library SiloERC4626Lib {
         convert to assets ==> 667 * (2 + 1) / (1002 + 1e3) = 0.9995
         so when user will use 667 withdrawal will fail, this is why we have to cross check:
         */
-        if (
-            SiloMathLib.convertToAssets(
-                shares,
-                shareTokenTotalSupply,
-                _totalAssets,
-                Rounding.MAX_WITHDRAW_TO_ASSETS,
-                ISilo.AssetType(uint8(_collateralType))
-            ) == 0
-        ) {
-            return (0, 0);
-        }
+//        if (
+//            SiloMathLib.convertToAssets(
+//                shares,
+//                shareTokenTotalSupply,
+//                _totalAssets,
+//                Rounding.MAX_WITHDRAW_TO_ASSETS,
+//                ISilo.AssetType(uint8(_collateralType))
+//            ) == 0
+//        ) {
+//            return (0, 0);
+//        }
     }
 
     function maxWithdrawWhenDebt(
