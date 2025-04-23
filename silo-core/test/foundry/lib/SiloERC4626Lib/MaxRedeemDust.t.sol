@@ -3,24 +3,16 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
-
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
-import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {ShareTokenDecimalsPowLib} from "../../_common/ShareTokenDecimalsPowLib.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc MaxRedeemTest
+    FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc MaxRedeemDustTest
 */
-contract MaxRedeemTest is SiloLittleHelper, Test {
+contract MaxRedeemDustTest is SiloLittleHelper, Test {
     function setUp() public {
         _setUpLocalFixture();
     }
