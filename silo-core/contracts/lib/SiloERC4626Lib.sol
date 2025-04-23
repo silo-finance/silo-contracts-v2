@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
-
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -222,26 +219,14 @@ library SiloERC4626Lib {
         convert to assets ==> 667 * (2 + 1) / (1002 + 1e3) = 0.9995
         so when user will use 667 withdrawal will fail, this is why we have to cross check:
         */
-    console2.log("shares", shares);
-    console2.log("shareTokenTotalSupply", shareTokenTotalSupply);
-    console2.log("_totalAssets", _totalAssets);
-    console2.log("_totalAssets", _totalAssets);
-    console2.log("convertToAssets", SiloMathLib.convertToAssets(
-        shares,
-        _totalAssets,
-        shareTokenTotalSupply,
-        Rounding.MAX_WITHDRAW_TO_ASSETS,
-        ISilo.AssetType(uint8(_collateralType))
-    ));
-
         if (
-            SiloMathLib.convertToAssets(
-                shares,
-                shareTokenTotalSupply,
-                _totalAssets,
-                Rounding.MAX_WITHDRAW_TO_ASSETS,
-                ISilo.AssetType(uint8(_collateralType))
-            ) == 0
+            SiloMathLib.convertToAssets({
+                _shares: shares,
+                _totalAssets: _totalAssets,
+                _totalShares: shareTokenTotalSupply,
+                _rounding: Rounding.MAX_WITHDRAW_TO_ASSETS,
+                _assetType: ISilo.AssetType(uint8(_collateralType))
+            }) == 0
         ) {
             return (0, 0);
         }
