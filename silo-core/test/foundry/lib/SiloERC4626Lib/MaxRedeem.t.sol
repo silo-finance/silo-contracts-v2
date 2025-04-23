@@ -51,7 +51,7 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         IShareToken(shareToken).transfer(owner, 999);
 
         uint256 maxRedeem = silo0.maxRedeem(owner, _type);
-//        assertEq(maxRedeem, 0, "max redeem should return 0 on dust shares");
+        assertEq(maxRedeem, 0, "max redeem should return 0 on dust shares");
 
         vm.expectRevert();
         silo0.redeem(maxRedeem, owner, owner);
@@ -59,6 +59,6 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         IShareToken(shareToken).transfer(owner, 1);
 
-        silo0.redeem(silo0.maxRedeem(owner, _type), owner, owner);
+        silo0.redeem(silo0.maxRedeem(owner, _type), owner, owner, _type);
     }
 }
