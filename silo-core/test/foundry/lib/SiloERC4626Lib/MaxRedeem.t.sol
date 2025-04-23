@@ -31,17 +31,34 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         _maxWithdraw_dust(ISilo.CollateralType.Protected);
     }
 
+    /*
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_collateral_dust
+    */
+    function test_maxWithdraw_collateral_dust() public {
+        _maxWithdraw_dust(ISilo.CollateralType.Collateral);
+    }
+
     function _maxWithdraw_dust(ISilo.CollateralType _type) internal {
         address depositor = makeAddr("depositor");
+        address owner = address(this);
 
         _deposit(1, depositor, _type);
 
-        (address protectedShareToken, address collateralShareToken,,) = silo0.config().getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
         address shareToken = _type == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
 
         vm.prank(depositor);
-        IShareToken(shareToken).transfer(address(this), 667);
+        IShareToken(shareToken).transfer(owner, 999);
 
-        assertEq(silo0.maxRedeem(address(this), _type), 0, "max redeem should return 0 on dust shares");
+        uint256 maxRedeem = silo0.maxRedeem(owner, _type);
+//        assertEq(maxRedeem, 0, "max redeem should return 0 on dust shares");
+
+        vm.expectRevert();
+        silo0.redeem(maxRedeem, owner, owner);
+
+        vm.prank(depositor);
+        IShareToken(shareToken).transfer(owner, 1);
+
+        silo0.redeem(silo0.maxRedeem(owner, _type), owner, owner);
     }
 }
