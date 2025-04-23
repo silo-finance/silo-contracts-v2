@@ -29,22 +29,21 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_dust_protected
     */
     function test_maxWithdraw_dust_protected() public {
-        _maxWithdraw_dust({_type: ISilo.CollateralType.Protected, _withDebt: false});
-
+        _maxWithdraw_dust(ISilo.CollateralType.Protected);
     }
 
     /*
         FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_dust_collateral
     */
     function test_maxWithdraw_dust_collateral() public {
-        _maxWithdraw_dust({_type: ISilo.CollateralType.Collateral, _withDebt: false});
+        _maxWithdraw_dust(ISilo.CollateralType.Collateral);
     }
 
     /*
         FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_dust_withDebt_protected
     */
     function test_maxWithdraw_dust_withDebt_protected() public {
-        _maxWithdraw_dust({_type: ISilo.CollateralType.Protected, _withDebt: true});
+        _maxWithdraw_dust_withDebt(ISilo.CollateralType.Protected);
 
     }
 
@@ -52,10 +51,10 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_dust_withDebt_collateral
     */
     function test_maxWithdraw_dust_withDebt_collateral() public {
-        _maxWithdraw_dust({_type: ISilo.CollateralType.Collateral, _withDebt: true});
+        _maxWithdraw_dust_withDebt(ISilo.CollateralType.Collateral);
     }
 
-    function _maxWithdraw_dust(ISilo.CollateralType _type, bool _withDebt) internal {
+    function _maxWithdraw_dust(ISilo.CollateralType _type) internal {
         address depositor = makeAddr("depositor");
         address owner = address(this);
         vm.label(owner, "owner");
@@ -72,17 +71,6 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         IShareToken(shareToken).transfer(owner, 999);
 
-        if (_withDebt) {
-            (,,address debtShareToken) = silo1.config().getShareTokens(address(silo1));
-
-            _depositForBorrow(9, address(2));
-            _borrow(3, depositor);
-
-            ShareDebtToken(debtShareToken).setReceiveApproval(depositor, 3);
-            vm.prank(depositor);
-            IShareToken(debtShareToken).transfer(owner, 1);
-        }
-
         uint256 maxRedeem = silo0.maxRedeem(owner, _type);
         assertEq(maxRedeem, 0, "max redeem should return 0 on dust shares");
 
@@ -93,5 +81,34 @@ contract MaxRedeemTest is SiloLittleHelper, Test {
         IShareToken(shareToken).transfer(owner, 1);
 
         silo0.redeem(silo0.maxRedeem(owner, _type), owner, owner, _type);
+    }
+
+    function _maxWithdraw_dust_withDebt(ISilo.CollateralType _type) internal {
+        address depositor = makeAddr("depositor");
+        address owner = address(this);
+
+        _deposit(10, depositor, _type);
+
+        (
+            address protectedShareToken,
+            address collateralShareToken,
+        ) = silo0.config().getShareTokens(address(silo0));
+
+        address shareToken = _type == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
+
+        vm.prank(depositor);
+        IShareToken(shareToken).transfer(owner, 999);
+
+        (,,address debtShareToken) = silo1.config().getShareTokens(address(silo1));
+
+        _depositForBorrow(9, address(2));
+        _borrow(3, depositor);
+
+        ShareDebtToken(debtShareToken).setReceiveApproval(depositor, 3);
+        vm.prank(depositor);
+
+        // we can not transfer debt if shares value is 0 (dust will be translated to 0)
+        vm.expectRevert(IShareToken.RecipientNotSolventAfterTransfer.selector);
+        IShareToken(debtShareToken).transfer(owner, 1);
     }
 }
