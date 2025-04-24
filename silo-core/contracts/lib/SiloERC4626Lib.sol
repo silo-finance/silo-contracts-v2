@@ -177,6 +177,7 @@ library SiloERC4626Lib {
             liquidity = _totalAssets;
         }
 
+        // if deposit is not related to debt
         if (depositConfig.silo != collateralConfig.silo) {
             shares = _collateralType == ISilo.CollateralType.Protected
                 ? IShareToken(depositConfig.protectedShareToken).balanceOf(_owner)
@@ -190,26 +191,42 @@ library SiloERC4626Lib {
                 ISilo.AssetType(uint256(_collateralType))
             );
 
-            if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) return (assets, shares);
+            if (_collateralType == ISilo.CollateralType.Collateral && assets > liquidity) {
+                assets = liquidity;
 
-            assets = liquidity;
-
-            shares = SiloMathLib.convertToShares(
-                assets,
-                _totalAssets,
-                shareTokenTotalSupply,
-                // when we doing withdraw, we using Rounding.Ceil, because we want to burn as many shares
-                // however here, we will be using shares as input to withdraw, if we round up, we can overflow
-                // because we will want to withdraw too much, so we have to use Rounding.Floor
-                Rounding.MAX_WITHDRAW_TO_SHARES,
-                ISilo.AssetType.Collateral
-            );
-
-            return (assets, shares);
+                shares = SiloMathLib.convertToShares(
+                    assets,
+                    _totalAssets,
+                    shareTokenTotalSupply,
+                    // when we doing withdraw, we using Rounding.Ceil, because we want to burn as many shares
+                    // however here, we will be using shares as input to withdraw, if we round up, we can overflow
+                    // because we will want to withdraw too much, so we have to use Rounding.Floor
+                    Rounding.MAX_WITHDRAW_TO_SHARES,
+                    ISilo.AssetType.Collateral
+                );
+            }
         } else {
-            return maxWithdrawWhenDebt(
+            (assets, shares) = maxWithdrawWhenDebt(
                 collateralConfig, debtConfig, _owner, liquidity, shareTokenTotalSupply, _collateralType, _totalAssets
             );
+        }
+
+        /*
+        there might be a case where conversion from assets <=> shares is not returning same amounts eg:
+        convert to shares ==> 1 * (1002 + 1e3) / (2 + 1) = 667.3
+        convert to assets ==> 667 * (2 + 1) / (1002 + 1e3) = 0.9995
+        so when user will use 667 withdrawal will fail, this is why we have to cross check:
+        */
+        if (
+            SiloMathLib.convertToAssets({
+                _shares: shares,
+                _totalAssets: _totalAssets,
+                _totalShares: shareTokenTotalSupply,
+                _rounding: Rounding.MAX_WITHDRAW_TO_ASSETS,
+                _assetType: ISilo.AssetType(uint8(_collateralType))
+            }) == 0
+        ) {
+            return (0, 0);
         }
     }
 
