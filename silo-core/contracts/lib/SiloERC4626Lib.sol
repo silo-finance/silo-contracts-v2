@@ -191,9 +191,7 @@ library SiloERC4626Lib {
                 ISilo.AssetType(uint256(_collateralType))
             );
 
-            if (_collateralType == ISilo.CollateralType.Protected || assets <= liquidity) {
-                // for protected, we don't have to check liquidity but we need to recalculate for dust
-            } else {
+            if (_collateralType == ISilo.CollateralType.Collateral && assets > liquidity) {
                 assets = liquidity;
 
                 shares = SiloMathLib.convertToShares(
