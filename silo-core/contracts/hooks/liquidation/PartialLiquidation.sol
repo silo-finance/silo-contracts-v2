@@ -16,9 +16,9 @@ import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
 
-import {PartialLiquidationExecLib} from "./lib/PartialLiquidationExecLib.sol";
-import {TransientReentrancy} from "../_common/TransientReentrancy.sol";
-import {BaseHookReceiver} from "../_common/BaseHookReceiver.sol";
+import {PartialLiquidationExecLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationExecLib.sol";
+import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
+import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent

@@ -7,7 +7,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloConfigsNames, SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {ISiloLiquidityGauge} from "ve-silo/contracts/gauges/interfaces/ISiloLiquidityGauge.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
