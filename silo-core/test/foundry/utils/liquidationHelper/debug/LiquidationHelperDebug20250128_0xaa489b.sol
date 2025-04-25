@@ -11,10 +11,10 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {LiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 
 /*
- FOUNDRY_PROFILE=core-test forge test --ffi --mc LiquidationHelperDebug20250128_0xaa489b -vv
+ FOUNDRY_PROFILE=core_test forge test --ffi --mc LiquidationHelperDebug20250128_0xaa489b -vv
 
 https://sonicscan.org/tx/0xaa489b045ea7fc36d0033f7655fcb4e53e031c1ca25f94f1b51aa255dcfa0130
 

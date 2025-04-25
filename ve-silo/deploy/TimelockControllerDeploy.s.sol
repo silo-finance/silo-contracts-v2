@@ -6,7 +6,7 @@ import {TimelockController} from "openzeppelin5/governance/TimelockController.so
 import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/deploy/TimelockControllerDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

@@ -6,6 +6,8 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {ErrorsLib} from "silo-vaults/contracts/libraries/ErrorsLib.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {ISiloVault, ISiloVaultBase} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
@@ -14,7 +16,7 @@ import {VaultIncentivesModule} from "silo-vaults/contracts/incentives/VaultIncen
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 /*
-FOUNDRY_PROFILE=vaults-tests forge test --mc VaultIncentivesModuleTest -vv
+FOUNDRY_PROFILE=vaults_tests forge test --mc VaultIncentivesModuleTest -vv
 */
 contract VaultIncentivesModuleTest is Test {
     bool internal constant _ALL_PROGRAMS_STOPPED = true;
@@ -25,6 +27,9 @@ contract VaultIncentivesModuleTest is Test {
     address internal _solution1 = makeAddr("Solution1");
     address internal _solution2 = makeAddr("Solution2");
 
+    IIncentivesClaimingLogicFactory internal _trustedFactory =
+        IIncentivesClaimingLogicFactory(makeAddr("TrustedFactory"));
+
     IIncentivesClaimingLogic internal _logic1 = IIncentivesClaimingLogic(makeAddr("Logic1"));
     IIncentivesClaimingLogic internal _logic2 = IIncentivesClaimingLogic(makeAddr("Logic2"));
 
@@ -33,6 +38,7 @@ contract VaultIncentivesModuleTest is Test {
 
     address internal _deployer = makeAddr("_deployer");
     address internal _guardian = makeAddr("_guardian");
+    address internal _curator = makeAddr("_curator");
     address internal _vault = makeAddr("_vault");
 
     event IncentivesClaimingLogicAdded(IERC4626 indexed market, IIncentivesClaimingLogic logic);
@@ -41,10 +47,20 @@ contract VaultIncentivesModuleTest is Test {
     event RevokePendingClaimingLogic(IERC4626 indexed market, IIncentivesClaimingLogic logic);
     event NotificationReceiverAdded(address notificationReceiver);
     event NotificationReceiverRemoved(address notificationReceiver);
+    event TrustedFactorySubmitted(IIncentivesClaimingLogicFactory factory);
+    event TrustedFactoryAdded(IIncentivesClaimingLogicFactory factory);
+    event TrustedFactoryRevoked(IIncentivesClaimingLogicFactory factory);
+    event TrustedFactoryRemoved(IIncentivesClaimingLogicFactory factory);
 
     function setUp() public {
         incentivesModule = VaultIncentivesModule(Clones.clone(address(new VaultIncentivesModule())));
-        incentivesModule.__VaultIncentivesModule_init(_deployer, ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
+        );
 
         vm.mockCall(
             address(incentivesModule.vault()),
@@ -57,33 +73,68 @@ contract VaultIncentivesModuleTest is Test {
             abi.encodeWithSelector(ISiloVaultBase.guardian.selector),
             abi.encode(_guardian)
         );
+
+        vm.mockCall(
+            address(incentivesModule.vault()),
+            abi.encodeWithSelector(ISiloVaultBase.curator.selector),
+            abi.encode(_curator)
+        );
+
+        vm.mockCall(
+            address(incentivesModule.vault()),
+            abi.encodeWithSelector(Ownable.owner.selector),
+            abi.encode(_deployer)
+        );
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_new -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_new -vvv
     */
     function test_IncentivesModule_new() public {
         VaultIncentivesModule module = new VaultIncentivesModule();
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        module.__VaultIncentivesModule_init(address(1), ISiloVault(_vault));
+        module.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
+        );
     }
 
     /*
-    FOUNDRY_PROFILE=vaults-tests forge test --mt test_IncentivesModule_init -vvv
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_init -vvv
     */
     function test_IncentivesModule_init() public {
         address module = Clones.clone(address(new VaultIncentivesModule()));
-        assertEq(VaultIncentivesModule(module).owner(), address(0), "cloned contract has NO owner");
 
-        VaultIncentivesModule(module).__VaultIncentivesModule_init(address(1), ISiloVault(_vault));
+        vm.expectRevert(); // not initialized, vault is not set
+        VaultIncentivesModule(module).owner();
 
-        assertEq(VaultIncentivesModule(module).owner(), address(1), "valid owner");
+        VaultIncentivesModule(module).__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
+        );
+
+        assertEq(VaultIncentivesModule(module).owner(), _deployer, "valid owner");
         assertEq(address(VaultIncentivesModule(module).vault()), _vault, "valid vault");
     }
 
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_IncentivesModule_initOnce -vvv
+    */
     function test_IncentivesModule_initOnce() public {
         vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
-        incentivesModule.__VaultIncentivesModule_init(address(1), ISiloVault(_vault));
+        incentivesModule.__VaultIncentivesModule_init(
+            ISiloVault(_vault),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
+        );
     }
 
     /*
@@ -186,7 +237,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_submitIncentivesClaimingLogic_OnlyOwner -vvv
     */
     function test_submitIncentivesClaimingLogic_OnlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
     }
 
@@ -236,7 +287,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_removeIncentivesClaimingLogic_onlyOwner -vvv
     */
     function test_removeIncentivesClaimingLogic_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.removeIncentivesClaimingLogic(_market1, _logic1);
     }
 
@@ -312,7 +363,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_addNotificationReceiver_onlyOwner -vvv
     */
     function test_addNotificationReceiver_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.addNotificationReceiver(INotificationReceiver(_solution1));
     }
 
@@ -358,7 +409,7 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_removeNotificationReceiver_onlyOwner -vvv
     */
     function test_removeNotificationReceiver_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
         incentivesModule.removeNotificationReceiver(INotificationReceiver(_solution1), _ALL_PROGRAMS_STOPPED);
     }
 
@@ -366,18 +417,222 @@ contract VaultIncentivesModuleTest is Test {
     forge test --mt test_vaultIncentivesModule_ownershipTransfer -vvv
     */
     function test_vaultIncentivesModule_ownershipTransfer() public {
+        Ownable2Step ownableModule = Ownable2Step(address(incentivesModule));
+
+        assertEq(ownableModule.owner(), _deployer);
+
         address newOwner = makeAddr("NewOwner");
 
-        Ownable2Step module = Ownable2Step(address(incentivesModule));
+        vm.mockCall(
+            address(incentivesModule.vault()),
+            abi.encodeWithSelector(Ownable.owner.selector),
+            abi.encode(newOwner)
+        );
+
+        assertEq(ownableModule.owner(), newOwner);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitTrustedFactory_onlyOwner -vv
+    */
+    function test_submitTrustedFactory_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.prank(_guardian);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitTrustedFactory_addressZero -vvv
+    */
+    function test_submitTrustedFactory_addressZero() public {
+        vm.expectRevert(IVaultIncentivesModule.AddressZero.selector);
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(IIncentivesClaimingLogicFactory(address(0)));
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitTrustedFactory_success -vvv
+    */
+    function test_submitTrustedFactory_success() public {
+        vm.expectEmit(true, true, true, true);
+        emit TrustedFactorySubmitted(_trustedFactory);
 
         vm.prank(_deployer);
-        module.transferOwnership(newOwner);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+    }
 
-        assertEq(module.pendingOwner(), newOwner);
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitTrustedFactory_alreadyPending -vvv
+    */
+    function test_submitTrustedFactory_alreadyPending() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
 
-        vm.prank(newOwner);
-        module.acceptOwnership();
+        vm.prank(_deployer);
+        vm.expectRevert(IVaultIncentivesModule.FactoryAlreadyPending.selector);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+    }
 
-        assertEq(module.owner(), newOwner);
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_revokePendingTrustedFactory_onlyGuardian -vvv
+    */
+    function test_revokePendingTrustedFactory_onlyGuardian() public {
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotGuardianRole.selector));
+        incentivesModule.revokePendingTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_revokePendingTrustedFactory_success -vvv
+    */
+    function test_revokePendingTrustedFactory_success() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.expectEmit(true, true, true, true);
+        emit TrustedFactoryRevoked(_trustedFactory);
+
+        vm.prank(_guardian);
+        incentivesModule.revokePendingTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_acceptTrustedFactory_cantAcceptFactory -vvv
+    */
+    function test_acceptTrustedFactory_cantAcceptFactory() public {
+        vm.expectRevert(IVaultIncentivesModule.CantAcceptFactory.selector);
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock - 1);
+
+        vm.expectRevert(IVaultIncentivesModule.CantAcceptFactory.selector);
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_acceptTrustedFactory_success -vvv
+    */
+    function test_acceptTrustedFactory_success() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        vm.expectEmit(true, true, true, true);
+        emit TrustedFactoryAdded(_trustedFactory);
+
+        vm.prank(_guardian);
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_removeTrustedFactory_onlyOwner -vvv
+    */
+    function test_removeTrustedFactory_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
+        incentivesModule.removeTrustedFactory(_trustedFactory);
+
+        vm.prank(_guardian);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotOwner.selector));
+        incentivesModule.removeTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_removeTrustedFactory_success -vvv
+    */
+    function test_removeTrustedFactory_success() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        vm.expectEmit(true, true, true, true);
+        emit TrustedFactoryRemoved(_trustedFactory);
+
+        vm.prank(_deployer);
+        incentivesModule.removeTrustedFactory(_trustedFactory);
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_trustedFactories_getters -vvv
+    */
+    function test_trustedFactories_getters() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        address[] memory factories = incentivesModule.getTrustedFactories();
+        assertEq(factories.length, 1);
+        assertEq(factories[0], address(_trustedFactory));
+
+        assertTrue(incentivesModule.isTrustedFactory(_trustedFactory));
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitIncentivesClaimingLogic_logicCreatedInTrustedFactory -vvv
+    */
+    function test_submitIncentivesClaimingLogic_logicCreatedInTrustedFactory() public {
+        vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        vm.mockCall(
+            address(_trustedFactory),
+            abi.encodeWithSelector(IIncentivesClaimingLogicFactory.createdInFactory.selector, address(_logic1)),
+            abi.encode(true)
+        );
+
+        vm.prank(_deployer);
+        incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
+        incentivesModule.acceptIncentivesClaimingLogic(_market1, _logic1);
+
+        vm.mockCall(
+            address(_trustedFactory),
+            abi.encodeWithSelector(IIncentivesClaimingLogicFactory.createdInFactory.selector, address(_logic2)),
+            abi.encode(true)
+        );
+
+        vm.prank(_curator);
+        incentivesModule.submitIncentivesClaimingLogic(_market2, _logic2);
+        incentivesModule.acceptIncentivesClaimingLogic(_market2, _logic2);
+
+        address[] memory claimingLogics = incentivesModule.getAllIncentivesClaimingLogics();
+        assertEq(claimingLogics.length, 2, "failed to add claiming logics");
+        assertEq(claimingLogics[0], address(_logic1), "failed to add claiming logic 1");
+        assertEq(claimingLogics[1], address(_logic2), "failed to add claiming logic 2");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --mt test_submitIncentivesClaimingLogic_onlyCurator -vvv
+    */
+    function test_submitIncentivesClaimingLogic_onlyCurator() public {
+         vm.prank(_deployer);
+        incentivesModule.submitTrustedFactory(_trustedFactory);
+
+        vm.warp(block.timestamp + _timelock + 1);
+
+        incentivesModule.acceptTrustedFactory(_trustedFactory);
+
+        vm.mockCall(
+            address(_trustedFactory),
+            abi.encodeWithSelector(IIncentivesClaimingLogicFactory.createdInFactory.selector, address(_logic1)),
+            abi.encode(true)
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotCuratorRole.selector));
+        incentivesModule.submitIncentivesClaimingLogic(_market1, _logic1);
     }
 }

@@ -9,7 +9,7 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {VeBoostDeploy} from "ve-silo/deploy/VeBoostDeploy.s.sol";
 import {IVeBoost} from "ve-silo/contracts/voting-escrow/interfaces/IVeBoost.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc VeBoostV2Test --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc VeBoostV2Test --ffi -vvv
 contract VeBoostV2Test is IntegrationTest {
     string constant internal _NAME = "Vote-Escrowed Boost";
     string constant internal _SYMBOL = "veBoost";
@@ -47,7 +47,7 @@ contract VeBoostV2Test is IntegrationTest {
         assertEq(_veBoost.nonces(_holder.addr), 0, "Invalid initial nonce");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostAcceptHolderSignature --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostAcceptHolderSignature --ffi -vvv
     function testVeBoostAcceptHolderSignature() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
 
@@ -60,7 +60,7 @@ contract VeBoostV2Test is IntegrationTest {
         assertEq(_veBoost.allowance(_holder.addr, _spender), value, "Invalid allowance balance");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostReuseSignature --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostReuseSignature --ffi -vvv
     function testVeBoostReuseSignature() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
 
@@ -76,7 +76,7 @@ contract VeBoostV2Test is IntegrationTest {
         _veBoost.permit(_holder.addr, _spender, value, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostSignatureForOtherHolder --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostSignatureForOtherHolder --ffi -vvv
     function testVeBoostSignatureForOtherHolder() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
 
@@ -87,7 +87,7 @@ contract VeBoostV2Test is IntegrationTest {
         _veBoost.permit(_holder.addr, _spender, value, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostSignatureForOtherSpender --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostSignatureForOtherSpender --ffi -vvv
     function testVeBoostSignatureForOtherSpender() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
 
@@ -98,7 +98,7 @@ contract VeBoostV2Test is IntegrationTest {
         _veBoost.permit(_holder.addr, _spender, value, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostSignatureForOtherAmount --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostSignatureForOtherAmount --ffi -vvv
     function testVeBoostSignatureForOtherAmount() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
 
@@ -109,7 +109,7 @@ contract VeBoostV2Test is IntegrationTest {
         _veBoost.permit(_holder.addr, _spender, value, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostSignatureForOtherToken --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostSignatureForOtherToken --ffi -vvv
     function testVeBoostSignatureForOtherToken() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
 
@@ -139,7 +139,7 @@ contract VeBoostV2Test is IntegrationTest {
         _veBoost.permit(_holder.addr, _spender, value, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostSignatureInvalidNonce --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostSignatureInvalidNonce --ffi -vvv
     function testVeBoostSignatureInvalidNonce() public {
         uint256 nonce = _veBoost.nonces(_holder.addr) + 1;
 
@@ -150,7 +150,7 @@ contract VeBoostV2Test is IntegrationTest {
         _veBoost.permit(_holder.addr, _spender, value, deadline, v, r, s);
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testVeBoostSignatureExpiredDeadline --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testVeBoostSignatureExpiredDeadline --ffi -vvv
     function testVeBoostSignatureExpiredDeadline() public {
         uint256 nonce = _veBoost.nonces(_holder.addr);
         uint256 expiredDeadline = block.timestamp - 1;

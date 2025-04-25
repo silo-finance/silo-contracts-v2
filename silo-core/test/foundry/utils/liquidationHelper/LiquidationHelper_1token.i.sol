@@ -8,7 +8,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {LiquidationHelperCommon} from "./LiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc LiquidationHelper1TokenTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationHelper1TokenTest
 */
 contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
     uint256 constant LIQUIDATION_UNDERESTIMATION = 1;

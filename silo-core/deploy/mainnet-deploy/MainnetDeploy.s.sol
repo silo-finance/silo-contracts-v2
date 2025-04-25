@@ -10,8 +10,9 @@ import {SiloDeployerDeploy} from "../SiloDeployerDeploy.s.sol";
 import {LiquidationHelperDeploy} from "../LiquidationHelperDeploy.s.sol";
 import {TowerDeploy} from "../TowerDeploy.s.sol";
 import {SiloLensDeploy} from "../SiloLensDeploy.s.sol";
-import {SiloRouterDeploy} from "../SiloRouterDeploy.s.sol";
+import {SiloRouterV2Deploy} from "../SiloRouterV2Deploy.s.sol";
 import {SiloIncentivesControllerGaugeLikeFactoryDeploy} from "../SiloIncentivesControllerGaugeLikeFactoryDeploy.sol";
+import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -28,10 +29,13 @@ abstract contract MainnetDeploy is CommonDeploy {
         LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
         SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
         TowerDeploy towerDeploy = new TowerDeploy();
-        SiloRouterDeploy siloRouterDeploy = new SiloRouterDeploy();
+        SiloRouterV2Deploy SiloRouterV2Deploy = new SiloRouterV2Deploy();
 
         SiloIncentivesControllerGaugeLikeFactoryDeploy siloIncentivesControllerGaugeLikeFactoryDeploy =
             new SiloIncentivesControllerGaugeLikeFactoryDeploy();
+
+        SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
+            new SiloIncentivesControllerFactoryDeploy();
 
         _deploySiloFactory();
         interestRateModelV2ConfigFactoryDeploy.run();
@@ -41,8 +45,9 @@ abstract contract MainnetDeploy is CommonDeploy {
         liquidationHelperDeploy.run();
         siloLensDeploy.run();
         towerDeploy.run();
-        siloRouterDeploy.run();
+        SiloRouterV2Deploy.run();
         siloIncentivesControllerGaugeLikeFactoryDeploy.run();
+        siloIncentivesControllerFactoryDeploy.run();
     }
 
     function _deploySiloFactory() internal virtual {}

@@ -17,7 +17,7 @@ import {IVotingEscrowCCIPRemapper} from "ve-silo/contracts/voting-escrow/interfa
 import {VeSiloDelegatorViaCCIP} from "ve-silo/contracts/voting-escrow/VeSiloDelegatorViaCCIP.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     forge script ve-silo/deploy/VeSiloDelegatorViaCCIPDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
  */

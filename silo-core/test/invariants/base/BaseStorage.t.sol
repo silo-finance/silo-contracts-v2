@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {
     IInterestRateModelV2Config,
     InterestRateModelV2Config
@@ -29,7 +29,7 @@ import {
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 
 

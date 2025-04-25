@@ -9,8 +9,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {BaseHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/BaseHookReceiver.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
@@ -20,7 +20,7 @@ import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc HookCallsOutsideActionTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc HookCallsOutsideActionTest
 */
 contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower, SiloLittleHelper, Test {
     using Hook for uint256;
@@ -54,7 +54,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_ifHooksAreNotCalledInsideAction
     */
     function test_ifHooksAreNotCalledInsideAction() public {
         (bool entered) = siloConfig.reentrancyGuardEntered();

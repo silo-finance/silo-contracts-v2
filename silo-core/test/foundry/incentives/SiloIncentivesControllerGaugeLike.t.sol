@@ -13,7 +13,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
@@ -27,7 +27,7 @@ import {
 } from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGaugeLikeFactory.sol";
 
 /**
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloIncentivesControllerGaugeLikeTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerGaugeLikeTest
  */
 contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     address internal _shareToken = address(new ERC20Mock());
@@ -46,7 +46,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createGaugeLike
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createGaugeLike
      */
     function test_createGaugeLike_success() public {
         address gaugeLike = _factory.createGaugeLike(_owner, _notifier, _shareToken);
@@ -54,7 +54,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_createGaugeLike_zeroShares
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createGaugeLike_zeroShares
      */
     function test_createGaugeLike_zeroShares() public {
         vm.expectRevert(IGauge.EmptyShareToken.selector);
@@ -62,7 +62,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_killGauge_onlyOwner
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_killGauge_onlyOwner
      */
     function test_killGauge_onlyOwner() public {
         address gaugeLike = _factory.createGaugeLike(_owner, _notifier, _shareToken);
@@ -72,7 +72,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_unKillGauge_onlyOwner
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_unKillGauge_onlyOwner
      */
     function test_unKillGauge_onlyOwner() public {
         address gaugeLike = _factory.createGaugeLike(_owner, _notifier, _shareToken);
@@ -85,7 +85,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_killGauge_success
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_killGauge_success
      */
     function test_killGauge_success() public {
         address gaugeLike = _factory.createGaugeLike(_owner, _notifier, _shareToken);
@@ -102,7 +102,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_unKillGauge_success
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_unKillGauge_success
      */
     function test_unKillGauge_success() public {
         address gaugeLike = _factory.createGaugeLike(_owner, _notifier, _shareToken);
@@ -122,7 +122,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_gaugeLikeIncentives_with_gaugeHookReceiver
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_gaugeLikeIncentives_with_gaugeHookReceiver
      */
     function test_gaugeLikeIncentives_with_gaugeHookReceiver() public {
         address timelock = makeAddr("Timelock");

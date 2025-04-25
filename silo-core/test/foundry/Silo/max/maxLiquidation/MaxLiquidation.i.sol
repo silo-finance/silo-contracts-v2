@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc MaxLiquidationTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxLiquidationTest
 
     this tests are for "normal" case,
     where user became insolvent and we can partially liquidate

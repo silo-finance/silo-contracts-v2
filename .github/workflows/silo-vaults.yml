@@ -9,6 +9,7 @@ env:
     RPC_SEPOLIA: ${{ secrets.RPC_SEPOLIA }}
     RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+    RPC_SONIC: ${{ secrets.RPC_SONIC }}
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
 
 on:
@@ -59,7 +60,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: nightly-70cd140131cd49875c6f31626bdfae08eba35386
+                    version: stable
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -69,7 +70,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run tests
-                run: FOUNDRY_PROFILE=vaults-tests forge test --no-match-test "_skip_" -v --ffi
+                run: FOUNDRY_PROFILE=vaults_tests forge test --no-match-test "_skip_" -v --ffi
 
             -   name: Sizes
                 run: |

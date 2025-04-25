@@ -12,7 +12,7 @@ import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 import {CAP} from "./helpers/BaseTest.sol";
 
 /*
-FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc RoleTest -vvv
+FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc RoleTest -vvv
 */
 contract RoleTest is IntegrationTest {
     function testSetCurator() public {

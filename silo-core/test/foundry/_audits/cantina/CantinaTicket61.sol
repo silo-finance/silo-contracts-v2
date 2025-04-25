@@ -8,7 +8,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket61
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket61
 */
 contract CantinaTicket61 is CantinaTicket {
     function testDebtApproval() public {

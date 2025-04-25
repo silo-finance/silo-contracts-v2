@@ -11,7 +11,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc TransitionCollateralTest
+FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mc TransitionCollateralTest
 */
 contract TransitionCollateralTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
@@ -21,7 +21,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_zeros
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_zeros
     */
     function test_transitionCollateral_zeros() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -29,7 +29,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_noCollateral_ownerZero
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_noCollateral_ownerZero
     */
     function test_transitionCollateral_noCollateral_ownerZero() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -37,7 +37,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_noCollateral_shareZero
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_noCollateral_shareZero
     */
     function test_transitionCollateral_noCollateral_shareZero() public {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -45,7 +45,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_wrongCollateral
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_wrongCollateral
     */
     function test_transitionCollateral_wrongCollateral() public {
         _deposit(10, address(this));
@@ -55,7 +55,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_toProtected
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_toProtected
     */
     function test_transitionCollateral_toProtected() public {
         address owner = address(this);
@@ -71,7 +71,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_toCollateral
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_toCollateral
     */
     function test_transitionCollateral_toCollateral() public {
         address owner = address(this);
@@ -90,7 +90,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_otherOwner
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_otherOwner
     */
     function test_transitionCollateral_otherOwner() public {
         address otherOwner = makeAddr("otherOwner");
@@ -111,7 +111,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_withDebt
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_withDebt
     */
     function test_transitionCollateral_withDebt() public {
         address owner = address(this);
@@ -124,7 +124,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_withInterest_solvent
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_withInterest_solvent
     */
     function test_transitionCollateral_withInterest_solvent() public {
         address owner = address(this);
@@ -141,7 +141,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_withInterest_inSolvent
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_withInterest_inSolvent
     */
     function test_transitionCollateral_withInterest_inSolvent() public {
         address owner = address(this);
@@ -157,7 +157,7 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_transitionCollateral_deposit_inSolvent
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_transitionCollateral_deposit_inSolvent
     */
     function test_transitionCollateral_deposit_inSolvent() public {
         address owner = address(this);

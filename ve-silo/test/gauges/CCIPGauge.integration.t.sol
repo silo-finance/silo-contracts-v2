@@ -24,7 +24,7 @@ import {VeSiloContracts} from "ve-silo/deploy/_CommonDeploy.sol";
 import {IChainlinkPriceFeedLike} from "ve-silo/test/gauges/interfaces/IChainlinkPriceFeedLike.sol";
 import {CCIPTransferMessageLib} from "./CCIPTransferMessageLib.sol";
 
-// FOUNDRY_PROFILE=ve-silo-test forge test --mc CCIPGaugeTest --ffi -vvv
+// FOUNDRY_PROFILE=ve_silo_test forge test --mc CCIPGaugeTest --ffi -vvv
 contract CCIPGaugeTest is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 192628160;
     uint256 internal constant _RELATIVE_WEIGHT_CAP = 1e18;
@@ -103,7 +103,7 @@ contract CCIPGaugeTest is IntegrationTest {
         assertEq(keccak256(message.extraArgs), keccak256(anyExtraArgs), "Wrong args in the message");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testTransferWithFeesInLINK --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testTransferWithFeesInLINK --ffi -vvv
     function testTransferWithFeesInLINK() public {
         address gauge = address(_gauge);
         uint256 initialGaugeBalance = 100e18;
@@ -138,7 +138,7 @@ contract CCIPGaugeTest is IntegrationTest {
         assertEq(initialGaugeBalance, gaugeBalance + mintAmount, "Unexpected balance change");
     }
 
-    // FOUNDRY_PROFILE=ve-silo-test forge test --mt testTransferWithFeesInETH --ffi -vvv
+    // FOUNDRY_PROFILE=ve_silo_test forge test --mt testTransferWithFeesInETH --ffi -vvv
     function testTransferWithFeesInETH() public {
         address gauge = address(_gauge);
         uint256 initialGaugeBalance = 100e18;

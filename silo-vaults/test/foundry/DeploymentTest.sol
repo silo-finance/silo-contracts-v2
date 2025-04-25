@@ -8,11 +8,11 @@ import {SiloVault} from "../../contracts/SiloVault.sol";
 import {IntegrationTest} from "./helpers/IntegrationTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc DeploymentTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc DeploymentTest -vvv
 */
 contract DeploymentTest is IntegrationTest {
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeploySiloVaultNotToken -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testDeploySiloVaultNotToken -vvv
     */
     function testDeploySiloVaultNotToken() public {
         address notToken = makeAddr("address notToken");
@@ -22,7 +22,7 @@ contract DeploymentTest is IntegrationTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testDeploySiloVaultPass -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testDeploySiloVaultPass -vvv
     */
     function testDeploySiloVaultPass(
         address owner,

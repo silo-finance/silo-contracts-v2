@@ -4,12 +4,13 @@ pragma solidity 0.8.28;
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {OracleFactory} from "../_common/OracleFactory.sol";
 import {DIAOracle, IDIAOracle} from "../dia/DIAOracle.sol";
 import {DIAOracleConfig} from "../dia/DIAOracleConfig.sol";
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
 
-contract DIAOracleFactory is OracleFactory {
+contract DIAOracleFactory is Create2Factory, OracleFactory {
     /// @dev decimals in DIA oracle
     uint256 public constant DIA_DECIMALS = 8;
 
@@ -17,10 +18,10 @@ contract DIAOracleFactory is OracleFactory {
         // noting to set
     }
 
-    function create(IDIAOracle.DIADeploymentConfig calldata _config)
-        external
-        virtual
-        returns (DIAOracle oracle)
+    function create(
+        IDIAOracle.DIADeploymentConfig calldata _config,
+        bytes32 _externalSalt
+    ) external virtual returns (DIAOracle oracle)
     {
         bytes32 id = hashConfig(_config);
         DIAOracleConfig oracleConfig = DIAOracleConfig(getConfigAddress[id]);
@@ -34,7 +35,7 @@ contract DIAOracleFactory is OracleFactory {
 
         oracleConfig = new DIAOracleConfig(_config);
 
-        oracle = DIAOracle(Clones.clone(ORACLE_IMPLEMENTATION));
+        oracle = DIAOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
 

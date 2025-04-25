@@ -20,7 +20,7 @@ import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloF
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
-/// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloHooksTest
+/// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mc SiloHooksTest
 contract SiloHooksTest is SiloLittleHelper, Test {
     uint24 constant HOOKS_BEFORE = 1;
     uint24 constant HOOKS_AFTER = 2;
@@ -57,7 +57,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksInitializationAfterDeployment
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHooksInitializationAfterDeployment
     */
     function testHooksInitializationAfterDeployment() public view {
         IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
@@ -71,7 +71,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(silo1Hooks.hooksAfter, HOOKS_AFTER, "hooksAfter is not initialized");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksUpdate
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHooksUpdate
     function testHooksUpdate() public {
         uint24 newHooksBefore = 3;
         uint24 newHooksAfter = 4;
@@ -93,7 +93,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(silo1Hooks.hooksAfter, newHooksAfter, "hooksAfter is not updated");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSilo
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testCallOnBehalfOfSilo
     function testCallOnBehalfOfSilo() public {
         (address protectedShareToken,,) = _siloConfig.getShareTokens(address(silo0));
 
@@ -113,7 +113,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(IERC20(protectedShareToken).balanceOf(_thridParty), tokensToMint);
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETH
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETH
     function testCallOnBehalfOfSiloWithETH() public {
         address target = address(new ContractThatAcceptsETH());
         bytes memory data = abi.encodeWithSelector(ContractThatAcceptsETH.anyFunction.selector);
@@ -129,7 +129,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(target.balance, amoutToSend, "Expect to have non zero balance");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testSiloStorageMutationWithSiloExtension
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSiloStorageMutationWithSiloExtension
     function testSiloStorageMutationWithSiloExtension() public {
         uint256 amoutToSend = 0;
         ISilo.AssetType assetType = ISilo.AssetType.Collateral;
@@ -153,7 +153,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(totalCollateralAfterCall, expectedTotalCollateralAssets, "Expect to have collateral assets");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETHleftover
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testCallOnBehalfOfSiloWithETHleftover
     function testCallOnBehalfOfSiloWithETHleftover() public {
         address target = address(new ContractThatAcceptsETH());
         bytes memory data = abi.encodeWithSelector(ContractThatAcceptsETH.anyFunctionThatSendEthBack.selector);
@@ -179,7 +179,7 @@ contract SiloHooksTest is SiloLittleHelper, Test {
         assertEq(_hookReceiverAddr.balance, amoutToSend, "Expect to have non zero balance on a hook receiver");
     }
 
-    /// FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt testHooksMisconfiguration
+    /// FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHooksMisconfiguration
     function testHooksMisconfiguration() public {
         vm.expectRevert(ISiloDeployer.HookReceiverMisconfigured.selector);
         _siloFixture.deploy_local(SiloConfigsNames.SILO_LOCAL_HOOKS_MISCONFIGURATION);

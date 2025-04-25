@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {CantinaTicket} from "./CantinaTicket.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc CantinaTicket239
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket239
 */
 contract CantinaTicket239 is CantinaTicket {
     function test_repay_early_accrue_interest_rate() public {

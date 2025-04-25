@@ -12,7 +12,7 @@ import {VeSiloDeployments, VeSiloContracts} from "ve-silo/common/VeSiloContracts
 import {ISiloGovernor, IGovernor} from "ve-silo/contracts/governance/interfaces/ISiloGovernor.sol";
 
 /**
-FOUNDRY_PROFILE=ve-silo-test \
+FOUNDRY_PROFILE=ve_silo_test \
     PROPOSAL_ID=30777859449768177335326918358646070044764896023301554175577731398295188897581 \
     forge script ve-silo/test/_mocks/for-testnet-deployments/scripts/ProposalDetails.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545

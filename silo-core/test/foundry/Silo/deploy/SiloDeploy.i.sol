@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {Vm} from "forge-std/Vm.sol";
+
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
+import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
+import {IChainlinkV3Factory} from "silo-oracles/contracts/interfaces/IChainlinkV3Factory.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -26,7 +30,7 @@ import {
 
 import {DIAOracleFactoryMock} from "silo-core/test/foundry/_mocks/oracles-factories/DIAOracleFactoryMock.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloDeployTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployTest
 contract SiloDeployTest is IntegrationTest {
    uint256 internal constant _FORKING_BLOCK_NUMBER = 19780370;
 
@@ -66,7 +70,7 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).run();
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_hooks_are_initialized
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
     function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
@@ -74,7 +78,7 @@ contract SiloDeployTest is IntegrationTest {
          _verifyHookReceiversForSilo(silo1);
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi -mt test_oracles_deploy
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
     function test_oracles_deploy() public view { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
@@ -88,6 +92,54 @@ contract SiloDeployTest is IntegrationTest {
             _uniV3OracleFactoryMock.MOCK_ORACLE_ADDR(),
             "Should have an Uniswap oracle as a fallback"
         );
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_encodeCallWithSalt -vv
+    function test_encodeCallWithSalt() public {
+        bytes32 salt = keccak256(bytes("some string"));
+
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config;
+
+        bytes memory callDataForModification = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
+        bytes memory callDataExpected = abi.encodeCall(IChainlinkV3Factory.create, (config, salt));
+
+        assembly {
+            let pointer := add(add(callDataForModification, 0x20), sub(mload(callDataForModification), 0x20))
+            mstore(pointer, salt)
+        }
+
+        assertEq(keccak256(callDataForModification), keccak256(callDataExpected), "failed to update the salt");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloConfig_and_hookReceiver_reorg
+    function test_siloConfig_and_hookReceiver_reorg() public {
+        Vm.Wallet memory wallet1 = vm.createWallet("eoa1");
+        Vm.Wallet memory wallet2 = vm.createWallet("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        ISiloConfig siloConfig1 = _siloDeploy
+            .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
+            .usePrivateKey(wallet1.privateKey)
+            .run();
+
+        (address silo0,) = siloConfig1.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfigData1 = siloConfig1.getConfig(silo0);
+
+        vm.revertTo(snapshot);
+
+        ISiloConfig siloConfig2 = _siloDeploy
+            .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
+            .usePrivateKey(wallet2.privateKey)
+            .run();
+
+        (silo0,) = siloConfig2.getSilos();
+
+        ISiloConfig.ConfigData memory siloConfigData2 = siloConfig2.getConfig(silo0);
+
+        assertNotEq(address(siloConfig1), address(siloConfig2), "Silo configs should be different");
+        assertNotEq(siloConfigData1.hookReceiver, siloConfigData2.hookReceiver, "Hook receiver should be different");
     }
 
     function _verifyHookReceiversForSilo(address _silo) internal view {

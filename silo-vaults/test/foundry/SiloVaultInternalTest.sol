@@ -9,11 +9,11 @@ import {InternalTest} from "./helpers/InternalTest.sol";
 import {NB_MARKETS, CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS} from "./helpers/BaseTest.sol";
 
 /*
- FOUNDRY_PROFILE=vaults-tests forge test --ffi --mc SiloVaultInternalTest -vvv
+ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc SiloVaultInternalTest -vvv
 */
 contract SiloVaultInternalTest is InternalTest {
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSetCapMaxQueueLengthExcedeed -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSetCapMaxQueueLengthExcedeed -vvv
     */
     function testSetCapMaxQueueLengthExcedeed() public {
         for (uint256 i; i < NB_MARKETS - 1; ++i) {
@@ -25,7 +25,7 @@ contract SiloVaultInternalTest is InternalTest {
     }
 
     /*
-     FOUNDRY_PROFILE=vaults-tests forge test --ffi --mt testSimulateWithdraw -vvv
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testSimulateWithdraw -vvv
     */
     function testSimulateWithdraw(uint256 suppliedAmount, uint256 borrowedAmount, uint256 assets) public {
         collateralToken.setOnDemand(true);

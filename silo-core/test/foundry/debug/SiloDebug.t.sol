@@ -22,7 +22,7 @@ interface IRMGetters {
     function getSetup(address _silo) external view returns (Setup memory setup);
 }
 
-// FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --ffi -vvv
+// FOUNDRY_PROFILE=core_test forge test --mc SiloDebugTest --ffi -vvv
 contract SiloDebugTest is IntegrationTest {
     address constant internal _SILO_ADDR = 0x7abd3124E1e2F5f8aBF8b862d086647A5141bf4c;
     address constant internal _IRM_ADDR = 0x9d33d45AA7E1B45c65EA4b36b0c586B58a4796cE;
@@ -41,7 +41,7 @@ contract SiloDebugTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --mt test_skip_It --ffi -vvv
+    FOUNDRY_PROFILE=core_test forge test --mc SiloDebugTest --mt test_skip_It --ffi -vvv
     */
     function test_skip_It() public view {
         // IInterestRateModelV2.ConfigWithState memory config = _IRM.getConfig(_SILO_ADDR);
@@ -54,7 +54,7 @@ contract SiloDebugTest is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test --mc SiloDebugTest --mt test_skip_siloLens_getLtv --ffi -vvv
+    FOUNDRY_PROFILE=core_test forge test --mc SiloDebugTest --mt test_skip_siloLens_getLtv --ffi -vvv
     */
     function test_skip_siloLens_getLtv() public {
         SiloLens siloLens = SiloLens(0xF56ccaa52f95C7CCE6c21df9636a5Dcefa22aa96);

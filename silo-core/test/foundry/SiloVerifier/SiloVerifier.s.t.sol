@@ -10,13 +10,13 @@ import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/Intere
 import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {IGaugeHookReceiver, GaugeHookReceiver, IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {IGaugeHookReceiver, GaugeHookReceiver, IGauge} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /*
-    FOUNDRY_PROFILE=core-test forge test -vv --match-contract SiloVerifierScriptTest --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --match-contract SiloVerifierScriptTest --ffi
 */
 contract SiloVerifierScriptTest is Test {
     ISiloConfig constant WS_USDC_CONFIG = ISiloConfig(0x062A36Bbe0306c2Fd7aecdf25843291fBAB96AD2);

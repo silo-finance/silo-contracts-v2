@@ -43,7 +43,8 @@ contract PendlePTToAssetOracleDeploy is CommonDeploy {
 
         oracle = factory.create({
             _underlyingOracle: underlyingOracle,
-            _market: market
+            _market: market,
+            _externalSalt: bytes32(0)
         });
 
         vm.stopBroadcast();

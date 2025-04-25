@@ -5,9 +5,10 @@ import {Test} from "forge-std/Test.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
-
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
@@ -73,7 +74,7 @@ contract BaseTest is SiloLittleHelper, Test {
         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), "SiloVault Vault", "MMV");
 
         IdleVaultsFactory factory = new IdleVaultsFactory();
-        idleMarket = factory.createIdleVault(vault);
+        idleMarket = factory.createIdleVault(vault, bytes32(0));
         vm.label(address(idleMarket), "idleMarket");
 
         _createNewMarkets();
@@ -88,7 +89,18 @@ contract BaseTest is SiloLittleHelper, Test {
         string memory name,
         string memory symbol
     ) public returns (ISiloVault) {
-        return siloVaultsFactory.createSiloVault(owner, initialTimelock, asset, name, symbol);
+        return siloVaultsFactory.createSiloVault(
+            owner,
+            initialTimelock,
+            asset,
+            name,
+            symbol,
+            bytes32(0),
+            address(0),
+            new IIncentivesClaimingLogic[](0),
+            new IERC4626[](0),
+            new IIncentivesClaimingLogicFactory[](0)
+        );
     }
 
     function _createNewMarkets() public virtual {

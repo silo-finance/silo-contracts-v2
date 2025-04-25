@@ -29,10 +29,20 @@ interface IOwnable {
 /// @dev This interface is used for factorizing ISiloVaultStaticTyping and ISiloVault.
 /// @dev Consider using the ISiloVault interface instead of this one.
 interface ISiloVaultBase {
+    /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
+    /// @dev Calculated to be (24 - underlyingDecimals) at construction, so the initial conversion rate maximizes
+    /// precision between shares and assets. Max `underlyingDecimals` is 18, so the minimum `DECIMALS_OFFSET` is 6.
     function DECIMALS_OFFSET() external view returns (uint8);
 
+    /// @notice Default acceptable loss when depositing to market
+    /// @dev For manipulated vault/market (ie. during first deposit attack), this loss will be huge.
+    /// This threshold prevents SiloVault from losing funds in compromised markets with inflated shares to assets rate.
+    /// This value can be changed by vault owner/guardian if needed.
     function DEFAULT_LOST_THRESHOLD() external view returns (uint256);
 
+    /// @notice Incentives module for the vault.
+    /// @dev Stores configuration for each market incentives claiming logic and
+    /// notification receivers that will be notified when a vault's balance changes.
     function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
 
     /// @notice method for claiming and distributing incentives rewards for all vault users
@@ -126,8 +136,8 @@ interface ISiloVaultBase {
     /// @notice Submits a `newGuardian`.
     /// @notice Warning: a malicious guardian could disrupt the vault's operation, and would have the power to revoke
     /// any pending guardian.
-    /// @dev In case there is no guardian, the gardian is set immediately.
-    /// @dev Warning: Submitting a gardian will overwrite the current pending gardian.
+    /// @dev In case there is no guardian, the guardian is set immediately.
+    /// @dev Warning: Submitting a guardian will overwrite the current pending guardian.
     function submitGuardian(address _newGuardian) external;
 
     /// @notice Accepts the pending guardian.
@@ -175,8 +185,12 @@ interface ISiloVaultBase {
     /// @dev Sender is expected to pass `assets = type(uint256).max` with the last MarketAllocation of `allocations` to
     /// supply all the remaining withdrawn liquidity, which would ensure that `totalWithdrawn` = `totalSupplied`.
     /// @dev A supply in a reallocation step will make the reallocation revert if the amount is greater than the net
-    /// amount from previous steps (i.e. total withdrawn minus total supplied).
+    /// amount from previous steps (i.e. total withdrawn minus total supplied). This function reverts if the assets
+    /// to be deposited would cause the SiloVault's deposits of the corresponding market to exceed its supply cap.
     function reallocate(MarketAllocation[] calldata _allocations) external;
+
+    /// @notice Syncs the balance tracker for the market.
+    function syncBalanceTracker(IERC4626, uint256, bool) external;
 }
 
 /// @dev This interface is inherited by SiloVault so that function signatures are checked by the compiler.
@@ -204,6 +218,7 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
     /// @notice Returns the current configuration of each market.
     function config(IERC4626) external view returns (MarketConfig memory);
 
+    /// @notice Returns the arbitrary loss threshold for the market.
     function arbitraryLossThreshold(IERC4626) external view returns (ArbitraryLossThreshold memory);
 
     /// @notice Returns the pending guardian.
@@ -217,7 +232,4 @@ interface ISiloVault is ISiloVaultBase, IERC4626, IERC20Permit, IOwnable, IMulti
 
     /// @notice Returns the allocation of assets for the market.
     function balanceTracker(IERC4626) external view returns (uint256);
-
-    /// @notice Syncs the balance tracker for the market.
-    function syncBalanceTracker(IERC4626, uint256, bool) external;
 }

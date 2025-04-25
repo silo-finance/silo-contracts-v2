@@ -10,9 +10,10 @@ interface IInterestRateModelV2Factory {
     /// @dev verifies config and creates IRM config contract
     /// @notice it can be used in separate tx eg config can be prepared before it will be used for Silo creation
     /// @param _config IRM configuration
+    /// @param _externalSalt external salt for the create2 call
     /// @return configHash the hashed config used as a key for IRM contract
     /// @return irm deployed (or existing one, depends on the config) contract address
-    function create(IInterestRateModelV2.Config calldata _config)
+    function create(IInterestRateModelV2.Config calldata _config, bytes32 _externalSalt)
         external
         returns (bytes32 configHash, IInterestRateModelV2 irm);
 

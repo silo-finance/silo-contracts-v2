@@ -14,11 +14,11 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-// FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc SiloReentrancyTest
+// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
     
-    // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_coverage_for_reentrancy
+    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_coverage_for_reentrancy
     function test_coverage_for_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
@@ -48,7 +48,7 @@ contract SiloReentrancyTest is Test {
         assertTrue(allCovered, "All methods should be covered");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_reentrancy
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_reentrancy
     function test_reentrancy() public {
         _deploySiloWithOverrides();
         Registries registries = new Registries();

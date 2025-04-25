@@ -78,7 +78,7 @@ contract HookReceiver is IHookReceiver, Test {
 }
 
 /*
-FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mc SiloBeforeHooksTest
+FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mc SiloBeforeHooksTest
 */
 contract SiloBeforeHooksTest is SiloLittleHelper, Test {
     address immutable BORROWER;
@@ -119,7 +119,7 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrow_2debt
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_borrow_2debt
     */
     function test_borrow_2debt() public {
         _hookReceiver.setBefore(uint24(Hook.BORROW));
@@ -137,7 +137,7 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_borrowSmeAsset_2debt
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_borrowSmeAsset_2debt
     */
     function test_borrowSmeAsset_2debt() public {
         _hookReceiver.setBefore(uint24(Hook.BORROW_SAME_ASSET));
@@ -155,7 +155,7 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_switchCollateralToThisSilo_debt
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_switchCollateralToThisSilo_debt
     */
     function test_switchCollateralToThisSilo_debt() public {
         _hookReceiver.setBefore(uint24(Hook.SWITCH_COLLATERAL));

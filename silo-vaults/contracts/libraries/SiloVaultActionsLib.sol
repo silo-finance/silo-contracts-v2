@@ -11,11 +11,15 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {ErrorsLib} from "./ErrorsLib.sol";
 import {EventsLib} from "./EventsLib.sol";
-import {PendingUint192, MarketConfig, ArbitraryLossThreshold} from "./PendingLib.sol";
+import {PendingLib, PendingUint192, MarketConfig, ArbitraryLossThreshold} from "./PendingLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
+
+import {PendingAddress} from "../interfaces/ISiloVault.sol";
 
 library SiloVaultActionsLib {
     using SafeERC20 for IERC20;
+    using PendingLib for PendingAddress;
+    using PendingLib for PendingUint192;
 
     function vaultDecimals(address _asset) external view returns (uint8 decimalsOffset) {
         require(_asset != address(0), ErrorsLib.ZeroAddress());
@@ -47,7 +51,6 @@ library SiloVaultActionsLib {
         IERC4626[] storage _withdrawQueue
     ) external returns (bool updateTotalAssets) {
         MarketConfig storage marketConfig = _config[_market];
-        uint256 approveValue;
 
         if (_supplyCap > 0) {
             if (!marketConfig.enabled) {
@@ -64,12 +67,9 @@ library SiloVaultActionsLib {
             }
 
             marketConfig.removableAt = 0;
-            // one time approval, so market can pull any amount of tokens from SiloVault in a future
-            approveValue = type(uint256).max;
         }
 
         marketConfig.cap = _supplyCap;
-        IERC20(_asset).forceApprove(address(_market), approveValue);
 
         emit EventsLib.SetCap(msg.sender, _market, _supplyCap);
 
@@ -117,6 +117,11 @@ library SiloVaultActionsLib {
             if (suppliable == 0) continue;
 
             uint256 internalBalance = _balanceTracker[market];
+
+            if (assets > internalBalance) {
+                // mimic the same behavior as we have in `deposit`
+                internalBalance = assets;
+            }
 
             // We reached a cap of the market by internal balance, so we can't supply more
             if (internalBalance >= supplyCap) continue;
@@ -178,6 +183,8 @@ library SiloVaultActionsLib {
         uint256 _expectedAssets,
         bool _override
     ) external {
+        if (_override == false && _expectedAssets != 0) revert ErrorsLib.InvalidOverride();
+
         uint256 oldBalance = _balanceTracker[_market];
         uint256 newBalance = _override ? _expectedAssets : expectedSupplyAssets(_market);
 
@@ -221,10 +228,11 @@ library SiloVaultActionsLib {
         emit EventsLib.SetFee(msg.sender, _newFee);
     }
 
-    function submitMarketRemovalValidateEmitEvent(
+    function submitMarketRemoval(
         IERC4626 _market,
         mapping(IERC4626 => MarketConfig) storage _config,
-        mapping(IERC4626 => PendingUint192) storage _pendingCap
+        mapping(IERC4626 => PendingUint192) storage _pendingCap,
+        uint256 _timelock
     ) external {
         if (_config[_market].removableAt != 0) revert ErrorsLib.AlreadyPending();
         if (_config[_market].cap != 0) revert ErrorsLib.NonZeroCap();
@@ -232,6 +240,9 @@ library SiloVaultActionsLib {
         if (_pendingCap[_market].validAt != 0) revert ErrorsLib.PendingCap(_market);
 
         emit EventsLib.SubmitMarketRemoval(msg.sender, _market);
+
+        // Safe to cast because timelock <= MAX_TIMELOCK.
+        _config[_market].removableAt = uint64(block.timestamp + _timelock);
     }
 
     function submitCapValidate(
@@ -246,5 +257,60 @@ library SiloVaultActionsLib {
         if (_config[_market].removableAt != 0) revert ErrorsLib.PendingRemoval();
         supplyCap = _config[_market].cap;
         if (_newSupplyCap == supplyCap) revert ErrorsLib.AlreadySet();
+    }
+
+    function updatePendingGuardian(PendingAddress storage _pendingGuardian, address _newGuardian, uint256 _timelock)
+        external
+    {
+        _pendingGuardian.update(_newGuardian, _timelock);
+
+        emit EventsLib.SubmitGuardian(_newGuardian);
+    }
+
+    function updateWithdrawQueue(
+        mapping(IERC4626 => MarketConfig) storage _config,
+        mapping(IERC4626 => PendingUint192) storage _pendingCap,
+        IERC4626[] calldata _withdrawQueue,
+        uint256[] calldata _indexes
+    ) external returns (IERC4626[] memory newWithdrawQueue) {
+        uint256 newLength = _indexes.length;
+        uint256 currLength = _withdrawQueue.length;
+
+        bool[] memory seen = new bool[](currLength);
+        newWithdrawQueue = new IERC4626[](newLength);
+
+        for (uint256 i; i < newLength; ++i) {
+            uint256 prevIndex = _indexes[i];
+
+            // If prevIndex >= currLength, it will revert with native "Index out of bounds".
+            IERC4626 market = _withdrawQueue[prevIndex];
+            if (seen[prevIndex]) revert ErrorsLib.DuplicateMarket(market);
+            seen[prevIndex] = true;
+
+            newWithdrawQueue[i] = market;
+        }
+
+        for (uint256 i; i < currLength; ++i) {
+            if (!seen[i]) {
+                IERC4626 market = _withdrawQueue[i];
+
+                if (_config[market].cap != 0) revert ErrorsLib.InvalidMarketRemovalNonZeroCap(market);
+                if (_pendingCap[market].validAt != 0) revert ErrorsLib.PendingCap(market);
+
+                if (SiloVaultActionsLib.ERC20BalanceOf(address(market), address(this)) != 0) {
+                    if (_config[market].removableAt == 0) revert ErrorsLib.InvalidMarketRemovalNonZeroSupply(market);
+
+                    if (block.timestamp < _config[market].removableAt) {
+                        revert ErrorsLib.InvalidMarketRemovalTimelockNotElapsed(market);
+                    }
+                }
+
+                delete _config[market];
+            }
+        }
+
+        emit EventsLib.SetWithdrawQueue(msg.sender, newWithdrawQueue);
+
+        return newWithdrawQueue;
     }
 }
