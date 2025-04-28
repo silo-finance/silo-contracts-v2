@@ -1077,6 +1077,23 @@ contract SiloIncentivesControllerTest is Test {
         emit log_named_string("programsNames[0]", programsNames[0]);
     }
 
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_20Symbols
+    function test_createIncentivesProgram_20Symbols() public {
+        uint104 emissionPerSecond;
+        uint256 distributionEnd;
+
+        string memory programName20Symbols = "ssssssssssssssssssss";
+
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.CollisionWithAddress.selector));
+        vm.prank(_owner);
+        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
+            name: programName20Symbols,
+            rewardToken: _rewardToken,
+            distributionEnd: uint40(distributionEnd),
+            emissionPerSecond: emissionPerSecond
+        }));
+    }
+
     function _claimRewards(address _user, address _to, string memory _programName) internal {
         uint256 snapshotId = vm.snapshot();
 
