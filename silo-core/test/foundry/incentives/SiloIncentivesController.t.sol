@@ -1062,6 +1062,21 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(programId2, addressAsBytes32, "invalid address conversion");
     }
 
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_programName_getter
+    function test_immediateDistribution_programName_getter() public {
+        string memory programName = Strings.toHexString(_rewardToken);
+
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_rewardToken, uint104(1));
+
+        string[] memory programsNames = _controller.getAllProgramsNames();
+
+        assertEq(programsNames[0], programName, "wrong conversion of programName");
+
+        emit log_named_address("_rewardToken", _rewardToken);
+        emit log_named_string("programsNames[0]", programsNames[0]);
+    }
+
     function _claimRewards(address _user, address _to, string memory _programName) internal {
         uint256 snapshotId = vm.snapshot();
 
