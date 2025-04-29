@@ -17,7 +17,7 @@ interface ISiloLeverage {
     /// @param _deposit deposit amount that user actually do
     /// @param _collateralType collateral type
     /// @param _multiplier leverage multiplier in 18 decimals, eg x1 == 1e18
-    /// @param _flashLoanLender source for flashloan
+    /// @param _flashDebtLender source for flashloan
     /// @param _borrowAmount amount of debt that leverage will create.
     /// This amount will be used to repay flashloan, pay fees and change will be transferred to user
     function leverage(
@@ -25,32 +25,29 @@ interface ISiloLeverage {
         uint256 _deposit,
         ISilo.CollateralType _collateralType,
         uint64 _multiplier,
-        IERC3156FlashLender _flashLoanLender,
+        IERC3156FlashLender _flashDebtLender,
         uint256 _borrowAmount
     ) external;
 
     /// @param _silo Silo address on which we doing leverage
     /// @param _deposit deposit amount that user actually do
     /// @param _multiplier leverage multiplier in 18 decimals, eg x1 == 1e18
-    /// @param _flashLoanLender source for flashloan
-    /// @param _swapSlippage max slippage for swap user will use to generate quote for swap data for leverage
-    /// Slippage is taken into consideration for calculate borrow amount, it increases amount of collateral by slippage
-    /// to have 100% guarantee that after swap we can cover all expenses
-    /// @param _collateralToDebtRatio swap ratio in 18 decimals collateral/debt eg 1ETH/2000USD = 1e18/2000e6 = 500000000e18
-    /// this ratio should be calculated based on quote API that will be used for swap for leverage
-    /// input amount for quote should be `deposit * leverage` as this will be expected amount to swap.
-    /// @return flashLoanAmount flashloan amount that is required for leverage
-    /// @return borrowAmount amount of debt that leverage will create
+    /// @param _flashDebtLender source for flashloan of debt token
+    /// @param _debtFlashloan amount of debt token that will be flashloaned
+    /// debt Flashloan amount should be calculated in this way: quote(deposit * leverage)
+    /// Swap fee and slippage are not considered. That means actual result will be UP TO provided leverage (usually less)
+     /// @return flashLoanAmount flashloan amount that is required for leverage
+    /// @return debtPreview amount of debt that leverage will create
     /// Borrow amount must be enough to:
     /// - cover leverage fee (fee is in debt token)
-    /// - after swap it to collateral token cover flashloan repay + flashloan fee
+    /// - cover flashloan repay + flashloan fee
     /// @return finalMultiplier final multiplier of leverage (might be different from input _multiplier)
     function previewLeverage(
         ISilo _silo,
         uint256 _deposit,
         uint64 _multiplier,
-        IERC3156FlashLender _flashLoanLender,
-        uint64 _swapSlippage,
+        IERC3156FlashLender _flashDebtLender,
+        uint64 _debtQuote,
         uint256 _collateralToDebtRatio
     ) external view returns (
         uint256 flashLoanAmount,
