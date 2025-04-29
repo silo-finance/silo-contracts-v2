@@ -14,7 +14,7 @@ import {HookReceiverMock} from "silo-core/test/foundry/_mocks/HookReceiverMock.s
 
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -39,7 +39,7 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         overrides.hookReceiver = hookReceiverMock.ADDRESS();
         overrides.configName = SiloConfigsNames.SILO_LOCAL_DEPLOYER;
 
-        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
+        SiloFixture siloFixture = new SiloFixture();
 
         address hook;
         (siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);

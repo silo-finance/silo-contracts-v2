@@ -10,10 +10,7 @@
   "workspaces": [
     "silo-core",
     "silo-oracles",
-    "silo-vaults",
-    "ve-silo",
-    "proposals",
-    "external/*"
+    "silo-vaults"
   ],
   "scripts": {
     "clear:artifacts": "find . -name 'artifacts' | xargs rm -rf",

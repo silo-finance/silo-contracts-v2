@@ -5,7 +5,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
+import {SiloDeployWithDeployerOwner} from "silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol";
 import {SiloConfigData} from "silo-core/deploy/input-readers/SiloConfigData.sol";
 
 // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployValidation
@@ -16,10 +16,10 @@ contract SiloDeployValidation is IntegrationTest {
     string constant internal _INVALID_IRM0 = "InterestRateModel0";
     string constant internal _INVALID_IRM1 = "InterestRateModel1";
 
-    SiloDeployWithGaugeHookReceiver internal _siloDeploy;
+    SiloDeployWithDeployerOwner internal _siloDeploy;
 
     function setUp() public {
-        _siloDeploy = new SiloDeployWithGaugeHookReceiver();
+        _siloDeploy = new SiloDeployWithDeployerOwner();
         _siloDeploy.useConfig(SiloConfigsNames.SILO_LOCAL_INVALID_CONTRACTS);
     }
 

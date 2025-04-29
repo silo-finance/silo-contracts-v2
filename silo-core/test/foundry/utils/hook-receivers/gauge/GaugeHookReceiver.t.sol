@@ -18,8 +18,6 @@ import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookRecei
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
-
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 
@@ -39,23 +37,21 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     address internal _gauge = makeAddr("Gauge");
     address internal _gauge2 = makeAddr("Gauge2");
 
-    address internal timelock = makeAddr("Timelock");
     address internal feeDistributor = makeAddr("FeeDistributor");
 
     event GaugeConfigured(address gauge, address shareToken);
 
     function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
-
         _siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);
 
         IHookReceiver hook = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 
         _hookReceiver = IGaugeHookReceiver(address(hook));
 
-        _dao = timelock;
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address deployer = vm.addr(deployerPrivateKey);
+
+        _dao = deployer;
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt testReInitialization
@@ -180,14 +176,6 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         vm.prank(_dao);
         _hookReceiver.setGauge(IGauge(_gauge), IShareToken(shareCollateralToken));
 
-        _mockGaugeIsKilled(false);
-
-        vm.prank(_dao);
-        vm.expectRevert(IGaugeHookReceiver.CantRemoveActiveGauge.selector);
-        _hookReceiver.removeGauge(IShareToken(shareCollateralToken));
-
-        _mockGaugeIsKilled(true);
-
         vm.prank(_dao);
         _hookReceiver.removeGauge(IShareToken(shareCollateralToken));
 
@@ -291,12 +279,6 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
             _TS
         );
     }
-
-   function _mockGaugeIsKilled(bool _killed) internal {
-       bytes memory data = abi.encodePacked(IGauge.is_killed.selector); // selector:0x9c868ac0
-       vm.mockCall(_gauge, data, abi.encode(_killed));
-       vm.expectCall(_gauge, data);
-   }
 
     function _mockGaugeShareToken(address _gaugeToMock, address _tokenToSet) internal {
         bytes memory data = abi.encodePacked(IGauge.share_token.selector);
