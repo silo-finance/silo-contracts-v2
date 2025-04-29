@@ -73,15 +73,11 @@ contract SiloLeverage is ISiloLeverage
         uint256 flashLoanFeeInCollateralToken = _flashLoanLender.flashFee(collateralConfig.token, flashLoanAmount);
 
         // TODO notice we using maxLtvOracle
+        // we not using `_collateralToDebtRatio` here, because quote in this case is more precise, quote is what Silo uses to calculate value
         // flashValue = 3e18 * $2000 = 6000e6
         uint256 flashValue = _quote(collateralConfig.maxLtvOracle, flashLoanAmount, collateralConfig.token);
         // totalCollateral = 3e18 + 2e18 = 5e18
         uint256 totalCollateral = flashLoanAmount + _deposit;
-
-        // totalCollateralValue = 5e18 * $2000 = 10_000e6
-        uint256 totalCollateralValue = collateralConfig.maxLtvOracle == address(0)
-            ? totalCollateral
-            : _calculateValueBasedOnRatio(flashLoanAmount, flashValue, totalCollateral);
 
         // we need to calculate amount to borrow,
         // for that we need to figure out ratio between collateral token and borrow token
@@ -101,14 +97,6 @@ contract SiloLeverage is ISiloLeverage
 
         // borrowAmount = min(6070.1e18 + 1, 8000e6) = 6070.1e18
         borrowAmount = Math.min(amountOutInDebtToken + leverageFeeInDebtToken, maxPossibleBorrowAmount);
-    }
-
-    function _calculateValueBasedOnRatio(uint256 _amount, uint256 _value, uint256 _inputAmount)
-        internal
-        view
-        returns (uint256 outputValue)
-    {
-        outputValue = _inputAmount * _value / _amount;
     }
 
     function _quote(address _oracle, uint256 _baseAmount, address _baseToken)
