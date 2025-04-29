@@ -68,6 +68,11 @@ rule onlySpecicifiedMethodsCanDecreaseMarketBalance(env e, method f, address mar
     assert balanceAfter < balanceBefore => isAllowedToDecreaseBalance;
 }
 
+
+/////////////////////
+//  IN DEVELOPMENT //
+/////////////////////
+
 persistent ghost previewRedeemGhost(uint256) returns uint256 {       
     axiom forall uint256 x. forall uint256 y. x < y => previewRedeemGhost(x) <= previewRedeemGhost(y);
 }
