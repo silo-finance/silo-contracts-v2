@@ -10,7 +10,7 @@ methods {
     function ERC20.allowance(address, address, address) external returns (uint256) envfree;
     
     function _.allowance(address owner, address spender) external => DISPATCHER(true);
-    function vault0.getTotalSupply(address) external returns(uint256) envfree;
+    function market0.getTotalSupply(address) external returns(uint256) envfree;
 
     //function _.mint(uint256, address) external => DISPATCHER(true);
     

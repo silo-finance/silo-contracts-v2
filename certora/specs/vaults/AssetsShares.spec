@@ -3,7 +3,7 @@ import "LastUpdated.spec";
 
 using ERC20Helper as ERC20Helper;
 using SiloVaultHarness as siloVaultHarness;
-using Vault1 as vault1;
+using Market1 as market1;
 using SiloVaultActionsLib as siloVaultActionsLib;
 using UtilsLib as utilsLib;
 
@@ -22,10 +22,10 @@ methods {
     function ERC20.allowance(address, address, address) external returns (uint256) envfree;
     
     function _.allowance(address owner, address spender) external => DISPATCHER(true);
-    function vault0.getTotalSupply(address) external returns(uint256) envfree;
+    function market0.getTotalSupply(address) external returns(uint256) envfree;
 
-    function vault0.asset() external returns(address) envfree;
-    function vault1.asset() external returns(address) envfree;
+    function market0.asset() external returns(address) envfree;
+    function market1.asset() external returns(address) envfree;
     
     //function _.mint(uint256, address) external => DISPATCHER(true);
     function _.balanceOf(address) external => DISPATCHER(true);
@@ -148,15 +148,15 @@ function setupMarkets()
     require supplyQLength() == 1;
     require withdrawQLength() == 2;
 
-    require supplyQGetAt(0) == vault0;
-    require withdrawQGetAt(0) == vault0;
-    require withdrawQGetAt(1) == vault1;
+    require supplyQGetAt(0) == market0;
+    require withdrawQGetAt(0) == market0;
+    require withdrawQGetAt(1) == market1;
     
-    require vault0.asset() == asset();
-    require vault1.asset() == asset();
+    require market0.asset() == asset();
+    require market1.asset() == asset();
 
-    require tokenByMarket[vault0] == asset();
-    require tokenByMarket[vault1] == asset();
+    require tokenByMarket[market0] == asset();
+    require tokenByMarket[market1] == asset();
 
 }
 
@@ -173,8 +173,8 @@ function notInTheSceneAssumptions(address user)
 {
     require user != siloVaultHarness; //Vault doesn't call public methods on itself
     require user != asset();
-    require user != vault0;
-    require user != vault1;
+    require user != market0;
+    require user != market1;
 }
 ////////////////////////////
 //      FINISHED RULES    //
@@ -212,7 +212,7 @@ persistent ghost bool delegatecallMade;
 
 hook CALL(uint g, address addr, uint value, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
     // calls to libraries and markets are allowed
-    if (addr != currentContract.asset() && addr != utilsLib && addr != vault0 && addr != vault1) 
+    if (addr != currentContract.asset() && addr != utilsLib && addr != market0 && addr != market1) 
     {
         callMade = true;
     }

@@ -12,8 +12,8 @@ methods {
     function _.withdraw(uint256 assets, address receiver, address spender) external => summaryWithdraw(calledContract, assets, receiver, spender) expect (uint256) ALL;
     function _.redeem(uint256 shares, address receiver, address spender) external => summaryRedeem(calledContract, shares, receiver, spender) expect (uint256) ALL;
     
-    function vault0.getConvertToShares(address vault, uint256 assets) external returns(uint256) envfree;
-    function vault0.getConvertToAssets(address vault, uint256 shares) external returns(uint256) envfree;
+    function market0.getConvertToShares(address vault, uint256 assets) external returns(uint256) envfree;
+    function market0.getConvertToAssets(address vault, uint256 shares) external returns(uint256) envfree;
 }
 
 function summaryDeposit(address market, uint256 assets, address receiver) returns uint256 {
@@ -25,7 +25,7 @@ function summaryDeposit(address market, uint256 assets, address receiver) return
     requireInvariant enabledHasConsistentAsset(market);
     
     ERC20.safeTransferFrom(asset(), currentContract, market, assets);
-    return vault0.getConvertToShares(market, assets);
+    return market0.getConvertToShares(market, assets);
 }
 
 function summaryWithdraw(address market, uint256 assets, address receiver, address spender) returns uint256 {
@@ -41,7 +41,7 @@ function summaryWithdraw(address market, uint256 assets, address receiver, addre
 
     ERC20.safeTransferFrom(asset, market, currentContract, assets);
 
-    return vault0.getConvertToShares(market, assets);
+    return market0.getConvertToShares(market, assets);
 }
 
 function summaryRedeem(address market, uint256 shares, address receiver, address spender) returns uint256 {
@@ -54,7 +54,7 @@ function summaryRedeem(address market, uint256 shares, address receiver, address
     requireInvariant enabledHasConsistentAsset(market);
 
     address asset = asset();
-    uint256 assets = vault0.getConvertToAssets(market, shares);
+    uint256 assets = market0.getConvertToAssets(market, shares);
 
     ERC20.safeTransferFrom(asset, market, currentContract, assets);
 
@@ -178,7 +178,7 @@ hook Sstore Token0._balances[KEY address user] uint256 newBalance (uint256 oldBa
 rule balanceTrackerDecreasesThenBalanceIncreases(env e, method f)
     filtered { f -> !f.isView && f.selector != sig:syncBalanceTracker(address,uint256,bool).selector }
 {
-    require e.msg.sender != vault0;
+    require e.msg.sender != market0;
     require balanceTrackerChange == 0;
     require vaultBalanceIncrease == 0;
     require vaultBalanceDecrease == 0;
@@ -195,7 +195,7 @@ rule vaultBalanceNeutral(env e, method f)
     filtered { f -> !f.isView }
 {
     require e.msg.sender != siloVaultHarness;
-    require e.msg.sender != vault0;
+    require e.msg.sender != market0;
     address receiver;
     require receiver != siloVaultHarness;
     address asset = asset();

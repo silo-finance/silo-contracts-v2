@@ -2,9 +2,9 @@
 // Doesn't reuire the withdrawRank
 // works with 2-3 markets in the withdrawQ
 
-using Vault0 as Vault0;
-// using Vault1 as Vault1;
-using Vault2 as Vault2;
+using Market0 as Market0;
+// using Market1 as Market1;
+using Market2 as Market2;
 // using Vault3 as Vault3;
 using VaultIncentivesModule as VaultIncentivesModule;
 using SiloIncentivesControllerCL as SiloIncentivesControllerCL;
@@ -15,8 +15,8 @@ using Token0 as Token0;
 methods {
     function _.balanceOf(address a) external => DISPATCHER(true); 
 
-    function Vault0.convertToAssets(uint256 shares) external returns (uint256) envfree;
-    function Vault2.convertToAssets(uint256 shares) external returns (uint256) envfree;
+    function Market0.convertToAssets(uint256 shares) external returns (uint256) envfree;
+    function Market2.convertToAssets(uint256 shares) external returns (uint256) envfree;
 
     function _.redeem(uint256 shares, address receiver, address owner) external => DISPATCHER(true); 
     function _.approve(address spender, uint256 value) external => DISPATCHER(true);
@@ -70,10 +70,10 @@ function assertFalse() returns bytes32 {
 
 
 function convertToAssetDispatchCVL(uint shares, address callee) returns uint256 {
-    if (callee == Vault0) {
-        return Vault0.convertToAssets(shares);
-    } else if (callee == Vault2) {
-        return Vault2.convertToAssets(shares);
+    if (callee == Market0) {
+        return Market0.convertToAssets(shares);
+    } else if (callee == Market2) {
+        return Market2.convertToAssets(shares);
     } else {
         require false;
         return 0;
@@ -92,19 +92,19 @@ function _getIncentivesProgramIndexCVL(uint256 currentIndex) returns uint256 {
 }
 
 hook Sload address wQueue withdrawQueue[INDEX uint i] {
-    require i == 0 => wQueue == Vault0;
-    // require wQueue[1] == Vault1;
+    require i == 0 => wQueue == Market0;
+    // require wQueue[1] == Market1;
 }
 
 hook Sload address sQueue supplyQueue[INDEX uint i] {
-    require i == 0 => sQueue == Vault2;
+    require i == 0 => sQueue == Market2;
     // require sQueue[1] == Vault3;
 }
 
 function assume2Vaults() {
-    require currentContract.withdrawQueue[0] == Vault0;
-    // require currentContract.withdrawQueue[1] == Vault1;
-    require currentContract.supplyQueue[0] == Vault2;
+    require currentContract.withdrawQueue[0] == Market0;
+    // require currentContract.withdrawQueue[1] == Market1;
+    require currentContract.supplyQueue[0] == Market2;
     // require currentContract.supplyQueue[1] == Vault3;
 }
 

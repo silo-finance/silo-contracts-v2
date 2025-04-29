@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import "ConsistentState.spec";
 
-using Vault0 as vault0;
+using Market0 as market0;
 using ERC20Helper as ERC20;
 
 methods {
@@ -9,7 +9,7 @@ methods {
     function ERC20.totalSupply(address) external returns(uint256) envfree;
     function ERC20.safeTransferFrom(address, address, address, uint256) external envfree;
 
-    function vault0.getTotalSupply(address) external returns(uint256) envfree;
+    function market0.getTotalSupply(address) external returns(uint256) envfree;
 
     // function Morpho.lastUpdate(MorphoHarness.market) external returns(uint256) envfree;
     // function Morpho.virtualTotalSupplyAssets(MorphoHarness.market) external returns(uint256) envfree;
@@ -33,7 +33,7 @@ function hasGuardianRole(address user) returns bool {
 // - on MetaMorpho, that it holds when the cap is positive for the first time
 // - on Blue, that a created market always has a positive last update
 function hasPositiveSupplyCapIsUpdated(address market) returns bool {
-    return config_(market).cap > 0 => vault0.getTotalSupply(market) > 0;
+    return config_(market).cap > 0 => market0.getTotalSupply(market) > 0;
 }
 
 // Check that any new market in the supply queue necessarily has a positive cap.
