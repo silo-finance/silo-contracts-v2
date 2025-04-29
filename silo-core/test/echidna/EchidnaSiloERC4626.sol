@@ -19,7 +19,6 @@ contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
     event AssertionFailed(string msg, string reason);
 
     constructor() payable {
-        ve_setUp(1706745600);
         core_setUp(address(this)); // fee receiver
 
         TestERC20Token _asset0 = new TestERC20Token("Test Token0", "TT0", 18);

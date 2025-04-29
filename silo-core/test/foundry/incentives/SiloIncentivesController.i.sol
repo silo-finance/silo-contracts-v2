@@ -15,7 +15,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
