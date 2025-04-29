@@ -12538,10 +12538,10 @@ BRF:10
 BRH:9
 end_of_record
 TN:
-SF:silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol
+SF:silo-core/test/foundry/_common/fixtures/SiloFixture.sol
 DA:11,524
-FN:11,SiloFixtureWithVeSilo.constructor
-FNDA:524,SiloFixtureWithVeSilo.constructor
+FN:11,SiloFixture.constructor
+FNDA:524,SiloFixture.constructor
 DA:12,524
 DA:14,524
 DA:16,524

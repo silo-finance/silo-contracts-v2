@@ -6,8 +6,8 @@ import {console2} from "forge-std/console2.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {CommonBase} from "forge-std/Base.sol";
 
-import {MainnetVeSiloDeploy} from "silo-core/deploy/mainnet-deploy/MainnetVeSiloDeploy.s.sol";
-import {SiloDeployWithGaugeHookReceiver} from "silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol";
+import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
+import {SiloDeployWithDeployerOwner} from "silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -23,7 +23,7 @@ struct SiloConfigOverride {
     string configName;
 }
 
-contract SiloDeploy_Local is SiloDeployWithGaugeHookReceiver {
+contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
     bytes32 public constant CLONE_IMPLEMENTATION_KEY = keccak256(bytes("CLONE_IMPLEMENTATION"));
 
     SiloConfigOverride internal siloConfigOverride;
@@ -93,7 +93,7 @@ contract SiloFixture is StdCheats, CommonBase {
             address hookReceiver
         )
     {
-        return _deploy(new SiloDeployWithGaugeHookReceiver(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
+        return _deploy(new SiloDeployWithDeployerOwner(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
     }
 
     function deploy_local(string memory _configName)
@@ -128,7 +128,7 @@ contract SiloFixture is StdCheats, CommonBase {
         );
     }
 
-    function _deploy(SiloDeployWithGaugeHookReceiver _siloDeploy, string memory _configName)
+    function _deploy(SiloDeployWithDeployerOwner _siloDeploy, string memory _configName)
         internal
         returns (
             ISiloConfig siloConfig,
@@ -140,7 +140,7 @@ contract SiloFixture is StdCheats, CommonBase {
         )
     {
         if (!_mainNetDeployed) {
-            MainnetVeSiloDeploy mainnetDeploy = new MainnetVeSiloDeploy();
+            MainnetDeploy mainnetDeploy = new MainnetDeploy();
             mainnetDeploy.disableDeploymentsSync();
             mainnetDeploy.run();
             console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");

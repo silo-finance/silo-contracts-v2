@@ -14,7 +14,7 @@ import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 
 import {MintableToken} from "./MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo} from "./fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "./fixtures/SiloFixture.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
     bool constant SAME_ASSET = true;
@@ -42,7 +42,7 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
-        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
+        SiloFixture siloFixture = new SiloFixture();
         return _localFixture("", SiloFixture(address(siloFixture)));
     }
 
@@ -57,7 +57,7 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
+        SiloFixture siloFixture = new SiloFixture();
         return _localFixture(_configName, SiloFixture(address(siloFixture)));
     }
 

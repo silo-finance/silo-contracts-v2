@@ -53,7 +53,6 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
         IGauge configuredGauge = configuredGauges[_shareToken];
 
         require(address(configuredGauge) != address(0), GaugeIsNotConfigured());
-        require(configuredGauge.is_killed(), CantRemoveActiveGauge());
 
         delete configuredGauges[_shareToken];
 
