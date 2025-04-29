@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
@@ -10,6 +12,7 @@ import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
+import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
 
 /// @title SiloLens is a helper contract for integrations and UI
@@ -239,5 +242,25 @@ contract SiloLens is ISiloLens {
 
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
         irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
+    }
+
+    function getSiloIncentivesControllerProgramsNames(
+        address _siloIncentivesController
+    ) public view returns (string[] memory programsNames) {
+        IDistributionManager distributionManager = IDistributionManager(_siloIncentivesController);
+        string[] memory originalProgramsNames = distributionManager.getAllProgramsNames();
+
+        programsNames = new string[](originalProgramsNames.length);
+
+        for (uint256 i; i < originalProgramsNames.length; i++) {
+            bytes memory originalProgramName = bytes(originalProgramsNames[i]);
+            
+            if (originalProgramName.length == 20) {
+                bytes32 nameBytes32 = bytes32(originalProgramName) >> 8 * 12;
+                programsNames[i] = Strings.toHexString(uint256(nameBytes32), 20);
+            } else {
+                programsNames[i] = originalProgramsNames[i];
+            }
+        }
     }
 }
