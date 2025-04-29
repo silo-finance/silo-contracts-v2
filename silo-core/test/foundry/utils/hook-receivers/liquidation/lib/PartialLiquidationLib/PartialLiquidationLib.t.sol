@@ -6,7 +6,7 @@ import {console} from "forge-std/console.sol";
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 
 import {PartialLiquidationLibChecked} from "./PartialLiquidationLibChecked.sol";
 import {CalculateCollateralToLiquidateTestData} from "../../../../../data-readers/CalculateCollateralToLiquidateTestData.sol";

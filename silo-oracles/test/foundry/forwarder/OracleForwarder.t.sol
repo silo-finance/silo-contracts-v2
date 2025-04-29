@@ -17,6 +17,8 @@ import {SiloOracleMock2} from "silo-oracles/test/foundry/_mocks/silo-oracles/Sil
 contract OracleForwarderTest is Test {
     address internal _owner = makeAddr("Owner");
 
+    IOracleForwarderFactory internal _factory;
+
     SiloOracleMock1 internal _oracleMock1;
     SiloOracleMock2 internal _oracleMock2;
 
@@ -34,11 +36,12 @@ contract OracleForwarderTest is Test {
         OracleForwarderFactoryDeploy factoryDeploy = new OracleForwarderFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
 
-        address factory = factoryDeploy.run();
+        _factory = IOracleForwarderFactory(factoryDeploy.run());
 
-        _oracleForwarder = IOracleForwarderFactory(factory).createOracleForwarder(
+        _oracleForwarder = _factory.createOracleForwarder(
             ISiloOracle(address(_oracleMock1)),
-            _owner
+            _owner,
+            bytes32(0)
         );
     }
 
@@ -121,5 +124,31 @@ contract OracleForwarderTest is Test {
         _oracleForwarder.setOracle(ISiloOracle(address(_oracleMock2)));
 
         assertEq(forwarder.quoteToken(), _oracleMock2.tokenAsQuote());
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --mt test_OracleForwarder_reorg
+    function test_OracleForwarder_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        IOracleForwarder oracle1 = _factory.createOracleForwarder(
+            ISiloOracle(address(_oracleMock1)),
+            _owner,
+            bytes32(0)
+        );
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        IOracleForwarder oracle2 = _factory.createOracleForwarder(
+            ISiloOracle(address(_oracleMock2)),
+            _owner,
+            bytes32(0)
+        );
+
+        assertNotEq(address(oracle1), address(oracle2), "oracle1 == oracle2");
     }
 }

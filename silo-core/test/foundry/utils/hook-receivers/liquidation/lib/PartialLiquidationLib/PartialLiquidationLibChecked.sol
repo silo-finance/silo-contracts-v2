@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 

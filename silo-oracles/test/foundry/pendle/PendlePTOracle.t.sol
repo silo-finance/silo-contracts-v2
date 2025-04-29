@@ -65,17 +65,17 @@ contract PendlePTOracleTest is Forking {
         vm.expectEmit(false, false, false, false);
         emit PendlePTOracleCreated(ISiloOracle(address(0)));
 
-        factory.create(new SiloOracleMock1(), market);
+        factory.create(new SiloOracleMock1(), market, bytes32(0));
     }
 
     function test_PendlePTOracle_factory_create_updatesMapping() public {
-        assertTrue(factory.createdInFactory(factory.create(new SiloOracleMock1(), market)));
+        assertTrue(factory.createdInFactory(factory.create(new SiloOracleMock1(), market, bytes32(0))));
         assertTrue(factory.createdInFactory(oracle));
     }
 
     function test_PendlePTOracle_factory_create_canDeployDuplicates() public {
-        assertTrue(factory.createdInFactory(factory.create(underlyingOracle, market)));
-        assertTrue(factory.createdInFactory(factory.create(underlyingOracle, market)));
+        assertTrue(factory.createdInFactory(factory.create(underlyingOracle, market, bytes32(0))));
+        assertTrue(factory.createdInFactory(factory.create(underlyingOracle, market, bytes32(0))));
     }
 
     function test_PendlePTOracle_constructor_state() public view {
@@ -99,7 +99,7 @@ contract PendlePTOracleTest is Forking {
         );
 
         vm.expectRevert(PendlePTOracle.TokensDecimalsDoesNotMatch.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_constructor_revertsInvalidUnderlyingOracle() public {
@@ -110,7 +110,7 @@ contract PendlePTOracleTest is Forking {
         );
 
         vm.expectRevert(PendlePTOracle.InvalidUnderlyingOracle.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_constructor_revertsPendleOracleNotReady_cardinality() public {
@@ -121,7 +121,7 @@ contract PendlePTOracleTest is Forking {
         );
 
         vm.expectRevert(PendlePTOracle.PendleOracleNotReady.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_constructor_revertsPendleOracleNotReady_observations() public {
@@ -132,7 +132,7 @@ contract PendlePTOracleTest is Forking {
         );
 
         vm.expectRevert(PendlePTOracle.PendleOracleNotReady.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_constructor_revertsPendleOracleNotReady_cardinalityAndObservations() public {
@@ -143,7 +143,7 @@ contract PendlePTOracleTest is Forking {
         );
 
         vm.expectRevert(PendlePTOracle.PendleOracleNotReady.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_constructor_revertsPendleOracleNotReady_integration() public {
@@ -153,7 +153,7 @@ contract PendlePTOracleTest is Forking {
 
         factory = new PendlePTOracleFactory(pendleOracle);
         vm.expectRevert(PendlePTOracle.PendleOracleNotReady.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_constructor_revertsPendlePtToSyRateIsZero() public {
@@ -164,7 +164,7 @@ contract PendlePTOracleTest is Forking {
         );
 
         vm.expectRevert(PendlePTOracle.PendlePtToSyRateIsZero.selector);
-        factory.create(underlyingOracle, market);
+        factory.create(underlyingOracle, market, bytes32(0));
     }
 
     function test_PendlePTOracle_quoteToken() public view {
@@ -236,5 +236,25 @@ contract PendlePTOracleTest is Forking {
         assertEq(oracle.quote(quoteAmount, ptToken), newUnderlyingPrice * rateFromPendleOracle / 10 ** 18);
         assertTrue(oracle.quote(quoteAmount, ptToken) < newUnderlyingPrice);
         assertTrue(oracle.quote(quoteAmount, ptToken) > newUnderlyingPrice * 95 / 100); // rate is ~96.68%
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_PendlePTOracle_reorg -vv
+    */
+    function test_PendlePTOracle_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        address oracle1 = address(factory.create(underlyingOracle, market, bytes32(0)));
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        address oracle2 = address(factory.create(underlyingOracle, market, bytes32(0)));
+
+        assertNotEq(oracle1, oracle2, "oracle1 == oracle2");        
     }
 }

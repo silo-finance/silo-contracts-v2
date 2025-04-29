@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {TestERC20Token} from "properties/ERC4626/util/TestERC20Token.sol";
 import {PropertiesAsserts} from "properties/util/PropertiesHelper.sol";

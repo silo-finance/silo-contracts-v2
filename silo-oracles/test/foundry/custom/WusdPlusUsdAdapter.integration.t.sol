@@ -55,7 +55,7 @@ contract WusdPlusUsdAdapterTest is IntegrationTest {
             _ORACLE_CONFIG_NAME
         );
 
-        ChainlinkV3Oracle oracle = _chainlinkV3OracleFactory.create(config);
+        ChainlinkV3Oracle oracle = _chainlinkV3OracleFactory.create(config, bytes32(0));
 
         uint256 quoteAmount = oracle.quote(1e18, address(config.baseToken));
 

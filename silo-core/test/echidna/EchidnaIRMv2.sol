@@ -76,7 +76,7 @@ contract EchidnaIRMv2 is PropertiesAsserts {
             Tcrit: 0
         });
 
-        (, IInterestRateModelV2 createdIRM) = factory.create(_config);
+        (, IInterestRateModelV2 createdIRM) = factory.create(_config, bytes32(0));
 
         IRMv2 = InterestRateModelV2(address(createdIRM));
     }

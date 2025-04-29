@@ -4,8 +4,8 @@ pragma solidity 0.8.28;
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IHookReceiver} from "../../../interfaces/IHookReceiver.sol";
-import {ISiloConfig} from "../../../interfaces/ISiloConfig.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 abstract contract BaseHookReceiver is IHookReceiver, Initializable {
     ISiloConfig public siloConfig;

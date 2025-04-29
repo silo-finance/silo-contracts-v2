@@ -490,7 +490,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* ERC4626 (PUBLIC) */
 
-    /// @inheritdoc IERC20Metadata
+    /// @dev Decimals by design are 18 to improve compatibility for external integrations.
+    /// SiloVault do not have an initial 1:1 shares-to-assets rate with underlying markets.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
         return 18;
     }

@@ -9,8 +9,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {BaseHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/BaseHookReceiver.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 

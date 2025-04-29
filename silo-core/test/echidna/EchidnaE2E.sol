@@ -10,8 +10,8 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {PartialLiquidationLib} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";

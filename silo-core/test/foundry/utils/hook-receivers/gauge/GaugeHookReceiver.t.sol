@@ -13,7 +13,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
-import {GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
