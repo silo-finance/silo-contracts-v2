@@ -72,7 +72,10 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
             ? flashLoanAmount
             : _calculateValueBasedOnRatio(flashLoanAmount, flashValue, flashLoanAmount + _deposit);
 
-        // we don't know debt
+        // we need to calculate amount to borrow,
+        // for that we need to figure out ratio between collateral token and borrow token
+        // would that be easier to provide by BE? our oracles are not ment for swap
+
         uint256 debtSampleAmount = 1e18;
         uint256 debtSampleValue = _quote(debtConfig.maxLtvOracle, debtSampleAmount, debtConfig.token);
 
@@ -81,17 +84,23 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
         uint256 borrowAmountForWholeCollateral = debtSampleAmount * totalCollateralValue / debtSampleValue;
         // maxLTV % of total collateral (flashLoanAmount + _deposit)
         uint256 maxBorrowAmount = debtSampleAmount * maxBorrowValue / debtSampleValue;
-        uint256 collateralToDebtRatio = totalCollateralValue * _DECIMALS / borrowAmountForWholeCollateral;
+
+        // TODO or BE can provide collateralToDebtRatio based on sample quote?
+        uint256 collateralToDebtRatio = _collateralToDebtRatio({
+            _totalCollateralValue: totalCollateralValue,
+            _maxLtv: collateralConfig.maxLtv,
+            _debtOracle: debtConfig.maxLtvOracle,
+            _debtToken: debtConfig.token
+        });
 
         uint256 collateralSlippage = _swapSlippage * (flashLoanAmount + flashLoanFeeInCollateralToken) / _DECIMALS;
-        uint256 collateralSlippageInDebtToken = collateralSlippage * _DECIMALS / collateralToDebtRatio;
+        // amount of collateral needed after swap
+        uint256 amountOut = flashLoanAmount + flashLoanFeeInCollateralToken + collateralSlippage;
+        uint256 amountOutInDebtToken = amountOut * _DECIMALS / collateralToDebtRatio;
+
         uint256 flashLoanFeeInDebtToken = _flashloanLender.flashFee(collateralConfig.token, flashLoanAmount) * _DECIMALS / collateralToDebtRatio;
 
-        borrowAmount = Math.min(
-            debtSampleAmount * flashValue / debtSampleValue
-                + flashLoanFeeInDebtToken + leverageFeeInDebtToken + collateralSlippageInDebtToken,
-            maxBorrowAmount
-        );
+        borrowAmount = Math.min(amountOutInDebtToken + leverageFeeInDebtToken, maxBorrowAmount);
     }
 
     function _calculateValueBasedOnRatio(uint256 _amount, uint256 _value, uint256 _inputAmount)
@@ -110,6 +119,26 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
         quoteAmount = _oracle == address(0)
             ? _baseAmount
             : ISiloOracle(_oracle).quote(_baseAmount, _baseToken);
+    }
+
+
+    function _collateralToDebtRatio(
+        uint256 _totalCollateralValue,
+        uint256 _maxLtv,
+        address _debtOracle,
+        address _debtToken
+    )
+        internal
+        view
+        returns (uint256 collateralToDebtRatio)
+    {
+        uint256 debtSampleAmount = 1e18;
+        uint256 debtSampleValue = _quote(_debtOracle, debtSampleAmount, _debtToken);
+
+        uint256 maxBorrowValue = _totalCollateralValue * _maxLtv / _DECIMALS;
+
+        uint256 borrowAmountForWholeCollateral = debtSampleAmount * _totalCollateralValue / debtSampleValue;
+        collateralToDebtRatio = _totalCollateralValue * _DECIMALS / borrowAmountForWholeCollateral;
     }
 
     function closeLeverage(
