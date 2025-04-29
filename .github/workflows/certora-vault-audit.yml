@@ -9,23 +9,23 @@ on:
       - 'certora-SiloVault'
   pull_request:
     branches:
-      - 'certora-SiloVaul'
+      - 'certora-SiloVault'
   workflow_dispatch:
 
 
 env:
   FOUNDRY_PROFILE: ci
   CONFIGS: |
-    certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled
+    certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled
     certora/config/vaults/consistentState.conf --exclude_rule supplyCapIsEnabled
     certora/config/vaults/distinctIdentifiers.conf 
-    certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank
-    certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ
-    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled
-    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2
+    certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank
+    certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ
+    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled
+    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue
     certora/config/vaults/immutability.conf
     certora/config/vaults/lastUpdated.conf 
-    certora/config/vaults/tokenApproval.conf --msg notInWithdrawQThenNoApproval  
+    certora/config/vaults/tokenApproval.conf
     certora/config/vaults/liveness.conf --rule canPauseSupply
     certora/config/vaults/marketInteractions.conf 
     certora/config/vaults/pendingValues.conf 
@@ -35,7 +35,7 @@ env:
     certora/config/vaults/roles.conf
     certora/config/vaults/timelock.conf --exclude_rule removableTime
     certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
-    certora/config/vaults/tokens.conf --rule vaultBalanceNeutral --msg vaultBalanceNeutral --parametric_contracts SiloVaultHarness
+    certora/config/vaults/tokens.conf --rule vaultBalanceNeutral
     certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
     certora/config/vaults/ERC4626.conf
 
@@ -56,7 +56,7 @@ jobs:
           python-version: '3.10'
           # cache: 'pip'
 
-      # NOTE: useing certora-cli-beta for now!
+      # NOTE: using certora-cli-beta for now!
       - name: Install certora
         run: pip3 install certora-cli-beta
 
