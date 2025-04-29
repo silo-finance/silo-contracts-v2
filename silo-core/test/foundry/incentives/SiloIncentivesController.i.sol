@@ -106,7 +106,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         __init(token0, token1, silo0, silo1);
 
-        _controller = new SiloIncentivesController(address(this), address(hook));
+        _controller = new SiloIncentivesController(address(this), address(hook), address(silo0));
         hook.setup(_controller, MintableToken(address(silo0)));
 
         silo0.updateHooks();
