@@ -21,7 +21,8 @@ contract SiloLeverage is ISiloLeverage
 //, IERC3156FlashBorrower
 {
     uint256 internal constant _DECIMALS = 1e18;
-    
+    uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
+
     /// @dev Silo is not designed to work with ether, but it can act as a middleware
     /// between any third-party contract and hook receiver. So, this is the responsibility
     /// of the hook receiver developer to handle it if needed.
@@ -34,25 +35,33 @@ contract SiloLeverage is ISiloLeverage
         ISilo.CollateralType _collateralType,
         uint64 _multiplier,
         IERC3156FlashLender _flashLoanLender,
-        uint256 _borrowAmount
+        uint256 _debtPreview
     ) external virtual {
         // TODO
     }
+
+    // TODO I see this issues with preview:
+    // 1. it will not be deterministic, because it depends on swap result and swap has fee and slippage
+    // so expected result will be always lower than preview method can estimate
+    //
+    // 2. we have another approximation: collateral/debt ratio, it will affect result as well
+    //
+    //
+    // so in general IDK if it will not be better to simply do static call to `leverage` instead
+    // if method is not deterministic does it bring value for UI?
 
     /// @inheritdoc ISiloLeverage
     function previewLeverage(
         ISilo _silo,
         uint256 _deposit, // 2e18
         uint64 _multiplier, // 1.5e18
-        IERC3156FlashLender _flashLoanLender,
-        uint64 _swapSlippage, // 0.01e18,
-        uint256 _collateralToDebtRatio // 500000000e18
+        IERC3156FlashLender _flashDebtLender,
+        uint64 _debtFlashloan // 1.5e18 * $2000 = 3000e6,
     ) external view virtual returns (
         uint256 flashLoanAmount,
-        uint256 borrowAmount,
+        uint256 debtPreview,
         uint64 finalMultiplier
     ) {
-        uint256 leverageFeeInDebtToken = 1;
         ISiloConfig config = _silo.config();
 
         (address silo0, address silo1) = config.getSilos();
@@ -63,21 +72,26 @@ contract SiloLeverage is ISiloLeverage
         ) = config.getConfigsForBorrow(silo0 == address(_silo) ? silo1 : silo0);
 
         // maxFlashLoan: unlimited
-        uint256 maxFlashLoan = _flashLoanLender.maxFlashLoan(collateralConfig.token);
-        // flashLoanAmount = (2e18 * 1.5e18 / 1e18) = 3e18
-        flashLoanAmount = Math.min(_deposit * _multiplier / _DECIMALS, maxFlashLoan);
-        // finalMultiplier = 3e18 * 1e18 / 2e18 = 1.5e18
-        finalMultiplier = uint64(flashLoanAmount * _DECIMALS / _deposit);
+        uint256 maxFlashLoan = _flashDebtLender.maxFlashLoan(debtConfig.token);
+        // flashLoanAmount = 3000e6 = 3000e6
+        flashLoanAmount = Math.min(_debtFlashloan, maxFlashLoan);
+        // finalMultiplier = 3000e6 * 1.5e18 / 3000e6 = 1.5e18
+        finalMultiplier = uint64(flashLoanAmount * _multiplier / _debtFlashloan);
 
         // flashLoanFeeInCollateralToken = 0.005e18
-        uint256 flashLoanFeeInCollateralToken = _flashLoanLender.flashFee(collateralConfig.token, flashLoanAmount);
+        uint256 flashLoanFeeInCollateralToken = _flashDebtLender.flashFee(debtConfig.token, flashLoanAmount);
+        uint256 leverageFee = flashLoanAmount * _LEVERAGE_FEE_IN_DEBT_TOKEN / _DECIMALS;
+        debtPreview = flashLoanAmount + flashLoanFeeInCollateralToken + leverageFee;
 
         // TODO notice we using maxLtvOracle
         // we not using `_collateralToDebtRatio` here, because quote in this case is more precise, quote is what Silo uses to calculate value
         // flashValue = 3e18 * $2000 = 6000e6
         uint256 flashValue = _quote(collateralConfig.maxLtvOracle, flashLoanAmount, collateralConfig.token);
         // totalCollateral = 3e18 + 2e18 = 5e18
-        uint256 totalCollateral = flashLoanAmount + _deposit;
+        uint256 totalCollateral = (finalMultiplier + _DECIMALS) * _deposit / _DECIMALS;
+
+        // TODO this is another estimation
+        uint256 collateralToDebtRatio = _multiplier * _deposit / _debtFlashloan;
 
         // we need to calculate amount to borrow,
         // for that we need to figure out ratio between collateral token and borrow token
@@ -85,18 +99,13 @@ contract SiloLeverage is ISiloLeverage
 
         // maxLTV % of total collateral (flashLoanAmount + _deposit)
         // maxPossibleBorrowAmount = 5e18 * 0.80e18 / 500000000e18 = 8000e6
-        uint256 maxPossibleBorrowAmount = totalCollateral * collateralConfig.maxLtv / _collateralToDebtRatio;
+        uint256 maxPossibleBorrowAmount = totalCollateral * collateralConfig.maxLtv / collateralToDebtRatio;
 
-        // collateralSlippage = 0.01e18 * (3e18 + 0.005e18) / 1e18 = 0.03005e18
-        uint256 collateralSlippage = _swapSlippage * (flashLoanAmount + flashLoanFeeInCollateralToken) / _DECIMALS;
-        // amount of collateral needed after swap
-        // amountOut = 3e18 + 0.005e18 + 0.03005e18 = 3.03505e18
-        uint256 amountOut = flashLoanAmount + flashLoanFeeInCollateralToken + collateralSlippage;
-        // amountOutInDebtToken = 3.03505e18 * 1e18 / 500000000e18 = 6070.1e18
-        uint256 amountOutInDebtToken = amountOut * _DECIMALS / _collateralToDebtRatio;
-
-        // borrowAmount = min(6070.1e18 + 1, 8000e6) = 6070.1e18
-        borrowAmount = Math.min(amountOutInDebtToken + leverageFeeInDebtToken, maxPossibleBorrowAmount);
+        if (debtPreview > maxPossibleBorrowAmount) {
+            // CAP on maxLTV
+            debtPreview = maxPossibleBorrowAmount;
+            // DO reverse calculation to provide new multiplier and new flashLoanAmount
+        }
     }
 
     function _quote(address _oracle, uint256 _baseAmount, address _baseToken)
