@@ -6,8 +6,6 @@ name: CORE Quality Test
 env:
     RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
     RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
-    RPC_SEPOLIA: ${{ secrets.RPC_SEPOLIA }}
-    RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
     RPC_SONIC: ${{ secrets.RPC_SONIC }}
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
