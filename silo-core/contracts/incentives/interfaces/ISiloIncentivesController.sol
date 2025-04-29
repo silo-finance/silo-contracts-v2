@@ -36,6 +36,7 @@ interface ISiloIncentivesController is IDistributionManager {
     error IncentivesProgramNotFound();
     error DifferentRewardsTokens();
     error EmissionPerSecondTooHigh();
+    error EmptyShareToken();
 
     /**
      * @dev Silo share token event handler
