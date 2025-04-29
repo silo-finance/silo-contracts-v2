@@ -47,6 +47,30 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_fee_priority
+    */
+    function test_fee_priority() public {
+        uint8 _decimals = 18;
+
+        _setUp(1e18, _decimals);
+
+        vm.startPrank(address(silo1));
+        // mock attack, leave just 1 wei of liquidity
+        token1.transfer(address(1), token1.balanceOf(address(silo1)) - 1);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 1);
+        uint256 interest = silo1.accrueInterest();
+
+        vm.expectEmit(address(silo1));
+        uint256 daoFees = 1; // DAO have higher priority
+        uint256 deployerFees = 0;
+        emit ISilo.WithdrawnFees(daoFees, deployerFees, false);
+        silo1.withdrawFees();
+    }
+
+
+    /*
     forge test -vv --ffi --mt test_fee_oneToken_18
     */
     function test_fee_oneToken_18() public {
@@ -72,8 +96,8 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         assertEq(daoAndDeployerRevenue, 289929387, "expect daoAndDeployerRevenue");
 
         vm.expectEmit(address(silo1));
-        uint256 daoFees = 173957632;
-        uint256 deployerFees = 115971755;
+        uint256 daoFees = 173957633;
+        uint256 deployerFees = 115971754;
         emit ISilo.WithdrawnFees(daoFees, deployerFees, false);
         silo1.withdrawFees();
     }
@@ -109,7 +133,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_fee_oneToken_6
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_fee_oneToken_6
     */
     function test_fee_oneToken_6() public {
         uint8 _decimals = 6;
@@ -192,7 +216,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         (, prevDaoAndDeployerRevenue) = _printFractions(silo1.accrueInterest());
 
         vm.expectEmit(address(silo1));
-        emit ISilo.WithdrawnFees(1, 1, false);
+        emit ISilo.WithdrawnFees(2, 0, false);
 
         silo1.withdrawFees();
 

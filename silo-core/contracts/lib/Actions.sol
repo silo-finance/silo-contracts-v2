@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "openzeppelin5/utils/Address.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
@@ -460,11 +461,10 @@ library Actions {
 
         if (deployerFeeReceiver != address(0)) {
             // split fees proportionally
-            daoRevenue *= daoFee;
-
             unchecked {
                 // fees are % in decimal point so safe to uncheck
-                daoRevenue = daoRevenue / (daoFee + deployerFee);
+                // we prioritizing DAO fee that's why Rounding.Ceil (UP)
+                daoRevenue = Math.mulDiv(daoRevenue, daoFee, daoFee + deployerFee, Math.Rounding.Ceil);
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }
