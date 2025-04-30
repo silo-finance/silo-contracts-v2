@@ -17,8 +17,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
-    uint256 internal constant _ROUNDING_THRESHOLD = 1e13;
-
     ISiloConfig siloConfig;
 
     function setUp() public {
@@ -37,15 +35,6 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_1token
     */
     function test_withdraw_all_possible_Collateral_1token() public {
-        _withdraw_all_possible_Collateral();
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_interest_1token
-    */
-    function test_withdraw_all_possible_Collateral_interest_1token() public {
-        vm.warp(block.timestamp + 1 hours);
-
         _withdraw_all_possible_Collateral();
     }
 
@@ -105,7 +94,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         // collateral
 
         uint256 maxWithdraw = collateralSilo.maxWithdraw(address(this));
-        // assertEq(maxWithdraw, 2e18 - 1, "maxWithdraw, because we have protected (-1 for underestimation)");
+        assertEq(maxWithdraw, 2e18 - 1, "maxWithdraw, because we have protected (-1 for underestimation)");
 
         uint256 previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw);
         uint256 gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Collateral);
