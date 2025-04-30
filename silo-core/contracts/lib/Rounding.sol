@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 // solhint-disable private-vars-leading-underscore
-library Rounding {
+library Rounding {//@audit go over each rounding direction and use
     Math.Rounding internal constant UP = Math.Rounding.Ceil;
     Math.Rounding internal constant DOWN = Math.Rounding.Floor;
     Math.Rounding internal constant DEBT_TO_ASSETS = Math.Rounding.Ceil;
@@ -28,7 +28,7 @@ library Rounding {
     Math.Rounding internal constant WITHDRAW_TO_SHARES = Math.Rounding.Ceil;
     Math.Rounding internal constant MAX_WITHDRAW_TO_ASSETS = Math.Rounding.Floor;
     Math.Rounding internal constant MAX_WITHDRAW_TO_SHARES = Math.Rounding.Floor;
-    Math.Rounding internal constant LIQUIDATE_TO_SHARES = Math.Rounding.Floor;
+    Math.Rounding internal constant LIQUIDATE_TO_SHARES = Math.Rounding.Floor;//@audit check if this should round down or up
     Math.Rounding internal constant LTV = Math.Rounding.Ceil;
     Math.Rounding internal constant ACCRUED_INTEREST = Math.Rounding.Floor;
 }

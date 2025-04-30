@@ -100,6 +100,13 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
             + ISilo(silo).convertToAssets(collateralShares, ISilo.AssetType.Collateral);
     }
 
+    function _getUserProtectedAssets(address silo, address user) internal view returns (uint256) {
+        (address protectedShareToken,) =
+            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Protected);
+        uint256 protectedShares = IERC20(protectedShareToken).balanceOf(user);
+        return ISilo(silo).convertToAssets(protectedShares, ISilo.AssetType.Protected);
+    }
+
     function _setTargetActor(address user) internal {
         targetActor = user;
     }

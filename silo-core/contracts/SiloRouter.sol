@@ -39,7 +39,7 @@ contract SiloRouter {
         // what asset do you want to use?
         IERC20 asset;
         // options specific for actions
-        bytes options;
+        bytes options;//@audit why using bytes if all the options passed are the AnyAction struct?
     }
 
     /// @dev native asset wrapped token. In case of Ether, it's WETH.
@@ -120,7 +120,7 @@ contract SiloRouter {
 
             _action.silo.repay(data.amount, msg.sender);
         } else if (_action.actionType == ActionType.RepayShares) {
-            AnyAction memory data = abi.decode(_action.options, (AnyAction));
+            AnyAction memory data = abi.decode(_action.options, (AnyAction));//@audit can anything be left here?
 
             uint256 assetsAmount = _action.silo.previewRepayShares(data.amount);
 

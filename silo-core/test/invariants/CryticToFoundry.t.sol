@@ -45,7 +45,132 @@ contract CryticToFoundry is Invariants, Setup {
     function testAux() public {}
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                FAILING INVARIANTS REPLAY                                  //
+    //                              FAILING POSTCONDITIONS REPLAY                                //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Fractions
+
+    function test_replay_deposit() public {
+        // @audit-issue getTotalCollateralAssetsWithInterest does not apply fraction calculation when called, unlike accrueInterestForAsset which applies the fraction
+        // totalAssetsBefore: 21991861
+        // assets: 7866581
+        // totalAssetsAfter: 29858443
+
+        // Breaks: Invalid: 29858442!=29858443, reason: LENDING_HSPOST_A: after deposit, silo.totalAssets[ISilo.AssetType.Collateral] increases by amount deposited
+
+        // in this case, integralInterest: 1 and integralRevenue: 0
+
+        Tester.mint(13030923723425133684497, 0, 0, 0);
+        Tester.deposit(21991861, 13, 59, 3);
+        Tester.borrow(621040, 0, 1);
+        _delay(11818);
+        Tester.accrueInterestForBothSilos();
+        _delay(3706);
+        Tester.deposit(7866581, 0, 1, 1);
+    }
+
+    function test_replay_borrow() public {
+        // @audit-issue getDebtAssets does not take into account integralInterest
+        // Invalid: 1722367!=1722368, reason: LENDING_HSPOST_A: after deposit, silo.totalAssets[ISilo.AssetType.Collateral] increases by amount deposited
+        // Similar case to test_replay_deposit
+        Tester.mint(2518531959823837031380, 0, 0, 0);
+        Tester.deposit(1780157, 0, 1, 1);
+        Tester.borrow(1722365, 0, 1);
+        _delay(29);
+        Tester.accrueInterestForBothSilos();
+        _delay(22);
+        Tester.borrow(1, 0, 1);
+    }
+
+    function test_replay_borrowSameAsset() public {
+        // @audit-issue Same case as test_replay_borrow
+        Tester.mint(580836077360653463743629447964978, 0, 0, 0);
+        Tester.setOraclePrice(39661949851364677948183886078802709693713432198988909772643851412, 1);
+        Tester.mint(1054429549, 0, 1, 1);
+        Tester.assertBORROWING_HSPOST_F(0, 1);
+        _delay(1638);
+        Tester.mint(27081962, 0, 1, 0);
+        _delay(67);
+        Tester.borrowSameAsset(1, 0, 1);
+    }
+
+    // Availability
+
+    function test_replay_assert_BORROWING_HSPOST_D() public {
+        //@audit-issue BORROWING_HSPOST_D: a user can always repay debt in full (+-1wei)
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(322357);
+        Tester.mint(578648582, 16, 16, 54);
+        _delay(4177);
+        Tester.deposit(85084973744223259135554130, 3, 10, 101);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(475271);
+        Tester.borrowSameAsset(1, 0, 0);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(46521);
+        Tester.assert_LENDING_INVARIANT_B(0, 1);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(187977);
+        Tester.assert_BORROWING_HSPOST_D(90, 150);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(411916);
+        Tester.withdraw(115792089237316195423570985008687907853269984665640564039457584007910656676987, 104, 38, 135);
+        _delay(62993);
+        Tester.accrueInterest(42);
+        _delay(490448);
+        Tester.assert_BORROWING_HSPOST_D(1, 88);
+    }
+
+    function test_replay_assert_LENDING_INVARIANT_B() public {
+        //@audit-issue LENDING_INVARIANT_B: Result of maxWithdraw() used as input to withdraw() should never revert
+        // error: NotSolvent
+        Tester.mint(632707868, 0, 0, 1);
+        Tester.borrowSameAsset(313517, 0, 0);
+        _delay(195346);
+        Tester.accrueInterest(0);
+        _delay(130008);
+        Tester.assert_LENDING_INVARIANT_B(0, 1);
+    }
+
+    function test_replay_assertBORROWING_HSPOST_F() public {
+        //@audit-issue BORROWING_HSPOST_F: User borrowing maxBorrow should never revert
+        // error -> NotEnoughLiquidity
+        Tester.mint(11638058238813243150339, 0, 0, 0);
+        Tester.deposit(8533010, 0, 1, 1);
+        Tester.borrow(8256930, 0, 1);
+        _delay(12);
+        Tester.accrueInterest(1);
+        _delay(7);
+        Tester.assertBORROWING_HSPOST_F(0, 1);
+    }
+
+    // Accounting
+
+    function test_replay_accrueInterestForSilo() public {
+        //@audit-issue SILO_HSPOST_A: accrueInterest() should never decrease total collateral and total debt
+        // Before collateralAssets 252975
+        // After collateralAssets  252974
+        Tester.mint(157818656604306680780, 0, 0, 0);
+        Tester.deposit(252962, 0, 1, 1);
+        Tester.borrow(94940, 0, 1);
+        _delay(12243);
+        Tester.deposit(1, 0, 1, 0);
+        _delay(95151);
+        Tester.accrueInterestForSilo(1);
+    }
+
+    // Potential false positives
+
+    function test_replay_transitionCollateral() public {
+        //@audit-issue BORROWING_HSPOST_L: If user is solvent transitionCollateral() for _transitionFrom == CollateralType.Protected should never revert
+        // ReturnZeroAssets
+        // This shouldn't be an issue -> invariant could be adapted to skip ReturnZeroAssets & ReturnZeroShares cases
+        Tester.deposit(1, 0, 0, 0);
+        Tester.transitionCollateral(1, 0, 0, 0);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     INVARIANTS REPLAY                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function test_replayechidna_BASE_INVARIANT() public {
@@ -101,7 +226,7 @@ contract CryticToFoundry is Invariants, Setup {
         _delay(563776);
         this.borrowSameAsset(6761450672746141936113668479670284573524169850700252331526405092555618758321, 2, 10);
         _delay(385872 + 456951);
-        this.setDaoFee(0,2877132025);
+        this.setDaoFee(0, 2877132025);
         _delay(31082);
         this.repayShares(32472179111736603803505870944287, 4, 22);
         _delay(174548);
@@ -141,13 +266,8 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                              FAILING POSTCONDITIONS REPLAY                                //
+    //                                   POSTCONDITIONS REPLAY                                   //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    function test_borrowSameAssetEchidna() public {
-        this.mint(2006, 0, 0, 1);
-        this.borrowSameAsset(1, 0, 0);
-    }
 
     function test_withdrawEchidna() public {
         Tester.mint(261704911235117686095, 3, 22, 5);

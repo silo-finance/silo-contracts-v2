@@ -104,6 +104,8 @@ abstract contract PostconditionsSpec {
 
     string constant BORROWING_HSPOST_L = "BORROWING_HSPOST_L: If user is solvent transitionCollateral() for _transitionFrom == CollateralType.Protected should never revert";
 
+    string constant BORROWING_HSPOST_M = "BORROWING_HSPOST_M: borrow should increase debtAssets by exactly _assets";
+    
     string constant BORROWING_HSPOST_O = "BORROWING_HSPOST_O: borrow should decrease Silo balance by exactly _assets";
 
     string constant BORROWING_HSPOST_P = "BORROWING_HSPOST_P: User should always have ltv below maxLTV after successful call to borrow()"; // TODO

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 library RevertLib {
-    function revertBytes(bytes memory _errMsg, string memory _customErr) internal pure {
+    function revertBytes(bytes memory _errMsg, string memory _customErr) internal pure {//@audit check this is right
         if (_errMsg.length > 0) {
             assembly { // solhint-disable-line no-inline-assembly
                 revert(add(32, _errMsg), mload(_errMsg))

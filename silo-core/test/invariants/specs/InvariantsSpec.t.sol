@@ -29,7 +29,7 @@ abstract contract InvariantsSpec {
     string constant BASE_INVARIANT_C = "BASE_INVARIANT_C: siloData.interestRateTimestamp == 0 => siloData.daoAndDeployerFees == 0";
 
     /// @notice related to silo property VS_Silo_debtShareToken_balance_notZero
-    string constant BASE_INVARIANT_D = "BASE_INVARIANT_D: user is solvent and shareDebtToken.balanceOf(user) != zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) == 0"; // TODO
+    string constant BASE_INVARIANT_D = "BASE_INVARIANT_D: user is solvent and shareDebtToken.balanceOf(user) != zero => protectedShareToken.balanceOf(user) + collateralShareToken.balanceOf(user) != 0";
 
     /// @notice related to silo property VS_Silo_balance_totalAssets
     string constant BASE_INVARIANT_E = "BASE_INVARIANT_E: balanceOf(silo) >= silo.totalAssets[Protected]";

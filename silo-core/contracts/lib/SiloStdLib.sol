@@ -10,6 +10,8 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 
+import "forge-std/console.sol";
+
 library SiloStdLib {
     using SafeERC20 for IERC20;
 
@@ -45,24 +47,18 @@ library SiloStdLib {
     function getTotalAssetsAndTotalSharesWithInterest(
         ISiloConfig.ConfigData memory _configData,
         ISilo.AssetType _assetType
-    )
-        internal
-        view
-        returns (uint256 totalAssets, uint256 totalShares)
-    {
+    ) internal view returns (uint256 totalAssets, uint256 totalShares) {
         if (_assetType == ISilo.AssetType.Protected) {
             totalAssets = ISilo(_configData.silo).getTotalAssetsStorage(ISilo.AssetType.Protected);
             totalShares = IShareToken(_configData.protectedShareToken).totalSupply();
         } else if (_assetType == ISilo.AssetType.Collateral) {
             totalAssets = getTotalCollateralAssetsWithInterest(
-                _configData.silo,
-                _configData.interestRateModel,
-                _configData.daoFee,
-                _configData.deployerFee
+                _configData.silo, _configData.interestRateModel, _configData.daoFee, _configData.deployerFee
             );
 
             totalShares = IShareToken(_configData.collateralShareToken).totalSupply();
-        } else { // ISilo.AssetType.Debt
+        } else {
+            // ISilo.AssetType.Debt
             totalAssets = getTotalDebtAssetsWithInterest(_configData.silo, _configData.interestRateModel);
             totalShares = IShareToken(_configData.debtShareToken).totalSupply();
         }
@@ -105,7 +101,8 @@ library SiloStdLib {
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
         uint256 rcomp;
 
-        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r)
+        {
             rcomp = r;
         } catch {
             // do not lock silo
@@ -147,14 +144,14 @@ library SiloStdLib {
     {
         uint256 rcomp;
 
-        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r)
+        {
             rcomp = r;
         } catch {
             // do not lock silo
         }
 
-        (
-            totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
+        (totalDebtAssetsWithInterest,) =
+            SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
     }
 }
