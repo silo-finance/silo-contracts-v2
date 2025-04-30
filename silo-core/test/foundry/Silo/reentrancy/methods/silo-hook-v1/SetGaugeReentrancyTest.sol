@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 import {TestStateLib} from "../../TestState.sol";
@@ -32,6 +32,9 @@ contract SetGaugeReentrancyTest is MethodReentrancyTest {
             address(this)
         ));
 
-        IGaugeHookReceiver(hookReceiver).setGauge(IGauge(address(this)), IShareToken(address(this)));
+        IGaugeHookReceiver(hookReceiver).setGauge(
+            ISiloIncentivesController(address(this)),
+            IShareToken(address(this))
+        );
     }
 }
