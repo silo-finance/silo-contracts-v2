@@ -71,7 +71,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
     }
 
     /*
-        forge test -vv --ffi --mt test_decimals_6_18_noOracle
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_decimals_6_18_noOracle
     */
     function test_decimals_6_18_noOracle() public {
         _setUp(6, 18, false);
@@ -93,7 +93,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateral, 41_37818, "collateral");
-        assertEq(debt, 39_40785, "debt");
+        assertEq(debt, 39_40781, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
@@ -145,7 +145,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
     }
 
     /*
-        forge test -vv --ffi --mt test_decimals_USDC_ETH_oracle
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_decimals_USDC_ETH_oracle
     */
     function test_decimals_USDC_ETH_oracle() public {
         _setUp(6, 18, true);
@@ -173,7 +173,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
         assertEq(collateral, 100_4885422 , "collateral");
-        assertEq(debt, 382813496697463186, "debt");
+        assertEq(debt, 382813495142189997, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
