@@ -7,6 +7,7 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
+import {ErrorsLib} from "./modules/ErrorsLib.sol";
 
 import {ISilo, IERC4626, IERC3156FlashLender} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
@@ -17,11 +18,11 @@ import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
 
-contract SiloLeverage is ISiloLeverage
-//, IERC3156FlashBorrower
-{
+contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
     uint256 internal constant _DECIMALS = 1e18;
     uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
+
+    address internal _lock;
 
     /// @dev Silo is not designed to work with ether, but it can act as a middleware
     /// between any third-party contract and hook receiver. So, this is the responsibility
@@ -34,10 +35,15 @@ contract SiloLeverage is ISiloLeverage
         uint256 _deposit,
         ISilo.CollateralType _collateralType,
         uint64 _multiplier,
-        IERC3156FlashLender _flashLoanLender,
-        uint256 _debtPreview
+        IERC3156FlashLender _flashDebtLender,
+        uint256 _flashBorrow
     ) external virtual {
-        // TODO
+        _lock = _flashDebtLender;
+
+        _borrowFlashloan();
+
+        // transient lock will force some design part eg flashloan can not be module
+        _lock = address(0);
     }
 
     // TODO I see this issues with preview:
@@ -126,25 +132,36 @@ contract SiloLeverage is ISiloLeverage
         // TODO
     }
 
+    /// @param _flashDebtLender
+    function _borrowFlashloan(
+        address _flashDebtLender,
+        address _token,
+        uint256 _amount,
+        bytes calldata _data
+    ) internal {
+        // TODO
+        require(IERC3156FlashLender(_flashDebtLender).flashLoan({
+            _receiver: address(this),
+            _token: _token,
+            _amount: _amount,
+            _data: _data
+        }), ErrorsLib.FlashloanFailed());
+    }
+
     function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
         external
         returns (bytes32)
     {
+        require(_lock == msg.sender, ErrorsLib.InvalidFlashloanLender());
+
         // TODO
+        // swap
+        // transfer from
+        // deposit
+        // borrow
+        // take leverage fee
+        // repay flashloan
+        // calculate leverage
     }
-//
-//    function borrowFlashloan(
-//        IERC3156FlashBorrower _receiver,
-//        address _token,
-//        uint256 _amount,
-//        bytes calldata _data
-//    ) {
-//        // TODO
-//        IERC3156FlashLender.flashLoan({
-//            _receiver: _receiver,
-//            _token: _token,
-//            _amount: _amount,
-//            _data: _data
-//        });
-//    }
+
 }
