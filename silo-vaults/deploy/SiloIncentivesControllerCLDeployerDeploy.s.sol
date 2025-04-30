@@ -15,7 +15,7 @@ import {
 import {CommonDeploy} from "./common/CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY FOUNDRY_PROFILE=vaults \
+    FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/SiloIncentivesControllerCLDeployerDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --verify --broadcast
         
