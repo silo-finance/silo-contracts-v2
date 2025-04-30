@@ -2,19 +2,26 @@
 pragma solidity 0.8.28;
 
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {ISiloIncentivesControllerCLFactory} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLFactory.sol";
-import {SiloIncentivesControllerCL} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
+import {
+    ISiloIncentivesControllerCLFactory
+} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLFactory.sol";
+import {
+    SiloIncentivesControllerCL
+} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 
 /// @title ISiloIncentivesControllerCLDeployer
 interface ISiloIncentivesControllerCLDeployer {
-    /// @dev reverts in constructor if an address for ISiloIncentivesControllerCLFactory does not pass interface
+    /// @dev Reverts in constructor if an address for ISiloIncentivesControllerCLFactory is zero.
+    error EmptyCLFactory();
+
+    /// @dev Reverts in constructor if an address for ISiloIncentivesControllerCLFactory does not pass interface
     /// sanity check.
     error InvalidCLFactory();
 
-    /// @dev reverts in resolveSiloVaultIncentivesController if SiloVault has more than one SiloIncentivesController.
-    error MoreThanOneSiloVaultIncentivesController();
+    /// @dev Reverts in resolveSiloVaultIncentivesController if SiloVault has more than one notification receiver.
+    error MoreThanOneSiloVaultNotificationReceiver();
 
-    /// @dev reverts in createIncentivesControllerCL if SiloVault's underlying market does not have configured
+    /// @dev Reverts in createIncentivesControllerCL if SiloVault's underlying market does not have configured
     /// incentives to claim rewards from.
     error UnderlyingMarketDoesNotHaveIncentives();
 
@@ -23,9 +30,9 @@ interface ISiloIncentivesControllerCLDeployer {
     /// Deployed CL supports only SiloIncentivesController implementation to claim borrowable deposits incentives from
     /// Silo markets. CL address can be used to submitIncentivesClaimingLogic() and acceptIncentivesClaimingLogic() in
     /// VaultIncentivesModule.
-    /// @dev This function must revert if SiloVault has more than one SiloIncentivesControllers in notification
-    /// receivers. In this case the deployment of CL must be executed manually using SiloIncentivesControllerCLFactory
-    /// with correct SiloVault's incentives controller.
+    /// @dev This function must revert if SiloVault has more than one notification receiver. In this case
+    /// the deployment of CL must be executed manually using SiloIncentivesControllerCLFactory with correct SiloVault's
+    /// notification receiver.
     /// @param _siloVault SiloVault address.
     /// @param _market SiloVault's underlying market to claim incentives from.
     function createIncentivesControllerCL(
@@ -33,8 +40,8 @@ interface ISiloIncentivesControllerCLDeployer {
         address _market
     ) external returns (SiloIncentivesControllerCL logic);
 
-    /// @notice get SiloVault's SiloIncentivesController from VaultIncentivesModule. This function reverts if SiloVault
-    /// has more than one controller.
+    /// @notice Get SiloVault's SiloIncentivesController from VaultIncentivesModule. This function reverts if SiloVault
+    /// has more than one notification receiver.
     /// @param _siloVault SiloVault address.
     /// @return controller SiloIncentivesController.
     function resolveSiloVaultIncentivesController(address _siloVault)
@@ -42,7 +49,7 @@ interface ISiloIncentivesControllerCLDeployer {
         view
         returns (ISiloIncentivesController controller);
     
-    /// @notice get market's collateral share token SiloIncentivesController.
+    /// @notice Get market's collateral share token SiloIncentivesController.
     /// @param _market SiloVault's underlying market address.
     /// @return controller underlying market address.
     function resolveMarketIncentivesController(address _market)

@@ -2,16 +2,20 @@
 pragma solidity 0.8.28;
 
 import {ISiloIncentivesControllerCLFactory} from "../../interfaces/ISiloIncentivesControllerCLFactory.sol";
-import {ISiloIncentivesControllerCLDeployer} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLDeployer.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
-import {SiloIncentivesControllerCL} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {Create2Factory} from "common/utils/Create2Factory.sol";
+import {
+    SiloIncentivesControllerCL
+} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
+import {
+    ISiloIncentivesControllerCLDeployer
+} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLDeployer.sol";
 
 /// @dev Factory for creating SiloIncentivesControllerCL instances
 contract SiloIncentivesControllerCLDeployer is Create2Factory, ISiloIncentivesControllerCLDeployer {
@@ -19,7 +23,7 @@ contract SiloIncentivesControllerCLDeployer is Create2Factory, ISiloIncentivesCo
     ISiloIncentivesControllerCLFactory public immutable CL_FACTORY;
 
     constructor(ISiloIncentivesControllerCLFactory _siloIncentivesControllerCLFactory) {
-        require(address(_siloIncentivesControllerCLFactory) != address(0), InvalidCLFactory());
+        require(address(_siloIncentivesControllerCLFactory) != address(0), EmptyCLFactory());
         require(!_siloIncentivesControllerCLFactory.createdInFactory(address(0)), InvalidCLFactory());
 
         CL_FACTORY = _siloIncentivesControllerCLFactory;
@@ -46,7 +50,7 @@ contract SiloIncentivesControllerCLDeployer is Create2Factory, ISiloIncentivesCo
         IVaultIncentivesModule vaultIncentivesModule = ISiloVault(_siloVault).INCENTIVES_MODULE();
         address[] memory notificationReceivers = vaultIncentivesModule.getNotificationReceivers();
 
-        require(notificationReceivers.length == 1, MoreThanOneSiloVaultIncentivesController());
+        require(notificationReceivers.length == 1, MoreThanOneSiloVaultNotificationReceiver());
         controller = ISiloIncentivesController(notificationReceivers[0]);
     }
     

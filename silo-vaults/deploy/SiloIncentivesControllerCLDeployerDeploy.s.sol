@@ -21,17 +21,27 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
         
 */
 contract SiloIncentivesControllerCLDeployerDeploy is CommonDeploy {
+    ISiloIncentivesControllerCLFactory siloIncentivesControllerCLFactory;
+
     function run() public returns (address factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        ISiloIncentivesControllerCLFactory siloIncentivesControllerCLFactory = ISiloIncentivesControllerCLFactory(
-            SiloVaultsDeployments.get(SiloVaultsContracts.SILO_INCENTIVES_CONTROLLER_CL_FACTORY, ChainsLib.chainAlias())
-        );
+        if (address(siloIncentivesControllerCLFactory) == address(0)) {
+            string memory chainAlias = ChainsLib.chainAlias();
+
+            siloIncentivesControllerCLFactory = ISiloIncentivesControllerCLFactory(
+                SiloVaultsDeployments.get(SiloVaultsContracts.SILO_INCENTIVES_CONTROLLER_CL_FACTORY, chainAlias)
+            );
+        }
 
         vm.startBroadcast(deployerPrivateKey);
         factory = address(new SiloIncentivesControllerCLDeployer(siloIncentivesControllerCLFactory));
         vm.stopBroadcast();
 
         _registerDeployment(address(factory), SiloVaultsContracts.SILO_INCENTIVES_CONTROLLER_CL_DEPLOYER);
+    }
+
+    function setCLFactory(ISiloIncentivesControllerCLFactory _siloIncentivesControllerCLFactory) external {
+        siloIncentivesControllerCLFactory = _siloIncentivesControllerCLFactory;
     }
 }
