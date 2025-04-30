@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -254,10 +255,16 @@ contract SiloLens is ISiloLens {
 
         for (uint256 i; i < originalProgramsNames.length; i++) {
             bytes memory originalProgramName = bytes(originalProgramsNames[i]);
-            
+
             if (originalProgramName.length == 20) {
-                bytes32 nameBytes32 = bytes32(originalProgramName) >> 8 * 12;
-                programsNames[i] = Strings.toHexString(uint256(nameBytes32), 20);
+                address token = address(bytes20(originalProgramName));
+
+                // Sanity check to be sure that it is a token
+                try IERC20(token).balanceOf(address(this)) returns (uint256) {
+                    programsNames[i] = Strings.toHexString(token);
+                } catch {
+                    programsNames[i] = originalProgramsNames[i];
+                }
             } else {
                 programsNames[i] = originalProgramsNames[i];
             }
