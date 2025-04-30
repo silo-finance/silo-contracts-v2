@@ -21,8 +21,7 @@ interface ISiloIncentivesControllerCLDeployer {
     /// @notice Creates a new SiloIncentivesControllerCL instance for a SiloVault. CL contract claims incentives from
     /// underlying market's incentives controller and distributes these incentives across depositors of the SiloVault.
     /// Deployed CL supports only SiloIncentivesController implementation to claim borrowable deposits incentives from
-    /// Silo markets.
-    /// CL address can be used to submitIncentivesClaimingLogic() and acceptIncentivesClaimingLogic() in
+    /// Silo markets. CL address can be used to submitIncentivesClaimingLogic() and acceptIncentivesClaimingLogic() in
     /// VaultIncentivesModule.
     /// @dev Msg.sender address is used as an external sault for SiloIncentivesControllerCLFactory. Msg.sender must be
     /// an EOA or multisig.
