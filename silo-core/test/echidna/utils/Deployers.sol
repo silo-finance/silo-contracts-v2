@@ -7,11 +7,6 @@ import {Data} from "../data/Data.sol";
 
 // External dependencies
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
-import {TimelockController} from "openzeppelin5/governance/TimelockController.sol";
-import {IVotingEscrow} from "balancer-labs/v2-interfaces/liquidity-mining/IVotingEscrow.sol";
-
-// ve-silo dependencies
-import {ISiloTimelockController} from "ve-silo/contracts/governance/interfaces/ISiloTimelockController.sol";
 
 // silo-core dependencies
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
@@ -46,10 +41,6 @@ contract Deployers is VyperDeployer, Data {
     ISiloDeployer siloDeployer;
     PartialLiquidation liquidationModule;
 
-    // ve-silo
-    ISiloTimelockController timelockController;
-    //IVeSilo votingEscrow;
-    //IFeeDistributor feeDistributor;
     address SILO80_WETH20_TOKEN = 0x9CC64EE4CB672Bc04C54B00a37E1Ed75b2Cc19Dd;
     address SILO_TOKEN = 0x6f80310CA7F2C654691D1383149Fa1A57d8AB1f8;
 
@@ -113,62 +104,6 @@ contract Deployers is VyperDeployer, Data {
     }
 
     /* ================================================================
-                            ve-silo deployments
-       ================================================================ */
-    function ve_setUp(uint256 feeDistributorStartTime) internal {
-        ve_deployTimelockController();
-
-        // note: The below deployments are not required to test most of the system,
-        // but could be beneficial to set up in the future. The implementations are commented out due to
-        // Echidna throwing an error on deploying the VotingEscrow.vy contract.
-
-        ve_deployVotingEscrow();
-        ve_deployFeeDistributor(feeDistributorStartTime);
-    }
-
-    function ve_deployTimelockController() internal {
-        uint256 minDelay = 1;
-        address[] memory proposers = new address[](0);
-        address[] memory executors = new address[](0);
-
-        timelockController = ISiloTimelockController(
-            address(
-                new TimelockController(
-                    minDelay,
-                    proposers,
-                    executors,
-                    timelockAdmin
-                )
-            )
-        );
-    }
-
-    // Vyper deployment causes Echidna to throw an error, hence this is commented out for now
-    function ve_deployFeeDistributor(uint256 startTime) internal {
-        /* feeDistributor = IFeeDistributor(
-            address(
-                new FeeDistributor(
-                    IVotingEscrow(address(votingEscrow)),
-                    startTime
-                )
-            )
-        ); */
-    }
-
-    function ve_deployVotingEscrow() internal {
-        /* address votingEscrowAddr = deployVotingEscrow(
-            abi.encode(
-                SILO80_WETH20_TOKEN,
-                "Voting Escrow (Silo)",
-                "veSILO",
-                address(timelockController)
-            )
-        );
-
-        votingEscrow = IVeSilo(votingEscrowAddr); */
-    }
-
-    /* ================================================================
                             silo-core deployments
        ================================================================ */
 
@@ -187,9 +122,6 @@ contract Deployers is VyperDeployer, Data {
             : feeReceiver;
 
         siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
-
-        address timelock = address(timelockController);
-        Ownable(address(siloFactory)).transferOwnership(timelock);
     }
 
     function core_deployInterestRateConfigFactory() internal {

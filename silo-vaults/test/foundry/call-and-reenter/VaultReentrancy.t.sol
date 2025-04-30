@@ -8,7 +8,7 @@ import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncent
 import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol";
 import {IMethodsRegistry} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "silo-core/test/foundry/Silo/reentrancy/interfaces/IMethodReentrancyTest.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";

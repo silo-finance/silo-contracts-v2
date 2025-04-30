@@ -5,7 +5,6 @@ properties/=gitmodules/crytic/properties/contracts/
 silo-core/=silo-core/
 silo-oracles/=silo-oracles/
 silo-vaults/=silo-vaults/
-ve-silo/=ve-silo/
 
 @openzeppelin/=gitmodules/openzeppelin-contracts-5
 morpho-blue/=gitmodules/morpho-blue/src
@@ -15,8 +14,5 @@ chainlink/=gitmodules/chainlink/contracts/src
 chainlink-ccip/=gitmodules/chainlink-ccip/contracts/src
 uniswap/=gitmodules/uniswap/
 @uniswap/v3-core/=gitmodules/uniswap/v3-core/
-balancer-labs/v2-solidity-utils/=external/balancer-v2-monorepo/pkg/solidity-utils/contracts
-balancer-labs/v2-interfaces/=external/balancer-v2-monorepo/pkg/interfaces/contracts
-balancer-labs/v2-liquidity-mining/=external/balancer-v2-monorepo/pkg/liquidity-mining/contracts
 pyth-sdk-solidity/=gitmodules/pyth-sdk-solidity/target_chains/ethereum/sdk/solidity
 a16z-erc4626-tests/=gitmodules/a16z-erc4626-tests

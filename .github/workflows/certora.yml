@@ -6,8 +6,6 @@ on:
     paths:
       - certora/*
       - .github/workflows/certora.yml
-      - ve-silo/**/*.sol
-      - ve-silo/**/*.vy
       - silo-core/**/*.sol
       - silo-oracles/**/*.sol
       - gitmodules/*
@@ -17,15 +15,13 @@ on:
     paths:
       - certora/*
       - .github/workflows/certora.yml
-      - ve-silo/**/*.sol
-      - ve-silo/**/*.vy
       - silo-core/**/*.sol
       - silo-oracles/**/*.sol
       - gitmodules/*
       - .gitmodules
 
 jobs:
-  ve-silo-foundry:
+  silo-foundry:
     strategy:
       fail-fast: true
 

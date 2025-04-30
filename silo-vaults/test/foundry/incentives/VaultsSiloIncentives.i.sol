@@ -34,7 +34,7 @@ contract VaultsSiloIncentivesTest is IntegrationTest {
 
         reward1.setOnDemand(true);
 
-        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
+        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault), address(vault));
     }
 
     /*
