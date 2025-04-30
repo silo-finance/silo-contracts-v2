@@ -12,7 +12,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc WithdrawWhenDebtTest
+     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc WithdrawWhenDebtTest
 */
 contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -30,15 +30,13 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         _deposit(2e18, address(this), ISilo.CollateralType.Collateral);
         _deposit(1e18, address(this), ISilo.CollateralType.Protected);
 
-        // borrow will be done by test, because amount matters for fractions
+        _borrow(0.1e18, address(this));
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_1token
     */
     function test_withdraw_all_possible_Collateral_1token() public {
-        _borrow(0.1e18, address(this));
-
         _withdraw_all_possible_Collateral();
     }
 
@@ -46,9 +44,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_withdraw_all_possible_Collateral_interest_1token
     */
     function test_withdraw_all_possible_Collateral_interest_1token() public {
-        _borrow(0.1e18, address(this));
-
-        vm.warp(block.timestamp + 10);
+        vm.warp(block.timestamp + 1 hours);
 
         _withdraw_all_possible_Collateral();
     }
@@ -59,8 +55,6 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
     function test_withdraw_whenDebt_fuzz(uint256 _depositAmount) public {
         vm.assume(_depositAmount > 1e18); // we have to be able to create insolvency in 1sec
         vm.assume(_depositAmount < 2 ** 96);
-
-        _borrow(0.1e18, address(this));
 
         address depositor = makeAddr("depositor");
         address borrower = address(this);
