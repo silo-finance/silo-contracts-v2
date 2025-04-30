@@ -161,4 +161,8 @@ interface ISiloIncentivesController is IDistributionManager {
      * @return the unclaimed user rewards
      */
     function getUserUnclaimedRewards(address _user, string calldata _programName) external view returns (uint256);
+
+    /// @notice Returns the Silo share token address
+    /// @return shareToken Address of the Silo share token
+    function SHARE_TOKEN() external view returns (address);
 }
