@@ -256,18 +256,23 @@ contract SiloLens is ISiloLens {
         for (uint256 i; i < originalProgramsNames.length; i++) {
             bytes memory originalProgramName = bytes(originalProgramsNames[i]);
 
-            if (originalProgramName.length == 20) {
+            if (isTokenAddress(originalProgramName)) {
                 address token = address(bytes20(originalProgramName));
-
-                // Sanity check to be sure that it is a token
-                try IERC20(token).balanceOf(address(this)) returns (uint256) {
-                    programsNames[i] = Strings.toHexString(token);
-                } catch {
-                    programsNames[i] = originalProgramsNames[i];
-                }
+                programsNames[i] = Strings.toHexString(token);
             } else {
                 programsNames[i] = originalProgramsNames[i];
             }
         }
+    }
+
+    function isTokenAddress(bytes memory _name) private view returns (bool isToken) {
+        if (_name.length != 20) return false;
+
+        address token = address(bytes20(_name));
+
+        // Sanity check to be sure that it is a token
+        try IERC20(token).balanceOf(address(this)) returns (uint256) {
+            isToken = true;
+        } catch {}
     }
 }
