@@ -30,6 +30,29 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_replay_assertBORROWING_HSPOST_F
+    this test test fix for maxBorrow when fractions
+    */
+    function test_replay_assertBORROWING_HSPOST_F() public {
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
+
+        address borrower = address(this);
+
+        //@audit-issue BORROWING_HSPOST_F: User borrowing maxBorrow should never revert
+        // error -> NotEnoughLiquidity
+        silo0.mint(11638058238813243150339, borrower);
+        silo1.deposit(8533010, address(1));
+        silo1.borrow(8256930, borrower, borrower);
+
+        vm.warp(block.timestamp + 12);
+        silo1.accrueInterest();
+        vm.warp(block.timestamp + 7);
+
+        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+    }
+
+    /*
     forge test -vv --ffi --mt test_borrow_all_zeros
     */
     function test_borrow_all_zeros() public {

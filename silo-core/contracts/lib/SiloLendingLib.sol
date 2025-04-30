@@ -256,7 +256,12 @@ library SiloLendingLib {
 
         if (assets == 0 || shares == 0) return (0, 0);
 
-        uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+        uint256 liquidityWithInterest = getLiquidity(_siloConfig) - 1;
+
+        if (liquidityWithInterest != 0) {
+            // we need to count for fractions, when fractions are applied liquidity is decreased
+            unchecked { liquidityWithInterest--; }
+        }
 
         if (assets > liquidityWithInterest) {
             assets = liquidityWithInterest;
