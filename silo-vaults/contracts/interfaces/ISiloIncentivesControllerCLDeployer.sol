@@ -23,8 +23,6 @@ interface ISiloIncentivesControllerCLDeployer {
     /// Deployed CL supports only SiloIncentivesController implementation to claim borrowable deposits incentives from
     /// Silo markets. CL address can be used to submitIncentivesClaimingLogic() and acceptIncentivesClaimingLogic() in
     /// VaultIncentivesModule.
-    /// @dev Msg.sender address is used as an external sault for SiloIncentivesControllerCLFactory. Msg.sender must be
-    /// an EOA or multisig.
     /// @dev This function must revert if SiloVault has more than one SiloIncentivesControllers in notification
     /// receivers. In this case the deployment of CL must be executed manually using SiloIncentivesControllerCLFactory
     /// with correct SiloVault's incentives controller.
@@ -35,11 +33,6 @@ interface ISiloIncentivesControllerCLDeployer {
         address _market
     ) external returns (SiloIncentivesControllerCL logic);
 
-    /// @notice Returns an address of SiloIncentivesControllerCLFactory used to deploy SiloIncentivesControllerCL.
-    /// The factory stored as an immutable variable.
-    /// @return clFactory CL factory address.
-    function siloIncentivesControllerCLFactory() external view returns (ISiloIncentivesControllerCLFactory clFactory);
-
     /// @notice get SiloVault's SiloIncentivesController from VaultIncentivesModule. This function reverts if SiloVault
     /// has more than one controller.
     /// @param _siloVault SiloVault address.
@@ -49,7 +42,7 @@ interface ISiloIncentivesControllerCLDeployer {
         view
         returns (ISiloIncentivesController controller);
     
-    /// @notice get underlying market's SiloIncentivesController.
+    /// @notice get market's collateral share token SiloIncentivesController.
     /// @param _market SiloVault's underlying market address.
     /// @return controller underlying market address.
     function resolveMarketIncentivesController(address _market)

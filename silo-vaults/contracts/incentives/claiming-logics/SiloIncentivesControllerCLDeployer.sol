@@ -11,9 +11,10 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 
 /// @dev Factory for creating SiloIncentivesControllerCL instances
-contract SiloIncentivesControllerCLDeployer is ISiloIncentivesControllerCLDeployer {
+contract SiloIncentivesControllerCLDeployer is Create2Factory, ISiloIncentivesControllerCLDeployer {
     /// @dev ISiloIncentivesControllerCLFactory to deploy claiming logics.
     ISiloIncentivesControllerCLFactory public immutable CL_FACTORY;
 
@@ -32,13 +33,8 @@ contract SiloIncentivesControllerCLDeployer is ISiloIncentivesControllerCLDeploy
         logic = CL_FACTORY.createIncentivesControllerCL({
             _vaultIncentivesController: address(resolveSiloVaultIncentivesController(_siloVault)),
             _siloIncentivesController: address(resolveMarketIncentivesController(_market)),
-            _externalSalt: bytes32(abi.encodePacked(msg.sender))
+            _externalSalt: _salt()
         });
-    }
-
-    /// @inheritdoc ISiloIncentivesControllerCLDeployer
-    function siloIncentivesControllerCLFactory() external view returns (ISiloIncentivesControllerCLFactory clFactory) {
-        clFactory = CL_FACTORY;
     }
 
     /// @inheritdoc ISiloIncentivesControllerCLDeployer
