@@ -244,7 +244,8 @@ contract SiloLensTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames -vvv
+    FOUNDRY_PROFILE=core_test \
+        forge test --ffi --mt test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames -vvv
     */
     function test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames() public {
         string memory expectedString = "ssssssssssssssssssss";
