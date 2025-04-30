@@ -47,11 +47,10 @@ interface ISiloLeverage {
         uint256 _deposit,
         uint64 _multiplier,
         IERC3156FlashLender _flashDebtLender,
-        uint64 _debtQuote,
-        uint256 _collateralToDebtRatio
+        uint256 _debtFlashloan
     ) external view returns (
         uint256 flashLoanAmount,
-        uint256 borrowAmount,
+        uint256 debtPreview,
         uint64 finalMultiplier
     );
 //
