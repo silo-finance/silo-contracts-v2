@@ -5,6 +5,7 @@ import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {ISiloIncentivesControllerCLFactory} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLFactory.sol";
 import {ISiloIncentivesControllerCLDeployer} from "silo-vaults/contracts/interfaces/ISiloIncentivesControllerCLDeployer.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
 import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 import {SiloIncentivesControllerCL} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
@@ -15,6 +16,10 @@ import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificat
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 // FOUNDRY_PROFILE=vaults_tests forge test -vvv --ffi --mc SiloIncentivesControllerCLDeployerTest
 contract SiloIncentivesControllerCLDeployerTest is Forking {
@@ -43,13 +48,23 @@ contract SiloIncentivesControllerCLDeployerTest is Forking {
         clDeployer = SiloIncentivesControllerCLDeployer(deploy.run());
     }
 
-    function test_testingData() public view {
+    function test_testingDataIsValid() public view {
         assertEq(address(ISiloVault(VAULT).INCENTIVES_MODULE()), VAULT_INCENTIVES_MODULE);
 
         assertEq(
             address(IVaultIncentivesModule(VAULT_INCENTIVES_MODULE).getNotificationReceivers()[0]),
             VAULT_INCENTIVES_CONTROLLER
         );
+
+        ISiloConfig.ConfigData memory configData = ISilo(MARKET).config().getConfig(MARKET);
+
+        address controllerFromHookReceiver =
+            address(GaugeHookReceiver(configData.hookReceiver).configuredGauges(IShareToken(MARKET)));
+
+        assertEq(MARKET_INCENTIVES_CONTROLLER, controllerFromHookReceiver);
+
+        assertEq(SiloIncentivesController(VAULT_INCENTIVES_CONTROLLER).NOTIFIER(), VAULT);
+        assertEq(SiloIncentivesController(MARKET_INCENTIVES_CONTROLLER).NOTIFIER(), configData.hookReceiver);
     }
 
     function test_constructor() public view {
