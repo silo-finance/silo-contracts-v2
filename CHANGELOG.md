@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.2.0] - 2025-04-30
+- Revert "silo-vaults: deployment sonic 1 min timelock"
+- silo-core: silo lens getter for programs names
+
 ## [3.1.0-rc.3] - 2025-04-23
 - silo-vaults: deployment sonic 1 min timelock
 
