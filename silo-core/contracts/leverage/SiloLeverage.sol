@@ -56,7 +56,7 @@ contract SiloLeverage is ISiloLeverage
         uint256 _deposit, // 2e18
         uint64 _multiplier, // 1.5e18
         IERC3156FlashLender _flashDebtLender,
-        uint64 _debtFlashloan // 1.5e18 * $2000 = 3000e6,
+        uint256 _debtFlashloan // 1.5e18 * $2000 = 3000e6,
     ) external view virtual returns (
         uint256 flashLoanAmount,
         uint256 debtPreview,
