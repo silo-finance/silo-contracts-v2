@@ -9,7 +9,6 @@ import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultInc
 import {SiloIncentivesControllerCL} from "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCL.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
-import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
@@ -63,6 +62,9 @@ contract SiloIncentivesControllerCLDeployer is ISiloIncentivesControllerCLDeploy
     {
         ISiloConfig.ConfigData memory configData = ISilo(_market).config().getConfig(_market);
         GaugeHookReceiver hookReceiver = GaugeHookReceiver(configData.hookReceiver);
-        controller = ISiloIncentivesController(address(hookReceiver.configuredGauges(IShareToken(_market))));
+        address gauge = address(hookReceiver.configuredGauges(IShareToken(_market)));
+
+        require(gauge != address(0), UnderlyingMarketDoesNotHaveIncentives());
+        controller = ISiloIncentivesController(gauge);
     }
 }
