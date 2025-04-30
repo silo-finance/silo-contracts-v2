@@ -20,7 +20,7 @@ import {
 /// @dev Factory for creating SiloIncentivesControllerCL instances
 contract SiloIncentivesControllerCLDeployer is Create2Factory, ISiloIncentivesControllerCLDeployer {
     /// @dev ISiloIncentivesControllerCLFactory to deploy claiming logics.
-    ISiloIncentivesControllerCLFactory public immutable CL_FACTORY;
+    ISiloIncentivesControllerCLFactory public immutable CL_FACTORY; // solhint-disable-line var-name-mixedcase
 
     constructor(ISiloIncentivesControllerCLFactory _siloIncentivesControllerCLFactory) {
         require(address(_siloIncentivesControllerCLFactory) != address(0), EmptyCLFactory());
