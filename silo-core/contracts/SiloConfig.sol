@@ -468,6 +468,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         if (borrowerCollateralSilo[_borrower] != _newCollateralSilo) {
             borrowerCollateralSilo[_borrower] = _newCollateralSilo;
             collateralSiloChanged = true;
-        }//@audit this does not revert if the borrower already has a collateral silo
+        }
     }
 }

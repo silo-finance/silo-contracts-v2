@@ -17,8 +17,6 @@ import {Hook} from "./Hook.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
-import "forge-std/console.sol";
-
 // solhint-disable function-max-lines
 
 library SiloERC4626Lib {

@@ -73,7 +73,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
 
     /// @inheritdoc IERC20R
     function increaseReceiveAllowance(address _owner, uint256 _addedValue) public virtual override {
-        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);//@audit how do they decide what functions have RO reentrancy?
+        NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
 
         uint256 currentAllowance = _receiveAllowance(_owner, _msgSender());
 

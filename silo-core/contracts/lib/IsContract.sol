@@ -32,7 +32,7 @@ library IsContract {
      * constructor.
      * ====
      */
-    function isContract(address _account) internal view returns (bool) {//@audit is this right?
+    function isContract(address _account) internal view returns (bool) {
         // This method relies on extcodesize/address.code.length, which returns 0
         // for contracts in construction, since the code is only stored at the end
         // of the constructor execution.

@@ -17,8 +17,6 @@ import {Rounding} from "./Rounding.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
-import "forge-std/console.sol";
-
 library SiloLendingLib {
     using SafeERC20 for IERC20;
     using Math for uint256;

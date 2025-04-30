@@ -188,7 +188,7 @@ library Actions {
     /// @return shares Amount of shares minted for the borrowed assets
     function borrowSameAsset(ISilo.BorrowArgs memory _args)
         external
-        returns (uint256 assets, uint256 shares, bool collateralTypeChanged)//@audit missing collateralTypeChanged parameter, also it shouldn't be collateralTypeChanged -> collateralSiloChanged
+        returns (uint256 assets, uint256 shares, bool collateralTypeChanged)
     {
         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);
 
@@ -203,7 +203,7 @@ library Actions {
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));
         ISiloConfig.ConfigData memory debtConfig = collateralConfig;
 
-        (assets, shares) = SiloLendingLib.borrow({//@audit what about allowances on this?
+        (assets, shares) = SiloLendingLib.borrow({
             _debtShareToken: debtConfig.debtShareToken,
             _token: debtConfig.token,
             _spender: msg.sender,
@@ -266,7 +266,7 @@ library Actions {
     /// - `transitionFrom`: Specifies whether transitioning from collateral or protected
     /// @return assets Amount of assets transitioned
     /// @return toShares Equivalent shares gained from the transition
-    function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)//@audit check kiki's case here
+    function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
     {
@@ -407,7 +407,7 @@ library Actions {
             ISilo.FlashloanFailed()
         );
 
-        IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);//@audit check this is the right way to check the flashloan invariant
+        IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
