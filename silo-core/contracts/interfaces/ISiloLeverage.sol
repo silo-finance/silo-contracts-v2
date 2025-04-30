@@ -18,15 +18,14 @@ interface ISiloLeverage {
     /// @param _collateralType collateral type
     /// @param _multiplier leverage multiplier in 18 decimals, eg x1 == 1e18
     /// @param _flashDebtLender source for flashloan
-    /// @param _borrowAmount amount of debt that leverage will create.
-    /// This amount will be used to repay flashloan, pay fees and change will be transferred to user
+    /// @param _flashBorrow amount of debt token that will be flashloan and swap for collateral
     function leverage(
         ISilo _silo,
         uint256 _deposit,
         ISilo.CollateralType _collateralType,
         uint64 _multiplier,
         IERC3156FlashLender _flashDebtLender,
-        uint256 _borrowAmount
+        uint256 _flashBorrow
     ) external;
 
     /// @param _silo Silo address on which we doing leverage
