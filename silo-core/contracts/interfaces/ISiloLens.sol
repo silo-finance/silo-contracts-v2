@@ -249,4 +249,11 @@ interface ISiloLens {
     /// @param _silo Silo address from which to read data
     /// @return IInterestRateModel interest rates model object
     function getModel(ISilo _silo) external view returns (IInterestRateModel);
+
+    /// @notice Get names of all programs in Silo incentives controller
+    /// @param _siloIncentivesController Address of the Silo incentives controller
+    /// @return programsNames Names of all programs in Silo incentives controller
+    function getSiloIncentivesControllerProgramsNames(
+        address _siloIncentivesController
+    ) external view returns (string[] memory programsNames);
 }
