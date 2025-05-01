@@ -364,6 +364,10 @@ library SiloLendingLib {
 
         assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
+        // When we are calculating fractions it is possible that integral revenue and interest are 1.
+        // In this case total debt assets will be increased by 1 and collateral will stay the same.
+        if (assets != 0)  assets--;
+
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
         // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
         // because we not creating debt here, we calculating max assets/shares, so we need to round.Down here
