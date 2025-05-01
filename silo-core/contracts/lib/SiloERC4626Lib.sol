@@ -282,7 +282,9 @@ library SiloERC4626Lib {
             );
         }
 
-        if (assets != 0) {
+        uint256 totalDebtAssets = SiloStorageLib.getSiloStorage().totalAssets[ISilo.AssetType.Debt];
+
+        if (assets != 0 && totalDebtAssets < SiloLendingLib._ROUNDING_THRESHOLD) {
             // underestimate to count for interest fractions, they are not included in view methods
             // so user can end up with more debt after accrue interest, there is why we need to do -1
             unchecked { assets--; }
