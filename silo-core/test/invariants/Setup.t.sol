@@ -18,9 +18,9 @@ import {
 import {
     IGaugeHookReceiver,
     GaugeHookReceiver
-} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
+} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
