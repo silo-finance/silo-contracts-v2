@@ -19,11 +19,11 @@ contract WithdrawWhenFractionsTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_withdraw_when_fractions
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_withdraw_when_fractions_fuzz(uint256 _borrowSameAsset) public {
+    function test_withdraw_when_fractions_fuzz(uint256 _borrowSameAsset, bool _maxRedeem) public {
         vm.assume(_borrowSameAsset < uint256(632707) * 80 / 100);
         vm.assume(_borrowSameAsset > 0);
 
-        _withdraw_when_fractions(_borrowSameAsset);
+        _withdraw_when_fractions(_borrowSameAsset, _maxRedeem);
     }
 
     /*
@@ -31,10 +31,10 @@ contract WithdrawWhenFractionsTest is SiloLittleHelper, Test {
     this test will fail for byt in maxWithdraw when we not count for interest fractions
     */
     function test_withdraw_when_fractions() public {
-        _withdraw_when_fractions(44723);
+        _withdraw_when_fractions(44723, false);
     }
 
-    function _withdraw_when_fractions(uint256 _borrowSameAsset) public {
+    function _withdraw_when_fractions(uint256 _borrowSameAsset, bool _maxRedeem) public {
         vm.warp(337812);
 
         address borrower = address(this);
@@ -46,8 +46,12 @@ contract WithdrawWhenFractionsTest is SiloLittleHelper, Test {
         silo1.accrueInterest();
         vm.warp(block.timestamp + 130008);
 
-        vm.assume(silo1.maxWithdraw(borrower) != 0);
-
-        silo1.withdraw(silo1.maxWithdraw(borrower), borrower, borrower);
+        if (_maxRedeem) {
+            vm.assume(silo1.maxRedeem(borrower) != 0);
+            silo1.redeem(silo1.maxRedeem(borrower), borrower, borrower);
+        } else {
+            vm.assume(silo1.maxWithdraw(borrower) != 0);
+            silo1.withdraw(silo1.maxWithdraw(borrower) - 1, borrower, borrower);
+        }
     }
 }
