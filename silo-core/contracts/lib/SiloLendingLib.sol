@@ -258,7 +258,7 @@ library SiloLendingLib {
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
-        if (liquidityWithInterest != 0) {
+        if (liquidityWithInterest != 0 && _totalDebtAssets < _ROUNDING_THRESHOLD) {
             // we need to count for fractions, when fractions are applied liquidity is decreased
             unchecked { liquidityWithInterest--; }
         }
