@@ -17,6 +17,8 @@ import {Rounding} from "./Rounding.sol";
 import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 library SiloLendingLib {
     using SafeERC20 for IERC20;
     using Math for uint256;
@@ -236,15 +238,23 @@ library SiloLendingLib {
             _debtShareBalanceCached: 0 /* no cache */
         });
 
+        console2.log("[calculateMaxBorrow] ltvData.borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
+        console2.log("[calculateMaxBorrow] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
+
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
+
+        console2.log("[calculateMaxBorrow] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
+        console2.log("[calculateMaxBorrow] borrowerDebtValue", borrowerDebtValue);
 
         uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
             _collateralConfig.maxLtv,
             sumOfBorrowerCollateralValue,
             borrowerDebtValue
         );
+
+        console2.log("[calculateMaxBorrow] maxBorrowValue", maxBorrowValue);
 
         (assets, shares) = maxBorrowValueToAssetsAndShares({
             _maxBorrowValue: maxBorrowValue,
@@ -254,9 +264,14 @@ library SiloLendingLib {
             _totalDebtShares: _totalDebtShares
         });
 
+        console2.log("[calculateMaxBorrow] assets", assets);
+        console2.log("[calculateMaxBorrow] shares", shares);
+
         if (assets == 0 || shares == 0) return (0, 0);
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+
+        console2.log("[calculateMaxBorrow] liquidityWithInterest", liquidityWithInterest);
 
         if (liquidityWithInterest != 0) {
             // We need to count for fractions, when fractions are applied liquidity may be decreased
@@ -297,6 +312,8 @@ library SiloLendingLib {
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
+
+        // totalDebtAssets += 1;
 
         return calculateMaxBorrow(
             collateralConfig,
@@ -367,8 +384,10 @@ library SiloLendingLib {
         if (assets != 0) {
             // When we calculate fractions, it is possible that total debt assets will increase by 1
             // which can lead to a revert on the LTV check. To avoid this, we underestimate assets.
-            unchecked { assets -= 1; }
+            unchecked { assets -= 5; }
         }
+
+        console2.log("[maxBorrowValueToAssetsAndShares] assets", assets);
 
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
         // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
@@ -377,12 +396,16 @@ library SiloLendingLib {
             assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
         );
 
+        console2.log("[maxBorrowValueToAssetsAndShares] shares", shares);
+
         // we need to recalculate assets, because what we did above is assets => shares with rounding down, but when
         // we input assets, they will generate more shares, so we need to calculate assets based on final shares
         // not based on borrow value
         assets = SiloMathLib.convertToAssets(
             shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
         );
+
+        console2.log("[maxBorrowValueToAssetsAndShares] assets", assets);
     }
 
     function getCompoundInterestRate(

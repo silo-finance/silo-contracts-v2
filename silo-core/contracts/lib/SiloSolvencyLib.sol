@@ -8,6 +8,8 @@ import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 library SiloSolvencyLib {
     using Math for uint256;
 
@@ -71,6 +73,9 @@ library SiloSolvencyLib {
             _accrueInMemory,
             debtShareBalance
         );
+
+        console2.log("[isBelowMaxLtv] ltv", ltv);
+        console2.log("[isBelowMaxLtv] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
 
         return ltv <= _collateralConfig.maxLtv;
     }

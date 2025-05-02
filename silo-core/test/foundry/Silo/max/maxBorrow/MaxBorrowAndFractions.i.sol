@@ -133,14 +133,15 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     function _executeBorrowScenario1(uint256 _borrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
 
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+            SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
             vm.assume(maxBorrowShares != 0);
             silo1.borrowShares(maxBorrowShares, borrower, borrower);
         } else {
             uint256 maxBorrow = silo1.maxBorrow(borrower);
+            SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
             vm.assume(maxBorrow != 0);
             silo1.borrow(maxBorrow, borrower, borrower);
         }
@@ -185,14 +186,23 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     function _executeBorrowScenario2(uint256 _borrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
 
         if (_borrowShares) {
-            silo1.borrowShares(silo1.maxBorrowShares(borrower), borrower, borrower);
+            uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+            _changeTotalsScenario2();
+            vm.assume(maxBorrowShares != 0);
+            silo1.borrowShares(maxBorrowShares, borrower, borrower);
         } else {
-            silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+            uint256 maxBorrow = silo1.maxBorrow(borrower);
+            _changeTotalsScenario2();
+            vm.assume(maxBorrow != 0);
+            silo1.borrow(maxBorrow, borrower, borrower);
         }
+    }
+
+    function _changeTotalsScenario2() internal {
+        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
+        SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
     }
 
     /*
@@ -234,14 +244,15 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     function _executeBorrowScenario3(uint256 _borrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
-        SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
 
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+            SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
             vm.assume(maxBorrowShares != 0);
             silo1.borrowShares(maxBorrowShares, borrower, borrower);
         } else {
             uint256 maxBorrow = silo1.maxBorrow(borrower);
+            SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
             vm.assume(maxBorrow != 0);
             silo1.borrow(maxBorrow, borrower, borrower);
         }
