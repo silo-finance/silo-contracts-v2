@@ -45,7 +45,9 @@ import {SiloHarness} from "silo-core/test/foundry/_mocks/SiloHarness.sol";
         SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
 
     scenario 3 (interest 0 revenue 1)
-        SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1); 
+        SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
+
+    Note: scenario 3 always succeeds, because of the liquidityWithInterest -= 1 in the calculateMaxBorrow fn
 */
 contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     uint256 public snapshot;
@@ -61,6 +63,28 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         _doDeposit();
 
         snapshot = vm.snapshot();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_WithFractions_scenario1_fuzz
+
+    scenario 1 - increase total debt assets
+    */
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_maxBorrow_WithFractions_scenario1_fuzz(uint256 _borrowAmount, bool _borrowShares, uint8 _scenario) public {
+        uint256 maxBorrow = silo1.maxBorrow(address(this));
+
+        vm.assume(_borrowAmount != 0);
+        vm.assume(_borrowAmount <= maxBorrow);
+        vm.assume(_scenario == 1 || _scenario == 2 || _scenario == 3);
+
+        if (_scenario == 1) {
+            _executeBorrowScenario1(_borrowAmount, _borrowShares);
+        } else if (_scenario == 2) {
+            _executeBorrowScenario2(_borrowAmount, _borrowShares);
+        } else if (_scenario == 3) {
+            _executeBorrowScenario3(_borrowAmount, _borrowShares);
+        }
     }
 
     /*

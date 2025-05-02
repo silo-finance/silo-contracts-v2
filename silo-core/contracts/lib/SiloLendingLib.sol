@@ -259,8 +259,8 @@ library SiloLendingLib {
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
         if (liquidityWithInterest != 0) {
-            // we need to count for fractions, when fractions are applied liquidity is decreased
-            unchecked { liquidityWithInterest--; }
+            // We need to count for fractions, when fractions are applied liquidity may be decreased
+            unchecked { liquidityWithInterest -= 1; }
         }
 
         if (assets > liquidityWithInterest) {
@@ -367,7 +367,7 @@ library SiloLendingLib {
         if (assets != 0) {
             // When we are calculating fractions it is possible that total debt assets will be increased by 1.
             // Which can lead to the to revert on LTV check. To avoid this we underestimate assets.
-            unchecked { assets--; }
+            unchecked { assets -= 1; }
         }
 
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
