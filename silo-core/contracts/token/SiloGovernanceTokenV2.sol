@@ -16,7 +16,7 @@ contract SiloGovernanceTokenV2 is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped
     constructor(address _initialOwner, ERC20Burnable _siloV1)
         ERC20("SILO", "SiloGovernanceToken")
         ERC20Permit("SILO")
-        ERC20Capped(10 ** 9 * 10 ** 18)
+        ERC20Capped(1_000_000_000e18)
         Ownable(_initialOwner)
     {
         SILO_V1 = _siloV1;
