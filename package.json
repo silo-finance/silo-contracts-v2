@@ -12,6 +12,7 @@
     "silo-oracles",
     "silo-vaults",
     "ve-silo",
+    "x-silo",
     "proposals",
     "external/*"
   ],
