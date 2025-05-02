@@ -7,6 +7,8 @@ import {ERC20Burnable} from "openzeppelin5/token/ERC20/extensions/ERC20Burnable.
 import {IERC20} from "gitmodules/openzeppelin-contracts-5/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC20Capped} from "openzeppelin5/token/ERC20/extensions/ERC20Capped.sol";
+import {Pausable} from "gitmodules/openzeppelin-contracts-5/contracts/utils/Pausable.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 contract SiloGovernanceTokenV2Test is Forking {
     ERC20Burnable public constant SILO_V1 = ERC20Burnable(0x6f80310CA7F2C654691D1383149Fa1A57d8AB1f8);
@@ -33,18 +35,13 @@ contract SiloGovernanceTokenV2Test is Forking {
         uint256 whaleBalanceBefore = SILO_V1.balanceOf(SILO_V1_WHALE);
         assertEq(token.balanceOf(SILO_V1_WHALE), 0);
 
-        vm.prank(SILO_V1_WHALE);
-        SILO_V1.approve(address(token), mintAmount);
-
-        vm.prank(SILO_V1_WHALE);
-        token.mint(SILO_V1_WHALE, mintAmount);
+        _whaleMintsSelf(mintAmount);
 
         assertEq(whaleBalanceBefore - SILO_V1.balanceOf(SILO_V1_WHALE), mintAmount);
         assertEq(token.balanceOf(SILO_V1_WHALE), mintAmount);
     }
 
     function test_mint_failsNoApprove() public {
-
         vm.prank(SILO_V1_WHALE);
         vm.expectRevert("ERC20: burn amount exceeds allowance");
         token.mint(SILO_V1_WHALE, 1);
@@ -71,49 +68,103 @@ contract SiloGovernanceTokenV2Test is Forking {
     }
 
     function test_mint_failsRepeatedMint() public {
-        uint256 fullBalanceToMint = SILO_V1.balanceOf(SILO_V1_WHALE);
-
         vm.startPrank(SILO_V1_WHALE);
         SILO_V1.approve(address(token), type(uint256).max);
-        token.mint(SILO_V1_WHALE, fullBalanceToMint);
+        token.mint(SILO_V1_WHALE, SILO_V1.balanceOf(SILO_V1_WHALE));
 
         vm.expectRevert("ERC20: burn amount exceeds balance");
-        token.mint(SILO_V1_WHALE, fullBalanceToMint);
+        token.mint(SILO_V1_WHALE, 1);
         vm.stopPrank();
     }
 
-    function test_mint_decreasesSiloV1Supply() public {
+    function test_mint_changesSupplies() public {
+        uint256 mintAmount = 10**18;
+        uint256 siloV1TotalSupplyBefore = SILO_V1.totalSupply();
+        uint256 siloV2TotalSupplyBefore = token.totalSupply();
 
+        _whaleMintsSelf(mintAmount);
+
+        assertEq(token.totalSupply() - siloV2TotalSupplyBefore, mintAmount);
+        assertEq(siloV1TotalSupplyBefore - SILO_V1.totalSupply(), mintAmount);
+        assertEq(token.totalSupply() + SILO_V1.totalSupply(), siloV1TotalSupplyBefore + siloV2TotalSupplyBefore);
     }
 
-    function test_mint_increasesSupply() public {
+    function test_mint_whenPausedMustFail() public {
+        vm.prank(OWNER);
+        token.pause();
 
+        vm.prank(SILO_V1_WHALE);
+        SILO_V1.approve(address(token), 1);
+
+        vm.prank(SILO_V1_WHALE);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        token.mint(SILO_V1_WHALE, 1);
     }
 
-    function test_mint_whenPaused() public {
+    function test_transfer_whenPausedMustWork() public {
+        uint256 mintAmount = 10**18;
+        _whaleMintsSelf(mintAmount);
 
+        vm.prank(OWNER);
+        token.pause();
+
+        address receiver = address(123);
+        assertEq(token.balanceOf(receiver), 0);
+        vm.prank(SILO_V1_WHALE);
+        token.transfer(receiver, mintAmount);
+        assertEq(token.balanceOf(receiver), mintAmount);
     }
 
     function test_pause_onlyOwner() public {
-
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        token.pause();
     }
 
     function test_unpause_onlyOwner() public {
-
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+        token.unpause();
     }
 
-    function test_transfer() public {
+    function test_pause_canUnpause() public {
+        vm.prank(OWNER);
+        token.pause();
+        assertEq(token.paused(), true);
 
+        vm.prank(OWNER);
+        token.unpause();
+
+        assertEq(token.paused(), false);
     }
+    function test_unpause_canPause() public {
+        assertEq(token.paused(), false);
 
-    function test_balanceOf() public {
+        vm.prank(OWNER);
+        token.pause();
 
+        assertEq(token.paused(), true);
     }
 
     function test_burn_onlySelf() public {
+        uint256 mintAmount = 10**18;
+        _whaleMintsSelf(mintAmount);
 
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector,
+                address(this),
+                0,
+                mintAmount
+            )
+        );
+
+        token.burnFrom(SILO_V1_WHALE, mintAmount);
     }
 
-    // cap
-    // supply
+    function _whaleMintsSelf(uint256 _mintAmount) internal {
+        vm.prank(SILO_V1_WHALE);
+        SILO_V1.approve(address(token), _mintAmount);
+
+        vm.prank(SILO_V1_WHALE);
+        token.mint(SILO_V1_WHALE, _mintAmount);
+    }
 }
