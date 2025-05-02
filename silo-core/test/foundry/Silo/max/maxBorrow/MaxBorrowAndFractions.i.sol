@@ -18,6 +18,7 @@ import {SiloHarness} from "silo-core/test/foundry/_mocks/SiloHarness.sol";
 
     Testing scenarios and result with and without fix in the SiloLendingLib.sol.maxBorrowValueToAssetsAndShares fn
     // assets--;
+    In this test, we expect to have no reverts
 
     results for maxBorrow => borrow
 
@@ -47,6 +48,8 @@ import {SiloHarness} from "silo-core/test/foundry/_mocks/SiloHarness.sol";
         SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1); 
 */
 contract MaxBorrowAndFractions is SiloLittleHelper, Test {
+    uint256 public snapshot;
+
     function setUp() public {
         ISiloConfig siloConfig = _setUpLocalFixture();
 
@@ -56,6 +59,8 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         token1.setOnDemand(true);
 
         _doDeposit();
+
+        snapshot = vm.snapshot();
     }
 
     /*
@@ -64,65 +69,46 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     scenario 1 - increase total debt assets
     */
     function test_maxBorrow_Borrow_WithFractions_scenario1() public {
-        uint256 snapshot = vm.snapshot();
-
-        uint256 borrowAmount = 50;
-        address borrower = address(this);
-        uint256 maxBorrowAfterDeposit;
-
-        _borrowAndUpdateSiloCode(borrowAmount);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        silo1.borrow(borrowAmount, borrower, borrower);
-
+        _executeBorrowScenario1(50);
         vm.revertTo(snapshot);
 
-        borrowAmount = silo1.maxBorrow(borrower);
-        maxBorrowAfterDeposit = _borrowAndUpdateSiloCode(borrowAmount / 2);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        silo1.borrow(maxBorrowAfterDeposit / 2, borrower, borrower);
-
+        uint256 maxBorrowAmount = silo1.maxBorrow(address(this));
+        _executeBorrowScenario1(maxBorrowAmount / 2);
         vm.revertTo(snapshot);
 
-        maxBorrowAfterDeposit = _borrowAndUpdateSiloCode(0);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        silo1.borrow(maxBorrowAfterDeposit, borrower, borrower);
-
+        _executeBorrowScenario1(0);
         vm.revertTo(snapshot);
     }
 
+    function _executeBorrowScenario1(uint256 _borrowAmount) internal {
+        address borrower = address(this);
+        _borrowAndUpdateSiloCode(_borrowAmount);
+        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
+        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+    }
+
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_Borrow_WithFractions_scenario2
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_borrow_WithFractions_scenario2
 
     scenario 2 - increase total collateral and debt assets
     */
     function test_maxBorrow_borrow_WithFractions_scenario2() public {
-        uint256 snapshot = vm.snapshot();
+        _executeBorrowScenario2(50);
+        vm.revertTo(snapshot);
 
-        uint256 borrowAmount = 50;
+        _executeBorrowScenario2(silo1.maxBorrow(address(this)) / 2);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario2(0);
+        vm.revertTo(snapshot);
+    }
+
+    function _executeBorrowScenario2(uint256 _borrowAmount) internal {
         address borrower = address(this);
-        uint256 maxBorrowAfterDeposit;
-
-        _borrowAndUpdateSiloCode(borrowAmount);
+        _borrowAndUpdateSiloCode(_borrowAmount);
         SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
         SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
-        silo1.borrow(borrowAmount, borrower, borrower);
-
-        vm.revertTo(snapshot);
-
-        borrowAmount = silo1.maxBorrow(borrower);
-        maxBorrowAfterDeposit = _borrowAndUpdateSiloCode(borrowAmount / 2);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
-        silo1.borrow(maxBorrowAfterDeposit / 2, borrower, borrower);
-
-        vm.revertTo(snapshot);
-
-        maxBorrowAfterDeposit = _borrowAndUpdateSiloCode(0);
-        SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
-        silo1.borrow(maxBorrowAfterDeposit, borrower, borrower);
-
-        vm.revertTo(snapshot);
+        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
     }
 
     /*
@@ -131,30 +117,21 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     scenario 3 - decrease total collateral assets
     */
     function test_maxBorrowWithFractions_scenario3() public {
-        uint256 snapshot = vm.snapshot();
+        _executeBorrowScenario3(50);
+        vm.revertTo(snapshot);
 
-        uint256 borrowAmount = 50;
+        _executeBorrowScenario3(silo1.maxBorrow(address(this)) / 2);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario3(0);
+        vm.revertTo(snapshot);
+    }
+
+    function _executeBorrowScenario3(uint256 _borrowAmount) internal {
         address borrower = address(this);
-        uint256 maxBorrowAfterDeposit;
-
-        _borrowAndUpdateSiloCode(borrowAmount);
+        _borrowAndUpdateSiloCode(_borrowAmount);
         SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
-        silo1.borrow(borrowAmount, borrower, borrower);
-
-        vm.revertTo(snapshot);
-
-        borrowAmount = silo1.maxBorrow(borrower);
-        maxBorrowAfterDeposit = _borrowAndUpdateSiloCode(borrowAmount / 2);
-        SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
-        silo1.borrow(maxBorrowAfterDeposit / 2, borrower, borrower);
-
-        vm.revertTo(snapshot);
-
-        maxBorrowAfterDeposit = _borrowAndUpdateSiloCode(0);
-        SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
-        silo1.borrow(maxBorrowAfterDeposit, borrower, borrower);
-
-        vm.revertTo(snapshot);
+        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
     }
 
     function _doDeposit() internal {
@@ -174,10 +151,10 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         vm.etch(address(silo1), address(silo1Harness).code);
 
         ISilo.Fractions memory fractions = silo1.getFractionsStorage();
-        emit log_named_uint("fractions.interest", fractions.interest);
-        emit log_named_uint("fractions.revenue", fractions.revenue);
+        assertEq(fractions.interest, 0);
+        assertEq(fractions.revenue, 0);
 
         maxBorrow = silo1.maxBorrow(borrower);
-        emit log_named_uint("maxBorrow", maxBorrow);
+        assertNotEq(maxBorrow, 0);
     }
 }
