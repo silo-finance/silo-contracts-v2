@@ -68,8 +68,6 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_WithFractions_scenario1_fuzz
-
-    scenario 1 - increase total debt assets
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_WithFractions_scenario1_fuzz(
