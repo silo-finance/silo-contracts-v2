@@ -365,8 +365,8 @@ library SiloLendingLib {
         assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
         if (assets != 0) {
-            // When we are calculating fractions it is possible that total debt assets will be increased by 1.
-            // Which can lead to the to revert on LTV check. To avoid this we underestimate assets.
+            // When we calculate fractions, it is possible that total debt assets will increase by 1
+            // which can lead to a revert on the LTV check. To avoid this, we underestimate assets.
             unchecked { assets -= 1; }
         }
 
