@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
-import {SiloGovernanceTokenV2} from "silo-core/contracts/token/SiloGovernanceTokenV2.sol";
+import {SiloGovernanceTokenV2} from "x-silo/token/SiloGovernanceTokenV2.sol";
 import {ERC20Burnable} from "openzeppelin5/token/ERC20/extensions/ERC20Burnable.sol";
 import {IERC20} from "gitmodules/openzeppelin-contracts-5/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
