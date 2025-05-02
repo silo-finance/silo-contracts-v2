@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity >=0.7.6;
+
+import {CommonDeploy} from "x-silo/deploy/CommonDeploy.sol";
+import {XSiloContracts} from "x-silo/deploy/XSiloContracts.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {ERC20Burnable} from "openzeppelin5/token/ERC20/extensions/ERC20Burnable.sol";
+import {SiloGovernanceTokenV2} from "x-silo/contracts/token/SiloGovernanceTokenV2.sol";
+
+/**
+    FOUNDRY_PROFILE=x_silo \
+        forge script x-silo/deploy/token/SiloGovernanceTokenV2Deploy.s.sol \
+        --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+ */
+contract SiloGovernanceTokenV2Deploy is CommonDeploy {
+    function run() public returns (address token) {
+        require(
+            block.chainid == ChainsLib.ANVIL_CHAIN_ID || block.chainid == ChainsLib.MAINNET_CHAIN_ID,
+            "wrong chain"
+        );
+
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        
+        ERC20Burnable siloTokenV1 = ERC20Burnable(AddrLib.getAddress("SILO"));
+        address owner = AddrLib.getAddress("NEW_SILO_TOKEN_OWNER");
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        token = address(new SiloGovernanceTokenV2(owner, siloTokenV1));
+
+        vm.stopBroadcast();
+
+        _registerDeployment(token, XSiloContracts.SILO_GOVERNANCE_TOKEN_V2);
+    }
+}
