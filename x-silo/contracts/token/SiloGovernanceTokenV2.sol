@@ -10,6 +10,9 @@ import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 
 /// @title Silo Governance Token V2.
 contract SiloGovernanceTokenV2 is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped, Pausable, Ownable2Step {
+    /// @dev Reverts in constructor for zero address of $SILO V1 token.
+    error ZeroAddress();
+
     /// @notice $SILO V1 token address used for token migration.
     ERC20Burnable public immutable SILO_V1; // solhint-disable-line var-name-mixedcase
 
@@ -19,6 +22,8 @@ contract SiloGovernanceTokenV2 is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped
         ERC20Capped(1_000_000_000e18)
         Ownable(_initialOwner)
     {
+        require(address(_siloV1) != address(0), ZeroAddress());
+
         SILO_V1 = _siloV1;
     }
 

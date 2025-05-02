@@ -30,6 +30,16 @@ contract SiloGovernanceTokenV2Test is Forking {
         assertEq(token.cap(), CAP);
     }
 
+    function test_constructor_revertsForZeroSilo() public {
+        vm.expectRevert(SiloGovernanceTokenV2.ZeroAddress.selector);
+        new SiloGovernanceTokenV2(OWNER, ERC20Burnable(address(0)));
+    }
+
+    function test_constructor_revertsForZeroOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
+        new SiloGovernanceTokenV2(address(0), SILO_V1);
+    }
+
     function test_mint_happyPath() public {
         uint256 mintAmount = 10**18;
         uint256 whaleBalanceBefore = SILO_V1.balanceOf(SILO_V1_WHALE);
