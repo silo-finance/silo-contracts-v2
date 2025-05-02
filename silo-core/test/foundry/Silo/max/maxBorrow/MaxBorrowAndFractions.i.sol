@@ -69,22 +69,46 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     scenario 1 - increase total debt assets
     */
     function test_maxBorrow_Borrow_WithFractions_scenario1() public {
-        _executeBorrowScenario1(50);
+        bool borrowShares = false;
+
+        _executeBorrowScenario1(50, borrowShares);
         vm.revertTo(snapshot);
 
-        uint256 maxBorrowAmount = silo1.maxBorrow(address(this));
-        _executeBorrowScenario1(maxBorrowAmount / 2);
+        _executeBorrowScenario1(silo1.maxBorrow(address(this)) / 2, borrowShares);
         vm.revertTo(snapshot);
 
-        _executeBorrowScenario1(0);
+        _executeBorrowScenario1(0, borrowShares);
         vm.revertTo(snapshot);
     }
 
-    function _executeBorrowScenario1(uint256 _borrowAmount) internal {
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_BorrowShares_WithFractions_scenario1
+
+    scenario 1 - increase total debt assets
+    */
+    function test_maxBorrow_BorrowShares_WithFractions_scenario1() public {
+        bool borrowShares = true;
+
+        _executeBorrowScenario1(50, borrowShares);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario1(silo1.maxBorrow(address(this)) / 2, borrowShares);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario1(0, borrowShares);
+        vm.revertTo(snapshot);
+    }
+
+    function _executeBorrowScenario1(uint256 _borrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
         SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
-        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+
+        if (_borrowShares) {
+            silo1.borrowShares(silo1.maxBorrowShares(borrower), borrower, borrower);
+        } else {
+            silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+        }
     }
 
     /*
@@ -93,22 +117,47 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     scenario 2 - increase total collateral and debt assets
     */
     function test_maxBorrow_borrow_WithFractions_scenario2() public {
-        _executeBorrowScenario2(50);
+        bool borrowShares = false;
+
+        _executeBorrowScenario2(50, borrowShares);
         vm.revertTo(snapshot);
 
-        _executeBorrowScenario2(silo1.maxBorrow(address(this)) / 2);
+        _executeBorrowScenario2(silo1.maxBorrow(address(this)) / 2, borrowShares);
         vm.revertTo(snapshot);
 
-        _executeBorrowScenario2(0);
+        _executeBorrowScenario2(0, borrowShares);
         vm.revertTo(snapshot);
     }
 
-    function _executeBorrowScenario2(uint256 _borrowAmount) internal {
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_borrowShares_WithFractions_scenario2
+
+    scenario 2 - increase total collateral and debt assets
+    */
+    function test_maxBorrow_borrowShares_WithFractions_scenario2() public {
+        bool borrowShares = true;
+
+        _executeBorrowScenario2(50, borrowShares);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario2(silo1.maxBorrow(address(this)) / 2, borrowShares);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario2(0, borrowShares);
+        vm.revertTo(snapshot);
+    }
+
+    function _executeBorrowScenario2(uint256 _borrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
         SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
         SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
-        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+
+        if (_borrowShares) {
+            silo1.borrowShares(silo1.maxBorrowShares(borrower), borrower, borrower);
+        } else {
+            silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+        }
     }
 
     /*
@@ -117,21 +166,46 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     scenario 3 - decrease total collateral assets
     */
     function test_maxBorrowWithFractions_scenario3() public {
-        _executeBorrowScenario3(50);
+        bool borrowShares = false;
+
+        _executeBorrowScenario3(50, borrowShares);
         vm.revertTo(snapshot);
 
-        _executeBorrowScenario3(silo1.maxBorrow(address(this)) / 2);
+        _executeBorrowScenario3(silo1.maxBorrow(address(this)) / 2, borrowShares);
         vm.revertTo(snapshot);
 
-        _executeBorrowScenario3(0);
+        _executeBorrowScenario3(0, borrowShares);
         vm.revertTo(snapshot);
     }
 
-    function _executeBorrowScenario3(uint256 _borrowAmount) internal {
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrowWithFractions_borrowShares_scenario3
+
+    scenario 3 - decrease total collateral assets
+    */
+    function test_maxBorrowWithFractions_borrowShares_scenario3() public {
+        bool borrowShares = true;
+
+        _executeBorrowScenario3(50, borrowShares);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario3(silo1.maxBorrow(address(this)) / 2, borrowShares);
+        vm.revertTo(snapshot);
+
+        _executeBorrowScenario3(0, borrowShares);
+        vm.revertTo(snapshot);
+    }
+
+    function _executeBorrowScenario3(uint256 _borrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
         SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
-        silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+
+        if (_borrowShares) {
+            silo1.borrowShares(silo1.maxBorrowShares(borrower), borrower, borrower);
+        } else {
+            silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+        }
     }
 
     function _doDeposit() internal {
