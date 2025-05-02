@@ -105,6 +105,9 @@ library SiloLendingLib {
 
         uint64 lastTimestamp = $.interestRateTimestamp;
 
+        console2.log("[accrueInterestForAsset] lastTimestamp", lastTimestamp);
+        console2.log("[accrueInterestForAsset] block.timestamp", block.timestamp);
+
         // Interest has already been accrued this block
         if (lastTimestamp == block.timestamp) {
             return 0;
@@ -127,6 +130,8 @@ library SiloLendingLib {
             _lastTimestamp: lastTimestamp
         });
 
+        console2.log("[getCompoundInterestRate] rcomp", rcomp);
+
         if (rcomp == 0) {
             $.interestRateTimestamp = uint64(block.timestamp);
             return 0;
@@ -142,6 +147,10 @@ library SiloLendingLib {
             _deployerFee: _deployerFee
         });
 
+        console2.log("[accrueInterestForAsset] accruedInterest", accruedInterest);
+        console2.log("[accrueInterestForAsset] totalFees", totalFees);
+
+
         (accruedInterest, totalFees) = applyFractions({
             _totalDebtAssets: totalDebtAssets,
             _rcomp: rcomp,
@@ -149,6 +158,9 @@ library SiloLendingLib {
             _fees: _daoFee + _deployerFee,
             _totalFees: totalFees
         });
+
+        console2.log("[applyFractions] accruedInterest", accruedInterest);
+        console2.log("[applyFractions] totalFees", totalFees);
 
         // update remaining contract state
         $.interestRateTimestamp = uint64(block.timestamp);
@@ -179,6 +191,10 @@ library SiloLendingLib {
 
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
+        console2.log("[borrow] totalDebtAssets", totalDebtAssets);
+        console2.log("[borrow] _args.assets", _args.assets);
+        console2.log("[borrow] _args.shares", _args.shares);
+
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsOrToShares(
             _args.assets,
             _args.shares,
@@ -188,6 +204,9 @@ library SiloLendingLib {
             Rounding.BORROW_TO_SHARES,
             ISilo.AssetType.Debt
         );
+
+        console2.log("[borrow] borrowedAssets", borrowedAssets);
+        console2.log("[borrow] borrowedShares", borrowedShares);
 
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
@@ -238,6 +257,20 @@ library SiloLendingLib {
             _debtShareBalanceCached: 0 /* no cache */
         });
 
+        // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
+        // that will be subtracted from collateral and integral interest that will be added to debt.
+        {
+            // We need to decrease borrowerCollateralAssets since we cannot access totalCollateralAssets before calculations.
+            if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
+
+            // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
+            // If borrowerDebtAssets is 0 then we have no interest
+            if (ltvData.borrowerDebtAssets != 0) ltvData.borrowerDebtAssets++;
+
+            // It _totalDebtAssets is 0 then we have no interest
+            if (_totalDebtAssets != 0) _totalDebtAssets++;
+        }
+
         console2.log("[calculateMaxBorrow] ltvData.borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
         console2.log("[calculateMaxBorrow] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
 
@@ -247,6 +280,7 @@ library SiloLendingLib {
 
         console2.log("[calculateMaxBorrow] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
         console2.log("[calculateMaxBorrow] borrowerDebtValue", borrowerDebtValue);
+        console2.log("[calculateMaxBorrow] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
 
         uint256 maxBorrowValue = SiloMathLib.calculateMaxBorrowValue(
             _collateralConfig.maxLtv,
@@ -312,8 +346,6 @@ library SiloLendingLib {
 
         (uint256 totalDebtAssets, uint256 totalDebtShares) =
             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(debtConfig, ISilo.AssetType.Debt);
-
-        // totalDebtAssets += 1;
 
         return calculateMaxBorrow(
             collateralConfig,
@@ -381,13 +413,16 @@ library SiloLendingLib {
 
         assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
 
-        if (assets != 0) {
+        // TODO: no longer needed
+        // if (assets != 0) {
             // When we calculate fractions, it is possible that total debt assets will increase by 1
             // which can lead to a revert on the LTV check. To avoid this, we underestimate assets.
-            unchecked { assets -= 5; }
-        }
+            // unchecked { assets -= 1; }
+        // }
 
         console2.log("[maxBorrowValueToAssetsAndShares] assets", assets);
+        console2.log("[maxBorrowValueToAssetsAndShares] _totalDebtAssets", _totalDebtAssets);
+        console2.log("[maxBorrowValueToAssetsAndShares] _totalDebtShares", _totalDebtShares);
 
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
         // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,

@@ -136,12 +136,15 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
 
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
-            SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
+            // if there is no debt and we are the first ones to borrow then how can fraction be added?
+            // Fractions are interest and interest is calculated on debt which is 0 here so adding
+            // 1 wei of debt is incorrect.
+            // SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
             vm.assume(maxBorrowShares != 0);
             silo1.borrowShares(maxBorrowShares, borrower, borrower);
         } else {
             uint256 maxBorrow = silo1.maxBorrow(borrower);
-            SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
+            // SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
             vm.assume(maxBorrow != 0);
             silo1.borrow(maxBorrow, borrower, borrower);
         }

@@ -171,6 +171,10 @@ library SiloSolvencyLib {
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
 
+        console2.log("[getLtv] ltvData.borrowerProtectedAssets", ltvData.borrowerProtectedAssets);
+        console2.log("[getLtv] ltvData.borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
+        console2.log("[getLtv] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
+
         if (ltvData.borrowerDebtAssets == 0) return 0;
 
         (,, ltvInDp) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
@@ -193,6 +197,9 @@ library SiloSolvencyLib {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
         ) = getPositionValues(_ltvData, _collateralToken, _debtAsset);
+
+        console2.log("[calculateLtv] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
+        console2.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
