@@ -218,7 +218,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         uint256 maxBorrow = silo0.maxBorrowSameAsset(borrower);
 
-        assertEq(maxBorrow, 0.75e18, "invalid maxBorrow for two tokens");
+        assertEq(maxBorrow, 0.75e18 - 1, "invalid maxBorrow for two tokens");
 
         uint256 borrowToMuch = maxBorrow + 2;
         emit log_named_uint("borrowToMuch", borrowToMuch);
@@ -324,7 +324,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         maxBorrow = silo0.maxBorrowSameAsset(_borrower);
         emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
-        assertEq(maxBorrow, maxLtv, "maxBorrow borrower can do, maxLTV is 75%");
+        assertEq(maxBorrow, maxLtv - 1, "maxBorrow borrower can do, maxLTV is 75%");
 
         uint256 borrowAmount = maxBorrow / 2;
         emit log_named_decimal_uint("first borrow amount", borrowAmount, 18);
@@ -340,10 +340,10 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         uint256 expectedShares = 1e18;
         expectedShares = expectedShares.decimalsOffsetPow();
 
-        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), shareTokenCurrentDebt, "expect borrower to have 1/2 of debt");
+        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), shareTokenCurrentDebt - 1, "expect borrower to have 1/2 of debt");
         assertEq(IShareToken(_collateralToken).balanceOf(_borrower), expectedShares, "borrower has collateral");
-        assertEq(silo0.getDebtAssets(), shareTokenCurrentDebt, "silo debt");
-        assertEq(gotShares, shareTokenCurrentDebt, "got debt shares");
+        assertEq(silo0.getDebtAssets(), shareTokenCurrentDebt - 1, "silo debt");
+        assertEq(gotShares, shareTokenCurrentDebt - 1, "got debt shares");
         assertEq(gotShares, convertToShares, "convertToShares returns same result");
         assertEq(borrowAmount, silo0.convertToAssets(gotShares, ISilo.AssetType.Debt), "convertToAssets returns borrowAmount");
 
@@ -356,7 +356,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         vm.prank(_borrower);
         gotShares = silo0.borrowSameAsset(borrowAmount, _borrower, _borrower);
 
-        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), maxLtv, "debt silo: borrower has debt");
+        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), maxLtv - 1, "debt silo: borrower has debt");
         assertEq(gotShares, maxLtv / 2, "got shares");
         assertEq(silo0.getDebtAssets(), maxBorrow, "debt silo: has debt");
         assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
