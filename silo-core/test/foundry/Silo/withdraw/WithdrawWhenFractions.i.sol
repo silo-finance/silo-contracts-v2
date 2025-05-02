@@ -51,7 +51,7 @@ contract WithdrawWhenFractionsTest is SiloLittleHelper, Test {
             silo1.redeem(silo1.maxRedeem(borrower), borrower, borrower);
         } else {
             vm.assume(silo1.maxWithdraw(borrower) != 0);
-            silo1.withdraw(silo1.maxWithdraw(borrower) - 1, borrower, borrower);
+            silo1.withdraw(silo1.maxWithdraw(borrower), borrower, borrower);
         }
     }
 }
