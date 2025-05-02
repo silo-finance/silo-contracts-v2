@@ -258,10 +258,8 @@ library SiloLendingLib {
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
-        if (liquidityWithInterest != 0) {
-            // we need to count for fractions, when fractions are applied liquidity is decreased
-            unchecked { liquidityWithInterest--; }
-        }
+        // we need to count for fractions, when fractions are applied liquidity is decreased
+        if (liquidityWithInterest != 0) unchecked { liquidityWithInterest--; }
 
         if (assets > liquidityWithInterest) {
             assets = liquidityWithInterest;
@@ -366,7 +364,7 @@ library SiloLendingLib {
 
         // When we are calculating fractions it is possible that integral revenue and interest are 1.
         // In this case total debt assets will be increased by 1 and collateral will stay the same.
-        if (assets != 0)  assets--;
+        if (assets != 0) unchecked { assets--; }
 
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
         // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
