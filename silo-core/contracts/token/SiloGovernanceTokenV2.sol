@@ -14,7 +14,7 @@ contract SiloGovernanceTokenV2 is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped
     ERC20Burnable public immutable SILO_V1; // solhint-disable-line var-name-mixedcase
 
     constructor(address _initialOwner, ERC20Burnable _siloV1)
-        ERC20("SILO", "SiloGovernanceToken")
+        ERC20("SILO", "Silo Governance Token")
         ERC20Permit("SILO")
         ERC20Capped(1_000_000_000e18)
         Ownable(_initialOwner)
