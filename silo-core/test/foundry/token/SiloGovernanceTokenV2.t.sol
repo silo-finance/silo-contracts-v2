@@ -71,7 +71,8 @@ contract SiloGovernanceTokenV2Test is Forking {
         vm.startPrank(SILO_V1_WHALE);
         SILO_V1.approve(address(token), type(uint256).max);
         token.mint(SILO_V1_WHALE, SILO_V1.balanceOf(SILO_V1_WHALE));
-
+        
+        assertEq(SILO_V1.balanceOf(SILO_V1_WHALE), 0);
         vm.expectRevert("ERC20: burn amount exceeds balance");
         token.mint(SILO_V1_WHALE, 1);
         vm.stopPrank();
@@ -144,7 +145,7 @@ contract SiloGovernanceTokenV2Test is Forking {
         assertEq(token.paused(), true);
     }
 
-    function test_burn_onlySelf() public {
+    function test_burnFrom_failsWithNoApproval() public {
         uint256 mintAmount = 10**18;
         _whaleMintsSelf(mintAmount);
 
@@ -158,6 +159,16 @@ contract SiloGovernanceTokenV2Test is Forking {
         );
 
         token.burnFrom(SILO_V1_WHALE, mintAmount);
+    }
+
+    function test_burn() public {
+        uint256 mintAmount = 10**18;
+        _whaleMintsSelf(mintAmount);
+
+        assertEq(token.balanceOf(SILO_V1_WHALE), mintAmount);
+        vm.prank(SILO_V1_WHALE);
+        token.burn(mintAmount);
+        assertEq(token.balanceOf(SILO_V1_WHALE), 0);
     }
 
     function _whaleMintsSelf(uint256 _mintAmount) internal {
