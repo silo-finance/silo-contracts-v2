@@ -60,7 +60,8 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         token0.setOnDemand(true);
         token1.setOnDemand(true);
 
-        _doDeposit();
+        uint256 depositAmount = 1e6;
+        _doDeposit(depositAmount);
 
         snapshot = vm.snapshot();
     }
@@ -71,7 +72,15 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     scenario 1 - increase total debt assets
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_WithFractions_scenario1_fuzz(uint256 _borrowAmount, bool _borrowShares, uint8 _scenario) public {
+    function test_maxBorrow_WithFractions_scenario1_fuzz(
+        uint256 _borrowAmount,
+        uint256 _depositAmount,
+        bool _borrowShares,
+        uint8 _scenario
+    ) public {
+        vm.assume(_depositAmount != 0 && _depositAmount < type(uint128).max);
+        _doDeposit(_depositAmount);
+
         uint256 maxBorrow = silo1.maxBorrow(address(this));
 
         vm.assume(_borrowAmount != 0);
@@ -230,15 +239,19 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
 
         if (_borrowShares) {
-            silo1.borrowShares(silo1.maxBorrowShares(borrower), borrower, borrower);
+            uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+            vm.assume(maxBorrowShares != 0);
+            silo1.borrowShares(maxBorrowShares, borrower, borrower);
         } else {
-            silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+            uint256 maxBorrow = silo1.maxBorrow(borrower);
+            vm.assume(maxBorrow != 0);
+            silo1.borrow(maxBorrow, borrower, borrower);
         }
     }
 
-    function _doDeposit() internal {
-        silo0.mint(1e6, address(this));
-        silo1.deposit(1e6, address(1));
+    function _doDeposit(uint256 _amount) internal {
+        silo0.mint(_amount, address(this));
+        silo1.deposit(_amount, address(1));
     }
 
     function _borrowAndUpdateSiloCode(uint256 _amount) internal returns (uint256 maxBorrow) {
