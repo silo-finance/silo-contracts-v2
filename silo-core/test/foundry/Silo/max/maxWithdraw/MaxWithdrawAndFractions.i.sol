@@ -105,12 +105,20 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
 
         if (_redeem) {
             uint256 maxRedeem = silo0.maxRedeem(borrower);
-            SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
+
+            if (silo0.getDebtAssets() != 0) { // no debt - no interest
+                SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
+            }
+
             vm.assume(maxRedeem != 0);
             silo0.redeem(maxRedeem, borrower, borrower);
         } else {
             uint256 maxWithdraw = silo0.maxWithdraw(borrower);
-            SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
+
+            if (silo0.getDebtAssets() != 0) { // no debt - no interest
+                SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
+            }
+
             vm.assume(maxWithdraw != 0);
             silo0.withdraw(maxWithdraw, borrower, borrower);
         }
@@ -169,6 +177,8 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
     }
 
     function _changeTotalsScenario2() internal {
+        if (silo0.getDebtAssets() != 0) return; // no debt - no interest
+
         SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
         SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
     }
@@ -214,12 +224,20 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
 
         if (_redeem) {
             uint256 maxRedeem = silo0.maxRedeem(borrower);
-            SiloHarness(payable(address(silo0))).decreaseTotalCollateralAssets(1);
+
+            if (silo0.getDebtAssets() != 0) { // no debt - no interest  
+                SiloHarness(payable(address(silo0))).decreaseTotalCollateralAssets(1);
+            }
+
             vm.assume(maxRedeem != 0);
             silo0.redeem(maxRedeem, borrower, borrower);
         } else {
             uint256 maxWithdraw = silo0.maxWithdraw(borrower);
-            SiloHarness(payable(address(silo0))).decreaseTotalCollateralAssets(1);
+
+            if (silo0.getDebtAssets() != 0) { // no debt - no interest
+                SiloHarness(payable(address(silo0))).decreaseTotalCollateralAssets(1);
+            }
+
             vm.assume(maxWithdraw != 0);
             silo0.withdraw(maxWithdraw, borrower, borrower);
         }

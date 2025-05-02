@@ -284,12 +284,6 @@ library SiloMathLib {
             assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
         }
 
-        if (assets != 0) {
-            // Underestimate to count for interest fractions, they are not included in view methods.
-            // So, users can end up with more debt after accruing interest, which is why we need to do `-1`.
-            unchecked { assets -= 1; }
-        }
-
         shares = SiloMathLib.convertToShares(
             assets,
             _totalAssets,

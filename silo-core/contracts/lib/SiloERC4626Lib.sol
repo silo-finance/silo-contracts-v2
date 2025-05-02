@@ -253,6 +253,17 @@ library SiloERC4626Lib {
             IShareToken(_debtConfig.debtShareToken).balanceOf(_owner)
         );
 
+        // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
+        // that will be subtracted from collateral and integral interest that will be added to debt.
+        {
+            // We need to decrease borrowerCollateralAssets since we cannot access totalCollateralAssets before calculations.
+            if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
+
+            // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
+            // If borrowerDebtAssets is 0 then we have no interest
+            if (ltvData.borrowerDebtAssets != 0) ltvData.borrowerDebtAssets++;
+        }
+
         {
             (uint256 collateralValue, uint256 debtValue) =
                 SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
