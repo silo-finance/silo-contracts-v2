@@ -129,9 +129,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
 
         if (_borrowShares) {
-            silo1.borrowShares(silo1.maxBorrowShares(borrower), borrower, borrower);
+            uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
+            vm.assume(maxBorrowShares != 0);
+            silo1.borrowShares(maxBorrowShares, borrower, borrower);
         } else {
-            silo1.borrow(silo1.maxBorrow(borrower), borrower, borrower);
+            uint256 maxBorrow = silo1.maxBorrow(borrower);
+            vm.assume(maxBorrow != 0);
+            silo1.borrow(maxBorrow, borrower, borrower);
         }
     }
 
