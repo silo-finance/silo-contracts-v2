@@ -156,7 +156,8 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _depositCollateral(2500e6, borrower, TWO_ASSETS);
         _depositForBorrow(1e18, depositor);
 
-        assertEq(silo1.maxBorrow(borrower), 0.75e18 - 1, "maxBorrow, maxLTV is 75%");
+        // -3e8 is because we decrease the user collateral by 1wei during maxBorrow calculation due to fractions
+        assertEq(silo1.maxBorrow(borrower), 0.75e18 - 3e8, "maxBorrow, maxLTV is 75% (-3e8 because of the fractions)");
         _borrow(silo1.maxBorrow(borrower), borrower);
 
         // LT is 85%, so 0.75e18 / 0.85 = 882352941176470700 of value in collateral is needed.
@@ -172,8 +173,8 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 100_4885422 , "collateral");
-        assertEq(debt, 382813495142189992, "debt");
+        assertEq(collateral, 100_4885418 , "collateral");
+        assertEq(debt, 382813493616435237, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);

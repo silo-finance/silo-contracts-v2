@@ -5,8 +5,6 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 library SiloMathLib {
     using Math for uint256;
 
@@ -148,11 +146,6 @@ library SiloMathLib {
     ) internal pure returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
             require(_shares != 0, ISilo.InputZeroShares());
-            console2.log("[convertToAssetsOrToShares] _assets", _assets);
-            console2.log("[convertToAssetsOrToShares] _shares", _shares);
-            console2.log("[convertToAssetsOrToShares] _totalAssets", _totalAssets);
-            console2.log("[convertToAssetsOrToShares] _totalShares", _totalShares);
-
             shares = _shares;
             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);
             require(assets != 0, ISilo.ReturnZeroAssets());
@@ -217,9 +210,6 @@ library SiloMathLib {
         uint256 maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(
             _collateralMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE
         );
-
-        console2.log("[calculateMaxBorrowValue] maxDebtValue", maxDebtValue);
-        console2.log("[calculateMaxBorrowValue] _borrowerDebtValue", _borrowerDebtValue);
 
         unchecked {
             // we will not underflow because we checking `maxDebtValue > _borrowerDebtValue`

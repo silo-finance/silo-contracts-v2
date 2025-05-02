@@ -8,8 +8,6 @@ import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
 import {Rounding} from "./Rounding.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 library SiloSolvencyLib {
     using Math for uint256;
 
@@ -73,9 +71,6 @@ library SiloSolvencyLib {
             _accrueInMemory,
             debtShareBalance
         );
-
-        console2.log("[isBelowMaxLtv] ltv", ltv);
-        console2.log("[isBelowMaxLtv] _collateralConfig.maxLtv", _collateralConfig.maxLtv);
 
         return ltv <= _collateralConfig.maxLtv;
     }
@@ -171,10 +166,6 @@ library SiloSolvencyLib {
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );
 
-        console2.log("[getLtv] ltvData.borrowerProtectedAssets", ltvData.borrowerProtectedAssets);
-        console2.log("[getLtv] ltvData.borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
-        console2.log("[getLtv] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
-
         if (ltvData.borrowerDebtAssets == 0) return 0;
 
         (,, ltvInDp) = calculateLtv(ltvData, _collateralConfig.token, _debtConfig.token);
@@ -197,9 +188,6 @@ library SiloSolvencyLib {
         (
             sumOfBorrowerCollateralValue, totalBorrowerDebtValue
         ) = getPositionValues(_ltvData, _collateralToken, _debtAsset);
-
-        console2.log("[calculateLtv] sumOfBorrowerCollateralValue", sumOfBorrowerCollateralValue);
-        console2.log("[calculateLtv] totalBorrowerDebtValue", totalBorrowerDebtValue);
 
         if (sumOfBorrowerCollateralValue == 0 && totalBorrowerDebtValue == 0) {
             return (0, 0, 0);
