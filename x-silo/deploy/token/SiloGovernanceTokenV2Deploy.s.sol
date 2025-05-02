@@ -12,6 +12,10 @@ import {SiloGovernanceTokenV2} from "x-silo/contracts/token/SiloGovernanceTokenV
     FOUNDRY_PROFILE=x_silo \
         forge script x-silo/deploy/token/SiloGovernanceTokenV2Deploy.s.sol \
         --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+
+    FOUNDRY_PROFILE=x_silo ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY forge verify-contract --constructor-args \
+        $(cast abi-encode “constructor(address, address)” <owner_address>  <silo_token_address>) \
+        <contract_address> SiloGovernanceTokenV2
  */
 contract SiloGovernanceTokenV2Deploy is CommonDeploy {
     function run() public returns (address token) {
