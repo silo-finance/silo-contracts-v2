@@ -7,6 +7,7 @@ import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol"
 import {ERC20Capped} from "openzeppelin5/token/ERC20/extensions/ERC20Capped.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 /// @title Silo Token V2.
 contract SiloToken is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped, Pausable, Ownable2Step {
@@ -22,7 +23,7 @@ contract SiloToken is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped, Pausable, 
         ERC20Capped(1_000_000_000e18)
         Ownable(_initialOwner)
     {
-        require(keccak256(bytes(_siloV1.symbol())) == keccak256(bytes("Silo")), InvalidSiloV1Address());
+        require(Strings.equal(_siloV1.symbol(), "Silo"), InvalidSiloV1Address());
 
         SILO_V1 = _siloV1;
     }
