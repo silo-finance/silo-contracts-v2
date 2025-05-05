@@ -27,7 +27,9 @@ contract SiloTokenTest is IntegrationTest {
 
         AddrLib.setAddress("SILO", address(SILO_V1));
         AddrLib.setAddress("NEW_SILO_TOKEN_OWNER", address(OWNER));
-        token = SiloToken((new SiloTokenDeploy()).run());
+        SiloTokenDeploy deployer = new SiloTokenDeploy();
+        deployer.disableDeploymentsSync();
+        token = SiloToken(deployer.run());
     }
 
     function test_constructor() public view {
