@@ -44,10 +44,6 @@ env:
     certora/config/vaults/ERC4626.conf --rule conversionWeakIntegrity_shares
     certora/config/vaults/ERC4626.conf --rule convertToCorrectness_assets
     certora/config/vaults/ERC4626.conf --rule convertToCorrectness_shares
-  
-    
-
-
 jobs:
   verify:
     runs-on: ubuntu-latest
