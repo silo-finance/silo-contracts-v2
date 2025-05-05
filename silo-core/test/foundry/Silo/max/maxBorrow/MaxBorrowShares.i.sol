@@ -62,9 +62,9 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
         vm.assume(maxBorrowShares > 0);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 36);
 
-        _assertMaxBorrowSharesIsZeroAtTheEnd();
+        _assertMaxBorrowSharesIsZeroAtTheEnd(36);
     }
 
     /*
@@ -116,8 +116,8 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         maxBorrowShares = silo1.maxBorrowShares(borrower);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
-        _assertMaxBorrowSharesIsZeroAtTheEnd();
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 36);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(36);
     }
 
     /*
@@ -166,8 +166,8 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         maxBorrowShares = silo1.maxBorrowShares(borrower);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(1);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 36);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(36);
     }
 
     /*
