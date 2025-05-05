@@ -12,7 +12,6 @@ on:
       - 'certora-SiloVault'
   workflow_dispatch:
 
-
 env:
   FOUNDRY_PROFILE: ci
   CONFIGS: |
@@ -25,7 +24,6 @@ env:
     certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue
     certora/config/vaults/immutability.conf
     certora/config/vaults/lastUpdated.conf 
-    certora/config/vaults/tokenApproval.conf
     certora/config/vaults/liveness.conf --rule canPauseSupply
     certora/config/vaults/marketInteractions.conf 
     certora/config/vaults/pendingValues.conf 
@@ -37,7 +35,18 @@ env:
     certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
     certora/config/vaults/tokens.conf --rule vaultBalanceNeutral
     certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
-    certora/config/vaults/ERC4626.conf
+    certora/config/vaults/ERC4626.conf --rule doesntAlwaysRevert --rule allowanceForMarkets --rule contributingProducesShares --rule redeemingAllValidity --rule dustFavorsTheHouse --rule underlyingCannotChange --rule zeroDepositZeroShares --rule conversionOfZero --rule noDynamicCalls --rule onlyContributionMethodsReduceAssets
+    certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets
+    certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares
+    certora/config/vaults/ERC4626.conf --rule convertToAssetsWeakAdditivity
+    certora/config/vaults/ERC4626.conf --rule convertToSharesWeakAdditivity
+    certora/config/vaults/ERC4626.conf --rule conversionWeakIntegrity_assets
+    certora/config/vaults/ERC4626.conf --rule conversionWeakIntegrity_shares
+    certora/config/vaults/ERC4626.conf --rule convertToCorrectness_assets
+    certora/config/vaults/ERC4626.conf --rule convertToCorrectness_shares
+  
+    
+
 
 jobs:
   verify:

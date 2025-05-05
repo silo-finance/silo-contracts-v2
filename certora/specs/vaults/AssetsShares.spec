@@ -6,6 +6,7 @@ using SiloVaultHarness as siloVaultHarness;
 using Market1 as market1;
 using SiloVaultActionsLib as siloVaultActionsLib;
 using UtilsLib as utilsLib;
+using Token0 as token0;
 
 
 methods {
@@ -38,15 +39,13 @@ methods {
     function _.safeTransferFrom(address token, address from, address to, uint256 value) internal
         => cvlTransferFrom(token, from, to, value) expect (bool, bytes memory);
     
-    function _.forceApprove(address, address, uint256) internal => NONDET;
+    // function _.forceApprove(address, address, uint256) internal => NONDET;
 
     // methods on markets
     function _.previewRedeem(uint256 shares) external => previewRedeem_cvl(calledContract, shares) expect (uint256);
     function _.deposit(uint256 assets, address receiver) external => deposit_cvl(currentContract, calledContract, assets, receiver) expect (uint256) ALL;
     function _.withdraw(uint256 assets, address receiver, address spender) external => withdraw_cvl(spender, calledContract, assets, receiver) expect (uint256) ALL;
     function _.redeem(uint256 shares, address receiver, address spender) external => redeem_cvl(spender, calledContract, shares, receiver) expect (uint256) ALL;
-
-    // math summaries for speed
     
 }
  
@@ -143,6 +142,8 @@ function redeem_cvl(address caller, address market, uint256 shares, address rece
     return assets;
 }
 
+// A setup that uses two markets. The withdrawQueue = [market0, makret1], supplyQueue = [market0]
+// Links the asset() correctly.
 function setupMarkets()
 {    
     require supplyQLength() == 1;
@@ -169,6 +170,7 @@ function balanceAssumptions(address user)
          <= ERC20.totalSupply(siloVaultHarness);
 }
 
+// To be used together with setupMarkets()
 function notInTheSceneAssumptions(address user)
 {
     require user != siloVaultHarness; //Vault doesn't call public methods on itself
@@ -176,9 +178,6 @@ function notInTheSceneAssumptions(address user)
     require user != market0;
     require user != market1;
 }
-////////////////////////////
-//      FINISHED RULES    //
-////////////////////////////
 
 // holds for two markets
 // https://prover.certora.com/output/6893/2facfa6ca76f46dc919fb6f12d058053/?anonymousKey=2dde6258f43ba5d9dc8189b37996f5d030367f8a
@@ -306,12 +305,14 @@ rule redeemingAllValidity() {
     assert ownerBalanceAfter == 0;
 }
 
-// holds
-invariant zeroAllowanceOnAssets(address user)
-    ERC20Helper.allowance(asset(), currentContract, user) == 0 {
-        preserved with(env e) {
-            require e.msg.sender != currentContract;
-        }
+// No address (including the markets) should not have standing allowance greater than 1wei.
+invariant allowanceForMarkets(address market)
+    ERC20.allowance(asset(), currentContract, market) <= 1
+    filtered { f -> !f.isView }
+{
+    preserved with (env e) {
+        setupMarkets();
+    }
 }
 
 // holds for two markets
@@ -368,11 +369,22 @@ rule conversionWeakMonotonicity_shares {
         "converting more assets must yield equal or greater shares";
 }
 
+// A one-time sanity check. We run without sanity checks on other rules to increase speed.
+rule doesntAlwaysRevert(env e, method f)
+{
+    calldataarg args;
+    f(e, args);
+    satisfy true;
+}
+
 /////////////////////
 //  IN DEVELOPMENT //
 /////////////////////
 
 // violated
+// CEX: User deposits 1 token, receives 1 VaultShare
+//      Vault deposits the 1 token to the market and receives 1 marketShare
+//      totalAssets doesn't go up because the 1 MarketShare doesnt give any tokens when redeemed
 rule zeroAssetsZeroShares(env e, method f)
     filtered { f -> !f.isView 
         && f.selector != sig:updateWithdrawQueue(uint256[]).selector    // admin method, can violate
@@ -408,7 +420,7 @@ rule zeroAssetsZeroShares(env e, method f)
         (totalAssets_post <= 1  <=> totalShares_post <= 1);    
 }
 
-// violated
+// violated because zeroAssetsZeroShares is violated
 rule moreAssetsThanShares(env e, method f)
     filtered { f -> !f.isView 
         && f.selector != sig:updateWithdrawQueue(uint256[]).selector    // admin method, can violate
@@ -446,6 +458,7 @@ rule moreAssetsThanShares(env e, method f)
 
 // timeout
 rule convertToAssetsWeakAdditivity() {
+    setupMarkets();
     uint256 sharesA; uint256 sharesB;
     require sharesA + sharesB < max_uint128
          && convertToAssets(sharesA) + convertToAssets(sharesB) < max_uint256
@@ -456,6 +469,7 @@ rule convertToAssetsWeakAdditivity() {
 
 // timeout
 rule convertToSharesWeakAdditivity() {
+    setupMarkets();
     uint256 assetsA; uint256 assetsB;
     require assetsA + assetsB < max_uint128
          && convertToAssets(assetsA) + convertToAssets(assetsB) < max_uint256
@@ -464,20 +478,31 @@ rule convertToSharesWeakAdditivity() {
         "converting assetsA and assetsB to shares then summing them must yield a smaller or equal result to summing them then converting";
 }
 
-
 // timeout
-rule conversionWeakIntegrity() {
+rule conversionWeakIntegrity_assets() {
+    setupMarkets();
     uint256 sharesOrAssets;
-    //assert convertToShares(convertToAssets(sharesOrAssets)) <= sharesOrAssets,
-    //    "converting shares to assets then back to shares must return shares less than or equal to the original amount";
     assert convertToAssets(convertToShares(sharesOrAssets)) <= sharesOrAssets,
         "converting assets to shares then back to assets must return assets less than or equal to the original amount";
 }
 
+rule conversionWeakIntegrity_shares() {
+    setupMarkets();
+    uint256 sharesOrAssets;
+    assert convertToShares(convertToAssets(sharesOrAssets)) <= sharesOrAssets,
+       "converting shares to assets then back to shares must return shares less than or equal to the original amount";
+}
+
 // timeout
-rule convertToCorrectness(uint256 amount, uint256 shares)
+rule convertToCorrectness_assets(uint256 amount, uint256 shares)
 {
-    //assert amount >= convertToAssets(convertToShares(amount));
+    setupMarkets();
+    assert amount >= convertToAssets(convertToShares(amount));
+}
+
+rule convertToCorrectness_shares(uint256 amount, uint256 shares)
+{
+    setupMarkets();
     assert shares >= convertToShares(convertToAssets(shares));
 }
 
@@ -540,6 +565,25 @@ rule totalsMonotonicity() {
         "if totalSupply changes by a larger amount, the corresponding change in totalAssets must remain the same or grow";
     assert totalSupplyAfter == totalSupplyBefore => totalAssetsBefore == totalAssetsAfter,
         "equal size changes to totalSupply must yield equal size changes to totalAssets";
+}
+
+// This doesnt hold and it is not supposed to.
+// The allowance of 1wei is not revoked when removing the market, but this is fine.
+// We could adjust the rule with a 1wei tolerance but we already have
+// a rule allowanceForMarkets which is more general.
+invariant zeroAllowanceOnAssets(address user)
+    withdrawRank(user) == 0 => ERC20Helper.allowance(asset(), currentContract, user) == 0
+    filtered { f -> !f.isView }
+{
+    
+    preserved with(env e) {
+        requireInvariant supplyCapIsEnabled(user);
+        requireInvariant enabledHasPositiveRank(user);
+        requireInvariant withdrawRankCorrect(user);
+        require e.msg.sender != token0;
+        require e.msg.sender != currentContract;
+        require user != currentContract;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -625,4 +669,3 @@ function callFunctionsWithReceiverAndOwner(env e, method f, uint256 assets, uint
         f(e, args);
     }
 }
-
