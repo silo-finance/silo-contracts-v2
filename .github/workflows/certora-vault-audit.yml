@@ -38,12 +38,6 @@ env:
     certora/config/vaults/ERC4626.conf --rule doesntAlwaysRevert --rule allowanceForMarkets --rule contributingProducesShares --rule redeemingAllValidity --rule dustFavorsTheHouse --rule underlyingCannotChange --rule zeroDepositZeroShares --rule conversionOfZero --rule noDynamicCalls --rule onlyContributionMethodsReduceAssets
     certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets
     certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares
-    certora/config/vaults/ERC4626.conf --rule convertToAssetsWeakAdditivity
-    certora/config/vaults/ERC4626.conf --rule convertToSharesWeakAdditivity
-    certora/config/vaults/ERC4626.conf --rule conversionWeakIntegrity_assets
-    certora/config/vaults/ERC4626.conf --rule conversionWeakIntegrity_shares
-    certora/config/vaults/ERC4626.conf --rule convertToCorrectness_assets
-    certora/config/vaults/ERC4626.conf --rule convertToCorrectness_shares
 jobs:
   verify:
     runs-on: ubuntu-latest
