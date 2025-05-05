@@ -239,7 +239,8 @@ library SiloLendingLib {
         // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
         // that will be subtracted from collateral and integral interest that will be added to debt.
         {
-            // We need to decrease borrowerCollateralAssets since we cannot access totalCollateralAssets before calculations.
+            // We need to decrease borrowerCollateralAssets
+            // since we cannot access totalCollateralAssets before calculations.
             if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
 
             // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
