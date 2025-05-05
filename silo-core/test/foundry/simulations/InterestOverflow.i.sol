@@ -65,7 +65,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         shares1 -= silo1.withdraw(silo1.maxWithdraw(makeAddr("user1")), makeAddr("user1"), makeAddr("user1"));
         vm.stopPrank();
 
-        assertEq(silo1.getLiquidity(), 0, "zero liquidity on silo1");
+        assertEq(silo1.getLiquidity(), 1, "1 wei of liquidity on silo1");
 
         // now move into future until we overflow interest
 
@@ -127,14 +127,14 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             emit log_named_decimal_uint("revenueLost", revenueLost, 18);
             emit log_named_decimal_uint("daoAndDeployerRevenue", daoAndDeployerRevenue, 18);
 
-            assertLe(revenueLost, 5, "we did not lost revenue (5 wei acceptable)");
+            assertLe(revenueLost, 6, "we did not lost revenue (6 wei acceptable)");
 
             // we repay revenue only, so that part that's not going to users as interest
             _repay( daoAndDeployerRevenue, borrower);
 
 
             // we have dust because
-            assertEq(silo1.getLiquidity(), minted, "even with huge repay, we cover interest first");
+            assertEq(silo1.getLiquidity(), minted + 1, "even with huge repay, we cover interest first");
         }
 
         _repay(silo1.maxRepay(borrower), borrower);
@@ -162,7 +162,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertEq(IShareToken(collateralShare).totalSupply(), 0, "no collateralShares");
 
             assertEq(token1.balanceOf(address(silo1)), 906695, "silo balance");
-            assertLe(revenueLost, 5, "lost revenue");
+            assertLe(revenueLost, 6, "lost revenue");
         }
 
         assertEq(_printUtilization(silo1).collateralAssets, 906695, "collateral dust left");

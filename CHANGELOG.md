@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - silo-core: prioritise DAO fee to ensure it is not zero-out by precision error
 - silo-core: count for fractions when calculate maxBorrow
+- silo-core: underestimate `maxWithdraw` to count for interest fractions
 
 ## [3.3.0] - 2025-05-01
 - silo-vaults: SiloIncentivesControllerCLDeployer helper contract to deploy claiming logics

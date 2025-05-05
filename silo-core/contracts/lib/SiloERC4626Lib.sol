@@ -172,6 +172,11 @@ library SiloERC4626Lib {
                 depositConfig.daoFee,
                 depositConfig.deployerFee
             );
+
+            if (liquidity != 0) {
+                // We need to count for fractions. When fractions are applied, liquidity may be decreased.
+                unchecked { liquidity -= 1; }
+            }
         } else {
             shareTokenTotalSupply = IShareToken(depositConfig.protectedShareToken).totalSupply();
             liquidity = _totalAssets;
@@ -247,6 +252,18 @@ library SiloERC4626Lib {
             ISilo.AccrueInterestInMemory.Yes,
             IShareToken(_debtConfig.debtShareToken).balanceOf(_owner)
         );
+
+        // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
+        // that will be subtracted from collateral and integral interest that will be added to debt.
+        {
+            // We need to decrease borrowerCollateralAssets
+            // since we cannot access totalCollateralAssets before calculations.
+            if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
+
+            // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
+            // If borrowerDebtAssets is 0 then we have no interest
+            if (ltvData.borrowerDebtAssets != 0) ltvData.borrowerDebtAssets++;
+        }
 
         {
             (uint256 collateralValue, uint256 debtValue) =
