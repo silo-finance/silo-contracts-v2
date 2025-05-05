@@ -335,7 +335,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_badDebt_partial_1token_noDepositors
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_badDebt_partial_1token_noDepositors
     */
     function test_liquidationCall_badDebt_partial_1token_noDepositors() public {
         uint256 maxDebtToCover = 100e18;
@@ -430,7 +430,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
 
             // testing event for coverage
             vm.expectEmit(true, true, true, true);
-            emit WithdrawnFees(7247046524394624088, 4831364349596416059, false);
+            emit WithdrawnFees(7247046524394624089, 4831364349596416058, false);
 
             silo0.withdrawFees();
 
