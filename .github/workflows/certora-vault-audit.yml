@@ -6,7 +6,7 @@ run-name: Certora verification of ${{ github.event_name }}
 on:
   push:
     branches:
-      - 'certora-SiloVault'
+      - 'otakar/project4'
   pull_request:
     branches:
       - 'otakar/project4'
