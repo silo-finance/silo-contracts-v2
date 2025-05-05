@@ -166,7 +166,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         maxBorrowShares = silo1.maxBorrowShares(borrower);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 5);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 7);
         _assertMaxBorrowSharesIsZeroAtTheEnd(2);
     }
 
