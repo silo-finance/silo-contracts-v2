@@ -37,10 +37,10 @@ import {SiloHarness} from "silo-core/test/foundry/_mocks/SiloHarness.sol";
         scenario 2 - revert AboveMaxLtv (fix solves the issue)
         scenario 3 - succeeds (no changes)
 
-    scenario 1 (interest 1 revenue 1)
+    scenario 1 (interest 1 revenue 0)
         SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
 
-    scenario 2 (interest 1 revenue 0)
+    scenario 2 (interest 1 revenue 1)
         SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
         SiloHarness(payable(address(silo1))).increaseTotalCollateralAssets(1);
 
