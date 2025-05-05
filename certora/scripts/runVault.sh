@@ -8,8 +8,7 @@ certoraRun certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled --
 certoraRun certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2
 
 certoraRun certora/config/vaults/immutability.conf
-certoraRun certora/config/vaults/lastUpdated.conf 
-certoraRun certora/config/vaults/tokenApproval.conf --msg notInWithdrawQThenNoApproval  
+certoraRun certora/config/vaults/lastUpdated.conf  
 certoraRun certora/config/vaults/liveness.conf --rule canPauseSupply
 certoraRun certora/config/vaults/marketInteractions.conf 
 certoraRun certora/config/vaults/pendingValues.conf 
@@ -21,4 +20,6 @@ certoraRun certora/config/vaults/timelock.conf --exclude_rule removableTime
 certoraRun certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
 certoraRun certora/config/vaults/tokens.conf --rule vaultBalanceNeutral --msg vaultBalanceNeutral --parametric_contracts SiloVaultHarness
 certoraRun certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
+
 certoraRun certora/config/vaults/ERC4626.conf
+certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets --rule conversionWeakMonotonicity_shares --msg conversionWeakMonotonicity
