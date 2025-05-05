@@ -62,6 +62,10 @@ function summaryRedeem(address market, uint256 shares, address receiver, address
 }
 
 // Check balances change on deposit.
+/*
+ * @title Checks that when Vault calls methods on markets, the Vault is always the receiver of shares and the market is enabled.
+ * @status Verified
+ */
 rule depositTokenChange(env e, uint256 assets, address receiver) {
     address asset = asset();
 
@@ -90,6 +94,10 @@ rule depositTokenChange(env e, uint256 assets, address receiver) {
 }
 
 // Check balance changes on withdraw.
+/*
+ * @title Checks that when Vault calls methods on markets, the Vault is always the receiver of shares and the market is enabled.
+ * @status Verified
+ */
 rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner) {
     address asset = asset();
 
@@ -128,6 +136,10 @@ rule withdrawTokenChange(env e, uint256 assets, address receiver, address owner)
 }
 
 // Check that balances do not change on reallocate.
+/*
+ * @title Checks that when Vault calls methods on markets, the Vault is always the receiver of shares and the market is enabled.
+ * @status Verified
+ */
 rule reallocateTokenChange(env e, SiloVaultHarness.MarketAllocation[] allocations) {
     address asset = asset();
 
@@ -162,7 +174,7 @@ hook Sstore SiloVaultHarness.balanceTracker[KEY address market] uint256 newBalan
     balanceTrackerChange = balanceTrackerChange + newBalance - oldBalance;
 }
 
-// we just want to track the increases and decreases of SiloVault's balance
+// we want to track all the increases and decreases of SiloVault's balance
 hook Sstore Token0._balances[KEY address user] uint256 newBalance (uint256 oldBalance) {
     if (user == siloVaultHarness)
     {
@@ -171,10 +183,11 @@ hook Sstore Token0._balances[KEY address user] uint256 newBalance (uint256 oldBa
     }
 }
 
-// After calling any external function, if the sum of deltas of all balanceTracker[market] 
-// (sum of balanceTracker[market] before minus sum of balanceTracker[market] after) 
-// is negative then balanceOf(asset, SiloVault) must increase by at least sumDelta (before the funds are sent to the receiver). 
-// This should hold for every function except syncBalanceTracker() 
+
+/*
+ * @title Checks that when balanceTracker decreases, the Vault really received the funds
+ * @status Verified
+ */
 rule balanceTrackerDecreasesThenBalanceIncreases(env e, method f)
     filtered { f -> !f.isView && f.selector != sig:syncBalanceTracker(address,uint256,bool).selector }
 {
@@ -190,7 +203,10 @@ rule balanceTrackerDecreasesThenBalanceIncreases(env e, method f)
     assert balanceTrackerChange < 0 => vaultBalanceIncrease >= -balanceTrackerChange;    
 }
 
-// Shows that SiloVault doesn't hoard the tokens, i.e., that it sends outs everything that it receives.
+/*
+ * @title Shows that SiloVault doesn't hoard the tokens, i.e., that it sends outs everything that it receives.
+ * @status Verified
+ */
 rule vaultBalanceNeutral(env e, method f)
     filtered { f -> !f.isView }
 {

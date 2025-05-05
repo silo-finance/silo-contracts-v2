@@ -32,7 +32,7 @@ function cvlMulDivWithRounding(uint256 x, uint256 y, uint256 denominator, Math.R
         return require_uint256((x * y) / denominator);
     }
     else {
-        assert false;   //no other rounding options should be used
+        assert false;   //add other branches if different rounding type is used
         return 0;
     }
 }

@@ -33,7 +33,10 @@ methods {
     function SafeERC20.safeTransfer(address, address, uint256) internal => CONSTANT;
 }
 
-// Check that the owner has more power than the guardian.
+/*
+ * @title Check that the owner has more power than the guardian.
+ * @status Verified
+ */
 rule ownerIsGuardian(method f, calldataarg args)
     filtered {
         f -> (!f.isView && f.contract == currentContract)
@@ -61,7 +64,10 @@ rule ownerIsGuardian(method f, calldataarg args)
     assert revertedOwner => revertedGuardian;
 }
 
-// Check that the owner has more power than the curator.
+/*
+ * @title Check that the owner has more power than the curator.
+ * @status Verified
+ */
 rule ownerIsCurator(method f, calldataarg args)
     filtered {
         f -> (!f.isView && f.contract == currentContract)
@@ -89,7 +95,10 @@ rule ownerIsCurator(method f, calldataarg args)
     assert revertedOwner => revertedCurator;
 }
 
-// Check that the curator has more power than allocators.
+/*
+ * @title Check that the curator has more power than allocators.
+ * @status Verified
+ */
 rule curatorIsAllocator(method f, calldataarg args)
     filtered {
         f -> (!f.isView && f.contract == currentContract)

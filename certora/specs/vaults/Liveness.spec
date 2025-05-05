@@ -8,7 +8,10 @@ methods {
     function lock() external returns (bool) envfree;
 }
 
-// Check that having the allocator role allows to pause supply on the vault.
+/*
+ * @title Check that having the allocator role allows to pause supply on the vault.
+ * @status Verified
+ */
 rule canPauseSupply() {
     require !lock();
 
@@ -33,6 +36,10 @@ rule canPauseSupply() {
     assert lastReverted;
 }
 
+/*
+ * @title Checks that currator is able to remove (disable) any market
+ * @status Verified
+ */
 rule canForceRemoveMarket(address market) {
     require !lock();
 

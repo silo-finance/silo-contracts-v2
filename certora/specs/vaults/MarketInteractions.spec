@@ -47,7 +47,11 @@ function summaryRedeem(address market, uint256 shares, address receiver, address
     return (_);
 }
 
-// Check assertions in the summaries.
+/*
+ * @title Checks that when Vault calls methods on markets, the Vault is always the receiver of shares and the market is enabled.
+ * @notice The assertions are in summaries.
+ * @status Verified
+ */
 rule checkSummary(method f, env e, calldataarg args) {
     f(e, args);
     assert true;

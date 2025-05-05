@@ -16,14 +16,21 @@ function isInWithdrawQueueIsEnabled(uint256 i) returns bool {
 
     return config_(market).enabled;
 }
-
-// Check that markets in the withdraw queue are enabled.
+ 
+/*
+ * @title Check that markets in the withdraw queue are enabled.
+ * @status Verified
+ */
 invariant inWithdrawQueueIsEnabled(uint256 i)
     isInWithdrawQueueIsEnabled(i)
 filtered {
     f -> f.selector != sig:updateWithdrawQueue(uint256[]).selector
 }
 
+/*
+ * @title Check that markets in the withdraw queue are enabled. (For specific method.)
+ * @status Verified
+ */
 rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue(env e, uint256 i, uint256[] indexes) {
     uint256 j;
     require isInWithdrawQueueIsEnabled(indexes[i]);
@@ -48,15 +55,24 @@ function isWithdrawRankCorrect(address market) returns bool {
     return withdrawQueue(assert_uint256(rank - 1)) == market;
 }
 
-// Checks that the withdraw rank of a market is given by the withdrawRank ghost variable.
+/*
+ * @title Checks that the withdraw rank of a market is given by the withdrawRank ghost variable.
+ * @status Verified
+ */
 invariant withdrawRankCorrect(address market)
     isWithdrawRankCorrect(market);
 
-// Checks that enabled markets have a positive withdraw rank, according to the withdrawRank ghost variable.
+/*
+ * @title Checks that enabled markets have a positive withdraw rank, according to the withdrawRank variable.
+ * @status Verified
+ */
 invariant enabledHasPositiveRank(address market)
     config_(market).enabled => withdrawRank(market) > 0;
 
-// Check that enabled markets are in the withdraw queue.
+/*
+ * @title Check that enabled markets are in the withdraw queue.
+ * @status Verified
+ */
 rule enabledIsInWithdrawQueue(address market) {
     require config_(market).enabled;
 
@@ -67,7 +83,10 @@ rule enabledIsInWithdrawQueue(address market) {
     assert withdrawQueue(witness) == market;
 }
 
-// Checks that markets with nonzero cap have a positive withdraw rank, according to the withdrawRank ghost variable.
+/*
+ * @title Checks that markets with nonzero cap have a positive withdraw rank, according to the withdrawRank variable.
+ * @status Verified
+ */
 invariant nonZeroCapHasPositiveRank(address market)
     config_(market).cap > 0 => withdrawRank(market) > 0
     {
@@ -86,14 +105,21 @@ function setSupplyQueueInputIsValid(address[] newSupplyQueue) returns bool
     return result;
 }
 
-// https://prover.certora.com/output/6893/51445a2d85b8428a9dcda8062811847e?anonymousKey=aee1daaea5bf150b10060398b47d34d107150cf9
-rule setSupplyQueueRevertsOnInvalidInput(env e, address[] newSupplyQueue)
+/*
+ * @title The method setSupplyQueue would revert if one of the markets would have zero cap
+ * @status Verified
+ */
+ rule setSupplyQueueRevertsOnInvalidInput(env e, address[] newSupplyQueue)
 {
     setSupplyQueue@withrevert(e, newSupplyQueue);
     bool reverted = lastReverted;
     assert !setSupplyQueueInputIsValid(newSupplyQueue) => reverted;
 }
 
+/*
+ * @title When a market is being added to the Supply queue it is already in Withdraw queue
+ * @status Verified
+ */
 invariant addedToSupplyQThenIsInWithdrawQ(uint256 supplyQIndex)
     supplyQIndex < supplyQLength() => withdrawRank(supplyQGetAt(supplyQIndex)) > 0
     filtered { f -> f.selector != sig:updateWithdrawQueue(uint256[]).selector /* the method allowed to break this */ }
@@ -107,7 +133,9 @@ invariant addedToSupplyQThenIsInWithdrawQ(uint256 supplyQIndex)
     }
 }
 
-// Rules below are in development
+/////////////////////
+//  IN DEVELOPMENT //
+/////////////////////
 
 // TODO
 invariant balanceTrackerLessThanCap(address market)

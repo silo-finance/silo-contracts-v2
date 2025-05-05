@@ -55,7 +55,6 @@ function cvlTransfer(address token, address to, uint256 value) returns (bool, by
     env e;
     require e.msg.sender == currentContract;
     require e.msg.value == 0;
-    require e.msg.value == 0;
     token.transfer(e, to, value);
     bool success;
     bytes resBytes;
@@ -352,12 +351,14 @@ rule redeemingAllValidity() {
     assert ownerBalanceAfter == 0;
 }
 
+// The Vault keeps 1 allowance for markets. It should be zero for other addresses.
 invariant zeroAllowanceOnAssets(address user)
-    ERC20Helper.allowance(asset(), currentContract, user) == 0 {
-        preserved with(env e) {
-            require e.msg.sender != currentContract;
-        }
+    withdrawRank(user) == 0 => ERC20Helper.allowance(asset(), currentContract, user) == 0
+{
+    preserved with(env e) {
+        require e.msg.sender != currentContract;
     }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////               # stakeholder properties  (Risk Analysis )         //////////

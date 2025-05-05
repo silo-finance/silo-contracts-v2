@@ -30,7 +30,6 @@ function cvlTransfer(address token, address to, uint256 value) returns (bool, by
     env e;
     require e.msg.sender == currentContract;
     require e.msg.value == 0;
-    require e.msg.value == 0;
     token.transfer(e, to, value);
     bool success;
     bytes resBytes;
@@ -47,7 +46,10 @@ function cvlTransferFrom(address token, address from, address to, uint256 value)
     return (success, resBytes);
 }
 
-// https://prover.certora.com/output/6893/4c8aa7184e9940f7afd740b15e4889ed/?anonymousKey=949c6dfcb5ef3bfede0b9c97d4d23e8bf9307aae
+/*
+ * @title Only certain methods may decrease balance of the Vault
+ * @status Verified
+ */
 rule onlySpecicifiedMethodsCanDecreaseMarketBalance(env e, method f, address market)
 { 
     require e.msg.sender != currentContract;

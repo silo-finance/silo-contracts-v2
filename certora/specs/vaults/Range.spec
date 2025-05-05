@@ -36,8 +36,6 @@ methods {
 
 }
 
-
-
 function isPendingTimelockInRange() returns bool {
     SiloVaultHarness.PendingUint192 pendingTimelock = pendingTimelock_();
 
@@ -46,11 +44,17 @@ function isPendingTimelockInRange() returns bool {
         assert_uint256(pendingTimelock.value) >= minTimelock();
 }
 
-// Check that the pending timelock is bounded by the min timelock and the max timelock.
+/*
+ * @title Check that the pending timelock is bounded by the min timelock and the max timelock.
+ * @status Verified
+ */
 invariant pendingTimelockInRange()
     isPendingTimelockInRange();
 
-// Check that the timelock is bounded by the min timelock and the max timelock.
+/*
+ * @title Check that the timelock is bounded by the min timelock and the max timelock.
+ * @status Verified
+ */
 invariant timelockInRange()
     timelock() <= maxTimelock() && timelock() >= minTimelock()
 {
@@ -59,17 +63,31 @@ invariant timelockInRange()
     }
 }
 
+/*
+ * @title Checks that the pending is never larger than Uint184
+ * @status Verified
+ */
 invariant pendingCapIsUint184(address market)
     to_mathint(pendingCap_(market).value) < 2^184;
 
-// Check that the fee cannot go over the max fee.
+
+/*
+ * @title Check that the fee cannot go over the max fee.
+ * @status Verified
+ */
 invariant feeInRange()
     assert_uint256(fee()) <= maxFee();
 
-// Check that the supply queue length cannot go over the max queue length.
+/*
+ * @title Check that the supply queue length cannot go over the max queue length.
+ * @status Verified
+ */
 invariant supplyQueueLengthInRange()
     supplyQueueLength() <= maxQueueLength();
 
-// Check that the withdraw queue length cannot go over the max queue length.
+/*
+ * @title Check that the withdraw queue length cannot go over the max queue length.
+ * @status Verified
+ */
 invariant withdrawQueueLengthInRange()
     withdrawQueueLength() <= maxQueueLength();

@@ -25,7 +25,10 @@ hook TIMESTAMP uint newTimestamp {
     lastTimestamp = newTimestamp;
 }
 
-// Show that nextGuardianUpdateTime does not revert.
+/*
+ * @title Show that nextGuardianUpdateTime does not revert.
+ * @status Verified
+ */
 rule nextGuardianUpdateTimeDoesNotRevert() {
     // The environment e yields the current time.
     env e;
@@ -39,7 +42,10 @@ rule nextGuardianUpdateTimeDoesNotRevert() {
     assert !lastReverted;
 }
 
-// Show that nextGuardianUpdateTime is increasing with time and that no change of guardian can happen before it.
+/*
+ * @title Show that nextGuardianUpdateTime is increasing with time and that no change of guardian can happen before it.
+ * @status Verified
+ */
 rule guardianUpdateTime(env e_next, method f, calldataarg args)
     filtered {
         f -> (f.contract == currentContract)
@@ -70,7 +76,10 @@ rule guardianUpdateTime(env e_next, method f, calldataarg args)
     assert true;
 }
 
-// Show that nextCapIncreaseTime does not revert.
+/*
+ * @title Show that nextCapIncreaseTime does not revert.
+ * @status Verified
+ */
 rule nextCapIncreaseTimeDoesNotRevert(address market) {
     // The environment e yields the current time.
     env e;
@@ -84,7 +93,10 @@ rule nextCapIncreaseTimeDoesNotRevert(address market) {
     assert !lastReverted;
 }
 
-// Show that nextCapIncreaseTime is increasing with time and that no increase of cap can happen before it.
+/*
+ * @title Show that nextCapIncreaseTime is increasing with time and that no increase of cap can happen before it.
+ * @status Verified
+ */
 rule capIncreaseTime(env e_next, method f, calldataarg args)
     filtered {
         f -> (f.contract == currentContract)
@@ -115,7 +127,10 @@ rule capIncreaseTime(env e_next, method f, calldataarg args)
     assert true;
 }
 
-// Show that nextTimelockDecreaseTime does not revert.
+/*
+ * @title Show that nextTimelockDecreaseTime does not revert.
+ * @status Verified
+ */
 rule nextTimelockDecreaseTimeDoesNotRevert() {
     // The environment e yields the current time.
     env e;
@@ -129,7 +144,10 @@ rule nextTimelockDecreaseTimeDoesNotRevert() {
     assert !lastReverted;
 }
 
-// Show that nextTimelockDecreaseTime is increasing with time and that no decrease of timelock can happen before it.
+/*
+ * @title Show that nextTimelockDecreaseTime is increasing with time and that no decrease of timelock can happen before it.
+ * @status Verified
+ */
 rule timelockDecreaseTime(env e_next, method f, calldataarg args)
     filtered {
         f -> (f.contract == currentContract)
@@ -158,7 +176,10 @@ rule timelockDecreaseTime(env e_next, method f, calldataarg args)
     assert true;
 }
 
-// Show that nextRemovableTime does not revert.
+/*
+ * @title Show that nextRemovableTime does not revert.
+ * @status Verified
+ */
 rule nextRemovableTimeDoesNotRevert(address market) {
     // The environment e yields the current time.
     env e;
@@ -172,7 +193,10 @@ rule nextRemovableTimeDoesNotRevert(address market) {
     assert !lastReverted;
 }
 
-// Show that nextRemovableTime is increasing with time and that no removal can happen before it.
+/*
+ * @title Show that nextRemovableTime is increasing with time and that no removal can happen before it.
+ * @status Verified
+ */
 rule removableTime(env e_next, method f, calldataarg args)
     filtered {
         f -> (f.contract == currentContract)

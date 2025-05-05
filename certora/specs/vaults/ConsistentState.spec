@@ -8,7 +8,10 @@ methods {
 
 }
 
-// Check that the fee cannot accrue to an unset fee recipient.
+/*
+ * @title Check that the fee cannot accrue to an unset fee recipient.
+ * @status Verified
+ */
 invariant noFeeToUnsetFeeRecipient()
     feeRecipient() == 0 => fee() == 0;
 
@@ -18,8 +21,11 @@ function hasSupplyCapIsEnabled(address market) returns bool {
     return config.cap > 0 => config.enabled;
 }
 
-// Check that having a positive supply cap implies that the market is enabled.
-// This invariant is useful to conclude that markets that are not enabled cannot be interacted with (notably for reallocate).
+/*
+ * @title Check that having a positive supply cap implies that the market is enabled.
+ * @status Verified
+ * @notice This invariant is useful to conclude that markets that are not enabled cannot be interacted with (notably for reallocate).
+ */
 invariant supplyCapIsEnabled(address market)
     hasSupplyCapIsEnabled(market);
 
@@ -27,7 +33,10 @@ function hasPendingSupplyCapHasConsistentAsset(address market) returns bool {
     return pendingCap_(market).validAt > 0 => getVaultAsset(market) == asset();
 }
 
-// Check that there can only be pending caps on markets where the loan asset is the asset of the vault.
+/*
+ * @title Check that there can only be pending caps on markets where the loan asset is the asset of the vault.
+ * @status Verified
+ */
 invariant pendingSupplyCapHasConsistentAsset(address market)
     hasPendingSupplyCapHasConsistentAsset(market);
 
@@ -35,7 +44,10 @@ function isEnabledHasConsistentAsset(address market) returns bool {
     return config_(market).enabled => getVaultAsset(market) == asset();
 }
 
-// Check that having a positive cap implies that the loan asset is the asset of the vault.
+/*
+ * @title Check that having a positive cap implies that the loan asset is the asset of the vault.
+ * @status Verified
+ */
 invariant enabledHasConsistentAsset(address market)
     isEnabledHasConsistentAsset(market)
 { preserved acceptCap(address _market) with (env e) {
@@ -58,7 +70,10 @@ function isNotInWwithdrawalQueueThenNoCap(address market) returns bool {
     return config.cap > 0 => config.removableAt == 0;
 }
 
-// Check that enabled markets are in the withdraw queue.
+/*
+ * @title Check that enabled markets are in the withdraw queue.
+ * @status Verified
+ */
 rule enabledIsInWithdrawalQueue(address market) {
     require config_(market).enabled;
 
@@ -69,7 +84,10 @@ rule enabledIsInWithdrawalQueue(address market) {
     assert withdrawQueue(witness) == market;
 }
 
-// Check that a market with a positive cap cannot be marked for removal.
+/*
+ * @title Check that a market with a positive cap cannot be marked for removal.
+ * @status Verified
+ */
 invariant supplyCapIsNotMarkedForRemoval(address market)
     hasSupplyCapIsNotMarkedForRemoval(market);
 
@@ -79,11 +97,17 @@ function isNotEnabledIsNotMarkedForRemoval(address market) returns bool {
     return !config.enabled => config.removableAt == 0;
 }
 
-// Check that a non-enabled market cannot be marked for removal.
+/*
+ * @title Check that a non-enabled market cannot be marked for removal.
+ * @status Verified
+ */
 invariant notEnabledIsNotMarkedForRemoval(address market)
     isNotEnabledIsNotMarkedForRemoval(market);
 
-// Check that a market with a pending cap cannot be marked for removal.
+/*
+ * @title Check that a market with a pending cap cannot be marked for removal.
+ * @status Verified
+ */
 invariant pendingCapIsNotMarkedForRemoval(address market)
     pendingCap_(market).validAt > 0 => config_(market).removableAt == 0;
 

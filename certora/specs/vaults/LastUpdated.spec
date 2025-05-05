@@ -36,7 +36,10 @@ function hasPositiveSupplyCapIsUpdated(address market) returns bool {
     return config_(market).cap > 0 => market0.getTotalSupply(market) > 0;
 }
 
-// Check that any new market in the supply queue necessarily has a positive cap.
+/*
+ * @title Check that any new market in the supply queue necessarily has a positive cap.
+ * @status Verified
+ */
 rule newSupplyQueueEnsuresPositiveCap(env e, address[] newSupplyQueue)
 {
     uint256 i;
