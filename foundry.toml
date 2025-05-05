@@ -116,31 +116,9 @@ fs_permissions = [
 
 [profile.x_silo]
 src = 'x-silo/contracts'
-out = 'cache/foundry/out/x-silo'
-broadcast = 'x-silo/broadcast'
-
-fs_permissions = [
-    { access = "read", path = "./cache/foundry/"}
-]
-
-[profile.x_silo_test]
-src = 'x-silo/test/foundry'
-out = 'cache/foundry/out/x-silo'
-broadcast = 'x-silo/broadcast'
-
-fs_permissions = [
-    { access = "read", path = "./cache/foundry/"}
-]
-
-[profile.x_silo_with_tests]
-src = 'x-silo/contracts'
 test = 'x-silo/test/foundry'
 out = 'cache/foundry/out/x-silo'
 broadcast = 'x-silo/broadcast'
-
-fs_permissions = [
-    { access = "read", path = "./cache/foundry/"}
-]
 
 [profile.oracles]
 src = 'silo-oracles/contracts'

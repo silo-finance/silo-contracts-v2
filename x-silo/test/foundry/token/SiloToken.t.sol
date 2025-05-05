@@ -1,43 +1,56 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
-import {SiloGovernanceTokenV2} from "x-silo/contracts/token/SiloGovernanceTokenV2.sol";
+import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
+import {SiloToken} from "x-silo/contracts/token/SiloToken.sol";
 import {ERC20Burnable} from "openzeppelin5/token/ERC20/extensions/ERC20Burnable.sol";
 import {IERC20} from "gitmodules/openzeppelin-contracts-5/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC20Capped} from "openzeppelin5/token/ERC20/extensions/ERC20Capped.sol";
 import {Pausable} from "gitmodules/openzeppelin-contracts-5/contracts/utils/Pausable.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {SiloTokenDeploy} from "x-silo/deploy/token/SiloTokenDeploy.s.sol";
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
-contract SiloGovernanceTokenV2Test is Forking {
+contract SiloTokenTest is IntegrationTest {
     ERC20Burnable public constant SILO_V1 = ERC20Burnable(0x6f80310CA7F2C654691D1383149Fa1A57d8AB1f8);
     address public constant OWNER = 0xE8e8041cB5E3158A0829A19E014CA1cf91098554;
     address public constant SILO_V1_WHALE = 0xE641Dca2E131FA8BFe1D7931b9b040e3fE0c5BDc;
     uint256 public constant FORKING_BLOCK = 22395354;
     uint256 public constant CAP = 10**9 * 10**18;
-    SiloGovernanceTokenV2 token;
+    SiloToken token;
 
-    constructor() Forking(BlockChain.ETHEREUM) {
-        initFork(FORKING_BLOCK);
+    function setUp() public {
+        AddrLib.init();
+        vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), FORKING_BLOCK);
 
-        token = new SiloGovernanceTokenV2(OWNER, SILO_V1);
+        AddrLib.setAddress("SILO", address(SILO_V1));
+        AddrLib.setAddress("NEW_SILO_TOKEN_OWNER", address(OWNER));
+        token = SiloToken((new SiloTokenDeploy()).run());
     }
 
     function test_constructor() public view {
         assertEq(token.owner(), OWNER);
         assertEq(address(token.SILO_V1()), address(SILO_V1));
         assertEq(token.cap(), CAP);
+        assertEq(token.symbol(), "SILO");
+        assertEq(token.name(), "Silo Token");
     }
 
     function test_constructor_revertsForZeroSilo() public {
-        vm.expectRevert(SiloGovernanceTokenV2.ZeroAddress.selector);
-        new SiloGovernanceTokenV2(OWNER, ERC20Burnable(address(0)));
+        vm.expectRevert(SiloToken.InvalidSiloV1Address.selector);
+        new SiloToken(OWNER, ERC20Burnable(token));
+
+        ERC20Burnable mockInvalidToken = ERC20Burnable(address(new ERC20Mock()));
+
+        vm.expectRevert(SiloToken.InvalidSiloV1Address.selector);
+        new SiloToken(OWNER, mockInvalidToken);
     }
 
     function test_constructor_revertsForZeroOwner() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
-        new SiloGovernanceTokenV2(address(0), SILO_V1);
+        new SiloToken(address(0), SILO_V1);
     }
 
     function test_mint_happyPath() public {
@@ -68,7 +81,7 @@ contract SiloGovernanceTokenV2Test is Forking {
 
     function test_mint_failsAboveCap() public {
         vm.prank(Ownable(address(SILO_V1)).owner());
-        SiloGovernanceTokenV2(address(SILO_V1)).mint(address(this), CAP * 2);
+        SiloToken(address(SILO_V1)).mint(address(this), CAP * 2);
 
         SILO_V1.approve(address(token), CAP + 1);
         token.mint(address(this), CAP);

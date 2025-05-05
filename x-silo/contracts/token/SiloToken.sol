@@ -8,21 +8,21 @@ import {ERC20Capped} from "openzeppelin5/token/ERC20/extensions/ERC20Capped.sol"
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 
-/// @title Silo Governance Token V2.
-contract SiloGovernanceTokenV2 is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped, Pausable, Ownable2Step {
-    /// @dev Reverts in constructor for zero address of $SILO V1 token.
-    error ZeroAddress();
+/// @title Silo Token V2.
+contract SiloToken is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped, Pausable, Ownable2Step {
+    /// @dev Reverts in constructor for invalid address of $SILO V1 token.
+    error InvalidSiloV1Address();
 
     /// @notice $SILO V1 token address used for token migration.
     ERC20Burnable public immutable SILO_V1; // solhint-disable-line var-name-mixedcase
 
     constructor(address _initialOwner, ERC20Burnable _siloV1)
-        ERC20("SILO", "Silo Governance Token")
-        ERC20Permit("SILO")
+        ERC20("Silo Token", "SILO")
+        ERC20Permit("Silo Token")
         ERC20Capped(1_000_000_000e18)
         Ownable(_initialOwner)
     {
-        require(address(_siloV1) != address(0), ZeroAddress());
+        require(keccak256(bytes(_siloV1.symbol())) == keccak256(bytes("Silo")), InvalidSiloV1Address());
 
         SILO_V1 = _siloV1;
     }
@@ -31,7 +31,7 @@ contract SiloGovernanceTokenV2 is ERC20, ERC20Burnable, ERC20Permit, ERC20Capped
     /// @param to Recipient address.
     /// @param amount Amount to mint.
     function mint(address to, uint256 amount) external virtual whenNotPaused {
-        SILO_V1.burnFrom(_msgSender(), amount);
+        SILO_V1.burnFrom(msg.sender, amount);
         _mint(to, amount);
     }
 

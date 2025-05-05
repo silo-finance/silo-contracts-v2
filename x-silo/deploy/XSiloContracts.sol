@@ -4,7 +4,7 @@ pragma solidity >=0.7.6 <0.9.0;
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";
 
 library XSiloContracts {
-    string public constant SILO_GOVERNANCE_TOKEN_V2 = "SiloGovernanceTokenV2.sol";
+    string public constant SILO_TOKEN = "SiloToken.sol";
 }
 
 library XSiloDeployments {
