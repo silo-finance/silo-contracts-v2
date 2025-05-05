@@ -114,6 +114,12 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
+[profile.x_silo]
+src = 'x-silo/contracts'
+test = 'x-silo/test/foundry'
+out = 'cache/foundry/out/x-silo'
+broadcast = 'x-silo/broadcast'
+
 [profile.oracles]
 src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'
