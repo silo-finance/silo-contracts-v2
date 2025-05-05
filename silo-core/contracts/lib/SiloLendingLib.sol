@@ -236,6 +236,21 @@ library SiloLendingLib {
             _debtShareBalanceCached: 0 /* no cache */
         });
 
+        // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
+        // that will be subtracted from collateral and integral interest that will be added to debt.
+        {
+            // We need to decrease borrowerCollateralAssets
+            // since we cannot access totalCollateralAssets before calculations.
+            if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
+
+            // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
+            // If borrowerDebtAssets is 0 then we have no interest
+            if (ltvData.borrowerDebtAssets != 0) ltvData.borrowerDebtAssets++;
+
+            // It _totalDebtAssets is 0 then we have no interest
+            if (_totalDebtAssets != 0) _totalDebtAssets++;
+        }
+
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
@@ -363,12 +378,6 @@ library SiloLendingLib {
             : _debtOracle.quote(debtTokenSample, _debtAsset);
 
         assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
-
-        if (assets != 0) {
-            // When we calculate fractions, it is possible that total debt assets will increase by 1
-            // which can lead to a revert on the LTV check. To avoid this, we underestimate assets.
-            unchecked { assets -= 1; }
-        }
 
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
         // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,

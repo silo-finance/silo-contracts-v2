@@ -217,7 +217,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
 
         uint256 maxBorrow = silo0.maxBorrowSameAsset(borrower);
-
+        // -2 because of the fractions underestimation
         assertEq(maxBorrow, 0.75e18 - 1, "invalid maxBorrow for two tokens");
 
         uint256 borrowToMuch = maxBorrow + 2;
@@ -324,6 +324,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         maxBorrow = silo0.maxBorrowSameAsset(_borrower);
         emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
+        // -1 because of the fractions underestimation
         assertEq(maxBorrow, maxLtv - 1, "maxBorrow borrower can do, maxLTV is 75%");
 
         uint256 borrowAmount = maxBorrow / 2;
@@ -349,16 +350,16 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         borrowAmount = silo0.maxBorrowSameAsset(_borrower);
         emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
-        assertEq(borrowAmount, maxLtv / 2, "borrow second time");
+        assertEq(borrowAmount, maxLtv / 2 - 2, "borrow second time"); // -2 because of the fractions underestimation
 
         convertToShares = silo0.convertToShares(borrowAmount, ISilo.AssetType.Debt);
 
         vm.prank(_borrower);
         gotShares = silo0.borrowSameAsset(borrowAmount, _borrower, _borrower);
 
-        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), maxLtv - 1, "debt silo: borrower has debt");
-        assertEq(gotShares, maxLtv / 2, "got shares");
-        assertEq(silo0.getDebtAssets(), maxBorrow, "debt silo: has debt");
+        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), maxLtv - 3, "debt silo: borrower has debt");
+        assertEq(gotShares, maxLtv / 2 - 2, "got shares"); // -2 because of the fractions underestimation
+        assertEq(silo0.getDebtAssets(), maxBorrow - 2, "debt silo: has debt"); // -2 because of the fractions underestimation
         assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
         assertEq(borrowAmount, silo0.convertToAssets(gotShares, ISilo.AssetType.Debt), "convertToAssets returns borrowAmount (2)");
 

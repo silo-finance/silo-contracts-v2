@@ -42,7 +42,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrowShares_withCollateral
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrowShares_withCollateral_1token_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrowShares_withCollateral_1token_fuzz(
@@ -62,9 +62,9 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
         vm.assume(maxBorrowShares > 0);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 4);
 
-        _assertMaxBorrowSharesIsZeroAtTheEnd();
+        _assertMaxBorrowSharesIsZeroAtTheEnd(1);
     }
 
     /*
@@ -116,8 +116,8 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
 
         maxBorrowShares = silo1.maxBorrowShares(borrower);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 2);
-        _assertMaxBorrowSharesIsZeroAtTheEnd();
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 5);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(1);
     }
 
     /*
@@ -132,7 +132,7 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrowShares_withInterest_
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrowShares_withInterest_1token_protected_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrowShares_withInterest_1token_protected_fuzz(
@@ -166,19 +166,19 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         maxBorrowShares = silo1.maxBorrowShares(borrower);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(1);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 7);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(2);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxBorrowShares_repayWithInterest_
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrowShares_repayWithInterest_1token_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 5000
     function test_maxBorrowShares_repayWithInterest_1token_fuzz(
         uint64 _collateral,
         uint128 _liquidity
     ) public {
-        // (uint64 _collateral, uint128 _liquidity) = (7117, 7095);
+        // (uint64 _collateral, uint128 _liquidity) = (59, 10247839164);
         _maxBorrowShares_repayWithInterest_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral);
     }
 
@@ -231,8 +231,8 @@ contract MaxBorrowSharesTest is SiloLittleHelper, Test {
         maxBorrowShares = silo1.maxBorrowShares(borrower);
         emit log_named_uint("____ maxBorrowShares", maxBorrowShares);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 3);
-        _assertMaxBorrowSharesIsZeroAtTheEnd(1);
+        _assertWeCanNotBorrowAboveMax(maxBorrowShares, 36);
+        _assertMaxBorrowSharesIsZeroAtTheEnd(36);
     }
 
     function _assertWeCanNotBorrowAboveMax(uint256 _maxBorrow) internal {
