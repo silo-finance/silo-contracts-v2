@@ -88,6 +88,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_getModel, _silo);
         _testFn(_maxLiquidation, _silo, _borrower);
         _testFn(_getFeesAndFeeReceivers, _silo);
+        _testFn(_getSiloIncentivesControllerProgramsNames);
     }
 
     function _testSiloConfig(ISiloConfig _siloConfig) internal {
@@ -120,6 +121,13 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         address _user
     ) internal {
         bytes4 sig = func(_siloConfig, _user);
+        _testedFunctions[sig] = true;
+    }
+
+    function _testFn(
+        function() internal view returns (bytes4) func
+    ) internal {
+        bytes4 sig = func();
         _testedFunctions[sig] = true;
     }
 
@@ -331,6 +339,11 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         // expect do not revert
         _lens.getModel(_silo);
         sig = ISiloLens.getModel.selector;
+    }
+
+    function _getSiloIncentivesControllerProgramsNames() internal view returns (bytes4 sig) {
+        // method is not related to Silo
+        sig = ISiloLens.getSiloIncentivesControllerProgramsNames.selector;
     }
 
     function _initializeSilosForChain(string memory _chainAlias) internal {

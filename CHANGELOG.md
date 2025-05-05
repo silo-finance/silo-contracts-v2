@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- silo-core: count for fractions when calculate maxBorrow
+
+## [3.3.0] - 2025-05-01
+- silo-vaults: SiloIncentivesControllerCLDeployer helper contract to deploy claiming logics
+- silo-core: moved hooks into silo-core/contracts/hooks
+
+## [3.2.0] - 2025-04-30
+- Revert "silo-vaults: deployment sonic 1 min timelock"
+- silo-core: silo lens getter for programs names
 
 ## [3.1.0-rc.3] - 2025-04-23
 - silo-vaults: deployment sonic 1 min timelock

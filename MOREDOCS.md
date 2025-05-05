@@ -193,3 +193,16 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
 
 - run `silo-core/deploy/SiloDeployerDeploy.s.sol` script
 - then deploy new market
+
+## Deployed silo lending markets versions
+Network: Sonic \
+ id 1 - 12 version [0.18.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/0.18.0) \
+ SiloDeployer [0x44e9c695624dad0bb3690a40c90e6d7964b32d3d](https://sonicscan.org/address/0x44e9c695624dad0bb3690a40c90e6d7964b32d3d) \
+ Silo Implementation [0x85b0273b0B415F9e28B9ce820240F4aa097F2a29](https://sonicscan.org/address/0x85b0273b0B415F9e28B9ce820240F4aa097F2a29) \
+ Silo Factory [0xa42001D6d2237d2c74108FE360403C4b796B7170](https://sonicscan.org/address/0xa42001D6d2237d2c74108FE360403C4b796B7170)
+
+ id 13 - 99 version [1.1.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/1.1.0) \
+ SiloDeployer [0x7C7B42dE0CE7A77d66d1C4744002083Ea0aE8a8d](https://sonicscan.org/address/0x7C7B42dE0CE7A77d66d1C4744002083Ea0aE8a8d) \
+ Silo Implementation [0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d](https://sonicscan.org/address/0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d) \
+ Silo Factory [0xa42001D6d2237d2c74108FE360403C4b796B7170](https://sonicscan.org/address/0xa42001D6d2237d2c74108FE360403C4b796B7170)
+ 

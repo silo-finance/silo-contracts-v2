@@ -258,6 +258,11 @@ library SiloLendingLib {
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
+        if (liquidityWithInterest != 0) {
+            // We need to count for fractions, when fractions are applied liquidity may be decreased
+            unchecked { liquidityWithInterest -= 1; }
+        }
+
         if (assets > liquidityWithInterest) {
             assets = liquidityWithInterest;
 
@@ -358,6 +363,12 @@ library SiloLendingLib {
             : _debtOracle.quote(debtTokenSample, _debtAsset);
 
         assets = _maxBorrowValue.mulDiv(debtTokenSample, debtSampleValue, Rounding.MAX_BORROW_TO_ASSETS);
+
+        if (assets != 0) {
+            // When we calculate fractions, it is possible that total debt assets will increase by 1
+            // which can lead to a revert on the LTV check. To avoid this, we underestimate assets.
+            unchecked { assets -= 1; }
+        }
 
         // when we borrow, we convertToShares with rounding.Up, to create higher debt, however here,
         // when we want to calculate "max borrow", we can not round.Up, because it can create issue with max ltv,
