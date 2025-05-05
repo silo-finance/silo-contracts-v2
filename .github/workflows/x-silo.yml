@@ -91,4 +91,4 @@ jobs:
           FOUNDRY_PROFILE=x_silo forge build --sizes
 
       - name: Run Forge tests
-        run: FOUNDRY_PROFILE=x_silo_test forge test -vv --no-match-test "_skip_" --ffi
+        run: FOUNDRY_PROFILE=x_silo forge test -vv --no-match-test "_skip_" --ffi
