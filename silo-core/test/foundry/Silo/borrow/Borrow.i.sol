@@ -465,6 +465,7 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         maxBorrow = silo1.maxBorrow(_borrower);
         emit log_named_decimal_uint("maxBorrow #1", maxBorrow, 18);
+        // -1 because of the fractions underestimation
         assertEq(maxBorrow, maxLtv - 1, "maxBorrow borrower can do, maxLTV is 75%");
 
         uint256 borrowAmount = maxBorrow / 2;
@@ -489,14 +490,14 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
 
         borrowAmount = silo1.maxBorrow(_borrower);
         emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
-        assertEq(borrowAmount, maxLtv / 2 - 2, "borrow second time");
+        assertEq(borrowAmount, maxLtv / 2 - 2, "borrow second time"); // -2 because of the fractions underestimation
 
         convertToShares = silo1.convertToShares(borrowAmount, ISilo.AssetType.Debt);
         gotShares = _borrow(borrowAmount, _borrower);
 
         assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), maxLtv - 3, "debt silo: borrower has debt");
-        assertEq(gotShares, maxLtv / 2 - 2, "got shares");
-        assertEq(silo1.getDebtAssets(), maxBorrow - 2, "debt silo: has debt");
+        assertEq(gotShares, maxLtv / 2 - 2, "got shares"); // -2 because of the fractions underestimation
+        assertEq(silo1.getDebtAssets(), maxBorrow - 2, "debt silo: has debt"); // -2 because of the fractions underestimation
         assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
         assertEq(borrowAmount, silo1.convertToAssets(gotShares, ISilo.AssetType.Debt), "convertToAssets returns borrowAmount (2)");
 
