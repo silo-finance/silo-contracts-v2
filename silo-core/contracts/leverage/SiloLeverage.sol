@@ -18,32 +18,59 @@ import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
 
-contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
+import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
+import {RevenueModule} from "./modules/FeeModule.sol";
+
+contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC3156FlashBorrower {
+    /// @param flashDebtLender address from where contract will get flashloan
+    /// @param amount flash amount
+    struct FlashArgs {
+        address flashDebtLender;
+        address token;
+        uint256 amount;
+    }
+
+    /// @param depositAmount total deposit amount (including flashloan amount)
+    struct DepositArgs {
+        ISilo depositSilo;
+        uint256 amount;
+        ISilo.CollateralType collateralType;
+        address receiver;
+    }
+
+    /// @param amount amount to borrow, should be equal to flashloan amount + flashloan fee + leverage fee
+    /// @param totalDeposit final deposit amount, sum of user deposit amount + flashloan amount
+    struct BorrowArgs {
+        ISilo silo;
+        uint256 amount;
+        address receiver;
+    }
+
+    bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     uint256 internal constant _DECIMALS = 1e18;
     uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
 
     address internal _lock;
 
-    /// @dev Silo is not designed to work with ether, but it can act as a middleware
-    /// between any third-party contract and hook receiver. So, this is the responsibility
-    /// of the hook receiver developer to handle it if needed.
-    receive() external payable {}
-
     /// @inheritdoc ISiloLeverage
     function leverage(
-        ISilo _silo,
-        uint256 _deposit,
-        ISilo.CollateralType _collateralType,
-        uint64 _multiplier,
-        IERC3156FlashLender _flashDebtLender,
-        uint256 _flashBorrow
-    ) external virtual {
-        _lock = _flashDebtLender;
+        FlashArgs calldata _flashArgs,
+        SwapArgs calldata _swapArgs,
+        DepositArgs calldata _depositArgs,
+        ISilo _borrowSilo
+    ) external virtual returns (uint256 multiplier) {
+        _lock = _flashArgs.flashDebtLender;
 
-        _borrowFlashloan();
+        bytes memory data = abi.encode(_swapArgs, _depositArgs, _borrowSilo);
 
-        // transient lock will force some design part eg flashloan can not be module
+        _borrowFlashloan(_flashArgs, data);
+
+        multiplier = _flashArgs.amount * _DECIMALS / _depositArgs.amount;
+
+        // transient lock will force design pattern, eg flashloan can not be module
         _lock = address(0);
+
+        // TODO: does is worth to add check for delta balance + fee at the end?
     }
 
     // TODO I see this issues with preview:
@@ -132,18 +159,11 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
         // TODO
     }
 
-    /// @param _flashDebtLender
-    function _borrowFlashloan(
-        address _flashDebtLender,
-        address _token,
-        uint256 _amount,
-        bytes calldata _data
-    ) internal {
-        // TODO
-        require(IERC3156FlashLender(_flashDebtLender).flashLoan({
+    function _borrowFlashloan(FlashArgs calldata _flashArgs, bytes calldata _data) internal virtual {
+        require(IERC3156FlashLender(_flashArgs.flashDebtLender).flashLoan({
             _receiver: address(this),
-            _token: _token,
-            _amount: _amount,
+            _token: _flashArgs.token,
+            _amount: _flashArgs.amount,
             _data: _data
         }), ErrorsLib.FlashloanFailed());
     }
@@ -154,14 +174,37 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower {
     {
         require(_lock == msg.sender, ErrorsLib.InvalidFlashloanLender());
 
-        // TODO
-        // swap
-        // transfer from
-        // deposit
-        // borrow
-        // take leverage fee
-        // repay flashloan
-        // calculate leverage
+        (
+            SwapArgs memory swapArgs,
+            DepositArgs memory depositArgs,
+            ISilo borrowSilo
+        ) = abi.decode(_data, (SwapArgs, DepositArgs, ISilo));
+
+        // TODO it is better to transfer fee imediately to receiver? otherwise we wil have to deal with balances locally
+        // eg. after swap, we can simply do balanceOf(token) OR we have to add compelcity and track balance bofore and after
+        uint256 amountOut = _fillQuote(swapArgs, _amount);
+
+        _deposit(depositArgs);
+
+        uint leverageFee = _calculateLeverageFee(depositArgs.totalDeposit);
+
+        // leverage fee will be leftover after borrow and repay flashloan
+        BorrowArgs memory borrowArgs = BorrowArgs(borrowSilo, _amount + _fee + leverageFee, depositArgs.receiver);
+        _borrow(borrowArgs);
+
+        return _FLASHLOAN_CALLBACK;
     }
 
+    function _deposit(DepositArgs memory _depositArgs) virtual internal {
+        IERC20 asset = IERC20(_depositArgs.silo.asset());
+
+        asset.forceApprove(address(_depositArgs.silo), _depositArgs.depositAmount);
+        _depositArgs.silo.deposit(_depositArgs.depositAmount, _depositArgs.receiver, _depositArgs.collateralType);
+        asset.forceApprove(address(_depositArgs.silo), 1);
+    }
+
+    function _borrow(BorrowArgs memory _borrowArgs) virtual internal {
+        uint256 borrowAmount = _borrowArgs.flashloanAmountWithFee + _calculateLeverageFee(_borrowArgs.totalDeposit);
+        _borrowArgs.silo.borrow(borrowAmount, _borrowArgs.receiver, _borrowArgs.receiver);
+    }
 }

@@ -12,6 +12,16 @@ library RevertLib {
         revert(_customErr);
     }
 
+    function revertBytes(bytes memory _errMsg, bytes4 _customErr) internal pure {
+        if (_errMsg.length > 0) {
+            assembly { // solhint-disable-line no-inline-assembly
+                revert(add(32, _errMsg), mload(_errMsg))
+            }
+        }
+
+        revert _customErr();
+    }
+
     function revertIfError(bytes4 _errorSelector) internal pure {
         if (_errorSelector == 0) return;
 
