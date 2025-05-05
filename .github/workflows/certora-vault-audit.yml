@@ -9,7 +9,7 @@ on:
       - 'certora-SiloVault'
   pull_request:
     branches:
-      - 'certora-SiloVault'
+      - 'otakar/project4'
   workflow_dispatch:
 
 env:
