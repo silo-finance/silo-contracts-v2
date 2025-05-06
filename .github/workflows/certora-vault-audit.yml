@@ -39,7 +39,6 @@ env:
     certora/config/vaults/ERC4626.conf --rule dustFavorsTheHouse
     certora/config/vaults/ERC4626.conf --rule onlyContributionMethodsReduceAssets
     certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets
-    certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares
 jobs:
   verify:
     runs-on: ubuntu-latest

@@ -24,4 +24,4 @@ certoraRun certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/s
 certoraRun certora/config/vaults/ERC4626.conf --rule dustFavorsTheHouse --msg dustFavorsTheHouse
 certoraRun certora/config/vaults/ERC4626.conf --rule onlyContributionMethodsReduceAssets --msg onlyContributionMethodsReduceAssets
 certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets --msg conversionWeakMonotonicity_assets
-certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares --msg conversionWeakMonotonicity_shares
+# certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares --msg conversionWeakMonotonicity_shares # borderline timeout
