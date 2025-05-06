@@ -23,6 +23,7 @@ library SiloCoreContracts {
     string public constant INCENTIVES_CONTROLLER_FACTORY = "SiloIncentivesControllerFactory.sol";
     string public constant INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY
         = "SiloIncentivesControllerGaugeLikeFactory.sol";
+    string public constant WHITELIST_COMPLIANCE_RESOLVER = "WhitelistComplianceResolver.sol";
 }
 
 /// @notice SiloCoreDeployments library
