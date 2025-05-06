@@ -35,8 +35,9 @@ env:
     certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
     certora/config/vaults/tokens.conf --rule vaultBalanceNeutral --parametric_contracts SiloVaultHarness
     certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
+    certora/config/vaults/ERC4626.conf
     certora/config/vaults/ERC4626.conf --rule dustFavorsTheHouse
-    certora/config/vaults/ERC4626.conf --rule doesntAlwaysRevert --rule allowanceForMarkets --rule contributingProducesShares --rule redeemingAllValidity --rule underlyingCannotChange --rule zeroDepositZeroShares --rule conversionOfZero --rule noDynamicCalls --rule onlyContributionMethodsReduceAssets
+    certora/config/vaults/ERC4626.conf --rule onlyContributionMethodsReduceAssets
     certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets
     certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares
 jobs:

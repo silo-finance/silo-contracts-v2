@@ -179,9 +179,11 @@ function notInTheSceneAssumptions(address user)
     require user != market1;
 }
 
-// holds for two markets
-// https://prover.certora.com/output/6893/2facfa6ca76f46dc919fb6f12d058053/?anonymousKey=2dde6258f43ba5d9dc8189b37996f5d030367f8a
-rule onlyContributionMethodsReduceAssets(method f) {
+/*
+ * @title Only deposit and mint can decrease user's balance.
+ * @status Verified
+ */
+ rule onlyContributionMethodsReduceAssets(method f) {
     address user; require user != currentContract;
     uint256 userAssetsBefore = userAssets(user);
 
@@ -223,9 +225,9 @@ hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint r
 }
 
 /*
-This rule proves there are no instances in the code in which the user can act as the contract.
-By proving this rule we can safely assume in our spec that e.msg.sender != currentContract.
-*/
+ * @title This rule proves there are no instances in the code in which the user can act as the contract.
+ * @status Verified
+ */
 rule noDynamicCalls {
     method f;
     env e;
@@ -239,7 +241,10 @@ rule noDynamicCalls {
     assert !callMade && !delegatecallMade;
 }
 
-//holds
+/*
+ * @title Zero assets convert to zero shares and vice versa.
+ * @status Verified
+ */
 rule conversionOfZero {
     uint256 convertZeroShares = convertToAssets(0);
     uint256 convertZeroAssets = convertToShares(0);
@@ -250,7 +255,10 @@ rule conversionOfZero {
         "converting zero assets must return zero shares";
 }
 
-// holds
+/*
+ * @title Depositing zero assets produces zero shares.
+ * @status Verified
+ */
 rule zeroDepositZeroShares(uint assets, address receiver)
 {
     env e;
@@ -260,7 +268,10 @@ rule zeroDepositZeroShares(uint assets, address receiver)
     assert shares == 0 <=> assets == 0;
 }
 
-// holds
+/*
+ * @title Address of the token cannot change.
+ * @status Verified
+ */
 rule underlyingCannotChange() {
     address originalAsset = asset();
 
@@ -273,7 +284,10 @@ rule underlyingCannotChange() {
         "the underlying asset of a contract must not change";
 }
 
-// holds
+/*
+ * @title Rounding is in favour of the Vault, i.e. redeem(deposit(x)) <= x, 
+ * @status Verified
+ */
 rule dustFavorsTheHouse(uint assetsIn )
 {
     env e;
@@ -292,7 +306,10 @@ rule dustFavorsTheHouse(uint assetsIn )
     assert balanceAfter >= balanceBefore;
 }
 
-// holds
+/*
+ * @title No shares left after redeeming the whole balance. 
+ * @status Verified
+ */
 rule redeemingAllValidity() { 
     address owner; 
     uint256 shares; require shares == balanceOf(owner);
@@ -305,7 +322,10 @@ rule redeemingAllValidity() {
     assert ownerBalanceAfter == 0;
 }
 
-// No address (including the markets) should not have standing allowance greater than 1wei.
+/*
+ * @title No address (including the markets) should not have standing allowance greater than 1wei.
+ * @status Verified
+ */
 invariant allowanceForMarkets(address market)
     ERC20.allowance(asset(), currentContract, market) <= 1
     filtered { f -> !f.isView }
@@ -315,8 +335,10 @@ invariant allowanceForMarkets(address market)
     }
 }
 
-// holds for two markets
-// https://prover.certora.com/output/6893/6753403e8b7241de9a49adfbc7274464/?anonymousKey=147e9d534c319cc5fa96075840ab6646a344f50a
+/*
+ * @title If tokens are deposited, then some shares are received.
+ * @status Verified
+ */
 rule contributingProducesShares(method f)
 filtered {
     f -> f.selector == sig:deposit(uint256,address).selector
@@ -353,7 +375,10 @@ filtered {
         "a contributor's assets must decrease if and only if the receiver's shares increase";
 }
 
-// holds
+/*
+ * @title convertToAssets is a non-decreasing function, i.e. x < y => convertTo(x) <= convertTo(y)
+ * @status Verified
+ */
 rule conversionWeakMonotonicity_assets {
     uint256 smallerShares; uint256 largerShares;
     
@@ -361,7 +386,10 @@ rule conversionWeakMonotonicity_assets {
         "converting more shares must yield equal or greater assets";
 }
 
-// holds
+/*
+ * @title convertToShares is a non-decreasing function, i.e. x < y => convertTo(x) <= convertTo(y)
+ * @status Verified
+ */
 rule conversionWeakMonotonicity_shares {
     uint256 smallerAssets; uint256 largerAssets;
 
@@ -369,7 +397,10 @@ rule conversionWeakMonotonicity_shares {
         "converting more assets must yield equal or greater shares";
 }
 
-// A one-time sanity check. We run without sanity checks on other rules to increase speed.
+/*
+ * @title A one-time sanity check. We run without sanity checks on other rules to increase speed.
+ * @status Verified
+ */
 rule doesntAlwaysRevert(env e, method f)
 {
     calldataarg args;

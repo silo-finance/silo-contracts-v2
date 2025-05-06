@@ -21,5 +21,7 @@ certoraRun certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
 certoraRun certora/config/vaults/tokens.conf --rule vaultBalanceNeutral --msg vaultBalanceNeutral --parametric_contracts SiloVaultHarness
 certoraRun certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
 
-certoraRun certora/config/vaults/ERC4626.conf
-certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets --rule conversionWeakMonotonicity_shares --msg conversionWeakMonotonicity
+certoraRun certora/config/vaults/ERC4626.conf --rule dustFavorsTheHouse --msg dustFavorsTheHouse
+certoraRun certora/config/vaults/ERC4626.conf --rule onlyContributionMethodsReduceAssets --msg onlyContributionMethodsReduceAssets
+certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets --msg conversionWeakMonotonicity_assets
+certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares --msg conversionWeakMonotonicity_shares
