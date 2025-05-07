@@ -1,0 +1,51 @@
+diff --git a/silo-vaults/contracts/SiloVault.sol b/silo-vaults/contracts/SiloVault.sol
+index 37bd47d1..e983a9c0 100644
+--- a/silo-vaults/contracts/SiloVault.sol
++++ b/silo-vaults/contracts/SiloVault.sol
+@@ -109,6 +109,17 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+     /// @dev Reentrancy guard.
+     bool transient _lock;
+ 
++    // HARNESS
++    // The index of the identifier of the last market withdrawn.
++    uint256 public lastIndexWithdraw;
++    // HARNESS
++    // The rank of a market identifier in the withdraw queue.
++    // Returns 0 if the corresponding market is not in the withdraw queue.
++    mapping(address => uint256) public withdrawRank;
++    // HARNESS
++    // The last index at which a market identifier has been removed from the withdraw queue.
++    mapping(address => uint256) public deletedAt;
++
+     /* CONSTRUCTOR */
+ 
+     /// @dev Initializes the contract.
+@@ -300,7 +311,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+     function updateWithdrawQueue(uint256[] calldata _indexes) external virtual onlyAllocatorRole {
+         _nonReentrantOn();
+ 
+-        withdrawQueue = SiloVaultActionsLib.updateWithdrawQueue(config, pendingCap, withdrawQueue, _indexes);
++        withdrawQueue = SiloVaultActionsLib.updateWithdrawQueue(config, pendingCap, withdrawQueue, _indexes, withdrawRank, deletedAt);
+ 
+         _nonReentrantOff();
+     }
+@@ -813,7 +824,8 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+             asset(),
+             config,
+             pendingCap,
+-            withdrawQueue
++            withdrawQueue,
++            withdrawRank
+         );
+ 
+         if (updateTotalAssets) {
+@@ -876,6 +888,9 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
+         uint256 length = withdrawQueue.length;
+ 
+         for (uint256 i; i < length; ++i) {
++            // HARNESS
++            lastIndexWithdraw = i;
++
+             IERC4626 market = withdrawQueue[i];
+ 
+             // Update internal balance for market to include interest if any.

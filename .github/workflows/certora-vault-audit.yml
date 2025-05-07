@@ -1,0 +1,100 @@
+# A workflow file for running Certora verification through GitHub actions.
+# Find results for each push in the "Actions" tab on the GitHub website.
+name: Certora verification
+run-name: Certora verification of ${{ github.event_name }}
+
+on:
+  push:
+    branches:
+      - 'otakar/project4'
+  pull_request:
+    branches:
+      - 'otakar/project4'
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+  CONFIGS: |
+    certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled
+    certora/config/vaults/consistentState.conf --exclude_rule supplyCapIsEnabled
+    certora/config/vaults/distinctIdentifiers.conf 
+    certora/config/vaults/enabled.conf --rule nonZeroCapHasPositiveRank
+    certora/config/vaults/enabled.conf --rule addedToSupplyQThenIsInWithdrawQ
+    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabled
+    certora/config/vaults/enabled.conf --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue
+    certora/config/vaults/immutability.conf
+    certora/config/vaults/lastUpdated.conf 
+    certora/config/vaults/liveness.conf --rule canPauseSupply
+    certora/config/vaults/marketInteractions.conf 
+    certora/config/vaults/pendingValues.conf 
+    certora/config/vaults/range.conf 
+    certora/config/vaults/reentrancy.conf 
+    certora/config/vaults/reverts.conf 
+    certora/config/vaults/roles.conf
+    certora/config/vaults/timelock.conf --exclude_rule removableTime
+    certora/config/vaults/tokens.conf --exclude_rule vaultBalanceNeutral
+    certora/config/vaults/tokens.conf --rule vaultBalanceNeutral --parametric_contracts SiloVaultHarness
+    certora/config/vaults/tokens.conf --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
+    certora/config/vaults/ERC4626.conf
+    certora/config/vaults/ERC4626.conf --rule dustFavorsTheHouse
+    certora/config/vaults/ERC4626.conf --rule onlyContributionMethodsReduceAssets
+    certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      # check out the current version (recurse submodules)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      # install Certora dependencies and CLI
+      - name: Install python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+          # cache: 'pip'
+
+      # NOTE: using certora-cli-beta for now!
+      - name: Install certora
+        run: pip3 install certora-cli-beta
+
+      # the following is only necessary if your project depends on contracts
+      # installed using yarn
+      - name: Install yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn
+
+      # Install solc-select 0.8.28
+      - name: Install solc-select
+        run: |
+          pip install solc-select
+          solc-select install 0.8.28
+          solc-select use 0.8.28
+
+      # Also download the solc 0.8.28 binaries and name it solc8.28
+      - name: Install solc-binary
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux
+          sudo mv solc-static-linux /usr/local/bin/solc8.28
+          chmod +x /usr/local/bin/solc8.28
+
+      - name: Certora munge
+        run: ./certora/scripts/munge.sh
+
+      - name: run configs
+        uses: Certora/certora-run-action@v1
+        with:
+          use-alpha: false
+          configurations: ${{ env.CONFIGS }}
+          solc-versions: 0.8.28
+          solc-remove-version-prefix: "0."
+          job-name: "Verified Rules"
+          certora-key: ${{ secrets.CERTORAKEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
