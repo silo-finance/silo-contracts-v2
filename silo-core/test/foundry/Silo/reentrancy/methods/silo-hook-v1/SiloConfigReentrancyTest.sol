@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
+import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 

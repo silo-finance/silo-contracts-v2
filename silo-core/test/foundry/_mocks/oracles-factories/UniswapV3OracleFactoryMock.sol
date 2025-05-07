@@ -6,7 +6,7 @@ import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Orac
 contract UniswapV3OracleFactoryMock {
     address constant public MOCK_ORACLE_ADDR = address(3);
 
-    function create(IUniswapV3Oracle.UniswapV3DeploymentConfig memory)
+    function create(IUniswapV3Oracle.UniswapV3DeploymentConfig memory, bytes32)
         external
         virtual
         returns (address oracle)

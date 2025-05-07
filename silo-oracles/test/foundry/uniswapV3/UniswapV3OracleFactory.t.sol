@@ -47,7 +47,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     }
 
     function setUp() public {
-        PRICE_PROVIDER = UNISWAPV3_ORACLE_FACTORY.create(creationConfig);
+        PRICE_PROVIDER = UNISWAPV3_ORACLE_FACTORY.create(creationConfig, bytes32(0));
         _validInitConfig();
     }
 
@@ -186,7 +186,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
             address(tokens["WETH"]),
             1800,
             120
-        ));
+        ), bytes32(0));
 
         assertEq(oracle.quote(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
     }
@@ -204,13 +204,13 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         );
 
         uint256 gasStart = gasleft();
-        UniswapV3Oracle oracle1 =  UNISWAPV3_ORACLE_FACTORY.create(cfg);
+        UniswapV3Oracle oracle1 =  UNISWAPV3_ORACLE_FACTORY.create(cfg, bytes32(0));
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
-        assertEq(gasStart - gasEnd, 248602, "optimise gas");
+        assertEq(gasStart - gasEnd, 254142, "optimise gas");
 
-        UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg);
+        UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg, bytes32(0));
 
         assertEq(address(oracle1.oracleConfig()), address(oracle2.oracleConfig()), "expect same config");
     }
@@ -231,7 +231,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
             address(tokens["WETH"]),
             1800,
             120
-        ));
+        ), bytes32(0));
 
         assertEq(oracle.quote(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
     }

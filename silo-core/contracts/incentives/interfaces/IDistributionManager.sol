@@ -35,6 +35,7 @@ interface IDistributionManager {
 
     error OnlyNotifier();
     error TooLongProgramName();
+    error CollisionWithAddress();
     error InvalidIncentivesProgramName();
     error OnlyNotifierOrOwner();
     error ZeroAddress();
