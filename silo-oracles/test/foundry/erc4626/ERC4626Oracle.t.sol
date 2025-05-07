@@ -30,7 +30,7 @@ contract ERC4626OracleTest is Test {
     function test_ERC4626Oracle_createERC4626Oracle() public {
         IERC4626 vault = IERC4626(_wosVault);
 
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
 
         assertTrue(ERC4626OracleFactory(address(_factory)).createdInFactory(address(oracle)));
     }
@@ -39,7 +39,7 @@ contract ERC4626OracleTest is Test {
     function test_ERC4626Oracle_quote() public {
         IERC4626 vault = IERC4626(_wosVault);
 
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
 
         uint256 quote = oracle.quote(1 ether, address(vault));
 
@@ -50,7 +50,7 @@ contract ERC4626OracleTest is Test {
     function test_ERC4626Oracle_quote_wrongBaseToken() public {
         IERC4626 vault = IERC4626(_wosVault);
 
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
 
         vm.expectRevert(ERC4626Oracle.AssetNotSupported.selector);
         oracle.quote(1 ether, address(1));
@@ -59,7 +59,7 @@ contract ERC4626OracleTest is Test {
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_quote_revertsZeroPrice -vvv
     function test_ERC4626Oracle_quote_revertsZeroPrice() public {
         IERC4626 vault = IERC4626(_wosVault);
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
 
         vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
         oracle.quote(0, address(vault));
@@ -78,7 +78,7 @@ contract ERC4626OracleTest is Test {
     function test_ERC4626Oracle_quoteToken() public {
         IERC4626 vault = IERC4626(_wosVault);
 
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
 
         assertEq(oracle.quoteToken(), address(vault.asset()));
     }
@@ -87,10 +87,34 @@ contract ERC4626OracleTest is Test {
     function test_ERC4626Oracle_beforeQuote() public {
         IERC4626 vault = IERC4626(_wosVault);
 
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
 
         // should not revert
         oracle.beforeQuote(address(vault));
         oracle.beforeQuote(address(1));
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_reorg
+    function test_ERC4626Oracle_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        ISiloOracle oracle1 = _factory.createERC4626Oracle(
+            IERC4626(_wosVault),
+            bytes32(0)
+        );
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        ISiloOracle oracle2 = _factory.createERC4626Oracle(
+            IERC4626(_wosVault),
+            bytes32(0)
+        );
+
+        assertNotEq(address(oracle1), address(oracle2), "oracle1 == oracle2");
     }
 }

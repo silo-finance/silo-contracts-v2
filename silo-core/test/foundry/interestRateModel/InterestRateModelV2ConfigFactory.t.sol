@@ -113,7 +113,7 @@ contract InterestRateModelV2FactoryTest is Test, InterestRateModelConfigs {
     function test_IRMF_create_new() public {
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config);
+        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config, bytes32(0));
 
         assertEq(configHash, factory.hashConfig(config), "wrong config hash");
         assertEq(address(irm), address(factory.irmByConfigHash(configHash)), "irm address is stored");
@@ -125,10 +125,32 @@ contract InterestRateModelV2FactoryTest is Test, InterestRateModelConfigs {
     function test_IRMF_create_reusable() public {
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config);
-        (bytes32 configHash2, IInterestRateModelV2 irm2) = factory.create(config);
+        (bytes32 configHash, IInterestRateModelV2 irm) = factory.create(config, bytes32(0));
+        (bytes32 configHash2, IInterestRateModelV2 irm2) = factory.create(config, bytes32(0));
 
         assertEq(configHash, configHash2, "config hash is the same for same config");
         assertEq(address(irm), address(irm2), "irm address is the same");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_IRMF_create_reorg
+    */
+    function test_IRMF_create_reorg() public {
+        address eoa1 = makeAddr("eoa1");
+        address eoa2 = makeAddr("eoa2");
+
+        IInterestRateModelV2.Config memory config = _defaultConfig();
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.prank(eoa1);
+        (, IInterestRateModelV2 irm) = factory.create(config, bytes32(0));
+
+        vm.revertTo(snapshot);
+
+        vm.prank(eoa2);
+        (, IInterestRateModelV2 irm2) = factory.create(config, bytes32(0));
+
+        assertNotEq(address(irm), address(irm2), "irm address is the same");
     }
 }

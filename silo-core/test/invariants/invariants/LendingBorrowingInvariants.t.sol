@@ -33,7 +33,8 @@ abstract contract LendingBorrowingInvariants is HandlerAggregator {
         if (siloConfig.getDebtSilo(user) == address(0)) {
             uint256 shares = IERC20(silo).balanceOf(user);
             uint256 balance = ISilo(silo).convertToAssets(shares);
-            if (ISilo(silo).getLiquidity() >= balance) {
+            uint256 liquidity = ISilo(silo).getLiquidity();
+            if (liquidity >= balance && liquidity > 1) {
                 assertEq(_maxRedeem(silo, user), shares, LENDING_INVARIANT_C);
             }
         }

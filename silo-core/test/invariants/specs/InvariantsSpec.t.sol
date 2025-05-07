@@ -77,8 +77,12 @@ abstract contract InvariantsSpec {
     string constant LENDING_INVARIANT_B =
         "LENDING_INVARIANT_B: Result of maxWithdraw() used as input to withdraw() should never revert";
 
+<<<<<<< HEAD
     string constant LENDING_INVARIANT_C =
         "LENDING_INVARIANT_C: If user has no debt and liquidity is available, maxRedeem() output equals shareToken.balanceOf(user)";
+=======
+    string constant LENDING_INVARIANT_C = "LENDING_INVARIANT_C: If user has no debt and liquidity > 1, maxRedeem() output equals shareToken.balanceOf(user)";
+>>>>>>> develop
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                        BORROWING                                          //

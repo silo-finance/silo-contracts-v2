@@ -20,7 +20,7 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
-import {GaugeHookReceiver, IGauge} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {GaugeHookReceiver, IGauge} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";

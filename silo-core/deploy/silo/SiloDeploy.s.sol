@@ -42,11 +42,17 @@ contract SiloDeploy is CommonDeploy {
     uint256 private constant _BYTES32_SIZE = 32;
 
     string public configName;
+    uint256 public privateKey;
 
     string[] public verificationIssues;
 
     function useConfig(string memory _config) external returns (SiloDeploy) {
         configName = _config;
+        return this;
+    }
+
+    function usePrivateKey(uint256 _privateKey) external returns (SiloDeploy) {
+        privateKey = _privateKey;
         return this;
     }
 
@@ -81,7 +87,7 @@ contract SiloDeploy is CommonDeploy {
         siloInitData.solvencyOracle1 = oracles.solvencyOracle1.deployed;
         siloInitData.maxLtvOracle1 = oracles.maxLtvOracle1.deployed;
 
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
 
         console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
         console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
@@ -226,7 +232,8 @@ contract SiloDeploy is CommonDeploy {
             _oracleConfigName
         );
 
-        txData.txInput = abi.encodeCall(IUniswapV3Factory.create, config);
+        // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
+        txData.txInput = abi.encodeCall(IUniswapV3Factory.create, (config, bytes32(0)));
     }
 
     function _chainLinkTxData(string memory _oracleConfigName)
@@ -245,7 +252,8 @@ contract SiloDeploy is CommonDeploy {
             _oracleConfigName
         );
 
-        txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, config);
+        // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
+        txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
     }
 
     function _diaTxData(string memory _oracleConfigName)
@@ -264,7 +272,8 @@ contract SiloDeploy is CommonDeploy {
             _oracleConfigName
         );
 
-        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, config);
+        // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
+        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
     }
 
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {

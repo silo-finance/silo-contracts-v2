@@ -6,7 +6,7 @@ import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3
 contract ChainlinkV3OracleFactoryMock {
     address constant public MOCK_ORACLE_ADDR = address(1);
 
-    function create(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory)
+    function create(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory, bytes32)
         external
         virtual
         returns (address oracle)

@@ -5,6 +5,33 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- silo-core: prioritise DAO fee to ensure it is not zero-out by precision error
+- silo-core: count for fractions when calculate maxBorrow
+- silo-core: underestimate `maxWithdraw` to count for interest fractions
+
+## [3.3.0] - 2025-05-01
+- silo-vaults: SiloIncentivesControllerCLDeployer helper contract to deploy claiming logics
+- silo-core: moved hooks into silo-core/contracts/hooks
+
+## [3.2.0] - 2025-04-30
+- Revert "silo-vaults: deployment sonic 1 min timelock"
+- silo-core: silo lens getter for programs names
+
+## [3.1.0-rc.3] - 2025-04-23
+- silo-vaults: deployment sonic 1 min timelock
+
+## [3.1.0] - 2025-04-23
+- silo-vaults: deployment sonic
+- silo-core: SiloDeployer hook and config reorg
+- silo-core: InterestRateModelV2Factory reorg protection
+- silo-oracles: factories reorg protection
+
+## [3.1.0-rc.2] - 2025-04-18
+- silo-vaults: deployment min timelock 1 day
+
+## [3.1.0-rc.1] - 2025-04-18
+- silo-vaults: deployment min timelock 1 min
 
 ## [3.0.0] - 2025-04-17
 - silo-vaults: Silo Vaults Deployer

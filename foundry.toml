@@ -12,6 +12,7 @@ optimizer = true
 optimizer_runs = 200
 via_ir = false
 allow_internal_expect_revert = true
+always_use_create_2_factory = true
 
 [profile.core]
 src = 'silo-core/contracts'
@@ -112,6 +113,12 @@ fs_permissions = [
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
+
+[profile.x_silo]
+src = 'x-silo/contracts'
+test = 'x-silo/test/foundry'
+out = 'cache/foundry/out/x-silo'
+broadcast = 'x-silo/broadcast'
 
 [profile.oracles]
 src = 'silo-oracles/contracts'

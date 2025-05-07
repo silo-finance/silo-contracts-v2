@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {
     IInterestRateModelV2Config,
     InterestRateModelV2Config
@@ -29,9 +29,14 @@ import {
     InterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
+<<<<<<< HEAD
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+=======
+import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+>>>>>>> develop
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 
 /// @notice BaseStorage contract for all test contracts, works in tandem with BaseTest
