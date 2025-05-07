@@ -84,6 +84,9 @@ jobs:
           sudo mv solc-static-linux /usr/local/bin/solc8.28
           chmod +x /usr/local/bin/solc8.28
 
+      - name: Certora munge
+        run: ./certora/scripts/munge.sh
+
       - name: run configs
         uses: Certora/certora-run-action@v1
         with:
