@@ -40,8 +40,6 @@ abstract contract BaseInvariants is HandlerAggregator {
         address protectedToken,
         address user
     ) internal {
-        console.log("IERC20(collateralToken).balanceOf(user)", IERC20(collateralToken).balanceOf(user));
-        console.log("IERC20(protectedToken).balanceOf(user)", IERC20(protectedToken).balanceOf(user));
         if (ISilo(silo).isSolvent(user) && IERC20(debtToken).balanceOf(user) > 0) {
             assertGt(
                 IERC20(collateralToken).balanceOf(user) + IERC20(protectedToken).balanceOf(user), 0, BASE_INVARIANT_D
@@ -69,5 +67,11 @@ abstract contract BaseInvariants is HandlerAggregator {
 
     function assert_BASE_INVARIANT_H() internal {
         assertFalse(siloConfig.reentrancyGuardEntered(), BASE_INVARIANT_H);
+    }
+
+    function assert_BASE_INVARIANT_J(address silo) internal {
+        ISilo.Fractions fractions = ISilo(silo).getFractionsStorage();
+        assertLt(fractions.interest, _PRECISION_DECIMALS, BASE_INVARIANT_J);
+        assertLt(fractions.revenue, _PRECISION_DECIMALS, BASE_INVARIANT_J);
     }
 }

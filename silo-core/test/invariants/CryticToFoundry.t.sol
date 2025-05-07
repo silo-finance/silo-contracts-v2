@@ -10,6 +10,7 @@ import {Invariants} from "./Invariants.t.sol";
 import {Setup} from "./Setup.t.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 /*
  * Test suite that converts from  "fuzz tests" to foundry "unit tests"
@@ -41,8 +42,300 @@ contract CryticToFoundry is Invariants, Setup {
         vm.warp(DEFAULT_TIMESTAMP);
     }
 
-    /// @dev Needed in order for foundry to recognise the contract as a test, faster debugging
-    function testAux() public {}
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                 FAILING INVARIANTS REPLAY                                 //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function test_replay_echidna_BORROWING_INVARIANT() public {
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(372709);
+        Tester.mint(2417851639229258349412351, 9, 212, 225);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(243804);
+        Tester.setOraclePrice(85325694741497293970114900540325703882142136582466790768881058534661869607342, 174);
+        _delay(350071);
+        Tester.mint(99999999999999999999999999999999, 9, 89, 51);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(18935);
+        Tester.transfer(186, 100, 117);
+        _delay(239463);
+        Tester.setOraclePrice(0, 67);
+        _delay(414736);
+        Tester.assertBORROWING_HSPOST_F(3, 17);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(195581);
+        Tester.setReceiveApproval(30685578394986357582078999966464701972880981229505152644870155067869293001835, 45, 7);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(227176);
+        Tester.setOraclePrice(34835035502209144393174416567643440875150259284937077194090922691628352320349, 79);
+        _delay(516957);
+        Tester.receiveAllowance(8530473304083092260213, 240, 84, 57);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(434894);
+        Tester.transfer(85936370295437688239666023304524236352038480082215230042585532195092641242663, 121, 57);
+        _delay(322343);
+        Tester.borrowShares(676, 66, 211);
+        _delay(358872);
+        Tester.withdrawFees(169);
+        _delay(592513);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(322274);
+        Tester.accrueInterestForSilo(2);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(536461);
+        Tester.transfer(10, 121, 160);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(344203);
+        Tester.borrowSameAsset(361, 180, 8);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(348682);
+        Tester.accrueInterestForBothSilos();
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(406886);
+        Tester.borrowShares(10, 57, 9);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(242553);
+        Tester.increaseReceiveAllowance(832, 32, 5);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(541304);
+        Tester.assertBORROWING_HSPOST_F(17, 16);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(385872);
+        Tester.assertBORROWING_HSPOST_F(35, 40);
+        _delay(115272);
+        Tester.deposit(12687115951434682245581533271292295008454411980148507776025986892916644883514, 187, 55, 192);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(45910);
+        Tester.assert_LENDING_INVARIANT_B(8, 100);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(410218);
+        Tester.repayShares(36681716227126625261976139211669968852856116041525778517090276499195287093544, 33, 196);
+        _delay(370487);
+        _delay(322342);
+        Tester.switchCollateralToThisSilo(88);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(150737);
+        Tester.setOraclePrice(55085254395496973713310036254475164815449370414279292876451310791531390099848, 185);
+        _delay(573973);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(267435);
+        Tester.accrueInterestForSilo(119);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(322275);
+        Tester.assertBORROWING_HSPOST_F(63, 7);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(175021);
+        Tester.setReceiveApproval(10002889961794596539796973504996959704980985133469634177742455461631591683, 0, 0);
+        _delay(432435);
+        Tester.setReceiveApproval(77810199537672672174487869, 21, 34);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(257969);
+        Tester.transitionCollateral(
+            2952420435339694155387374530264656233341124343226065830662652174233168402417, 214, 100, 19
+        );
+        _delay(272128);
+        Tester.redeem(115792089237316195423570985008687907853269984665640564039457584007910970861363, 68, 86, 47);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(65535);
+        Tester.redeem(37121490586876463643594538770730079992137184137283045384563272437437622698, 9, 0, 0);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(314382);
+        Tester.setReceiveApproval(10002889961794596539796973504996959704980985133469634177742455461631591683, 0, 0);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(7991);
+        Tester.receiveAllowance(
+            115792089237316195423570985008687907853269984665640564039457584007909554634365, 65, 173, 205
+        );
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(97913);
+        Tester.borrow(32065055921751079176067689929776809133066336021227662015545511534713182833380, 211, 39);
+        _delay(290782);
+        Tester.borrow(115792089237316195423570985008687907853269984665640564039457584007913129639921, 148, 214);
+        _delay(236463);
+        Tester.accrueInterestForSilo(207);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(407328);
+        Tester.increaseReceiveAllowance(
+            26698661725508022344991932391899159986723586886363100763084210921928360409884, 34, 47
+        );
+        _delay(267437);
+        Tester.deposit(34365944724486564157347987013325555975850944661960088747315509752927935221071, 252, 17, 135);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(135);
+        Tester.mint(2796547478, 167, 99, 196);
+        _delay(114539);
+        Tester.setReceiveApproval(10002889961794596539796973504996959704980985133469634177742455461631591683, 0, 0);
+        _delay(322274);
+        Tester.liquidationCall(
+            72286004447577986458437567305331946987203996418580014685516731491757444299,
+            false,
+            RandomGenerator(0, 1, 14)
+        );
+        _delay(290781);
+        Tester.borrowShares(115792089237316195423570985008687907853269984665640564039457584007913029639936, 33, 251);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(272894);
+        Tester.setReceiveApproval(
+            64278365737277695325537877219905224650752995421380070783619460629254482647269, 100, 154
+        );
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(267436);
+        Tester.approve(34260412612931728860370846265354122154485203500404919683122115869794936247149, 192, 254);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(586693);
+        Tester.transfer(146806, 88, 191);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(428919);
+        Tester.accrueInterestForBothSilos();
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(520290);
+        Tester.receiveAllowance(
+            58027867628455688080527647795747120465611868299122843183825279870936112342740, 13, 167, 148
+        );
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(370487);
+        Tester.switchCollateralToThisSilo(84);
+        _delay(115272);
+        Tester.transfer(10, 121, 160);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(146806);
+        Tester.accrueInterestForBothSilos();
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(175570);
+        Tester.withdraw(350393272295982098238177576405864701487966731636, 31, 106, 55);
+        _delay(262804);
+        Tester.transfer(10, 121, 160);
+        _delay(262803);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(172101);
+        Tester.transferFrom(21666088070152977932511755556529540775754069320300939159927719120183971679004, 201, 67, 47);
+        _delay(376096);
+        Tester.accrueInterestForSilo(11);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(520290);
+        Tester.borrowShares(1, 0, 0);
+        _delay(276465);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(352070);
+        Tester.accrueInterestForBothSilos();
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(389578);
+        Tester.borrow(57785768273192013473830643916785952111784314581165225851799605347174423545353, 73, 137);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(455658);
+        Tester.accrueInterestForSilo(22);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(223965);
+        Tester.approve(32, 12, 15);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(243804);
+        Tester.mint(29403836422878935877760115914423198848354204582186392420774737863530175968592, 56, 61, 6);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(411917);
+        Tester.transitionCollateral(11, 12, 197, 27);
+        _delay(147355);
+        Tester.decreaseReceiveAllowance(
+            49777145588601685391651222070984253955402946131128958726116927109939948633515, 206, 23
+        );
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(463588);
+        Tester.liquidationCall(
+            72286004447577986458437567305331946987203996418580014685516731491757444299,
+            false,
+            RandomGenerator(0, 1, 14)
+        );
+        _delay(322216);
+        Tester.borrowShares(1, 0, 0);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(379072);
+        Tester.transferFrom(14698357937948805815960600949944760709108245068149287236522350047880339736881, 21, 31, 131);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(31593);
+        Tester.mint(591, 39, 165, 198);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(568302);
+        Tester.borrow(80742785232462715187169000977889304418912879693135904941465885773785042337045, 123, 6);
+        _delay(303345);
+        Tester.transfer(10, 121, 160);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(584864);
+        Tester.transfer(0, 65, 131);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(257968);
+        Tester.approve(5294796397173254828855461886745241769817423997814419939199560210740900758801, 65, 251);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(22081);
+        Tester.redeem(28186007747590260315885236660985956356444442425796727491887604888362967676705, 25, 234, 120);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(114541);
+        Tester.assert_BORROWING_HSPOST_D(0, 0);
+        _delay(160);
+        Tester.withdrawFees(219);
+        _delay(112444);
+        Tester.setReceiveApproval(10002889961794596539796973504996959704980985133469634177742455461631591683, 0, 0);
+        _delay(82913);
+        _delay(350071);
+        Tester.assertBORROWING_HSPOST_F(211, 8);
+        _delay(290780);
+        Tester.borrowSameAsset(1532892062, 138, 166);
+        _delay(224492);
+        Tester.repayShares(102149416822379872074713342371381626779185429824852270579659598676190057038302, 102, 36);
+        _delay(322338);
+        Tester.decreaseReceiveAllowance(2145568950, 136, 49);
+        _delay(306998);
+        Tester.withdraw(466, 132, 176, 125);
+        _delay(50247);
+        Tester.borrow(71945912387345017289926827295245311443546474351620452353917285713535725937869, 33, 12);
+        _delay(101);
+        Tester.accrueInterestForBothSilos();
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(172101);
+        Tester.borrow(0, 137, 133);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(242555);
+        Tester.borrowShares(3121116754, 20, 85);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(406886);
+        Tester.borrowShares(89628965518883155826701692533871612447659975250868048739381070510521797802909, 129, 63);
+        _delay(428919);
+        _delay(526194);
+        Tester.assert_LENDING_INVARIANT_B(8, 100);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(322356);
+        Tester.transfer(18088871336966795399021245558516541522725514524615172745963984133344944343069, 158, 162);
+        _delay(114541);
+        Tester.flashLoan(1532892063, 0, 48, 42);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(543329);
+        Tester.withdraw(115792089237316195423570985008687907853269984665640564039457584007913129639932, 27, 20, 27);
+        _setUpActor(0x0000000000000000000000000000000000020000);
+        _delay(166184);
+        Tester.accrueInterestForSilo(17);
+        _delay(789209);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(314383);
+        Tester.borrowShares(37439836327923360225337895871394760624280537466773280374265222508165906222591, 75, 51);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(577105);
+        Tester.accrueInterest(154);
+        _setUpActor(0x0000000000000000000000000000000000010000);
+        _delay(348683);
+        Tester.withdraw(67, 136, 119, 109);
+        _setUpActor(0x0000000000000000000000000000000000030000);
+        _delay(56);
+        Tester.assert_BORROWING_HSPOST_D(207, 83);
+        console.log(MockSiloOracle(oracle0).quote(1, baseAssets[0]));
+        console.log("collateralBalance0: ", IERC20(silos[0]).balanceOf(address(actor)));
+        console.log("protectedBalance0: ", IERC20(protectedTokens[0]).balanceOf(address(actor)));
+        console.log("debtBalance0: ", IERC20(debtTokens[0]).balanceOf(address(actor)));
+        console.log("collateralBalance1: ", IERC20(silos[1]).balanceOf(address(actor)));
+        console.log("protectedBalance1: ", IERC20(protectedTokens[1]).balanceOf(address(actor)));
+        console.log("debtBalance1: ", IERC20(debtTokens[1]).balanceOf(address(actor)));
+        console.log("borrowerCollateralSilo: ", siloConfig.borrowerCollateralSilo(address(actor)));
+        console.log("silos[0]: ", silos[0]);
+        console.log("silos[1]: ", silos[1]);
+        echidna_BORROWING_INVARIANT();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                              FAILING POSTCONDITIONS REPLAY                                //
