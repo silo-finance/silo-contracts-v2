@@ -48,17 +48,13 @@ library SiloVaultActionsLib {
         address _asset,
         mapping(IERC4626 => MarketConfig) storage _config,
         mapping(IERC4626 => PendingUint192) storage _pendingCap,
-        IERC4626[] storage _withdrawQueue,
-        mapping(address => uint256) storage _withdrawRank
+        IERC4626[] storage _withdrawQueue
     ) external returns (bool updateTotalAssets) {
         MarketConfig storage marketConfig = _config[_market];
 
         if (_supplyCap > 0) {
             if (!marketConfig.enabled) {
                 _withdrawQueue.push(_market);
-
-                // HARNESS
-                _withdrawRank[address(_market)] = _withdrawQueue.length + 1;
 
                 if (_withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
 
@@ -275,9 +271,7 @@ library SiloVaultActionsLib {
         mapping(IERC4626 => MarketConfig) storage _config,
         mapping(IERC4626 => PendingUint192) storage _pendingCap,
         IERC4626[] calldata _withdrawQueue,
-        uint256[] calldata _indexes,
-        mapping(address => uint256) storage withdrawRank,
-        mapping(address => uint256) storage deletedAt
+        uint256[] calldata _indexes
     ) external returns (IERC4626[] memory newWithdrawQueue) {
         uint256 newLength = _indexes.length;
         uint256 currLength = _withdrawQueue.length;
@@ -294,10 +288,6 @@ library SiloVaultActionsLib {
             seen[prevIndex] = true;
 
             newWithdrawQueue[i] = market;
-
-            // HARNESS
-            withdrawRank[address(market)] = i + 1;
-    
         }
 
         for (uint256 i; i < currLength; ++i) {
@@ -314,10 +304,6 @@ library SiloVaultActionsLib {
                         revert ErrorsLib.InvalidMarketRemovalTimelockNotElapsed(market);
                     }
                 }
-
-                // HARNESS
-                deletedAt[address(market)] = i;
-                delete withdrawRank[address(market)];
 
                 delete _config[market];
             }

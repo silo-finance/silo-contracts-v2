@@ -109,17 +109,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Reentrancy guard.
     bool transient _lock;
 
-    // HARNESS
-    // The index of the identifier of the last market withdrawn.
-    uint256 public lastIndexWithdraw;
-    // HARNESS
-    // The rank of a market identifier in the withdraw queue.
-    // Returns 0 if the corresponding market is not in the withdraw queue.
-    mapping(address => uint256) public withdrawRank;
-    // HARNESS
-    // The last index at which a market identifier has been removed from the withdraw queue.
-    mapping(address => uint256) public deletedAt;
-
     /* CONSTRUCTOR */
 
     /// @dev Initializes the contract.
@@ -311,7 +300,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     function updateWithdrawQueue(uint256[] calldata _indexes) external virtual onlyAllocatorRole {
         _nonReentrantOn();
 
-        withdrawQueue = SiloVaultActionsLib.updateWithdrawQueue(config, pendingCap, withdrawQueue, _indexes, withdrawRank, deletedAt);
+        withdrawQueue = SiloVaultActionsLib.updateWithdrawQueue(config, pendingCap, withdrawQueue, _indexes);
 
         _nonReentrantOff();
     }
@@ -824,8 +813,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             asset(),
             config,
             pendingCap,
-            withdrawQueue,
-            withdrawRank
+            withdrawQueue
         );
 
         if (updateTotalAssets) {
@@ -888,9 +876,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         uint256 length = withdrawQueue.length;
 
         for (uint256 i; i < length; ++i) {
-            // HARNESS
-            lastIndexWithdraw = i;
-
             IERC4626 market = withdrawQueue[i];
 
             // Update internal balance for market to include interest if any.

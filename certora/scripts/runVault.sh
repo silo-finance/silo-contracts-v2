@@ -1,3 +1,6 @@
+git apply ./certora/patches/SiloVault.patch
+git apply ./certora/patches/SiloVaultActionsLib.patch
+
 certoraRun certora/config/vaults/consistentState.conf --rule supplyCapIsEnabled --msg supplyCapIsEnabled
 certoraRun certora/config/vaults/consistentState.conf --exclude_rule supplyCapIsEnabled
 
@@ -25,3 +28,6 @@ certoraRun certora/config/vaults/ERC4626.conf --rule dustFavorsTheHouse --msg du
 certoraRun certora/config/vaults/ERC4626.conf --rule onlyContributionMethodsReduceAssets --msg onlyContributionMethodsReduceAssets
 certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_assets --msg conversionWeakMonotonicity_assets
 # certoraRun certora/config/vaults/ERC4626.conf --rule conversionWeakMonotonicity_shares --msg conversionWeakMonotonicity_shares # borderline timeout
+
+git apply -R ./certora/patches/SiloVault.patch
+git apply -R ./certora/patches/SiloVaultActionsLib.patch
