@@ -16,6 +16,7 @@ on:
     push:
         branches: [ master, develop ]
         paths:
+            - silo-core/**/*.sol
             - silo-vaults/**/*.sol
             - silo-vaults/**/*.ts
             - silo-vaults/**/*.js
@@ -29,6 +30,7 @@ on:
 
     pull_request:
         paths:
+            - silo-core/**/*.sol
             - silo-vaults/**/*.sol
             - silo-vaults/**/*.ts
             - silo-vaults/**/*.js
