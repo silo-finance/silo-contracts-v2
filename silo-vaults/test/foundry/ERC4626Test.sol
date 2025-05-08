@@ -298,7 +298,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         vault.deposit(1, SUPPLIER);
 
-        // 1 wei solves the rounding issue
+        // 1 wei solves the issue created by the liquidity underestimation in the Silo maxWithdraw fn
         assertEq(vault.maxRedeem(ONBEHALF), minted, "maxRedeem(ONBEHALF)");
 
         vm.prank(ONBEHALF);
