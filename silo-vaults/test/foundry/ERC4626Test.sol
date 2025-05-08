@@ -279,6 +279,37 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     }
 
     /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testRedeemAllWith1WeiDeposit -vvv
+    */
+    function testRedeemAllWith1WeiDeposit(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
+        deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+
+        vm.prank(SUPPLIER);
+        uint256 minted = vault.deposit(deposited, ONBEHALF);
+
+        assertEq(vault.maxRedeem(ONBEHALF), minted - 1e6, "maxRedeem(ONBEHALF)");
+
+        vm.prank(ONBEHALF);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotEnoughLiquidity.selector));
+        vault.redeem(minted, RECEIVER, ONBEHALF);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(1, SUPPLIER);
+
+        // 1 wei solves the rounding issue
+        assertEq(vault.maxRedeem(ONBEHALF), minted, "maxRedeem(ONBEHALF)");
+
+        vm.prank(ONBEHALF);
+        uint256 assets = vault.redeem(minted, RECEIVER, ONBEHALF);
+
+        assertEq(assets, deposited, "assets");
+        assertEq(vault.balanceOf(ONBEHALF), 0, "balanceOf(ONBEHALF)");
+        assertEq(loanToken.balanceOf(RECEIVER), deposited, "loanToken.balanceOf(RECEIVER)");
+    }
+
+    /*
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testRedeemNotDeposited -vvv
     */
     function testRedeemNotDeposited(uint256 deposited) public {
