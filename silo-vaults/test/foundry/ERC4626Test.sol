@@ -17,11 +17,15 @@ import {CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTes
  FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ERC4626Test -vvv
 */
 contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
+    uint256 public vaultDecimalsOffset;
+
     function setUp() public override {
         super.setUp();
 
         _setCap(allMarkets[0], CAP);
         _sortSupplyQueueIdleLast();
+
+        vaultDecimalsOffset = vault.DECIMALS_OFFSET();
     }
 
     /*
@@ -245,10 +249,10 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(ONBEHALF);
         uint256 shares = vault.withdraw(assets - 1, RECEIVER, ONBEHALF);
 
-        uint256 mintedRoundedDown = minted - 1e6;
+        uint256 mintedRoundedDown = minted - 10 ** vaultDecimalsOffset;
 
         assertEq(shares, mintedRoundedDown, "shares");
-        assertEq(vault.balanceOf(ONBEHALF), 1e6, "balanceOf(ONBEHALF)");
+        assertEq(vault.balanceOf(ONBEHALF), 10 ** vaultDecimalsOffset, "balanceOf(ONBEHALF)");
         assertEq(loanToken.balanceOf(RECEIVER), assets - 1, "loanToken.balanceOf(RECEIVER)");
         assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 1, "expectedSupplyAssets(vault)");
     }
@@ -265,7 +269,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         uint256 minted = vault.deposit(deposited, ONBEHALF);
 
         // because of the underestimation in the Silo
-        uint256 expectedMaxRedeem = minted - 1e6;
+        uint256 expectedMaxRedeem = minted - 10 ** vaultDecimalsOffset;
 
         assertEq(vault.maxRedeem(ONBEHALF), expectedMaxRedeem, "maxRedeem(ONBEHALF)");
 
@@ -273,7 +277,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         uint256 assets = vault.redeem(expectedMaxRedeem, RECEIVER, ONBEHALF);
 
         assertEq(assets, deposited - 1, "assets");
-        assertEq(vault.balanceOf(ONBEHALF), 1e6, "balanceOf(ONBEHALF)");
+        assertEq(vault.balanceOf(ONBEHALF), 10 ** vaultDecimalsOffset, "balanceOf(ONBEHALF)");
         assertEq(loanToken.balanceOf(RECEIVER), deposited - 1, "loanToken.balanceOf(RECEIVER)");
         assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 1, "expectedSupplyAssets(vault)");
     }
@@ -289,7 +293,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 minted = vault.deposit(deposited, ONBEHALF);
 
-        assertEq(vault.maxRedeem(ONBEHALF), minted - 1e6, "maxRedeem(ONBEHALF)");
+        assertEq(vault.maxRedeem(ONBEHALF), minted - 10 ** vaultDecimalsOffset, "maxRedeem(ONBEHALF)");
 
         vm.prank(ONBEHALF);
         vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotEnoughLiquidity.selector));
@@ -320,7 +324,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
-        uint256 sharesRoundedDown = shares - 1e6;
+        uint256 sharesRoundedDown = shares - 10 ** vaultDecimalsOffset;
 
         vm.prank(SUPPLIER);
         vm.expectRevert(abi.encodeWithSelector(
@@ -344,7 +348,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
-        uint256 sharesRoundedDown = shares - 1e6;
+        uint256 sharesRoundedDown = shares - 10 ** vaultDecimalsOffset;
 
         vm.prank(RECEIVER);
         vm.expectRevert(abi.encodeWithSelector(
@@ -370,7 +374,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         uint256 shares = vault.previewWithdraw(assets);
 
-        uint256 sharesRoundedDown = shares - 1e6;
+        uint256 sharesRoundedDown = shares - 10 ** vaultDecimalsOffset;
 
         vm.prank(RECEIVER);
         vm.expectRevert(abi.encodeWithSelector(
@@ -439,7 +443,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
 
         uint256 sharesBurnt = vault.previewWithdraw(assets);
 
-        uint256 expectedSharesBurnt = sharesBurnt - 1e6;
+        uint256 expectedSharesBurnt = sharesBurnt - 10 ** vaultDecimalsOffset;
 
         vm.expectRevert(
             abi.encodeWithSelector(
