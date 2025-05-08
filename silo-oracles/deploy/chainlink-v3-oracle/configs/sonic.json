@@ -257,5 +257,16 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "CHAINLINK_HARDCODE_woS_wS": {
+        "baseToken": "woS",
+        "quoteToken": "wS",
+        "primaryAggregator": "CHAINLINK_wOS_OS_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
