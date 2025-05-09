@@ -11,17 +11,17 @@ import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientRe
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
-import {Stream} from "../Stream.sol";
+import {Stream} from "./Stream.sol";
 
 
 // TODO do we need nonReentrant on vault methods? if so we need to override them all
 
-contract XSiloToken is ERC4626, XRedeemPolicy {
-    Stream public immutable STREAM;
+contract XSilo is ERC4626, XRedeemPolicy {
+    Stream public stream;
 
     INotificationReceiver public notificationReceiver;
 
-    event NotificationReceiverUpdate(INotificationReceiver indexed newReceiver);
+    event StreamUpdate(Stream indexed newStream);
 
     constructor(address _asset, Stream _stream)
         Ownable(msg.sender)
@@ -59,6 +59,13 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
         emit NotificationReceiverUpdate(_notificationReceiver);
     }
 
+    function setStream(Stream _stream) external onlyOwner {
+        require(stream != _stream, "TODO errors");
+
+        stream = _stream;
+        emit StreamUpdate(_stream);
+    }
+
     // TODO withdraw/reddeem isees preview, we override preview so it should work out of the box - QA!
 
     /// @notice This would make the amount that the user would need to "gift" the market in order to significantly
@@ -86,7 +93,8 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
-        STREAM.claimRewards();
+        Stream stream_ = stream;
+        if (address(stream_) != address(0)) stream.claimRewards();
 
         super._update(_from, _to, _value);
 
