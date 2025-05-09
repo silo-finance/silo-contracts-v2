@@ -50,6 +50,8 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
         assets = getXAmountByVestingDuration(_shares, 0);
     }
 
+    // TODO withdraw/reddeem isees preview, we override preview so it should work out of the box - QA!
+
     /// @notice This would make the amount that the user would need to "gift" the market in order to significantly
     /// inflate the share price very large and impractical.
     function _decimalsOffset() internal view virtual override returns (uint8) {
