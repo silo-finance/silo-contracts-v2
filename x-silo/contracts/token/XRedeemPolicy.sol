@@ -165,6 +165,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
         // get corresponding SILO amount based on duration
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmountToBurn, _duration);
+        // TODO question: convertToAssets will give us current value,
+        // should user got future value? if so, we need to convert on finalizing
         siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
 
         emit StartRedeem(msg.sender, _xSiloAmountToBurn, siloAmountAfterVesting, _duration);
@@ -226,8 +228,6 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         userRedeems[msg.sender][_index] = userRedeems[msg.sender][userRedeems[msg.sender].length - 1];
         userRedeems[msg.sender].pop();
     }
-
-    function convertToShares(uint256 _value) public virtual returns (uint256);
 
     function convertToAssets(uint256 _value) public virtual returns (uint256);
 
