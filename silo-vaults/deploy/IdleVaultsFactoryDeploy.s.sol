@@ -8,10 +8,18 @@ import {IdleVaultsFactory} from "silo-vaults/contracts/IdleVaultsFactory.sol";
 import {CommonDeploy} from "./common/CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY FOUNDRY_PROFILE=vaults \
+    FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol:IdleVaultsFactoryDeploy \
-        --ffi --rpc-url $RPC_SONIC \
-        --broadcast --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=vaults \
+        forge script silo-vaults/deploy/IdleVaultsFactoryDeploy.s.sol:IdleVaultsFactoryDeploy \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
 */
 contract IdleVaultsFactoryDeploy is CommonDeploy {
     function run() public returns (IdleVaultsFactory factory) {
