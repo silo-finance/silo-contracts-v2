@@ -3,10 +3,8 @@ pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
-import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
-import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
 
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 
@@ -66,7 +64,7 @@ contract XSilo is ERC4626, XRedeemPolicy {
         emit StreamUpdate(_stream);
     }
 
-    // TODO withdraw/reddeem isees preview, we override preview so it should work out of the box - QA!
+    // TODO withdraw/reddeem uses preview, we override preview so it should work out of the box - QA!
 
     /// @notice This would make the amount that the user would need to "gift" the market in order to significantly
     /// inflate the share price very large and impractical.
@@ -78,8 +76,8 @@ contract XSilo is ERC4626, XRedeemPolicy {
         return ERC20._burn(_owner, _shares);
     }
 
-    function _mintShares(address _account, uint256 _value) internal virtual override {
-        return ERC20._mint(_account, _value);
+    function _mintShares(address _account, uint256 _shares) internal virtual override {
+        return ERC20._mint(_account, _shares);
     }
 
     function _withdraw(
