@@ -20,5 +20,11 @@
             "implementation": "0xd483138B7e40bCBCa16654FE9AD4bC0E565736Da",
             "description": "original implementation"
         }
+    ],
+    "ink": [
+        {
+            "implementation": "0x4576fa3e2E061376431619B5631C25c99fFa27bd",
+            "description": "original implementation"
+        }
     ]
 }
