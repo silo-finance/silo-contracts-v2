@@ -8,7 +8,25 @@ import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 /**
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/SiloVirtualAsset8DecimalsDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=oracles \
+        forge script silo-oracles/deploy/SiloVirtualAsset8DecimalsDeploy.s.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
+
+    FOUNDRY_PROFILE=oracles forge verify-contract <contract-address> \
+        silo-oracles/contracts/silo-virtual-assets/SiloVirtualAsset8Decimals.sol:SiloVirtualAsset8Decimals \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INK \
+        --compiler-version 0.8.28 \
+        --num-of-optimizations 200 \
+        --watch
  */
 contract SiloVirtualAsset8DecimalsDeploy is CommonDeploy {
     function run() public returns (address asset) {

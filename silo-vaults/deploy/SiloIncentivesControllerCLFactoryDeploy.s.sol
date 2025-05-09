@@ -10,10 +10,18 @@ import {
 import {CommonDeploy} from "./common/CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY FOUNDRY_PROFILE=vaults \
+    FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/SiloIncentivesControllerCLFactoryDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 \
-        --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=vaults \
+        forge script silo-vaults/deploy/SiloIncentivesControllerCLFactoryDeploy.s.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
 */
 contract SiloIncentivesControllerCLFactoryDeploy is CommonDeploy {
     function run() public returns (address factory) {

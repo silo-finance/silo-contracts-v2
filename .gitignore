@@ -2,6 +2,7 @@ node_modules
 .idea
 .editorconfig
 .vscode
+.cursor
 .env
 cache
 **/foundry/out/

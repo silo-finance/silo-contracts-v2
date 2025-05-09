@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+
+### [3.4.0] - 2025-05-09
+- silo-core: prioritize DAO fee to ensure it is not zero-out by precision error
+- silo-core: count for fractions when calculate maxBorrow
+- silo-core: underestimate `maxWithdraw` to count for interest fractions
+- silo-core: fix maxRedeem for dust
+- silo-core: proper name conversion in the getProgramName fn
+- silo-core: silo lens getter for programs names
+- silo-core: Incentives controller for ws in beS / wS Silo
+- silo-vaults: helper contract to deploy claiming logics
+- x-silo: Silo Token V2
+- sonic deployment: silo-core, silo-oracles
+- arbitrum deployment: silo-core, silo-oracles, silo-vaults
+- optimism deployment: silo-core, silo-oracles, silo-vaults
+- ink deployment: silo-core, silo-oracles, silo-vaults
+
 ## [3.3.0] - 2025-05-01
 - silo-vaults: SiloIncentivesControllerCLDeployer helper contract to deploy claiming logics
 - silo-core: moved hooks into silo-core/contracts/hooks

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -127,24 +128,24 @@ contract WithdrawFeesTest is Test {
     }
 
     /*
-    forge test -vv --mt test_withdrawFees_pass
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_withdrawFees_pass
     */
     function test_withdrawFees_pass() external {
         uint256 daoFee = 0.20e18;
         uint256 deployerFee = 0.20e18;
         uint256 daoAndDeployerRevenue = 1e18;
-        uint256 daoFees = daoAndDeployerRevenue/2;
+        uint256 daoFees = daoAndDeployerRevenue / 2;
 
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
 
         daoFee = 0.20e18;
         deployerFee = 0.10e18;
-        daoFees = daoAndDeployerRevenue * 2/3;
+        daoFees = Math.mulDiv(daoAndDeployerRevenue, 2, 3, Math.Rounding.Ceil);
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
 
         daoFee = 0.20e18;
         deployerFee = 0.01e18;
-        daoFees = daoAndDeployerRevenue * 20/21;
+        daoFees = Math.mulDiv(daoAndDeployerRevenue, 20, 21, Math.Rounding.Ceil);
 
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
     }

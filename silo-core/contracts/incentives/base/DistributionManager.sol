@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
@@ -135,7 +136,13 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
      * @return The name of the incentives program
      */
     function getProgramName(bytes32 _programId) public pure virtual returns (string memory) {
-        return string(TokenHelper.removeZeros(abi.encodePacked(_programId)));
+        bytes memory idWithoutZeros = TokenHelper.removeZeros(abi.encodePacked(_programId));
+
+        if (idWithoutZeros.length == 20) { // expecting a hex string representing an address
+            return Strings.toHexString(uint256(_programId), 20);
+        }
+
+        return string(idWithoutZeros);
     }
 
     /**

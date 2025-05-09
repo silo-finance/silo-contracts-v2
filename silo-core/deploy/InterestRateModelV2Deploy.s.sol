@@ -8,15 +8,16 @@ import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/int
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2Deploy.s.sol:InterestRateModelV2Deploy \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
 
-    code verification:
-
-    FOUNDRY_PROFILE=core forge verify-contract 0xc4Ea88E05262d2B5cf53aA78C65Fb7511e3C4C15 \
-    silo-core/contracts/interestRateModel/InterestRateModelV2.sol:InterestRateModelV2 \
-    --compiler-version 0.8.28 \
-    --rpc-url $RPC_ARBITRUM \
-    --watch
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/InterestRateModelV2Deploy.s.sol:InterestRateModelV2Deploy \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
  */
 contract InterestRateModelV2Deploy is CommonDeploy {
     function run() public returns (IInterestRateModelV2 interestRateModelV2) {

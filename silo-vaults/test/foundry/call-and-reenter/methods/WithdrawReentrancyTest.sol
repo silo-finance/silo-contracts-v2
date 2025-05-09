@@ -27,7 +27,7 @@ contract WithdrawReentrancyTest is MethodReentrancyTest {
         TestStateLib.enableReentrancy();
 
         vm.prank(depositor);
-        vault.withdraw(amount, depositor, depositor);
+        vault.withdraw(amount - 1, depositor, depositor);
     }
 
     function verifyReentrancy() external {

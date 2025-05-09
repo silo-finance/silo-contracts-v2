@@ -13017,6 +13017,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"x-silo@workspace:x-silo":
+  version: 0.0.0-use.local
+  resolution: "x-silo@workspace:x-silo"
+  dependencies:
+    solhint: ~3.4.1
+  languageName: unknown
+  linkType: soft
+
 "xhr-request-promise@npm:^0.1.2":
   version: 0.1.3
   resolution: "xhr-request-promise@npm:0.1.3"

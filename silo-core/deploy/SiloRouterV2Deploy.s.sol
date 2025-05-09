@@ -9,8 +9,17 @@ import {SiloRouterV2Implementation} from "silo-core/contracts/silo-router/SiloRo
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloRouterV2Deploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
- */
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloRouterV2Deploy.s.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
+*/
 contract SiloRouterV2Deploy is CommonDeploy {
     function run() public returns (SiloRouterV2 siloRouterV2) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));

@@ -92,7 +92,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getUserLTV(silo1, borrower), 0.75e18, "borrower LTV #1");
 
         assertEq(siloLens.getUtilization(silo0), 0, "getUtilization #0");
-        assertEq(siloLens.getUtilization(silo1), 0.75e18, "getUtilization #1");
+        assertEq(siloLens.getUtilization(silo1), 0.75e18 - 1, "getUtilization #1");
 
         assertEq(
             siloLens.calculateCollateralValue(siloConfig, borrower),
@@ -129,17 +129,17 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         vm.warp(block.timestamp + 65 days);
 
         assertEq(siloLens.getBorrowAPR(silo0), 0, "getBorrowAPR after 65 days #0");
-        assertEq(siloLens.getBorrowAPR(silo1), 6_605018041910688000, "getBorrowAPR after 65 days #1");
+        assertEq(siloLens.getBorrowAPR(silo1), 6_605018041879152000, "getBorrowAPR after 65 days #1");
 
         assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after 65 days #0");
-        assertEq(siloLens.getDepositAPR(silo1), 4_625564840811145381, "getDepositAPR after 65 days #1");
+        assertEq(siloLens.getDepositAPR(silo1), 4_625564840789060382, "getDepositAPR after 65 days #1");
 
         ISilo[] memory silos = new ISilo[](1);
         silos[0] = silo1;
 
         ISiloLens.APR[] memory aprs = siloLens.getAPRs(silos);
-        assertEq(aprs[0].borrowAPR, 6_605018041910688000, "apr.getBorrowAPR after 65 days #1");
-        assertEq(aprs[0].depositAPR, 4_625564840811145381, "aps.getDepositAPR after 65 days #1");
+        assertEq(aprs[0].borrowAPR, 6_605018041879152000, "apr.getBorrowAPR after 65 days #1");
+        assertEq(aprs[0].depositAPR, 4_625564840789060382, "aps.getDepositAPR after 65 days #1");
 
         assertLt(siloLens.getDepositAPR(silo1), siloLens.getBorrowAPR(silo1), "deposit APR should be less than borrow");
 
@@ -220,7 +220,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         );
 
         uint256 maxRepayBefore = silo1.maxRepay(borrower);
-        assertEq(maxRepayBefore, 14.994397297218850137e18, "maxRepayBefore");
+        assertEq(maxRepayBefore, 14.994397297218850135e18, "maxRepayBefore");
 
         vm.warp(block.timestamp + 300 days);
 
@@ -232,7 +232,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getDepositAPR(silo1), 0, "getDepositAPR after long time #1");
 
         uint256 maxRepayAfter = silo1.maxRepay(borrower);
-        assertEq(maxRepayAfter, 1247.410613506809097866e18, "maxRepayAfter");
+        assertEq(maxRepayAfter, 1247.410613506809097700e18, "maxRepayAfter");
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "hasPosition");
     }
@@ -260,7 +260,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         _borrow(toBorrow, borrower);
 
         assertEq(siloLens.getUtilization(silo0), 0, "getUtilization #0");
-        assertEq(siloLens.getUtilization(silo1), _utilization, "getUtilization #1");
+        assertEq(siloLens.getUtilization(silo1), _utilization - 1, "getUtilization #1");
 
         _assertInterest(toBorrow);
     }

@@ -10,17 +10,18 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 /**
-    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloLensDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
 
-    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC \
-    forge verify-contract 0xE05966aee69CeCD677a30f469812Ced650cE3b5E \
-        SiloLens \
-        --compiler-version 0.8.28 \
-        --rpc-url $RPC_SONIC \
-        --watch
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloLensDeploy.s.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
 
     remember to run `TowerRegistration` script after deployment!
  */

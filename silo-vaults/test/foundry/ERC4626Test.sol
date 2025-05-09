@@ -17,11 +17,15 @@ import {CAP, MIN_TEST_ASSETS, MAX_TEST_ASSETS, TIMELOCK} from "./helpers/BaseTes
  FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc ERC4626Test -vvv
 */
 contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
+    uint256 public vaultDecimalsOffset;
+
     function setUp() public override {
         super.setUp();
 
         _setCap(allMarkets[0], CAP);
         _sortSupplyQueueIdleLast();
+
+        vaultDecimalsOffset = vault.DECIMALS_OFFSET();
     }
 
     /*
@@ -87,20 +91,20 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.assume(vault.convertToAssets(redeemed) != 0);
 
         vm.expectEmit();
-        emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed));
+        emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed - 1));
         vm.prank(ONBEHALF);
-        vault.redeem(redeemed, RECEIVER, ONBEHALF);
+        vault.redeem(redeemed - 1, RECEIVER, ONBEHALF);
 
         assertEq(loanToken.balanceOf(address(vault)), 0, "balanceOf(vault)");
-        assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, "balanceOf(ONBEHALF)");
+        assertEq(vault.balanceOf(ONBEHALF), shares - redeemed + 1, "balanceOf(ONBEHALF)");
     }
 
     /*
      FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testWithdraw -vvv
     */
     function testWithdraw(uint256 deposited, uint256 withdrawn) public {
-        vm.assume(deposited != 0);
-        vm.assume(withdrawn != 0);
+        vm.assume(deposited > 1);
+        vm.assume(withdrawn > 1);
 
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
         withdrawn = bound(withdrawn, 0, deposited);
@@ -109,9 +113,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
         vm.expectEmit();
-        emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - withdrawn);
+        emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - withdrawn + 1);
         vm.prank(ONBEHALF);
-        uint256 redeemed = vault.withdraw(withdrawn, RECEIVER, ONBEHALF);
+        uint256 redeemed = vault.withdraw(withdrawn - 1, RECEIVER, ONBEHALF);
 
         assertEq(loanToken.balanceOf(address(vault)), 0, "balanceOf(vault)");
         assertEq(vault.balanceOf(ONBEHALF), shares - redeemed, "balanceOf(ONBEHALF)");
@@ -240,15 +244,17 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 minted = vault.deposit(assets, ONBEHALF);
 
-        assertEq(vault.maxWithdraw(ONBEHALF), assets, "maxWithdraw(ONBEHALF)");
+        assertEq(vault.maxWithdraw(ONBEHALF), assets - 1, "maxWithdraw(ONBEHALF)");
 
         vm.prank(ONBEHALF);
-        uint256 shares = vault.withdraw(assets, RECEIVER, ONBEHALF);
+        uint256 shares = vault.withdraw(assets - 1, RECEIVER, ONBEHALF);
 
-        assertEq(shares, minted, "shares");
-        assertEq(vault.balanceOf(ONBEHALF), 0, "balanceOf(ONBEHALF)");
-        assertEq(loanToken.balanceOf(RECEIVER), assets, "loanToken.balanceOf(RECEIVER)");
-        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 0, "expectedSupplyAssets(vault)");
+        uint256 mintedRoundedDown = minted - 10 ** vaultDecimalsOffset;
+
+        assertEq(shares, mintedRoundedDown, "shares");
+        assertEq(vault.balanceOf(ONBEHALF), 10 ** vaultDecimalsOffset, "balanceOf(ONBEHALF)");
+        assertEq(loanToken.balanceOf(RECEIVER), assets - 1, "loanToken.balanceOf(RECEIVER)");
+        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 1, "expectedSupplyAssets(vault)");
     }
 
     /*
@@ -262,6 +268,41 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 minted = vault.deposit(deposited, ONBEHALF);
 
+        // because of the underestimation in the Silo
+        uint256 expectedMaxRedeem = minted - 10 ** vaultDecimalsOffset;
+
+        assertEq(vault.maxRedeem(ONBEHALF), expectedMaxRedeem, "maxRedeem(ONBEHALF)");
+
+        vm.prank(ONBEHALF);
+        uint256 assets = vault.redeem(expectedMaxRedeem, RECEIVER, ONBEHALF);
+
+        assertEq(assets, deposited - 1, "assets");
+        assertEq(vault.balanceOf(ONBEHALF), 10 ** vaultDecimalsOffset, "balanceOf(ONBEHALF)");
+        assertEq(loanToken.balanceOf(RECEIVER), deposited - 1, "loanToken.balanceOf(RECEIVER)");
+        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 1, "expectedSupplyAssets(vault)");
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testRedeemAllWith1WeiDeposit -vvv
+    */
+    function testRedeemAllWith1WeiDeposit(uint256 deposited) public {
+        vm.assume(deposited != 0);
+
+        deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
+
+        vm.prank(SUPPLIER);
+        uint256 minted = vault.deposit(deposited, ONBEHALF);
+
+        assertEq(vault.maxRedeem(ONBEHALF), minted - 10 ** vaultDecimalsOffset, "maxRedeem(ONBEHALF)");
+
+        vm.prank(ONBEHALF);
+        vm.expectRevert(abi.encodeWithSelector(ErrorsLib.NotEnoughLiquidity.selector));
+        vault.redeem(minted, RECEIVER, ONBEHALF);
+
+        vm.prank(SUPPLIER);
+        vault.deposit(1, SUPPLIER);
+
+        // 1 wei solves the issue created by the liquidity underestimation in the Silo maxWithdraw fn
         assertEq(vault.maxRedeem(ONBEHALF), minted, "maxRedeem(ONBEHALF)");
 
         vm.prank(ONBEHALF);
@@ -270,7 +311,6 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         assertEq(assets, deposited, "assets");
         assertEq(vault.balanceOf(ONBEHALF), 0, "balanceOf(ONBEHALF)");
         assertEq(loanToken.balanceOf(RECEIVER), deposited, "loanToken.balanceOf(RECEIVER)");
-        assertEq(_expectedSupplyAssets(allMarkets[0], address(vault)), 0, "expectedSupplyAssets(vault)");
     }
 
     /*
@@ -284,9 +324,17 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
+        uint256 sharesRoundedDown = shares - 10 ** vaultDecimalsOffset;
+
         vm.prank(SUPPLIER);
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, SUPPLIER, 0, shares));
-        vault.redeem(shares, SUPPLIER, SUPPLIER);
+        vm.expectRevert(abi.encodeWithSelector(
+            IERC20Errors.ERC20InsufficientBalance.selector,
+            SUPPLIER,
+            0,
+            sharesRoundedDown
+        ));
+
+        vault.redeem(sharesRoundedDown, SUPPLIER, SUPPLIER);
     }
 
     /*
@@ -300,9 +348,17 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
+        uint256 sharesRoundedDown = shares - 10 ** vaultDecimalsOffset;
+
         vm.prank(RECEIVER);
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, RECEIVER, 0, shares));
-        vault.redeem(shares, RECEIVER, ONBEHALF);
+        vm.expectRevert(abi.encodeWithSelector(
+            IERC20Errors.ERC20InsufficientAllowance.selector,
+            RECEIVER,
+            0,
+            sharesRoundedDown
+        ));
+
+        vault.redeem(sharesRoundedDown, RECEIVER, ONBEHALF);
     }
 
     /*
@@ -317,9 +373,18 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vault.deposit(assets, ONBEHALF);
 
         uint256 shares = vault.previewWithdraw(assets);
+
+        uint256 sharesRoundedDown = shares - 10 ** vaultDecimalsOffset;
+
         vm.prank(RECEIVER);
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, RECEIVER, 0, shares));
-        vault.withdraw(assets, RECEIVER, ONBEHALF);
+        vm.expectRevert(abi.encodeWithSelector(
+            IERC20Errors.ERC20InsufficientAllowance.selector,
+            RECEIVER,
+            0,
+            sharesRoundedDown
+        ));
+
+        vault.withdraw(assets - 1, RECEIVER, ONBEHALF);
     }
 
     /*
@@ -364,6 +429,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testWithdrawMoreThanBalanceButLessThanTotalAssets -vvv
     */
     function testWithdrawMoreThanBalanceButLessThanTotalAssets(uint256 deposited, uint256 assets) public {
+        vm.assume(deposited > 1);
+        vm.assume(assets > 1);
+
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
 
         vm.startPrank(SUPPLIER);
@@ -374,11 +442,20 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         assets = bound(assets, deposited / 2 + 1, vault.totalAssets());
 
         uint256 sharesBurnt = vault.previewWithdraw(assets);
+
+        uint256 expectedSharesBurnt = sharesBurnt - 10 ** vaultDecimalsOffset;
+
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, ONBEHALF, shares, sharesBurnt)
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector,
+                ONBEHALF,
+                shares,
+                expectedSharesBurnt
+            )
         );
+
         vm.prank(ONBEHALF);
-        vault.withdraw(assets, RECEIVER, ONBEHALF);
+        vault.withdraw(assets - 1, RECEIVER, ONBEHALF);
     }
 
     /*
@@ -451,7 +528,11 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         silo0.deposit(type(uint128).max, BORROWER);
         silo1.borrow(borrowedAssets, BORROWER, BORROWER);
 
-        assertEq(vault.maxWithdraw(ONBEHALF), depositedAssets - borrowedAssets, "maxWithdraw(ONBEHALF)");
+        // -1 because of the underestimation in the Silo
+        uint256 expectedMaxWithdraw = depositedAssets - borrowedAssets;
+        if (expectedMaxWithdraw != 0) expectedMaxWithdraw--;
+
+        assertEq(vault.maxWithdraw(ONBEHALF), expectedMaxWithdraw, "maxWithdraw(ONBEHALF)");
     }
 
     /*

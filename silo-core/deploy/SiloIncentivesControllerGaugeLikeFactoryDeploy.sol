@@ -9,7 +9,16 @@ import {ISiloIncentivesControllerGaugeLikeFactory} from "silo-core/contracts/inc
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloIncentivesControllerGaugeLikeFactoryDeploy.sol \
-        --ffi --broadcast --rpc-url $RPC_ARBITRUM --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloIncentivesControllerGaugeLikeFactoryDeploy.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
  */
 contract SiloIncentivesControllerGaugeLikeFactoryDeploy is CommonDeploy {
     function run() public returns (ISiloIncentivesControllerGaugeLikeFactory factory) {
