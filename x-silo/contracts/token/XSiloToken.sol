@@ -8,6 +8,8 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
 
+import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
+
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "../Stream.sol";
 
@@ -17,16 +19,16 @@ import {Stream} from "../Stream.sol";
 contract XSiloToken is ERC4626, XRedeemPolicy {
     Stream public immutable STREAM;
 
+    INotificationReceiver public notificationReceiver;
+
+    event NotificationReceiverUpdate(INotificationReceiver indexed newReceiver);
+
     constructor(address _asset, Stream _stream)
         Ownable(msg.sender)
         ERC4626(IERC20(_asset))
         ERC20(string.concat('x', TokenHelper.symbol(_asset)), string.concat('x', TokenHelper.symbol(_asset)))
     {
         STREAM = _stream;
-    }
-
-    function convertToShares(uint256 _value) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
-        return ERC4626.convertToShares(_value);
     }
 
     function convertToAssets(uint256 _value) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
@@ -48,6 +50,13 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
     /** @dev See {IERC4626-previewRedeem}. */
     function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
         assets = getXAmountByVestingDuration(_shares, 0);
+    }
+
+    function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+        require(notificationReceiver != _notificationReceiver, "TODO errors");
+
+        notificationReceiver = _notificationReceiver;
+        emit NotificationReceiverUpdate(_notificationReceiver);
     }
 
     // TODO withdraw/reddeem isees preview, we override preview so it should work out of the box - QA!
@@ -81,9 +90,17 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
 
         super._update(_from, _to, _value);
 
-        if (_value == 0) return;
+        INotificationReceiver receiver = notificationReceiver;
 
-        // TODO notification
-        // _afterTokenTransfer(_from, _to, _value);
+        if (_value == 0 || address(receiver) == address(0)) return;
+
+        receiver.afterTokenTransfer({
+            _sender: _from,
+            _senderBalance: balanceOf(_from),
+            _recipient: _to,
+            _recipientBalance: balanceOf(_to),
+            _totalSupply: totalSupply(),
+            _amount: _value
+        });
     }
 }
