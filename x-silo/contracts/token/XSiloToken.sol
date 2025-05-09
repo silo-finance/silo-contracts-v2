@@ -50,8 +50,19 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
         }
     }
 
+    /** @dev See {IERC4626-previewWithdraw}. */
+    function previewWithdraw(uint256 assets) public view virtual returns (uint256) {
+        return _convertToShares(assets, Math.Rounding.Ceil);
+    }
+
+    /** @dev See {IERC4626-previewRedeem}. */
+    function previewRedeem(uint256 shares) public view virtual returns (uint256) {
+        return _convertToAssets(shares, Math.Rounding.Floor);
+    }
+
     // TODO previewWithdraw and previewRedeem probably need to stay as is, because
     // they are not based on address, just raw amounts
+    // >> getAmountByVestingDuration(amount, 0)
 
     /** @dev See {IERC4626-withdraw}. */
     function withdraw(uint256 assets, address receiver, address owner) public virtual override returns (uint256) {
