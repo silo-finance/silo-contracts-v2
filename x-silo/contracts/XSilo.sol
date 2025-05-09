@@ -21,14 +21,14 @@ contract XSilo is ERC4626, XRedeemPolicy {
 
     INotificationReceiver public notificationReceiver;
 
+    event NotificationReceiverUpdate(INotificationReceiver indexed newNotificationReceiver);
     event StreamUpdate(Stream indexed newStream);
 
-    constructor(address _asset, Stream _stream)
+    constructor(address _asset)
         Ownable(msg.sender)
         ERC4626(IERC20(_asset))
         ERC20(string.concat('x', TokenHelper.symbol(_asset)), string.concat('x', TokenHelper.symbol(_asset)))
     {
-        STREAM = _stream;
     }
 
     function convertToAssets(uint256 _value) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
