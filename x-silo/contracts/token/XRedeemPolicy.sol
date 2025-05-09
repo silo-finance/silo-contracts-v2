@@ -70,8 +70,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         if (len == 0) return 0;
 
         for (uint256 i = 0; i < len; i++) {
-            RedeemInfo storage _redeem = userRedeems[userAddress][i];
-            redeemingAmount += _redeem.siloAmount;
+            RedeemInfo storage redeemCache = userRedeems[userAddress][i];
+            redeemingAmount += redeemCache.siloAmount;
         }
     }
 
@@ -85,8 +85,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         validateRedeem(userAddress, redeemIndex)
         returns (uint256 siloAmount, uint256 xSiloAmount, uint256 xSiloAfterVestingRatio, uint256 endTime)
     {
-        RedeemInfo storage _redeem = userRedeems[userAddress][redeemIndex];
-        return (_redeem.siloAmount, _redeem.xSiloAmount, _redeem.xSiloAfterVestingRatio, _redeem.endTime);
+        RedeemInfo storage redeemCache = userRedeems[userAddress][redeemIndex];
+        return (redeemCache.siloAmount, redeemCache.xSiloAmount, redeemCache.xSiloAfterVestingRatio, redeemCache.endTime);
     }
 
     function updateRedeemSettings(uint256 _minRedeemRatio, uint256 _maxRedeemRatio, uint256 _minRedeemDuration, uint256 _maxRedeemDuration) external onlyOwner {
@@ -103,11 +103,14 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         emit UpdateRedeemSettings(_minRedeemRatio, _maxRedeemRatio, _minRedeemDuration, _maxRedeemDuration);
     }
 
+    /* TODO we need public method for that
+    all custom methods related to queue management should be implemented in this contract
+    */
     function _redeemXSilo(uint256 xSiloAmount, uint256 duration) internal {
         require(xSiloAmount > 0, "redeem: xSiloAmount cannot be null");
         require(duration >= minRedeemDuration, "redeem: duration too low");
 
-        _transfer(msg.sender, address(this), xSiloAmount);
+        _transferShares(msg.sender, address(this), xSiloAmount);
 
         // get corresponding SILO amount based on duration
         uint256 xSiloAfterVestingRatio = getAmountByVestingDuration(xSiloAmount, duration);
@@ -133,30 +136,30 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     }
 
     function _finalizeRedeem(uint256 redeemIndex) internal validateRedeem(msg.sender, redeemIndex) {
-        RedeemInfo storage _redeem = userRedeems[msg.sender][redeemIndex];
-        require(block.timestamp >= _redeem.endTime, "finalizeRedeem: vesting duration has not ended yet");
+        RedeemInfo storage redeemCache = userRedeems[msg.sender][redeemIndex];
+        require(block.timestamp >= redeemCache.endTime, "finalizeRedeem: vesting duration has not ended yet");
 
-        _redeemAndBurn(msg.sender, _redeem.xSiloAfterVestingRatio, _redeem.xSiloAmount - _redeem.xSiloAfterVestingRatio);
+        _redeemAndBurn(msg.sender, redeemCache.xSiloAfterVestingRatio, redeemCache.xSiloAmount - redeemCache.xSiloAfterVestingRatio);
 
         // remove redeem entry
         _deleteRedeemEntry(redeemIndex);
     }
 
     function _redeemAndBurn(address userAddress, uint256 xSiloToRedeem, uint256 xSiloToBurn) internal {
-        _redeem(xSiloToRedeem, userAddress, address(this));
-        _burn(xSiloToBurn);
+        redeem(xSiloToRedeem, userAddress, address(this));
+        _burnShares(userAddress, xSiloToBurn);
 
         emit FinalizeRedeem(userAddress, xSiloToRedeem, xSiloToBurn);
     }
 
     function cancelRedeem(uint256 redeemIndex) external nonReentrant validateRedeem(msg.sender, redeemIndex) {
-        RedeemInfo storage _redeem = userRedeems[msg.sender][redeemIndex];
+        RedeemInfo storage redeemCache = userRedeems[msg.sender][redeemIndex];
 
-        uint256 xSiloToReturn = convertToShares(_redeem.siloAmount);
-        uint256 xSiloToBurn = _redeem.xSiloAmount - xSiloToReturn;
+        uint256 xSiloToReturn = convertToShares(redeemCache.siloAmount);
+        uint256 xSiloToBurn = redeemCache.xSiloAmount - xSiloToReturn;
 
-        _burn(xSiloToBurn);
-        _transfer(address(this), msg.sender, xSiloToReturn);
+        _burnShares(msg.sender, xSiloToBurn);
+        _transferShares(address(this), msg.sender, xSiloToReturn);
 
         emit CancelRedeem(msg.sender, xSiloToReturn, xSiloToBurn);
 
@@ -169,13 +172,13 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         userRedeems[msg.sender].pop();
     }
 
-    function _redeem(uint256 _shares, address _receiver, address _owner) internal virtual;
+    function redeem(uint256 _shares, address _receiver, address _owner) public virtual returns (uint256);
 
-    function _transfer(address _from, address _to, uint256 _value) internal virtual;
+    function convertToShares(uint256 _value) public virtual returns (uint256);
 
-    function _burn(uint256 _value) internal virtual;
+    function convertToAssets(uint256 _value) public virtual returns (uint256);
 
-    function convertToShares(uint256 _value) internal virtual returns (uint256);
+    function _transferShares(address _from, address _to, uint256 _value) internal virtual;
 
-    function convertToAssets(uint256 _value) internal virtual returns (uint256);
+    function _burnShares(address _owner, uint256 _shares) internal virtual;
 }
