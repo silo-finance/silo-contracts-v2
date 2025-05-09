@@ -49,7 +49,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         _;
     }
 
-    function getAmountByVestingDuration(uint256 amount, uint256 duration) public view returns (uint256) {
+    function getAmountByVestingDuration(uint256 amount, uint256 duration) public view returns (uint256 underlyingAmount) {
         if (duration < minRedeemDuration) {
             return 0;
         }
