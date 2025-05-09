@@ -6,10 +6,13 @@ import {ERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC46
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
 
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "../Stream.sol";
 
+
+// TODO do we need nonReentrant on vault methods? if so we need to override them all
 
 contract XSiloToken is ERC4626, XRedeemPolicy {
     Stream public immutable STREAM;
@@ -32,17 +35,19 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
 
     /** @dev See {IERC4626-maxWithdraw}. */
     function maxWithdraw(address _owner) public view virtual override returns (uint256 assets) {
-        assets = getAmountByVestingDuration(balanceOf(_owner), 0);
+        uint256 xSiloAfterVesting = getXAmountByVestingDuration(balanceOf(_owner), 0);
+        assets = convertToAssets(xSiloAfterVesting);
     }
 
     /** @dev See {IERC4626-previewWithdraw}. */
     function previewWithdraw(uint256 _assets) public view virtual override returns (uint256 shares) {
-        shares = getSharesByVestingDuration(_assets, 0);
+        uint256 _xSiloAfterVesting = convertToShares(_assets);
+        shares = getAmountInByVestingDuration(_xSiloAfterVesting, 0);
     }
 
     /** @dev See {IERC4626-previewRedeem}. */
     function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
-        assets = getAmountByVestingDuration(_shares, 0);
+        assets = getXAmountByVestingDuration(_shares, 0);
     }
 
     /// @notice This would make the amount that the user would need to "gift" the market in order to significantly
@@ -55,13 +60,19 @@ contract XSiloToken is ERC4626, XRedeemPolicy {
         return ERC20._burn(_owner, _shares);
     }
 
-//    function _transferShares(address _from, address _to, uint256 _value) internal virtual override {
-//        return ERC20._transfer(_from, _to, _value);
-//    }
+    function _mintShares(address _account, uint256 _value) internal virtual override {
+        return ERC20._mint(_account, _value);
+    }
 
-//    function _redeemShares(uint256 _shares, address _receiver, address _owner) internal virtual override {
-//        return ERC4626.redeem(_from, _to, _value);
-//    }
+    function _withdraw(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _assetsToTransfer,
+        uint256 _sharesToBurn
+    ) internal virtual override(ERC4626, XRedeemPolicy) {
+        ERC4626._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
+    }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
         STREAM.claimRewards();
