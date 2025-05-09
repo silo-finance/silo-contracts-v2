@@ -33,8 +33,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
     uint256 public minRedeemRatio = 50; // 1:0.5
     uint256 public maxRedeemRatio = 100; // 1:1
-    uint256 public minRedeemDuration = 15 days; // 1296000s
-    uint256 public maxRedeemDuration = 90 days; // 7776000s
+    uint256 public minRedeemDuration = 0 days;
+    uint256 public maxRedeemDuration = 6 * 30 days; // 6 months
 
     mapping(address => RedeemInfo[]) public userRedeems;
 
@@ -189,7 +189,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         }
     }
 
-    function _finalizeRedeem(uint256 redeemIndex) internal validateRedeem(msg.sender, redeemIndex) {
+    function finalizeRedeem(uint256 redeemIndex) external nonReentrant validateRedeem(msg.sender, redeemIndex) {
         RedeemInfo storage redeemCache = userRedeems[msg.sender][redeemIndex];
         require(block.timestamp >= redeemCache.endTime, "finalizeRedeem: vesting duration has not ended yet");
 
