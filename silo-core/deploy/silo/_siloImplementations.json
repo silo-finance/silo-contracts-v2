@@ -13,6 +13,10 @@
         {
             "implementation": "0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d",
             "description": "Changed share token decimals to 18"
+        },
+        {
+            "implementation": "0xc2B2e6e30F0F059cC05bF5B29d452A770944f0E3",
+            "description": "after code4arena contest"
         }
     ],
     "optimism": [

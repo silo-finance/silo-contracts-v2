@@ -31,9 +31,9 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
         assertEq(factoryFromSilo0, deployedFactory, "factoryFromSilo0 == deployedFactory");
     }
 
-    function test_get_exists_optimism() public {
+    function test_get_exists_sonic() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.SONIC_ALIAS);
-        assertEq(addr, 0x89E3Cf1c67C0c0701EF7926A79f65EeEb52904eF, "expect valid address Sonic");
+        assertEq(addr, 0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203, "expect valid address Sonic");
     }
 
     function test_get_exists_arbitrum_one() public {
