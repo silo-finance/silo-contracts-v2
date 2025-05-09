@@ -3,38 +3,49 @@ pragma solidity 0.8.28;
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
-import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
-import {Address} from "openzeppelin5/utils/Address.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
-/*
- * xGRAIL is Camelot's escrowed governance token obtainable by converting Silo to it
- * It's non-transferable, except from/to whitelisted addresses
- * It can be converted back to Silo through a vesting process
- * This contract is made to receive xGRAIL deposits from users in order to allocate them to Usages (plugins) contracts
- */
-abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
-    using Address for address;
-    using SafeERC20 for IERC20;
 
+/// @dev based on Camelot's xGRAIL
+/// @notice Policy for redeem xSilo back to Silo
+abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     struct RedeemInfo {
         uint256 xSiloAmount;
         uint256 siloAmountAfterVesting;
         uint256 endTime;
     }
 
-    IERC20 public immutable siloToken; // Silo token to convert to/from
+    uint256 constant _DECIMALS = 100;
+
+    /// @dev Silo token to convert to/from
+    IERC20 public immutable siloToken;
 
     /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
     uint256 public constant MAX_FIXED_RATIO = 100; // 100%
 
     // Redeeming min/max settings are updatable at any time by owner
 
+    /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
+    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 50 means ratio of 1:0.5
     uint256 public minRedeemRatio = 50; // 1:0.5
+
+    /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
+    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 100 means ratio of 1:1
     uint256 public maxRedeemRatio = 100; // 1:1
+
+    /// @dev `minRedeemDuration` together with `maxRedeemDuration` is used to create range of durations
+    /// based on which redeem amount is calculated, value is in seconds.
+    /// Eg if set to 2 days, redeem attempt for less duration will be reverted and preview method for lower duration
+    /// will return 0. `minRedeemDuration` can be set to 0, in that case immediate redeem will be possible but it will
+    /// generate loss.
     uint256 public minRedeemDuration = 0 days;
-    uint256 public maxRedeemDuration = 6 * 30 days; // 6 months
+
+    /// @dev `minRedeemDuration` together with `maxRedeemDuration` is used to create range of durations
+    /// based on which redeem amount is calculated, value is in seconds.
+    /// Eg if set to 10 days, redeem attempt for less duration will calculate amount based on range, and enything above
+    /// will result in 100% of tokens.
+    uint256 public maxRedeemDuration = 6 * 20 days; // 6 months
 
     mapping(address => RedeemInfo[]) public userRedeems;
 
@@ -43,8 +54,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
     event CancelRedeem(address indexed _userAddress, uint256 xSiloToMint);
 
-    modifier validateRedeem(address _userAddress, uint256 redeemIndex) {
-        require(redeemIndex < userRedeems[_userAddress].length, "validateRedeem: redeem entry does not exist");
+    modifier validateRedeem(address _userAddress, uint256 _redeemIndex) {
+        require(_redeemIndex < userRedeems[_userAddress].length, "validateRedeem: redeem entry does not exist");
         _;
     }
 
@@ -60,7 +71,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
         // capped to maxRedeemDuration
         if (_duration > maxRedeemDuration) {
-            return _xSiloAmount * maxRedeemRatio / 100;
+            return _xSiloAmount * maxRedeemRatio / _DECIMALS;
         }
 
         uint256 ratio = minRedeemRatio +
@@ -70,7 +81,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
                 maxRedeemDuration - minRedeemDuration
             );
 
-        xSiloAfterVesting = _xSiloAmount * ratio / 100;
+        xSiloAfterVesting = _xSiloAmount * ratio / _DECIMALS;
     }
 
     function getAmountInByVestingDuration(uint256 _xSiloAfterVesting, uint256 _duration)
@@ -85,7 +96,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
         // capped to maxRedeemDuration
         if (_duration > maxRedeemDuration) {
-            return _xSiloAfterVesting * 100 / maxRedeemRatio;
+            return _xSiloAfterVesting * _DECIMALS / maxRedeemRatio;
         }
 
         uint256 ratio = minRedeemRatio +
@@ -95,7 +106,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
                 maxRedeemDuration - minRedeemDuration
             );
 
-        xSiloInAmount = _xSiloAfterVesting * 100 / ratio;
+        xSiloInAmount = _xSiloAfterVesting * _DECIMALS / ratio;
     }
 
     function getUserRedeemsBalance(address _userAddress)
@@ -229,7 +240,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         userRedeems[msg.sender].pop();
     }
 
-    function convertToAssets(uint256 _value) public virtual returns (uint256);
+    function convertToAssets(uint256 _shares) public virtual returns (uint256);
 
     function _withdraw(
         address _caller,
@@ -240,7 +251,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     ) internal virtual;
 
 
-    function _mintShares(address _account, uint256 _value) internal virtual;
+    function _mintShares(address _account, uint256 _shares) internal virtual;
 
     function _burnShares(address _owner, uint256 _shares) internal virtual;
 }
