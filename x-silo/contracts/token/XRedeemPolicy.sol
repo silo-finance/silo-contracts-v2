@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Address} from "openzeppelin5/utils/Address.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+
+import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
 /*
- * xGRAIL is Camelot's escrowed governance token obtainable by converting GRAIL to it
+ * xGRAIL is Camelot's escrowed governance token obtainable by converting Silo to it
  * It's non-transferable, except from/to whitelisted addresses
- * It can be converted back to GRAIL through a vesting process
+ * It can be converted back to Silo through a vesting process
  * This contract is made to receive xGRAIL deposits from users in order to allocate them to Usages (plugins) contracts
  */
-contract XRedeemPolicy is Ownable {
+abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     using Address for address;
     using SafeERC20 for IERC20;
 
@@ -18,7 +25,7 @@ contract XRedeemPolicy is Ownable {
         uint256 endTime;
     }
 
-    IERC20 public immutable siloToken; // GRAIL token to convert to/from
+    IERC20 public immutable siloToken; // Silo token to convert to/from
 
     /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
     uint256 public constant MAX_FIXED_RATIO = 100; // 100%
@@ -49,7 +56,7 @@ contract XRedeemPolicy is Ownable {
 
         // capped to maxRedeemDuration
         if (duration > maxRedeemDuration) {
-            return amount.mul(maxRedeemRatio).div(100);
+            return amount * maxRedeemRatio / 100;
         }
 
         uint256 ratio = minRedeemRatio + ((duration - minRedeemDuration) * (maxRedeemRatio - minRedeemRatio) / (maxRedeemDuration - minRedeemDuration));
@@ -106,21 +113,22 @@ contract XRedeemPolicy is Ownable {
         uint256 xSiloAfterVestingRatio = getAmountByVestingDuration(xSiloAmount, duration);
         uint256 siloAmount = convertToAssets(xSiloAmount);
 
-        emit StartRedeem(msg.sender, siloAmount, xSiloAmount, xSiloAfterVestingRatio;, duration);
+        emit StartRedeem(msg.sender, siloAmount, xSiloAmount, xSiloAfterVestingRatio, duration);
 
         // if redeeming is not immediate, go through vesting process
         if (duration > 0) {
             // add redeeming entry
             userRedeems[msg.sender].push(
-            RedeemInfo({
-            siloAmount : siloAmount,
-            xSiloAmount : xSiloAmount,
-            xSiloAfterVestingRatio;: xSiloAfterVestingRatio;,
-            endTime : block.timestamp + duration
-        });
+                RedeemInfo({
+                    siloAmount: siloAmount,
+                    xSiloAmount: xSiloAmount,
+                    xSiloAfterVestingRatio: xSiloAfterVestingRatio,
+                    endTime: block.timestamp + duration
+                })
+            );
         } else {
-        // immediately redeem for SILO
-        _redeemAndBurn(msg.sender, xSiloAfterVestingRatio;, xSiloAmount - xSiloAfterVestingRatio;);
+            // immediately redeem for SILO
+            _redeemAndBurn(msg.sender, xSiloAfterVestingRatio, xSiloAmount - xSiloAfterVestingRatio);
         }
     }
 
@@ -136,7 +144,7 @@ contract XRedeemPolicy is Ownable {
 
     function _redeemAndBurn(address userAddress, uint256 xSiloToRedeem, uint256 xSiloToBurn) internal {
         _redeem(xSiloToRedeem, userAddress, address(this));
-        _burn(address(this), xSiloToBurn);
+        _burn(xSiloToBurn);
 
         emit FinalizeRedeem(userAddress, xSiloToRedeem, xSiloToBurn);
     }
@@ -147,7 +155,7 @@ contract XRedeemPolicy is Ownable {
         uint256 xSiloToReturn = convertToShares(_redeem.siloAmount);
         uint256 xSiloToBurn = _redeem.xSiloAmount - xSiloToReturn;
 
-        _burn(address(this), xSiloToBurn);
+        _burn(xSiloToBurn);
         _transfer(address(this), msg.sender, xSiloToReturn);
 
         emit CancelRedeem(msg.sender, xSiloToReturn, xSiloToBurn);
@@ -160,4 +168,14 @@ contract XRedeemPolicy is Ownable {
         userRedeems[msg.sender][index] = userRedeems[msg.sender][userRedeems[msg.sender].length - 1];
         userRedeems[msg.sender].pop();
     }
+
+    function _redeem(uint256 _shares, address _receiver, address _owner) internal virtual;
+
+    function _transfer(address _from, address _to, uint256 _value) internal virtual;
+
+    function _burn(uint256 _value) internal virtual;
+
+    function convertToShares(uint256 _value) internal virtual returns (uint256);
+
+    function convertToAssets(uint256 _value) internal virtual returns (uint256);
 }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable2Step, Ownable} from "@openzeppelin/access/Ownable2Step.sol";
-import {Math} from "@openzeppelin/utils/math/Math.sol";
-import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 /// @title Stream
 /// @notice This contract allows the owner to set a beneficiary and stream tokens to them at a specified rate.
