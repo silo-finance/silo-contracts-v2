@@ -24,5 +24,11 @@
             "implementation": "0xBc0131AA1FF58F628ceAcE15751F703E17E24C69",
             "description": "original implementation"
         }
+    ],
+    "ink": [
+        {
+            "implementation": "0x4576fa3e2E061376431619B5631C25c99fFa27bd",
+            "description": "original implementation"
+        }
     ]
 }
