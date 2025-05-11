@@ -65,21 +65,12 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         virtual
         returns (uint256 xSiloAfterVesting)
     {
-        if (_xSiloAmount == 0 || _duration < minRedeemDuration) {
+        if (_xSiloAmount == 0) {
             return 0;
         }
 
-        // capped to maxRedeemDuration
-        if (_duration > maxRedeemDuration) {
-            return _xSiloAmount * maxRedeemRatio / _DECIMALS;
-        }
-
-        uint256 ratio = minRedeemRatio +
-            Math.mulDiv(
-                _duration - minRedeemDuration,
-                maxRedeemRatio - minRedeemRatio,
-                maxRedeemDuration - minRedeemDuration
-            );
+        uint256 ratio = _calculateRatio(_duration);
+        if (ratio == 0) return 0;
 
         xSiloAfterVesting = _xSiloAmount * ratio / _DECIMALS;
     }
@@ -90,21 +81,12 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         virtual
         returns (uint256 xSiloInAmount)
     {
-        if (_xSiloAfterVesting == 0 || _duration < minRedeemDuration) {
+        if (_xSiloAfterVesting == 0) {
             return 0;
         }
 
-        // capped to maxRedeemDuration
-        if (_duration > maxRedeemDuration) {
-            return _xSiloAfterVesting * _DECIMALS / maxRedeemRatio;
-        }
-
-        uint256 ratio = minRedeemRatio +
-            Math.mulDiv(
-                _duration - minRedeemDuration,
-                maxRedeemRatio - minRedeemRatio,
-                maxRedeemDuration - minRedeemDuration
-            );
+        uint256 ratio = _calculateRatio(_duration);
+        if (ratio == 0) return type(uint256).max;
 
         xSiloInAmount = _xSiloAfterVesting * _DECIMALS / ratio;
     }
@@ -210,6 +192,29 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         _deleteRedeemEntry(redeemIndex);
 
         emit FinalizeRedeem(msg.sender, redeemCache.siloAmountAfterVesting, redeemCache.xSiloAmount);
+    }
+
+    function _calculateRatio(uint256 _duration)
+        internal
+        view
+        virtual
+        returns (uint256 ratio)
+    {
+        if (_duration < minRedeemDuration) {
+            return 0;
+        }
+
+        // capped to maxRedeemDuration
+        if (_duration > maxRedeemDuration) {
+            return maxRedeemRatio;
+        }
+
+        ratio = minRedeemRatio +
+            Math.mulDiv(
+                _duration - minRedeemDuration,
+                maxRedeemRatio - minRedeemRatio,
+                maxRedeemDuration - minRedeemDuration
+            );
     }
 
     function _burnAndRedeem(address _userAddress, uint256 _xSiloToBurn, uint256 _siloToTransfer) internal {
