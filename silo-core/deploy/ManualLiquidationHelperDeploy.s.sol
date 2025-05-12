@@ -11,10 +11,20 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
 
 /*
-    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=core \
+    FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/ManualLiquidationHelperDeploy.s.sol:ManualLiquidationHelperDeploy \
         --ffi --rpc-url $RPC_SONIC \
         --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/ManualLiquidationHelperDeploy.s.sol:ManualLiquidationHelperDeploy \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
 
     NOTICE: remember to register it in Tower
 */
