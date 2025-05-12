@@ -163,8 +163,6 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
         // get corresponding SILO amount based on duration
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmountToBurn, _duration);
-        // TODO question: convertToAssets will give us current value,
-        // should user got future value? if so, we need to convert on finalizing
         siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
         uint256 currentSiloAmount = convertToAssets(_xSiloAmountToBurn);
 
@@ -267,7 +265,6 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 _assetsToTransfer,
         uint256 _sharesToBurn
     ) internal virtual;
-
 
     function _burnShares(address _account, uint256 _shares) internal virtual;
 
