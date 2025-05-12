@@ -56,11 +56,7 @@ contract SiloVaultsVerifier is CommonDeploy {
 
         if (deployerVaultsFactory != getDeployedAddress(SiloVaultsContracts.SILO_VAULTS_FACTORY)) {
             errorsCounter++;
-
-            _logError(
-                "SiloVaultDeployer.SILO_VAULTS_FACTORY is not expected",
-                deployerVaultsFactory
-            );
+            _logError("SiloVaultDeployer.SILO_VAULTS_FACTORY is not expected", deployerVaultsFactory);
         }
 
         address deployerIncentivesControllerFactory = address(siloVaultsDeployer.SILO_INCENTIVES_CONTROLLER_FACTORY());
@@ -80,11 +76,7 @@ contract SiloVaultsVerifier is CommonDeploy {
 
         if (deployerCLFactory != clFactory) {
             errorsCounter++;
-
-            _logError(
-                "SiloVaultDeployer.SILO_INCENTIVES_CONTROLLER_CL_FACTORY is not expected",
-                deployerCLFactory
-            );
+            _logError("SiloVaultDeployer.SILO_INCENTIVES_CONTROLLER_CL_FACTORY is not expected", deployerCLFactory);
         }
 
         address deployerIdleVaultsFactory = address(siloVaultsDeployer.IDLE_VAULTS_FACTORY());
@@ -92,11 +84,7 @@ contract SiloVaultsVerifier is CommonDeploy {
 
         if (deployerIdleVaultsFactory != idleVaultsFactory) {
             errorsCounter++;
-
-            _logError(
-                "SiloVaultDeployer.IDLE_VAULTS_FACTORY is not expected",
-                deployerIdleVaultsFactory
-            );
+            _logError("SiloVaultDeployer.IDLE_VAULTS_FACTORY is not expected", deployerIdleVaultsFactory);
         }
 
         SiloIncentivesControllerCLDeployer clDeployer = SiloIncentivesControllerCLDeployer(
@@ -107,11 +95,7 @@ contract SiloVaultsVerifier is CommonDeploy {
 
         if (clDeployersFactory != clFactory) {
             errorsCounter++;
-
-            _logError(
-                "SiloIncentivesControllerCLDeployer.CL_FACTORY is not expected",
-                clDeployersFactory
-            );
+            _logError("SiloIncentivesControllerCLDeployer.CL_FACTORY is not expected", clDeployersFactory);
         }
     }
 
@@ -128,10 +112,6 @@ contract SiloVaultsVerifier is CommonDeploy {
     }
 
     function _logError(string memory _msg, address _contract) internal pure {
-        console2.log(
-            FAIL_SYMBOL, 
-            _msg,
-            Strings.toHexString(_contract)
-        );
+        console2.log(FAIL_SYMBOL, _msg, Strings.toHexString(_contract));
     }
 }
