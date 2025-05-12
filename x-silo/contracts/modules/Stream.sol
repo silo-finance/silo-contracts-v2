@@ -110,7 +110,7 @@ contract Stream is Ownable2Step {
     }
 
     /// @dev Emergency withdraw token's balance on the contract
-    function emergencyWithdraw(IERC20 _token) public nonReentrant onlyOwner {
+    function emergencyWithdraw(IERC20 _token) public onlyOwner {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, NoBalance());
 
