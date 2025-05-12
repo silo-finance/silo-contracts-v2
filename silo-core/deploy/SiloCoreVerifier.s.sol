@@ -56,7 +56,7 @@ contract SiloCoreVerifier is CommonDeploy {
         errorsCounter += _verifyLinks({_daoFeeReceiver: expectedOwner});
 
         if (errorsCounter != 0) {
-            _logError(string.concat("Finished with ", Strings.toString(errorsCounter), " errors"));
+            console2.log(FAIL_SYMBOL, "Finished with", errorsCounter, "errors");
         } else {
             console2.log(SUCCESS_SYMBOL, "No errors, verification is done");
         }
@@ -76,12 +76,11 @@ contract SiloCoreVerifier is CommonDeploy {
             if (!_skipCheckOwnerForContractName(allCoreContractsNames[i]) && success && owner != _expectedOwner) {
                 errorsCounter++;
 
-                _logError(
-                    string.concat(
-                        allCoreContractsNames[i],
-                        " owner is not expected, real owner is ",
-                        Strings.toHexString(owner)
-                    )
+                console2.log(
+                    FAIL_SYMBOL,
+                    allCoreContractsNames[i],
+                    "owner is not expected, real owner is",
+                    owner
                 );
             }
         }
@@ -96,14 +95,14 @@ contract SiloCoreVerifier is CommonDeploy {
 
         if (daoFeeReceiver != _daoFeeReceiver) {
             errorsCounter++;
-            _logError(string.concat("Fee receiver is not expected ", Strings.toHexString(daoFeeReceiver)));
+            _logError("Fee receiver is not expected", daoFeeReceiver);
         }
 
         Silo silo = Silo(payable(getDeployedAddress(SiloCoreContracts.SILO)));
 
         if (silo.factory() != siloFactory) {
             errorsCounter++;
-            _logError(string.concat("Silo.factory() is not expected ", Strings.toHexString(address(silo.factory()))));
+            _logError("Silo.factory() is not expected", address(silo.factory()));
         }
 
         errorsCounter += _verifySiloDeployer();
@@ -117,39 +116,21 @@ contract SiloCoreVerifier is CommonDeploy {
 
         if (siloDeployerIrmFactory != irmV2Factory) {
             errorsCounter++;
-
-            _logError(
-                string.concat(
-                    "SiloDeployer IRM_CONFIG_FACTORY is not expected ",
-                    Strings.toHexString(siloDeployerIrmFactory)
-                )
-            );
+            _logError("SiloDeployer IRM_CONFIG_FACTORY is not expected", siloDeployerIrmFactory);
         }
 
         address siloDeployerSiloFactory = address(siloDeployer.SILO_FACTORY());
 
         if (siloDeployerSiloFactory != siloFactory) {
             errorsCounter++;
-
-            _logError(
-                string.concat(
-                    "SiloDeployer SILO_FACTORY is not expected ",
-                    Strings.toHexString(siloDeployerSiloFactory)
-                )
-            );
+            _logError("SiloDeployer SILO_FACTORY is not expected", siloDeployerSiloFactory);
         }
 
         address siloDeployerSiloImpl = address(siloDeployer.SILO_IMPL());
 
         if (siloDeployerSiloImpl != getDeployedAddress(SiloCoreContracts.SILO)) {
             errorsCounter++;
-
-            _logError(
-                string.concat(
-                    "SiloDeployer SILO_IMPL is not expected ",
-                    Strings.toHexString(siloDeployerSiloImpl)
-                )
-            );
+            _logError("SiloDeployer SILO_IMPL is not expected", siloDeployerSiloImpl);
         }
 
         address siloDeployerProtectedTokenImpl = address(siloDeployer.SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL());
@@ -158,10 +139,8 @@ contract SiloCoreVerifier is CommonDeploy {
             errorsCounter++;
 
             _logError(
-                string.concat(
-                    "SiloDeployer SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL is not expected ",
-                    Strings.toHexString(siloDeployerProtectedTokenImpl)
-                )
+                "SiloDeployer SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL is not expected",
+                siloDeployerProtectedTokenImpl
             );
         }
 
@@ -169,13 +148,7 @@ contract SiloCoreVerifier is CommonDeploy {
 
         if (siloDeployerDebtTokenImpl != getDeployedAddress(SiloCoreContracts.SHARE_DEBT_TOKEN)) {
             errorsCounter++;
-
-            _logError(
-                string.concat(
-                    "SiloDeployer SHARE_DEBT_TOKEN_IMPL is not expected ",
-                    Strings.toHexString(siloDeployerDebtTokenImpl)
-                )
-            );
+            _logError("SiloDeployer SHARE_DEBT_TOKEN_IMPL is not expected", siloDeployerDebtTokenImpl);
         }
     }
 
@@ -191,7 +164,7 @@ contract SiloCoreVerifier is CommonDeploy {
 
             if (allCoreContracts[i] == address(0)) {
                 errorsCounter++;
-                _logError(string.concat("Can't find deployment for ", allCoreContractsNames[i]));
+                console2.log(FAIL_SYMBOL, "Can't find deployment for", allCoreContractsNames[i]);
             }
         }
     }
@@ -223,7 +196,11 @@ contract SiloCoreVerifier is CommonDeploy {
         } catch {}
     }
 
-    function _logError(string memory _toLog) internal pure {
-        console2.log(FAIL_SYMBOL, _toLog);
+    function _logError(string memory _msg, address _contract) internal pure {
+        console2.log(
+            FAIL_SYMBOL, 
+            _msg,
+            _contract
+        );
     }
 }
