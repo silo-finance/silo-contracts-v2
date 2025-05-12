@@ -24,6 +24,11 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
     }
 
+    /** @dev See {IERC4626-convertToShares}. */
+    function convertToShares(uint256 _assets) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
+        return ERC4626.convertToShares(_assets);
+    }
+
     /** @dev See {IERC4626-convertToAssets}. */
     function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
         return ERC4626.convertToAssets(_shares);
@@ -95,8 +100,8 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         return ERC20._transfer(_from, _owner, _shares);
     }
 
-    function _mintShares(address _account, uint256 _shares) internal virtual override {
-        return ERC20._mint(_account, _shares);
+    function _burnShares(address _account, uint256 _shares) internal virtual override {
+        return ERC20._burn(_account, _shares);
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
