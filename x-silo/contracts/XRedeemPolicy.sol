@@ -178,7 +178,13 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
             _burnShares(msg.sender, _xSiloAmountToBurn);
         } else {
             // immediately redeem for SILO
-            _burnAndRedeem(msg.sender, siloAmountAfterVesting, siloAmountAfterVesting);
+            _withdraw({
+                _caller: msg.sender,
+                _receiver: msg.sender,
+                _owner: msg.sender,
+                _assetsToTransfer: siloAmountAfterVesting,
+                _sharesToBurn: siloAmountAfterVesting
+            });
         }
     }
 
@@ -186,7 +192,13 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         RedeemInfo storage redeemCache = userRedeems[msg.sender][redeemIndex];
         require(block.timestamp >= redeemCache.endTime, "finalizeRedeem: vesting duration has not ended yet");
 
-        _burnAndRedeem(msg.sender, redeemCache.xSiloAmount, redeemCache.siloAmountAfterVesting);
+        _withdraw({
+            _caller: msg.sender,
+            _receiver: msg.sender,
+            _owner: msg.sender,
+            _assetsToTransfer: redeemCache.siloAmountAfterVesting,
+            _sharesToBurn: redeemCache.xSiloAmount
+        });
 
         // remove redeem entry
         _deleteRedeemEntry(redeemIndex);
@@ -215,16 +227,6 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
                 maxRedeemRatio - minRedeemRatio,
                 maxRedeemDuration - minRedeemDuration
             );
-    }
-
-    function _burnAndRedeem(address _userAddress, uint256 _xSiloToBurn, uint256 _siloToTransfer) internal {
-        _withdraw({
-            _caller: msg.sender,
-            _receiver: _userAddress,
-            _owner: _userAddress,
-            _assetsToTransfer: _siloToTransfer,
-            _sharesToBurn: _xSiloToBurn
-        });
     }
 
     function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
