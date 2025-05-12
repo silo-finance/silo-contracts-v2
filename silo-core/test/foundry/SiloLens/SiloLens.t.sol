@@ -3,12 +3,15 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
+import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 /*
     forge test -vv --ffi --mc SiloLensTest
@@ -204,5 +207,72 @@ contract SiloLensTest is SiloLittleHelper, Test {
         uint256 borrowerDebtSilo1Ignored = siloLens.debtBalanceOfUnderlying(silo1, _borrower);
 
         assertEq(borrowerDebtSilo1Ignored, _AMOUNT_BORROW);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_SiloLens_getSiloIncentivesControllerProgramsNames -vvv
+    */
+    function test_SiloLens_getSiloIncentivesControllerProgramsNames() public {
+        address token = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
+
+        vm.mockCall(
+            token,
+            abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)),
+            abi.encode(0)
+        );
+
+        string memory expectedString = "0x5615deb798bb3e4dfa0139dfa1b3d433cc23b72f";
+        bytes32 programId = bytes32(hex"5615deb798bb3e4dfa0139dfa1b3d433cc23b72f");
+
+        address siloIncentivesController = makeAddr("SiloIncentivesController");
+
+        // to simulate what we have in the DistributionManager
+        bytes memory withRemovedZeros = TokenHelper.removeZeros(abi.encodePacked(programId));
+
+        string[] memory incentivesControllerProgramsNames = new string[](1);
+        incentivesControllerProgramsNames[0] = string(withRemovedZeros);
+
+        vm.mockCall(
+            siloIncentivesController,
+            abi.encodeWithSelector(IDistributionManager.getAllProgramsNames.selector),
+            abi.encode(incentivesControllerProgramsNames)
+        );
+
+        string[] memory programsNames = siloLens.getSiloIncentivesControllerProgramsNames(siloIncentivesController);
+        assertEq(programsNames.length, 1);
+        assertEq(programsNames[0], expectedString);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test \
+        forge test --ffi --mt test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames -vvv
+    */
+    function test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames() public {
+        string memory expectedString = "ssssssssssssssssssss";
+        address siloIncentivesController = makeAddr("SiloIncentivesController");
+
+        bytes memory nameBytes = bytes(expectedString);
+
+        address token = address(bytes20(nameBytes));
+
+        vm.mockCallRevert(
+            token,
+            abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)),
+            abi.encode(0)
+        );
+
+        // to simulate what we have in the DistributionManager
+        string[] memory incentivesControllerProgramsNames = new string[](1);
+        incentivesControllerProgramsNames[0] = expectedString;
+
+        vm.mockCall(
+            siloIncentivesController,
+            abi.encodeWithSelector(IDistributionManager.getAllProgramsNames.selector),
+            abi.encode(incentivesControllerProgramsNames)
+        );
+
+        string[] memory programsNames = siloLens.getSiloIncentivesControllerProgramsNames(siloIncentivesController);
+        assertEq(programsNames.length, 1);
+        assertEq(programsNames[0], expectedString);
     }
 }

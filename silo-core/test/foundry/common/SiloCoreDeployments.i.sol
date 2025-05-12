@@ -31,14 +31,14 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
         assertEq(factoryFromSilo0, deployedFactory, "factoryFromSilo0 == deployedFactory");
     }
 
-    function test_get_exists_optimism() public {
-        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.OPTIMISM_ALIAS);
-        assertEq(addr, 0x55a4983949f8a3156Ad483c4003218a7F33D466b, "expect valid address Optimism");
+    function test_get_exists_sonic() public {
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.SONIC_ALIAS);
+        assertEq(addr, 0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203, "expect valid address Sonic");
     }
 
     function test_get_exists_arbitrum_one() public {
         address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.ARBITRUM_ONE_ALIAS);
-        assertEq(addr, 0xf7dc975C96B434D436b9bF45E7a45c95F0521442, "expect valid address on Arbitrum");
+        assertEq(addr, 0x384DC7759d35313F0b567D42bf2f611B285B657C, "expect valid address on Arbitrum");
     }
 
     function test_get_contractNotExists() public {

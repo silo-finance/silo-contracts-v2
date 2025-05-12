@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {
     PartialLiquidationLib
-} from "silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol";
+} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 
 import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
 

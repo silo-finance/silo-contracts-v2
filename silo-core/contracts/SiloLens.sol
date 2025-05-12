@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
@@ -10,6 +13,7 @@ import {IInterestRateModel} from "./interfaces/IInterestRateModel.sol";
 import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
+import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
 
 /// @title SiloLens is a helper contract for integrations and UI
@@ -239,5 +243,36 @@ contract SiloLens is ISiloLens {
 
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
         irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
+    }
+
+    function getSiloIncentivesControllerProgramsNames(
+        address _siloIncentivesController
+    ) public view returns (string[] memory programsNames) {
+        IDistributionManager distributionManager = IDistributionManager(_siloIncentivesController);
+        string[] memory originalProgramsNames = distributionManager.getAllProgramsNames();
+
+        programsNames = new string[](originalProgramsNames.length);
+
+        for (uint256 i; i < originalProgramsNames.length; i++) {
+            bytes memory originalProgramName = bytes(originalProgramsNames[i]);
+
+            if (isTokenAddress(originalProgramName)) {
+                address token = address(bytes20(originalProgramName));
+                programsNames[i] = Strings.toHexString(token);
+            } else {
+                programsNames[i] = originalProgramsNames[i];
+            }
+        }
+    }
+
+    function isTokenAddress(bytes memory _name) private view returns (bool isToken) {
+        if (_name.length != 20) return false;
+
+        address token = address(bytes20(_name));
+
+        // Sanity check to be sure that it is a token
+        try IERC20(token).balanceOf(address(this)) returns (uint256) {
+            isToken = true;
+        } catch {}
     }
 }

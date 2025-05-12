@@ -12,9 +12,10 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
+import {Create2Factory} from "common/utils/Create2Factory.sol";
 
 /// @notice Silo Deployer
-contract SiloDeployer is ISiloDeployer {
+contract SiloDeployer is Create2Factory, ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
@@ -135,7 +136,7 @@ contract SiloDeployer is ISiloDeployer {
 
         uint256 nextSiloId = SILO_FACTORY.getNextSiloId();
 
-        siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
+        siloConfig = ISiloConfig(address(new SiloConfig{salt: _salt()}(nextSiloId, configData0, configData1)));
     }
 
     /// @notice Create IRMs and update `_siloInitData`
@@ -147,8 +148,10 @@ contract SiloDeployer is ISiloDeployer {
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
     ) internal {
-        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0);
-        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1);
+        bytes32 irmFactorySalt = _salt();
+
+        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0, irmFactorySalt);
+        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1, irmFactorySalt);
 
         _siloInitData.interestRateModel0 = address(interestRateModel0);
         _siloInitData.interestRateModel1 = address(interestRateModel1);
@@ -184,6 +187,8 @@ contract SiloDeployer is ISiloDeployer {
 
         if (factory == address(0)) return address(0);
 
+        _updateSalt(_txData.txInput);
+
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = factory.call(_txData.txInput);
 
@@ -205,7 +210,7 @@ contract SiloDeployer is ISiloDeployer {
         );
 
         if (_hookReceiverImplementation != address(0)) {
-            _siloInitData.hookReceiver = Clones.clone(_hookReceiverImplementation);
+            _siloInitData.hookReceiver = Clones.cloneDeterministic(_hookReceiverImplementation, _salt());
         }
     }
 
@@ -224,6 +229,17 @@ contract SiloDeployer is ISiloDeployer {
                 _siloConfig,
                 _clonableHookReceiver.initializationData
             );
+        }
+    }
+
+    /// @notice Update the salt of the tx input
+    /// @param _txInput The tx input for the oracle factory
+    function _updateSalt(bytes memory _txInput) internal {
+        bytes32 salt = _salt();
+
+        assembly { // solhint-disable-line no-inline-assembly
+            let pointer := add(add(_txInput, 0x20), sub(mload(_txInput), 0x20))
+            mstore(pointer, salt)
         }
     }
 }

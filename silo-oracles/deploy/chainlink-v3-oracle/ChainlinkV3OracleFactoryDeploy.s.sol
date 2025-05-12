@@ -8,11 +8,21 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol";
 
 /**
-ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
+FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleFactoryDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_INK --broadcast --verify
 
-FOUNDRY_PROFILE=oracles forge verify-contract 0x17B0FD3eB9CFbdA5B46A0C896e28b3F0c5a7F61d \
+Resume verification:
+FOUNDRY_PROFILE=oracles \
+    forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleFactoryDeploy.s.sol \
+    --ffi --rpc-url $RPC_INK \
+    --verify \
+    --verifier blockscout \
+    --verifier-url $VERIFIER_URL_INK \
+    --private-key $PRIVATE_KEY \
+    --resume
+
+FOUNDRY_PROFILE=oracles forge verify-contract <contract-address> \
     ChainlinkV3OracleFactory \
     --compiler-version 0.8.28 \
     --rpc-url $RPC_SONIC \

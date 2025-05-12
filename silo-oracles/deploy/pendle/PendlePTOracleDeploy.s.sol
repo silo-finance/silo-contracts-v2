@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
@@ -39,7 +38,8 @@ contract PendlePTOracleDeploy is CommonDeploy {
 
         oracle = factory.create({
             _underlyingOracle: underlyingOracle,
-            _market: market
+            _market: market,
+            _externalSalt: bytes32(0)
         });
 
         vm.stopBroadcast();

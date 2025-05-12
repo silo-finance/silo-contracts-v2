@@ -56,7 +56,7 @@ contract MaxBorrowValueToAssetsAndSharesTestData {
         allData[i].input.maxBorrowValue = 100;
         allData[i].input.totalDebtShares = 18;
         allData[i].input.totalDebtAssets = 9;
-        allData[i].output.assets = 100; // for no oracle, value == assets, so maxBorrowValue = 100 => 100 assets
+        allData[i].output.assets = 100; // for no oracle, value == assets, so maxBorrowValue = 100 - 1 => 99 assets
         allData[i].output.shares = 200;
 
         i = _init("has some debt, assets:shares is 1:2, with oracle (1e18) => 3e18");

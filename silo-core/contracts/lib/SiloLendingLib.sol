@@ -236,6 +236,21 @@ library SiloLendingLib {
             _debtShareBalanceCached: 0 /* no cache */
         });
 
+        // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
+        // that will be subtracted from collateral and integral interest that will be added to debt.
+        {
+            // We need to decrease borrowerCollateralAssets
+            // since we cannot access totalCollateralAssets before calculations.
+            if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
+
+            // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
+            // If borrowerDebtAssets is 0 then we have no interest
+            if (ltvData.borrowerDebtAssets != 0) ltvData.borrowerDebtAssets++;
+
+            // It _totalDebtAssets is 0 then we have no interest
+            if (_totalDebtAssets != 0) _totalDebtAssets++;
+        }
+
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
@@ -257,6 +272,11 @@ library SiloLendingLib {
         if (assets == 0 || shares == 0) return (0, 0);
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+
+        if (liquidityWithInterest != 0) {
+            // We need to count for fractions, when fractions are applied liquidity may be decreased
+            unchecked { liquidityWithInterest -= 1; }
+        }
 
         if (assets > liquidityWithInterest) {
             assets = liquidityWithInterest;

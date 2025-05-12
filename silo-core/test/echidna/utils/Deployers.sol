@@ -18,15 +18,15 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {IInterestRateModelV2Factory, InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
-import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol";
+import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
@@ -199,7 +199,7 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deployInterestRateModel() internal {
-        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
+        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0], bytes32(0));
     }
 
     function core_deployGaugeHookReceiver() internal {

@@ -12,6 +12,7 @@ optimizer = true
 optimizer_runs = 200
 via_ir = false
 allow_internal_expect_revert = true
+always_use_create_2_factory = true
 
 [profile.core]
 src = 'silo-core/contracts'
@@ -113,6 +114,12 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
+[profile.x_silo]
+src = 'x-silo/contracts'
+test = 'x-silo/test/foundry'
+out = 'cache/foundry/out/x-silo'
+broadcast = 'x-silo/broadcast'
+
 [profile.oracles]
 src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'
@@ -135,6 +142,7 @@ arbitrum_one = "${RPC_ARBITRUM}"
 optimism = "${RPC_OPTIMISM}"
 anvil = "${RPC_ANVIL}"
 sonic = "${RPC_SONIC}"
+ink = "${RPC_INK}"
 
 [etherscan]
 sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
