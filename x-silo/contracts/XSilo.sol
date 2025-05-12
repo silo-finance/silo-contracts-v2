@@ -11,6 +11,7 @@ import {Stream} from "./modules/Stream.sol";
 
 contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     error ZeroShares();
+    error ZeroAssets();
 
     constructor(address _initialOwner, address _asset)
         XSiloManagement(_initialOwner)
@@ -56,13 +57,13 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /** @dev See {IERC4626-deposit}. */
-    function deposit(uint256 _assets, address _receiver) public virtual override nonReentrant returns (uint256) {
-        return super.deposit(_assets, _receiver);
+    function deposit(uint256 _assets, address _receiver) public virtual override nonReentrant returns (uint256 shares) {
+        shares = super.deposit(_assets, _receiver);
     }
 
     /** @dev See {IERC4626-mint}. */
-    function mint(uint256 _shares, address _receiver) public virtual override nonReentrant returns (uint256) {
-        return super.mint(_shares, _receiver);
+    function mint(uint256 _shares, address _receiver) public virtual override nonReentrant returns (uint256 assets) {
+        assets = super.mint(_shares, _receiver);
     }
 
     /** @dev See {IERC4626-withdraw}. */
@@ -88,6 +89,16 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     // TODO withdraw/redeem uses preview, we override preview so it should work out of the box - QA!
+
+    /**
+     * @dev Deposit/mint common workflow.
+     */
+    function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
+        require(_shares != 0, ZeroShares());
+        require(_assets != 0, ZeroAssets());
+
+        super._deposit(_caller, _receiver, _assets, _shares);
+    }
 
     function _withdraw(
         address _caller,
