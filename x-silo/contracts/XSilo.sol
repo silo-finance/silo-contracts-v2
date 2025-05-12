@@ -11,9 +11,6 @@ import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificat
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "./Stream.sol";
 
-
-// TODO do we need nonReentrant on vault methods? if so we need to override them all
-
 contract XSilo is ERC4626, XRedeemPolicy {
     Stream public stream;
 
@@ -29,8 +26,16 @@ contract XSilo is ERC4626, XRedeemPolicy {
     {
     }
 
-    function convertToAssets(uint256 _value) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
-        return ERC4626.convertToAssets(_value);
+    /** @dev See {IERC4626-totalAssets}. */
+    function totalAssets() public view virtual override returns (uint256 total) {
+        total = super.totalAssets();
+
+        Stream stream_ = stream;
+        if (address(stream_) != address(0)) total += stream_.pendingRewards();
+    }
+
+    function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
+        return ERC4626.convertToAssets(_shares);
     }
 
     /** @dev See {IERC4626-maxWithdraw}. */
@@ -47,18 +52,43 @@ contract XSilo is ERC4626, XRedeemPolicy {
 
     /** @dev See {IERC4626-previewRedeem}. */
     function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
-        assets = getXAmountByVestingDuration(_shares, 0);
+        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_shares, 0);
+        assets = convertToAssets(xSiloAfterVesting);
     }
 
-    /** @dev See {IERC4626-totalAssets}. */
-    function totalAssets() public view virtual override returns (uint256 total) {
-        total = super.totalAssets();
-
-        Stream stream_ = stream;
-        if (address(stream_) != address(0)) total += stream_.pendingRewards();
+    /** @dev See {IERC4626-deposit}. */
+    function deposit(uint256 _assets, address _receiver) public virtual override nonReentrant returns (uint256) {
+        return super.deposit(_assets, _receiver);
     }
 
-    function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+    /** @dev See {IERC4626-mint}. */
+    function mint(uint256 _shares, address _receiver) public virtual nonReentrant returns (uint256) {
+        return super.mint(_shares, _receiver);
+    }
+
+    /** @dev See {IERC4626-withdraw}. */
+    function withdraw(uint256 _assets, address _receiver, address _owner)
+        public
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
+        return super.withdraw(_assets, _receiver, _owner);
+    }
+
+    /** @dev See {IERC4626-redeem}. */
+    function redeem(uint256 _shares, address _receiver, address _owner)
+        public
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
+        return super.redeem(_shares, _receiver, _owner);
+    }
+
+    function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner nonReentrant {
         require(notificationReceiver != _notificationReceiver, "TODO errors");
 
         notificationReceiver = _notificationReceiver;
@@ -74,20 +104,6 @@ contract XSilo is ERC4626, XRedeemPolicy {
 
     // TODO withdraw/reddeem uses preview, we override preview so it should work out of the box - QA!
 
-    /// @notice This would make the amount that the user would need to "gift" the market in order to significantly
-    /// inflate the share price very large and impractical.
-    function _decimalsOffset() internal view virtual override returns (uint8) {
-        return 6;
-    }
-
-    function _burnShares(address _owner, uint256 _shares) internal virtual override {
-        return ERC20._burn(_owner, _shares);
-    }
-
-    function _mintShares(address _account, uint256 _shares) internal virtual override {
-        return ERC20._mint(_account, _shares);
-    }
-
     function _withdraw(
         address _caller,
         address _receiver,
@@ -96,6 +112,14 @@ contract XSilo is ERC4626, XRedeemPolicy {
         uint256 _sharesToBurn
     ) internal virtual override(ERC4626, XRedeemPolicy) {
         ERC4626._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
+    }
+
+    function _burnShares(address _owner, uint256 _shares) internal virtual override {
+        return ERC20._burn(_owner, _shares);
+    }
+
+    function _mintShares(address _account, uint256 _shares) internal virtual override {
+        return ERC20._mint(_account, _shares);
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
