@@ -175,7 +175,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
                 })
             );
 
-            _burnShares(msg.sender, _xSiloAmountToBurn);
+            _transferShares(msg.sender, address(this), _xSiloAmountToBurn);
         } else {
             // immediately redeem for SILO
             _withdraw({
@@ -260,5 +260,5 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
     function _mintShares(address _account, uint256 _shares) internal virtual;
 
-    function _burnShares(address _owner, uint256 _shares) internal virtual;
+    function _transferShares(address _from, address _to, uint256 _shares) internal virtual;
 }
