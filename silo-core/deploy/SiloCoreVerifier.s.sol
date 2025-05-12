@@ -203,7 +203,6 @@ contract SiloCoreVerifier is CommonDeploy {
 
             if (allCoreContracts[i] == address(0)) {
                 errorsCounter++;
-
                 _logError(string.concat("Can't find deployment for ", allCoreContractsNames[i]));
             }
         }
