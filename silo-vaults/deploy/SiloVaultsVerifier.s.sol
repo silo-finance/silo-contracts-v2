@@ -59,18 +59,6 @@ contract SiloVaultsVerifier is CommonDeploy {
             _logError("SiloVaultDeployer.SILO_VAULTS_FACTORY is not expected", deployerVaultsFactory);
         }
 
-        address deployerIncentivesControllerFactory = address(siloVaultsDeployer.SILO_INCENTIVES_CONTROLLER_FACTORY());
-        address siloIncentivesControllerFactory = getDeployedAddress(SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY);
-
-        if (deployerIncentivesControllerFactory != siloIncentivesControllerFactory) {
-            errorsCounter++;
-
-            _logError(
-                "SiloVaultDeployer.SILO_INCENTIVES_CONTROLLER_FACTORY is not expected",
-                deployerIncentivesControllerFactory
-            );
-        }
-
         address deployerCLFactory = address(siloVaultsDeployer.SILO_INCENTIVES_CONTROLLER_CL_FACTORY());
         address clFactory = getDeployedAddress(SiloVaultsContracts.SILO_INCENTIVES_CONTROLLER_CL_FACTORY);
 
