@@ -46,7 +46,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     /// based on which redeem amount is calculated, value is in seconds.
     /// Eg if set to 10 days, redeem attempt for less duration will calculate amount based on range, and enything above
     /// will result in 100% of tokens.
-    uint256 public maxRedeemDuration = 6 * 20 days; // 6 months
+    uint256 public maxRedeemDuration = 6 * 30 days; // 6 months
 
     mapping(address => RedeemInfo[]) public userRedeems;
 
