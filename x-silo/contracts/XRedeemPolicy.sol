@@ -187,7 +187,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
                 _receiver: msg.sender,
                 _owner: msg.sender,
                 _assetsToTransfer: siloAmountAfterVesting,
-                _sharesToBurn: siloAmountAfterVesting
+                _sharesToBurn: _xSiloAmountToBurn
             });
         }
     }
