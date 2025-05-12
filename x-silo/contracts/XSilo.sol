@@ -10,7 +10,8 @@ import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "./Stream.sol";
 
 contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
-    constructor(address _asset)
+    constructor(address _initialOwner, address _asset)
+        XSiloManagement(_initialOwner)
         ERC4626(IERC20(_asset))
         ERC20(string.concat('x', TokenHelper.symbol(_asset)), string.concat('x', TokenHelper.symbol(_asset)))
     {
