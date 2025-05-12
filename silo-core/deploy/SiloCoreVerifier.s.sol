@@ -24,7 +24,7 @@ contract SiloCoreVerifier is CommonDeploy {
     string public constant SUCCESS_SYMBOL = unicode"✅";
     string public constant FAIL_SYMBOL = unicode"❌";
 
-    /// @dev list of all core contracts from SiloCoreContracts.
+    /// @dev list of all core contracts to be deployed.
     string[] allCoreContractsNames = [
         SiloCoreContracts.SILO_FACTORY,
         SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY,
@@ -32,7 +32,6 @@ contract SiloCoreVerifier is CommonDeploy {
         SiloCoreContracts.SILO_HOOK_V1,
         SiloCoreContracts.SILO_DEPLOYER,
         SiloCoreContracts.SILO,
-        SiloCoreContracts.PARTIAL_LIQUIDATION,
         SiloCoreContracts.LIQUIDATION_HELPER,
         SiloCoreContracts.MANUAL_LIQUIDATION_HELPER,
         SiloCoreContracts.TOWER,
