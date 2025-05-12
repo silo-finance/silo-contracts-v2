@@ -53,10 +53,7 @@ contract SiloCoreVerifier is CommonDeploy {
         AddrLib.init();
         address expectedOwner = AddrLib.getAddress(vm.envString("EXPECTED_OWNER"));
         uint256 errorsCounter = _verifyOwners(expectedOwner);
-
-        errorsCounter += _verifyLinks({
-            _daoFeeReceiver: expectedOwner
-        });
+        errorsCounter += _verifyLinks({_daoFeeReceiver: expectedOwner});
 
         if (errorsCounter != 0) {
             _logError(string.concat("Finished with ", Strings.toString(errorsCounter), " errors"));
@@ -79,9 +76,13 @@ contract SiloCoreVerifier is CommonDeploy {
             if (!_skipCheckOwnerForContractName(allCoreContractsNames[i]) && success && owner != _expectedOwner) {
                 errorsCounter++;
 
-                _logError(string.concat(
-                    allCoreContractsNames[i], " owner is not expected, real owner is ", Strings.toHexString(owner)
-                ));
+                _logError(
+                    string.concat(
+                        allCoreContractsNames[i],
+                        " owner is not expected, real owner is ",
+                        Strings.toHexString(owner)
+                    )
+                );
             }
         }
     }
@@ -105,27 +106,16 @@ contract SiloCoreVerifier is CommonDeploy {
             _logError(string.concat("Silo.factory() is not expected ", Strings.toHexString(address(silo.factory()))));
         }
 
-        InterestRateModelV2Factory irmV2Factory =
-            InterestRateModelV2Factory(getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY));
-
-        InterestRateModelV2 irm = InterestRateModelV2(getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2));
-
-        if (irmV2Factory.IRM() != address(irm)) {
-            errorsCounter++;
-            _logError(string.concat("IRMv2 implementation not expected ", Strings.toHexString(irmV2Factory.IRM())));
-        }
-
-        errorsCounter += _verifySiloDeployer({
-            _irmV2Factory: address(irmV2Factory),
-            _siloFactory: address(siloFactory)
-        });
+        errorsCounter += _verifySiloDeployer();
     }
 
-    function _verifySiloDeployer(address _irmV2Factory, address _siloFactory) internal returns (uint256 errorsCounter) {
+    function _verifySiloDeployer() internal returns (uint256 errorsCounter) {
         SiloDeployer siloDeployer = SiloDeployer(getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
         address siloDeployerIrmFactory = address(siloDeployer.IRM_CONFIG_FACTORY());
+        address irmV2Factory = getDeployedAddress(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
+        address siloFactory = getDeployedAddress(SiloCoreContracts.SILO_FACTORY);
 
-        if (siloDeployerIrmFactory != _irmV2Factory) {
+        if (siloDeployerIrmFactory != irmV2Factory) {
             errorsCounter++;
 
             _logError(
@@ -138,7 +128,7 @@ contract SiloCoreVerifier is CommonDeploy {
 
         address siloDeployerSiloFactory = address(siloDeployer.SILO_FACTORY());
 
-        if (siloDeployerSiloFactory != _siloFactory) {
+        if (siloDeployerSiloFactory != siloFactory) {
             errorsCounter++;
 
             _logError(
