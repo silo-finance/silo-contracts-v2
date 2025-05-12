@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {Script} from "forge-std/Script.sol";
-import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
-import {console2} from "forge-std/console2.sol";
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -15,6 +12,7 @@ import {InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
+import {console2} from "forge-std/console2.sol";
 
 /**
 FOUNDRY_PROFILE=core EXPECTED_OWNER=DAO \
@@ -120,10 +118,17 @@ contract SiloCoreVerifier is CommonDeploy {
             _logError(string.concat("IRMv2 implementation not expected ", Strings.toHexString(irmV2Factory.IRM())));
         }
 
+        errorsCounter += _verifySiloDeployer({
+            _irmV2Factory: address(irmV2Factory),
+            _siloFactory: address(siloFactory)
+        });
+    }
+
+    function _verifySiloDeployer(address _irmV2Factory, address _siloFactory) internal returns (uint256 errorsCounter) {
         SiloDeployer siloDeployer = SiloDeployer(getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
         address siloDeployerIrmFactory = address(siloDeployer.IRM_CONFIG_FACTORY());
 
-        if (siloDeployerIrmFactory != address(irmV2Factory)) {
+        if (siloDeployerIrmFactory != _irmV2Factory) {
             errorsCounter++;
 
             _logError(
@@ -136,7 +141,7 @@ contract SiloCoreVerifier is CommonDeploy {
 
         address siloDeployerSiloFactory = address(siloDeployer.SILO_FACTORY());
 
-        if (siloDeployerSiloFactory != address(siloFactory)) {
+        if (siloDeployerSiloFactory != _siloFactory) {
             errorsCounter++;
 
             _logError(
@@ -186,8 +191,6 @@ contract SiloCoreVerifier is CommonDeploy {
             );
         }
     }
-
-    function _verifySiloDeployer()
 
     /// @dev Returns an array of all silo-core contracts addresses, throws if anything is not found. Index of a
     /// contract corresponds to it's name in all core contract names.
