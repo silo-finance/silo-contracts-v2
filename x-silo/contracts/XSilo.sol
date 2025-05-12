@@ -1,26 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
-import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
-
+import {XSiloManagement, INotificationReceiver} from "./XSiloManagement.sol";
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "./Stream.sol";
 
-contract XSilo is ERC4626, XRedeemPolicy {
-    Stream public stream;
-
-    INotificationReceiver public notificationReceiver;
-
-    event NotificationReceiverUpdate(INotificationReceiver indexed newNotificationReceiver);
-    event StreamUpdate(Stream indexed newStream);
-
+contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     constructor(address _asset)
-        Ownable(msg.sender)
         ERC4626(IERC20(_asset))
         ERC20(string.concat('x', TokenHelper.symbol(_asset)), string.concat('x', TokenHelper.symbol(_asset)))
     {
@@ -62,7 +52,7 @@ contract XSilo is ERC4626, XRedeemPolicy {
     }
 
     /** @dev See {IERC4626-mint}. */
-    function mint(uint256 _shares, address _receiver) public virtual nonReentrant returns (uint256) {
+    function mint(uint256 _shares, address _receiver) public virtual override nonReentrant returns (uint256) {
         return super.mint(_shares, _receiver);
     }
 
@@ -86,20 +76,6 @@ contract XSilo is ERC4626, XRedeemPolicy {
         returns (uint256)
     {
         return super.redeem(_shares, _receiver, _owner);
-    }
-
-    function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner nonReentrant {
-        require(notificationReceiver != _notificationReceiver, "TODO errors");
-
-        notificationReceiver = _notificationReceiver;
-        emit NotificationReceiverUpdate(_notificationReceiver);
-    }
-
-    function setStream(Stream _stream) external onlyOwner {
-        require(stream != _stream, "TODO errors");
-
-        stream = _stream;
-        emit StreamUpdate(_stream);
     }
 
     // TODO withdraw/reddeem uses preview, we override preview so it should work out of the box - QA!
