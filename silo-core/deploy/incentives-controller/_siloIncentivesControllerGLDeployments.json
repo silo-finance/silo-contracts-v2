@@ -1,4 +1,7 @@
 {
+  "arbitrum_one": {
+    "SIC WETH/USDC(101) WETH:Collateral": "0xd82823BF2CB3a0f79fc65Dea5981e68E55C5934f"
+  },
   "sonic": {
     "SIC PT-aSonUSDC-14AUG2025/scUSD(46) scUSD:Collateral": "0xeA3602cD66D09b2B0D887758Dc57c67aBCd9BeEF",
     "SIC PT-stS-29MAY2025/wS(40) wS:Collateral": "0x4BeFBc8E3885f124C683a2ee4E0B69e785b2C83E",
