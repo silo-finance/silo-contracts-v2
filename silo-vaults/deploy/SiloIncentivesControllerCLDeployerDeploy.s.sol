@@ -17,8 +17,17 @@ import {CommonDeploy} from "./common/CommonDeploy.sol";
 /*
     FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/SiloIncentivesControllerCLDeployerDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --verify --broadcast
-        
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=vaults \
+        forge script silo-vaults/deploy/SiloIncentivesControllerCLDeployerDeploy.s.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
 */
 contract SiloIncentivesControllerCLDeployerDeploy is CommonDeploy {
     ISiloIncentivesControllerCLFactory siloIncentivesControllerCLFactory;

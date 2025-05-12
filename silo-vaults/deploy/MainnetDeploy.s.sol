@@ -6,6 +6,7 @@ import {PublicAllocatorDeploy} from "./PublicAllocatorDeploy.s.sol";
 import {IdleVaultsFactoryDeploy} from "./IdleVaultsFactoryDeploy.s.sol";
 import {SiloIncentivesControllerCLFactoryDeploy} from "./SiloIncentivesControllerCLFactoryDeploy.s.sol";
 import {SiloVaultsDeployerDeploy} from "./SiloVaultsDeployerDeploy.s.sol";
+import {SiloIncentivesControllerCLDeployerDeploy} from "./SiloIncentivesControllerCLDeployerDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=vaults \
@@ -18,6 +19,8 @@ contract MainnetDeploy {
         PublicAllocatorDeploy publicAllocatorDeploy = new PublicAllocatorDeploy();
         IdleVaultsFactoryDeploy idleVaultsFactoryDeploy = new IdleVaultsFactoryDeploy();
         SiloVaultsDeployerDeploy siloVaultsDeployerDeploy = new SiloVaultsDeployerDeploy();
+        SiloIncentivesControllerCLDeployerDeploy siloIncentivesControllerCLDeployerDeploy =
+            new SiloIncentivesControllerCLDeployerDeploy();
 
         SiloIncentivesControllerCLFactoryDeploy siloIncentivesControllerCLFactoryDeploy =
             new SiloIncentivesControllerCLFactoryDeploy();
@@ -27,5 +30,6 @@ contract MainnetDeploy {
         idleVaultsFactoryDeploy.run();
         siloIncentivesControllerCLFactoryDeploy.run();
         siloVaultsDeployerDeploy.run();
+        siloIncentivesControllerCLDeployerDeploy.run();
     }
 }
