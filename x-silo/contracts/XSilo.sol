@@ -87,7 +87,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         return super.redeem(_shares, _receiver, _owner);
     }
 
-    // TODO withdraw/reddeem uses preview, we override preview so it should work out of the box - QA!
+    // TODO withdraw/redeem uses preview, we override preview so it should work out of the box - QA!
 
     function _withdraw(
         address _caller,
@@ -97,6 +97,8 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         uint256 _sharesToBurn
     ) internal virtual override(ERC4626, XRedeemPolicy) {
         require(_sharesToBurn != 0, ZeroShares());
+        // TODO should we disallow zero assets as well?
+
         ERC4626._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
     }
 
