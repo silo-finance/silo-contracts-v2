@@ -24,6 +24,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
     }
 
+    /** @dev See {IERC4626-convertToAssets}. */
     function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
         return ERC4626.convertToAssets(_shares);
     }
