@@ -16,23 +16,24 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 endTime;
     }
 
+    // TODO maybe we can increase precision to 1e4?
     uint256 constant _DECIMALS = 100;
 
     /// @dev Silo token to convert to/from
     IERC20 public immutable siloToken;
 
     /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
-    uint256 public constant MAX_FIXED_RATIO = 100; // 100%
+    uint256 public constant MAX_FIXED_RATIO = _DECIMALS; // 100%
 
     // Redeeming min/max settings are updatable at any time by owner
 
     /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
     /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 50 means ratio of 1:0.5
-    uint256 public minRedeemRatio = 50; // 1:0.5
+    uint256 public minRedeemRatio = 0.5e2; // 1:0.5
 
     /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
     /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 100 means ratio of 1:1
-    uint256 public maxRedeemRatio = 100; // 1:1
+    uint256 public maxRedeemRatio = 1e2; // 1:1
 
     /// @dev `minRedeemDuration` together with `maxRedeemDuration` is used to create range of durations
     /// based on which redeem amount is calculated, value is in seconds.
@@ -79,7 +80,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         public
         view
         virtual
-        returns (uint256 xSiloInAmount)
+        returns (uint256 xSiloAmountIn)
     {
         if (_xSiloAfterVesting == 0) {
             return 0;
@@ -88,7 +89,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 ratio = _calculateRatio(_duration);
         if (ratio == 0) return type(uint256).max;
 
-        xSiloInAmount = _xSiloAfterVesting * _DECIMALS / ratio;
+        xSiloAmountIn = _xSiloAfterVesting * _DECIMALS / ratio;
     }
 
     function getUserRedeemsBalance(address _userAddress)
