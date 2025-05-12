@@ -73,7 +73,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 ratio = _calculateRatio(_duration);
         if (ratio == 0) return 0;
 
-        xSiloAfterVesting = _xSiloAmount * ratio / _PRECISION;
+        xSiloAfterVesting = Math.mulDiv(_xSiloAmount, ratio, _PRECISION, Math.Rounding.Floor);
     }
 
     function getAmountInByVestingDuration(uint256 _xSiloAfterVesting, uint256 _duration)
@@ -89,7 +89,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 ratio = _calculateRatio(_duration);
         if (ratio == 0) return type(uint256).max;
 
-        xSiloAmountIn = _xSiloAfterVesting * _PRECISION / ratio;
+        xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
     }
 
     function getUserRedeemsBalance(address _userAddress)
