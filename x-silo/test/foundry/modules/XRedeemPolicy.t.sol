@@ -6,12 +6,13 @@ import {Test} from "forge-std/Test.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {XSilo, XRedeemPolicy, ERC20} from "../../../contracts/XSilo.sol";
+import {XSilo, XRedeemPolicy, Stream, ERC20} from "../../../contracts/XSilo.sol";
 
 /*
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XRedeemPolicyTest
 */
 contract XRedeemPolicyTest is Test {
+    Stream stream;
     XSilo policy;
     ERC20Mock asset;
 
@@ -23,6 +24,7 @@ contract XRedeemPolicyTest is Test {
     function setUp() public {
         asset = new ERC20Mock();
         policy = new XSilo(address(this), address(asset));
+        stream = new Stream(address(this), address(policy), address(asset));
 
         assertEq(policy.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
         assertEq(policy.maxRedeemRatio(), 1e2, "expected initial setup for maxRedeemRatio");
@@ -120,5 +122,41 @@ contract XRedeemPolicyTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, 1));
         policy.redeemSilo(1, 0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_noStream
+    */
+    function test_redeemSilo_immediate_noStream() public {
+        address user = makeAddr("user");
+        vm.startPrank(user);
+
+        asset.mint(user, 100);
+        asset.approve(address(policy), 100);
+
+        policy.deposit(asset.balanceOf(user), user);
+        policy.redeemSilo(policy.balanceOf(user), 0);
+
+        assertEq(policy.totalSupply(), 0, "vault should be empty");
+        assertEq(policy.balanceOf(user), 0, "no user balance");
+        assertEq(asset.balanceOf(user), 50, "user got 50% on immediate redeem");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_ZeroShares
+    */
+    function test_redeemSilo_immediate_ZeroShares() public {
+        address user = makeAddr("user");
+        _setupStream();
+
+        vm.warp(block.timestamp + 1 minutes);
+
+        vm.startPrank(user);
+
+        asset.mint(user, 100);
+        asset.approve(address(policy), 100);
+
+        vm.expectRevert(XSilo.ZeroShares.selector);
+        policy.deposit(100, user);
     }
 }
