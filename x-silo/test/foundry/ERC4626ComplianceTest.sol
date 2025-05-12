@@ -5,7 +5,7 @@ import {ERC4626Test} from "a16z-erc4626-tests/ERC4626.test.sol";
 
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
-import {XSilo, XRedeemPolicy, ERC20} from "../../../contracts/XSilo.sol";
+import {XSilo, XRedeemPolicy, ERC20} from "../../contracts/XSilo.sol";
 
 /*
  FOUNDRY_PROFILE=x_silo forge test --ffi --mc ERC4626ComplianceTest -vvv
