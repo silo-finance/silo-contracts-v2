@@ -14,9 +14,9 @@ import {
 } from "silo-core/deploy/incentives-controller/SiloIncentivesControllerGLCreateAndConfigure.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=Silo_WETH_USDC INCENTIVES_OWNER=GROWTH_MULTISIG INCENTIVIZED_ASSET=WETH \
+FOUNDRY_PROFILE=core CONFIG=wS_scUSD_Silo INCENTIVES_OWNER=GROWTH_MULTISIG INCENTIVIZED_ASSET=scUSD \
     forge script silo-core/deploy/silo/SiloDeployWithIncentives.s.sol \
-    --ffi --rpc-url $RPC_ARBITRUM--broadcast --verify
+    --ffi --rpc-url $RPC_SONIC--broadcast --verify
  */
 contract SiloDeployWithIncentives is SiloDeployWithDeployerOwner {
     function run() public override returns (ISiloConfig siloConfig) {
