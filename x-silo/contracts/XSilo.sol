@@ -5,9 +5,9 @@ import {ERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC46
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
-import {XSiloManagement, INotificationReceiver} from "./XSiloManagement.sol";
-import {XRedeemPolicy} from "./XRedeemPolicy.sol";
-import {Stream} from "./Stream.sol";
+import {XSiloManagement, INotificationReceiver} from "./modules/XSiloManagement.sol";
+import {XRedeemPolicy} from "./modules/XRedeemPolicy.sol";
+import {Stream} from "./modules/Stream.sol";
 
 contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     constructor(address _initialOwner, address _asset)
