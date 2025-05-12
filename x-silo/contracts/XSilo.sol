@@ -10,6 +10,8 @@ import {XRedeemPolicy} from "./modules/XRedeemPolicy.sol";
 import {Stream} from "./modules/Stream.sol";
 
 contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
+    error ZeroShares();
+
     constructor(address _initialOwner, address _asset)
         XSiloManagement(_initialOwner)
         ERC4626(IERC20(_asset))
@@ -94,6 +96,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         uint256 _assetsToTransfer,
         uint256 _sharesToBurn
     ) internal virtual override(ERC4626, XRedeemPolicy) {
+        require(_sharesToBurn != 0, ZeroShares());
         ERC4626._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
     }
 
