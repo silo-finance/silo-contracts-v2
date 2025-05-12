@@ -97,7 +97,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         ERC4626._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
     }
 
-    function _transferShares(address _from, address _owner, uint256 _shares) internal virtual override {
+    function _transferShares(address _from, address _to, uint256 _shares) internal virtual override {
         return ERC20._transfer(_from, _owner, _shares);
     }
 
