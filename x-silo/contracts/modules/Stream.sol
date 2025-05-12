@@ -12,6 +12,7 @@ contract Stream is Ownable2Step {
     using SafeERC20 for IERC20;
 
     error DistributionTimeExpired();
+    error NoBalance();
 
     event BeneficiaryUpdated(address indexed beneficiary);
     event RewardTokenUpdated(address indexed rewardToken);
@@ -106,5 +107,13 @@ contract Stream is Ownable2Step {
         distributionEnd = _distributionEnd;
 
         emit EmissionsUpdated(_emissionPerSecond, _distributionEnd);
+    }
+
+    /// @dev Emergency withdraw token's balance on the contract
+    function emergencyWithdraw(IERC20 _token) public nonReentrant onlyOwner {
+        uint256 balance = _token.balanceOf(address(this));
+        require(balance != 0, NoBalance());
+
+        _token.safeTransfer(msg.sender, balance);
     }
 }
