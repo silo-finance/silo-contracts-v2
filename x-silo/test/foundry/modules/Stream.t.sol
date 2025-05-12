@@ -61,6 +61,7 @@ contract StreamTest is Test {
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_pendingRewardsMustMatchClaim_warpLoop_fuzz
     */
+    /// forge-config: x_silo.fuzz.runs = 10000
     function test_pendingRewardsMustMatchClaim_warpLoop_fuzz(uint32 _emissionPerSecond, uint64 _distributionEnd) public {
         vm.assume(_distributionEnd > 0);
 
@@ -79,6 +80,7 @@ contract StreamTest is Test {
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_pendingRewardsMustMatchClaim_fuzz
     */
+    /// forge-config: x_silo.fuzz.runs = 10000
     function test_pendingRewardsMustMatchClaim_fuzz(uint32 _emissionPerSecond, uint64 _distributionEnd, uint64 _warp) public {
         vm.assume(_distributionEnd > 0);
 
