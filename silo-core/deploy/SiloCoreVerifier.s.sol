@@ -51,9 +51,7 @@ contract SiloCoreVerifier is CommonDeploy {
 
     function run() public {
         AddrLib.init();
-
         address expectedOwner = AddrLib.getAddress(vm.envString("EXPECTED_OWNER"));
-
         uint256 errorsCounter = _verifyOwners(expectedOwner);
 
         errorsCounter += _verifyLinks({
