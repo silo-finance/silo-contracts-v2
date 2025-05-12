@@ -195,7 +195,7 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
 - then deploy new market
 
 ## Deployed silo lending markets versions
-Network: Sonic \
+**Network: Sonic**
  id 1 - 12 version [0.18.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/0.18.0) \
  SiloDeployer [0x44e9c695624dad0bb3690a40c90e6d7964b32d3d](https://sonicscan.org/address/0x44e9c695624dad0bb3690a40c90e6d7964b32d3d) \
  Silo Implementation [0x85b0273b0B415F9e28B9ce820240F4aa097F2a29](https://sonicscan.org/address/0x85b0273b0B415F9e28B9ce820240F4aa097F2a29) \
@@ -205,4 +205,26 @@ Network: Sonic \
  SiloDeployer [0x7C7B42dE0CE7A77d66d1C4744002083Ea0aE8a8d](https://sonicscan.org/address/0x7C7B42dE0CE7A77d66d1C4744002083Ea0aE8a8d) \
  Silo Implementation [0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d](https://sonicscan.org/address/0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d) \
  Silo Factory [0xa42001D6d2237d2c74108FE360403C4b796B7170](https://sonicscan.org/address/0xa42001D6d2237d2c74108FE360403C4b796B7170)
+
+ id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ SiloDeployer [0xd3e800f6cfE31253911C3b941594286fCD007116](https://sonicscan.org/address/0xd3e800f6cfE31253911C3b941594286fCD007116) \
+ Silo Implementation [0xc2B2e6e30F0F059cC05bF5B29d452A770944f0E3](https://sonicscan.org/address/0xc2B2e6e30F0F059cC05bF5B29d452A770944f0E3) \
+ Silo Factory [0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203](https://sonicscan.org/address/0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203)
  
+ **Network: Arbitrum** \
+ id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ SiloDeployer [0x1d244E66e9A875F325ca85Db3077d3C446090Ec5](https://arbiscan.io/address/0x1d244E66e9A875F325ca85Db3077d3C446090Ec5) \
+ Silo Implementation [0xc216dFac5e29EafC4ed826A3bB79dB72E1aC2535](https://arbiscan.io/address/0xc216dFac5e29EafC4ed826A3bB79dB72E1aC2535) \
+ Silo Factory [0x384DC7759d35313F0b567D42bf2f611B285B657C](https://arbiscan.io/address/0x384DC7759d35313F0b567D42bf2f611B285B657C)
+
+ **Network: Optimism** \
+ id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ SiloDeployer [0x12D73b8dC92961C71782154B70416c4A1fb7dD12](https://optimistic.etherscan.io/address/0x12D73b8dC92961C71782154B70416c4A1fb7dD12) \
+ Silo Implementation [0xBc0131AA1FF58F628ceAcE15751F703E17E24C69](https://optimistic.etherscan.io/address/0xBc0131AA1FF58F628ceAcE15751F703E17E24C69) \
+ Silo Factory [0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5](https://optimistic.etherscan.io/address/0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5)
+
+ **Network: Ink** \
+ id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ SiloDeployer [0x2a4507b28c6E620A2Dcc05062F250D3d1C0f3faa](https://explorer.inkonchain.com/address/0x2a4507b28c6E620A2Dcc05062F250D3d1C0f3faa) \
+ Silo Implementation [0x4576fa3e2E061376431619B5631C25c99fFa27bd](https://explorer.inkonchain.com/address/0x4576fa3e2E061376431619B5631C25c99fFa27bd) \
+ Silo Factory [0xD13921239e3832FDC4141FDE544D3D058B529A5D](https://explorer.inkonchain.com/address/0xD13921239e3832FDC4141FDE544D3D058B529A5D)
