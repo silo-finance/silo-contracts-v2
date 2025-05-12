@@ -17,6 +17,9 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 endTime;
     }
 
+    error ZeroAmount();
+    error RedeemIndexDoesNotExist();
+
     uint256 constant _PRECISION = 100;
 
     /// @dev Silo token to convert to/from
@@ -56,7 +59,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     event CancelRedeem(address indexed _userAddress, uint256 xSiloToMint);
 
     modifier validateRedeem(address _userAddress, uint256 _redeemIndex) {
-        require(_redeemIndex < userRedeems[_userAddress].length, "validateRedeem: redeem entry does not exist");
+        require(_redeemIndex < userRedeems[_userAddress].length, RedeemIndexDoesNotExist());
         _;
     }
 
@@ -155,7 +158,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         nonReentrant
         returns (uint256 siloAmountAfterVesting)
     {
-        require(_xSiloAmountToBurn > 0, "redeem: xSiloAmount cannot be null");
+        require(_xSiloAmountToBurn > 0, ZeroAmount());
         require(_duration >= minRedeemDuration, "redeem: duration too low");
 
         // get corresponding SILO amount based on duration
