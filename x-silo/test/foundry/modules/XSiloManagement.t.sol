@@ -31,4 +31,18 @@ contract XSiloManagementTest is Test {
 
         assertEq(address(newAddr), address(mgm.notificationReceiver()), "new notificationReceiver");
     }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream
+    */
+    function test_setStream() public {
+        Stream newAddr = Stream(makeAddr("new Stream"));
+
+        vm.expectEmit(true, true, true, true);
+        emit StreamUpdate(newAddr);
+
+        mgm.setStream(newAddr);
+
+        assertEq(address(newAddr), address(mgm.stream()), "new Stream");
+    }
 }
