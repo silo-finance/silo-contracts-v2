@@ -32,6 +32,11 @@ contract XSiloManagementTest is Test {
         assertEq(address(newAddr), address(mgm.notificationReceiver()), "new notificationReceiver");
     }
 
+    function test_setNotificationReceiver_revert() public {
+        vm.expectRevert(XSiloManagement.NoChange.selector);
+        mgm.setNotificationReceiver(INotificationReceiver(address(0)));
+    }
+
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream
     */
@@ -44,5 +49,10 @@ contract XSiloManagementTest is Test {
         mgm.setStream(newAddr);
 
         assertEq(address(newAddr), address(mgm.stream()), "new Stream");
+    }
+
+    function test_setStream_revert() public {
+        vm.expectRevert(XSiloManagement.NoChange.selector);
+        mgm.setStream(Stream(address(0)));
     }
 }
