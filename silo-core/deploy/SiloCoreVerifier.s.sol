@@ -197,10 +197,6 @@ contract SiloCoreVerifier is CommonDeploy {
     }
 
     function _logError(string memory _msg, address _contract) internal pure {
-        console2.log(
-            FAIL_SYMBOL, 
-            _msg,
-            _contract
-        );
+        console2.log(FAIL_SYMBOL, _msg, _contract);
     }
 }
