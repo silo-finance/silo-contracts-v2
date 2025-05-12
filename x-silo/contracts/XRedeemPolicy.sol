@@ -210,6 +210,22 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         emit FinalizeRedeem(msg.sender, redeemCache.siloAmountAfterVesting, redeemCache.xSiloAmountToBurn);
     }
 
+    function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
+        RedeemInfo storage redeemCache = userRedeems[msg.sender][_redeemIndex];
+
+        uint256 xSiloBeforeRedeem = convertToShares(redeemCache.currentSiloAmount);
+        uint256 toTransfer = redeemCache.xSiloAmountToBurn - xSiloBeforeRedeem;
+        uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
+
+        _transferShares(address(this), msg.sender, toTransfer);
+        _burnShares(address(this), toBurn);
+
+        emit CancelRedeem(msg.sender, redeemCache.xSiloAmountToBurn);
+
+        // remove redeem entry
+        _deleteRedeemEntry(_redeemIndex);
+    }
+
     function _calculateRatio(uint256 _duration)
         internal
         view
@@ -231,22 +247,6 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
                 maxRedeemRatio - minRedeemRatio,
                 maxRedeemDuration - minRedeemDuration
             );
-    }
-
-    function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
-        RedeemInfo storage redeemCache = userRedeems[msg.sender][_redeemIndex];
-
-        uint256 xSiloBeforeRedeem = convertToShares(redeemCache.currentSiloAmount);
-        uint256 toTransfer = redeemCache.xSiloAmountToBurn - xSiloBeforeRedeem;
-        uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
-
-        _transferShares(address(this), msg.sender, toTransfer);
-        _burnShares(address(this), toBurn);
-
-        emit CancelRedeem(msg.sender, redeemCache.xSiloAmountToBurn);
-
-        // remove redeem entry
-        _deleteRedeemEntry(_redeemIndex);
     }
 
     function _deleteRedeemEntry(uint256 _index) internal {

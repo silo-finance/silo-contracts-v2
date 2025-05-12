@@ -18,7 +18,7 @@ contract XSiloManagement is Ownable2Step {
     event NotificationReceiverUpdate(INotificationReceiver indexed newNotificationReceiver);
     event StreamUpdate(Stream indexed newStream);
 
-    constructor() Ownable(msg.sender) {
+    constructor(address _initialOwner) Ownable(_initialOwner) {
     }
 
     function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
