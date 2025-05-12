@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: Unlicense
+pragma solidity 0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+
+import {XSilo, XRedeemPolicy, ERC20} from "../../../contracts/XSilo.sol";
+
+/*
+FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XRedeemPolicyTest
+*/
+contract XRedeemPolicyTest is Test {
+    XRedeemPolicy policy;
+
+    event UpdateRedeemSettings(uint256 minRedeemRatio, uint256 maxRedeemRatio, uint256 minRedeemDuration, uint256 maxRedeemDuration);
+    event StartRedeem(address indexed _userAddress, uint256 currentSiloAmount, uint256 xSiloToBurn, uint256 siloAmountAfterVesting, uint256 duration);
+    event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
+    event CancelRedeem(address indexed _userAddress, uint256 xSiloToMint);
+
+    function setUp() public {
+        policy = new XSilo(address(this), address(new ERC20Mock()));
+
+        assertEq(policy.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
+        assertEq(policy.maxRedeemRatio(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(policy.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
+        assertEq(policy.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getXAmountByVestingDuration_zeroDuration
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_getXAmountByVestingDuration_zeroDuration_fuzz(uint256 _amount) public {
+        assertEq(policy.getXAmountByVestingDuration(_amount, 0), _amount / 2, "any amount for 0 duration returns 1/2");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getXAmountByVestingDuration_notReverts
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_getXAmountByVestingDuration_notReverts_fuzz(uint256 _amount, uint256 _duration) public {
+        policy.getXAmountByVestingDuration(_amount, _duration);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getAmountInByVestingDuration_zeroDuration_fuzz
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_getAmountInByVestingDuration_zeroDuration_fuzz(uint256 _xSiloAfterVesting) public {
+        vm.assume(_xSiloAfterVesting <= type(uint128).max);
+
+        assertEq(policy.getAmountInByVestingDuration(_xSiloAfterVesting, 0), _xSiloAfterVesting * 2, "any amount for 0 returns +50%");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getAmountInByVestingDuration_notReverts_fuzz
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_getAmountInByVestingDuration_notReverts_fuzz(uint256 _xSiloAfterVesting, uint256 _duration) public {
+        vm.assume(_xSiloAfterVesting <= type(uint128).max);
+
+        policy.getAmountInByVestingDuration(_xSiloAfterVesting, _duration);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getAmounts_crosscheck_fuzz
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_getAmounts_crosscheck_fuzz(uint256 _xSiloAfterVesting, uint256 _duration) public {
+        vm.assume(_xSiloAfterVesting <= type(uint128).max);
+
+        uint256 xSiloAmountIn = policy.getAmountInByVestingDuration(_xSiloAfterVesting, _duration);
+
+        uint256 xSiloAfter = policy.getXAmountByVestingDuration(xSiloAmountIn, _duration);
+
+        assertEq(xSiloAfter, _xSiloAfterVesting, "#1 crosscheck calculation");
+
+        uint256 xAmountIn = policy.getAmountInByVestingDuration(xSiloAfter, _duration);
+
+        assertEq(xAmountIn, xSiloAmountIn, "#2 crosscheck calculation");
+    }
+}
