@@ -50,6 +50,14 @@ contract XSilo is ERC4626, XRedeemPolicy {
         assets = getXAmountByVestingDuration(_shares, 0);
     }
 
+    /** @dev See {IERC4626-totalAssets}. */
+    function totalAssets() public view virtual override returns (uint256 total) {
+        total = super.totalAssets();
+
+        Stream stream_ = stream;
+        if (address(stream_) != address(0)) total += stream_.pendingRewards();
+    }
+
     function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
         require(notificationReceiver != _notificationReceiver, "TODO errors");
 
@@ -92,7 +100,7 @@ contract XSilo is ERC4626, XRedeemPolicy {
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
         Stream stream_ = stream;
-        if (address(stream_) != address(0)) stream.claimRewards();
+        if (address(stream_) != address(0)) stream_.claimRewards();
 
         super._update(_from, _to, _value);
 
