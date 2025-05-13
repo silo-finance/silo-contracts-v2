@@ -155,6 +155,42 @@ contract StreamTest is Test {
         assertEq(stream.pendingRewards(), stream.claimRewards(), "pendingRewards must match claim");
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_lastUpdateTimestamp_update_whenRewards
+    */
+    function test_lastUpdateTimestamp_update_whenRewards() public {
+        stream.setEmissions(1e18, block.timestamp + 1 days);
+
+        token.mint(address(stream), stream.fundingGap());
+
+        vm.warp(block.timestamp + 1);
+
+        assertGt(stream.pendingRewards(), 0, "expect rewards");
+        assertLt(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is in past before update");
+
+        stream.claimRewards();
+
+        assertEq(stream.pendingRewards(), 0, "expect NO rewards");
+        assertEq(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is updated");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_lastUpdateTimestamp_update_noBalance
+    */
+    function test_lastUpdateTimestamp_update_noBalance() public {
+        stream.setEmissions(1e18, block.timestamp + 1 days);
+
+        vm.warp(block.timestamp + 1);
+
+        assertEq(stream.pendingRewards(), 0, "expect NO rewards because no balance");
+        assertLt(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is in past before update");
+
+        stream.claimRewards();
+
+        assertEq(stream.pendingRewards(), 0, "expect NO rewards");
+        assertEq(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is updated");
+    }
+
     function _assert_zeros() private {
         assertEq(stream.fundingGap(), 0, "no gap when no distribution");
         assertEq(stream.pendingRewards(), 0, "no pendingRewards when no distribution");
