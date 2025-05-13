@@ -55,7 +55,7 @@ contract Stream is Ownable2Step {
     /// @notice Calculate the pending rewards for the `BENEFICIARY`.
     /// @return rewards The amount of pending rewards.
     function pendingRewards() public view returns (uint256 rewards) {
-        if (lastUpdateTimestamp > distributionEnd) return 0;
+        if (lastUpdateTimestamp >= distributionEnd) return 0;
 
         uint256 timeElapsed = Math.min(block.timestamp, distributionEnd) - lastUpdateTimestamp;
         rewards = timeElapsed * emissionPerSecond;
