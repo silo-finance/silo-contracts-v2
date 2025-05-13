@@ -24,6 +24,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     function totalAssets() public view virtual override returns (uint256 total) {
         total = super.totalAssets();
 
+        // TODO this will not work, we need to find another way to properly calculate current total
         Stream stream_ = stream;
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
     }

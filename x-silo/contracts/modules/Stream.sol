@@ -96,6 +96,9 @@ contract Stream is Ownable2Step {
     }
 
     /// @notice Set the emission rate and distribution end timestamp.
+    /// WARNING: do not set emissions fof xSilo when xSilo is empty or total supply is low:
+    /// - it can break ratio.
+    /// - it will lock dust balances.
     /// @param _emissionPerSecond The new emission rate.
     /// @param _distributionEnd The new distribution end timestamp.
     /// @dev Only the contract owner can call this function.
