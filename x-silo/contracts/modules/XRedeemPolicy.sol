@@ -23,9 +23,6 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
     uint256 constant _PRECISION = 100;
 
-    /// @dev Silo token to convert to/from
-    IERC20 public immutable siloToken;
-
     /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
     uint256 public constant MAX_FIXED_RATIO = _PRECISION; // 100%
 
