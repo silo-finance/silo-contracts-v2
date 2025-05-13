@@ -159,4 +159,30 @@ contract XRedeemPolicyTest is Test {
         vm.expectRevert(XSilo.ZeroShares.selector);
         policy.deposit(100, user);
     }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_tooMuch
+    */
+    function test_redeemSilo_immediate_tooMuch(bool _withRewards, uint32 _warp) public {
+        address user = makeAddr("user");
+
+        vm.warp(block.timestamp + 1 minutes);
+
+        vm.startPrank(user);
+
+        uint256 amount = 100;
+        asset.mint(user, amount);
+        asset.approve(address(policy), amount);
+        uint256 xSilo = policy.deposit(amount, user);
+
+        vm.stopPrank();
+
+        if (_withRewards) _setupStream();
+        if (_warp != 0) vm.warp(block.timestamp + _warp);
+
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, user, xSilo, xSilo + 1));
+        vm.prank(user);
+        policy.redeemSilo(xSilo + 1, 0);
+    }
+
 }
