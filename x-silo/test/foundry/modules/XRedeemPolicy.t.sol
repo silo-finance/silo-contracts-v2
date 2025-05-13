@@ -189,7 +189,7 @@ contract XRedeemPolicyTest is Test {
         uint256 amount = 100;
         uint256 shares = _convert(user, amount);
 
-        uint256 emissionPerSecond = _setupStream();
+        _setupStream();
 
         emit log_named_uint("previewRedeem: ", policy.previewRedeem(shares));
         vm.prank(user);
