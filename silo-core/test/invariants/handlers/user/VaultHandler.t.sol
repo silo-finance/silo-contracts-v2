@@ -45,11 +45,12 @@ contract VaultHandler is BaseHandler {
 
             if (_collateralType == ISilo.CollateralType.Collateral) {
                 (uint256 totalCollateralAssets,) = vault1.getCollateralAndDebtTotalsStorage();
-                /* assertEq(
+                assertApproxEqAbs(
                     defaultVarsBefore[target].totalAssets + _assets,
                     defaultVarsAfter[target].totalAssets,
+                    1,
                     LENDING_HSPOST_A
-                ); *///TODO remove comment when test_replay_deposit is fixed
+                );
             }
         }
 
@@ -174,7 +175,7 @@ contract VaultHandler is BaseHandler {
         // POST-CONDITIONS
 
         if (maxWithdraw != 0) {
-            //assertTrue(success, LENDING_INVARIANT_B); TODO remove comment when test_replay_assert_LENDING_INVARIANT_B is fixed
+            assertTrue(success, LENDING_INVARIANT_B);
         }
     }
 

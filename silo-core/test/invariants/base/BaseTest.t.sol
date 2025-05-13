@@ -127,4 +127,15 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
         uint256 _actorIndex = _i % NUMBER_OF_ACTORS;
         return actorAddresses[_actorIndex];
     }
+
+    function _isCustomError(bytes memory returnData, bytes4 expectedSelector) internal pure returns (bool) {
+        if (returnData.length >= 4) {
+            bytes4 errorSelector;
+            assembly {
+                errorSelector := mload(add(returnData, 32))
+            }
+            return errorSelector == expectedSelector;
+        }
+        return false;
+    }
 }

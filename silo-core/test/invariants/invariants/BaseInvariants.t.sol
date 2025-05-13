@@ -70,7 +70,7 @@ abstract contract BaseInvariants is HandlerAggregator {
     }
 
     function assert_BASE_INVARIANT_J(address silo) internal {
-        ISilo.Fractions fractions = ISilo(silo).getFractionsStorage();
+        ISilo.Fractions memory fractions = ISilo(silo).getFractionsStorage();
         assertLt(fractions.interest, _PRECISION_DECIMALS, BASE_INVARIANT_J);
         assertLt(fractions.revenue, _PRECISION_DECIMALS, BASE_INVARIANT_J);
     }

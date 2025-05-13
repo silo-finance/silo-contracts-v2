@@ -46,7 +46,7 @@ abstract contract PostconditionsSpec {
 
     string constant SILO_HSPOST_A = "SILO_HSPOST_A: accrueInterest() should never decrease total collateral and total debt";
 
-    string constant SILO_HSPOST_B = "SILO_HSPOST_B: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in Silo"; // TODO
+    string constant SILO_HSPOST_B = "SILO_HSPOST_B: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in Silo";
 
     string constant SILO_GPOST_C = "SILO_GPOST_C: withdraw()/redeem()/borrow()/borrowShares() should always call accrueInterest() on both Silos"; // TODO
 
@@ -57,7 +57,7 @@ abstract contract PostconditionsSpec {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice related to silo property HLP_integrity_deposit_collateral_no_interest
-    string constant LENDING_HSPOST_A = "LENDING_HSPOST_A: after deposit, silo.totalAssets[ISilo.AssetType.Collateral] increases by amount deposited"; // TODO
+    string constant LENDING_HSPOST_A = "LENDING_HSPOST_A: after deposit, silo.totalAssets[ISilo.AssetType.Collateral] increases by amount deposited";
 
     /// @notice related to silo property HLP_integrity_deposit_collateral_no_interest
     string constant LENDING_HSPOST_B = "LENDING_HSPOST_B: after mint, silo.totalSupply increases by amount minted";
@@ -130,18 +130,4 @@ abstract contract PostconditionsSpec {
 
     /// @notice related to silo property HLP_silo_anyone_can_liquidate_insolvent
     string constant LIQUIDATION_GPOST_A = "LIQUIDATION_GPOST_A: Anyone can liquidate insolvent user"; // TODO
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                          IN PROGRESS                                      //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    string constant SILO_INVARIANT_G = "SILO_INVARIANT_G: _debtShareToken totalsupply MUST increase while borrowing"; //custom
-
-    string constant SILO_INVARIANT_H = "SILO_INVARIANT_H: _debtShareToken totalsupply MUST decrease on repayments"; //custom
-
-    string constant SILO_INVARIANT_I = "SILO_INVARIANT_I: _debtShareToken totalSupply MUST be the sum of all borrowed shares"; //custom
-
-    string constant SILO_INVARIANT_J = "SILO_INVARIANT_J: _collateralShareToken balance MUST increase while depositing"; //custom
-
-    string constant SILO_INVARIANT_K = "SILO_INVARIANT_K: _collateralShareToken balance MUST decrease while withdrawing"; //custom
 }

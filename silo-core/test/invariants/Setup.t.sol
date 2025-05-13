@@ -12,8 +12,8 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {PartialLiquidation} from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
-import {SiloHookV1} from "silo-core/contracts/utils/hook-receivers/SiloHookV1.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
@@ -172,7 +172,7 @@ contract Setup is BaseTest {
         );
 
         // Deploy interestRateModel
-        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0]);
+        (, interestRateModelV2) = interestRateModelV2ConfigFactory.create(presetIRMConfigs[0], "");
     }
 
     function core_deploySiloDeployer() internal {

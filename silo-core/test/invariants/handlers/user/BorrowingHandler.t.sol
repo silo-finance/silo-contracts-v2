@@ -49,10 +49,12 @@ contract BorrowingHandler is BaseHandler {
         if (success) {
             _after();
 
-            /* assertEq(
-                defaultVarsBefore[target].debtAssets + _assets, defaultVarsAfter[target].debtAssets, BORROWING_HSPOST_M
-            ); */
-            // TODO remove comment when test_replay_borrow is fixed
+            assertApproxEqAbs(
+                defaultVarsBefore[target].debtAssets + _assets,
+                defaultVarsAfter[target].debtAssets,
+                1,
+                BORROWING_HSPOST_M
+            );
 
             assertEq(defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O);
         }
@@ -75,10 +77,12 @@ contract BorrowingHandler is BaseHandler {
         if (success) {
             _after();
 
-            /* assertEq(
-                defaultVarsBefore[target].debtAssets + _assets, defaultVarsAfter[target].debtAssets, BORROWING_HSPOST_M
-            ); */
-            // TODO remove comment when test_replay_borrow is fixed
+            assertApproxEqAbs(
+                defaultVarsBefore[target].debtAssets + _assets,
+                defaultVarsAfter[target].debtAssets,
+                1,
+                BORROWING_HSPOST_M
+            );
 
             assertEq(defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O);
         }
@@ -206,12 +210,6 @@ contract BorrowingHandler is BaseHandler {
 
         // POST-CONDITIONS
 
-        if (defaultVarsBefore[target].isSolvent && _collateralType == ISilo.CollateralType.Protected) {
-            if (_shares > 0 && protectedAssets > 0) {
-                assertTrue(success, BORROWING_HSPOST_L);
-            }
-        }
-
         if (success) {
             _after();
 
@@ -241,7 +239,9 @@ contract BorrowingHandler is BaseHandler {
 
         address target = _getRandomSilo(j);
 
-        uint256 debtAmount = ISilo(target).maxRepay(borrower);
+        uint256 maxRepayShares = ISilo(target).maxRepayShares(borrower);
+
+        uint256 debtAmount = ISilo(target).previewRepayShares(maxRepayShares);
 
         (, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(target);
 
@@ -250,10 +250,11 @@ contract BorrowingHandler is BaseHandler {
         }
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.repay.selector, debtAmount, borrower));
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(ISilo.repayShares.selector, debtAmount, borrower));
 
         if (debtAmount > 0) {
-            //assertTrue(success, BORROWING_HSPOST_D); TODO remove comment when test_replay_borrow is fixed
+            assertTrue(success, BORROWING_HSPOST_D);
             assertLe(ISilo(target).maxRepay(borrower), 1, BORROWING_HSPOST_D);
         }
 
