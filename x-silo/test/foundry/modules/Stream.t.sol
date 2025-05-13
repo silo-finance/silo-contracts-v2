@@ -39,9 +39,11 @@ contract StreamTest is Test {
         assertEq(stream.pendingRewards(), 0, "no pendingRewards when distribution did not start yet");
         assertEq(stream.fundingGap(), 100, "fundingGap is 100% from begin");
 
-        vm.warp(block.timestamp + 50);
+        vm.warp(block.timestamp + 1);
+        assertEq(stream.pendingRewards(), 1, "pendingRewards for 1 sec");
 
-        assertEq(stream.pendingRewards(), 50, "pendingRewards");
+        vm.warp(block.timestamp + 49);
+        assertEq(stream.pendingRewards(), 50, "pendingRewards for 50 sec");
 
         token.mint(address(stream), 50);
         assertEq(stream.claimRewards(), 50, "claimRewards");
