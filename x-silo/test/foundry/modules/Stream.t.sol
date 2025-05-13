@@ -38,30 +38,50 @@ contract StreamTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_1perSecFlow
     */
     function test_1perSecFlow() public {
-
         stream.setEmissions(1, block.timestamp + 100);
         assertEq(stream.pendingRewards(), 0, "no pendingRewards when distribution did not start yet");
         assertEq(stream.fundingGap(), 100, "fundingGap is 100% from begin");
 
         vm.warp(block.timestamp + 1);
+        token.mint(address(stream), 1);
         assertEq(stream.pendingRewards(), 1, "pendingRewards for 1 sec");
 
         vm.warp(block.timestamp + 49);
-        assertEq(stream.pendingRewards(), 50, "pendingRewards for 50 sec");
-
         token.mint(address(stream), 50);
+
+        assertEq(stream.pendingRewards(), 50, "pendingRewards for 50 sec");
         assertEq(stream.claimRewards(), 50, "claimRewards");
         assertEq(token.balanceOf(address(beneficiary)), 50, "beneficiary got rewards");
 
         // much over the distribution time
         vm.warp(block.timestamp + 3 days);
+        assertEq(stream.fundingGap(), 49, "fundingGap returns what's missing");
+
+        token.mint(address(stream), stream.fundingGap());
 
         assertEq(stream.pendingRewards(), 50, "pendingRewards shows what's left");
-        assertEq(stream.fundingGap(), 50, "fundingGap returns what's missing");
 
-        token.mint(address(stream), 50);
         assertEq(stream.claimRewards(), 50, "claimRewards");
         assertEq(token.balanceOf(address(beneficiary)), 100, "beneficiary got 100% rewards");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_noBalance
+    */
+    function test_noBalance() public {
+        stream.setEmissions(1, block.timestamp + 100);
+        assertEq(stream.pendingRewards(), 0, "no pendingRewards when distribution did not start yet");
+        assertEq(stream.fundingGap(), 100, "fundingGap is 100% from begin");
+
+        vm.warp(block.timestamp + 10);
+        assertEq(stream.pendingRewards(), 0, "pendingRewards 0 when no balance");
+        assertEq(stream.claimRewards(), 0, "claimRewards 0 whe nno balance");
+
+        vm.warp(block.timestamp + 10);
+        token.mint(address(stream), 3);
+
+        assertEq(stream.pendingRewards(), 3, "pendingRewards returns max possible value");
+        assertEq(stream.claimRewards(), 3, "claimRewards returns max possible value");
     }
 
     /*

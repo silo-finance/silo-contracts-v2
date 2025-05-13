@@ -58,15 +58,16 @@ contract Stream is Ownable2Step {
         if (lastUpdateTimestamp >= distributionEnd) return 0;
 
         uint256 timeElapsed = Math.min(block.timestamp, distributionEnd) - lastUpdateTimestamp;
-        rewards = timeElapsed * emissionPerSecond;
+        uint256 balanceOf = IERC20(REWARD_ASSET).balanceOf(address(this));
+
+        rewards = Math.min(timeElapsed * emissionPerSecond, balanceOf);
     }
 
     function claimRewards() public returns (uint256 rewards) {
         rewards = pendingRewards();
-        uint256 balanceOf = IERC20(REWARD_ASSET).balanceOf(address(this));
+        lastUpdateTimestamp = block.timestamp;
 
-        if (rewards != 0 && balanceOf >= rewards) {
-            lastUpdateTimestamp = block.timestamp;
+        if (rewards != 0) {
             IERC20(REWARD_ASSET).safeTransfer(BENEFICIARY, rewards);
             emit RewardsClaimed(rewards);
         }
