@@ -54,7 +54,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     event UpdateRedeemSettings(uint256 minRedeemRatio, uint256 maxRedeemRatio, uint256 minRedeemDuration, uint256 maxRedeemDuration);
     event StartRedeem(address indexed _userAddress, uint256 currentSiloAmount, uint256 xSiloToBurn, uint256 siloAmountAfterVesting, uint256 duration);
     event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
-    event CancelRedeem(address indexed _userAddress, uint256 xSiloToMint);
+    event CancelRedeem(address indexed _userAddress, uint256 xSiloToTransfer, uint256 xSiloToBurn);
 
     modifier validateRedeem(address _userAddress, uint256 _redeemIndex) {
         require(_redeemIndex < userRedeems[_userAddress].length, RedeemIndexDoesNotExist());
@@ -229,7 +229,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         if (toTransfer != 0) _transferShares(address(this), msg.sender, toTransfer);
         if (toBurn != 0) _burnShares(address(this), toBurn);
 
-        emit CancelRedeem(msg.sender, redeemCache.xSiloAmountToBurn);
+        emit CancelRedeem(msg.sender, toTransfer, toBurn);
 
         // remove redeem entry
         _deleteRedeemEntry(_redeemIndex);

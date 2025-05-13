@@ -16,7 +16,7 @@ contract StreamTest is Test {
 
     function setUp() public {
         token = new ERC20Mock();
-        stream = new Stream(address(this), beneficiary, address(token));
+        stream = new Stream(address(this), beneficiary);
 
         _assert_zeros();
     }
