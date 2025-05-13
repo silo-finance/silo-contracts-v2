@@ -197,36 +197,41 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_withStream_withTime_fuzz
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_withStream_afterTime_fuzz
     */
-    function test_redeemSilo_immediate_withStream_withTime_fuzz(uint256 _amount) public {
+    function test_redeemSilo_immediate_withStream_afterTime_fuzz(uint256 _amount) public {
         vm.assume(_amount > 0);
         vm.assume(_amount < 2 ** 128);
 
-        _convert(address(123), 1e18);
+        _convert(makeAddr("first user"), 1e18);
         _setupStream();
 
         vm.warp(block.timestamp + 1 days);
 
         address user = makeAddr("user");
+        vm.assume(policy.previewDeposit(_amount) != 0);
         _convert(user, _amount);
 
         _ensure_redeemSilo_immediate_doesNotGiveRewards(user, _amount);
     }
 
     function _ensure_redeemSilo_immediate_doesNotGiveRewards(address _user, uint256 _amount) public {
-        address user = makeAddr("user");
+        vm.startPrank(_user);
 
-        vm.startPrank(user);
-        policy.redeemSilo(policy.balanceOf(user), 0);
+        uint256 shares = policy.balanceOf(_user);
+
+        vm.assume(policy.getAmountByVestingDuration(shares, 0) != 0);
+
+        policy.redeemSilo(shares, 0);
         vm.stopPrank();
 
-        assertEq(policy.balanceOf(user), 0, "no user balance");
+        assertEq(policy.balanceOf(_user), 0, "no user balance");
 
-        assertEq(
+        // in extreme cases we can get less that 50% because of precision error
+        assertLe(
+            asset.balanceOf(_user),
             _amount / 2,
-            asset.balanceOf(user),
-            "user got 50% on immediate redeem (rewards not included because no time)"
+            "user got up to 50% on immediate redeem (rewards not included because no time)"
         );
     }
 
