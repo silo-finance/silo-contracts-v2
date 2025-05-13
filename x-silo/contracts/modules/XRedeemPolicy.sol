@@ -63,6 +63,16 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         _;
     }
 
+    function getAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
+        public
+        view
+        virtual
+        returns (uint256 siloAmountAfterVesting)
+    {
+        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmount, _duration);
+        siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
+    }
+
     function getXAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
         public
         view
@@ -162,8 +172,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         require(_duration >= minRedeemDuration, "redeem: duration too low");
 
         // get corresponding SILO amount based on duration
-        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmountToBurn, _duration);
-        siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
+        siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
         uint256 currentSiloAmount = convertToAssets(_xSiloAmountToBurn);
 
         emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
