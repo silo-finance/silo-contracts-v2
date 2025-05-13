@@ -179,28 +179,53 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_withStream
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_withStream_NoTime_fuzz
     */
-    function test_redeemSilo_immediate_withStream() public {
+    function test_redeemSilo_immediate_withStream_NoTime_fuzz(uint256 _amount) public {
+        vm.assume(_amount > 0);
+        vm.assume(_amount < 2 ** 128);
+
         address user = makeAddr("user");
 
-        vm.warp(block.timestamp + 1 minutes);
-
-        uint256 amount = 100;
-        uint256 shares = _convert(user, amount);
+        _convert(user, _amount);
 
         _setupStream();
 
-        emit log_named_uint("previewRedeem: ", policy.previewRedeem(shares));
-        vm.prank(user);
-        policy.redeemSilo(shares, 0);
+        _ensure_redeemSilo_immediate_doesNotGiveRewards(user, _amount);
 
         assertEq(policy.totalSupply(), 0, "vault should be empty");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_withStream_withTime_fuzz
+    */
+    function test_redeemSilo_immediate_withStream_withTime_fuzz(uint256 _amount) public {
+        vm.assume(_amount > 0);
+        vm.assume(_amount < 2 ** 128);
+
+        _convert(address(123), 1e18);
+        _setupStream();
+
+        vm.warp(block.timestamp + 1 days);
+
+        address user = makeAddr("user");
+        _convert(user, _amount);
+
+        _ensure_redeemSilo_immediate_doesNotGiveRewards(user, _amount);
+    }
+
+    function _ensure_redeemSilo_immediate_doesNotGiveRewards(address _user, uint256 _amount) public {
+        address user = makeAddr("user");
+
+        vm.startPrank(user);
+        policy.redeemSilo(policy.balanceOf(user), 0);
+        vm.stopPrank();
+
         assertEq(policy.balanceOf(user), 0, "no user balance");
 
         assertEq(
+            _amount / 2,
             asset.balanceOf(user),
-            amount / 2,
             "user got 50% on immediate redeem (rewards not included because no time)"
         );
     }
