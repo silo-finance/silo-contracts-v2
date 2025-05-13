@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {IERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
@@ -14,16 +15,14 @@ contract Stream is Ownable2Step {
     error DistributionTimeExpired();
     error NoBalance();
 
-    event BeneficiaryUpdated(address indexed beneficiary);
-    event RewardTokenUpdated(address indexed rewardToken);
     event EmissionsUpdated(uint256 indexed emissionPerSecond, uint256 indexed distributionEnd);
-    event RewardsClaimed(address indexed beneficiary, uint256 indexed amount);
+    event RewardsClaimed(uint256 indexed amount);
 
     /// @notice address that can claim rewards
-    address public beneficiary;
+    address public immutable BENEFICIARY;
 
     /// @notice token in which rewards are distributed
-    address public rewardToken;
+    address public immutable REWARD_TOKEN;
 
     /// @notice amount of rewards distributed per second
     uint256 public emissionPerSecond;
@@ -34,9 +33,9 @@ contract Stream is Ownable2Step {
     /// @notice timestamp of the last update
     uint256 public lastUpdateTimestamp;
 
-    constructor(address _initialOwner, address _beneficiary, address _rewardToken) Ownable(_initialOwner) {
-        beneficiary = _beneficiary;
-        rewardToken = _rewardToken;
+    constructor(address _initialOwner, address _beneficiary) Ownable(_initialOwner) {
+        BENEFICIARY = _beneficiary;
+        REWARD_TOKEN = IERC4626(_beneficiary).asset();
         distributionEnd = block.timestamp;
         lastUpdateTimestamp = block.timestamp;
     }
@@ -48,12 +47,12 @@ contract Stream is Ownable2Step {
 
         uint256 timeElapsed = distributionEnd - lastUpdateTimestamp;
         uint256 rewards = timeElapsed * emissionPerSecond;
-        uint256 balanceOf = IERC20(rewardToken).balanceOf(address(this));
+        uint256 balanceOf = IERC20(REWARD_TOKEN).balanceOf(address(this));
 
         gap = balanceOf >= rewards ? 0 : rewards - balanceOf;
     }
 
-    /// @notice Calculate the pending rewards for the beneficiary.
+    /// @notice Calculate the pending rewards for the `BENEFICIARY`.
     /// @return rewards The amount of pending rewards.
     function pendingRewards() public view returns (uint256 rewards) {
         if (lastUpdateTimestamp > distributionEnd) return 0;
@@ -64,36 +63,18 @@ contract Stream is Ownable2Step {
 
     function claimRewards() public returns (uint256 rewards) {
         rewards = pendingRewards();
-        uint256 balanceOf = IERC20(rewardToken).balanceOf(address(this));
+        uint256 balanceOf = IERC20(REWARD_TOKEN).balanceOf(address(this));
 
         if (rewards != 0 && balanceOf >= rewards) {
             lastUpdateTimestamp = block.timestamp;
-            IERC20(rewardToken).safeTransfer(beneficiary, rewards);
-            emit RewardsClaimed(beneficiary, rewards);
+            IERC20(REWARD_TOKEN).safeTransfer(BENEFICIARY, rewards);
+            emit RewardsClaimed(rewards);
         }
     }
 
     ///////////////////////
     /// OWNER FUNCTIONS ///
     ///////////////////////
-
-    /// @notice Set the beneficiary address.
-    /// @param _beneficiary The new beneficiary address.
-    /// @dev Only the contract owner can call this function.
-    function setBeneficiary(address _beneficiary) external onlyOwner {
-        beneficiary = _beneficiary;
-
-        emit BeneficiaryUpdated(_beneficiary);
-    }
-
-    /// @notice Set the reward token address.
-    /// @param _rewardToken The new reward token address.
-    /// @dev Only the contract owner can call this function.
-    function setRewardToken(address _rewardToken) external onlyOwner {
-        rewardToken = _rewardToken;
-
-        emit RewardTokenUpdated(_rewardToken);
-    }
 
     /// @notice Set the emission rate and distribution end timestamp.
     /// WARNING: do not set emissions fof xSilo when xSilo is empty or total supply is low:
@@ -114,10 +95,10 @@ contract Stream is Ownable2Step {
     }
 
     /// @dev Emergency withdraw token's balance on the contract
-    function emergencyWithdraw(IERC20 _token) public onlyOwner {
-        uint256 balance = _token.balanceOf(address(this));
+    function emergencyWithdraw() public onlyOwner {
+        uint256 balance = IERC20(REWARD_TOKEN).balanceOf(address(this));
         require(balance != 0, NoBalance());
 
-        _token.safeTransfer(msg.sender, balance);
+        IERC20(REWARD_TOKEN).safeTransfer(msg.sender, balance);
     }
 }
