@@ -18,6 +18,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     }
 
     error ZeroAmount();
+    error NoSiloToRedeem();
     error RedeemIndexDoesNotExist();
 
     uint256 constant _PRECISION = 100;
@@ -173,6 +174,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
         // get corresponding SILO amount based on duration
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
+        require(siloAmountAfterVesting != 0, NoSiloToRedeem());
+
         uint256 currentSiloAmount = convertToAssets(_xSiloAmountToBurn);
 
         emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
@@ -263,9 +266,9 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         userRedeems[msg.sender].pop();
     }
 
-    function convertToAssets(uint256 _shares) public virtual returns (uint256);
+    function convertToAssets(uint256 _shares) public view virtual returns (uint256);
 
-    function convertToShares(uint256 _assets) public virtual returns (uint256);
+    function convertToShares(uint256 _assets) public view virtual returns (uint256);
 
     function _withdraw(
         address _caller,
