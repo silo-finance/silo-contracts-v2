@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {ERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
+import {ERC4626, IERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
@@ -20,7 +20,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     {
     }
 
-    /** @dev See {IERC4626-totalAssets}. */
+    /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
         total = super.totalAssets();
 
@@ -28,45 +28,45 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
     }
 
-    /** @dev See {IERC4626-convertToShares}. */
+    /// @inheritdoc IERC4626
     function convertToShares(uint256 _assets) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
         return ERC4626.convertToShares(_assets);
     }
 
-    /** @dev See {IERC4626-convertToAssets}. */
+    /// @inheritdoc IERC4626
     function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
         return ERC4626.convertToAssets(_shares);
     }
 
-    /** @dev See {IERC4626-maxWithdraw}. */
+    /// @inheritdoc IERC4626
     function maxWithdraw(address _owner) public view virtual override returns (uint256 assets) {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(balanceOf(_owner), 0);
         assets = convertToAssets(xSiloAfterVesting);
     }
 
-    /** @dev See {IERC4626-previewWithdraw}. */
+    /// @inheritdoc IERC4626
     function previewWithdraw(uint256 _assets) public view virtual override returns (uint256 shares) {
         uint256 _xSiloAfterVesting = convertToShares(_assets);
         shares = getAmountInByVestingDuration(_xSiloAfterVesting, 0);
     }
 
-    /** @dev See {IERC4626-previewRedeem}. */
+    /// @inheritdoc IERC4626
     function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_shares, 0);
         assets = convertToAssets(xSiloAfterVesting);
     }
 
-    /** @dev See {IERC4626-deposit}. */
+    /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public virtual override nonReentrant returns (uint256 shares) {
         shares = super.deposit(_assets, _receiver);
     }
 
-    /** @dev See {IERC4626-mint}. */
+    /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) public virtual override nonReentrant returns (uint256 assets) {
         assets = super.mint(_shares, _receiver);
     }
 
-    /** @dev See {IERC4626-withdraw}. */
+    /// @inheritdoc IERC4626
     function withdraw(uint256 _assets, address _receiver, address _owner)
         public
         virtual
@@ -77,7 +77,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         return super.withdraw(_assets, _receiver, _owner);
     }
 
-    /** @dev See {IERC4626-redeem}. */
+    /// @inheritdoc IERC4626
     function redeem(uint256 _shares, address _receiver, address _owner)
         public
         virtual
@@ -86,6 +86,22 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         returns (uint256)
     {
         return super.redeem(_shares, _receiver, _owner);
+    }
+
+    /// @inheritdoc ERC20
+    function transfer(address _to, uint256 _value) public virtual override(ERC20, IERC20) nonReentrant returns (bool) {
+        return super.transfer(_to, _value);
+    }
+
+    /// @inheritdoc ERC20
+    function transferFrom(address _from, address _to, uint256 _value)
+        public
+        virtual
+        override(ERC20, IERC20)
+        nonReentrant
+        returns (bool)
+    {
+        return super.transferFrom(_from, _to, _value);
     }
 
     // TODO withdraw/redeem uses preview, we override preview so it should work out of the box - QA!
