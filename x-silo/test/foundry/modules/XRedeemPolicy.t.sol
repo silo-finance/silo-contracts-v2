@@ -168,21 +168,60 @@ contract XRedeemPolicyTest is Test {
 
         vm.warp(block.timestamp + 1 minutes);
 
-        vm.startPrank(user);
-
-        uint256 amount = 100;
-        asset.mint(user, amount);
-        asset.approve(address(policy), amount);
-        uint256 xSilo = policy.deposit(amount, user);
-
-        vm.stopPrank();
+        uint256 shares = _convert(user, 100);
 
         if (_withRewards) _setupStream();
         if (_warp != 0) vm.warp(block.timestamp + _warp);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, user, xSilo, xSilo + 1));
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, user, shares, shares + 1));
         vm.prank(user);
-        policy.redeemSilo(xSilo + 1, 0);
+        policy.redeemSilo(shares + 1, 0);
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_immediate_withStream
+    */
+    function test_redeemSilo_immediate_withStream() public {
+        address user = makeAddr("user");
+
+        vm.warp(block.timestamp + 1 minutes);
+
+        uint256 amount = 100;
+        uint256 shares = _convert(user, amount);
+
+        uint256 emissionPerSecond = _setupStream();
+
+        emit log_named_uint("previewRedeem: ", policy.previewRedeem(shares));
+        vm.prank(user);
+        policy.redeemSilo(shares, 0);
+
+        assertEq(policy.totalSupply(), 0, "vault should be empty");
+        assertEq(policy.balanceOf(user), 0, "no user balance");
+
+        assertEq(
+            asset.balanceOf(user),
+            amount / 2,
+            "user got 50% on immediate redeem (rewards not included because no time)"
+        );
+    }
+
+    function _setupStream() public returns (uint256 emissionPerSecond) {
+        emissionPerSecond = 0.01e18;
+
+        policy.setStream(stream);
+        stream.setEmissions(emissionPerSecond, 1 days);
+        asset.mint(address(stream), stream.fundingGap());
+    }
+
+    function _convert(address _user, uint256 _amount) public returns (uint256 shares){
+        vm.startPrank(_user);
+
+        asset.mint(_user, _amount);
+        asset.approve(address(policy), _amount);
+        shares = policy.deposit(_amount, _user);
+
+        assertGt(shares, 0, "[_convert] shares received");
+
+        vm.stopPrank();
+    }
 }
