@@ -22,7 +22,7 @@ contract Stream is Ownable2Step {
     address public immutable BENEFICIARY;
 
     /// @notice token in which rewards are distributed
-    address public immutable REWARD_TOKEN;
+    address public immutable REWARD_ASSET;
 
     /// @notice amount of rewards distributed per second
     uint256 public emissionPerSecond;
@@ -35,7 +35,7 @@ contract Stream is Ownable2Step {
 
     constructor(address _initialOwner, address _beneficiary) Ownable(_initialOwner) {
         BENEFICIARY = _beneficiary;
-        REWARD_TOKEN = IERC4626(_beneficiary).asset();
+        REWARD_ASSET = IERC4626(_beneficiary).asset();
         distributionEnd = block.timestamp;
         lastUpdateTimestamp = block.timestamp;
     }
@@ -47,7 +47,7 @@ contract Stream is Ownable2Step {
 
         uint256 timeElapsed = distributionEnd - lastUpdateTimestamp;
         uint256 rewards = timeElapsed * emissionPerSecond;
-        uint256 balanceOf = IERC20(REWARD_TOKEN).balanceOf(address(this));
+        uint256 balanceOf = IERC20(REWARD_ASSET).balanceOf(address(this));
 
         gap = balanceOf >= rewards ? 0 : rewards - balanceOf;
     }
@@ -63,11 +63,11 @@ contract Stream is Ownable2Step {
 
     function claimRewards() public returns (uint256 rewards) {
         rewards = pendingRewards();
-        uint256 balanceOf = IERC20(REWARD_TOKEN).balanceOf(address(this));
+        uint256 balanceOf = IERC20(REWARD_ASSET).balanceOf(address(this));
 
         if (rewards != 0 && balanceOf >= rewards) {
             lastUpdateTimestamp = block.timestamp;
-            IERC20(REWARD_TOKEN).safeTransfer(BENEFICIARY, rewards);
+            IERC20(REWARD_ASSET).safeTransfer(BENEFICIARY, rewards);
             emit RewardsClaimed(rewards);
         }
     }
@@ -96,9 +96,9 @@ contract Stream is Ownable2Step {
 
     /// @dev Emergency withdraw token's balance on the contract
     function emergencyWithdraw() public onlyOwner {
-        uint256 balance = IERC20(REWARD_TOKEN).balanceOf(address(this));
+        uint256 balance = IERC20(REWARD_ASSET).balanceOf(address(this));
         require(balance != 0, NoBalance());
 
-        IERC20(REWARD_TOKEN).safeTransfer(msg.sender, balance);
+        IERC20(REWARD_ASSET).safeTransfer(msg.sender, balance);
     }
 }
