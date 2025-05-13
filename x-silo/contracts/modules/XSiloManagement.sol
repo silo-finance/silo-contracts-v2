@@ -10,7 +10,7 @@ import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificat
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "./Stream.sol";
 
-contract XSiloManagement is Ownable2Step {
+abstract contract XSiloManagement is Ownable2Step {
     Stream public stream;
 
     INotificationReceiver public notificationReceiver;
