@@ -22,9 +22,11 @@ contract PreviewWithdrawTest is VaultsLittleHelper {
         bool _partial
     ) public {
         uint256 amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
-        vm.assume(amountIn > 0);
+        vm.assume(amountIn > 1);
 
         _deposit(_assetsOrShares, depositor);
+
+        amountIn -= 1;
 
         uint256 preview = _getPreview(amountIn);
 

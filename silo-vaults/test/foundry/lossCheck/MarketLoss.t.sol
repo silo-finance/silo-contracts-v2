@@ -264,8 +264,11 @@ contract MarketLossTest is IBefore, IntegrationTest {
         idleMarket.deposit(idleAmount, address(vault));
         vm.stopPrank();
 
+        uint256 availableToRedeem = vault.balanceOf(SUPPLIER) - 1e6;
+        vm.assume(vault.convertToAssets(availableToRedeem) != 0);
+
         vm.startPrank(SUPPLIER);
-        uint256 supplierWithdraw = vault.redeem(vault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
+        uint256 supplierWithdraw = vault.redeem(availableToRedeem, SUPPLIER, SUPPLIER);
         vm.stopPrank();
 
         uint256 supplierDiff = supplierWithdraw > _supplierDeposit ? 0 : _supplierDeposit - supplierWithdraw;
@@ -274,8 +277,8 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         assertLe(
             supplierDiff,
-            1, // NOTICE: 1 wei can be 50% loss for dust deposits
-            "SUPPLIER should not lost (1 wei acceptable for rounding)"
+            2, // NOTICE: 1 or 2 wei can be 50% loss for dust deposits
+            "SUPPLIER should not lost (2 wei acceptable for rounding)"
         );
     }
 

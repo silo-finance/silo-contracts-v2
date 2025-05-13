@@ -31,4 +31,5 @@ library Rounding {
     Math.Rounding internal constant LIQUIDATE_TO_SHARES = Math.Rounding.Floor;
     Math.Rounding internal constant LTV = Math.Rounding.Ceil;
     Math.Rounding internal constant ACCRUED_INTEREST = Math.Rounding.Floor;
+    Math.Rounding internal constant DAO_REVENUE = Math.Rounding.Ceil;
 }

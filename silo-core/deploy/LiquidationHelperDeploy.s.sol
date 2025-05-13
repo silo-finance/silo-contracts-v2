@@ -30,6 +30,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
     address payable constant GNOSIS_SAFE_OP = payable(0x468CD12aa9e9fe4301DB146B0f7037831B52382d);
     address payable constant GNOSIS_SAFE_SONIC = payable(0x7461d8c0fDF376c847b651D882DEa4C73fad2e4B);
+    address payable constant GNOSIS_SAFE_INK = payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554);
 
     function run() public virtual returns (address liquidationHelper) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
@@ -59,6 +60,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);
+        if (chainId == ChainsLib.INK_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
 
         revert(string.concat("can not find native token for ", ChainsLib.chainAlias()));
     }
@@ -82,6 +84,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return GNOSIS_SAFE_OP;
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return GNOSIS_SAFE_ARB;
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return GNOSIS_SAFE_SONIC;
+        if (chainId == ChainsLib.INK_CHAIN_ID) return GNOSIS_SAFE_INK;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) {
             console2.log("[LiquidationHelperDeploy] TODO set _tokenReceiver for ", ChainsLib.chainAlias());
             return GNOSIS_SAFE_MAINNET;
