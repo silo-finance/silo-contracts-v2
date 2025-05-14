@@ -16,44 +16,8 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     constructor(address _initialOwner, address _asset)
         XSiloManagement(_initialOwner)
         ERC4626(IERC20(_asset))
-        ERC20(string.concat('x', TokenHelper.symbol(_asset)), string.concat('x', TokenHelper.symbol(_asset)))
+        ERC20(string.concat("x", TokenHelper.symbol(_asset)), string.concat("x", TokenHelper.symbol(_asset)))
     {
-    }
-
-    /// @inheritdoc IERC4626
-    function totalAssets() public view virtual override returns (uint256 total) {
-        total = super.totalAssets();
-
-        Stream stream_ = stream;
-        if (address(stream_) != address(0)) total += stream_.pendingRewards();
-    }
-
-    /// @inheritdoc IERC4626
-    function convertToShares(uint256 _assets) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
-        return ERC4626.convertToShares(_assets);
-    }
-
-    /// @inheritdoc IERC4626
-    function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
-        return ERC4626.convertToAssets(_shares);
-    }
-
-    /// @inheritdoc IERC4626
-    function maxWithdraw(address _owner) public view virtual override returns (uint256 assets) {
-        uint256 xSiloAfterVesting = getXAmountByVestingDuration(balanceOf(_owner), 0);
-        assets = convertToAssets(xSiloAfterVesting);
-    }
-
-    /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 _assets) public view virtual override returns (uint256 shares) {
-        uint256 _xSiloAfterVesting = convertToShares(_assets);
-        shares = getAmountInByVestingDuration(_xSiloAfterVesting, 0);
-    }
-
-    /// @inheritdoc IERC4626
-    function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
-        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_shares, 0);
-        assets = convertToAssets(xSiloAfterVesting);
     }
 
     /// @inheritdoc IERC4626
@@ -105,6 +69,42 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     // TODO withdraw/redeem uses preview, we override preview so it should work out of the box - QA!
+
+    /// @inheritdoc IERC4626
+    function totalAssets() public view virtual override returns (uint256 total) {
+        total = super.totalAssets();
+
+        Stream stream_ = stream;
+        if (address(stream_) != address(0)) total += stream_.pendingRewards();
+    }
+
+    /// @inheritdoc IERC4626
+    function convertToShares(uint256 _assets) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
+        return ERC4626.convertToShares(_assets);
+    }
+
+    /// @inheritdoc IERC4626
+    function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
+        return ERC4626.convertToAssets(_shares);
+    }
+
+    /// @inheritdoc IERC4626
+    function maxWithdraw(address _owner) public view virtual override returns (uint256 assets) {
+        uint256 xSiloAfterVesting = getXAmountByVestingDuration(balanceOf(_owner), 0);
+        assets = convertToAssets(xSiloAfterVesting);
+    }
+
+    /// @inheritdoc IERC4626
+    function previewWithdraw(uint256 _assets) public view virtual override returns (uint256 shares) {
+        uint256 _xSiloAfterVesting = convertToShares(_assets);
+        shares = getAmountInByVestingDuration(_xSiloAfterVesting, 0);
+    }
+
+    /// @inheritdoc IERC4626
+    function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
+        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_shares, 0);
+        assets = convertToAssets(xSiloAfterVesting);
+    }
 
     /**
      * @dev Deposit/mint common workflow.
