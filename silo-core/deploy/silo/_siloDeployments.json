@@ -1,5 +1,6 @@
 {
   "arbitrum_one": {
+    "Silo_PENDLE_USDC": "0x8016Cc623456bf2C8B59C2E7cc9031097DE5f0D8",
     "Silo_WETH_USDC": "0x9607783e0901EE781397D1A1BF407E5c1737b50d"
   },
   "optimism": {

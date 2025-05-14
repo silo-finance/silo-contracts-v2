@@ -1,5 +1,7 @@
 {
   "arbitrum_one": {
+    "SIC PENDLE/USDC(107) PENDLE:Collateral": "0x4c45d51c23092B4ccf061Bd84Ad9f9837e3620b6",
+    "SIC PENDLE/USDC(107) USDC:Collateral": "0x8f56fC1BB4B2D4d8bFb2603369F3f99dE23473Cc",
     "SIC WETH/USDC(102) WETH:Collateral": "0xe6fAd4F8345A9e7D4F9205573Bda320B3D40e9ee"
   },
   "sonic": {
