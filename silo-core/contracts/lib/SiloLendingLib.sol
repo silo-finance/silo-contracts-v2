@@ -389,7 +389,20 @@ library SiloLendingLib {
         {
             /*
             this is workaround for fractions
-            TBD
+            - fractions are not applied on view methods so we need to count for them
+            - `_totalDebtAssets` was increased level above to compensate for fractions
+            Because of above, when we increase `_totalDebtAssets` we increase debt share value, as result
+            conversion asset -> shares will give us less shares and then same ration will be applied
+            for next conversion (the one below). As result we basically got less shares for assets.
+            When we do borrow(assets) and we do not have fractions to apply `_totalDebtAssets` is not increased.
+            Lower total assets means lower share price, so for same amount of assets that maxBorrow() calculated
+            we will get more shares, and at last step, when we checking maxLtv, more shares will give us more assets,
+            too much to hold max LTV requirement.
+            Solution: lower shares are fine, because this is underestimation for fractions. Now when we recalculating
+            assets again (because of described issue below), we don't want hi share price (in case there are
+            no fractions), we need low share price and it will give us lower assets.
+            This is why we do `_totalDebtAssets--` to compensate `_totalDebtAssets++` level above.
+        
             */
             if (_totalDebtAssets != 0) _totalDebtAssets--;
         }
