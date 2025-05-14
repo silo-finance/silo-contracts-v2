@@ -3,10 +3,10 @@ pragma solidity >=0.7.6;
 
 import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
 
-import {XSiloDeployments} from "x-silo/deploy/XSiloContracts.sol";
+import {XSiloDeployments} from "x-silo/common/XSiloContracts.sol";
 
 contract CommonDeploy is Deployer {
-    string internal constant _FORGE_OUT_DIR = "cache/foundry/out/x-silo";
+    string internal constant _FORGE_OUT_DIR = "cache/foundry/out";
 
     function _forgeOutDir() internal pure override virtual returns (string memory) {
         return _FORGE_OUT_DIR;
