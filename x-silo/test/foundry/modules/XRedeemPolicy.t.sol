@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
@@ -346,6 +347,17 @@ contract XRedeemPolicyTest is Test {
         uint256 siloAmountAfterVesting = policy.getAmountByVestingDuration(1e18, 0);
 
         assertEq(siloAmountAfterVesting, 0, "siloAmountAfterVesting iz zero because min ratio is 0");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_updateRedeemSettings_onlyOwner
+    */
+    function test_updateRedeemSettings_onlyOwner() public {
+        address someAddress = makeAddr("someAddress");
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
+        vm.prank(someAddress);
+        policy.updateRedeemSettings(0, 0, 0, 0);
     }
 
     // TODO provide rewards and make sure we can claim all
