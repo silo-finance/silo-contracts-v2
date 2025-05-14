@@ -386,6 +386,14 @@ library SiloLendingLib {
             assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
         );
 
+        {
+            /*
+            this is workaround for fractions
+            TBD
+            */
+            if (_totalDebtAssets != 0) _totalDebtAssets--;
+        }
+
         // we need to recalculate assets, because what we did above is assets => shares with rounding down, but when
         // we input assets, they will generate more shares, so we need to calculate assets based on final shares
         // not based on borrow value
