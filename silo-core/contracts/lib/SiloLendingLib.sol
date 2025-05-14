@@ -388,21 +388,28 @@ library SiloLendingLib {
 
         {
             /*
-            this is workaround for fractions
-            - fractions are not applied on view methods so we need to count for them
-            - `_totalDebtAssets` was increased level above to compensate for fractions
-            Because of above, when we increase `_totalDebtAssets` we increase debt share value, as result
-            conversion asset -> shares will give us less shares and then same ration will be applied
-            for next conversion (the one below). As result we basically got less shares for assets.
-            When we do borrow(assets) and we do not have fractions to apply `_totalDebtAssets` is not increased.
-            Lower total assets means lower share price, so for same amount of assets that maxBorrow() calculated
-            we will get more shares, and at last step, when we checking maxLtv, more shares will give us more assets,
-            too much to hold max LTV requirement.
-            Solution: lower shares are fine, because this is underestimation for fractions. Now when we recalculating
-            assets again (because of described issue below), we don't want hi share price (in case there are
-            no fractions), we need low share price and it will give us lower assets.
-            This is why we do `_totalDebtAssets--` to compensate `_totalDebtAssets++` level above.
-        
+            This is a workaround for handling fractions:
+
+            - Fractions are not applied in view methods, so we need to account for them manually.
+            - `_totalDebtAssets` is incremented earlier to compensate for these fractions.
+
+            Due to this, increasing `_totalDebtAssets` raises the debt share price. As a result, converting
+            assets to shares yields fewer shares, and this same reduced ratio is applied
+            to the next conversion (shown below). Ultimately, this means we receive fewer shares for the same amount
+            of assets.
+
+            When we call `borrow(assets)` and there are no fractions to apply, `_totalDebtAssets` is not incremented.
+            A lower `_totalDebtAssets` means a lower share price, so the same amount of assets
+            (as calculated by `maxBorrow()`) will result in more shares. At the final step, when checking maxLtv,
+            having more shares translates to more assets—exceeding the allowed maximum LTV.
+
+            Solution:
+            Having fewer shares is acceptable because it underestimates the value due to missing fractions.
+            When recalculating assets (due to the issue described above), we want a lower share price
+            (which occurs when there are no fractions), as this leads to fewer assets and keeps us within the LTV limit.
+
+            Therefore, we decrement `_totalDebtAssets` with `_totalDebtAssets--`
+            to offset the earlier `_totalDebtAssets++`.
             */
             if (_totalDebtAssets != 0) _totalDebtAssets--;
         }
