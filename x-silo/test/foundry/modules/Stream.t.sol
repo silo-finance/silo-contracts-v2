@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {ERC4626Mock} from "openzeppelin5/mocks/token/ERC4626Mock.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
@@ -189,6 +190,28 @@ contract StreamTest is Test {
 
         assertEq(stream.pendingRewards(), 0, "expect NO rewards");
         assertEq(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is updated");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setEmissions_onlyOwner
+    */
+    function test_setEmissions_onlyOwner() public {
+        address someAddress = makeAddr("someAddress");
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
+        vm.prank(someAddress);
+        stream.setEmissions(1e18, block.timestamp + 1 days);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_emergencyWithdraw_onlyOwner
+    */
+    function test_emergencyWithdraw_onlyOwner() public {
+        address someAddress = makeAddr("someAddress");
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
+        vm.prank(someAddress);
+        stream.emergencyWithdraw();
     }
 
     function _assert_zeros() private {
