@@ -26,6 +26,7 @@ contract XRedeemPolicyTest is Test {
         policy = new XSilo(address(this), address(asset));
         stream = new Stream(address(this), address(policy));
 
+        // TODO copy this file and create tests for randome setup?
         // all tests are done for this setup:
 
         assertEq(policy.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
