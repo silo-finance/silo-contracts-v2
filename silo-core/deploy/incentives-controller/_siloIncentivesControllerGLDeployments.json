@@ -1,5 +1,7 @@
 {
   "arbitrum_one": {
+    "SIC WBTC/USDC(106) USDC:Collateral": "0x0Dd02bd3cebc248b9B13595ac3B12EF55D1a6306",
+    "SIC WBTC/USDC(106) WBTC:Collateral": "0x55c6E9191F8431E61914bE137b96636e1E8E6277",
     "SIC WETH/USDC(102) WETH:Collateral": "0xe6fAd4F8345A9e7D4F9205573Bda320B3D40e9ee"
   },
   "sonic": {
