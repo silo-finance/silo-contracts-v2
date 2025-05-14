@@ -273,11 +273,6 @@ library SiloLendingLib {
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
 
-        if (liquidityWithInterest != 0) {
-            // We need to count for fractions, when fractions are applied liquidity may be decreased
-            unchecked { liquidityWithInterest -= 1; }
-        }
-
         if (assets > liquidityWithInterest) {
             assets = liquidityWithInterest;
 
@@ -340,10 +335,15 @@ library SiloLendingLib {
             _deployerFee
         );
 
+        // We need to count for fractions. When fractions are applied totalCollateralAssets may be decreased
+        // because of revenue
+        if (totalCollateralAssets != 0) totalCollateralAssets--;
+
+        // We need to count for fractions. When fractions are applied totalDebtAssets may be increased, that's why +1
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             address(this),
             _interestRateModel
-        );
+        ) + 1;
 
         liquidity = SiloMathLib.liquidity(totalCollateralAssets, totalDebtAssets);
     }

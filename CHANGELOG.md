@@ -5,7 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
+### Fixed
+- silo-core: fix maxBorrow again liquidity was decreased by 1, 
+  however it was calculated based on total that was out of sync with other calculation
 
 ### [3.4.0] - 2025-05-09
 - silo-core: prioritize DAO fee to ensure it is not zero-out by precision error
