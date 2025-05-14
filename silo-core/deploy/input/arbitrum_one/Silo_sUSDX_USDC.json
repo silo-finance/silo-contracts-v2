@@ -23,7 +23,7 @@
     "maxLtv1": 0,
     "lt1": 0,
     "liquidationTargetLtv1": 0,
-    "liquidationFee1": 350,
+    "liquidationFee1": 0,
     "flashloanFee1": 0,
     "callBeforeQuote1": false
 }
