@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {XSiloManagement, INotificationReceiver, Stream} from "../../../contracts/modules/XSiloManagement.sol";
 
@@ -51,8 +52,33 @@ contract XSiloManagementTest is Test {
         assertEq(address(newAddr), address(mgm.stream()), "new Stream");
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_revert
+    */
     function test_setStream_revert() public {
         vm.expectRevert(XSiloManagement.NoChange.selector);
         mgm.setStream(Stream(address(0)));
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_onlyOwner
+    */
+    function test_setStream_onlyOwner() public {
+        address someAddress = makeAddr("someAddress");
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
+        vm.prank(someAddress);
+        mgm.setStream(Stream(address(0)));
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setNotificationReceiver_onlyOwner
+    */
+    function test_setNotificationReceiver_onlyOwner() public {
+        address someAddress = makeAddr("someAddress");
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
+        vm.prank(someAddress);
+        mgm.setNotificationReceiver(INotificationReceiver(address(0)));
     }
 }
