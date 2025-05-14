@@ -2,13 +2,16 @@
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {ERC4626Mock} from "openzeppelin5/mocks/token/ERC4626Mock.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {Stream} from "../../../contracts/modules/Stream.sol";
+import {StreamDeploy} from "x-silo/deploy/StreamDeploy.s.sol";
+import {XSiloContracts} from "x-silo/common/XSiloContracts.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 /*
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc StreamTest
@@ -19,9 +22,17 @@ contract StreamTest is Test {
     ERC4626 beneficiary;
 
     function setUp() public {
+        AddrLib.init();
+
         token = new ERC20Mock();
         beneficiary = new ERC4626Mock(address(token));
-        stream = new Stream(address(this), address(beneficiary));
+
+        AddrLib.setAddress(XSiloContracts.X_SILO, address(beneficiary));
+        AddrLib.setAddress(AddrKey.DAO, address(this));
+
+        StreamDeploy deploy = new StreamDeploy();
+        deploy.disableDeploymentsSync();
+        stream = deploy.run();
 
         _assert_zeros();
     }

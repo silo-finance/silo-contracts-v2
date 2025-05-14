@@ -10,7 +10,7 @@ import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificat
 import {XRedeemPolicy} from "./XRedeemPolicy.sol";
 import {Stream} from "./Stream.sol";
 
-contract XSiloManagement is Ownable2Step {
+abstract contract XSiloManagement is Ownable2Step {
     Stream public stream;
 
     INotificationReceiver public notificationReceiver;
@@ -20,7 +20,8 @@ contract XSiloManagement is Ownable2Step {
 
     error NoChange();
 
-    constructor(address _initialOwner) Ownable(_initialOwner) {
+    constructor(address _initialOwner, address _stream) Ownable(_initialOwner) {
+        stream = Stream(_stream); // it is optional and can be address(0)
     }
 
     function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {

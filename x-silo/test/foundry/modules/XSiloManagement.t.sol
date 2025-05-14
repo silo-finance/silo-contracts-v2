@@ -3,20 +3,31 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
 import {XSiloManagement, INotificationReceiver, Stream} from "../../../contracts/modules/XSiloManagement.sol";
+import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.s.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
+import {XSilo} from "x-silo/contracts/XSilo.sol";
 
 /*
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XSiloManagementTest
 */
 contract XSiloManagementTest is Test {
-    XSiloManagement mgm;
+    XSilo mgm;
 
     event NotificationReceiverUpdate(INotificationReceiver indexed newNotificationReceiver);
     event StreamUpdate(Stream indexed newStream);
 
     function setUp() public {
-        mgm = new XSiloManagement(address(this));
+        AddrLib.init();
+        AddrLib.setAddress(AddrKey.SILO_TOKEN_V2, address(new ERC20Mock()));
+        AddrLib.setAddress(AddrKey.DAO, address(this));
+
+        XSiloAndStreamDeploy deploy = new XSiloAndStreamDeploy();
+        deploy.disableDeploymentsSync();
+        (mgm,) = deploy.run();
     }
 
     /*
@@ -56,8 +67,9 @@ contract XSiloManagementTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_revert
     */
     function test_setStream_revert() public {
+        Stream currentStream = mgm.stream();
         vm.expectRevert(XSiloManagement.NoChange.selector);
-        mgm.setStream(Stream(address(0)));
+        mgm.setStream(currentStream);
     }
 
     /*
