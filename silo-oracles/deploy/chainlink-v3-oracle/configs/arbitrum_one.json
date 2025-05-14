@@ -10,6 +10,17 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
+    "CHAINLINK_wstETH_ETH": {
+        "baseToken": "wstETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_wstETH_stETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_stETH_ETH_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e36,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_WETH_USD": {
         "baseToken": "WETH",
         "quoteToken": "SILO_VIRTUAL_USD_8",
