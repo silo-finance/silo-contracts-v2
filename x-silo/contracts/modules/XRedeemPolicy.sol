@@ -61,6 +61,9 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         _;
     }
 
+    /// @param _xSiloAmount xSilo amount to redeem for Silo
+    /// @param _duration duration in seconds after which redeem happen
+    /// @return siloAmountAfterVesting Silo amount user will get after duration
     function getAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
         public
         view
@@ -71,6 +74,9 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
     }
 
+    /// @param _xSiloAmount xSilo amount to use for vesting
+    /// @param _duration duration in seconds
+    /// @return xSiloAfterVesting xSilo amount will be used for redeem after vesting
     function getXAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
         public
         view
@@ -87,6 +93,10 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         xSiloAfterVesting = Math.mulDiv(_xSiloAmount, ratio, _PRECISION, Math.Rounding.Floor);
     }
 
+    /// @dev reversed method for getXAmountByVestingDuration
+    /// @param _xSiloAfterVesting amount after vesting
+    /// @param _duration duration in seconds
+    /// @return xSiloAmountIn xSilo amount user will spend to get `_xSiloAfterVesting`
     function getAmountInByVestingDuration(uint256 _xSiloAfterVesting, uint256 _duration)
         public
         view
