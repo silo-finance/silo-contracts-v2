@@ -13,8 +13,8 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     error ZeroShares();
     error ZeroAssets();
 
-    constructor(address _initialOwner, address _asset)
-        XSiloManagement(_initialOwner)
+    constructor(address _initialOwner, address _asset, address _stream)
+        XSiloManagement(_initialOwner, _stream)
         ERC4626(IERC20(_asset))
         ERC20(string.concat('x', TokenHelper.symbol(_asset)), string.concat('x', TokenHelper.symbol(_asset)))
     {
