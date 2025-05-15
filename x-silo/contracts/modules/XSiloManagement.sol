@@ -24,7 +24,8 @@ abstract contract XSiloManagement is Ownable2Step {
 
     constructor(address _initialOwner, address _stream) Ownable(_initialOwner) {
         // it is optional and can be address(0)
-        if (_stream != address(0)) _setStream(Stream(_stream));
+        // we have to skip check because of deployment scripts: they using precalculated addresses
+        if (_stream != address(0)) _setStream({_stream: Stream(_stream), _skipBeneficiaryCheck: true});
     }
 
     /// @notice This function allows setting the notification receiver to address(0).
@@ -43,12 +44,12 @@ abstract contract XSiloManagement is Ownable2Step {
     }
 
     function setStream(Stream _stream) external onlyOwner {
-        _setStream(_stream);
+        _setStream(_stream, false);
     }
 
-    function _setStream(Stream _stream) internal {
+    function _setStream(Stream _stream, bool _skipBeneficiaryCheck) internal {
         require(stream != _stream, NoChange());
-        require(_stream.BENEFICIARY() == address(this), NotBeneficiary());
+        require(_skipBeneficiaryCheck || _stream.BENEFICIARY() == address(this), NotBeneficiary());
 
         stream = _stream;
         emit StreamUpdate(_stream);
