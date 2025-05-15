@@ -239,7 +239,12 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
  Silo Factory [0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5](https://optimistic.etherscan.io/address/0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5)
 
  **Network: Ink** \
- id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ id 100 - 101 version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
  SiloDeployer [0x2a4507b28c6E620A2Dcc05062F250D3d1C0f3faa](https://explorer.inkonchain.com/address/0x2a4507b28c6E620A2Dcc05062F250D3d1C0f3faa) \
  Silo Implementation [0x4576fa3e2E061376431619B5631C25c99fFa27bd](https://explorer.inkonchain.com/address/0x4576fa3e2E061376431619B5631C25c99fFa27bd) \
+ Silo Factory [0xD13921239e3832FDC4141FDE544D3D058B529A5D](https://explorer.inkonchain.com/address/0xD13921239e3832FDC4141FDE544D3D058B529A5D)
+
+ id 102 -  version [3.5.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ SiloDeployer [0xb59605f42A1c564aacc9387132Ad712295b21E55](https://explorer.inkonchain.com/address/0xb59605f42A1c564aacc9387132Ad712295b21E55) \
+ Silo Implementation [0xd3De080436b9d38DC315944c16d89C050C414Fed](https://explorer.inkonchain.com/address/0xd3De080436b9d38DC315944c16d89C050C414Fed) \
  Silo Factory [0xD13921239e3832FDC4141FDE544D3D058B529A5D](https://explorer.inkonchain.com/address/0xD13921239e3832FDC4141FDE544D3D058B529A5D)
