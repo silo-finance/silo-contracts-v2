@@ -39,14 +39,22 @@ contract XSiloManagementTest is Test {
         vm.expectEmit(true, true, true, true);
         emit NotificationReceiverUpdate(newAddr);
 
-        mgm.setNotificationReceiver(newAddr);
+        mgm.setNotificationReceiver(newAddr, true);
 
         assertEq(address(newAddr), address(mgm.notificationReceiver()), "new notificationReceiver");
     }
 
-    function test_setNotificationReceiver_revert() public {
+    function test_setNotificationReceiver_revert_NoChange() public {
         vm.expectRevert(XSiloManagement.NoChange.selector);
-        mgm.setNotificationReceiver(INotificationReceiver(address(0)));
+        mgm.setNotificationReceiver(INotificationReceiver(address(0)), true);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setNotificationReceiver_revert_StopAllRelatedPrograms
+    */
+    function test_setNotificationReceiver_revert_StopAllRelatedPrograms() public {
+        vm.expectRevert(abi.encodeWithSelector(XSiloManagement.StopAllRelatedPrograms.selector));
+        mgm.setNotificationReceiver(INotificationReceiver(address(1)), false);
     }
 
     /*
@@ -123,6 +131,6 @@ contract XSiloManagementTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
         vm.prank(someAddress);
-        mgm.setNotificationReceiver(INotificationReceiver(address(0)));
+        mgm.setNotificationReceiver(INotificationReceiver(address(0)), true);
     }
 }
