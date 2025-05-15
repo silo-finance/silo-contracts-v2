@@ -12,6 +12,7 @@ import {Stream} from "./modules/Stream.sol";
 contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     error ZeroShares();
     error ZeroAssets();
+    error SelfTransferNotAllowed();
 
     constructor(address _initialOwner, address _asset, address _stream)
         XSiloManagement(_initialOwner, _stream)
@@ -147,6 +148,8 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
+        require(_from != _to, SelfTransferNotAllowed());
+
         Stream stream_ = stream;
         if (address(stream_) != address(0)) stream_.claimRewards();
 
