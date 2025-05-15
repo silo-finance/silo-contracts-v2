@@ -71,7 +71,7 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_WithFractions_any_scenario_fuzz(
-        uint256 _borrowAmount,
+        uint256 _firstBorrowAmount,
         uint256 _depositAmount,
         bool _borrowShares,
         uint8 _scenario
@@ -81,15 +81,17 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
 
         uint256 maxBorrow = silo1.maxBorrow(address(this));
 
-        vm.assume(_borrowAmount != 0 && _borrowAmount < maxBorrow);
+        // We need to create a debt before testing, because of that `_firstBorrowAmount` should be < `maxBorrow`.
+        // Otherwise, the test will fail because we will not be able to borrow a second time.
+        vm.assume(_firstBorrowAmount != 0 && _firstBorrowAmount < maxBorrow);
         vm.assume(_scenario == 1 || _scenario == 2 || _scenario == 3);
 
         if (_scenario == 1) {
-            _executeBorrowScenario1(_borrowAmount, _borrowShares);
+            _executeBorrowScenario1(_firstBorrowAmount, _borrowShares);
         } else if (_scenario == 2) {
-            _executeBorrowScenario2(_borrowAmount, _borrowShares);
+            _executeBorrowScenario2(_firstBorrowAmount, _borrowShares);
         } else if (_scenario == 3) {
-            _executeBorrowScenario3(_borrowAmount, _borrowShares);
+            _executeBorrowScenario3(_firstBorrowAmount, _borrowShares);
         }
     }
 
@@ -129,9 +131,9 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         vm.revertTo(snapshot);
     }
 
-    function _executeBorrowScenario1(uint256 _borrowAmount, bool _borrowShares) internal {
+    function _executeBorrowScenario1(uint256 _firstBorrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
-        _borrowAndUpdateSiloCode(_borrowAmount);
+        _borrowAndUpdateSiloCode(_firstBorrowAmount);
 
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
@@ -190,9 +192,9 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         vm.revertTo(snapshot);
     }
 
-    function _executeBorrowScenario2(uint256 _borrowAmount, bool _borrowShares) internal {
+    function _executeBorrowScenario2(uint256 _firstBorrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
-        _borrowAndUpdateSiloCode(_borrowAmount);
+        _borrowAndUpdateSiloCode(_firstBorrowAmount);
 
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
@@ -250,9 +252,9 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         vm.revertTo(snapshot);
     }
 
-    function _executeBorrowScenario3(uint256 _borrowAmount, bool _borrowShares) internal {
+    function _executeBorrowScenario3(uint256 _firstBorrowAmount, bool _borrowShares) internal {
         address borrower = address(this);
-        _borrowAndUpdateSiloCode(_borrowAmount);
+        _borrowAndUpdateSiloCode(_firstBorrowAmount);
 
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
