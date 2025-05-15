@@ -411,7 +411,9 @@ library SiloLendingLib {
             Therefore, we decrement `_totalDebtAssets` with `_totalDebtAssets--`
             to offset the earlier `_totalDebtAssets++`.
             */
-            if (_totalDebtAssets != 0) _totalDebtAssets--;
+            if (_totalDebtAssets != 0) {
+                unchecked { _totalDebtAssets--; }
+            }
         }
 
         // we need to recalculate assets, because what we did above is assets => shares with rounding down, but when
