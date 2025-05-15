@@ -28,7 +28,7 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
     }
 
     /*
-    forge test -vv --mt test_maxBorrowValueToAssetsAndShares_loop
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_maxBorrowValueToAssetsAndShares_loop
     */
     function test_maxBorrowValueToAssetsAndShares_loop() public {
         MaxBorrowValueToAssetsAndSharesTestData.MBVData[] memory testDatas = tests.getData();
