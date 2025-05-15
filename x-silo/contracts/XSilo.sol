@@ -39,27 +39,18 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /// @inheritdoc IERC4626
-    /// @notice `maxWithdraw` uses a duration of 0 to calculate the result, which represents the worst-case scenario
-    /// for asset withdrawals. To obtain a better deal, please use the custom method `getAmountByVestingDuration` with
-    /// different duration.
     function maxWithdraw(address _owner) public view virtual override returns (uint256 assets) {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(balanceOf(_owner), 0);
         assets = convertToAssets(xSiloAfterVesting);
     }
 
     /// @inheritdoc IERC4626
-    /// @notice `previewWithdraw` uses a duration of 0 to calculate the result, which represents the worst-case scenario
-    /// for asset withdrawals. To obtain a better deal, please use the custom method `getAmountByVestingDuration` with
-    /// different duration.
     function previewWithdraw(uint256 _assets) public view virtual override returns (uint256 shares) {
         uint256 _xSiloAfterVesting = convertToShares(_assets);
         shares = getAmountInByVestingDuration(_xSiloAfterVesting, 0);
     }
 
     /// @inheritdoc IERC4626
-    /// @notice `previewRedeem` uses a duration of 0 to calculate the result, which represents the worst-case scenario
-    /// for asset redeem. To obtain a better deal, please use the custom method `getAmountByVestingDuration` with
-    /// different duration.
     function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_shares, 0);
         assets = convertToAssets(xSiloAfterVesting);
