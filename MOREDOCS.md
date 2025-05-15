@@ -206,9 +206,14 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
  Silo Implementation [0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d](https://sonicscan.org/address/0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d) \
  Silo Factory [0xa42001D6d2237d2c74108FE360403C4b796B7170](https://sonicscan.org/address/0xa42001D6d2237d2c74108FE360403C4b796B7170)
 
- id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ id 100 version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
  SiloDeployer [0xd3e800f6cfE31253911C3b941594286fCD007116](https://sonicscan.org/address/0xd3e800f6cfE31253911C3b941594286fCD007116) \
  Silo Implementation [0xc2B2e6e30F0F059cC05bF5B29d452A770944f0E3](https://sonicscan.org/address/0xc2B2e6e30F0F059cC05bF5B29d452A770944f0E3) \
+ Silo Factory [0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203](https://sonicscan.org/address/0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203)
+
+ id 101 - version [3.5.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.5.0) \
+ SiloDeployer [0x2Efa5cB0B72f625465aeAc4B84AC90C8b4519C23](https://sonicscan.org/address/0x2Efa5cB0B72f625465aeAc4B84AC90C8b4519C23) \
+ Silo Implementation [0x435Ab368F5fCCcc71554f4A8ac5F5b922bC4Dc06](https://sonicscan.org/address/0x435Ab368F5fCCcc71554f4A8ac5F5b922bC4Dc06) \
  Silo Factory [0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203](https://sonicscan.org/address/0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203)
  
  **Network: Arbitrum** \
