@@ -69,6 +69,24 @@ contract XSiloTest is Test {
             "withdraw give us same result as redeem with 0 duration"
         );
     }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_usersDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_maxRedeem_usersDuration0(uint256 _silos) public {
+        vm.assume(_silos > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calulculations
+
+        _convert(user, _silos);
+
+        assertEq(
+            xSilo.maxRedeem(user),
+            xSilo.getXAmountByVestingDuration(xSilo.balanceOf(user), 0),
+            "redeem give us same result as redeem with 0 duration"
+        );
+    }
+
     function _convert(address _user, uint256 _amount) public returns (uint256 shares){
         vm.startPrank(_user);
 

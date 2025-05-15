@@ -105,6 +105,14 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /// @inheritdoc IERC4626
+    /// @notice `maxRedeem` uses a duration of 0 to calculate the result, which represents the worst-case scenario
+    /// for asset withdrawals. To obtain a better deal, please use the custom method `getXAmountByVestingDuration` with
+    /// different duration.
+    function maxRedeem(address _owner) public view virtual override returns (uint256 shares) {
+        shares = getXAmountByVestingDuration(balanceOf(_owner), 0);
+    }
+
+    /// @inheritdoc IERC4626
     /// @notice `previewWithdraw` uses a duration of 0 to calculate the result, which represents the worst-case scenario
     /// for asset withdrawals. To obtain a better deal, please use the custom method `getAmountByVestingDuration` with
     /// different duration.
