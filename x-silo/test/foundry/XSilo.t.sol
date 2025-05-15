@@ -59,7 +59,7 @@ contract XSiloTest is Test {
     /// forge-config: x_silo.fuzz.runs = 10000
     function test_maxWithdraw_usersDuration0(uint256 _silos) public {
         vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calulculations
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
         _convert(user, _silos);
 
@@ -71,12 +71,29 @@ contract XSiloTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewWithdraw_usersDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_previewWithdraw_usersDuration0(uint256 _silos) public {
+        vm.assume(_silos > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+
+        uint256 xSiloRequiredFor = xSilo.previewWithdraw(_silos);
+
+        assertEq(
+            xSilo.getAmountByVestingDuration(xSiloRequiredFor, 0),
+            _silos,
+            "previewWithdraw give us same result as vesting with 0 duration"
+        );
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_usersDuration0
     */
     /// forge-config: x_silo.fuzz.runs = 10000
     function test_maxRedeem_usersDuration0(uint256 _silos) public {
         vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calulculations
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
         _convert(user, _silos);
 
