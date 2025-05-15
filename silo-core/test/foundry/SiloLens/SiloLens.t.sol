@@ -12,6 +12,7 @@ import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.
 import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 /*
     forge test -vv --ffi --mc SiloLensTest
@@ -243,6 +244,19 @@ contract SiloLensTest is SiloLittleHelper, Test {
         assertEq(programsNames[0], expectedString);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_SiloLens_forking_getSiloIncentivesControllerProgramsNames -vvv
+    */
+    function test_SiloLens_forking_getSiloIncentivesControllerProgramsNames() public {
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 26894678);
+
+        address siloIncentivesController = 0xdc5B289bB15C3FEE96d106a607B13cCA8092F4F9;
+
+        SiloLens siloLens = new SiloLens();
+        string[] memory programsNames = siloLens.getSiloIncentivesControllerProgramsNames(siloIncentivesController);
+
+        assertEq(programsNames.length, 2);
+    }
     /*
     FOUNDRY_PROFILE=core_test \
         forge test --ffi --mt test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames -vvv

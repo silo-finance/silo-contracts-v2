@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Utils} from "silo-foundry-utils/lib/Utils.sol";
 
 import {ISiloLens, ISilo} from "./interfaces/ISiloLens.sol";
 import {IShareToken} from "./interfaces/IShareToken.sol";
@@ -269,6 +270,8 @@ contract SiloLens is ISiloLens {
         if (_name.length != 20) return false;
 
         address token = address(bytes20(_name));
+
+        if (Utils.getCodeAt(token).length == 0) return false;
 
         // Sanity check to be sure that it is a token
         try IERC20(token).balanceOf(address(this)) returns (uint256) {
