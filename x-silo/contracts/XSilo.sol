@@ -107,11 +107,12 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /// @inheritdoc IERC4626
-    /// @notice `maxRedeem` uses a duration of 0 to calculate the result, which represents the worst-case scenario
-    /// for asset withdrawals. To obtain a better deal, please use the custom method `getXAmountByVestingDuration` with
-    /// different duration.
+    /// @notice `maxRedeem` returns whole user balance, however when user do `redeem`, `shares` that are actually
+    /// used for redeeming process are calculated based on vesting with duration == 0, which represents the worst-case
+    /// scenario for asset redeeming. Therefore only part of that shares will be converted back to Silo.
+    /// To obtain a better deal, please use the custom method `redeemSilo` with different duration.
     function maxRedeem(address _owner) public view virtual override returns (uint256 shares) {
-        shares = getXAmountByVestingDuration(balanceOf(_owner), 0);
+        shares = super.maxRedeem(_owner);
     }
 
     /// @inheritdoc IERC4626
