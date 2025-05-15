@@ -19,6 +19,7 @@ abstract contract XSiloManagement is Ownable2Step {
     event StreamUpdate(Stream indexed newStream);
 
     error NoChange();
+    error StopAllRelatedPrograms();
     error NotBeneficiary();
 
     constructor(address _initialOwner, address _stream) Ownable(_initialOwner) {
@@ -26,8 +27,16 @@ abstract contract XSiloManagement is Ownable2Step {
         if (_stream != address(0)) _setStream(Stream(_stream));
     }
 
-    function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
+    /// @notice This function allows setting the notification receiver to address(0).
+    /// We know that it is dangerous if there are active incentive programs. Also, it can be an issue if we update to
+    /// the new notification receiver while we have active incentive programs. That's why we have sanity check
+    /// using `_allProgramsStopped`
+    function setNotificationReceiver(INotificationReceiver _notificationReceiver, bool _allProgramsStopped)
+        external
+        onlyOwner
+    {
         require(notificationReceiver != _notificationReceiver, NoChange());
+        require(_allProgramsStopped, StopAllRelatedPrograms());
 
         notificationReceiver = _notificationReceiver;
         emit NotificationReceiverUpdate(_notificationReceiver);
