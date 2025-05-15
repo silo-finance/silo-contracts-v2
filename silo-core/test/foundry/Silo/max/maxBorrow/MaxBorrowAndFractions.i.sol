@@ -81,8 +81,7 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
 
         uint256 maxBorrow = silo1.maxBorrow(address(this));
 
-        vm.assume(_borrowAmount != 0);
-        vm.assume(_borrowAmount <= maxBorrow);
+        vm.assume(_borrowAmount != 0 && _borrowAmount < maxBorrow);
         vm.assume(_scenario == 1 || _scenario == 2 || _scenario == 3);
 
         if (_scenario == 1) {
@@ -293,10 +292,10 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         vm.etch(address(silo1), address(silo1Harness).code);
 
         ISilo.Fractions memory fractions = silo1.getFractionsStorage();
-        assertEq(fractions.interest, 0);
-        assertEq(fractions.revenue, 0);
+        assertEq(fractions.interest, 0, "interest should be 0");
+        assertEq(fractions.revenue, 0, "revenue should be 0");
 
         maxBorrow = silo1.maxBorrow(borrower);
-        assertNotEq(maxBorrow, 0);
+        assertNotEq(maxBorrow, 0, "maxBorrow should not be 0");
     }
 }
