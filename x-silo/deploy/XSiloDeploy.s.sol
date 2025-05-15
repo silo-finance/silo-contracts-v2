@@ -22,9 +22,10 @@ contract XSiloDeploy is CommonDeploy {
 
         address siloTokenV2 = XSiloDeployments.get(AddrKey.SILO_TOKEN_V2, chainAlias);
         address dao = AddrLib.getAddressSafe(chainAlias, AddrKey.DAO);
+        address stream = XSiloDeployments.get(XSiloContracts.STREAM, chainAlias);
 
         vm.startBroadcast(deployerPrivateKey);
-        xSilo = new XSilo(dao, siloTokenV2, address(0));
+        xSilo = new XSilo(dao, siloTokenV2, stream);
         vm.stopBroadcast();
 
         _registerDeployment(address(xSilo), XSiloContracts.X_SILO);
