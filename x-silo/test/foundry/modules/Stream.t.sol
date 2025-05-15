@@ -91,9 +91,11 @@ contract StreamTest is Test {
 
         vm.warp(block.timestamp + 10);
         token.mint(address(stream), 3);
+        assertEq(token.balanceOf(stream.BENEFICIARY()), 0, "BENEFICIARY didn't receive any rewards yet");
 
         assertEq(stream.pendingRewards(), 3, "pendingRewards returns max possible value");
         assertEq(stream.claimRewards(), 3, "claimRewards returns max possible value");
+        assertEq(token.balanceOf(stream.BENEFICIARY()), 3, "BENEFICIARY got tokens");
     }
 
     /*
