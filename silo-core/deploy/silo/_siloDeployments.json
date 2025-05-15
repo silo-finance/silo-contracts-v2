@@ -1,5 +1,7 @@
 {
-  "arbitrum_one": {},
+  "arbitrum_one": {
+    "Silo_WETH_USDC": "0x450e577F905902505c4478E2776187bD3725479c"
+  },
   "optimism": {
     "Silo_UniswapV3-WETH-USDC": "0x34A40A76823838a22AE42cB5B62F83580900061d"
   },
