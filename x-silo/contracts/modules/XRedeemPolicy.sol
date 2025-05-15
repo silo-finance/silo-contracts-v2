@@ -17,11 +17,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 endTime;
     }
 
-    error ZeroAmount();
-    error NoSiloToRedeem();
-    error RedeemIndexDoesNotExist();
-
-    uint256 constant _PRECISION = 100;
+    uint256 internal constant _PRECISION = 100;
 
     /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
     uint256 public constant MAX_FIXED_RATIO = _PRECISION; // 100%
@@ -51,102 +47,31 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
     mapping(address => RedeemInfo[]) public userRedeems;
 
-    event UpdateRedeemSettings(uint256 minRedeemRatio, uint256 maxRedeemRatio, uint256 minRedeemDuration, uint256 maxRedeemDuration);
-    event StartRedeem(address indexed _userAddress, uint256 currentSiloAmount, uint256 xSiloToBurn, uint256 siloAmountAfterVesting, uint256 duration);
+    event UpdateRedeemSettings(
+        uint256 minRedeemRatio,
+        uint256 maxRedeemRatio,
+        uint256 minRedeemDuration,
+        uint256 maxRedeemDuration
+    );
+
+    event StartRedeem(
+        address indexed _userAddress,
+        uint256 currentSiloAmount,
+        uint256 xSiloToBurn,
+        uint256 siloAmountAfterVesting,
+        uint256 duration
+    );
+
     event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
     event CancelRedeem(address indexed _userAddress, uint256 xSiloToTransfer, uint256 xSiloToBurn);
+
+    error ZeroAmount();
+    error NoSiloToRedeem();
+    error RedeemIndexDoesNotExist();
 
     modifier validateRedeem(address _userAddress, uint256 _redeemIndex) {
         require(_redeemIndex < userRedeems[_userAddress].length, RedeemIndexDoesNotExist());
         _;
-    }
-
-    /// @param _xSiloAmount xSilo amount to redeem for Silo
-    /// @param _duration duration in seconds after which redeem happen
-    /// @return siloAmountAfterVesting Silo amount user will get after duration
-    function getAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
-        public
-        view
-        virtual
-        returns (uint256 siloAmountAfterVesting)
-    {
-        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmount, _duration);
-        siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
-    }
-
-    /// @param _xSiloAmount xSilo amount to use for vesting
-    /// @param _duration duration in seconds
-    /// @return xSiloAfterVesting xSilo amount will be used for redeem after vesting
-    function getXAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
-        public
-        view
-        virtual
-        returns (uint256 xSiloAfterVesting)
-    {
-        if (_xSiloAmount == 0) {
-            return 0;
-        }
-
-        uint256 ratio = _calculateRatio(_duration);
-        if (ratio == 0) return 0;
-
-        xSiloAfterVesting = Math.mulDiv(_xSiloAmount, ratio, _PRECISION, Math.Rounding.Floor);
-    }
-
-    /// @dev reversed method for getXAmountByVestingDuration
-    /// @param _xSiloAfterVesting amount after vesting
-    /// @param _duration duration in seconds
-    /// @return xSiloAmountIn xSilo amount user will spend to get `_xSiloAfterVesting`
-    function getAmountInByVestingDuration(uint256 _xSiloAfterVesting, uint256 _duration)
-        public
-        view
-        virtual
-        returns (uint256 xSiloAmountIn)
-    {
-        if (_xSiloAfterVesting == 0) {
-            return 0;
-        }
-
-        uint256 ratio = _calculateRatio(_duration);
-        if (ratio == 0) return type(uint256).max;
-
-        xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
-    }
-
-    function getUserRedeemsBalance(address _userAddress)
-        external
-        view
-        virtual
-        returns (uint256 redeemingSiloAmount)
-    {
-        uint256 len = userRedeems[_userAddress].length;
-
-        if (len == 0) return 0;
-
-        for (uint256 i = 0; i < len; i++) {
-            RedeemInfo storage redeemCache = userRedeems[_userAddress][i];
-            redeemingSiloAmount += redeemCache.siloAmountAfterVesting;
-        }
-    }
-
-    function getUserRedeemsLength(address _userAddress) external view returns (uint256) {
-        return userRedeems[_userAddress].length;
-    }
-
-    function getUserRedeem(address _userAddress, uint256 _redeemIndex)
-        external
-        view
-        validateRedeem(_userAddress, _redeemIndex)
-        returns (uint256 currentSiloAmount, uint256 xSiloAmount, uint256 siloAmountAfterVesting, uint256 endTime)
-    {
-        RedeemInfo storage redeemCache = userRedeems[_userAddress][_redeemIndex];
-
-        return (
-            redeemCache.currentSiloAmount,
-            redeemCache.xSiloAmountToBurn,
-            redeemCache.siloAmountAfterVesting,
-            redeemCache.endTime
-        );
     }
 
     function updateRedeemSettings(
@@ -245,7 +170,116 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         _deleteRedeemEntry(_redeemIndex);
     }
 
-    function _calculateRatio(uint256 _duration)
+    function getUserRedeemsBalance(address _userAddress)
+        external
+        view
+        virtual
+        returns (uint256 redeemingSiloAmount)
+    {
+        uint256 len = userRedeems[_userAddress].length;
+
+        if (len == 0) return 0;
+
+        for (uint256 i = 0; i < len; i++) {
+            RedeemInfo storage redeemCache = userRedeems[_userAddress][i];
+            redeemingSiloAmount += redeemCache.siloAmountAfterVesting;
+        }
+    }
+
+    function getUserRedeemsLength(address _userAddress) external view returns (uint256) {
+        return userRedeems[_userAddress].length;
+    }
+
+    function getUserRedeem(address _userAddress, uint256 _redeemIndex)
+        external
+        view
+        validateRedeem(_userAddress, _redeemIndex)
+        returns (uint256 currentSiloAmount, uint256 xSiloAmount, uint256 siloAmountAfterVesting, uint256 endTime)
+    {
+        RedeemInfo storage redeemCache = userRedeems[_userAddress][_redeemIndex];
+
+        return (
+            redeemCache.currentSiloAmount,
+            redeemCache.xSiloAmountToBurn,
+            redeemCache.siloAmountAfterVesting,
+            redeemCache.endTime
+        );
+    }
+
+    /// @param _xSiloAmount xSilo amount to redeem for Silo
+    /// @param _duration duration in seconds after which redeem happen
+    /// @return siloAmountAfterVesting Silo amount user will get after duration
+    function getAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
+        public
+        view
+        virtual
+        returns (uint256 siloAmountAfterVesting)
+    {
+        uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmount, _duration);
+        siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
+    }
+
+    /// @param _xSiloAmount xSilo amount to use for vesting
+    /// @param _duration duration in seconds
+    /// @return xSiloAfterVesting xSilo amount will be used for redeem after vesting
+    function getXAmountByVestingDuration(uint256 _xSiloAmount, uint256 _duration)
+        public
+        view
+        virtual
+        returns (uint256 xSiloAfterVesting)
+    {
+        if (_xSiloAmount == 0) {
+            return 0;
+        }
+
+        uint256 ratio = _calculateRatio(_duration);
+        if (ratio == 0) return 0;
+
+        xSiloAfterVesting = Math.mulDiv(_xSiloAmount, ratio, _PRECISION, Math.Rounding.Floor);
+    }
+
+    /// @dev reversed method for getXAmountByVestingDuration
+    /// @param _xSiloAfterVesting amount after vesting
+    /// @param _duration duration in seconds
+    /// @return xSiloAmountIn xSilo amount user will spend to get `_xSiloAfterVesting`
+    function getAmountInByVestingDuration(uint256 _xSiloAfterVesting, uint256 _duration)
+        public
+        view
+        virtual
+        returns (uint256 xSiloAmountIn)
+    {
+        if (_xSiloAfterVesting == 0) {
+            return 0;
+        }
+
+        uint256 ratio = _calculateRatio(_duration);
+        if (ratio == 0) return type(uint256).max;
+
+        xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
+    }
+
+    function convertToAssets(uint256 _shares) public view virtual returns (uint256);
+
+    function convertToShares(uint256 _assets) public view virtual returns (uint256);
+
+    function _deleteRedeemEntry(uint256 _index) internal {
+        userRedeems[msg.sender][_index] = userRedeems[msg.sender][userRedeems[msg.sender].length - 1];
+        userRedeems[msg.sender].pop();
+    }
+
+    function _withdraw(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _assetsToTransfer,
+        uint256 _sharesToBurn
+    ) internal virtual;
+
+    function _burnShares(address _account, uint256 _shares) internal virtual;
+
+    function _transferShares(address _from, address _to, uint256 _shares) internal virtual;
+
+        function _calculateRatio(uint256 _duration)
         internal
         view
         virtual
@@ -265,25 +299,4 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         ratio = minRedeemRatio
             + Math.mulDiv(_duration - minRedeemDuration, ratioDiff, maxRedeemDuration - minRedeemDuration);
     }
-
-    function _deleteRedeemEntry(uint256 _index) internal {
-        userRedeems[msg.sender][_index] = userRedeems[msg.sender][userRedeems[msg.sender].length - 1];
-        userRedeems[msg.sender].pop();
-    }
-
-    function convertToAssets(uint256 _shares) public view virtual returns (uint256);
-
-    function convertToShares(uint256 _assets) public view virtual returns (uint256);
-
-    function _withdraw(
-        address _caller,
-        address _receiver,
-        address _owner,
-        uint256 _assetsToTransfer,
-        uint256 _sharesToBurn
-    ) internal virtual;
-
-    function _burnShares(address _account, uint256 _shares) internal virtual;
-
-    function _transferShares(address _from, address _to, uint256 _shares) internal virtual;
 }
