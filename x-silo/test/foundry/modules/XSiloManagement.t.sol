@@ -50,17 +50,49 @@ contract XSiloManagementTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_streamWithoutBENEFICIARY
     */
-    function test_setStream() public {
-        Stream newAddr = Stream(makeAddr("new Stream"));
+    function test_setStream_streamWithoutBENEFICIARY() public {
+        Stream streamWithoutBENEFICIARY = Stream(makeAddr("new Stream"));
+
+        vm.expectRevert();
+        mgm.setStream(streamWithoutBENEFICIARY);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_NotBeneficiary
+    */
+    function test_setStream_NotBeneficiary() public {
+        Stream stream = Stream(makeAddr("new Stream"));
+
+        vm.mockCall(
+            address(stream),
+            abi.encodeWithSelector(stream.BENEFICIARY.selector),
+            abi.encode(address(123))
+        );
+
+        vm.expectRevert(XSiloManagement.NotBeneficiary.selector);
+        mgm.setStream(stream);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_pass
+    */
+    function test_setStream_pass() public {
+        Stream newStream = Stream(makeAddr("new Stream"));
+
+        vm.mockCall(
+            address(newStream),
+            abi.encodeWithSelector(newStream.BENEFICIARY.selector),
+            abi.encode(address(mgm))
+        );
 
         vm.expectEmit(true, true, true, true);
-        emit StreamUpdate(newAddr);
+        emit StreamUpdate(newStream);
 
-        mgm.setStream(newAddr);
+        mgm.setStream(newStream);
 
-        assertEq(address(newAddr), address(mgm.stream()), "new Stream");
+        assertEq(address(newStream), address(mgm.stream()), "new Stream");
     }
 
     /*
