@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {ERC4626, IERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
