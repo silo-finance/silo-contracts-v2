@@ -19,9 +19,11 @@ abstract contract XSiloManagement is Ownable2Step {
     event StreamUpdate(Stream indexed newStream);
 
     error NoChange();
+    error NotBeneficiary();
 
     constructor(address _initialOwner, address _stream) Ownable(_initialOwner) {
-        stream = Stream(_stream); // it is optional and can be address(0)
+        // it is optional and can be address(0)
+        if (_stream != address(0)) _setStream(Stream(_stream));
     }
 
     function setNotificationReceiver(INotificationReceiver _notificationReceiver) external onlyOwner {
@@ -32,7 +34,12 @@ abstract contract XSiloManagement is Ownable2Step {
     }
 
     function setStream(Stream _stream) external onlyOwner {
+        _setStream(_stream);
+    }
+
+    function _setStream(Stream _stream) internal {
         require(stream != _stream, NoChange());
+        require(_stream.BENEFICIARY() == address(this), NotBeneficiary());
 
         stream = _stream;
         emit StreamUpdate(_stream);
