@@ -212,9 +212,14 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
  Silo Factory [0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203](https://sonicscan.org/address/0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203)
  
  **Network: Arbitrum** \
- id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ id 100 - 108 version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
  SiloDeployer [0x1d244E66e9A875F325ca85Db3077d3C446090Ec5](https://arbiscan.io/address/0x1d244E66e9A875F325ca85Db3077d3C446090Ec5) \
  Silo Implementation [0xc216dFac5e29EafC4ed826A3bB79dB72E1aC2535](https://arbiscan.io/address/0xc216dFac5e29EafC4ed826A3bB79dB72E1aC2535) \
+ Silo Factory [0x384DC7759d35313F0b567D42bf2f611B285B657C](https://arbiscan.io/address/0x384DC7759d35313F0b567D42bf2f611B285B657C)
+
+  id 109 - version [3.5.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.5.0) \
+ SiloDeployer [0xc95Cce9e3A23d8c1c51a61CeAa5ee5927BA9F521](https://arbiscan.io/address/0xc95Cce9e3A23d8c1c51a61CeAa5ee5927BA9F521) \
+ Silo Implementation [0x9b550BF0351986342959d4447c5851e570766238](https://arbiscan.io/address/0x9b550BF0351986342959d4447c5851e570766238) \
  Silo Factory [0x384DC7759d35313F0b567D42bf2f611B285B657C](https://arbiscan.io/address/0x384DC7759d35313F0b567D42bf2f611B285B657C)
 
  **Network: Optimism** \
