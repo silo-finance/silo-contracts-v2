@@ -53,34 +53,6 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0
-    */
-    /// forge-config: x_silo.fuzz.runs = 10000
-    function test_redeem_usesDuration0(uint256 _silos, uint256 _xSiloToRedeem) public {
-        vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
-        vm.assume(_xSiloToRedeem > 0);
-
-        _convert(user, _silos);
-        vm.assume(_xSiloToRedeem <= xSilo.balanceOf(user));
-
-        uint256 expectedAmountOut = xSilo.getAmountByVestingDuration(_xSiloToRedeem, 0);
-        vm.assume(expectedAmountOut > 0);
-
-        vm.startPrank(user);
-
-        assertEq(
-            xSilo.redeem(_xSiloToRedeem, user, user),
-            expectedAmountOut,
-            "withdraw give us same result as redeem with 0 duration"
-        );
-
-        assertEq(asset.balanceOf(user), expectedAmountOut, "user got exact amount of tokens");
-
-        vm.stopPrank();
-    }
-
-    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxWithdraw_usersDuration0
     */
     /// forge-config: x_silo.fuzz.runs = 10000
@@ -101,7 +73,7 @@ contract XSiloTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewWithdraw_usersDuration0
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_previewWithdraw_usersDuration0(uint256 _silos) public {
+    function test_previewWithdraw_usersDuration0(uint256 _silos) public view {
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
@@ -118,7 +90,7 @@ contract XSiloTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_usersDuration0
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_maxRedeem_usersDuration0(uint256 _silos) public {
+    function test_maxRedeem_retunsAll(uint256 _silos) public {
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
@@ -126,8 +98,8 @@ contract XSiloTest is Test {
 
         assertEq(
             xSilo.maxRedeem(user),
-            xSilo.getXAmountByVestingDuration(xSilo.balanceOf(user), 0),
-            "redeem give us same result as redeem with 0 duration"
+            xSilo.balanceOf(user),
+            "max redeem return all user balance even if not all can be translated immediatly to Silo"
         );
     }
 
@@ -135,7 +107,7 @@ contract XSiloTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewRedeem_usersDuration0
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_previewRedeem_usersDuration0(uint256 _xSilos) public {
+    function test_previewRedeem_usersDuration0(uint256 _xSilos) public view {
         vm.assume(_xSilos > 0);
 
         assertEq(
@@ -144,7 +116,6 @@ contract XSiloTest is Test {
             "previewRedeem give us same result as vesting with 0 duration"
         );
     }
-
 
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_usesDuration0
@@ -179,6 +150,69 @@ contract XSiloTest is Test {
             xSilo.getAmountByVestingDuration(withdrawnShares, 0),
             "withdraw give us same result as vesting with 0 duration"
         );
+
+        vm.stopPrank();
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_all
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_redeem_all(uint256 _silos) public {
+        vm.assume(_silos > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+
+        _convert(user, _silos);
+
+        uint256 siloPreview = xSilo.getAmountByVestingDuration(xSilo.balanceOf(user), 0);
+        vm.assume(siloPreview != 0);
+
+        vm.startPrank(user);
+
+        uint256 gotSilos = xSilo.redeem(xSilo.balanceOf(user), user, user);
+
+        assertEq(
+            siloPreview,
+            gotSilos,
+            "redeem give us same result as vesting with 0 duration"
+        );
+
+        assertEq(asset.balanceOf(user), gotSilos, "user got exact amount of tokens");
+
+        vm.stopPrank();
+    }
+
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_redeem_usesDuration0(
+        uint256 _silos, uint256 _xSiloToRedeem
+    ) public {
+//        (uint256 _silos, uint256 _xSiloToRedeem) = (9133, 4696);
+
+        vm.assume(_silos > 0);
+        vm.assume(_xSiloToRedeem > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+
+        _convert(user, _silos);
+        vm.assume(_xSiloToRedeem <= xSilo.balanceOf(user));
+
+        uint256 siloPreview = xSilo.getAmountByVestingDuration(_xSiloToRedeem, 0);
+        vm.assume(siloPreview != 0);
+
+        vm.startPrank(user);
+
+        uint256 gotSilos = xSilo.redeem(_xSiloToRedeem, user, user);
+
+        assertEq(
+            siloPreview,
+            gotSilos,
+            "redeem give us same result as vesting with 0 duration"
+        );
+
+        assertEq(asset.balanceOf(user), gotSilos, "user got exact amount of tokens");
 
         vm.stopPrank();
     }
