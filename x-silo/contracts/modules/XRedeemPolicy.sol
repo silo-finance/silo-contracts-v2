@@ -279,7 +279,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
     function _transferShares(address _from, address _to, uint256 _shares) internal virtual;
 
-        function _calculateRatio(uint256 _duration)
+    function _calculateRatio(uint256 _duration)
         internal
         view
         virtual
