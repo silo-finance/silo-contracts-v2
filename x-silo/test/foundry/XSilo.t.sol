@@ -21,6 +21,8 @@ contract XSiloTest is Test {
     XSilo xSilo;
     ERC20Mock asset;
 
+    address user = makeAddr("user");
+
     function setUp() public {
         AddrLib.init();
 
@@ -50,6 +52,23 @@ contract XSiloTest is Test {
         xSilo.transfer(address(this), 1);
     }
 
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxWithdraw_usersDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_maxWithdraw_usersDuration0(uint256 _silos) public {
+        vm.assume(_silos > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calulculations
+
+        _convert(user, _silos);
+
+        assertEq(
+            xSilo.maxWithdraw(user),
+            xSilo.getAmountByVestingDuration(xSilo.balanceOf(user), 0),
+            "withdraw give us same result as redeem with 0 duration"
+        );
+    }
     function _convert(address _user, uint256 _amount) public returns (uint256 shares){
         vm.startPrank(_user);
 
