@@ -52,4 +52,8 @@ silo-core/deploy/input/_importFromCsv/
 **/broadcast/
 **/broadcast/*
 !silo-core/broadcast/SiloDeployerDeploy.s.sol/**/run-latest.json
+
+# certora
+.certora_internal
+certora/harness/vaults/contracts
 emv-**/*
