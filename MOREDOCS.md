@@ -223,9 +223,14 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
  Silo Factory [0x384DC7759d35313F0b567D42bf2f611B285B657C](https://arbiscan.io/address/0x384DC7759d35313F0b567D42bf2f611B285B657C)
 
  **Network: Optimism** \
- id 100 -  version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
+ id 100 version [3.4.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.4.0) \
  SiloDeployer [0x12D73b8dC92961C71782154B70416c4A1fb7dD12](https://optimistic.etherscan.io/address/0x12D73b8dC92961C71782154B70416c4A1fb7dD12) \
  Silo Implementation [0xBc0131AA1FF58F628ceAcE15751F703E17E24C69](https://optimistic.etherscan.io/address/0xBc0131AA1FF58F628ceAcE15751F703E17E24C69) \
+ Silo Factory [0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5](https://optimistic.etherscan.io/address/0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5)
+
+ id 101 -  version [3.5.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.5.0) \
+ SiloDeployer [0x6225eF6256f945f490204D7F71e80B0FF84523dD](https://optimistic.etherscan.io/address/0x6225eF6256f945f490204D7F71e80B0FF84523dD) \
+ Silo Implementation [0x7ef3055d2B76214Df9Ae74D42944e2917D08Bd78](https://optimistic.etherscan.io/address/0x7ef3055d2B76214Df9Ae74D42944e2917D08Bd78) \
  Silo Factory [0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5](https://optimistic.etherscan.io/address/0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5)
 
  **Network: Ink** \
