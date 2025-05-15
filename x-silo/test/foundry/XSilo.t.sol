@@ -150,27 +150,27 @@ contract XSiloTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_usesDuration0
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_withdraw_usesDuration0(
-//        uint256 _silos, uint256 _xSiloToRedeem
-    ) public {
-        uint256 _silos = 100; uint256 _siloToWithdraw = 15;
+    function test_withdraw_usesDuration0(uint256 _silos, uint256 _siloToWithdraw) public {
+//        uint256 _silos = 100; uint256 _siloToWithdraw = 15;
 
         vm.assume(_silos > 0);
+        vm.assume(_siloToWithdraw > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
         _convert(user, _silos);
+        vm.assume(_siloToWithdraw <= xSilo.maxWithdraw(user));
 
         vm.startPrank(user);
 
         uint256 checkpoint = vm.snapshot();
-
         uint256 withdrawnShares = xSilo.withdraw(_siloToWithdraw, user, user);
-        emit log_named_uint("withdrawnShares", withdrawnShares);
-        vm.assume(withdrawnShares <= xSilo.balanceOf(user));
+
+        assertEq(asset.balanceOf(user), _siloToWithdraw, "user got exact amount of tokens");
 
         vm.revertTo(checkpoint);
 
         emit log_named_uint("withdrawnShares after rollback", withdrawnShares);
+        emit log_named_uint("_siloToWithdraw", _siloToWithdraw);
 
         vm.startPrank(user);
 
@@ -179,8 +179,6 @@ contract XSiloTest is Test {
             xSilo.getAmountByVestingDuration(withdrawnShares, 0),
             "withdraw give us same result as vesting with 0 duration"
         );
-
-        assertEq(asset.balanceOf(user), _siloToWithdraw, "user got exact amount of tokens");
 
         vm.stopPrank();
     }
