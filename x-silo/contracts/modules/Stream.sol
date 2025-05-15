@@ -12,12 +12,6 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 contract Stream is Ownable2Step {
     using SafeERC20 for IERC20;
 
-    error DistributionTimeExpired();
-    error NoBalance();
-
-    event EmissionsUpdated(uint256 indexed emissionPerSecond, uint256 indexed distributionEnd);
-    event RewardsClaimed(uint256 indexed amount);
-
     /// @notice address that can claim rewards
     address public immutable BENEFICIARY;
 
@@ -33,11 +27,53 @@ contract Stream is Ownable2Step {
     /// @notice timestamp of the last update
     uint256 public lastUpdateTimestamp;
 
+    event EmissionsUpdated(uint256 indexed emissionPerSecond, uint256 indexed distributionEnd);
+    event RewardsClaimed(uint256 indexed amount);
+
+    error DistributionTimeExpired();
+    error NoBalance();
+
     constructor(address _initialOwner, address _beneficiary) Ownable(_initialOwner) {
         BENEFICIARY = _beneficiary;
         REWARD_ASSET = IERC4626(_beneficiary).asset();
         distributionEnd = block.timestamp;
         lastUpdateTimestamp = block.timestamp;
+    }
+
+    /// @notice Set the emission rate and distribution end timestamp.
+    /// WARNING: do not set emissions fof xSilo when xSilo is empty or total supply is low:
+    /// - it can break ratio.
+    /// - it will lock dust balances.
+    /// @param _emissionPerSecond The new emission rate.
+    /// @param _distributionEnd The new distribution end timestamp.
+    /// @dev Only the contract owner can call this function.
+    /// @dev The distribution end timestamp must be in the future.
+    function setEmissions(uint256 _emissionPerSecond, uint256 _distributionEnd) external onlyOwner {
+        require(_distributionEnd > block.timestamp, DistributionTimeExpired());
+
+        emissionPerSecond = _emissionPerSecond;
+        distributionEnd = _distributionEnd;
+        lastUpdateTimestamp = block.timestamp;
+
+        emit EmissionsUpdated(_emissionPerSecond, _distributionEnd);
+    }
+
+    function claimRewards() public returns (uint256 rewards) {
+        rewards = pendingRewards();
+        lastUpdateTimestamp = block.timestamp;
+
+        if (rewards != 0) {
+            IERC20(REWARD_ASSET).safeTransfer(BENEFICIARY, rewards);
+            emit RewardsClaimed(rewards);
+        }
+    }
+
+    /// @dev Emergency withdraw token's balance on the contract
+    function emergencyWithdraw() public onlyOwner {
+        uint256 balance = IERC20(REWARD_ASSET).balanceOf(address(this));
+        require(balance != 0, NoBalance());
+
+        IERC20(REWARD_ASSET).safeTransfer(msg.sender, balance);
     }
 
     /// @notice Calculate the funding gap for the stream.
@@ -61,45 +97,5 @@ contract Stream is Ownable2Step {
         uint256 balanceOf = IERC20(REWARD_ASSET).balanceOf(address(this));
 
         rewards = Math.min(timeElapsed * emissionPerSecond, balanceOf);
-    }
-
-    function claimRewards() public returns (uint256 rewards) {
-        rewards = pendingRewards();
-        lastUpdateTimestamp = block.timestamp;
-
-        if (rewards != 0) {
-            IERC20(REWARD_ASSET).safeTransfer(BENEFICIARY, rewards);
-            emit RewardsClaimed(rewards);
-        }
-    }
-
-    ///////////////////////
-    /// OWNER FUNCTIONS ///
-    ///////////////////////
-
-    /// @notice Set the emission rate and distribution end timestamp.
-    /// WARNING: do not set emissions fof xSilo when xSilo is empty or total supply is low:
-    /// - it can break ratio.
-    /// - it will lock dust balances.
-    /// @param _emissionPerSecond The new emission rate.
-    /// @param _distributionEnd The new distribution end timestamp.
-    /// @dev Only the contract owner can call this function.
-    /// @dev The distribution end timestamp must be in the future.
-    function setEmissions(uint256 _emissionPerSecond, uint256 _distributionEnd) external onlyOwner {
-        require(_distributionEnd > block.timestamp, DistributionTimeExpired());
-
-        emissionPerSecond = _emissionPerSecond;
-        distributionEnd = _distributionEnd;
-        lastUpdateTimestamp = block.timestamp;
-
-        emit EmissionsUpdated(_emissionPerSecond, _distributionEnd);
-    }
-
-    /// @dev Emergency withdraw token's balance on the contract
-    function emergencyWithdraw() public onlyOwner {
-        uint256 balance = IERC20(REWARD_ASSET).balanceOf(address(this));
-        require(balance != 0, NoBalance());
-
-        IERC20(REWARD_ASSET).safeTransfer(msg.sender, balance);
     }
 }
