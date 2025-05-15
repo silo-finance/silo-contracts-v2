@@ -32,25 +32,31 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /// @inheritdoc IERC4626
+    /// @notice `withdraw` uses a duration of 0 to calculate amount of Silo to withdraw. Duration 0 represents
+    /// the worst-case scenario for asset withdrawals. To obtain a better deal, please use the custom method
+    /// `redeemSilo` with different duration.
     function withdraw(uint256 _assets, address _receiver, address _owner)
         public
         virtual
         override
         nonReentrant
-        returns (uint256)
+        returns (uint256 shares)
     {
-        return super.withdraw(_assets, _receiver, _owner);
+        shares = super.withdraw(_assets, _receiver, _owner);
     }
 
     /// @inheritdoc IERC4626
+    /// @notice `redeem` uses a duration of 0 to calculate amount of Silo to redeem. Duration 0 represents
+    /// the worst-case scenario for asset withdrawals. To obtain a better deal, please use the custom method
+    /// `redeemSilo` with different duration.
     function redeem(uint256 _shares, address _receiver, address _owner)
         public
         virtual
         override
         nonReentrant
-        returns (uint256)
+        returns (uint256 assets)
     {
-        return super.redeem(_shares, _receiver, _owner);
+        assets = super.redeem(_shares, _receiver, _owner);
     }
 
     /// @inheritdoc ERC20
@@ -134,7 +140,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
         uint256 _sharesToBurn
     ) internal virtual override(ERC4626, XRedeemPolicy) {
         require(_sharesToBurn != 0, ZeroShares());
-        // TODO should we disallow zero assets as well?
+        require(_assetsToTransfer != 0, ZeroAssets());
 
         ERC4626._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
     }
