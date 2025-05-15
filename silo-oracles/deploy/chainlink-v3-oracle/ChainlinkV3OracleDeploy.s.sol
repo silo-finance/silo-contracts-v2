@@ -31,7 +31,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = ChainlinkV3OracleFactory(factory).create(config, bytes32(0));
+        oracle = ChainlinkV3OracleFactory(factory).create(config);
 
         vm.stopBroadcast();
 
