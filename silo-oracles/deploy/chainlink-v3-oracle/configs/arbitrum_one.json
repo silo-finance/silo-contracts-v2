@@ -20,5 +20,16 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "REDSTONE_sUSDX_USD": {
+        "baseToken": "sUSDX",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_sUSDX_USDX_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "REDSTONE_USDX_USD_aggregator",
+        "secondaryHeartbeat": 22001,
+        "normalizationDivider": 1e16,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
