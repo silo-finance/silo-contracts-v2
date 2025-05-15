@@ -52,6 +52,33 @@ contract XSiloTest is Test {
         xSilo.transfer(address(this), 1);
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_redeem_usesDuration0(uint256 _silos, uint256 _xSiloToRedeem) public {
+        vm.assume(_silos > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+        vm.assume(_xSiloToRedeem > 0);
+
+        _convert(user, _silos);
+        vm.assume(_xSiloToRedeem <= xSilo.balanceOf(user));
+
+        uint256 expectedAmountOut = xSilo.getAmountByVestingDuration(_xSiloToRedeem, 0);
+        vm.assume(expectedAmountOut > 0);
+
+        vm.startPrank(user);
+
+        assertEq(
+            xSilo.redeem(_xSiloToRedeem, user, user),
+            expectedAmountOut,
+            "withdraw give us same result as redeem with 0 duration"
+        );
+
+        assertEq(asset.balanceOf(user), expectedAmountOut, "user got exact amount of tokens");
+
+        vm.stopPrank();
+    }
 
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxWithdraw_usersDuration0
@@ -117,6 +144,47 @@ contract XSiloTest is Test {
             "previewRedeem give us same result as vesting with 0 duration"
         );
     }
+
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_usesDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_withdraw_usesDuration0(
+//        uint256 _silos, uint256 _xSiloToRedeem
+    ) public {
+        uint256 _silos = 100; uint256 _siloToWithdraw = 15;
+
+        vm.assume(_silos > 0);
+        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+
+        _convert(user, _silos);
+
+        vm.startPrank(user);
+
+        uint256 checkpoint = vm.snapshot();
+
+        uint256 withdrawnShares = xSilo.withdraw(_siloToWithdraw, user, user);
+        emit log_named_uint("withdrawnShares", withdrawnShares);
+        vm.assume(withdrawnShares <= xSilo.balanceOf(user));
+
+        vm.revertTo(checkpoint);
+
+        emit log_named_uint("withdrawnShares after rollback", withdrawnShares);
+
+        vm.startPrank(user);
+
+        assertEq(
+            _siloToWithdraw,
+            xSilo.getAmountByVestingDuration(withdrawnShares, 0),
+            "withdraw give us same result as vesting with 0 duration"
+        );
+
+        assertEq(asset.balanceOf(user), _siloToWithdraw, "user got exact amount of tokens");
+
+        vm.stopPrank();
+    }
+
     function _convert(address _user, uint256 _amount) public returns (uint256 shares){
         vm.startPrank(_user);
 
