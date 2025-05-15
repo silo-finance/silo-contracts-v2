@@ -6,7 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Fixed
+
+### [3.5.0] - 2025-05-15
 - silo-core: fix `maxBorrow`, see explanation in code, method `maxBorrowValueToAssetsAndShares()`
+- silo-core: Silo implementation redeploy
+- silo-core: SiloLens isTokenAddress fn check code size
+- silo-core: wstkscUSD USDC.e new market
+- silo-core: wOS wS borrowable new market
+- silo-core: EURC.e USDC.e new market
 
 ### [3.4.0] - 2025-05-09
 - silo-core: prioritize DAO fee to ensure it is not zero-out by precision error
