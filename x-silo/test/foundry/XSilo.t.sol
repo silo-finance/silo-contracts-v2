@@ -104,6 +104,19 @@ contract XSiloTest is Test {
         );
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewRedeem_usersDuration0
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_previewRedeem_usersDuration0(uint256 _xSilos) public {
+        vm.assume(_xSilos > 0);
+
+        assertEq(
+            xSilo.previewRedeem(_xSilos),
+            xSilo.getAmountByVestingDuration(_xSilos, 0),
+            "previewRedeem give us same result as vesting with 0 duration"
+        );
+    }
     function _convert(address _user, uint256 _amount) public returns (uint256 shares){
         vm.startPrank(_user);
 
