@@ -87,10 +87,10 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_usersDuration0
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_returnsAll
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_maxRedeem_retunsAll(uint256 _silos) public {
+    function test_maxRedeem_returnsAll(uint256 _silos) public {
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
@@ -181,7 +181,6 @@ contract XSiloTest is Test {
 
         vm.stopPrank();
     }
-
 
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0
