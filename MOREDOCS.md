@@ -196,6 +196,7 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
 
 ## Known issues:
 - Silo incentives controller with version < 3.6.0 has issue with `getProgramName` fn. It fails to convert the immediate distribution program name into a proper string representation.
+Silos incentives controller with this issue: Sonic 1 - 101, Arbitrum 100 - 111, Optimism - 100, Ink - 100 - 101.
 
 ## Deployed silo lending markets versions
 **Network: Sonic**
