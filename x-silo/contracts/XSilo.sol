@@ -107,7 +107,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /// @inheritdoc IERC4626
-    /// @notice `maxRedeem` returns whole user balance, however when user do `redeem`, `shares` that are actually
+    /// @notice `maxRedeem` returns user balance based on best case scenario (max vesting), however when user do `redeem`, `shares` that are actually
     /// used for redeeming process are calculated based on vesting with duration == 0, which represents the worst-case
     /// scenario for asset redeeming. Therefore only part of that shares will be converted back to Silo.
     /// To obtain a better deal, please use the custom method `redeemSilo` with different duration.
