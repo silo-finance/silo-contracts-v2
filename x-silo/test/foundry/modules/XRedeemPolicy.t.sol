@@ -2,15 +2,17 @@
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
-import {XSilo, XRedeemPolicy, Stream, ERC20} from "../../../contracts/XSilo.sol";
 import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.s.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
+
+import {XSilo, XRedeemPolicy, Stream, ERC20} from "../../../contracts/XSilo.sol";
+import {IXRedeemPolicy} from "../../../contracts/interfaces/IXRedeemPolicy.sol";
 
 /*
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XRedeemPolicyTest
@@ -125,7 +127,7 @@ contract XRedeemPolicyTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getUserRedeem_revertsOnInvalidIndex
     */
     function test_getUserRedeem_revertsOnInvalidIndex() public {
-        vm.expectRevert(XRedeemPolicy.RedeemIndexDoesNotExist.selector);
+        vm.expectRevert(IXRedeemPolicy.RedeemIndexDoesNotExist.selector);
         policy.getUserRedeem(address(1), 100);
     }
 
@@ -133,10 +135,10 @@ contract XRedeemPolicyTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_zeros
     */
     function test_redeemSilo_zeros() public {
-        vm.expectRevert(XRedeemPolicy.ZeroAmount.selector);
+        vm.expectRevert(IXRedeemPolicy.ZeroAmount.selector);
         policy.redeemSilo(0, 0);
 
-        vm.expectRevert(XRedeemPolicy.NoSiloToRedeem.selector);
+        vm.expectRevert(IXRedeemPolicy.NoSiloToRedeem.selector);
         policy.redeemSilo(1, 0);
     }
 

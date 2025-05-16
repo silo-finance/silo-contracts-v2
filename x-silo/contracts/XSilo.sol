@@ -9,7 +9,7 @@ import {XSiloManagement, INotificationReceiver} from "./modules/XSiloManagement.
 import {XRedeemPolicy} from "./modules/XRedeemPolicy.sol";
 import {Stream, IStream} from "./modules/Stream.sol";
 
-contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
+contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     error ZeroShares();
     error ZeroAssets();
     error SelfTransferNotAllowed();

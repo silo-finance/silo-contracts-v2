@@ -6,17 +6,11 @@ import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
+import {IXRedeemPolicy} from "../interfaces/IXRedeemPolicy.sol";
 
 /// @dev based on Camelot's xGRAIL
 /// @notice Policy for redeem xSilo back to Silo
-abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
-    struct RedeemInfo {
-        uint256 currentSiloAmount;
-        uint256 xSiloAmountToBurn;
-        uint256 siloAmountAfterVesting;
-        uint256 endTime;
-    }
-
+abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentrancy {
     uint256 internal constant _PRECISION = 100;
 
     /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
@@ -45,38 +39,15 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     /// will result in 100% of tokens.
     uint256 public maxRedeemDuration = 6 * 30 days; // 6 months
 
-    mapping(address => RedeemInfo[]) public userRedeems;
-
-    event UpdateRedeemSettings(
-        uint256 minRedeemRatio,
-        uint256 maxRedeemRatio,
-        uint256 minRedeemDuration,
-        uint256 maxRedeemDuration
-    );
-
-    event StartRedeem(
-        address indexed _userAddress,
-        uint256 currentSiloAmount,
-        uint256 xSiloToBurn,
-        uint256 siloAmountAfterVesting,
-        uint256 duration
-    );
-
-    event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
-    event CancelRedeem(address indexed _userAddress, uint256 xSiloToTransfer, uint256 xSiloToBurn);
-
-    error ZeroAmount();
-    error NoSiloToRedeem();
-    error RedeemIndexDoesNotExist();
-    error InvalidRatioOrder();
-    error InvalidDurationOrder();
-    error MaxRatioOverflow();
-    error DurationTooLow();
-    error VestingNotOver();
+    mapping(address => RedeemInfo[]) private _userRedeems;
 
     modifier validateRedeem(address _userAddress, uint256 _redeemIndex) {
-        require(_redeemIndex < userRedeems[_userAddress].length, RedeemIndexDoesNotExist());
+        require(_redeemIndex < _userRedeems[_userAddress].length, RedeemIndexDoesNotExist());
         _;
+    }
+
+    function userRedeems(address _user) external view returns (RedeemInfo[] memory) {
+        return _userRedeems[_user];
     }
 
     function updateRedeemSettings(
@@ -120,7 +91,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         // if redeeming is not immediate, go through vesting process
         if (_duration > 0) {
             // add redeeming entry
-            userRedeems[msg.sender].push(
+            _userRedeems[msg.sender].push(
                 RedeemInfo({
                     currentSiloAmount: currentSiloAmount,
                     xSiloAmountToBurn: _xSiloAmountToBurn,
@@ -143,7 +114,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     }
 
     function finalizeRedeem(uint256 redeemIndex) external nonReentrant validateRedeem(msg.sender, redeemIndex) {
-        RedeemInfo storage redeemCache = userRedeems[msg.sender][redeemIndex];
+        RedeemInfo storage redeemCache = _userRedeems[msg.sender][redeemIndex];
         require(block.timestamp >= redeemCache.endTime, VestingNotOver());
 
         _withdraw({
@@ -161,7 +132,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     }
 
     function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
-        RedeemInfo storage redeemCache = userRedeems[msg.sender][_redeemIndex];
+        RedeemInfo storage redeemCache = _userRedeems[msg.sender][_redeemIndex];
 
         uint256 toTransfer = convertToShares(redeemCache.currentSiloAmount);
         uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
@@ -181,18 +152,18 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         virtual
         returns (uint256 redeemingSiloAmount)
     {
-        uint256 len = userRedeems[_userAddress].length;
+        uint256 len = _userRedeems[_userAddress].length;
 
         if (len == 0) return 0;
 
         for (uint256 i = 0; i < len; i++) {
-            RedeemInfo storage redeemCache = userRedeems[_userAddress][i];
+            RedeemInfo storage redeemCache = _userRedeems[_userAddress][i];
             redeemingSiloAmount += redeemCache.siloAmountAfterVesting;
         }
     }
 
     function getUserRedeemsLength(address _userAddress) external view returns (uint256) {
-        return userRedeems[_userAddress].length;
+        return _userRedeems[_userAddress].length;
     }
 
     function getUserRedeem(address _userAddress, uint256 _redeemIndex)
@@ -201,7 +172,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         validateRedeem(_userAddress, _redeemIndex)
         returns (uint256 currentSiloAmount, uint256 xSiloAmount, uint256 siloAmountAfterVesting, uint256 endTime)
     {
-        RedeemInfo storage redeemCache = userRedeems[_userAddress][_redeemIndex];
+        RedeemInfo storage redeemCache = _userRedeems[_userAddress][_redeemIndex];
 
         return (
             redeemCache.currentSiloAmount,
@@ -269,8 +240,8 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     function convertToShares(uint256 _assets) public view virtual returns (uint256);
 
     function _deleteRedeemEntry(uint256 _index) internal {
-        userRedeems[msg.sender][_index] = userRedeems[msg.sender][userRedeems[msg.sender].length - 1];
-        userRedeems[msg.sender].pop();
+        _userRedeems[msg.sender][_index] = _userRedeems[msg.sender][_userRedeems[msg.sender].length - 1];
+        _userRedeems[msg.sender].pop();
     }
 
     function _withdraw(
