@@ -44,7 +44,6 @@ contract Stream is IStream, Ownable2Step {
 
         emissionPerSecond = _emissionPerSecond;
         distributionEnd = _distributionEnd;
-        lastUpdateTimestamp = block.timestamp;
 
         emit EmissionsUpdated(_emissionPerSecond, _distributionEnd);
     }
