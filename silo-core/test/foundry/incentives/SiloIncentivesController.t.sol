@@ -1100,7 +1100,6 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_notifier);
         _controller.immediateDistribution(_token, uint104(1));
 
-
         string[] memory programsNames = _controller.getAllProgramsNames();
         assertEq(programsNames.length, 2, "expected 2 programs");
 
