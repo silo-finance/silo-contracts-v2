@@ -16,6 +16,8 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XRedeemPolicyTest
 */
 contract XRedeemPolicyTest is Test {
+    uint256 internal constant _PRECISION = 100;
+
     Stream stream;
     XSilo policy;
     ERC20Mock asset;
@@ -88,7 +90,7 @@ contract XRedeemPolicyTest is Test {
         public
         view
     {
-        vm.assume(_xSiloAfterVesting <= type(uint128).max);
+        vm.assume(_xSiloAfterVesting <= type(uint256).max / _PRECISION);
 
         policy.getAmountInByVestingDuration(_xSiloAfterVesting, _duration);
     }
@@ -193,24 +195,6 @@ contract XRedeemPolicyTest is Test {
         assertEq(policy.totalSupply(), 0, "vault should be empty");
         assertEq(policy.balanceOf(user), 0, "no user balance");
         assertEq(asset.balanceOf(user), 50, "user got 50% on immediate redeem");
-    }
-
-    /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_deposit_ZeroShares
-    */
-    function test_deposit_ZeroShares() public {
-        address user = makeAddr("user");
-        _setupStream();
-
-        vm.warp(block.timestamp + 1 minutes);
-
-        vm.startPrank(user);
-
-        asset.mint(user, 100);
-        asset.approve(address(policy), 100);
-
-        vm.expectRevert(XSilo.ZeroShares.selector);
-        policy.deposit(100, user);
     }
 
     /*
@@ -343,6 +327,42 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax
+    */
+    function test_redeemSilo_everyoneRedeemMax() public {
+        uint256 _amount = 1e18;
+        uint256 maxDuration = policy.maxRedeemDuration();
+
+        address user = makeAddr("user");
+        address user2 = makeAddr("user2");
+
+        _convert(user, _amount);
+        _convert(user2, _amount);
+
+        _setupStream(); // 0.01/s for 1 day
+
+        vm.prank(user);
+        policy.redeemSilo(_amount, maxDuration);
+
+        vm.prank(user2);
+        policy.redeemSilo(_amount, maxDuration);
+
+        vm.warp(block.timestamp + maxDuration);
+
+        vm.prank(user);
+        policy.finalizeRedeem(0);
+
+        vm.prank(user2);
+        policy.finalizeRedeem(0);
+
+
+        assertEq(policy.totalSupply(), 0, "no shares, everyone left");
+        assertEq(asset.balanceOf(address(policy)), 0.01e18 * 1 days, "even with max vesting, noone got rewards");
+        assertEq(asset.balanceOf(user), _amount, "with max vesting user did not lose tokens");
+        assertEq(asset.balanceOf(user2), _amount, "with max vesting user2 did not lose tokens");
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_settings_zero
     */
     function test_settings_zero() public {
@@ -370,13 +390,34 @@ contract XRedeemPolicyTest is Test {
         policy.updateRedeemSettings(0, 0, 0, 0);
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_deposit_ZeroShares
+    */
+    function test_deposit_ZeroShares() public {
+        address user = makeAddr("user");
+        // this wil create huge ratio, so we can test zero shares
+        _setupStream();
+
+        vm.warp(block.timestamp + 1 minutes);
+
+        vm.startPrank(user);
+
+        asset.mint(user, 100);
+        asset.approve(address(policy), 100);
+
+        vm.expectRevert(XSilo.ZeroShares.selector);
+        policy.deposit(100, user);
+    }
+
     // TODO provide rewards and make sure we can claim all
 
     function _setupStream() public returns (uint256 emissionPerSecond) {
         emissionPerSecond = 0.01e18;
 
-        stream.setEmissions(emissionPerSecond, 1 days);
+        stream.setEmissions(emissionPerSecond, block.timestamp + 1 days);
         asset.mint(address(stream), stream.fundingGap());
+
+        assertEq(asset.balanceOf(address(stream)), 0.01e18 * 1 days, "pending rewards balance");
     }
 
     function _convert(address _user, uint256 _amount) public returns (uint256 shares){
