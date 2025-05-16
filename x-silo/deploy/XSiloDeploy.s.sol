@@ -11,9 +11,18 @@ import {StreamDeploy} from "x-silo/deploy/StreamDeploy.s.sol";
 import {XSilo} from "x-silo/contracts/XSilo.sol";
 
 /**
-    FOUNDRY_PROFILE=x-silo \
+    FOUNDRY_PROFILE=x_silo \
         forge script x-silo/deploy/XSiloDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
+
+    verify code in case of issues:
+    
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=x_silo \
+        forge script x-silo/deploy/XSiloDeploy.s.sol \
+        --ffi --rpc-url $RPC_SONIC --resume --verify \
+        --verifier-url https://api.sonicscan.org/api \
+        --private-key $PRIVATE_KEY
+
  */
 contract XSiloDeploy is CommonDeploy {
     function run() public returns (XSilo xSilo) {
