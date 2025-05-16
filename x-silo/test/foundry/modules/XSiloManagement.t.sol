@@ -6,10 +6,12 @@ import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
-import {XSiloManagement, INotificationReceiver, Stream} from "../../../contracts/modules/XSiloManagement.sol";
 import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.s.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {XSilo} from "x-silo/contracts/XSilo.sol";
+
+import {XSiloManagement, IXSiloManagement, INotificationReceiver} from "../../../contracts/modules/XSiloManagement.sol";
+import {Stream, IStream} from "../../../contracts/modules/Stream.sol";
 
 /*
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XSiloManagementTest
@@ -18,7 +20,7 @@ contract XSiloManagementTest is Test {
     XSilo mgm;
 
     event NotificationReceiverUpdate(INotificationReceiver indexed newNotificationReceiver);
-    event StreamUpdate(Stream indexed newStream);
+    event StreamUpdate(IStream indexed newStream);
 
     function setUp() public {
         AddrLib.init();
@@ -45,7 +47,7 @@ contract XSiloManagementTest is Test {
     }
 
     function test_setNotificationReceiver_revert_NoChange() public {
-        vm.expectRevert(XSiloManagement.NoChange.selector);
+        vm.expectRevert(IXSiloManagement.NoChange.selector);
         mgm.setNotificationReceiver(INotificationReceiver(address(0)), true);
     }
 
@@ -53,7 +55,7 @@ contract XSiloManagementTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setNotificationReceiver_revert_StopAllRelatedPrograms
     */
     function test_setNotificationReceiver_revert_StopAllRelatedPrograms() public {
-        vm.expectRevert(abi.encodeWithSelector(XSiloManagement.StopAllRelatedPrograms.selector));
+        vm.expectRevert(abi.encodeWithSelector(IXSiloManagement.StopAllRelatedPrograms.selector));
         mgm.setNotificationReceiver(INotificationReceiver(address(1)), false);
     }
 
@@ -79,7 +81,7 @@ contract XSiloManagementTest is Test {
             abi.encode(address(123))
         );
 
-        vm.expectRevert(XSiloManagement.NotBeneficiary.selector);
+        vm.expectRevert(IXSiloManagement.NotBeneficiary.selector);
         mgm.setStream(stream);
     }
 
@@ -107,8 +109,8 @@ contract XSiloManagementTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setStream_revert
     */
     function test_setStream_revert() public {
-        Stream currentStream = mgm.stream();
-        vm.expectRevert(XSiloManagement.NoChange.selector);
+        IStream currentStream = mgm.stream();
+        vm.expectRevert(IXSiloManagement.NoChange.selector);
         mgm.setStream(currentStream);
     }
 

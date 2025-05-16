@@ -9,7 +9,7 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {XSiloManagement, INotificationReceiver} from "./modules/XSiloManagement.sol";
 import {XRedeemPolicy} from "./modules/XRedeemPolicy.sol";
-import {Stream} from "./modules/Stream.sol";
+import {Stream, IStream} from "./modules/Stream.sol";
 
 contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     error ZeroShares();
@@ -83,7 +83,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     function totalAssets() public view virtual override returns (uint256 total) {
         total = super.totalAssets();
 
-        Stream stream_ = stream;
+        IStream stream_ = stream;
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
     }
 
@@ -167,7 +167,7 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     function _update(address _from, address _to, uint256 _value) internal virtual override {
         require(_from != _to, SelfTransferNotAllowed());
 
-        Stream stream_ = stream;
+        IStream stream_ = stream;
         if (address(stream_) != address(0)) stream_.claimRewards();
 
         super._update(_from, _to, _value);
