@@ -363,6 +363,34 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_oneRedeemMax
+    */
+    function test_redeemSilo_oneRedeemMax() public {
+        uint256 _amount = 1e18;
+        uint256 maxDuration = policy.maxRedeemDuration();
+
+        address user = makeAddr("user");
+        address user2 = makeAddr("user2");
+
+        _convert(user, _amount);
+        _convert(user2, _amount);
+
+        _setupStream(); // 0.01/s for 1 day
+
+        vm.prank(user);
+        policy.redeemSilo(_amount, maxDuration);
+
+        vm.warp(block.timestamp + maxDuration);
+
+        vm.prank(user);
+        policy.finalizeRedeem(0);
+
+        assertEq(policy.totalSupply(),1e18, "one user left");
+        assertEq(asset.balanceOf(address(policy)), 1e18 + 0.01e18 * 1 days, "user deposit + all rewards left");
+        assertEq(asset.balanceOf(user), _amount, "with max vesting user did not lose tokens");
+        assertEq(asset.balanceOf(address(stream)), 0, "no stream rewards");
+    }
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_settings_zero
     */
     function test_settings_zero() public {
