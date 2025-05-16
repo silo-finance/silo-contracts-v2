@@ -164,9 +164,7 @@ contract XSiloIntegrationTest is Test {
     function _userRedeemSilo(address _user) internal {
         uint256 balance = xSilo.balanceOf(_user);
         uint256 maxRedeemDuration = xSilo.maxRedeemDuration();
-
-        uint256 xSiloBalance = xSilo.balanceOf(address(xSilo));
-
+        
         vm.prank(_user);
         xSilo.redeemSilo(balance, maxRedeemDuration);
     }
