@@ -24,8 +24,6 @@ contract XSiloTest is Test {
     XSilo xSilo;
     ERC20Mock asset;
 
-    address user = makeAddr("user");
-
     function setUp() public {
         AddrLib.init();
 
@@ -63,6 +61,8 @@ contract XSiloTest is Test {
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
+        address user = makeAddr("user");
+
         _convert(user, _silos);
 
         assertEq(
@@ -96,6 +96,8 @@ contract XSiloTest is Test {
     function test_maxRedeem_returnsAll(uint256 _silos) public {
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+
+        address user = makeAddr("user");
 
         _convert(user, _silos);
 
@@ -131,6 +133,8 @@ contract XSiloTest is Test {
         vm.assume(_siloToWithdraw > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
+        address user = makeAddr("user");
+
         _convert(user, _silos);
         vm.assume(_siloToWithdraw <= xSilo.maxWithdraw(user));
 
@@ -165,6 +169,8 @@ contract XSiloTest is Test {
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
+        address user = makeAddr("user");
+
         _convert(user, _silos);
 
         uint256 siloPreview = xSilo.getAmountByVestingDuration(xSilo.balanceOf(user), 0);
@@ -197,6 +203,8 @@ contract XSiloTest is Test {
         vm.assume(_silos > 0);
         vm.assume(_xSiloToRedeem > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+
+        address user = makeAddr("user");
 
         _convert(user, _silos);
         vm.assume(_xSiloToRedeem <= xSilo.balanceOf(user));
