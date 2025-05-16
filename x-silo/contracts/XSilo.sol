@@ -75,8 +75,6 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         return super.transferFrom(_from, _to, _value);
     }
 
-    // TODO withdraw/redeem uses preview, we override preview so it should work out of the box - QA!
-
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
         total = super.totalAssets();

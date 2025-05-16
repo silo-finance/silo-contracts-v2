@@ -308,23 +308,23 @@ contract XRedeemPolicyTest is Test {
         vm.warp(block.timestamp + 1 hours);
         vm.assume(policy.previewDeposit(_amount) != 0);
 
-        uint256 sharesBefore = policy.balanceOf(user);
-        uint256 siloAmountBefore = policy.convertToAssets(sharesBefore);
+        uint256 sharesBeforeRedeem = policy.balanceOf(user);
+        uint256 siloAmountBeforeRedeem = policy.convertToAssets(sharesBeforeRedeem);
 
-        policy.redeemSilo(sharesBefore, _duration);
+        policy.redeemSilo(sharesBeforeRedeem, _duration);
         vm.warp(block.timestamp + 1 days);
 
-        uint256 expectedShares = policy.convertToShares(siloAmountBefore);
+        uint256 expectedSharesAfterRedeem = policy.convertToShares(siloAmountBeforeRedeem);
 
         vm.expectEmit(address(policy));
-        emit CancelRedeem(user, expectedShares, sharesBefore - expectedShares);
+        emit CancelRedeem(user, expectedSharesAfterRedeem, sharesBeforeRedeem - expectedSharesAfterRedeem);
 
         policy.cancelRedeem(0);
 
         vm.stopPrank();
 
-        assertLt(expectedShares, sharesBefore, "cancel will reduce shares");
-        assertEq(policy.balanceOf(user), expectedShares, "expectedShares");
+        assertLt(expectedSharesAfterRedeem, sharesBeforeRedeem, "cancel will recalculate (reduce) shares");
+        assertEq(policy.balanceOf(user), expectedSharesAfterRedeem, "expectedShares");
         assertEq(asset.balanceOf(user), 0, "user did not get any Silo");
     }
 
