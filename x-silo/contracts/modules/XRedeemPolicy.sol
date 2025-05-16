@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ERC20, IERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -242,11 +240,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 ratio = _calculateRatio(_duration);
         if (ratio == 0) return 0;
 
-        console2.log("ratio",ratio );
-
         xSiloAfterVesting = Math.mulDiv(_xSiloAmount, ratio, _PRECISION, Math.Rounding.Floor);
-        console2.log("_xSiloAmount",_xSiloAmount );
-        console2.log("xSiloAfterVesting",xSiloAfterVesting );
     }
 
     /// @dev reversed method for getXAmountByVestingDuration

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {ERC4626, IERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
@@ -107,9 +105,10 @@ contract XSilo is XSiloManagement, ERC4626, XRedeemPolicy {
     }
 
     /// @inheritdoc IERC4626
-    /// @notice `maxRedeem` returns user balance based on best case scenario (max vesting), however when user do `redeem`, `shares` that are actually
-    /// used for redeeming process are calculated based on vesting with duration == 0, which represents the worst-case
-    /// scenario for asset redeeming. Therefore only part of that shares will be converted back to Silo.
+    /// @notice `maxRedeem` returns user balance based on best case scenario (max vesting), however when user
+    /// do `redeem`, `shares` that are actually used for redeeming process are calculated based on vesting with
+    /// duration == 0, which represents the worst-case scenario for asset redeeming.
+    /// Therefore only part of that shares will be converted back to Silo.
     /// To obtain a better deal, please use the custom method `redeemSilo` with different duration.
     function maxRedeem(address _owner) public view virtual override returns (uint256 shares) {
         shares = super.maxRedeem(_owner);
