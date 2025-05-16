@@ -409,6 +409,83 @@ contract XRedeemPolicyTest is Test {
             "user deposit + all rewards for 1 day (-864 for rounding based on calculations with offset)");
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnVestingPeriod
+    */
+    function test_redeemSilo_expectNoRewardsOnVestingPeriod() public {
+        uint256 _amount = 1e18;
+
+        address user = makeAddr("user");
+        address user2 = makeAddr("user2");
+
+        _convert(user, _amount);
+        _convert(user2, _amount);
+
+        assertEq(asset.balanceOf(address(policy)), 2e18, "users Silos");
+
+        _setupStream(); // 0.01/s for 1 day
+
+        assertEq(asset.balanceOf(address(policy)), 2e18, "no rewards transferred yet");
+
+        vm.startPrank(user);
+
+        vm.warp(block.timestamp + 1 hours);
+
+        uint256 pendingRewards = stream.pendingRewards();
+        uint256 user2MaxWithdrawBefore = policy.maxWithdraw(user2);
+
+        uint256 siloAmountAfterVesting = policy.redeemSilo(0.25e18, 0);
+        assertEq(policy.balanceOf(user), 0.75e18, "shares left after 1st redeem");
+
+        assertEq(
+            asset.balanceOf(address(policy)),
+            2e18 + pendingRewards - siloAmountAfterVesting,
+            "on redeemSilo we have transfer, so we claimed no rewards transferred yet"
+        );
+
+        assertGt(
+            policy.maxWithdraw(user2),
+            user2MaxWithdrawBefore,
+            "user2 got bust after user1 redeem before max vesting"
+        );
+
+        policy.redeemSilo(0.25e18, 11 hours);
+        assertEq(policy.balanceOf(user), 0.5e18, "shres left on user balance");
+
+        policy.redeemSilo(0.25e18, 23 hours);
+        policy.redeemSilo(0.25e18, 6 * 30 days);
+
+        assertEq(policy.balanceOf(user), 0, "all shares locked, transferred to contract on redeem");
+
+        _finalizeNextRedeemBeforeMaxVesting("after 11h");
+        _finalizeNextRedeemBeforeMaxVesting("after 23h");
+        _finalizeNextRedeemBeforeMaxVesting("MAX vesting");
+
+        vm.stopPrank();
+    }
+
+    // this is helper method for test: test_redeemSilo_expectNoRewardsOnVestingPeriod
+    function _finalizeNextRedeemBeforeMaxVesting(string memory _msg) internal {
+        emit log(_msg);
+        address user = makeAddr("user");
+        address user2 = makeAddr("user2");
+
+        (,,,uint256 endTime) = policy.getUserRedeem(user, 0);
+        vm.warp(endTime);
+
+        uint256 user2MaxWithdrawBefore = policy.maxWithdraw(user2);
+
+        policy.finalizeRedeem(0);
+
+        assertGt(
+            policy.maxWithdraw(user2),
+            user2MaxWithdrawBefore,
+            string.concat(
+                "user2 got bust after user1 redeem because",
+                "on redeem before max vesting, shares are burned -> so value of 1 share is up, ",
+                "on redeem after max vesting??"
+            )
+        );
     }
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_settings_zero
