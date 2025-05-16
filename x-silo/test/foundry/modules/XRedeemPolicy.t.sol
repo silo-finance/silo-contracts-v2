@@ -389,6 +389,26 @@ contract XRedeemPolicyTest is Test {
         assertEq(asset.balanceOf(address(policy)), 1e18 + 0.01e18 * 1 days, "user deposit + all rewards left");
         assertEq(asset.balanceOf(user), _amount, "with max vesting user did not lose tokens");
         assertEq(asset.balanceOf(address(stream)), 0, "no stream rewards");
+
+        vm.prank(user2);
+        policy.redeemSilo(_amount, maxDuration);
+        vm.warp(block.timestamp + maxDuration);
+
+        vm.prank(user2);
+        policy.finalizeRedeem(0);
+
+        assertEq(
+            asset.balanceOf(address(policy)),
+            864,
+            "users should get all (864 dust for rounding based on calculations with offset)"
+        );
+
+        assertEq(
+            asset.balanceOf(user2),
+            1e18 + 0.01e18 * 1 days - 864,
+            "user deposit + all rewards for 1 day (-864 for rounding based on calculations with offset)");
+    }
+
     }
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_settings_zero
