@@ -70,6 +70,11 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
     error ZeroAmount();
     error NoSiloToRedeem();
     error RedeemIndexDoesNotExist();
+    error InvalidRatioOrder();
+    error InvalidDurationOrder();
+    error MaxRatioOverflow();
+    error DurationTooLow();
+    error VestingNotOver();
 
     modifier validateRedeem(address _userAddress, uint256 _redeemIndex) {
         require(_redeemIndex < userRedeems[_userAddress].length, RedeemIndexDoesNotExist());
@@ -82,10 +87,10 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         uint256 _minRedeemDuration,
         uint256 _maxRedeemDuration
     ) external onlyOwner {
-        require(_minRedeemRatio <= _maxRedeemRatio, "updateRedeemSettings: wrong ratio values");
-        require(_minRedeemDuration < _maxRedeemDuration, "updateRedeemSettings: wrong duration values");
+        require(_minRedeemRatio <= _maxRedeemRatio, InvalidRatioOrder());
+        require(_minRedeemDuration < _maxRedeemDuration, InvalidDurationOrder());
         // should never exceed 100%
-        require(_maxRedeemRatio <= MAX_FIXED_RATIO, "updateRedeemSettings: wrong ratio values");
+        require(_maxRedeemRatio <= MAX_FIXED_RATIO, MaxRatioOverflow());
 
         minRedeemRatio = _minRedeemRatio;
         maxRedeemRatio = _maxRedeemRatio;
@@ -104,7 +109,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         returns (uint256 siloAmountAfterVesting)
     {
         require(_xSiloAmountToBurn > 0, ZeroAmount());
-        require(_duration >= minRedeemDuration, "redeem: duration too low");
+        require(_duration >= minRedeemDuration, DurationTooLow());
 
         // get corresponding SILO amount based on duration
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
@@ -141,7 +146,7 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
 
     function finalizeRedeem(uint256 redeemIndex) external nonReentrant validateRedeem(msg.sender, redeemIndex) {
         RedeemInfo storage redeemCache = userRedeems[msg.sender][redeemIndex];
-        require(block.timestamp >= redeemCache.endTime, "finalizeRedeem: vesting duration has not ended yet");
+        require(block.timestamp >= redeemCache.endTime, VestingNotOver());
 
         _withdraw({
             _caller: msg.sender,
