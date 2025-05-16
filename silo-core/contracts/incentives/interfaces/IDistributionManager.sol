@@ -35,7 +35,6 @@ interface IDistributionManager {
 
     error OnlyNotifier();
     error TooLongProgramName();
-    error CollisionWithAddress();
     error InvalidIncentivesProgramName();
     error OnlyNotifierOrOwner();
     error ZeroAddress();
@@ -93,5 +92,5 @@ interface IDistributionManager {
      * @param _programName the name (bytes32) of the incentives program
      * @return programName the name (string) of the incentives program
      */
-    function getProgramName(bytes32 _programName) external pure returns (string memory programName);
+    function getProgramName(bytes32 _programName) external view returns (string memory programName);
 }
