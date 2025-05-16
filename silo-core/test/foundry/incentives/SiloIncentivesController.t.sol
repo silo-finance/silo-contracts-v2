@@ -1077,21 +1077,42 @@ contract SiloIncentivesControllerTest is Test {
         emit log_named_string("programsNames[0]", programsNames[0]);
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_20Symbols
-    function test_createIncentivesProgram_20Symbols() public {
-        uint104 emissionPerSecond;
-        uint256 distributionEnd;
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_programsNames_getter
+    /// forge-config: core_test.fuzz.runs = 10000
+    function test_programsNames_getter(address _token, string memory _programName) public {
+        vm.assume(_token != address(0));
+        vm.assume(bytes(_programName).length > 0 && bytes(_programName).length <= 32);
 
-        string memory programName20Symbols = "ssssssssssssssssssss";
+        DistributionTypes.IncentivesProgramCreationInput memory input;
 
-        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.CollisionWithAddress.selector));
+        input = DistributionTypes.IncentivesProgramCreationInput({
+            name: _programName,
+            rewardToken: _token,
+            emissionPerSecond: 1e6,
+            distributionEnd: uint40(block.timestamp + 1)
+        });
+
+        // create program
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: programName20Symbols,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(distributionEnd),
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(input);
+
+        // do distribution (it should create program)
+        vm.prank(_notifier);
+        _controller.immediateDistribution(_token, uint104(1));
+
+
+        string[] memory programsNames = _controller.getAllProgramsNames();
+        assertEq(programsNames.length, 2, "expected 2 programs");
+
+        assertEq(programsNames[0], _programName, "expected programName");
+        
+        // check immediateDistribution program name
+        // 1. It should be a string representation of the `_token`
+        string memory expectedProgramName = Strings.toHexString(_token);
+        assertEq(programsNames[1], expectedProgramName, "_token programName string");
+        // 2. Conversion from the string to address should result in the `_token`
+        address programAddress = AddressUtilsLib.fromHexString(programsNames[1]);
+        assertEq(programAddress, _token, "_token programName address");
     }
 
     function _claimRewards(address _user, address _to, string memory _programName) internal {

@@ -127,6 +127,8 @@ contract SiloIncentivesController is BaseIncentivesController {
         programId = _getProgramIdForAddress(_tokenToDistribute);
 
         if (incentivesPrograms[programId].lastUpdateTimestamp == 0) {
+            _isImmediateDistributionProgram[programId] = true;
+
             DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput;
 
             _incentivesProgramInput.name = Strings.toHexString(_tokenToDistribute);
