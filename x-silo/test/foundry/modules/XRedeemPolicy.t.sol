@@ -534,8 +534,6 @@ contract XRedeemPolicyTest is Test {
         policy.deposit(100, user);
     }
 
-    // TODO provide rewards and make sure we can claim all
-
     function _setupStream() public returns (uint256 emissionPerSecond) {
         emissionPerSecond = 0.01e18;
 
