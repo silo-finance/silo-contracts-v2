@@ -170,6 +170,44 @@ contract StreamTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_claimRewards_neverReverts_fuzz
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_claimRewards_neverReverts_fuzz(
+        uint32 _emissionPerSecond,
+        uint64 _distributionEnd
+    ) public {
+        vm.assume(_distributionEnd > 0);
+
+        _pendingClaimAndWarp(1);
+
+        stream.setEmissions(_emissionPerSecond, block.timestamp + _distributionEnd);
+
+        _pendingClaimAndWarp(1);
+
+        token.mint(address(stream), 1);
+
+        _pendingClaimAndWarp(1);
+
+        token.mint(address(stream), stream.fundingGap());
+
+        _pendingClaimAndWarp(_distributionEnd);
+
+        _pendingClaimAndWarp(1);
+    }
+
+    // helper method for test_claimRewards_neverReverts_fuzz
+    function _pendingClaimAndWarp(uint256 _warp) internal {
+        stream.pendingRewards();
+        stream.claimRewards();
+
+        vm.warp(block.timestamp + _warp);
+
+        stream.pendingRewards();
+        stream.claimRewards();
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_lastUpdateTimestamp_update_whenRewards
     */
     function test_lastUpdateTimestamp_update_whenRewards() public {
