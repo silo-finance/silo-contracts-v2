@@ -149,9 +149,9 @@ abstract contract XRedeemPolicy is Ownable2Step, TransientReentrancy {
         require(block.timestamp >= redeemCache.endTime, VestingNotOver());
 
         _withdraw({
-            _caller: msg.sender,
+            _caller: address(this),
             _receiver: msg.sender,
-            _owner: msg.sender,
+            _owner: address(this),
             _assetsToTransfer: redeemCache.siloAmountAfterVesting,
             _sharesToBurn: redeemCache.xSiloAmountToBurn
         });
