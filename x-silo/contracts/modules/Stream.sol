@@ -51,6 +51,8 @@ contract Stream is Ownable2Step {
     function setEmissions(uint256 _emissionPerSecond, uint256 _distributionEnd) external onlyOwner {
         require(_distributionEnd > block.timestamp, DistributionTimeExpired());
 
+        claimRewards();
+
         emissionPerSecond = _emissionPerSecond;
         distributionEnd = _distributionEnd;
         lastUpdateTimestamp = block.timestamp;
