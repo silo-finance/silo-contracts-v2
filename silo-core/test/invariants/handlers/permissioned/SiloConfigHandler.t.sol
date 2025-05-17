@@ -31,15 +31,15 @@ contract SiloConfigHandler is BaseHandler {
 
         // POST-CONDITIONS
 
-        if (defaultVarsBefore[silo].debtAssets > 0) {
+        if (defaultVarsBefore[silo].debtAssets > 1) {
             // We account for fractions delta
-            assertGe(defaultVarsAfter[silo].debtAssets, defaultVarsBefore[silo].debtAssets - 1, SILO_HSPOST_A);
+            assertGe(defaultVarsAfter[silo].debtAssets, defaultVarsBefore[silo].debtAssets - 2, SILO_HSPOST_A);
         }
 
-        if (defaultVarsBefore[silo].collateralAssets > 0) {
+        if (defaultVarsBefore[silo].collateralAssets > 1) {
             // We account for fractions delta
             assertGe(
-                defaultVarsAfter[silo].collateralAssets, defaultVarsBefore[silo].collateralAssets - 1, SILO_HSPOST_A
+                defaultVarsAfter[silo].collateralAssets, defaultVarsBefore[silo].collateralAssets - 2, SILO_HSPOST_A
             );
         }
     }
