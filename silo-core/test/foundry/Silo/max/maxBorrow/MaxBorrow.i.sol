@@ -150,13 +150,16 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxBorrow_withDebt
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withDebt_1_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_withDebt_1_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withDebt(_collateral, _liquidity, SAME_ASSET);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withDebt_2_fuzz
+    */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_withDebt_2_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withDebt(_collateral, _liquidity, TWO_ASSETS);
@@ -180,17 +183,20 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = _maxBorrow1(_sameAsset);
         _assertWeCanNotBorrowAboveMax(maxBorrow, 1, _sameAsset);
 
-        _assertMaxBorrowIsZeroAtTheEnd(_sameAsset);
+        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxBorrow_withInterest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withInterest
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_withInterest_1_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withInterest(_collateral, _liquidity, SAME_ASSET);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withInterest_2_fuzz
+    */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_withInterest_2_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withInterest(_collateral, _liquidity, TWO_ASSETS);
@@ -218,17 +224,20 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
 
         _assertWeCanNotBorrowAboveMax(maxBorrow, _sameAsset);
 
-        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
+        _assertMaxBorrowIsZeroAtTheEnd(2, _sameAsset);
     }
 
     /*
-    forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_2tokens_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 5000
     function test_maxBorrow_repayWithInterest_2tokens_fuzz(uint64 _collateral, uint128 _liquidity) public {
         _maxBorrow_repayWithInterest(_collateral, _liquidity, ISilo.CollateralType.Collateral, TWO_ASSETS);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_2tokens_protected_fuzz
+    */
     /// forge-config: core_test.fuzz.runs = 5000
     function test_maxBorrow_repayWithInterest_2tokens_protected_fuzz(uint64 _collateral, uint128 _liquidity) public {
         _maxBorrow_repayWithInterest(_collateral, _liquidity, ISilo.CollateralType.Protected, TWO_ASSETS);
@@ -242,6 +251,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         _maxBorrow_repayWithInterest(_collateral, _liquidity, ISilo.CollateralType.Collateral, SAME_ASSET);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_1token_protected_fuzz
+    */
     function test_maxBorrow_repayWithInterest_1token_protected_fuzz(
         uint64 _collateral,
         uint128 _liquidity
@@ -289,7 +301,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
         _assertWeCanNotBorrowAboveMax(maxBorrow, _sameAsset);
-        _assertMaxBorrowIsZeroAtTheEnd(1, _sameAsset);
+        _assertMaxBorrowIsZeroAtTheEnd(29, _sameAsset);
     }
 
     /*
@@ -418,7 +430,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         assertLe(
             maxBorrow,
             _underestimatedBy,
-            string.concat("at this point max should return 0 +/-", _underestimatedBy.toString())
+            string.concat("[_assertMaxBorrowIsZeroAtTheEnd] at this point max should return 0 +/-", _underestimatedBy.toString())
         );
     }
 

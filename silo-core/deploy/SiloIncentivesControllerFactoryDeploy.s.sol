@@ -9,7 +9,16 @@ import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/Si
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol \
-        --ffi --broadcast --rpc-url http://127.0.0.1:8545 --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
  */
 contract SiloIncentivesControllerFactoryDeploy is CommonDeploy {
     function run() public returns (SiloIncentivesControllerFactory factory) {

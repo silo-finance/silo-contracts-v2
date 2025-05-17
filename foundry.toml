@@ -142,6 +142,7 @@ arbitrum_one = "${RPC_ARBITRUM}"
 optimism = "${RPC_OPTIMISM}"
 anvil = "${RPC_ANVIL}"
 sonic = "${RPC_SONIC}"
+ink = "${RPC_INK}"
 
 [etherscan]
 sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
