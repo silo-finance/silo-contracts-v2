@@ -279,7 +279,7 @@ contract BorrowingHandler is BaseHandler {
             actor.proxy(target, abi.encodeWithSelector(ISilo.borrow.selector, maxBorrow, receiver, address(actor)));
 
         if (maxBorrow > 0) {
-            //assertTrue(success, BORROWING_HSPOST_F); TODO remove comment
+            assertTrue(success, BORROWING_HSPOST_F);
         }
 
         if (success) {
