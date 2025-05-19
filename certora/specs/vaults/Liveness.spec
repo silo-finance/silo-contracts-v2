@@ -8,7 +8,10 @@ methods {
     function lock() external returns (bool) envfree;
 }
 
-// Check that having the allocator role allows to pause supply on the vault.
+/*
+ * @title Check that having the allocator role allows to pause supply on the vault.
+ * @status Verified
+ */
 rule canPauseSupply() {
     require !lock();
 
@@ -33,19 +36,23 @@ rule canPauseSupply() {
     assert lastReverted;
 }
 
-rule canForceRemoveMarket(address id) {
+/*
+ * @title Checks that currator is able to remove (disable) any market
+ * @status Verified
+ */
+rule canForceRemoveMarket(address market) {
     require !lock();
 
-    requireInvariant supplyCapIsEnabled(id);
-    requireInvariant enabledHasConsistentAsset(id);
+    requireInvariant supplyCapIsEnabled(market);
+    requireInvariant enabledHasConsistentAsset(market);
     // Safe require because this holds as an invariant.
-    require hasPositiveSupplyCapIsUpdated(id);
+    require hasPositiveSupplyCapIsUpdated(market);
 
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    SiloVaultHarness.MarketConfig config = config_(market);
     require config.cap > 0;
     require config.removableAt == 0;
-    // Assume that the withdraw queue is [X, id];
-    require withdrawQueue(1) == id;
+    // Assume that the withdraw queue is [X, market];
+    require withdrawQueue(1) == market;
     require withdrawQueueLength() == 2;
 
     env e1; env e2; env e3;
@@ -54,18 +61,18 @@ rule canForceRemoveMarket(address id) {
     require e3.msg.sender == e1.msg.sender;
 
     require e1.msg.value == 0;
-    revokePendingCap@withrevert(e1, id);
+    revokePendingCap@withrevert(e1, market);
     assert !lastReverted;
 
     require e2.msg.value == 0;
-    submitCap@withrevert(e2, id, 0);
+    submitCap@withrevert(e2, market, 0);
     assert !lastReverted;
 
     require e3.msg.value == 0;
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
     require e3.block.timestamp < 2^63;
-    submitMarketRemoval@withrevert(e3, id);
+    submitMarketRemoval@withrevert(e3, market);
     assert !lastReverted;
 
     env e4; uint256[] newWithdrawQueue;
@@ -77,5 +84,5 @@ rule canForceRemoveMarket(address id) {
     updateWithdrawQueue@withrevert(e4, newWithdrawQueue);
     assert !lastReverted;
 
-    assert !config_(id).enabled;
+    assert !config_(market).enabled;
 }

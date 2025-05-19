@@ -41,14 +41,18 @@ persistent ghost bool hasCall;
 
 hook CALL(uint g, address addr, uint value, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
     if (ignoredCall) {
-        // Ignore calls to tokens and Morpho markets as they are trusted (they have gone through a timelock).
+        // Ignore calls to tokens and markets as they are trusted (they have gone through a timelock).
         ignoredCall = false;
     } else {
         hasCall = true;
     }
 }
 
-// Check that there are no untrusted external calls, ensuring notably reentrancy safety.
+// 
+/*
+ * @title Check that there are no untrusted external calls, ensuring notably reentrancy safety.
+ * @status Verified
+ */
 rule reentrancySafe(method f, env e, calldataarg data)
     filtered {
         f -> (f.contract == currentContract)
