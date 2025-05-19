@@ -100,20 +100,23 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     }
 
     function finalizeRedeem(uint256 redeemIndex) external nonReentrant validateRedeem(msg.sender, redeemIndex) {
-        RedeemInfo storage redeemCache = _userRedeems[msg.sender][redeemIndex];
-        require(block.timestamp >= redeemCache.endTime, VestingNotOver());
+        RedeemInfo storage redeem_ = _userRedeems[msg.sender][redeemIndex];
+        require(block.timestamp >= redeem_.endTime, VestingNotOver());
+
+        emit FinalizeRedeem(msg.sender, redeem_.siloAmountAfterVesting, redeem_.xSiloAmountToBurn);
+
+        uint256 assetsToTransfer = redeem_.siloAmountAfterVesting;
+        uint256 sharesToBurn = redeem_.xSiloAmountToBurn;
 
         // remove redeem entry
         _deleteRedeemEntry(redeemIndex);
-
-        emit FinalizeRedeem(msg.sender, redeemCache.siloAmountAfterVesting, redeemCache.xSiloAmountToBurn);
 
         _withdraw({
             _caller: address(this),
             _receiver: msg.sender,
             _owner: address(this),
-            _assetsToTransfer: redeemCache.siloAmountAfterVesting,
-            _sharesToBurn: redeemCache.xSiloAmountToBurn
+            _assetsToTransfer: assetsToTransfer,
+            _sharesToBurn: sharesToBurn
         });
     }
 
