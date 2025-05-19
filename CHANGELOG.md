@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Fixed
 
+
+### [3.6.0] - 2025-05-19
+#Added 
+- certora specs for the Silo Vaults
+- silo-core: incentive program name conversion
+- silo-core: liquidation helper deployment ink
+- silo-oracles: revert on zero price in DIA
+- silo-oracles: pyth deployment
+- SiloIncentivesController and SiloVaultDeployer deployment
+- new markets:
+  - silo-core: WETH USDC market on Arbitrum
+  - silo-core: sUSDX USDC new market Arbitrum
+  - silo-core: ARB USDC new market on Arbitrum
+  - silo-core: WETH USDT market on Ink
+
 ### [3.5.0] - 2025-05-15
 - silo-core: fix `maxBorrow`, see explanation in code, method `maxBorrowValueToAssetsAndShares()`
 - silo-core: Silo implementation redeploy
