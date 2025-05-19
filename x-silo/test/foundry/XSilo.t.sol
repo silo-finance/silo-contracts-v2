@@ -216,7 +216,7 @@ contract XSiloTest is Test {
         vm.assume(_assetsToDeposit > 0);
         vm.assume(_assetsToDeposit < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        _percentAssetsToWithdraw = uint64(bound(_percentAssetsToWithdraw, 0, 1e18));
+        _percentAssetsToWithdraw = uint64(bound(_percentAssetsToWithdraw, 1, 1e18));
 
         _assumeCustomSetup(_customSetup);
 
@@ -269,29 +269,36 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0_fuzz
     */
-    /// forge-config: x_silo.fuzz.runs = 10000
-    function test_redeem_usesDuration0(
-        uint256 _silos, uint256 _xSiloToRedeem
+    /// forge-config: x_silo.fuzz.runs = 5000
+    function test_redeem_usesDuration0_fuzz(
+        CustomSetup memory _customSetup,
+        uint256 _assets,
+        uint16 _percentToRedeem
     ) public {
-//        (uint256 _silos, uint256 _xSiloToRedeem) = (9133, 4696);
+        vm.assume(_assets > 0);
+        vm.assume(_assets < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        vm.assume(_silos > 0);
-        vm.assume(_xSiloToRedeem > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+        _assumeCustomSetup(_customSetup);
+
+//        (uint256 _silos, uint256 _xSiloToRedeem) = (9133, 4696);
 
         address user = makeAddr("user");
 
-        _convert(user, _silos);
-        vm.assume(_xSiloToRedeem <= xSilo.balanceOf(user));
+        _convert(user, _assets);
 
-        uint256 siloPreview = xSilo.getAmountByVestingDuration(_xSiloToRedeem, 0);
+        _percentToRedeem = uint16(bound(_percentToRedeem, 1, _PRECISION));
+
+        uint256 xSiloToRedeem = Math.mulDiv(xSilo.balanceOf(user), _percentToRedeem, _PRECISION, Math.Rounding.Floor);
+
+
+        uint256 siloPreview = xSilo.getAmountByVestingDuration(xSiloToRedeem, 0);
         vm.assume(siloPreview != 0);
 
         vm.startPrank(user);
 
-        uint256 gotSilos = xSilo.redeem(_xSiloToRedeem, user, user);
+        uint256 gotSilos = xSilo.redeem(xSiloToRedeem, user, user);
 
         assertEq(
             siloPreview,
