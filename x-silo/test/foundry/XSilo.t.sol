@@ -239,14 +239,16 @@ contract XSiloTest is Test {
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_all
     */
-    /// forge-config: x_silo.fuzz.runs = 10000
-    function test_redeem_all(uint256 _silos) public {
-        vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+    /// forge-config: x_silo.fuzz.runs = 5000
+    function test_redeem_all_fuzz(CustomSetup memory _customSetup, uint256 _assets) public {
+        _assumeCustomSetup(_customSetup);
+
+        vm.assume(_assets > 0);
+        vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
 
         address user = makeAddr("user");
 
-        _convert(user, _silos);
+        _convert(user, _assets);
 
         uint256 siloPreview = xSilo.getAmountByVestingDuration(xSilo.balanceOf(user), 0);
         vm.assume(siloPreview != 0);
