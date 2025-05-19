@@ -79,9 +79,12 @@ contract Stream is IStream, Ownable2Step {
 
     /// @inheritdoc IStream
     function pendingRewards() public view returns (uint256 rewards) {
-        if (lastUpdateTimestamp >= distributionEnd) return 0;
+        uint256 lastUpdateTimestamp_ = lastUpdateTimestamp;
+        uint256 distributionEnd_ = distributionEnd;
 
-        uint256 timeElapsed = Math.min(block.timestamp, distributionEnd) - lastUpdateTimestamp;
+        if (lastUpdateTimestamp_ >= distributionEnd_) return 0;
+
+        uint256 timeElapsed = Math.min(block.timestamp, distributionEnd_) - lastUpdateTimestamp_;
         uint256 balanceOf = IERC20(REWARD_ASSET).balanceOf(address(this));
 
         rewards = Math.min(timeElapsed * emissionPerSecond, balanceOf);
