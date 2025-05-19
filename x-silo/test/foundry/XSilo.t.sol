@@ -20,9 +20,18 @@ import {XSilo, XRedeemPolicy, Stream, ERC20} from "../../contracts/XSilo.sol";
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XSiloTest
 */
 contract XSiloTest is Test {
+    uint256 internal constant _PRECISION = 100;
+
     Stream stream;
     XSilo xSilo;
     ERC20Mock asset;
+
+    struct CustomSetup {
+        uint64 minRedeemRatio;
+        uint64 maxRedeemRatio;
+        uint64 minRedeemDuration;
+        uint64 maxRedeemDuration;
+    }
 
     function setUp() public {
         AddrLib.init();
@@ -37,16 +46,15 @@ contract XSiloTest is Test {
         (xSilo, stream) = deploy.run();
         // all tests are done for this setup:
 
-        assertEq(xSilo.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
-        assertEq(xSilo.maxRedeemRatio(), 1e2, "expected initial setup for maxRedeemRatio");
-        assertEq(xSilo.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
-        assertEq(xSilo.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
+        _defaultSetupVerification();
     }
 
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_SelfTransferNotAllowed
     */
-    function test_SelfTransferNotAllowed() public {
+    function test_SelfTransferNotAllowed(CustomSetup memory _customSetup) public {
+        _assumeCustomSetup(_customSetup);
+
         _convert(address(this), 10);
 
         vm.expectRevert(XSilo.SelfTransferNotAllowed.selector);
@@ -54,16 +62,18 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxWithdraw_usersDuration0
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxWithdraw_usersDuration0_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_maxWithdraw_usersDuration0(uint256 _silos) public {
-        vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+    function test_maxWithdraw_usersDuration0_fuzz(CustomSetup memory _customSetup, uint256 _assets) public {
+        _assumeCustomSetup(_customSetup);
+
+        vm.assume(_assets > 0);
+        vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
 
         address user = makeAddr("user");
 
-        _convert(user, _silos);
+        _convert(user, _assets);
 
         assertEq(
             xSilo.maxWithdraw(user),
@@ -327,5 +337,37 @@ contract XSiloTest is Test {
         assertGt(shares, 0, "[_convert] shares received");
 
         vm.stopPrank();
+    }
+
+    function _defaultSetupVerification() internal {
+        // all tests are done for this setup:
+
+        assertEq(xSilo.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
+        assertEq(xSilo.maxRedeemRatio(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(xSilo.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
+        assertEq(xSilo.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
+    }
+
+    function _assumeCustomSetup(CustomSetup memory _customSetup) internal {
+        _customSetup.maxRedeemRatio = uint64(bound(_customSetup.maxRedeemRatio, 0, _PRECISION));
+        _customSetup.minRedeemRatio = uint64(bound(_customSetup.minRedeemRatio, 0, _customSetup.maxRedeemRatio));
+        _customSetup.maxRedeemDuration = uint64(bound(_customSetup.maxRedeemDuration, 1, 365 days));
+        _customSetup.minRedeemDuration = uint64(bound(_customSetup.minRedeemDuration, 0, _customSetup.maxRedeemDuration - 1));
+
+        emit log_named_uint("minRedeemRatio", _customSetup.minRedeemRatio);
+        emit log_named_uint("maxRedeemRatio", _customSetup.maxRedeemRatio);
+        emit log_named_uint("minRedeemDuration", _customSetup.minRedeemDuration);
+        emit log_named_uint("maxRedeemDuration", _customSetup.maxRedeemDuration);
+
+        try xSilo.updateRedeemSettings({
+            _minRedeemRatio: _customSetup.minRedeemRatio,
+            _maxRedeemRatio: _customSetup.maxRedeemRatio,
+            _minRedeemDuration: _customSetup.minRedeemDuration,
+            _maxRedeemDuration: _customSetup.maxRedeemDuration
+        }) {
+            // OK
+        } catch {
+            vm.assume(false);
+        }
     }
 }
