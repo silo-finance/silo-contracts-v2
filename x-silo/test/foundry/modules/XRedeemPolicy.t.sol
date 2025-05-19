@@ -255,6 +255,43 @@ contract XRedeemPolicyTest is Test {
         _ensure_redeemSilo_immediate_doesNotGiveRewards(user, _amount);
     }
 
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_getters
+    */
+    function test_redeemSilo_getters() public {
+        address user = makeAddr("user");
+        _convert(user, 1e18);
+
+        uint256 balanceBeforeRedeem = policy.balanceOf(user);
+        uint256 maxDuration = policy.maxRedeemDuration();
+
+        vm.prank(user);
+        policy.redeemSilo(balanceBeforeRedeem, maxDuration);
+
+        uint256 balanceAfterRedeem = policy.balanceOf(user);
+        assertEq(balanceAfterRedeem, 0, "balance should be 0");
+
+        uint256 userRedeemsLength = policy.getUserRedeemsLength(user);
+        assertEq(userRedeemsLength, 1, "userRedeemsLength should be 1");
+
+        uint256 userRedeemsBalance = policy.getUserRedeemsBalance(user);
+        assertEq(userRedeemsBalance, balanceBeforeRedeem, "userRedeemsBalance should be equal to balanceBeforeRedeem");
+
+        uint256 currentSiloAmount;
+        uint256 xSiloAmount;
+        uint256 siloAmountAfterVesting;
+        uint256 endTime;
+
+        (currentSiloAmount, xSiloAmount, siloAmountAfterVesting, endTime) = policy.getUserRedeem(user, 0);
+        assertEq(currentSiloAmount, balanceBeforeRedeem, "currentSiloAmount should be equal to balanceBeforeRedeem");
+        assertEq(xSiloAmount, balanceBeforeRedeem, "xSiloAmount should be equal to balanceBeforeRedeem");
+        assertEq(siloAmountAfterVesting, balanceBeforeRedeem, "siloAmountAfterVesting should be equal to balanceBeforeRedeem");
+        assertEq(endTime, block.timestamp + maxDuration, "endTime should be equal to maxDuration");
+
+        vm.expectRevert(IXRedeemPolicy.RedeemIndexDoesNotExist.selector);
+        policy.getUserRedeem(user, 1);
+    }
+
     function _ensure_redeemSilo_immediate_doesNotGiveRewards(address _user, uint256 _amount) public {
         vm.startPrank(_user);
 
