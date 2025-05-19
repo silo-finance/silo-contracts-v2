@@ -114,10 +114,12 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_returnsAll
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxRedeem_returnsAll_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_maxRedeem_returnsAll(uint256 _silos) public {
+    function test_maxRedeem_returnsAll_fuzz(CustomSetup memory _customSetup, uint256 _silos) public {
+        _assumeCustomSetup(_customSetup);
+
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
 
