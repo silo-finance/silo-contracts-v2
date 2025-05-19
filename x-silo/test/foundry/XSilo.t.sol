@@ -476,18 +476,19 @@ contract XSiloTest is Test {
                 vm.warp(block.timestamp + 30 minutes);
             }
 
+            stream.claimRewards();
+
             maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
         }
-
-        stream.claimRewards();
 
         assertEq(stream.pendingRewards(), 0, "all rewards should be distributed");
         // I think it might be a case when someone can not exit and xSilo will be locked
         // eg some dust that can not be converted back to Silo, but fuzzing not fining it so assets is set to 0
         assertEq(xSilo.totalSupply(), 0, "everyone should exit");
-
-        // TODO why stream has balance if pending is 0?
-//        assertLt(asset.balanceOf(address(stream)), stream.emissionPerSecond(), "stream has no balance (dust acceptable)");
+        
+        if (stream.distributionEnd() <= block.timestamp) {
+            assertEq(asset.balanceOf(address(stream)), 0, "stream has no balance");
+        }
     }
 
     function _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(uint256 _prevMaxTotal)
