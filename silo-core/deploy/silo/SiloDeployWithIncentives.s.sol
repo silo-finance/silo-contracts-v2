@@ -14,7 +14,7 @@ import {
 } from "silo-core/deploy/incentives-controller/SiloIncentivesControllerGLCreateAndConfigure.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=Silo_PT-Silo-46-scUSD-14AUG2025_USDC.e INCENTIVES_OWNER=GROWTH_MULTISIG INCENTIVIZED_ASSET=USDC.e \
+FOUNDRY_PROFILE=core CONFIG=wS_scUSD_Silo INCENTIVES_OWNER=GROWTH_MULTISIG INCENTIVIZED_ASSET=scUSD \
     forge script silo-core/deploy/silo/SiloDeployWithIncentives.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
