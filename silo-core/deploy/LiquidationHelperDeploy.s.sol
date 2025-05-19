@@ -84,7 +84,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return ODOS_ROUTER_SONIC;
-        if (chainId == ChainsLib.INK_CHAIN_ID) return EXCHANGE_PROXY_INK;
+        if (chainId == ChainsLib.INK_CHAIN_ID) return EXCHANGE_PROXY_ZERO_X_INK;
 
         revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
     }
