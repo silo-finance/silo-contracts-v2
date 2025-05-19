@@ -277,6 +277,28 @@ contract XRedeemPolicyTest is Test {
         uint256 userRedeemsBalance = policy.getUserRedeemsBalance(user);
         assertEq(userRedeemsBalance, balanceBeforeRedeem, "userRedeemsBalance should be equal to balanceBeforeRedeem");
 
+        XRedeemPolicy.RedeemInfo[] memory userRedeems = policy.userRedeems(user);
+        assertEq(userRedeems.length, 1, "userRedeems should have 1 item");
+        assertEq(userRedeems[0].endTime, block.timestamp + maxDuration, "endTime should be equal to maxDuration");
+
+        assertEq(
+            userRedeems[0].currentSiloAmount,
+            balanceBeforeRedeem,
+            "currentSiloAmount should be equal to balanceBeforeRedeem"
+        );
+
+        assertEq(
+            userRedeems[0].xSiloAmountToBurn,
+            balanceBeforeRedeem,
+            "xSiloAmountToBurn should be equal to balanceBeforeRedeem"
+        );
+
+        assertEq(
+            userRedeems[0].siloAmountAfterVesting,
+            balanceBeforeRedeem,
+            "siloAmountAfterVesting should be equal to balanceBeforeRedeem"
+        );
+
         uint256 currentSiloAmount;
         uint256 xSiloAmount;
         uint256 siloAmountAfterVesting;
@@ -571,6 +593,22 @@ contract XRedeemPolicyTest is Test {
 
         vm.expectRevert(XSilo.ZeroShares.selector);
         policy.deposit(100, user);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_ration_calculation_duration_less_min_duration
+    */
+    function test_ration_calculation_duration_less_min_duration() public {
+        policy.updateRedeemSettings({
+            _minRedeemRatio: policy.minRedeemRatio(),
+            _maxRedeemRatio: policy.maxRedeemRatio(),
+            _minRedeemDuration: 2 days,
+            _maxRedeemDuration: policy.maxRedeemDuration()
+        });
+
+        uint256 siloAmountAfterVesting = policy.getAmountByVestingDuration(1e18, 1 days);
+        // because duration is less than min duration, ration should be 0
+        assertEq(siloAmountAfterVesting, 0, "siloAmountAfterVesting should be 0");
     }
 
     function _setupStream() public returns (uint256 emissionPerSecond) {
