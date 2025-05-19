@@ -394,10 +394,10 @@ contract XSiloTest is Test {
             vm.warp(block.timestamp + 1 minutes);
         }
 
+        uint256 maxTotalShares = xSilo.totalSupply();
+
         _setupStream(_emissionPerSecond, block.timestamp + _streamDistribution);
         vm.warp(block.timestamp + 1 hours);
-
-        uint256 maxTotalShares = xSilo.totalSupply();
 
         for (uint i = 0; i < _data.length; i++) {
             emit log_named_uint("--------- redeemSilo", i);
@@ -420,6 +420,8 @@ contract XSiloTest is Test {
             }
 
             vm.warp(block.timestamp + 30 minutes);
+
+            maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
         }
 
         vm.warp(block.timestamp + xSilo.maxRedeemDuration() + 1);
@@ -456,6 +458,8 @@ contract XSiloTest is Test {
                 emit log_named_decimal_uint("non withdrowable", shares, 18);
                 stream.claimRewards();
             }
+
+            maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
         }
 
         vm.warp(block.timestamp + maxDurationToExit);
@@ -471,31 +475,28 @@ contract XSiloTest is Test {
                 emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
                 vm.warp(block.timestamp + 30 minutes);
             }
+
+            maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
         }
 
         stream.claimRewards();
 
-        assertLe(stream.pendingRewards(), 0, "there should be no pending rewards");
-//
-//        assertLe(
-//            asset.balanceOf(address(stream)),
-//            1e3,
-//            "stream has no balance (dust acceptable)"
-//        );
+        assertEq(stream.pendingRewards(), 0, "all rewards should be distributed");
+        // I think it might be a case when someone can not exit and xSilo will be locked
+        // eg some dust that can not be converted back to Silo, but fuzzing not fining it so assets is set to 0
+        assertEq(xSilo.totalSupply(), 0, "everyone should exit");
 
-        uint256 lockedAssets = xSilo.totalSupply();
-        uint256 allRedeemed = maxTotalShares - lockedAssets;
+        // TODO why stream has balance if pending is 0?
+//        assertLt(asset.balanceOf(address(stream)), stream.emissionPerSecond(), "stream has no balance (dust acceptable)");
+    }
 
-        emit log_named_uint("maxTotalShares", maxTotalShares);
-        emit log_named_uint("   totalSupply", xSilo.totalSupply());
-        emit log_named_uint("   allRedeemed", allRedeemed);
-        emit log_named_uint("  lockedAssets", lockedAssets);
-
-        assertLe(
-            lockedAssets * 1e18 / maxTotalShares,
-            0.95e18, // TODO why 90%?
-            "arbitrary leftover that we accept in this simulation, that users can't withdraw"
-        );
+    function _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(uint256 _prevMaxTotal)
+        internal
+        view
+        returns (uint256 newMaxTotal)
+    {
+        newMaxTotal = xSilo.totalSupply();
+        assertLe(newMaxTotal, _prevMaxTotal, " assert TotalSupply Only Decreasing When No New Deposits");
     }
 
     function _userAddr(uint256 _i) internal returns (address addr) {
