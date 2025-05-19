@@ -83,20 +83,34 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewWithdraw_usersDuration0
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewWithdraw_usersDuration0_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_previewWithdraw_usersDuration0(uint256 _silos) public view {
-        vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+    function test_previewWithdraw_usersDuration0_fuzz(
+        CustomSetup memory _customSetup,
+        uint256 _assets
+    ) public {
+        _assumeCustomSetup(_customSetup);
 
-        uint256 xSiloRequiredFor = xSilo.previewWithdraw(_silos);
+        vm.assume(_assets > 0);
+        vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
 
-        assertEq(
-            xSilo.getAmountByVestingDuration(xSiloRequiredFor, 0),
-            _silos,
-            "previewWithdraw give us same result as vesting with 0 duration"
-        );
+        uint256 xSiloRequiredForAssets = xSilo.previewWithdraw(_assets);
+        emit log_named_uint("xSiloRequiredForAssets", xSiloRequiredForAssets);
+
+        if (xSiloRequiredForAssets == type(uint256).max) {
+            assertEq(
+                xSilo.getAmountByVestingDuration(type(uint256).max, 0),
+                0,
+                "(ratio is 0) previewWithdraw give us MAX, because there are no amount that can withdraw even 1 wei"
+            );
+        } else {
+            assertEq(
+                xSilo.getAmountByVestingDuration(xSiloRequiredForAssets, 0),
+                _assets,
+                "previewWithdraw give us same result as vesting with 0 duration"
+            );
+        }
     }
 
     /*
@@ -327,7 +341,7 @@ contract XSiloTest is Test {
         asset.mint(address(stream), stream.fundingGap());
     }
 
-    function _convert(address _user, uint256 _amount) public returns (uint256 shares){
+    function _convert(address _user, uint256 _amount) internal returns (uint256 shares){
         vm.startPrank(_user);
 
         asset.mint(_user, _amount);
@@ -339,7 +353,7 @@ contract XSiloTest is Test {
         vm.stopPrank();
     }
 
-    function _defaultSetupVerification() internal {
+    function _defaultSetupVerification() internal view {
         // all tests are done for this setup:
 
         assertEq(xSilo.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
