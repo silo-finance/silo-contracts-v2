@@ -9,7 +9,7 @@ import {TokensGenerator} from "../_common/TokensGenerator.sol";
 import {DIAOracle, DIAOracle, IDIAOracle, IDIAOracleV2} from "../../../contracts/dia/DIAOracle.sol";
 import {DIAOracleConfig} from "../../../contracts/dia/DIAOracleConfig.sol";
 import {DIAConfigDefault} from "../_common/DIAConfigDefault.sol";
-
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 /*
     FOUNDRY_PROFILE=oracles forge test -vv --match-contract DIAOracleTest
@@ -87,6 +87,38 @@ contract DIAOracleTest is DIAConfigDefault {
         uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
         emit log_named_decimal_uint("RDPX/USD", price, 6);
         assertEq(price, 17889972, "$17,88");
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_ZeroPrice_oneFeed
+    */
+    function test_DIAOracle_quote_ZeroPrice_oneFeed() public {
+        uint256 dividerToZeroPrice = 10**36;
+        IDIAOracle.DIADeploymentConfig memory cfgOneFeed = _defaultDIAConfig(dividerToZeroPrice, 0);
+        DIAOracleConfig oracleConfigOneFeed = new DIAOracleConfig(cfgOneFeed);
+        assertTrue(Strings.equal(cfgOneFeed.secondaryKey, ""), "Only one feed is used");
+
+        DIAOracle oracle = DIAOracle(Clones.clone(address(new DIAOracle())));
+        oracle.initialize(oracleConfigOneFeed, cfgOneFeed.primaryKey, cfgOneFeed.secondaryKey);
+
+        vm.expectRevert(IDIAOracle.ZeroQuote.selector);
+        oracle.quote(1, address(tokens["RDPX"]));
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_ZeroPrice_twoFeeds
+    */
+    function test_DIAOracle_quote_ZeroPrice_twoFeeds() public {
+        uint256 dividerToZeroPrice = 10**36;
+        IDIAOracle.DIADeploymentConfig memory cfgTwoFeeds = _defaultDIAConfig(dividerToZeroPrice, 0);
+        cfgTwoFeeds.secondaryKey = "ETH/USD";
+
+        DIAOracleConfig oracleConfigTwoFeeds = new DIAOracleConfig(cfgTwoFeeds);
+        DIAOracle oracle = DIAOracle(Clones.clone(address(new DIAOracle())));
+        oracle.initialize(oracleConfigTwoFeeds, cfgTwoFeeds.primaryKey, cfgTwoFeeds.secondaryKey);
+
+        vm.expectRevert(IDIAOracle.ZeroQuote.selector);
+        oracle.quote(1, address(tokens["RDPX"]));
     }
 
     /*
