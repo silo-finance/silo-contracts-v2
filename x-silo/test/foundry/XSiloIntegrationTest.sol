@@ -24,7 +24,6 @@ import {
  FOUNDRY_PROFILE=x_silo forge test --ffi --mc XSiloIntegrationTest -vv
 */
 contract XSiloIntegrationTest is Test {
-    uint256 public constant FORKING_BLOCK = 28010240;
     address public constant SILO_WHALE = 0xE641Dca2E131FA8BFe1D7931b9b040e3fE0c5BDc;
     address public constant USDC_WHALE = 0x7214e1D350Ba8E2b19dE4f77DDd3609Af06AAdE2;
 
@@ -47,7 +46,7 @@ contract XSiloIntegrationTest is Test {
     uint256 userInitialSiloBalance;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("RPC_SONIC"), FORKING_BLOCK);
+        vm.createSelectFork(vm.envString("RPC_SONIC"));
 
         XSiloAndStreamDeploy deploy = new XSiloAndStreamDeploy();
         deploy.disableDeploymentsSync();
