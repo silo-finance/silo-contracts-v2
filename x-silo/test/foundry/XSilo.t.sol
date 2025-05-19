@@ -151,42 +151,89 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_usesDuration0
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_usesDuration0_WithdrawPossible_fuzz
     */
-    /// forge-config: x_silo.fuzz.runs = 10000
-    function test_withdraw_usesDuration0(uint256 _silos, uint256 _siloToWithdraw) public {
-//        uint256 _silos = 100; uint256 _siloToWithdraw = 15;
+    /// forge-config: x_silo.fuzz.runs = 5000
+    function test_withdraw_usesDuration0_WithdrawPossible_fuzz(
+        CustomSetup memory _customSetup,
+        uint256 _assetsToDeposit,
+        uint16 _percentAssetsToWithdraw
+    ) public {
+        vm.assume(_assetsToDeposit > 0);
+        vm.assume(_assetsToDeposit < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        vm.assume(_silos > 0);
-        vm.assume(_siloToWithdraw > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+        uint256 precision = _PRECISION;
+
+        _percentAssetsToWithdraw = uint16(bound(_percentAssetsToWithdraw, 1, precision));
+
+        _assumeCustomSetup(_customSetup);
+
+//        uint256 _assetsToDeposit = 100; uint256 _assetsToWithdraw = 15;
 
         address user = makeAddr("user");
 
-        _convert(user, _silos);
-        vm.assume(_siloToWithdraw <= xSilo.maxWithdraw(user));
+        _convert(user, _assetsToDeposit);
+
+        uint256 assetsToWithdraw = Math.mulDiv(
+            xSilo.maxWithdraw(user), _percentAssetsToWithdraw, precision, Math.Rounding.Floor
+        );
 
         vm.startPrank(user);
 
         uint256 checkpoint = vm.snapshot();
-        uint256 withdrawnShares = xSilo.withdraw(_siloToWithdraw, user, user);
 
-        assertEq(asset.balanceOf(user), _siloToWithdraw, "user got exact amount of tokens");
+        vm.assume(xSilo.previewWithdraw(assetsToWithdraw) > 0);
+
+        uint256 withdrawnShares = xSilo.withdraw(assetsToWithdraw, user, user);
+
+        assertEq(asset.balanceOf(user), assetsToWithdraw, "user got exact amount of tokens");
 
         vm.revertTo(checkpoint);
 
         emit log_named_uint("withdrawnShares after rollback", withdrawnShares);
-        emit log_named_uint("_siloToWithdraw", _siloToWithdraw);
+        emit log_named_uint("_siloToWithdraw", assetsToWithdraw);
 
         vm.startPrank(user);
 
         assertEq(
-            _siloToWithdraw,
+            assetsToWithdraw,
             xSilo.getAmountByVestingDuration(withdrawnShares, 0),
             "withdraw give us same result as vesting with 0 duration"
         );
 
         vm.stopPrank();
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_usesDuration0_zeroShares_fuzz
+    */
+    /// forge-config: x_silo.fuzz.runs = 10000
+    function test_withdraw_usesDuration0_zeroShares_fuzz(
+        CustomSetup memory _customSetup,
+        uint256 _assetsToDeposit,
+        uint64 _percentAssetsToWithdraw
+    ) public {
+        vm.assume(_assetsToDeposit > 0);
+        vm.assume(_assetsToDeposit < type(uint256).max / _PRECISION); // to not cause overflow on calculation
+
+        _percentAssetsToWithdraw = uint64(bound(_percentAssetsToWithdraw, 0, 1e18));
+
+        _assumeCustomSetup(_customSetup);
+
+        address user = makeAddr("user");
+
+        _convert(user, _assetsToDeposit);
+
+        uint256 assetsToWithdraw = Math.mulDiv(
+            xSilo.maxWithdraw(user), _percentAssetsToWithdraw, 1e18, Math.Rounding.Floor
+        );
+
+        bool zeroShares = xSilo.previewWithdraw(assetsToWithdraw) == 0;
+        vm.assume(zeroShares);
+
+        vm.expectRevert(XSilo.ZeroShares.selector);
+        vm.prank(user);
+        xSilo.withdraw(assetsToWithdraw, user, user);
     }
 
     /*
