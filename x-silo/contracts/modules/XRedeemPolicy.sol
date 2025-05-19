@@ -37,10 +37,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         _;
     }
 
-    function userRedeems(address _user) external view returns (RedeemInfo[] memory) {
-        return _userRedeems[_user];
-    }
-
     function updateRedeemSettings(
         uint256 _minRedeemRatio,
         uint256 _maxRedeemRatio,
@@ -125,6 +121,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         RedeemInfo storage redeemCache = _userRedeems[msg.sender][_redeemIndex];
 
         uint256 toTransfer = convertToShares(redeemCache.currentSiloAmount);
+        // TODO is it worth to create fuzzing test that check if asset/shares ratio can ony go up?
         uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
 
         if (toTransfer != 0) _transferShares(address(this), msg.sender, toTransfer);
@@ -134,6 +131,10 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
 
         // remove redeem entry
         _deleteRedeemEntry(_redeemIndex);
+    }
+
+    function userRedeems(address _user) external view returns (RedeemInfo[] memory) {
+        return _userRedeems[_user];
     }
 
     function getUserRedeemsBalance(address _userAddress)

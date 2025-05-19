@@ -16,7 +16,7 @@ import {XSilo} from "x-silo/contracts/XSilo.sol";
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
     verify code in case of issues:
-    
+
     ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=x_silo \
         forge script x-silo/deploy/XSiloDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --resume --verify \
