@@ -135,15 +135,17 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewRedeem_usersDuration0
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_previewRedeem_usersDuration0_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 10000
-    function test_previewRedeem_usersDuration0(uint256 _xSilos) public view {
-        vm.assume(_xSilos > 0);
+    function test_previewRedeem_usersDuration0_fuzz(CustomSetup memory _customSetup, uint256 _shares) public {
+        _assumeCustomSetup(_customSetup);
+
+        vm.assume(_shares > 0);
 
         assertEq(
-            xSilo.previewRedeem(_xSilos),
-            xSilo.getAmountByVestingDuration(_xSilos, 0),
+            xSilo.previewRedeem(_shares),
+            xSilo.getAmountByVestingDuration(_shares, 0),
             "previewRedeem give us same result as vesting with 0 duration"
         );
     }
