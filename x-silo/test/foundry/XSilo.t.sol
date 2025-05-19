@@ -62,6 +62,32 @@ contract XSiloTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_transferFrom_success
+    */
+    function test_transferFrom_success(CustomSetup memory _customSetup) public {
+        _assumeCustomSetup(_customSetup);
+
+        address user = makeAddr("user");
+        address spender = makeAddr("spender");
+
+        uint256 xSiloAmount = 10e18;
+
+        _convert(user, xSiloAmount);
+
+        vm.prank(user);
+        xSilo.approve(spender, xSiloAmount);
+
+        assertEq(xSilo.balanceOf(user), xSiloAmount, "user balance should be xSiloAmount");
+        assertEq(xSilo.balanceOf(spender), 0, "spender balance should be 0");
+
+        vm.prank(spender);
+        xSilo.transferFrom(user, spender, xSiloAmount);
+
+        assertEq(xSilo.balanceOf(user), 0, "user balance should be 0");
+        assertEq(xSilo.balanceOf(spender), xSiloAmount, "spender balance should be xSiloAmount");
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_maxWithdraw_usersDuration0_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 10000
