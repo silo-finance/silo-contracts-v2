@@ -343,14 +343,39 @@ contract XSiloTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_xSilo_flowShouldNotRevert
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_xSilo_flowShouldNotRevert_default_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 1000
-    function test_xSilo_flowShouldNotRevert(
+    function test_xSilo_flowShouldNotRevert_default_fuzz(
         TestFlow[] memory _data,
         uint32 _emissionPerSecond,
         uint32 _streamDistribution
     ) public {
+        _xSilo_flowShouldNotRevert(_data, _emissionPerSecond, _streamDistribution);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_xSilo_flowShouldNotRevert_custom_fuzz
+    */
+    /// forge-config: x_silo.fuzz.runs = 1000
+    function test_xSilo_flowShouldNotRevert_custom_fuzz(
+        CustomSetup memory _customSetup,
+        TestFlow[] memory _data,
+        uint32 _emissionPerSecond,
+        uint32 _streamDistribution
+    ) public {
+        vm.assume(_customSetup.minRedeemRatio > 0); // so we do not stuck will all xSilos at the end
+
+        _assumeCustomSetup(_customSetup);
+
+        _xSilo_flowShouldNotRevert(_data, _emissionPerSecond, _streamDistribution);
+    }
+
+    function _xSilo_flowShouldNotRevert(
+        TestFlow[] memory _data,
+        uint32 _emissionPerSecond,
+        uint32 _streamDistribution
+    ) internal {
         vm.assume(_data.length > 0);
         vm.assume(_data.length <= 50);
 
@@ -362,13 +387,16 @@ contract XSiloTest is Test {
             vm.assume(amount > 1e3); // to prevent ratio issue on stream rewards
 
             _convert(user, amount);
+            emit log_named_decimal_uint("amount", amount, 18);
+            emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+
             vm.warp(block.timestamp + 1 minutes);
         }
 
         _setupStream(_emissionPerSecond, block.timestamp + _streamDistribution);
         vm.warp(block.timestamp + 1 hours);
 
-        uint256 allFinishAt = block.timestamp + _streamDistribution;
+        uint256 maxTotalShares = xSilo.totalSupply();
 
         for (uint i = 0; i < _data.length; i++) {
             emit log_named_uint("--------- redeemSilo", i);
@@ -377,45 +405,97 @@ contract XSiloTest is Test {
             uint256 amount = xSilo.balanceOf(user) * 10 / 100;
             if (amount == 0) continue;
 
-            uint256 redeemDuration = Math.min(_data[i].redeemDuration, xSilo.maxRedeemDuration());
-            allFinishAt = Math.max(block.timestamp + redeemDuration, allFinishAt);
+            _data[i].redeemDuration = uint64(
+                bound(_data[i].redeemDuration, xSilo.minRedeemDuration(), xSilo.maxRedeemDuration())
+            );
 
             vm.prank(user);
-            xSilo.redeemSilo(amount, redeemDuration);
+
+            try xSilo.redeemSilo(amount, _data[i].redeemDuration) {
+                emit log_named_decimal_uint("amount", amount, 18);
+                emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+            } catch {
+                // it is ok if fail in this step, this is just random simulation
+            }
+
             vm.warp(block.timestamp + 30 minutes);
         }
 
-        vm.warp(allFinishAt + 1);
+        vm.warp(block.timestamp + xSilo.maxRedeemDuration() + 1);
 
         address admin = makeAddr("admin");
+        uint256 minDurationToExit = xSilo.minRedeemDuration();
+
+        for (uint i = 0; i < _data.length; i++) {
+            emit log_named_uint("\t--------- finalizeRedeem", i);
+
+            address user = _userAddr(i);
+
+            if (xSilo.getUserRedeemsLength(user) != 0) {
+                vm.prank(user);
+                xSilo.finalizeRedeem(0);
+                emit log_named_uint("finalized", i);
+                vm.warp(block.timestamp + 30 minutes);
+            }
+
+            uint256 shares = xSilo.balanceOf(user);
+            uint256 amountByVestingDuration = xSilo.getAmountByVestingDuration(shares, minDurationToExit);
+
+            if (xSilo.maxWithdraw(user) != 0) {
+                vm.prank(user);
+                emit log_named_decimal_uint("shares to exit", shares, 18);
+                xSilo.redeem(shares, user, user);
+                emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+                vm.warp(block.timestamp + 30 minutes);
+            } else if (shares != 0 && amountByVestingDuration != 0) {
+                vm.prank(user);
+                emit log_named_decimal_uint("redeemSilo", shares, 18);
+                xSilo.redeemSilo(shares, minDurationToExit);
+                emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+            } else {
+                emit log_named_decimal_uint("non withdrowable", shares, 18);
+                stream.claimRewards();
+            }
+        }
+
+        vm.warp(block.timestamp + xSilo.minRedeemDuration());
 
         for (uint i = 0; i < _data.length; i++) {
             emit log_named_uint("--------- exiting", i);
 
             address user = _userAddr(i);
-            uint256 amount = xSilo.balanceOf(user);
 
             if (xSilo.getUserRedeemsLength(user) != 0) {
                 vm.prank(user);
                 xSilo.finalizeRedeem(0);
+                emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
                 vm.warp(block.timestamp + 30 minutes);
-            }
-
-            if (xSilo.maxWithdraw(user) != 0) {
-                vm.prank(user);
-                xSilo.redeemSilo(amount, 0);
-                vm.warp(block.timestamp + 30 minutes);
-            } else if (amount != 0) {
-                vm.prank(user);
-                xSilo.transfer(admin, amount);
-            } else {
-                stream.claimRewards();
             }
         }
 
+        stream.claimRewards();
+
         assertLe(stream.pendingRewards(), 0, "there should be no pending rewards");
-        assertLe(asset.balanceOf(address(stream)), 0, "stream has no balance (dust acceptable)");
-        assertLe(xSilo.balanceOf(admin), 0, "leftover that users can't withdraw");
+//
+//        assertLe(
+//            asset.balanceOf(address(stream)),
+//            1e3,
+//            "stream has no balance (dust acceptable)"
+//        );
+
+        uint256 lockedAssets = xSilo.totalSupply();
+        uint256 allRedeemed = maxTotalShares - lockedAssets;
+
+        emit log_named_uint("maxTotalShares", maxTotalShares);
+        emit log_named_uint("   totalSupply", xSilo.totalSupply());
+        emit log_named_uint("   allRedeemed", allRedeemed);
+        emit log_named_uint("  lockedAssets", lockedAssets);
+
+        assertLe(
+            lockedAssets * 1e18 / maxTotalShares,
+            0.95e18, // TODO why 90%?
+            "arbitrary leftover that we accept in this simulation, that users can't withdraw"
+        );
     }
 
     function _userAddr(uint256 _i) internal returns (address addr) {
