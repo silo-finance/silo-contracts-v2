@@ -5,6 +5,12 @@ pragma solidity ^0.8.0;
 /// @title Stream
 /// @notice This contract allows the owner to set a beneficiary and stream tokens to them at a specified rate.
 interface IStream {
+    event EmissionsUpdated(uint256 indexed emissionPerSecond, uint256 indexed distributionEnd);
+    event RewardsClaimed(uint256 indexed amount);
+
+    error DistributionTimeExpired();
+    error NoBalance();
+
     /// @notice address that can claim rewards
     function BENEFICIARY() external returns (address);
 
@@ -19,12 +25,6 @@ interface IStream {
 
     /// @notice timestamp of the last update
     function lastUpdateTimestamp() external returns (uint256);
-
-    event EmissionsUpdated(uint256 indexed emissionPerSecond, uint256 indexed distributionEnd);
-    event RewardsClaimed(uint256 indexed amount);
-
-    error DistributionTimeExpired();
-    error NoBalance();
 
     /// @notice Set the emission rate and distribution end timestamp.
     /// WARNING: do not set emissions fof xSilo when xSilo is empty or total supply is low:

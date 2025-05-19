@@ -59,7 +59,7 @@ contract Stream is IStream, Ownable2Step {
     }
 
     /// @inheritdoc IStream
-    function emergencyWithdraw() public onlyOwner {
+    function emergencyWithdraw() external onlyOwner {
         uint256 balance = IERC20(REWARD_ASSET).balanceOf(address(this));
         require(balance != 0, NoBalance());
 
