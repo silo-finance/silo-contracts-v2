@@ -35,7 +35,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
     address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
-    address constant EXCHANGE_PROXY_INK = 0x0000000000001fF3684f28c67538d4D072C22734;
+    address constant EXCHANGE_PROXY_ZERO_X_INK = 0x0000000000001fF3684f28c67538d4D072C22734;
 
     address payable constant GNOSIS_SAFE_MAINNET = payable(address(1)); // placeholder for integration tests
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
