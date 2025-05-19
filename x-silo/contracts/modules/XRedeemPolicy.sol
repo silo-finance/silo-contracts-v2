@@ -124,13 +124,13 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         // TODO is it worth to create fuzzing test that check if asset/shares ratio can ony go up?
         uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
 
-        if (toTransfer != 0) _transferShares(address(this), msg.sender, toTransfer);
-        if (toBurn != 0) _burnShares(address(this), toBurn);
-
         emit CancelRedeem(msg.sender, toTransfer, toBurn);
 
         // remove redeem entry
         _deleteRedeemEntry(_redeemIndex);
+
+        if (toTransfer != 0) _transferShares(address(this), msg.sender, toTransfer);
+        if (toBurn != 0) _burnShares(address(this), toBurn);
     }
 
     function userRedeems(address _user) external view returns (RedeemInfo[] memory) {
