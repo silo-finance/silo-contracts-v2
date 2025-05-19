@@ -53,7 +53,7 @@ contract XSiloTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_SelfTransferNotAllowed
     */
     function test_SelfTransferNotAllowed(CustomSetup memory _customSetup) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         _convert(address(this), 10);
 
@@ -65,7 +65,7 @@ contract XSiloTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_transferFrom_success
     */
     function test_transferFrom_success(CustomSetup memory _customSetup) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         address user = makeAddr("user");
         address spender = makeAddr("spender");
@@ -92,7 +92,7 @@ contract XSiloTest is Test {
     */
     /// forge-config: x_silo.fuzz.runs = 10000
     function test_maxWithdraw_usersDuration0_fuzz(CustomSetup memory _customSetup, uint256 _assets) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_assets > 0);
         vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
@@ -116,7 +116,7 @@ contract XSiloTest is Test {
         CustomSetup memory _customSetup,
         uint256 _assets
     ) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_assets > 0);
         vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
@@ -144,7 +144,7 @@ contract XSiloTest is Test {
     */
     /// forge-config: x_silo.fuzz.runs = 10000
     function test_maxRedeem_returnsAll_fuzz(CustomSetup memory _customSetup, uint256 _silos) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_silos > 0);
         vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
@@ -165,7 +165,7 @@ contract XSiloTest is Test {
     */
     /// forge-config: x_silo.fuzz.runs = 10000
     function test_previewRedeem_usersDuration0_fuzz(CustomSetup memory _customSetup, uint256 _shares) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_shares > 0);
 
@@ -192,7 +192,7 @@ contract XSiloTest is Test {
 
         _percentAssetsToWithdraw = uint16(bound(_percentAssetsToWithdraw, 1, precision));
 
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
 //        uint256 _assetsToDeposit = 100; uint256 _assetsToWithdraw = 15;
 
@@ -244,7 +244,7 @@ contract XSiloTest is Test {
 
         _percentAssetsToWithdraw = uint64(bound(_percentAssetsToWithdraw, 1, 1e18));
 
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         address user = makeAddr("user");
 
@@ -267,7 +267,7 @@ contract XSiloTest is Test {
     */
     /// forge-config: x_silo.fuzz.runs = 5000
     function test_redeem_all_fuzz(CustomSetup memory _customSetup, uint256 _assets) public {
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_assets > 0);
         vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
@@ -306,7 +306,7 @@ contract XSiloTest is Test {
         vm.assume(_assets > 0);
         vm.assume(_assets < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
 //        (uint256 _silos, uint256 _xSiloToRedeem) = (9133, 4696);
 
@@ -365,8 +365,9 @@ contract XSiloTest is Test {
         uint32 _streamDistribution
     ) public {
         vm.assume(_customSetup.minRedeemRatio > 0); // so we do not stuck will all xSilos at the end
+        vm.assume(_customSetup.maxRedeemRatio > 0); // so we do not stuck will all xSilos at the end
 
-        _assumeCustomSetup(_customSetup);
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: false});
 
         _xSilo_flowShouldNotRevert(_data, _emissionPerSecond, _streamDistribution);
     }
@@ -423,8 +424,7 @@ contract XSiloTest is Test {
 
         vm.warp(block.timestamp + xSilo.maxRedeemDuration() + 1);
 
-        address admin = makeAddr("admin");
-        uint256 minDurationToExit = xSilo.minRedeemDuration();
+        uint256 maxDurationToExit = xSilo.maxRedeemDuration();
 
         for (uint i = 0; i < _data.length; i++) {
             emit log_named_uint("\t--------- finalizeRedeem", i);
@@ -439,7 +439,7 @@ contract XSiloTest is Test {
             }
 
             uint256 shares = xSilo.balanceOf(user);
-            uint256 amountByVestingDuration = xSilo.getAmountByVestingDuration(shares, minDurationToExit);
+            uint256 amountByVestingDuration = xSilo.getAmountByVestingDuration(shares, maxDurationToExit);
 
             if (xSilo.maxWithdraw(user) != 0) {
                 vm.prank(user);
@@ -450,7 +450,7 @@ contract XSiloTest is Test {
             } else if (shares != 0 && amountByVestingDuration != 0) {
                 vm.prank(user);
                 emit log_named_decimal_uint("redeemSilo", shares, 18);
-                xSilo.redeemSilo(shares, minDurationToExit);
+                xSilo.redeemSilo(shares, maxDurationToExit);
                 emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
             } else {
                 emit log_named_decimal_uint("non withdrowable", shares, 18);
@@ -458,7 +458,7 @@ contract XSiloTest is Test {
             }
         }
 
-        vm.warp(block.timestamp + xSilo.minRedeemDuration());
+        vm.warp(block.timestamp + maxDurationToExit);
 
         for (uint i = 0; i < _data.length; i++) {
             emit log_named_uint("--------- exiting", i);
@@ -528,11 +528,20 @@ contract XSiloTest is Test {
         assertEq(xSilo.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
     }
 
-    function _assumeCustomSetup(CustomSetup memory _customSetup) internal {
-        _customSetup.maxRedeemRatio = uint64(bound(_customSetup.maxRedeemRatio, 0, _PRECISION));
-        _customSetup.minRedeemRatio = uint64(bound(_customSetup.minRedeemRatio, 0, _customSetup.maxRedeemRatio));
-        _customSetup.maxRedeemDuration = uint64(bound(_customSetup.maxRedeemDuration, 1, 365 days));
-        _customSetup.minRedeemDuration = uint64(bound(_customSetup.minRedeemDuration, 0, _customSetup.maxRedeemDuration - 1));
+    function _assumeCustomSetup(CustomSetup memory _customSetup, bool _allowForZeros) internal {
+        _customSetup.maxRedeemRatio = uint64(bound(_customSetup.maxRedeemRatio, _allowForZeros ? 0 : 1, _PRECISION));
+
+        _customSetup.minRedeemRatio = uint64(bound(
+            _customSetup.minRedeemRatio, _allowForZeros ? 0 : 1, _customSetup.maxRedeemRatio)
+        );
+
+        _customSetup.maxRedeemDuration = uint64(bound(
+            _customSetup.maxRedeemDuration, _allowForZeros ? 1 : 2, 365 days)
+        );
+
+        _customSetup.minRedeemDuration = uint64(bound(
+            _customSetup.minRedeemDuration, _allowForZeros ? 0 : 1, _customSetup.maxRedeemDuration - 1)
+        );
 
         emit log_named_uint("minRedeemRatio", _customSetup.minRedeemRatio);
         emit log_named_uint("maxRedeemRatio", _customSetup.maxRedeemRatio);
