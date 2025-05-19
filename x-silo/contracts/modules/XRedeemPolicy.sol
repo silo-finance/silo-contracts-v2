@@ -79,7 +79,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
 
         // if redeeming is not immediate, go through vesting process
-        if (_duration > 0) {
+        if (_duration != 0) {
             // add redeeming entry
             _userRedeems[msg.sender].push(
                 RedeemInfo({
