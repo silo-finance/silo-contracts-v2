@@ -12,6 +12,7 @@ import {Stream} from "../../../contracts/modules/Stream.sol";
 import {StreamDeploy} from "x-silo/deploy/StreamDeploy.s.sol";
 import {XSiloContracts} from "x-silo/common/XSiloContracts.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
+import {IStream} from "x-silo/contracts/interfaces/IStream.sol";
 
 /*
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc StreamTest
@@ -263,6 +264,31 @@ contract StreamTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
         vm.prank(someAddress);
         stream.emergencyWithdraw();
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_emergencyWithdraw_NoBalance
+    */
+    function test_emergencyWithdraw_NoBalance() public {
+        vm.expectRevert(abi.encodeWithSelector(IStream.NoBalance.selector));
+        stream.emergencyWithdraw();
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_emergencyWithdraw_success
+    */
+    function test_emergencyWithdraw_success() public {
+        uint256 amount = 1e18;
+
+        token.mint(address(stream), amount);
+
+        assertEq(token.balanceOf(address(stream)), amount, "stream should have balance");
+        assertEq(token.balanceOf(address(this)), 0, "owner should have no balance");
+
+        stream.emergencyWithdraw();
+
+        assertEq(token.balanceOf(address(stream)), 0, "stream should have no balance");
+        assertEq(token.balanceOf(address(this)), amount, "owner should have balance");
     }
 
     function _assert_zeros() private {
