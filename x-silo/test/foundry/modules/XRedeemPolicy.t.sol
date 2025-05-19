@@ -41,7 +41,6 @@ contract XRedeemPolicyTest is Test {
         deploy.disableDeploymentsSync();
         (policy, stream) = deploy.run();
 
-        // TODO copy this file and create tests for randome setup?
         // all tests are done for this setup:
 
         assertEq(policy.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
