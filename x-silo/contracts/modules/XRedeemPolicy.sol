@@ -122,7 +122,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         RedeemInfo storage redeemCache = _userRedeems[msg.sender][_redeemIndex];
 
         uint256 toTransfer = convertToShares(redeemCache.currentSiloAmount);
-        // TODO is it worth to create fuzzing test that check if asset/shares ratio can ony go up?
         uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
 
         emit CancelRedeem(msg.sender, toTransfer, toBurn);

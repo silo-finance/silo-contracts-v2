@@ -378,6 +378,8 @@ contract XSiloTest is Test {
         vm.assume(_data.length > 0);
         vm.assume(_data.length <= 50);
 
+        uint256 assetShareRatio = _getAssetShareRatio();
+
         for (uint i = 0; i < _data.length; i++) {
             emit log_named_uint("--------- depositing", i);
 
@@ -390,6 +392,8 @@ contract XSiloTest is Test {
             emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
 
             vm.warp(block.timestamp + 1 minutes);
+
+            assetShareRatio = _assertAssetShareRatioGoesOnlyUp(assetShareRatio);
         }
 
         uint256 maxTotalShares = xSilo.totalSupply();
@@ -420,6 +424,7 @@ contract XSiloTest is Test {
             vm.warp(block.timestamp + 30 minutes);
 
             maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
+            assetShareRatio = _assertAssetShareRatioGoesOnlyUp(assetShareRatio);
         }
 
         vm.warp(block.timestamp + xSilo.maxRedeemDuration() + 1);
@@ -458,6 +463,7 @@ contract XSiloTest is Test {
             }
 
             maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
+            assetShareRatio = _assertAssetShareRatioGoesOnlyUp(assetShareRatio);
         }
 
         vm.warp(block.timestamp + maxDurationToExit);
@@ -477,6 +483,7 @@ contract XSiloTest is Test {
             stream.claimRewards();
 
             maxTotalShares = _assertTotalSupplyOnlyDecreasingWhenNoNewDeposits(maxTotalShares);
+            assetShareRatio = _assertAssetShareRatioGoesOnlyUp(assetShareRatio);
         }
 
         assertEq(stream.pendingRewards(), 0, "all rewards should be distributed");
@@ -496,6 +503,25 @@ contract XSiloTest is Test {
     {
         newMaxTotal = xSilo.totalSupply();
         assertLe(newMaxTotal, _prevMaxTotal, " assert TotalSupply Only Decreasing When No New Deposits");
+    }
+
+    function _getAssetShareRatio() internal view returns (uint256 ratio) {
+        uint256 assets = xSilo.totalAssets();
+        if (assets == 0) return 0;
+
+        uint256 supply = xSilo.totalSupply();
+        if (supply == 0) return type(uint256).max;
+
+        ratio = xSilo.totalAssets() * 1e18 / supply;
+    }
+
+    function _assertAssetShareRatioGoesOnlyUp(uint256 _prevRatio)
+        internal
+        view
+        returns (uint256 newRatio)
+    {
+        newRatio = _getAssetShareRatio();
+        assertGe(newRatio, _prevRatio, " asset:share ration can only go up");
     }
 
     function _userAddr(uint256 _i) internal returns (address addr) {
