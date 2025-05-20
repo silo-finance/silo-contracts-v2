@@ -13,9 +13,16 @@ import {CommonDeploy} from "x-silo/deploy/CommonDeploy.sol";
 import {ComputeAddrLib} from "common/utils/ComputeAddrLib.sol";
 
 /**
-    FOUNDRY_PROFILE=x-silo \
+    FOUNDRY_PROFILE=x_silo \
         forge script x-silo/deploy/XSiloAndStreamDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
+
+    verify code in case of issues:
+
+    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=x_silo \
+        forge script x-silo/deploy/XSiloAndStreamDeploy.s.sol \
+        --ffi --rpc-url $RPC_SONIC --resume --verify \
+        --private-key $PRIVATE_KEY
  */
 contract XSiloAndStreamDeploy is CommonDeploy {
     function run() public returns (XSilo xSilo, Stream stream) {
