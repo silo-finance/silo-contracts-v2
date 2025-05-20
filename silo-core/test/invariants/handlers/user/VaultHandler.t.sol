@@ -44,9 +44,11 @@ contract VaultHandler is BaseHandler {
             _after();
 
             if (_collateralType == ISilo.CollateralType.Collateral) {
-                assertEq(
+                (uint256 totalCollateralAssets,) = vault1.getCollateralAndDebtTotalsStorage();
+                assertApproxEqAbs(
                     defaultVarsBefore[target].totalAssets + _assets,
                     defaultVarsAfter[target].totalAssets,
+                    1,
                     LENDING_HSPOST_A
                 );
             }

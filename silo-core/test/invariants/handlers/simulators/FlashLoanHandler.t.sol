@@ -57,7 +57,7 @@ contract FlashLoanHandler is BaseHandler {
 
         // POST-CONDITIONS
 
-        if (_amountToRepay > _amount + flashFee && maxFlashLoanAmount >= _amount) {
+        if ((_amountToRepay > _amount + flashFee && maxFlashLoanAmount >= _amount) && _amount != 0) {
             assertTrue(success, BORROWING_HSPOST_U1);
         } else {
             assertFalse(success, BORROWING_HSPOST_U2);

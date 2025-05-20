@@ -10,9 +10,7 @@ import {
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 
 // Mock Contracts
-import {
-    TestERC20
-} from "../utils/mocks/TestERC20.sol";
+import {TestERC20} from "../utils/mocks/TestERC20.sol";
 
 // Test Contracts
 
@@ -22,16 +20,19 @@ import {Actor} from "../utils/Actor.sol";
 // Interfaces
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {
+    IInterestRateModelV2Config,
+    InterestRateModelV2Config
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {
     IInterestRateModelV2Factory,
     InterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
-import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {
+    IInterestRateModelV2, InterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
-
 
 /// @notice BaseStorage contract for all test contracts, works in tandem with BaseTest
 abstract contract BaseStorage {
@@ -71,10 +72,8 @@ abstract contract BaseStorage {
     address internal targetActor;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                       SUITE STORAGE                                       //
+    //                              SUITE STORAGE: PROTOCOL CONTRACTS                            //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    // PROTOCOL CONTRACTS
 
     /// @notice The two silos of a market
     address internal _vault0;
@@ -82,36 +81,42 @@ abstract contract BaseStorage {
     Silo internal vault0;
     Silo internal vault1;
 
-	/// @notice Protocol factories
+    /// @notice Protocol factories
     ISiloFactory siloFactory;
-    ISiloFactory siloFactoryInternal;
     IInterestRateModelV2Factory interestRateModelV2ConfigFactory;
-    IInterestRateModelV2.Config[] presetIRMConfigs;
 
-	/// @notice The interest rate model for the market
+    /// @notice silo Config
+    ISiloConfig internal siloConfig;
+
+    /// @notice The interest rate model for the market
     IInterestRateModelV2 interestRateModelV2;
 
-	/// @notice Secondary contracts
-    IGaugeHookReceiver hookReceiver;
+    /// @notice Secondary contracts
     ISiloDeployer siloDeployer;
     PartialLiquidation liquidationModule;
 
-    // ASSETS
+    /// @notice Implementations
+    address siloImpl;
+    address shareProtectedCollateralTokenImpl;
+    address shareDebtTokenImpl;
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     SUITE STORAGE: ASSETS                                 //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// @notice Suite base assets
     TestERC20 internal _asset0;
     TestERC20 internal _asset1;
 
-    // CONFIGURATION
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     SUITE STORAGE: MOCKS                                  //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    ISiloConfig internal siloConfig;
+    /// @notice Mock oracles
+    address internal oracle0;
+    address internal oracle1;
 
-    mapping(string IRMConfigName => address IRMConfigAddress) internal IRMConfigs;
-
-    // MOCKS
-
-	address internal oracle0;
-	address internal oracle1;
-
+    /// @notice Mock flashloan receiver for echidna
     address internal flashLoanReceiver;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,9 +138,14 @@ abstract contract BaseStorage {
     /// @notice Array of prototected collaterals share tokens for the suite
     address[] internal protectedTokens;
 
+    // Data
+
+    /// @notice IRM configs
+    IInterestRateModelV2.Config[] presetIRMConfigs;
+    mapping(string IRMConfigName => address IRMConfigAddress) internal IRMConfigs;
 
     /// @notice Mapping of silo init data
-	mapping(string identifier => ISiloConfig.InitData siloInitData) internal siloData;
+    mapping(string identifier => ISiloConfig.InitData siloInitData) internal siloData;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          STRUCTS                                          //

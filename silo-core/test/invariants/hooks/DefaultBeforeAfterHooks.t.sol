@@ -92,12 +92,13 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
     function _setBorrowingValues(address silo, DefaultVars storage _defaultVars) internal {
         (address debtToken, address _asset) = siloConfig.getDebtShareTokenAndAsset(silo);
+        _defaultVars.balance = IERC20(_asset).balanceOf(silo);
+        _defaultVars.interestRateTimestamp = ISilo(silo).utilizationData().interestRateTimestamp;
+
         _defaultVars.userDebtShares = IERC20(debtToken).balanceOf(targetActor);
         _defaultVars.userDebt = ISilo(silo).maxRepay(targetActor);
-        _defaultVars.balance = IERC20(_asset).balanceOf(silo);
         _defaultVars.userAssets = _getUserAssets(silo, targetActor);
         _defaultVars.userBalance = IERC20(_asset).balanceOf(targetActor);
-        _defaultVars.interestRateTimestamp = ISilo(silo).utilizationData().interestRateTimestamp;
         _defaultVars.borrowerCollateralSilo = siloConfig.borrowerCollateralSilo(targetActor);
         _defaultVars.isSolvent = ISilo(silo).isSolvent(targetActor);
     }
