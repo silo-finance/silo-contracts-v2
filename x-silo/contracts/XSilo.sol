@@ -173,7 +173,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
         INotificationReceiver receiver = notificationReceiver;
 
-        if (_value == 0 || address(receiver) == address(0)) return;
+        if (address(receiver) == address(0)) return;
 
         receiver.afterTokenTransfer({
             _sender: _from,
