@@ -44,7 +44,7 @@ contract XRedeemPolicyTest is Test {
         // all tests are done for this setup:
 
         assertEq(policy.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
-        assertEq(policy.maxRedeemRatio(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(policy.MAX_REDEEM_RATIO(), 1e2, "expected initial setup for maxRedeemRatio");
         assertEq(policy.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
         assertEq(policy.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
     }
@@ -551,7 +551,7 @@ contract XRedeemPolicyTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_settings_zero
     */
     function test_settings_zero() public {
-        policy.updateRedeemSettings(0, 0, 0, 1);
+        policy.updateRedeemSettings(0, 0, 1);
 
         address user = makeAddr("user");
 
@@ -572,7 +572,15 @@ contract XRedeemPolicyTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, someAddress));
         vm.prank(someAddress);
-        policy.updateRedeemSettings(0, 0, 0, 0);
+        policy.updateRedeemSettings(0, 0, 0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_updateRedeemSettings_durationTooHigh
+    */
+    function test_updateRedeemSettings_durationTooHigh() public {
+        vm.expectRevert(IXRedeemPolicy.DurationTooHigh.selector);
+        policy.updateRedeemSettings(0, 0, 365 days + 1);
     }
 
     /*
@@ -600,7 +608,6 @@ contract XRedeemPolicyTest is Test {
     function test_ration_calculation_duration_less_min_duration() public {
         policy.updateRedeemSettings({
             _minRedeemRatio: policy.minRedeemRatio(),
-            _maxRedeemRatio: policy.maxRedeemRatio(),
             _minRedeemDuration: 2 days,
             _maxRedeemDuration: policy.maxRedeemDuration()
         });
