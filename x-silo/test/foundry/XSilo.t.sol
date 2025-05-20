@@ -389,7 +389,7 @@ contract XSiloTest is Test {
 
             _convert(user, amount);
             emit log_named_decimal_uint("amount", amount, 18);
-            emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+            emit log_named_decimal_uint("ratio", _getAssetShareRatio(), 18);
 
             vm.warp(block.timestamp + 1 minutes);
 
@@ -416,7 +416,7 @@ contract XSiloTest is Test {
 
             try xSilo.redeemSilo(amount, _data[i].redeemDuration) {
                 emit log_named_decimal_uint("amount", amount, 18);
-                emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+                emit log_named_decimal_uint("ratio", _getAssetShareRatio(), 18);
             } catch {
                 // it is ok if fail in this step, this is just random simulation
             }
@@ -476,7 +476,7 @@ contract XSiloTest is Test {
             if (xSilo.getUserRedeemsLength(user) != 0) {
                 vm.prank(user);
                 xSilo.finalizeRedeem(0);
-                emit log_named_decimal_uint("ratio", xSilo.convertToAssets(1e18), 18);
+                emit log_named_decimal_uint("ratio", _getAssetShareRatio(), 18);
                 vm.warp(block.timestamp + 30 minutes);
             }
 
@@ -506,13 +506,7 @@ contract XSiloTest is Test {
     }
 
     function _getAssetShareRatio() internal view returns (uint256 ratio) {
-        uint256 assets = xSilo.totalAssets();
-        if (assets == 0) return 0;
-
-        uint256 supply = xSilo.totalSupply();
-        if (supply == 0) return type(uint256).max;
-
-        ratio = xSilo.totalAssets() * 1e18 / supply;
+        ratio = xSilo.convertToAssets(1e18);
     }
 
     function _assertAssetShareRatioGoesOnlyUp(uint256 _prevRatio)
