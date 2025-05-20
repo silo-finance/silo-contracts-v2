@@ -515,7 +515,9 @@ contract XSiloTest is Test {
         returns (uint256 newRatio)
     {
         newRatio = _getAssetShareRatio();
-        assertGe(newRatio, _prevRatio, " asset:share ration can only go up");
+
+        // if there are no shares, ex last user exit, we do not check, because it will go down eg back to 1:1
+        if (xSilo.totalSupply() != 0) assertGe(newRatio, _prevRatio, " asset:share ration can only go up");
     }
 
     function _userAddr(uint256 _i) internal returns (address addr) {
