@@ -162,6 +162,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
+        require(_value != 0, ZeroAssets());
         require(_from != _to, SelfTransferNotAllowed());
 
         IStream stream_ = stream;
