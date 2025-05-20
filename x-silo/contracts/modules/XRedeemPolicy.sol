@@ -250,14 +250,19 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
             return 0;
         }
 
-        uint256 ratioDiff = MAX_REDEEM_RATIO - minRedeemRatio;
+        uint256 minRedeemRatio_ = minRedeemRatio;
+        uint256 maxRedeemDuration_ = maxRedeemDuration;
+
+        uint256 ratioDiff = MAX_REDEEM_RATIO - minRedeemRatio_;
 
         // capped to maxRedeemDuration
-        if (_duration > maxRedeemDuration || ratioDiff == 0) {
+        if (_duration > maxRedeemDuration_ || ratioDiff == 0) {
             return MAX_REDEEM_RATIO;
         }
 
-        ratio = minRedeemRatio
-            + Math.mulDiv(_duration - minRedeemDuration, ratioDiff, maxRedeemDuration - minRedeemDuration);
+        uint256 minRedeemDuration_ = minRedeemDuration;
+
+        ratio = minRedeemRatio_
+            + Math.mulDiv(_duration - minRedeemDuration_, ratioDiff, maxRedeemDuration_ - minRedeemDuration_);
     }
 }
