@@ -13,8 +13,10 @@ interface IXSiloManagement {
     error StopAllRelatedPrograms();
     error NotBeneficiary();
 
+    /// @dev stream contract, from where xSilo will claim rewards
     function stream() external view returns(IStream);
 
+    /// @dev notification receiver address, it's optional, when empty notifications are not sent
     function notificationReceiver() external view returns(INotificationReceiver);
 
     /// @notice This function allows setting the notification receiver to address(0).
@@ -23,5 +25,7 @@ interface IXSiloManagement {
     /// using `_allProgramsStopped`
     function setNotificationReceiver(INotificationReceiver _notificationReceiver, bool _allProgramsStopped) external;
 
+    /// @dev it sets stream, from where xSilo will claim rewards
+    /// stream must have address of current contract set as `BENEFICIARY()`
     function setStream(IStream _stream) external;
 }

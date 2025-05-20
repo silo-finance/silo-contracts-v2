@@ -37,6 +37,8 @@ interface IStream {
     /// @dev The distribution end timestamp must be in the future.
     function setEmissions(uint256 _emissionPerSecond, uint256 _distributionEnd) external;
 
+    /// @dev Open method that will claim reward for `BENEFICIARY`.
+    /// it does not revert if there is no reward pending.
     function claimRewards() external returns (uint256 rewards);
 
     /// @dev Emergency withdraw token's balance on the contract

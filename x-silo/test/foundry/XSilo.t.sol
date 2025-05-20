@@ -61,6 +61,18 @@ contract XSiloTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_ZeroTransfer
+    */
+    function test_ZeroTransfer(CustomSetup memory _customSetup) public {
+        _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
+
+        _convert(address(this), 10);
+
+        vm.expectRevert(XSilo.ZeroTransfer.selector);
+        xSilo.transfer(address(2), 0);
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_transferFrom_success
     */
     function test_transferFrom_success(CustomSetup memory _customSetup) public {

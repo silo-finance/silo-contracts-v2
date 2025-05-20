@@ -13,6 +13,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     error ZeroShares();
     error ZeroAssets();
     error SelfTransferNotAllowed();
+    error ZeroTransfer();
 
     constructor(address _initialOwner, address _asset, address _stream)
         XSiloManagement(_initialOwner, _stream)
@@ -162,8 +163,8 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
-        require(_value != 0, ZeroAssets());
         require(_from != _to, SelfTransferNotAllowed());
+        require(_value != 0, ZeroTransfer());
 
         IStream stream_ = stream;
         if (address(stream_) != address(0)) stream_.claimRewards();

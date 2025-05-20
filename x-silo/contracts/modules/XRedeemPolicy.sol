@@ -38,6 +38,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         _;
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function updateRedeemSettings(
         uint256 _minRedeemRatio,
         uint256 _minRedeemDuration,
@@ -97,6 +98,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         }
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function finalizeRedeem(uint256 redeemIndex) external nonReentrant validateRedeem(msg.sender, redeemIndex) {
         RedeemInfo storage redeem_ = _userRedeems[msg.sender][redeemIndex];
         require(block.timestamp >= redeem_.endTime, VestingNotOver());
@@ -118,6 +120,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         });
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
         RedeemInfo storage redeemCache = _userRedeems[msg.sender][_redeemIndex];
 
@@ -133,10 +136,12 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         if (toBurn != 0) _burnShares(address(this), toBurn);
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function userRedeems(address _user) external view returns (RedeemInfo[] memory) {
         return _userRedeems[_user];
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function getUserRedeemsBalance(address _userAddress)
         external
         view
@@ -153,10 +158,12 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         }
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function getUserRedeemsLength(address _userAddress) external view returns (uint256) {
         return _userRedeems[_userAddress].length;
     }
 
+    /// @inheritdoc IXRedeemPolicy
     function getUserRedeem(address _userAddress, uint256 _redeemIndex)
         external
         view

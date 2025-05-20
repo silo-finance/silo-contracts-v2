@@ -34,6 +34,7 @@ abstract contract XSiloManagement is IXSiloManagement, Ownable2Step {
         emit NotificationReceiverUpdate(_notificationReceiver);
     }
 
+    /// @inheritdoc IXSiloManagement
     function setStream(IStream _stream) external onlyOwner {
         _setStream(_stream, false);
     }
