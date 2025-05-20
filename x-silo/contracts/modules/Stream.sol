@@ -38,9 +38,13 @@ contract Stream is IStream, Ownable2Step {
 
     /// @inheritdoc IStream
     function setEmissions(uint256 _emissionPerSecond, uint256 _distributionEnd) external onlyOwner {
-        require(_distributionEnd > block.timestamp, DistributionTimeExpired());
-
         claimRewards();
+
+        if (_emissionPerSecond == 0) {
+            _distributionEnd == block.timestamp;
+        } else {
+            require(_distributionEnd > block.timestamp, DistributionTimeExpired());
+        }
 
         emissionPerSecond = _emissionPerSecond;
         distributionEnd = _distributionEnd;

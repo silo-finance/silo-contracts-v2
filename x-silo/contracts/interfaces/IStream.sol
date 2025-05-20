@@ -31,7 +31,8 @@ interface IStream {
     /// - it can break ratio.
     /// - it will lock dust balances.
     /// @param _emissionPerSecond The new emission rate.
-    /// @param _distributionEnd The new distribution end timestamp.
+    /// @param _distributionEnd The new distribution end timestamp. It must be time in the future.
+    /// In case `_emissionPerSecond` is 0, `_distributionEnd` will be override and set to current time.
     /// @dev Only the contract owner can call this function.
     /// @dev The distribution end timestamp must be in the future.
     function setEmissions(uint256 _emissionPerSecond, uint256 _distributionEnd) external;
