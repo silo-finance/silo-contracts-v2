@@ -14,7 +14,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     uint256 internal constant _PRECISION = 100;
 
     /// @inheritdoc IXRedeemPolicy
-    uint256 public constant MAX_REDEEM_RATIO = 1e2; // 1:1
+    uint256 public constant MAX_REDEEM_RATIO = _PRECISION; // 1:1
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public constant MAX_REDEEM_DURATION_CAP = 365 days;
