@@ -530,7 +530,7 @@ contract XSiloTest is Test {
 
     function _assumeCustomSetup(CustomSetup memory _customSetup, bool _allowForZeros) internal {
         _customSetup.minRedeemRatio = uint64(bound(
-            _customSetup.minRedeemRatio, _allowForZeros ? 0 : 1, 1e2)
+            _customSetup.minRedeemRatio, _allowForZeros ? 0 : 1, xSilo.MAX_REDEEM_RATIO())
         );
 
         _customSetup.maxRedeemDuration = uint64(bound(
