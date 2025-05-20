@@ -28,7 +28,6 @@ contract XSiloTest is Test {
 
     struct CustomSetup {
         uint64 minRedeemRatio;
-        uint64 maxRedeemRatio;
         uint64 minRedeemDuration;
         uint64 maxRedeemDuration;
     }
@@ -365,7 +364,6 @@ contract XSiloTest is Test {
         uint32 _streamDistribution
     ) public {
         vm.assume(_customSetup.minRedeemRatio > 0); // so we do not stuck will all xSilos at the end
-        vm.assume(_customSetup.maxRedeemRatio > 0); // so we do not stuck will all xSilos at the end
 
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: false});
 
@@ -525,16 +523,14 @@ contract XSiloTest is Test {
         // all tests are done for this setup:
 
         assertEq(xSilo.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
-        assertEq(xSilo.maxRedeemRatio(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(xSilo.MAX_REDEEM_RATIO(), 1e2, "expected initial setup for maxRedeemRatio");
         assertEq(xSilo.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
         assertEq(xSilo.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
     }
 
     function _assumeCustomSetup(CustomSetup memory _customSetup, bool _allowForZeros) internal {
-        _customSetup.maxRedeemRatio = uint64(bound(_customSetup.maxRedeemRatio, _allowForZeros ? 0 : 1, _PRECISION));
-
         _customSetup.minRedeemRatio = uint64(bound(
-            _customSetup.minRedeemRatio, _allowForZeros ? 0 : 1, _customSetup.maxRedeemRatio)
+            _customSetup.minRedeemRatio, _allowForZeros ? 0 : 1, 1e2)
         );
 
         _customSetup.maxRedeemDuration = uint64(bound(
@@ -546,13 +542,11 @@ contract XSiloTest is Test {
         );
 
         emit log_named_uint("minRedeemRatio", _customSetup.minRedeemRatio);
-        emit log_named_uint("maxRedeemRatio", _customSetup.maxRedeemRatio);
         emit log_named_uint("minRedeemDuration", _customSetup.minRedeemDuration);
         emit log_named_uint("maxRedeemDuration", _customSetup.maxRedeemDuration);
 
         try xSilo.updateRedeemSettings({
             _minRedeemRatio: _customSetup.minRedeemRatio,
-            _maxRedeemRatio: _customSetup.maxRedeemRatio,
             _minRedeemDuration: _customSetup.minRedeemDuration,
             _maxRedeemDuration: _customSetup.maxRedeemDuration
         }) {

@@ -14,15 +14,16 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     uint256 internal constant _PRECISION = 100;
 
     /// @inheritdoc IXRedeemPolicy
-    uint256 public constant MAX_FIXED_RATIO = _PRECISION; // 100%
+    uint256 public constant MAX_REDEEM_RATIO = 1e2; // 1:1
 
-    // Redeeming min/max settings are updatable at any time by owner
+    /// @inheritdoc IXRedeemPolicy
+    uint256 public constant MAX_REDEEM_DURATION_CAP = 365 days;
+
+    // Redeeming min/max settings are updatable at any time by owner.
+    // Except for the max redeem ratio, which is capped at 1:1.
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public minRedeemRatio = 0.5e2; // 1:0.5
-
-    /// @inheritdoc IXRedeemPolicy
-    uint256 public maxRedeemRatio = 1e2; // 1:1
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public minRedeemDuration = 0 days;
@@ -39,21 +40,18 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
 
     function updateRedeemSettings(
         uint256 _minRedeemRatio,
-        uint256 _maxRedeemRatio,
         uint256 _minRedeemDuration,
         uint256 _maxRedeemDuration
     ) external onlyOwner {
-        require(_minRedeemRatio <= _maxRedeemRatio, InvalidRatioOrder());
+        require(_minRedeemRatio <= MAX_REDEEM_RATIO, InvalidRatioOrder());
         require(_minRedeemDuration < _maxRedeemDuration, InvalidDurationOrder());
-        // should never exceed 100%
-        require(_maxRedeemRatio <= MAX_FIXED_RATIO, MaxRatioOverflow());
+        require(_maxRedeemDuration <= MAX_REDEEM_DURATION_CAP, DurationTooHigh());
 
         minRedeemRatio = _minRedeemRatio;
-        maxRedeemRatio = _maxRedeemRatio;
         minRedeemDuration = _minRedeemDuration;
         maxRedeemDuration = _maxRedeemDuration;
 
-        emit UpdateRedeemSettings(_minRedeemRatio, _maxRedeemRatio, _minRedeemDuration, _maxRedeemDuration);
+        emit UpdateRedeemSettings(_minRedeemRatio, _minRedeemDuration, _maxRedeemDuration);
     }
 
     /// @inheritdoc IXRedeemPolicy
@@ -253,11 +251,11 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
             return 0;
         }
 
-        uint256 ratioDiff = maxRedeemRatio - minRedeemRatio;
+        uint256 ratioDiff = MAX_REDEEM_RATIO - minRedeemRatio;
 
         // capped to maxRedeemDuration
         if (_duration > maxRedeemDuration || ratioDiff == 0) {
-            return maxRedeemRatio;
+            return MAX_REDEEM_RATIO;
         }
 
         ratio = minRedeemRatio

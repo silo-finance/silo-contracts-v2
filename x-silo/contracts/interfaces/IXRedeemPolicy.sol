@@ -13,7 +13,6 @@ interface IXRedeemPolicy {
     
     event UpdateRedeemSettings(
         uint256 minRedeemRatio,
-        uint256 maxRedeemRatio,
         uint256 minRedeemDuration,
         uint256 maxRedeemDuration
     );
@@ -37,20 +36,21 @@ interface IXRedeemPolicy {
     error MaxRatioOverflow();
     error DurationTooLow();
     error VestingNotOver();
+    error DurationTooHigh();
 
+    /// @dev Max redeem duration is capped at 365 days.
+    function MAX_REDEEM_DURATION_CAP() external view returns (uint256);
 
-    /// @dev constant used to require redeem ratio to not be more than 100%, 100 == 100%
-    function MAX_FIXED_RATIO() external view returns (uint256);
+    /// @dev `minRedeemRatio` together with `MAX_REDEEM_RATIO` is used to create range of ratios
+    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 100 means ratio of 1:1.
+    // `MAX_REDEEM_RATIO` is capped at 1:1.
+    function MAX_REDEEM_RATIO() external view returns (uint256);
 
     // Redeeming min/max settings are updatable at any time by owner
 
     /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
     /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 50 means ratio of 1:0.5
     function minRedeemRatio() external view returns (uint256);
-
-    /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
-    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 100 means ratio of 1:1
-    function maxRedeemRatio() external view returns (uint256);
 
     /// @dev `minRedeemDuration` together with `maxRedeemDuration` is used to create range of durations
     /// based on which redeem amount is calculated, value is in seconds.
@@ -69,7 +69,6 @@ interface IXRedeemPolicy {
 
     function updateRedeemSettings(
         uint256 _minRedeemRatio,
-        uint256 _maxRedeemRatio,
         uint256 _minRedeemDuration,
         uint256 _maxRedeemDuration
     ) external;
