@@ -140,8 +140,4 @@ interface IXRedeemPolicy {
         external
         view
         returns (uint256 xSiloAmountIn);
-//
-//    function convertToAssets(uint256 _shares) external view returns (uint256);
-//
-//    function convertToShares(uint256 _assets) external view returns (uint256);
 }
