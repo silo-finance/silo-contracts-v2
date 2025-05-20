@@ -36,6 +36,7 @@ common/addresses/anvil.json
 coverage
 !coverage/silo-core.txt
 !coverage/silo-oracles.txt
+!coverage/x-silo.txt
 
 # echidna
 corpus/
