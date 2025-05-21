@@ -4,11 +4,11 @@ pragma solidity 0.8.28;
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
-import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {IncentiveHook} from "silo-core/contracts/hooks/incentive/IncentiveHook.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
-contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation {
+contract SiloHookV1 is IncentiveHook, PartialLiquidation {
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data)
         public
@@ -18,25 +18,24 @@ contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation {
         (address owner) = abi.decode(_data, (address));
 
         BaseHookReceiver.__BaseHookReceiver_init(_config);
-        GaugeHookReceiver.__GaugeHookReceiver_init(owner);
+        IncentiveHook.__IncentiveHook_init(owner);
     }
 
     /// @inheritdoc IHookReceiver
-    function beforeAction(address, uint256, bytes calldata)
+    function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
-        override
+        override(IncentiveHook, IHookReceiver)
     {
-        // Do not expect any actions.
-        revert RequestNotSupported();
+        IncentiveHook.beforeAction(_silo, _action, _inputAndOutput);
     }
 
     /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
-        override(GaugeHookReceiver, IHookReceiver)
+        override(IncentiveHook, IHookReceiver)
     {
-        GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
+        IncentiveHook.afterAction(_silo, _action, _inputAndOutput);
     }
 }

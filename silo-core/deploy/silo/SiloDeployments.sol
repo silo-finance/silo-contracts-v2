@@ -12,6 +12,7 @@ library SiloConfigsNames {
     string public constant SILO_LOCAL_DEPLOYER = "Silo_Local_deployer";
     string public constant SILO_LOCAL_HOOKS_MISCONFIGURATION = "Silo_Local_HookMisconfiguration";
     string public constant SILO_LOCAL_GAUGE_HOOK_RECEIVER = "Silo_Local_gauge_hook_receiver";
+    string public constant SILO_LOCAL_INCENTIVE_HOOK_RECEIVER = "Silo_Local_incentive_hook_receiver";
     string public constant SILO_LOCAL_INVALID_CONTRACTS = "Silo_Local_invalidContracts";
 
     string public constant SILO_FULL_CONFIG_TEST = "Silo_FULL_CONFIG_TEST";
