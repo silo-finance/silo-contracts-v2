@@ -11,7 +11,7 @@ import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.so
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /**
-    INCENTIVES_OWNER=DAO SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
+    INCENTIVES_OWNER=GROWTH_MULTISIG SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerGLCreateAndConfigure.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
