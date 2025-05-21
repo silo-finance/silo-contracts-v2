@@ -7,7 +7,6 @@ import {IZeroExSwapModule} from "./IZeroExSwapModule.sol";
 /// @title ISiloLeverage Interface
 /// @notice Interface for a contract that enables leveraged deposits using flash loans and token swaps
 interface ISiloLeverage {
-
     /// @notice Parameters for a flash loan
     /// @param flashDebtLender The address of the lender providing the flash loan
     /// @param token The token to borrow
@@ -35,6 +34,7 @@ interface ISiloLeverage {
 
     /// @notice Thrown if the provided flash loan lender is invalid or unsupported
     error InvalidFlashloanLender();
+    error InvalidInitiator();
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails

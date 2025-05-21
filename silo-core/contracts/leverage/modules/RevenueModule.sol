@@ -55,6 +55,7 @@ abstract contract RevenueModule is Ownable2Step {
     /// @notice Set the leverage fee
     /// @param _fee New leverage fee (must be < FEE_DECIMALS)
     function setLeverageFee(uint256 _fee) external onlyOwner {
+        require(revenueReceiver != address(0), ReceiverZero());
         require(leverageFee != _fee, FeeDidNotChanged());
         require(_fee < FEE_DECIMALS, InvalidFee());
 
