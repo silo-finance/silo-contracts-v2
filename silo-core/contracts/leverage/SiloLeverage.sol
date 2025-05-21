@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -40,6 +42,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         _borrowFlashloan(_flashArgs, data);
 
         multiplier = _flashArgs.amount * _DECIMALS / _depositArgs.amount;
+        console2.log("multiplier", multiplier);
 
         // transient lock will force design pattern, eg flashloan can not be module
         _lock = address(0);
@@ -75,6 +78,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         returns (bytes32)
     {
         require(_lock == msg.sender, InvalidFlashloanLender());
+        console2.log("onFlashLoan amount %s for token %s", _flashloanAmount, _borrowToken);
 
         (
             SwapArgs memory swapArgs,
@@ -83,10 +87,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         ) = abi.decode(_data, (SwapArgs, DepositArgs, ISilo));
 
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
+        console2.log("swap amountOut %s", amountOut);
 
-        uint256 totalDeposit = _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
+        _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
 
         uint256 leverageFee = _calculateLeverageFee(_flashloanAmount);
+        console2.log("_flashloanFee %s", _flashloanFee);
+        console2.log("leverageFee %s", leverageFee);
 
         borrowSilo.borrow({
             _assets: _flashloanAmount + _flashloanFee + leverageFee,
