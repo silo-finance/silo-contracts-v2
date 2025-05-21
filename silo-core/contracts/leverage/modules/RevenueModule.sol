@@ -97,7 +97,7 @@ abstract contract RevenueModule is Ownable2Step {
     /// @dev Will always return at least 1 if fee > 0 and calculation rounds down
     /// @param _amount The amount to calculate the fee for
     /// @return leverageFeeAmount The calculated fee amount
-    function _calculateLeverageFee(uint256 _amount) internal virtual returns (uint256 leverageFeeAmount) {
+    function calculateLeverageFee(uint256 _amount) public virtual view returns (uint256 leverageFeeAmount) {
         uint256 fee = leverageFee;
         if (fee == 0) return 0;
 
@@ -110,7 +110,7 @@ abstract contract RevenueModule is Ownable2Step {
     /// @param _totalDeposit Total amount deposited
     /// @return leverageFeeAmount The amount of fee transferred
     function _transferFee(IERC20 _token, uint256 _totalDeposit) internal virtual returns (uint256 leverageFeeAmount) {
-        leverageFeeAmount = _calculateLeverageFee(_totalDeposit);
+        leverageFeeAmount = calculateLeverageFee(_totalDeposit);
         if (leverageFeeAmount == 0) return 0;
 
         _token.safeTransfer(revenueReceiver, leverageFeeAmount);
