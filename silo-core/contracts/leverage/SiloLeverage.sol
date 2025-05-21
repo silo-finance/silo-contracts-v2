@@ -21,7 +21,12 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     uint256 internal constant _DECIMALS = 1e18;
     uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
 
+    uint256 internal constant _ACTION_OPEN_LEVERAGE = 1;
+    uint256 internal constant _ACTION_CLOSE_LEVERAGE = 2;
+
+    // TODO transient
     address internal _lock;
+    address internal _action;
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -35,6 +40,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         ISilo _borrowSilo
     ) external virtual returns (uint256 multiplier) {
         _lock = _flashArgs.flashDebtLender;
+        _action = _ACTION_OPEN_LEVERAGE;
 
         bytes memory data = abi.encode(_swapArgs, _depositArgs, _borrowSilo);
 
@@ -44,23 +50,29 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
         // transient lock will force design pattern, eg flashloan can not be module
         _lock = address(0);
-
+        _action = 0;
         // TODO: does is worth to add check for delta balance + fee at the end?
     }
 
     function closeLeverage(
         ISilo _silo,
+        SwapArgs calldata _swapArgs,
         ISilo.CollateralType _collateralType,
         IERC3156FlashLender _flashLoanLender
     ) external view virtual returns (ISilo silo) {
+        _lock = _flashArgs.flashDebtLender;
+        _action = _ACTION_CLOSE_LEVERAGE;
+
         // TODO
         // take flashloan to repay all USD
-        //repay USD
-        //withdraw some ETH for swap
-        //swap all withdrawn ETH for USD
-        //repay flashloan with USD
-        //transfer USD change  to user
-        //user will end up with just deposit in ETH
+
+        bytes memory data = abi.encode(_swapArgs, _depositArgs, _borrowSilo);
+
+        _borrowFlashloan(_flashArgs, data);
+
+
+        _lock = address(0);
+        _action = 0;
     }
 
     function _borrowFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
@@ -88,6 +100,21 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         // TODO: _initiator check might be redundant, because of how `_lock` works, but atm I see no harm to check it
         require(_initiator == address(this), InvalidInitiator());
 
+        if (_action == _ACTION_OPEN_LEVERAGE) _openLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
+        else if (_action == _ACTION_CLOSE_LEVERAGE) _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
+        else revert UnknownAction();
+
+        return _FLASHLOAN_CALLBACK;
+    }
+
+    function _openLeverage(
+        address _borrowToken,
+        uint256 _flashloanAmount,
+        uint256 _flashloanFee,
+        bytes calldata _data
+    )
+        internal
+    {
         (
             SwapArgs memory swapArgs,
             DepositArgs memory depositArgs,
@@ -111,8 +138,32 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
 
         IERC20(_borrowToken).forceApprove(_lock, _flashloanAmount + _flashloanFee);
+    }
 
-        return _FLASHLOAN_CALLBACK;
+    function _closeLeverage(
+        address _debtToken,
+        uint256 _flashloanAmount,
+        uint256 _flashloanFee,
+        bytes calldata _data
+    )
+        internal
+    {
+        (
+            SwapArgs memory swapArgs,
+            CloseLeverageArgs memory closeArgs
+        ) = abi.decode(_data, (SwapArgs, DepositArgs, ISilo));
+
+        closeArgs.siloWithDebt.repayshares(closeArgs.borrowerDebtShares);
+
+        closeArgs.siloWithCollateral.redeem(closeArgs.collateralShares, address(this), closeArgs.borrower);
+
+        uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
+
+        uint256 change = amountOut - _flashloanAmount - _flashloanFee;
+
+        IERC20(_debtToken).safeTransfer(closeArgs.borrower, change);
+
+        IERC20(_debtToken).forceApprove(_lock, _flashloanAmount + _flashloanFee);
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
