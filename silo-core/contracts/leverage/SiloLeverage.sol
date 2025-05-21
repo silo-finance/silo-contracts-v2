@@ -64,7 +64,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     }
 
     function onFlashLoan(
-        address _initiator,
+        address /* _initiator */,
         address _borrowToken,
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
