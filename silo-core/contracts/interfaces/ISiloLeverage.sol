@@ -29,12 +29,29 @@ interface ISiloLeverage {
         address receiver;
     }
 
+    /// @param borrower address of owner of leverage position
+    /// @param siloWithDebt address of silo with debt
+    /// @param borrowerDebtShares total borrower debt shares to repay
+    /// @param siloWithCollateral address of silo with collateral
+    /// @param collateralType The type of collateral to use
+    /// @param sharesToWithdraw collateral shares to withdraw, it is expected to be total debt shares because
+    /// swap is based on total user collateral
+    struct CloseLeverageArgs {
+        address borrower;
+        ISilo siloWithDebt;
+        uint256 borrowerDebtShares;
+        ISilo siloWithCollateral;
+        ISilo.CollateralType collateralType;
+        uint256 collateralShares;
+    }
+
     /// @notice Thrown when the flash loan fails to execute
     error FlashloanFailed();
 
     /// @notice Thrown if the provided flash loan lender is invalid or unsupported
     error InvalidFlashloanLender();
     error InvalidInitiator();
+    error UnknownAction();
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails
