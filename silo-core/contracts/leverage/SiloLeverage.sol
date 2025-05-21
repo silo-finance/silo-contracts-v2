@@ -6,17 +6,9 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
-import {ErrorsLib} from "./modules/ErrorsLib.sol";
 
-import {ISilo, IERC4626, IERC3156FlashLender} from "../interfaces/ISilo.sol";
-import {IShareToken} from "../interfaces/IShareToken.sol";
-
+import {ISilo, IERC3156FlashLender} from "../interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISiloFactory} from "../interfaces/ISiloFactory.sol";
-import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
 
 import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
@@ -24,6 +16,8 @@ import {RevenueModule} from "./modules/RevenueModule.sol";
 
 // TODO nonReentrant
 contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC3156FlashBorrower {
+    using SafeERC20 for IERC20;
+
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     uint256 internal constant _DECIMALS = 1e18;
     uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
@@ -49,16 +43,6 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         _lock = address(0);
 
         // TODO: does is worth to add check for delta balance + fee at the end?
-    }
-
-    function _quote(address _oracle, uint256 _baseAmount, address _baseToken)
-        internal
-        view
-        returns (uint256 quoteAmount)
-    {
-        quoteAmount = _oracle == address(0)
-            ? _baseAmount
-            : ISiloOracle(_oracle).quote(_baseAmount, _baseToken);
     }
 
     function closeLeverage(
