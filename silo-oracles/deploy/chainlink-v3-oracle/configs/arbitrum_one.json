@@ -21,7 +21,7 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
-    "CHAINLINK_ezETH_ETH": {
+    "CHAINLINK_ezETH_WETH": {
         "baseToken": "ezETH",
         "quoteToken": "WETH",
         "primaryAggregator": "CHAINLINK_ezETH_ETH_aggregator",
