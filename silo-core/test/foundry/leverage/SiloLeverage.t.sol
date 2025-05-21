@@ -19,8 +19,9 @@ import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
 */
 contract SiloLeverageTest is SiloLittleHelper, Test {
     ISiloConfig cfg;
-
+    SiloLeverage siloLeverage;
     address debtShareToken;
+    SwapRouterMock swap;
 
     function setUp() public {
         cfg = _setUpLocalFixture();
@@ -32,31 +33,24 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         _depositForBorrow(2000e18, address(2));
 
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
+
+        siloLeverage = new SiloLeverage(address(this));
+        swap = new SwapRouterMock();
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_happyPath
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example
     */
-    function test_leverage_happyPath() public {
+    function test_leverage_example() public {
         address user = makeAddr("user");
         uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 10;
 
-        SiloLeverage siloLeverage = new SiloLeverage(address(this));
-        SwapRouterMock swap = new SwapRouterMock();
-        swap.setSwap(token1, 1e18, token0, 1.3e18);
 
         ISiloLeverage.FlashArgs memory flashArgs = ISiloLeverage.FlashArgs({
-            amount: depositAmount * 10,
+            amount: depositAmount * multiplier,
             token: silo1.asset(),
             flashDebtLender: address(silo1)
-        });
-
-        IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
-            buyToken: address(silo0.asset()),
-            sellToken: address(silo1.asset()),
-            allowanceTarget: address(1),
-            exchangeProxy: address(swap),
-            swapCallData: "mocked swap"
         });
 
         ISiloLeverage.DepositArgs memory depositArgs = ISiloLeverage.DepositArgs({
@@ -66,16 +60,30 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
             silo: silo0
         });
 
+        // this data should be provided by BE API
+        IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
+            buyToken: address(silo0.asset()),
+            sellToken: address(silo1.asset()),
+            allowanceTarget: makeAddr("this is address provided by API"),
+            exchangeProxy: address(swap),
+            swapCallData: "mocked swap data"
+        });
+
+        // we required to provide this
         ISilo borrowSilo = silo1;
+
+        // mock the swap
+        swap.setSwap(token1, flashArgs.amount, token0, 1.3e18);
 
         vm.startPrank(user);
 
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), 2e18);
-        siloLeverage.leverage(flashArgs, swapArgs, depositArgs, borrowSilo);
+        uint256 finalMultiplier = siloLeverage.leverage(flashArgs, swapArgs, depositArgs, borrowSilo);
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), 0);
 
         vm.stopPrank();
 
+        assertEq(finalMultiplier, 1.4e18, "finalMultiplier");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 1.4e18, "user got deposit x 10");
         assertEq(silo1.maxRepay(user), 1.01e18, "user has debt equal to flashloan + fees");
     }

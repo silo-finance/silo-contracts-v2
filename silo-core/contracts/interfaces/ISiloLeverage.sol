@@ -1,18 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.28;
+pragma solidity ^0.8.0;
 
-import {ISilo, IERC3156FlashLender} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
-
-import {ISilo, IERC4626, IERC3156FlashLender} from "./ISilo.sol";
-import {IShareToken} from "./IShareToken.sol";
-
-import {IERC3156FlashBorrower} from "./IERC3156FlashBorrower.sol";
-import {ISiloConfig} from "./ISiloConfig.sol";
-import {ISiloFactory} from "./ISiloFactory.sol";
-import {ISiloOracle} from "./ISiloOracle.sol";
-
-import {IZeroExSwapModule} from "../interfaces/IZeroExSwapModule.sol";
+import {ISilo, IERC3156FlashLender} from "./ISilo.sol";
+import {IZeroExSwapModule} from "./IZeroExSwapModule.sol";
 
 /// @title ISiloLeverage Interface
 /// @notice Interface for a contract that enables leveraged deposits using flash loans and token swaps
@@ -51,7 +41,7 @@ interface ISiloLeverage {
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings
     /// @param _depositArgs Final deposit configuration into a Silo
-    /// @param _borrowSilo The Silo to borrow from
+    /// @param _borrowSilo The Silo to borrow from. In general, it should be the "other" silo from the same market.
     /// @return multiplier Leverage multiplier achieved by the operation
     function leverage(
         FlashArgs calldata _flashArgs,
@@ -66,8 +56,4 @@ interface ISiloLeverage {
 //        ISilo.CollateralType _collateralType,
 //        IERC3156FlashLender _flashloanLender
 //    ) external view virtual override returns (ISilo);
-//
-//    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
-//        external
-//        returns (bytes32);
 }
