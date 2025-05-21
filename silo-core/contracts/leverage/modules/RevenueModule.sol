@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-// TODO Ownable
-contract RevenueModule {
+contract RevenueModule is Ownable2Step {
+    using SafeERC20 for IERC20;
+
     uint256 public constant FEE_DECIMALS = 1e18;
 
     uint256 public leverageFee;
@@ -22,15 +25,15 @@ contract RevenueModule {
     error NoRevenue();
     error ReceiverNotSet();
 
-    function setLeverageFee(uint256 _fee) external {
+    function setLeverageFee(uint256 _fee) external onlyOwner {
         require(leverageFee != _fee, FeeDidNotChanged());
-        require(_fee < 1e18, InvalidFee());
+        require(_fee < FEE_DECIMALS, InvalidFee());
 
         leverageFee = _fee;
         emit LeverageFeeChanged(_fee);
     }
 
-    function setRevenueReceiver(address _receiver) external {
+    function setRevenueReceiver(address _receiver) external onlyOwner {
         require(revenueReceiver != _receiver, ReceiverDidNotChanged());
         require(_receiver != address(0), ReceiverZero());
 
@@ -38,14 +41,20 @@ contract RevenueModule {
         emit RevenueReceiverChanged(_receiver);
     }
 
-    function withdrawRevenue(IERC20 _token) external {
+    function withdrawRevenues(IERC20[] calldata _tokens) external {
+        for (uint256 i; i < _tokens.length; i++) {
+            withdrawRevenue(_tokens[i]);
+        }
+    }
+
+    function withdrawRevenue(IERC20 _token) public {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, NoRevenue());
 
         address receiver = revenueReceiver;
         require(receiver != address(0), ReceiverNotSet());
 
-        _token.transfer(balance, receiver);
+        _token.safeTransfer(balance, receiver);
         emit LeverageRevenue(address(_token), balance, receiver);
     }
 
@@ -57,11 +66,10 @@ contract RevenueModule {
         if (leverageFeeAmount == 0) leverageFeeAmount = 1;
     }
 
-    function _takeLeverageFee(uint256 _totalDeposit) internal virtual returns (uint256 leverageFeeAmount) {
-        uint256 fee = leverageFee;
-        if (fee == 0) return 0;
+    function _transferFee(IERC20 _token, uint256 _totalDeposit) internal virtual returns (uint256 leverageFeeAmount) {
+        leverageFeeAmount = _calculateLeverageFee(_totalDeposit);
+        if (leverageFeeAmount == 0) return 0;
 
-        leverageFeeAmount = _totalDeposit * fee / FEE_DECIMALS;
-        if (leverageFeeAmount == 0) leverageFeeAmount = 1;
+        _token.safeTransfer(leverageFeeAmount, revenueReceiver);
     }
 }
