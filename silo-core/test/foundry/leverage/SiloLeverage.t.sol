@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -18,6 +19,8 @@ import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
     FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc SiloLeverageTest
 */
 contract SiloLeverageTest is SiloLittleHelper, Test {
+    using SafeERC20 for IERC20;
+
     ISiloConfig cfg;
     SiloLeverage siloLeverage;
     address debtShareToken;
@@ -26,16 +29,19 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
     function setUp() public {
         cfg = _setUpLocalFixture();
 
-        token0.setOnDemand(true);
-        token1.setOnDemand(true);
-
         _deposit(1000e18, address(1));
         _depositForBorrow(2000e18, address(2));
 
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
 
         siloLeverage = new SiloLeverage(address(this));
+        siloLeverage.setRevenueReceiver(makeAddr("RevenueReceiver"));
+        siloLeverage.setLeverageFee(0.0001e18);
+
         swap = new SwapRouterMock();
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
     }
 
     /*
@@ -46,6 +52,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 10;
 
+        token0.mint(user, depositAmount);
 
         ISiloLeverage.FlashArgs memory flashArgs = ISiloLeverage.FlashArgs({
             amount: depositAmount * multiplier,
@@ -61,6 +68,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         });
 
         // this data should be provided by BE API
+        // NOTICE: user needs to give allowance for swap router to use tokens
         IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
             buyToken: address(silo0.asset()),
             sellToken: address(silo1.asset()),
@@ -77,26 +85,29 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
 
         vm.startPrank(user);
 
-        // user must set receive approval for debt share token
         uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
             flashArgs.amount, ISilo(flashArgs.flashDebtLender)
         );
 
+        // APPROVALS
+
+        // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
+        IERC20(depositArgs.silo.asset()).forceApprove(address(siloLeverage), depositArgs.amount);
+
+        // user must set receive approval for debt share token
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
 
         uint256 finalMultiplier = siloLeverage.leverage(flashArgs, swapArgs, depositArgs, borrowSilo);
-
-        // to play safe, user must reset receive approval to 0
-        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), 0);
 
         vm.stopPrank();
 
         assertEq(finalMultiplier, 10e18, "finalMultiplier 10x");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 1.4e18, "user got deposit x 10");
-        assertEq(silo1.maxRepay(user), 1.01e18, "user has debt equal to flashloan + fees");
+        assertEq(silo1.maxRepay(user), 1.0101e18, "user has debt equal to flashloan + fees");
 
         assertEq(token0.balanceOf(address(siloLeverage)), 0, "no token0");
         assertEq(token1.balanceOf(address(siloLeverage)), 0, "no token1");
+        // TODO check debt approval to be 0
     }
 
     function _calculateDebtReceiveApproval(

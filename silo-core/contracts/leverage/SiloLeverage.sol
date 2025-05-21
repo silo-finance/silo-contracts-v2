@@ -30,6 +30,8 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
         DepositArgs calldata _depositArgs,
+        // TODO _borrowSilo is mostly optimisation, to not spend gas on figure out "other" silo,
+        // but if you think it is worth, we can remove it from interface and resolve internally
         ISilo _borrowSilo
     ) external virtual returns (uint256 multiplier) {
         _lock = _flashArgs.flashDebtLender;
@@ -52,6 +54,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         IERC3156FlashLender _flashLoanLender
     ) external view virtual returns (ISilo silo) {
         // TODO
+        // take flashloan to repay all USD
+        //repay USD
+        //withdraw some ETH for swap
+        //swap all withdrawn ETH for USD
+        //repay flashloan with USD
+        //transfer USD change  to user
+        //user will end up with just deposit in ETH
     }
 
     function _borrowFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
@@ -64,7 +73,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     }
 
     function onFlashLoan(
-        address /* _initiator */,
+        address _initiator,
         address _borrowToken,
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
@@ -73,7 +82,11 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         external
         returns (bytes32)
     {
+        // this check prevents call `onFlashLoan` directly
         require(_lock == msg.sender, InvalidFlashloanLender());
+
+        // TODO: _initiator check might be redundant, because of how `_lock` works, but atm I see no harm to check it
+        require(_initiator == address(this), InvalidInitiator());
 
         (
             SwapArgs memory swapArgs,
@@ -89,11 +102,15 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
         borrowSilo.borrow({
             _assets: _flashloanAmount + _flashloanFee + leverageFee,
-            _receiver: depositArgs.receiver,
+            _receiver: address(this),
             _borrower: depositArgs.receiver
         });
 
+        // TODO we could cumulate fees and withdraw later, but it will not save much gas
+        // and direct transfer allow us to keep leverage contract clean (not have any tokens)
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
+
+        IERC20(_borrowToken).forceApprove(_lock, _flashloanAmount + _flashloanFee);
 
         return _FLASHLOAN_CALLBACK;
     }
