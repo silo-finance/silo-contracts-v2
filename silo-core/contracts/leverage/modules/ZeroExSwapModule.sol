@@ -5,7 +5,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RevertLib} from "../../lib/RevertLib.sol";
-import {IZeroExSwapModule} from "../interfaces/IZeroExSwapModule.sol";
+import {IZeroExSwapModule} from "../../interfaces/IZeroExSwapModule.sol";
 
 /// @dev Based on demo contract that swaps its ERC20 balance for another ERC20.
 /// demo source: https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
@@ -15,13 +15,8 @@ contract ZeroExSwapModule is IZeroExSwapModule {
 
     /// @dev Swaps ERC20->ERC20 tokens held by this contract using a API quote.
     /// Must attach ETH equal to the `value` field from the API response.
-    /// @param _exchangeProxy ExchangeProxy address.
-    /// See https://docs.0x.org/developer-resources/contract-addresses
-    /// The `to` field from the API response
-    /// @param _sellToken The `sellTokenAddress` field from the API response.
-    /// @param _spender The `allowanceTarget` field from the API response.
-    /// @param _swapCallData The `data` field from the API response.
-    function _fillQuote(SwapArgs calldata _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut) {
+    /// @param _swapArgs see SwapArgs for details
+    function _fillQuote(SwapArgs memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut) {
         if (_swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
         uint256 balanceBefore = IERC20(_swapArgs.buyToken).balanceOf(address(this));

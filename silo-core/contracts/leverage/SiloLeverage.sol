@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -23,6 +23,8 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
 
     address internal _lock;
+
+    constructor (address _initialOwner) Ownable(_initialOwner) {}
 
     /// @inheritdoc ISiloLeverage
     function leverage(
@@ -53,9 +55,9 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         // TODO
     }
 
-    function _borrowFlashloan(FlashArgs calldata _flashArgs, bytes calldata _data) internal virtual {
+    function _borrowFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
         require(IERC3156FlashLender(_flashArgs.flashDebtLender).flashLoan({
-            _receiver: address(this),
+            _receiver: this,
             _token: _flashArgs.token,
             _amount: _flashArgs.amount,
             _data: _data
@@ -65,7 +67,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     function onFlashLoan(
         address _initiator,
         address _borrowToken,
-        uint256 _amount,
+        uint256 _flashloanAmount,
         uint256 _flashloanFee,
         bytes calldata _data
     )
@@ -80,31 +82,34 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
             ISilo borrowSilo
         ) = abi.decode(_data, (SwapArgs, DepositArgs, ISilo));
 
-        // TODO it is better to transfer fee imediately to receiver? otherwise we wil have to deal with balances locally
-        // eg. after swap, we can simply do balanceOf(token) OR we have to add compelcity and track balance bofore and after
-        uint256 amountOut = _fillQuote(swapArgs, _amount);
+        uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
-        _deposit(depositArgs, IERC20(swapArgs.buyToken));
+        uint256 totalDeposit = _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
 
-        uint256 leverageFee = _calculateLeverageFee(depositArgs.totalDeposit);
+        uint256 leverageFee = _calculateLeverageFee(_flashloanAmount);
 
-        // leverage fee will be leftover after borrow and repay flashloan
-        BorrowArgs memory borrowArgs = BorrowArgs(borrowSilo, _amount + _flashloanFee + leverageFee, depositArgs.receiver);
-        _borrow(borrowArgs);
+        borrowSilo.borrow({
+            _assets: _flashloanAmount + _flashloanFee + leverageFee,
+            _receiver: depositArgs.receiver,
+            _borrower: depositArgs.receiver
+        });
 
-        if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(leverageFee, revenueReceiver);
+        if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
 
         return _FLASHLOAN_CALLBACK;
     }
 
-    function _deposit(DepositArgs memory _depositArgs, IERC20 _asset) virtual internal {
-        _asset.forceApprove(address(_depositArgs.silo), _depositArgs.depositAmount);
-        _depositArgs.silo.deposit(_depositArgs.depositAmount, _depositArgs.receiver, _depositArgs.collateralType);
-        _asset.forceApprove(address(_depositArgs.silo), 1);
-    }
+    function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
+        internal
+        virtual
+        returns (uint256 totalDeposit)
+    {
+        _asset.safeTransferFrom(_depositArgs.receiver, address(this), _depositArgs.amount);
 
-    function _borrow(BorrowArgs memory _borrowArgs) virtual internal {
-        uint256 borrowAmount = _borrowArgs.flashloanAmountWithFee + _calculateLeverageFee(_borrowArgs.totalDeposit);
-        _borrowArgs.silo.borrow(borrowAmount, _borrowArgs.receiver, _borrowArgs.receiver);
+        totalDeposit = _depositArgs.amount + _swapAmountOut;
+
+        _asset.forceApprove(address(_depositArgs.silo), totalDeposit);
+        _depositArgs.silo.deposit(totalDeposit, _depositArgs.receiver, _depositArgs.collateralType);
+        _asset.forceApprove(address(_depositArgs.silo), 1);
     }
 }
