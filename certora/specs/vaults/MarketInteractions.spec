@@ -8,19 +8,19 @@ methods {
     function lastIndexWithdraw() external returns(uint256) envfree;
 }
 
-function summaryDeposit(address id, uint256 assets, address receiver) returns uint256 {
+function summaryDeposit(address market, uint256 assets, address receiver) returns uint256 {
     assert assets != 0;
     assert receiver == currentContract;
 
-    requireInvariant supplyCapIsEnabled(id);
+    requireInvariant supplyCapIsEnabled(market);
 
-    assert config_(id).enabled;
+    assert config_(market).enabled;
 
     // NONDET summary, which is sound because all non view functions in Morpho Blue are abstracted away.
     return (_);
 }
 
-function summaryWithdraw(address id, uint256 assets, address receiver, address spender) returns uint256 {
+function summaryWithdraw(address market, uint256 assets, address receiver, address spender) returns uint256 {
     assert assets != 0;
     assert receiver == currentContract;
     assert spender == currentContract;
@@ -28,12 +28,12 @@ function summaryWithdraw(address id, uint256 assets, address receiver, address s
     uint256 index = lastIndexWithdraw();
     requireInvariant inWithdrawQueueIsEnabled(index);
 
-    assert config_(id).enabled;
+    assert config_(market).enabled;
 
     return (_);
 }
 
-function summaryRedeem(address id, uint256 shares, address receiver, address spender) returns uint256 {
+function summaryRedeem(address market, uint256 shares, address receiver, address spender) returns uint256 {
     assert shares != 0;
     assert receiver == currentContract;
     assert spender == currentContract;
@@ -41,13 +41,17 @@ function summaryRedeem(address id, uint256 shares, address receiver, address spe
     uint256 index = lastIndexWithdraw();
     requireInvariant inWithdrawQueueIsEnabled(index);
 
-    assert config_(id).enabled;
+    assert config_(market).enabled;
     
     // NONDET summary, which is sound because all non view functions in Morpho Blue are abstracted away.
     return (_);
 }
 
-// Check assertions in the summaries.
+/*
+ * @title Checks that when Vault calls methods on markets, the Vault is always the receiver of shares and the market is enabled.
+ * @notice The assertions are in summaries.
+ * @status Verified
+ */
 rule checkSummary(method f, env e, calldataarg args) {
     f(e, args);
     assert true;
