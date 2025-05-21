@@ -77,14 +77,32 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
 
         vm.startPrank(user);
 
-        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), 2e18);
+        // user must set receive approval for debt share token
+        uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
+            flashArgs.amount, ISilo(flashArgs.flashDebtLender)
+        );
+
+        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
+
         uint256 finalMultiplier = siloLeverage.leverage(flashArgs, swapArgs, depositArgs, borrowSilo);
+
+        // to play safe, user must reset receive approval to 0
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), 0);
 
         vm.stopPrank();
 
-        assertEq(finalMultiplier, 1.4e18, "finalMultiplier");
+        assertEq(finalMultiplier, 10e18, "finalMultiplier 10x");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 1.4e18, "user got deposit x 10");
         assertEq(silo1.maxRepay(user), 1.01e18, "user has debt equal to flashloan + fees");
+    }
+
+    function _calculateDebtReceiveApproval(
+        uint256 _flashAmount,
+        ISilo _flashFrom
+    ) internal returns (uint256 debtReceiveApproval) {
+        uint256 flashFee = _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
+        uint256 leverageFee = siloLeverage.calculateLeverageFee(_flashAmount);
+
+        debtReceiveApproval = _flashAmount + flashFee + leverageFee;
     }
 }

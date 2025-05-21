@@ -85,7 +85,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
         _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
 
-        uint256 leverageFee = _calculateLeverageFee(_flashloanAmount);
+        uint256 leverageFee = calculateLeverageFee(_flashloanAmount);
 
         borrowSilo.borrow({
             _assets: _flashloanAmount + _flashloanFee + leverageFee,
