@@ -1,0 +1,57 @@
+diff --git a/silo-vaults/contracts/libraries/SiloVaultActionsLib.sol b/silo-vaults/contracts/libraries/SiloVaultActionsLib.sol
+index 21c0d443..88f0b681 100644
+--- a/silo-vaults/contracts/libraries/SiloVaultActionsLib.sol
++++ b/silo-vaults/contracts/libraries/SiloVaultActionsLib.sol
+@@ -48,7 +48,8 @@ library SiloVaultActionsLib {
+         address _asset,
+         mapping(IERC4626 => MarketConfig) storage _config,
+         mapping(IERC4626 => PendingUint192) storage _pendingCap,
+-        IERC4626[] storage _withdrawQueue
++        IERC4626[] storage _withdrawQueue,
++        mapping(address => uint256) storage _withdrawRank
+     ) external returns (bool updateTotalAssets) {
+         MarketConfig storage marketConfig = _config[_market];
+ 
+@@ -56,6 +57,9 @@ library SiloVaultActionsLib {
+             if (!marketConfig.enabled) {
+                 _withdrawQueue.push(_market);
+ 
++                // HARNESS
++                _withdrawRank[address(_market)] = _withdrawQueue.length + 1;
++
+                 if (_withdrawQueue.length > ConstantsLib.MAX_QUEUE_LENGTH) revert ErrorsLib.MaxQueueLengthExceeded();
+ 
+                 marketConfig.enabled = true;
+@@ -271,7 +275,9 @@ library SiloVaultActionsLib {
+         mapping(IERC4626 => MarketConfig) storage _config,
+         mapping(IERC4626 => PendingUint192) storage _pendingCap,
+         IERC4626[] calldata _withdrawQueue,
+-        uint256[] calldata _indexes
++        uint256[] calldata _indexes,
++        mapping(address => uint256) storage withdrawRank,
++        mapping(address => uint256) storage deletedAt
+     ) external returns (IERC4626[] memory newWithdrawQueue) {
+         uint256 newLength = _indexes.length;
+         uint256 currLength = _withdrawQueue.length;
+@@ -288,6 +294,10 @@ library SiloVaultActionsLib {
+             seen[prevIndex] = true;
+ 
+             newWithdrawQueue[i] = market;
++
++            // HARNESS
++            withdrawRank[address(market)] = i + 1;
++    
+         }
+ 
+         for (uint256 i; i < currLength; ++i) {
+@@ -305,6 +315,10 @@ library SiloVaultActionsLib {
+                     }
+                 }
+ 
++                // HARNESS
++                deletedAt[address(market)] = i;
++                delete withdrawRank[address(market)];
++
+                 delete _config[market];
+             }
+         }

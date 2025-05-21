@@ -290,5 +290,16 @@
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "REDSTONE_scUSD_USDC": {
+        "baseToken": "scUSD",
+        "quoteToken": "USDC.e",
+        "primaryAggregator": "REDSTONE_scUSD_USDC_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
     }
 }

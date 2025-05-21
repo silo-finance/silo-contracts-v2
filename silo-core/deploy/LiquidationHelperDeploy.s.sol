@@ -15,16 +15,27 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    ETHERSCAN_API_KEY=$VERIFIER_API_KEY_SONIC FOUNDRY_PROFILE=core \
+    FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --rpc-url $RPC_SONIC \
+        --ffi --rpc-url $RPC_INK \
         --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
+        --ffi --rpc-url $RPC_INK \
+        --verify \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INK \
+        --private-key $PRIVATE_KEY \
+        --resume
 
     NOTICE: remember to register it in Tower
 */
 contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
     address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
+    address constant EXCHANGE_PROXY_ZERO_X_INK = 0x0000000000001fF3684f28c67538d4D072C22734;
 
     address payable constant GNOSIS_SAFE_MAINNET = payable(address(1)); // placeholder for integration tests
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
@@ -73,6 +84,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return ODOS_ROUTER_SONIC;
+        if (chainId == ChainsLib.INK_CHAIN_ID) return EXCHANGE_PROXY_ZERO_X_INK;
 
         revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
     }
