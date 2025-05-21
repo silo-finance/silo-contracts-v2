@@ -24,18 +24,11 @@ interface ISiloLeverage {
         uint256 amount;
     }
 
-    /// @param leverageAmount total deposit amount (sum of user deposit amount + flashloan amount)
+    /// @param amount raw deposit amount (without flashloan amount)
     struct DepositArgs {
         ISilo silo;
-        uint256 leverageAmount;
-        ISilo.CollateralType collateralType;
-        address receiver;
-    }
-
-    /// @param amount amount to borrow, should be equal to flashloan amount + flashloan fee + leverage fee
-    struct BorrowArgs {
-        ISilo silo;
         uint256 amount;
+        ISilo.CollateralType collateralType;
         address receiver;
     }
 
@@ -49,7 +42,7 @@ interface ISiloLeverage {
         IZeroExSwapModule.SwapArgs calldata _swapArgs,
         DepositArgs calldata _depositArgs,
         ISilo _borrowSilo
-    ) external;
+    ) external returns (uint256 multiplier);
 
 //
 //    function closeLeverage(
