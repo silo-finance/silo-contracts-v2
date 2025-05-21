@@ -94,6 +94,9 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         assertEq(finalMultiplier, 10e18, "finalMultiplier 10x");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 1.4e18, "user got deposit x 10");
         assertEq(silo1.maxRepay(user), 1.01e18, "user has debt equal to flashloan + fees");
+
+        assertEq(token0.balanceOf(address(siloLeverage)), 0, "no token0");
+        assertEq(token1.balanceOf(address(siloLeverage)), 0, "no token1");
     }
 
     function _calculateDebtReceiveApproval(
