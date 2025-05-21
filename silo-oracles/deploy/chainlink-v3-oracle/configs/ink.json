@@ -21,7 +21,7 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
-    "PYTH_BTC_USD": {
+    "PYTH_kBTC_USD": {
         "baseToken": "kBTC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "PYTH_BTC_USD_aggregator",
