@@ -123,8 +123,7 @@ abstract contract BaseStorage {
     //                                       EXTRA VARIABLES                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice Array of base assets for the suite
-    address[] internal baseAssets;
+    address internal siloToken;
 
     /// @notice Array of silos for the suite
     address[] internal silos;

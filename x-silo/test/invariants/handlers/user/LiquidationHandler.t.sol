@@ -25,41 +25,6 @@ contract LiquidationHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function liquidationCall(
-        uint256 _debtToCover,
-        bool _receiveSToken,
-        RandomGenerator memory random
-    ) external setup {
-        bool success;
-        bytes memory returnData;
-
-        address borrower = _getRandomActor(random.i);
-
-        _setTargetActor(borrower);
-
-        // Fuzzing the collateral and debt assets in order to check for edge cases and integraty
-        // between the two silos
-        address collateralAsset = _getRandomBaseAsset(random.k);
-        address debtAsset = _getRandomBaseAsset(random.j);
-
-        _before();
-        (success, returnData) = actor.proxy(
-            address(liquidationModule),
-            abi.encodeWithSelector(
-                IPartialLiquidation.liquidationCall.selector,
-                collateralAsset,
-                debtAsset,
-                borrower,
-                _debtToCover,
-                _receiveSToken
-            )
-        );
-
-        if (success) {
-            _after();
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////

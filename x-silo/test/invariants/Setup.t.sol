@@ -24,7 +24,6 @@ import {MockFlashLoanReceiver} from "./helpers/FlashLoanReceiver.sol";
 
 // Mock Contracts
 import {TestERC20} from "./utils/mocks/TestERC20.sol";
-import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
 
 // Interfaces
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
@@ -65,10 +64,7 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _deployAssets() internal {
-        _asset0 = new TestERC20("Test Token0", "TT0", 18);
-        _asset1 = new TestERC20("Test Token1", "TT1", 6);
-        baseAssets.push(address(_asset0));
-        baseAssets.push(address(_asset1));
+        siloToken = address(new TestERC20("Silo Token", "Silo", 18));
     }
 
     function _deployCoreProtocol(address feeReceiver) internal {

@@ -20,11 +20,6 @@ contract BaseHandler is HookAggregator {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice Helper function to get a random base asset
-    function _getRandomBaseAsset(uint256 i) internal view returns (address) {
-        return baseAssets[i % baseAssets.length];
-    }
-
-    /// @notice Helper function to get a random base asset
     function _getRandomSilo(uint256 i) internal view returns (address) {
         return silos[i % silos.length];
     }

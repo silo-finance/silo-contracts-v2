@@ -91,8 +91,8 @@ As mentioned on the public documentation this suite framework spins around to ty
         for (uint256 i = 0; i < silos.length; i++) {
             assert_BASE_INVARIANT_B(silos[i], debtTokens[i]);
             assert_BASE_INVARIANT_C(silos[i]);
-            assert_BASE_INVARIANT_E(silos[i], baseAssets[i]);
-            assert_BASE_INVARIANT_F(silos[i], baseAssets[i]);
+            assert_BASE_INVARIANT_E(silos[i], siloToken[i]);
+            assert_BASE_INVARIANT_F(silos[i], siloToken[i]);
             assert_BASE_INVARIANT_H();
             for (uint256 j = 0; j < actorAddresses.length; j++) {
                 address collateralSilo = siloConfig.borrowerCollateralSilo(actorAddresses[j]);
