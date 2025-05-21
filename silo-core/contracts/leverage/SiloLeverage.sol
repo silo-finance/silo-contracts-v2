@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -19,33 +20,10 @@ import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
 
 import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
-import {RevenueModule} from "./modules/FeeModule.sol";
+import {RevenueModule} from "./modules/RevenueModule.sol";
 
+// TODO nonReentrant
 contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC3156FlashBorrower {
-    /// @param flashDebtLender address from where contract will get flashloan
-    /// @param amount flash amount
-    struct FlashArgs {
-        address flashDebtLender;
-        address token;
-        uint256 amount;
-    }
-
-    /// @param depositAmount total deposit amount (including flashloan amount)
-    struct DepositArgs {
-        ISilo depositSilo;
-        uint256 amount;
-        ISilo.CollateralType collateralType;
-        address receiver;
-    }
-
-    /// @param amount amount to borrow, should be equal to flashloan amount + flashloan fee + leverage fee
-    /// @param totalDeposit final deposit amount, sum of user deposit amount + flashloan amount
-    struct BorrowArgs {
-        ISilo silo;
-        uint256 amount;
-        address receiver;
-    }
-
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     uint256 internal constant _DECIMALS = 1e18;
     uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
@@ -155,7 +133,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         ISilo _silo,
         ISilo.CollateralType _collateralType,
         IERC3156FlashLender _flashLoanLender
-    ) external view virtual returns (ISilo) {
+    ) external view virtual returns (ISilo silo) {
         // TODO
     }
 
@@ -165,14 +143,20 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
             _token: _flashArgs.token,
             _amount: _flashArgs.amount,
             _data: _data
-        }), ErrorsLib.FlashloanFailed());
+        }), FlashloanFailed());
     }
 
-    function onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes calldata _data)
+    function onFlashLoan(
+        address _initiator,
+        address _borrowToken,
+        uint256 _amount,
+        uint256 _flashloanFee,
+        bytes calldata _data
+    )
         external
         returns (bytes32)
     {
-        require(_lock == msg.sender, ErrorsLib.InvalidFlashloanLender());
+        require(_lock == msg.sender, InvalidFlashloanLender());
 
         (
             SwapArgs memory swapArgs,
@@ -184,23 +168,23 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         // eg. after swap, we can simply do balanceOf(token) OR we have to add compelcity and track balance bofore and after
         uint256 amountOut = _fillQuote(swapArgs, _amount);
 
-        _deposit(depositArgs);
+        _deposit(depositArgs, IERC20(swapArgs.buyToken));
 
-        uint leverageFee = _calculateLeverageFee(depositArgs.totalDeposit);
+        uint256 leverageFee = _calculateLeverageFee(depositArgs.totalDeposit);
 
         // leverage fee will be leftover after borrow and repay flashloan
-        BorrowArgs memory borrowArgs = BorrowArgs(borrowSilo, _amount + _fee + leverageFee, depositArgs.receiver);
+        BorrowArgs memory borrowArgs = BorrowArgs(borrowSilo, _amount + _flashloanFee + leverageFee, depositArgs.receiver);
         _borrow(borrowArgs);
+
+        if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(leverageFee, revenueReceiver);
 
         return _FLASHLOAN_CALLBACK;
     }
 
-    function _deposit(DepositArgs memory _depositArgs) virtual internal {
-        IERC20 asset = IERC20(_depositArgs.silo.asset());
-
-        asset.forceApprove(address(_depositArgs.silo), _depositArgs.depositAmount);
+    function _deposit(DepositArgs memory _depositArgs, IERC20 _asset) virtual internal {
+        _asset.forceApprove(address(_depositArgs.silo), _depositArgs.depositAmount);
         _depositArgs.silo.deposit(_depositArgs.depositAmount, _depositArgs.receiver, _depositArgs.collateralType);
-        asset.forceApprove(address(_depositArgs.silo), 1);
+        _asset.forceApprove(address(_depositArgs.silo), 1);
     }
 
     function _borrow(BorrowArgs memory _borrowArgs) virtual internal {
