@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 
-contract ConfiguredGaugesReentrancyTest is MethodReentrancyTest {
+contract GetNotificationReceiversReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
@@ -17,11 +17,11 @@ contract ConfiguredGaugesReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "configuredGauges(address)";
+        description = "getNotificationReceivers(address)";
     }
 
     function _ensureItWillNotRevert() internal view {
         address hookReceiver = TestStateLib.hookReceiver();
-        IGaugeHookReceiver(hookReceiver).configuredGauges(IShareToken(address(this)));
+        IIncentiveHook(hookReceiver).getNotificationReceivers(IShareToken(address(this)));
     }
 }

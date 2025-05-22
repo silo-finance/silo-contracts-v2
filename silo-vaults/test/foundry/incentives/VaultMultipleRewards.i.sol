@@ -17,6 +17,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
+import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
@@ -68,8 +69,8 @@ contract VaultMultipleRewardsTest is IntegrationTest {
 
         // set SiloIncentivesController as gauge for hook
         vm.prank(Ownable(address(partialLiquidation)).owner());
-        IGaugeHookReceiver(address(partialLiquidation)).setGauge(
-            IGaugeLike(address(siloIncentivesController)), IShareToken(siloWithIncentives)
+        IIncentiveHook(address(partialLiquidation)).addNotificationReceiver(
+            IShareToken(siloWithIncentives), INotificationReceiver(address(siloIncentivesController))
         );
 
         _sortSupplyQueueIdleLast();

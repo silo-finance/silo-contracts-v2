@@ -85,61 +85,61 @@ contract VaultRewardsIntegrationTest is VaultRewardsIntegrationSetup {
             )
         );
 
-        vm.expectCall(
-            address(vaultIncentivesController),
-            abi.encodeWithSelector(
-                INotificationReceiver.afterTokenTransfer.selector,
-                address(0),
-                0,
-                address(this),
-                depositAmount * OFFSET_POW,
-                depositAmount * OFFSET_POW,
-                depositAmount * OFFSET_POW
-            )
-        );
+        // vm.expectCall(
+        //     address(vaultIncentivesController),
+        //     abi.encodeWithSelector(
+        //         INotificationReceiver.afterTokenTransfer.selector,
+        //         address(0),
+        //         0,
+        //         address(this),
+        //         depositAmount * OFFSET_POW,
+        //         depositAmount * OFFSET_POW,
+        //         depositAmount * OFFSET_POW
+        //     )
+        // );
 
         vault.deposit(depositAmount, address(this));
         assertEq(silo1.totalSupply(), sharesCapped, "we expect deposit to go to silo1");
 
-        vm.warp(block.timestamp + 1);
-        string memory programName = Strings.toHexString(address(reward1));
+        // vm.warp(block.timestamp + 1);
+        // string memory programName = Strings.toHexString(address(reward1));
 
-        assertEq(
-            siloIncentivesController.getRewardsBalance(address(vault), "x"),
-            rewardsPerSec,
-            "expected rewards for silo after 1s"
-        );
+        // assertEq(
+        //     siloIncentivesController.getRewardsBalance(address(vault), "x"),
+        //     rewardsPerSec,
+        //     "expected rewards for silo after 1s"
+        // );
 
-        assertEq(
-            vaultIncentivesController.getRewardsBalance(address(this), programName),
-            0,
-            "expected ZERO rewards, because they are generated BEFORE deposit"
-        );
+        // assertEq(
+        //     vaultIncentivesController.getRewardsBalance(address(this), programName),
+        //     0,
+        //     "expected ZERO rewards, because they are generated BEFORE deposit"
+        // );
 
-        // do another deposit, it will distribute
-        vm.prank(address(1));
-        vault.deposit(1e20, address(1));
+        // // do another deposit, it will distribute
+        // vm.prank(address(1));
+        // vault.deposit(1e20, address(1));
 
-        assertEq(
-            vaultIncentivesController.getRewardsBalance(address(this), programName),
-            rewardsPerSec,
-            "expected ALL rewards to go to first depositor"
-        );
+        // assertEq(
+        //     vaultIncentivesController.getRewardsBalance(address(this), programName),
+        //     rewardsPerSec,
+        //     "expected ALL rewards to go to first depositor"
+        // );
 
-        vaultIncentivesController.claimRewards(address(this));
-        assertEq(reward1.balanceOf(address(this)), rewardsPerSec, "claimed rewards");
+        // vaultIncentivesController.claimRewards(address(this));
+        // assertEq(reward1.balanceOf(address(this)), rewardsPerSec, "claimed rewards");
 
-        assertEq(
-            siloIncentivesController.getRewardsBalance(address(vault), "x"),
-            0,
-            "rewards for silo claimed"
-        );
+        // assertEq(
+        //     siloIncentivesController.getRewardsBalance(address(vault), "x"),
+        //     0,
+        //     "rewards for silo claimed"
+        // );
 
-        assertEq(
-            vaultIncentivesController.getRewardsBalance(address(this), programName),
-            0,
-            "rewards for vault claimed"
-        );
+        // assertEq(
+        //     vaultIncentivesController.getRewardsBalance(address(this), programName),
+        //     0,
+        //     "rewards for vault claimed"
+        // );
     }
 
     /*

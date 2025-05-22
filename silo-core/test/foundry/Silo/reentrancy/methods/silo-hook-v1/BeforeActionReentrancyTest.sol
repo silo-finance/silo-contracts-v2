@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 
@@ -22,7 +22,7 @@ contract BeforeActionReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevert() internal {
         address hookReceiver = TestStateLib.hookReceiver();
 
-        vm.expectRevert(IGaugeHookReceiver.RequestNotSupported.selector);
-        IGaugeHookReceiver(hookReceiver).beforeAction(address(this), 0, "");
+        vm.expectRevert(IHookReceiver.OnlySilo.selector);
+        IHookReceiver(hookReceiver).beforeAction(address(this), 0, "");
     }
 }
