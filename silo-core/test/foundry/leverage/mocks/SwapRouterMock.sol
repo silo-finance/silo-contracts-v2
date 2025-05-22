@@ -29,7 +29,7 @@ contract SwapRouterMock {
         amountOut = _amountOut;
     }
 
-    fallback(bytes calldata _data) external returns (bytes memory data) {
+    fallback() external {
         // in real case user should give allowance, but here we simply force it,
         // because in this mock we dont know the user
         sellToken.setOnDemand(true);
