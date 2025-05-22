@@ -50,6 +50,7 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
     event IncentivesClaimingLogicRemoved(ISilo indexed silo, IIncentivesClaimingLogic indexed logic);
     event NotificationReceiverAdded(IShareToken indexed shareToken, INotificationReceiver indexed receiver);
     event NotificationReceiverRemoved(IShareToken indexed shareToken, INotificationReceiver indexed receiver);
+    event FailedToClaimIncentives(address indexed silo, address claimingLogic);
 
     function setUp() public virtual {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _dao);
@@ -371,12 +372,8 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         vm.prank(_dao);
         _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogicReverts1)));
         
-        vm.expectRevert(abi.encodeWithSelector(
-            MockClaimingLogicReverts.ClaimRewardsReverts.selector,
-            address(silo0),
-            address(mockLogicReverts1),
-            address(_hookReceiver)
-        ));
+        vm.expectEmit(true, true, true, true, address(_hookReceiver));
+        emit FailedToClaimIncentives(address(silo0), address(mockLogicReverts1));
 
         vm.prank(address(silo0));
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.BORROW, bytes(""));
@@ -389,12 +386,8 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogic2)));
         vm.stopPrank();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            MockClaimingLogicReverts.ClaimRewardsReverts.selector,
-            address(silo0),
-            address(mockLogicReverts1),
-            address(_hookReceiver)
-        ));
+        vm.expectEmit(true, true, true, true, address(_hookReceiver));
+        emit FailedToClaimIncentives(address(silo0), address(mockLogicReverts1));
 
         vm.prank(address(silo0));
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.REPAY, bytes(""));
@@ -411,12 +404,8 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectEmit(true, true, true, true, address(silo0));
         emit MockClaimingLogic.ClaimRewardsCalled(address(silo0), address(mockLogic1), address(_hookReceiver), 1);
 
-        vm.expectRevert(abi.encodeWithSelector(
-            MockClaimingLogicReverts.ClaimRewardsReverts.selector,
-            address(silo0),
-            address(mockLogicReverts2),
-            address(_hookReceiver)
-        ));
+        vm.expectEmit(true, true, true, true, address(_hookReceiver));
+        emit FailedToClaimIncentives(address(silo0), address(mockLogicReverts2));
 
         vm.prank(address(silo0));
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.LIQUIDATION, bytes(""));

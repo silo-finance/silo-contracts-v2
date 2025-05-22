@@ -13,6 +13,8 @@ interface IIncentiveHook {
     event NotificationReceiverAdded(IShareToken indexed shareToken, INotificationReceiver indexed receiver);
     event NotificationReceiverRemoved(IShareToken indexed shareToken, INotificationReceiver indexed receiver);
 
+    event FailedToClaimIncentives(address indexed silo, address claimingLogic);
+
     error OwnerIsZeroAddress();
     error ClaimingLogicAlreadyAdded();
     error ClaimingLogicNotAdded();

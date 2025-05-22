@@ -12,7 +12,6 @@ import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol"
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /// @title IncentiveHook
 /// @dev This contract is designed to be used as a hook receiver for Silo contracts.
@@ -171,7 +170,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
             address claimingLogic = address(_claimingLogics[ISilo(_silo)].at(i));
             bytes memory input = abi.encodePacked(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
 
-            (bool success, bytes memory result) = ISilo(_silo).callOnBehalfOfSilo({
+            (bool success,) = ISilo(_silo).callOnBehalfOfSilo({
                 _target: claimingLogic,
                 _value: 0,
                 _callType: ISilo.CallType.Delegatecall,
@@ -179,7 +178,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
             });
 
             if (!success) {
-                RevertLib.revertBytes(result, "Failed to claim incentives");
+                emit FailedToClaimIncentives(_silo, claimingLogic);
             }
         }
     }
