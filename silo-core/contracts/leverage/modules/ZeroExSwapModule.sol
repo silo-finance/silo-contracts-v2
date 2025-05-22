@@ -21,7 +21,8 @@ contract ZeroExSwapModule is IZeroExSwapModule {
     function _fillQuote(SwapArgs memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut) {
         if (_swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
-        uint256 balanceBefore = IERC20(_swapArgs.buyToken).balanceOf(address(this));
+        // TODO do we have tocheck balance before? is there a case when contract will have tokens before swap?
+        // uint256 balanceBefore = IERC20(_swapArgs.buyToken).balanceOf(address(this));
 
         // Approve token for spending by the exchange
         IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, _approval);
@@ -34,8 +35,8 @@ contract ZeroExSwapModule is IZeroExSwapModule {
         // Reset approval to 1 to avoid lingering allowances
         IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, 1);
 
-        uint256 balanceAfter = IERC20(_swapArgs.buyToken).balanceOf(address(this));
-
-        amountOut = balanceAfter - balanceBefore;
+//        uint256 balanceAfter = IERC20(_swapArgs.buyToken).balanceOf(address(this));
+//        amountOut = balanceAfter - balanceBefore;
+        amountOut = IERC20(_swapArgs.buyToken).balanceOf(address(this));
     }
 }

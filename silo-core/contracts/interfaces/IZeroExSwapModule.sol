@@ -17,4 +17,5 @@ interface IZeroExSwapModule {
 
     error ExchangeAddressZero();
     error SwapCallFailed();
+    error Swap();
 }

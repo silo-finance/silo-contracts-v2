@@ -52,6 +52,7 @@ interface ISiloLeverage {
     error InvalidFlashloanLender();
     error InvalidInitiator();
     error UnknownAction();
+    error SwapDidNotCoverObligations();
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails
