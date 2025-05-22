@@ -14,6 +14,7 @@ import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
 
 // TODO nonReentrant
+// TODO ensure it will that work for Pendle
 contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC3156FlashBorrower {
     using SafeERC20 for IERC20;
 
