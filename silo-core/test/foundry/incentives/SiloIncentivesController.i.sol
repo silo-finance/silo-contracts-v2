@@ -15,7 +15,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -106,7 +106,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
 
         __init(token0, token1, silo0, silo1);
 
-        _controller = new SiloIncentivesController(address(this), address(hook));
+        _controller = new SiloIncentivesController(address(this), address(hook), address(silo0));
         hook.setup(_controller, MintableToken(address(silo0)));
 
         silo0.updateHooks();

@@ -16,9 +16,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
-
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
@@ -39,23 +37,21 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     address internal _gauge = makeAddr("Gauge");
     address internal _gauge2 = makeAddr("Gauge2");
 
-    address internal timelock = makeAddr("Timelock");
     address internal feeDistributor = makeAddr("FeeDistributor");
 
     event GaugeConfigured(address gauge, address shareToken);
 
     function setUp() public {
-        // Mock addresses that we need for the `SiloFactoryDeploy` script
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, timelock);
-        AddrLib.setAddress(VeSiloContracts.FEE_DISTRIBUTOR, feeDistributor);
-
         _siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);
 
         IHookReceiver hook = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 
         _hookReceiver = IGaugeHookReceiver(address(hook));
 
-        _dao = timelock;
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address deployer = vm.addr(deployerPrivateKey);
+
+        _dao = deployer;
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt testReInitialization
@@ -89,7 +85,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testHookReceiverPermissions
     function testHookReceiverPermissions() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(address(0)));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(address(0)));
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         _hookReceiver.removeGauge(IShareToken(address(0)));
@@ -100,7 +96,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         // Revert without reason as `_gauge` do not have `shareToken()` fn
         vm.expectRevert();
         vm.prank(_dao);
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(address(0)));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(address(0)));
 
         address invalidShareToken = makeAddr("InvalidShareToken");
 
@@ -108,12 +104,12 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         vm.expectRevert(IGaugeHookReceiver.WrongGaugeShareToken.selector);
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(address(1)));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(address(1)));
 
         vm.prank(_dao);
         // Revert without reason as `invalidShareToken` do not have `silo()` fn
         vm.expectRevert();
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(invalidShareToken));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(invalidShareToken));
 
         (address silo0,) = _siloConfig.getSilos();
 
@@ -123,7 +119,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         vm.expectRevert(IGaugeHookReceiver.InvalidShareToken.selector);
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(invalidShareToken));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(invalidShareToken));
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSetGaugePass
@@ -134,9 +130,9 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _mockGaugeShareToken(_gauge, shareCollateralToken);
 
         vm.prank(_dao);
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(shareCollateralToken));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(shareCollateralToken));
 
-        IGauge configured = GaugeHookReceiver(address(_hookReceiver)).configuredGauges(
+        ISiloIncentivesController configured = GaugeHookReceiver(address(_hookReceiver)).configuredGauges(
             IShareToken(shareCollateralToken)
         );
 
@@ -146,7 +142,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         vm.expectRevert(IGaugeHookReceiver.GaugeAlreadyConfigured.selector);
-        _hookReceiver.setGauge(IGauge(_gauge2), IShareToken(shareCollateralToken));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge2), IShareToken(shareCollateralToken));
 
         (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(silo0);
 
@@ -178,15 +174,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _mockGaugeShareToken(_gauge, shareCollateralToken);
 
         vm.prank(_dao);
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(shareCollateralToken));
-
-        _mockGaugeIsKilled(false);
-
-        vm.prank(_dao);
-        vm.expectRevert(IGaugeHookReceiver.CantRemoveActiveGauge.selector);
-        _hookReceiver.removeGauge(IShareToken(shareCollateralToken));
-
-        _mockGaugeIsKilled(true);
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(shareCollateralToken));
 
         vm.prank(_dao);
         _hookReceiver.removeGauge(IShareToken(shareCollateralToken));
@@ -217,7 +205,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         _mockGaugeShareToken(_gauge, debtShareToken);
 
         vm.prank(_dao);
-        _hookReceiver.setGauge(IGauge(_gauge), IShareToken(debtShareToken));
+        _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(debtShareToken));
 
         uint256 action = Hook.shareTokenTransfer(Hook.DEBT_TOKEN);
 
@@ -241,32 +229,11 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
             invalidAction,
             data
         );
-
-        // send notification when gauge is killed
-        bytes memory gaugeKilledSelector = abi.encodePacked(IGauge.is_killed.selector);
-        vm.mockCall(_gauge, gaugeKilledSelector, abi.encode(true));
-        _mockGaugeAfterTransfer();
-        vm.prank(debtShareToken);
-        _hookReceiver.afterAction(
-            silo0,
-            action,
-            data
-        );
-
-        // send notification when gauge is not killed
-        vm.mockCall(_gauge, gaugeKilledSelector, abi.encode(false));
-        _mockGaugeAfterTransfer();
-        vm.prank(debtShareToken);
-        _hookReceiver.afterAction(
-            silo0,
-            action,
-            data
-        );
     }
 
     function _mockGaugeAfterTransfer() internal {
         bytes memory data = abi.encodeCall(
-            IGauge.afterTokenTransfer,
+            ISiloIncentivesController.afterTokenTransfer,
             (
                 _sender,
                 _SENDER_BAL,
@@ -292,14 +259,8 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         );
     }
 
-   function _mockGaugeIsKilled(bool _killed) internal {
-       bytes memory data = abi.encodePacked(IGauge.is_killed.selector); // selector:0x9c868ac0
-       vm.mockCall(_gauge, data, abi.encode(_killed));
-       vm.expectCall(_gauge, data);
-   }
-
     function _mockGaugeShareToken(address _gaugeToMock, address _tokenToSet) internal {
-        bytes memory data = abi.encodePacked(IGauge.share_token.selector);
+        bytes memory data = abi.encodePacked(ISiloIncentivesController.SHARE_TOKEN.selector);
         vm.mockCall(_gaugeToMock, data, abi.encode(_tokenToSet));
         vm.expectCall(_gaugeToMock, data);
     }

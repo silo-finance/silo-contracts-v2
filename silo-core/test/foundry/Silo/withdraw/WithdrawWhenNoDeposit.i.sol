@@ -11,7 +11,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
 /*
     forge test -vv --ffi --mc WithdrawWhenNoDepositTest
