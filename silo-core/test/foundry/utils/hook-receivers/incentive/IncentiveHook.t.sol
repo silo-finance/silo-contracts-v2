@@ -413,7 +413,7 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_onlySiloOrShareTokenModifier
     function test_beforeAction_onlySiloOrShareTokenModifier() public {
-        vm.expectRevert(IHookReceiver.OnlySiloOrShareToken.selector);
+        vm.expectRevert(IHookReceiver.OnlySilo.selector);
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.DEPOSIT, bytes(""));
     }
 

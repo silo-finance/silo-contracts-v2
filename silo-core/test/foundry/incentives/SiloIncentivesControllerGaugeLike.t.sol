@@ -14,10 +14,11 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {SiloIncentivesControllerGaugeLike} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLike.sol";
+import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 
 import {
     SiloIncentivesControllerGaugeLikeFactoryDeploy
@@ -122,9 +123,9 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_gaugeLikeIncentives_with_gaugeHookReceiver
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_gaugeLikeIncentives_with_incentiveHook
      */
-    function test_gaugeLikeIncentives_with_gaugeHookReceiver() public {
+    function test_gaugeLikeIncentives_with_incentiveHook() public {
         address timelock = makeAddr("Timelock");
         address feeDistributor = makeAddr("FeeDistributor");
 
@@ -135,18 +136,19 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
         ISiloConfig siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);
         (address silo0,) = siloConfig.getSilos();
 
-        IGaugeHookReceiver gaugeHookReceiver = IGaugeHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
+        IIncentiveHook incentiveHook = IIncentiveHook(IShareToken(address(silo0)).hookSetup().hookReceiver);
         (,address shareCollateralToken,) = siloConfig.getShareTokens(silo0);
 
         address gaugeLikeController = _factory.createGaugeLike(_owner, _notifier, shareCollateralToken);
 
         vm.prank(timelock);
-        gaugeHookReceiver.setGauge(IGauge(gaugeLikeController), IShareToken(shareCollateralToken));
+        incentiveHook.addNotificationReceiver(IShareToken(shareCollateralToken), INotificationReceiver(gaugeLikeController));
 
-        IGauge configured = GaugeHookReceiver(address(gaugeHookReceiver)).configuredGauges(
+        address[] memory notificationReceivers = IIncentiveHook(address(incentiveHook)).getNotificationReceivers(
             IShareToken(shareCollateralToken)
         );
 
-        assertEq(address(configured), address(gaugeLikeController));
+        assertEq(notificationReceivers.length, 1, "Incentive hook should have one notification receiver");
+        assertEq(notificationReceivers[0], address(gaugeLikeController), "Incentive hook should have the gauge as notification receiver");
     }
 }

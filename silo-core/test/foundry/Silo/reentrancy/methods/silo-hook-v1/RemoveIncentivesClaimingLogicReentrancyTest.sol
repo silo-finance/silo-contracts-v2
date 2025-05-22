@@ -3,14 +3,14 @@ pragma solidity ^0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol";
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 
-contract SetGaugeReentrancyTest is MethodReentrancyTest {
+contract RemoveIncentivesClaimingLogicReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert (permissions)");
         _ensureItWillRevert();
@@ -21,7 +21,7 @@ contract SetGaugeReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "setGauge(address,address)";
+        description = "removeIncentivesClaimingLogic(address,address)";
     }
 
     function _ensureItWillRevert() internal {
@@ -32,6 +32,9 @@ contract SetGaugeReentrancyTest is MethodReentrancyTest {
             address(this)
         ));
 
-        IGaugeHookReceiver(hookReceiver).setGauge(IGauge(address(this)), IShareToken(address(this)));
+        IIncentiveHook(hookReceiver).removeIncentivesClaimingLogic(
+            ISilo(address(this)),
+            IIncentivesClaimingLogic(address(this))
+        );
     }
 }
