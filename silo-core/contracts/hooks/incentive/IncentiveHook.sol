@@ -14,18 +14,27 @@ import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiv
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
+/// @title IncentiveHook
+/// @dev This contract is designed to be used as a hook receiver for Silo contracts.
+/// It allows an owner to register incentive claiming logics for different silos and notification receivers for share tokens.
+/// The `beforeAction` hook is used to claim incentives before any Silo action (deposit, withdraw, borrow, etc.).
+/// The `afterAction` hook is used to notify registered receivers after a share token transfer.
 abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHook {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Hook for uint256;
     using Hook for bytes;
 
+    /// @notice Maps a Silo to a set of addresses representing incentive claiming logics.
     mapping(ISilo silo => EnumerableSet.AddressSet claimingLogics) internal _claimingLogics;
+    /// @notice Maps a share token to a set of addresses representing notification receivers.
     mapping(IShareToken shareToken => EnumerableSet.AddressSet notificationReceivers) internal _notificationReceivers;
 
+    /// @notice Transient variable to store the action type for which `beforeAction` was executed.
+    /// @dev This is used in `afterAction` to determine if incentives need to be claimed for token transfers.
     uint256 transient beforeActionExecutedFor;
 
+    /// @dev The ownership is transferred to address(0) to lock the implementation, preventing re-initialization.
     constructor() Ownable(msg.sender) {
-        // lock implementation
         _transferOwnership(address(0));
     }
 
