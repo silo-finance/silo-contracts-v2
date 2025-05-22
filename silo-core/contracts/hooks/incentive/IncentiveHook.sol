@@ -240,7 +240,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
             // Share token transfer ignored as it has no before token transfer hook.
 
         if (hooksBefore != allHooks) {
-            _setHookConfig(_silo, uint24(hooksBefore), uint24(_getHooksAfter(_silo)));
+            _setHookConfig(_silo, uint24(allHooks), uint24(_getHooksAfter(_silo)));
         }
     }
 
