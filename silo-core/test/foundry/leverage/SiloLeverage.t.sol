@@ -126,6 +126,14 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
             collateralShares: silo0.balanceOf(user)
         });
 
+        swapArgs = IZeroExSwapModule.SwapArgs({
+            sellToken: address(silo0.asset()),
+            buyToken: address(silo1.asset()),
+            allowanceTarget: makeAddr("this is address provided by API"),
+            exchangeProxy: address(swap),
+            swapCallData: "mocked swap data"
+        });
+
         // mock the swap + 20%
         swap.setSwap(token0, flashArgs.amount, token1, flashArgs.amount * 1.2e18 / 1e18);
 
