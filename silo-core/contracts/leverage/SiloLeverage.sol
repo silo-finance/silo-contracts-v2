@@ -42,7 +42,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         // but if you think it is worth, we can remove it from interface and resolve internally
         ISilo _borrowSilo
     ) external virtual returns (uint256 multiplier) {
-        _lock = _flashArgs.flashDebtLender;
+        _lock = _flashArgs.flashloanTarget;
         _action = _ACTION_OPEN_LEVERAGE;
 
         bytes memory data = abi.encode(_swapArgs, _depositArgs, _borrowSilo);
@@ -62,7 +62,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         SwapArgs calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external virtual {
-        _lock = _flashArgs.flashDebtLender;
+        _lock = _flashArgs.flashloanTarget;
         _action = _ACTION_CLOSE_LEVERAGE;
 
         bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
@@ -74,7 +74,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     }
 
     function _borrowFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
-        require(IERC3156FlashLender(_flashArgs.flashDebtLender).flashLoan({
+        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: _flashArgs.token,
             _amount: _flashArgs.amount,
@@ -83,7 +83,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     }
 
     function _repayFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
-        require(IERC3156FlashLender(_flashArgs.flashDebtLender).flashLoan({
+        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: _flashArgs.token,
             _amount: _flashArgs.amount,
