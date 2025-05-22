@@ -40,6 +40,26 @@ abstract contract DIAConfigDefault is TokensGenerator {
         );
     }
 
+    function _defaultDIAConfigTwoFeeds(
+        string memory _firstFeed,
+        string memory _secondFeed,
+        uint256 _divider,
+        uint256 _multiplier,
+        bool _invert
+    ) internal view returns (IDIAOracle.DIADeploymentConfig memory) {
+        return IDIAOracle.DIADeploymentConfig(
+            IDIAOracleV2(DIA_ORACLE_V2),
+            IERC20Metadata(address(tokens["RDPX"])),
+            IERC20Metadata(address(tokens["USDT"])),
+            1 days,
+            _firstFeed,
+            _secondFeed,
+            _divider,
+            _multiplier,
+            _invert
+        );
+    }
+
     function _printDIADeployemntConfig(IDIAOracle.DIADeploymentConfig memory _config) internal {
         emit log_named_address("quote token", address(_config.quoteToken));
         emit log_named_address("base token", address(_config.baseToken));
