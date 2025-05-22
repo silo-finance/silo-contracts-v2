@@ -62,7 +62,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
     function addNotificationReceiver(
         IShareToken _shareToken,
         INotificationReceiver _notificationReceiver
-    ) 
+    )
         external
         onlyOwner
     {

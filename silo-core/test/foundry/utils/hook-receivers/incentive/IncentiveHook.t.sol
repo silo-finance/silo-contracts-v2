@@ -26,9 +26,6 @@ import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 
-// Custom error
-error OnlySilo();
-
 // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc IncentiveHookTest
 contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
     IIncentiveHook internal _hookReceiver;
@@ -471,7 +468,56 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         IHookReceiver(address(_hookReceiver)).afterAction(address(silo1), Hook.DEPOSIT, bytes(""));
     }
 
-    function _mockGaugeAfterTransfer(
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_afterAction_multipleReceivers_success
+    function test_afterAction_multipleReceivers_success() public {
+        vm.prank(_dao);
+        _hookReceiver.addNotificationReceiver(_shareToken1, INotificationReceiver(_notificationReceiver1));
+        vm.prank(_dao);
+        _hookReceiver.addNotificationReceiver(_shareToken1, INotificationReceiver(_notificationReceiver2));
+
+        address sender = makeAddr("Sender");
+        address recipient = makeAddr("Recipient");
+        uint256 amount = 100;
+        uint256 senderBalance = 100;
+        uint256 recipientBalance = 100;
+        uint256 totalSupply = 100;
+
+        bytes memory data = abi.encodePacked(
+            sender,
+            recipient,
+            amount,
+            senderBalance,
+            recipientBalance,
+            totalSupply
+        );
+
+        _mocAfterTransfer(
+            _notificationReceiver1,
+            sender,
+            recipient,
+            amount,
+            senderBalance,
+            recipientBalance,
+            totalSupply
+        );
+
+        _mocAfterTransfer(
+            _notificationReceiver2,
+            sender,
+            recipient,
+            amount,
+            senderBalance,
+            recipientBalance,
+            totalSupply
+        );
+
+        uint256 action = Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo0), action, data);
+    }
+
+    function _mocAfterTransfer(
         address _notificationReceiver,
         address _sender,
         address _recipient,
