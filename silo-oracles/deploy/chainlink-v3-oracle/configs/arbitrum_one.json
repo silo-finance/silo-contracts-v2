@@ -42,5 +42,16 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "CHAINLINK_WBTC_WETH": {
+        "baseToken": "WBTC",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_WBTC_BTC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_BTC_ETH_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e16,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
