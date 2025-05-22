@@ -119,15 +119,18 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
             DepositArgs memory depositArgs
         ) = abi.decode(_data, (SwapArgs, DepositArgs));
 
-
+        // swap all flashloan amount into collateral token
         ISilo borrowSilo = _otherSilo(depositArgs.silo);
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
+        // deposit with leverage
         _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
         __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
 
+        // fee is based on flashloan amount, we do not cound user own amount
         uint256 leverageFee = calculateLeverageFee(_flashloanAmount);
 
+        // borrow asset wil be used to pay fees
         borrowSilo.borrow({
             _assets: __totalBorrow,
             _receiver: address(this),
@@ -136,10 +139,9 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
         emit OpenLeverage(__msgSender, depositArgs.amount, _flashloanAmount, __totalBorrow);
 
-        // TODO we could cumulate fees and withdraw later, but it will not save much gas
-        // and direct transfer allow us to keep leverage contract clean (not have any tokens)
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
 
+        // approval for repay flashloan
         IERC20(_borrowToken).forceApprove(__flashloanTarget, _flashloanAmount + _flashloanFee);
     }
 

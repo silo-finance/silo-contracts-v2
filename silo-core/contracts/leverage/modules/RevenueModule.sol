@@ -73,16 +73,14 @@ abstract contract RevenueModule is Ownable2Step {
         emit RevenueReceiverChanged(_receiver);
     }
 
-    /// @notice Withdraw revenue for multiple tokens
-    /// @param _tokens List of tokens to withdraw revenue for
-    function withdrawRevenues(IERC20[] calldata _tokens) external {
+    /// @param _tokens List of tokens to rescue
+    function rescueTokens(IERC20[] calldata _tokens) external {
         for (uint256 i; i < _tokens.length; i++) {
             withdrawRevenue(_tokens[i]);
         }
     }
 
-    /// @notice Withdraw revenue for a specific token
-    /// @param _token ERC20 token to withdraw
+    /// @param _token ERC20 token to rescue
     function withdrawRevenue(IERC20 _token) public {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, NoRevenue());
@@ -104,16 +102,5 @@ abstract contract RevenueModule is Ownable2Step {
 
         leverageFeeAmount = Math.mulDiv(_amount, fee, FEE_DECIMALS, Math.Rounding.Ceil);
         if (leverageFeeAmount == 0) leverageFeeAmount = 1;
-    }
-
-    /// @notice Transfers the leverage fee from the deposit to the revenue receiver
-    /// @param _token The ERC20 token used for payment
-    /// @param _totalDeposit Total amount deposited
-    /// @return leverageFeeAmount The amount of fee transferred
-    function _transferFee(IERC20 _token, uint256 _totalDeposit) internal virtual returns (uint256 leverageFeeAmount) {
-        leverageFeeAmount = calculateLeverageFee(_totalDeposit);
-        if (leverageFeeAmount == 0) return 0;
-
-        _token.safeTransfer(revenueReceiver, leverageFeeAmount);
     }
 }
