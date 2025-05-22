@@ -49,6 +49,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
         require(_silo == ISilo(silo0) || _silo == ISilo(silo1), InvalidSilo());
         require(address(_logic) != address(0), ZeroAddress());
         require(_claimingLogics[_silo].add(address(_logic)), ClaimingLogicAlreadyAdded());
+
         emit IncentivesClaimingLogicAdded(_silo, _logic);
 
         _configureHooksIfNotConfigured(address(_silo));
@@ -63,6 +64,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
         onlyOwner
     {
         require(_claimingLogics[_silo].remove(address(_logic)), ClaimingLogicNotAdded());
+
         emit IncentivesClaimingLogicRemoved(_silo, _logic);
     }
 
