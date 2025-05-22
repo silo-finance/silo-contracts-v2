@@ -59,12 +59,11 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         ISiloLeverage.FlashArgs memory flashArgs = ISiloLeverage.FlashArgs({
             amount: depositAmount * multiplier,
             token: silo1.asset(),
-            flashDebtLender: address(silo1)
+            flashloanTarget: address(silo1)
         });
 
         ISiloLeverage.DepositArgs memory depositArgs = ISiloLeverage.DepositArgs({
             amount: depositAmount,
-            receiver: user,
             collateralType: ISilo.CollateralType.Collateral,
             silo: silo0
         });
@@ -79,16 +78,13 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
             swapCallData: "mocked swap data"
         });
 
-        // we required to provide this
-        ISilo borrowSilo = silo1;
-
         // mock the swap
         swap.setSwap(token1, flashArgs.amount, token0, 1.3e18);
 
         vm.startPrank(user);
 
         uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
-            flashArgs.amount, ISilo(flashArgs.flashDebtLender)
+            flashArgs.amount, ISilo(flashArgs.flashloanTarget)
         );
 
         // APPROVALS
@@ -99,9 +95,10 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         // user must set receive approval for debt share token
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
 
-        uint256 finalMultiplier = siloLeverage.leverage(flashArgs, swapArgs, depositArgs, borrowSilo);
+        (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.leverage(flashArgs, swapArgs, depositArgs);
+        uint256 finalMultiplier = totalDeposit * 1e18 / depositArgs.amount;
 
-        assertEq(finalMultiplier, 10e18, "finalMultiplier 10x");
+        assertEq(finalMultiplier, 14e18, "finalMultiplier 14x");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 1.4e18, "user got deposit x 10");
         assertEq(silo1.maxRepay(user), 1.0101e18, "user has debt equal to flashloan + fees");
 
@@ -114,16 +111,12 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         flashArgs = ISiloLeverage.FlashArgs({
             amount: silo0.previewRedeem(silo0.balanceOf(user)),
             token: silo1.asset(),
-            flashDebtLender: address(silo1)
+            flashloanTarget: address(silo1)
         });
 
         ISiloLeverage.CloseLeverageArgs memory args = ISiloLeverage.CloseLeverageArgs({
-            borrower: user,
-            siloWithDebt: silo1,
-            borrowerDebtShares: IERC20(debtShareToken).balanceOf(user),
             siloWithCollateral: silo0,
-            collateralType: ISilo.CollateralType.Collateral,
-            collateralShares: silo0.balanceOf(user)
+            collateralType: ISilo.CollateralType.Collateral
         });
 
         swapArgs = IZeroExSwapModule.SwapArgs({
@@ -138,7 +131,8 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         swap.setSwap(token0, flashArgs.amount, token1, flashArgs.amount * 1.2e18 / 1e18);
 
         // APPROVALS
-        IERC20(collateralShareToken).forceApprove(address(siloLeverage), args.collateralShares);
+        uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(user);
+        IERC20(collateralShareToken).forceApprove(address(siloLeverage), collateralSharesApproval);
 
         siloLeverage.closeLeverage(flashArgs, swapArgs, args);
 
@@ -151,7 +145,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
     function _calculateDebtReceiveApproval(
         uint256 _flashAmount,
         ISilo _flashFrom
-    ) internal returns (uint256 debtReceiveApproval) {
+    ) internal view returns (uint256 debtReceiveApproval) {
         uint256 flashFee = _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
         uint256 leverageFee = siloLeverage.calculateLeverageFee(_flashAmount);
 

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
+
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
+import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo, IERC3156FlashLender} from "../interfaces/ISilo.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
@@ -22,14 +26,17 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     uint256 internal constant _DECIMALS = 1e18;
-    uint256 internal constant _LEVERAGE_FEE_IN_DEBT_TOKEN = 1e18;
 
     uint256 internal constant _ACTION_OPEN_LEVERAGE = 1;
     uint256 internal constant _ACTION_CLOSE_LEVERAGE = 2;
 
     // TODO transient
-    address internal _lock;
-    uint256 internal _action;
+    uint256 internal __action;
+    address internal __flashloanTarget;
+    address internal __msgSender;
+    uint256 internal __totalDeposit;
+    uint256 internal __totalBorrow;
+    ISiloConfig internal __siloConfig;
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -37,23 +44,19 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     function leverage(
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
-        DepositArgs calldata _depositArgs,
-        // TODO _borrowSilo is mostly optimisation, to not spend gas on figure out "other" silo,
-        // but if you think it is worth, we can remove it from interface and resolve internally
-        ISilo _borrowSilo
-    ) external virtual returns (uint256 multiplier) {
-        _lock = _flashArgs.flashloanTarget;
-        _action = _ACTION_OPEN_LEVERAGE;
+        DepositArgs calldata _depositArgs
+    ) external virtual returns (uint256 totalDeposit, uint256 totalBorrow) {
+        _setTransient(_depositArgs.silo, _ACTION_OPEN_LEVERAGE, _flashArgs.flashloanTarget);
 
-        bytes memory data = abi.encode(_swapArgs, _depositArgs, _borrowSilo);
+        bytes memory data = abi.encode(_swapArgs, _depositArgs);
 
-        _borrowFlashloan(_flashArgs, data);
+        _executeFlashloan(_flashArgs, data);
 
-        multiplier = _flashArgs.amount * _DECIMALS / _depositArgs.amount;
+        totalDeposit = __totalDeposit;
+        totalBorrow = __totalBorrow;
 
         // transient lock will force design pattern, eg flashloan can not be module
-        _lock = address(0);
-        _action = 0;
+        _resetTransient();
         // TODO: does is worth to add check for delta balance + fee at the end?
     }
 
@@ -62,27 +65,16 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         SwapArgs calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external virtual {
-        _lock = _flashArgs.flashloanTarget;
-        _action = _ACTION_CLOSE_LEVERAGE;
+        _setTransient(_closeLeverageArgs.siloWithCollateral, _ACTION_CLOSE_LEVERAGE, _flashArgs.flashloanTarget);
 
         bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
 
-        _repayFlashloan(_flashArgs, data);
+        _executeFlashloan(_flashArgs, data);
 
-        _lock = address(0);
-        _action = 0;
+        _resetTransient();
     }
 
-    function _borrowFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
-        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
-            _receiver: this,
-            _token: _flashArgs.token,
-            _amount: _flashArgs.amount,
-            _data: _data
-        }), FlashloanFailed());
-    }
-
-    function _repayFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
+    function _executeFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: _flashArgs.token,
@@ -102,13 +94,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         returns (bytes32)
     {
         // this check prevents call `onFlashLoan` directly
-        require(_lock == msg.sender, InvalidFlashloanLender());
+        require(__flashloanTarget == msg.sender, InvalidFlashloanLender());
 
-        // TODO: _initiator check might be redundant, because of how `_lock` works, but atm I see no harm to check it
+        // TODO: _initiator check might be redundant, because of how `__flashloanTarget` works, but atm I see no harm to check it
         require(_initiator == address(this), InvalidInitiator());
 
-        if (_action == _ACTION_OPEN_LEVERAGE) _openLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
-        else if (_action == _ACTION_CLOSE_LEVERAGE) _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
+        if (__action == _ACTION_OPEN_LEVERAGE) _openLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
+        else if (__action == _ACTION_CLOSE_LEVERAGE) _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
         else revert UnknownAction();
 
         return _FLASHLOAN_CALLBACK;
@@ -124,27 +116,31 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     {
         (
             SwapArgs memory swapArgs,
-            DepositArgs memory depositArgs,
-            ISilo borrowSilo
-        ) = abi.decode(_data, (SwapArgs, DepositArgs, ISilo));
+            DepositArgs memory depositArgs
+        ) = abi.decode(_data, (SwapArgs, DepositArgs));
 
+
+        ISilo borrowSilo = _otherSilo(depositArgs.silo);
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
         _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
+        __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
 
         uint256 leverageFee = calculateLeverageFee(_flashloanAmount);
 
         borrowSilo.borrow({
-            _assets: _flashloanAmount + _flashloanFee + leverageFee,
+            _assets: __totalBorrow,
             _receiver: address(this),
-            _borrower: depositArgs.receiver
+            _borrower: __msgSender
         });
+
+        emit OpenLeverage(__msgSender, depositArgs.amount, _flashloanAmount, __totalBorrow);
 
         // TODO we could cumulate fees and withdraw later, but it will not save much gas
         // and direct transfer allow us to keep leverage contract clean (not have any tokens)
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
 
-        IERC20(_borrowToken).forceApprove(_lock, _flashloanAmount + _flashloanFee);
+        IERC20(_borrowToken).forceApprove(__flashloanTarget, _flashloanAmount + _flashloanFee);
     }
 
     function _closeLeverage(
@@ -160,10 +156,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
             CloseLeverageArgs memory closeArgs
         ) = abi.decode(_data, (SwapArgs, CloseLeverageArgs));
 
-        IERC20(_debtToken).forceApprove(address(closeArgs.siloWithDebt), _flashloanAmount);
-        closeArgs.siloWithDebt.repayShares(closeArgs.borrowerDebtShares, closeArgs.borrower);
+        ISilo siloWithDebt = _otherSilo(closeArgs.siloWithCollateral);
 
-        closeArgs.siloWithCollateral.redeem(closeArgs.collateralShares, address(this), closeArgs.borrower);
+        IERC20(_debtToken).forceApprove(address(siloWithDebt), _flashloanAmount);
+        siloWithDebt.repayShares(_resolveRepayShareBalanceOfMsgSender(siloWithDebt), __msgSender);
+
+        uint256 redeemShares = _resolveRedeemBalanceOfMsgSender(closeArgs);
+        closeArgs.siloWithCollateral.redeem(redeemShares, address(this), __msgSender, closeArgs.collateralType);
 
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
@@ -172,22 +171,71 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
         uint256 change = amountOut - obligation;
 
-        IERC20(_debtToken).safeTransfer(closeArgs.borrower, change);
+        IERC20(_debtToken).safeTransfer(__msgSender, change);
 
-        IERC20(_debtToken).forceApprove(_lock, obligation);
+        IERC20(_debtToken).forceApprove(__flashloanTarget, obligation);
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
         internal
         virtual
-        returns (uint256 totalDeposit)
     {
-        _asset.safeTransferFrom(_depositArgs.receiver, address(this), _depositArgs.amount);
+        // transfer collateral tokens from borrower
+        _asset.safeTransferFrom(__msgSender, address(this), _depositArgs.amount);
 
-        totalDeposit = _depositArgs.amount + _swapAmountOut;
+        __totalDeposit = _depositArgs.amount + _swapAmountOut;
 
-        _asset.forceApprove(address(_depositArgs.silo), totalDeposit);
-        _depositArgs.silo.deposit(totalDeposit, _depositArgs.receiver, _depositArgs.collateralType);
-        _asset.forceApprove(address(_depositArgs.silo), 1);
+        _asset.forceApprove(address(_depositArgs.silo), __totalDeposit);
+        _depositArgs.silo.deposit(__totalDeposit, __msgSender, _depositArgs.collateralType);
+    }
+    
+    function _resolveRepayShareBalanceOfMsgSender(ISilo _siloWithDebt)
+        internal
+        view
+        virtual
+        returns (uint256 repayShareBalance)
+    {
+        (,, address shareDebtToken) = __siloConfig.getShareTokens(address(_siloWithDebt));
+        repayShareBalance = IERC20(shareDebtToken).balanceOf(__msgSender);
+    }
+
+    function _resolveRedeemBalanceOfMsgSender(CloseLeverageArgs memory _closeArgs)
+        internal
+        view
+        virtual
+        returns (uint256 balanceOf)
+    {
+        console2.log("__msgSender", __msgSender);
+        console2.log("_closeArgs.siloWithCollateral.balanceOf(__msgSender)", _closeArgs.siloWithCollateral.balanceOf(__msgSender));
+
+        if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
+            return _closeArgs.siloWithCollateral.balanceOf(__msgSender);
+        }
+
+        (address protectedShareToken,,) = __siloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
+
+        balanceOf = ISilo(protectedShareToken).balanceOf(__msgSender);
+    }
+
+    function _otherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
+        (address silo0, address silo1) = __siloConfig.getSilos();
+        require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
+
+        otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
+    }
+
+    function _setTransient(ISilo _silo, uint256 _action, address _flashloanTarget) internal {
+        __flashloanTarget = _flashloanTarget;
+        __action = _action;
+        __msgSender = msg.sender;
+        __siloConfig = _silo.config();
+    }
+    
+    function _resetTransient() internal {
+        __totalDeposit = 0;
+        __totalBorrow = 0;
+        __flashloanTarget = address(0);
+        __action = 0;
+        __msgSender = address(0);
     }
 }
