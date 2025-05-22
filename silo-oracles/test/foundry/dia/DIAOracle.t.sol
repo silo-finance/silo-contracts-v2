@@ -119,7 +119,7 @@ contract DIAOracleTest is DIAConfigDefault {
         assertEq(firstFeedValue / 10 ** 8, 17, "RDPX ~17$");
         assertEq(secondFeedValue / 10 ** 8, 1651, "ETH ~1651$");
         assertEq(price, firstFeedValue * secondFeedValue * 10 ** baseTokenDecimals / divider);
-        assertTrue(price / 10 ** 18 > 28000 ** price / 10 ** 18 < 30000, "price is expected (17*1651)");
+        assertTrue(price / 10 ** 18 > 28000 && price / 10 ** 18 < 30000, "price is expected (17*1651)");
     }
 
     /*
