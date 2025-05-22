@@ -19,6 +19,7 @@ import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificat
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
@@ -128,6 +129,46 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(_incentivesClaimingLogic1));
     }
 
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_addIncentivesClaimingLogic_invalidSilo
+    function test_addIncentivesClaimingLogic_invalidSilo() public {
+        vm.prank(_dao);
+        ISilo invalidSilo = ISilo(makeAddr("InvalidSilo"));
+        vm.expectRevert(IIncentiveHook.InvalidSilo.selector);
+        _hookReceiver.addIncentivesClaimingLogic(invalidSilo, IIncentivesClaimingLogic(_incentivesClaimingLogic1));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_addIncentivesClaimingLogic_zeroAddress
+    function test_addIncentivesClaimingLogic_zeroAddress() public {
+        vm.prank(_dao);
+        vm.expectRevert(IIncentiveHook.ZeroAddress.selector);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(0)));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_addIncentivesClaimingLogic_configuresHooks
+    function test_addIncentivesClaimingLogic_configuresHooks() public {
+        // Ensure no hooks are set initially for silo0's before hooks
+        (uint24 hooksBefore,) = IHookReceiver(address(_hookReceiver)).hookReceiverConfig(address(silo0));
+        assertEq(uint256(hooksBefore), 0, "Initial hooksBefore should be 0");
+        // hooksAfter might be configured by addNotificationReceiver tests if they run prior,
+        // so we only focus on hooksBefore which is solely configured by addIncentivesClaimingLogic.
+
+        vm.prank(_dao);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(_incentivesClaimingLogic1));
+
+        uint256 expectedHooksBefore = Hook.DEPOSIT |
+            Hook.WITHDRAW |
+            Hook.BORROW |
+            Hook.BORROW_SAME_ASSET |
+            Hook.REPAY |
+            Hook.TRANSITION_COLLATERAL |
+            Hook.SWITCH_COLLATERAL |
+            Hook.LIQUIDATION |
+            Hook.FLASH_LOAN;
+
+        (hooksBefore,) = IHookReceiver(address(_hookReceiver)).hookReceiverConfig(address(silo0));
+        assertEq(uint256(hooksBefore), expectedHooksBefore, "hooksBefore not configured correctly");
+    }
+
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_removeIncentivesClaimingLogic
     function test_removeIncentivesClaimingLogic() public {
         vm.startPrank(_dao);
@@ -160,6 +201,19 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         vm.stopPrank();
     }
 
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_removeIncentivesClaimingLogic_invalidSilo
+    function test_removeIncentivesClaimingLogic_invalidSilo() public {
+        vm.prank(_dao);
+        // First, add a logic to a valid silo to ensure the function doesn't revert for other reasons.
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(_incentivesClaimingLogic1));
+
+        ISilo invalidSilo = ISilo(makeAddr("InvalidSilo"));
+        // This will revert with `ClaimingLogicNotAdded` because the `EnumerableSet` for `invalidSilo` will be empty.
+        vm.prank(_dao);
+        vm.expectRevert(IIncentiveHook.ClaimingLogicNotAdded.selector);
+        _hookReceiver.removeIncentivesClaimingLogic(invalidSilo, IIncentivesClaimingLogic(_incentivesClaimingLogic1));
+    }
+
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_addNotificationReceiver
     function test_addNotificationReceiver() public {
         vm.prank(_dao);
@@ -189,6 +243,16 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         vm.prank(_dao);
         vm.expectRevert(IIncentiveHook.NotificationReceiverAlreadyAdded.selector);
         _hookReceiver.addNotificationReceiver(_shareToken1, INotificationReceiver(_notificationReceiver1));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_removeNotificationReceiver_allProgramsNotStopped
+    function test_removeNotificationReceiver_allProgramsNotStopped() public {
+        vm.prank(_dao);
+        _hookReceiver.addNotificationReceiver(_shareToken1, INotificationReceiver(_notificationReceiver1));
+
+        vm.prank(_dao);
+        vm.expectRevert(IIncentiveHook.AllProgramsNotStopped.selector);
+        _hookReceiver.removeNotificationReceiver(_shareToken1, INotificationReceiver(_notificationReceiver1), false);
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_removeNotificationReceiver_notAdded
@@ -224,6 +288,25 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         assertEq(notificationReceivers.length, 0);
 
         vm.stopPrank();
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_getIncentivesClaimingLogics_empty
+    function test_getIncentivesClaimingLogics_empty() public {
+        address[] memory logics = _hookReceiver.getIncentivesClaimingLogics(silo0);
+        assertEq(logics.length, 0, "Logics should be empty");
+
+        logics = _hookReceiver.getIncentivesClaimingLogics(ISilo(makeAddr("NonExistentSilo")));
+         assertEq(logics.length, 0, "Logics for non-existent silo should be empty");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_getNotificationReceivers_empty
+    function test_getNotificationReceivers_empty() public {
+        address[] memory receivers = _hookReceiver.getNotificationReceivers(_shareToken1);
+        assertEq(receivers.length, 0, "Receivers for shareToken1 should be empty");
+
+        IShareToken nonExistentShareToken = IShareToken(makeAddr("NonExistentShareToken"));
+        receivers = _hookReceiver.getNotificationReceivers(nonExistentShareToken);
+        assertEq(receivers.length, 0, "Receivers for non-existent shareToken should be empty");
     }
 
     function _testHookReceiverInitializationForSilo(address _silo) internal view {
