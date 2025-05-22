@@ -471,6 +471,31 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         IHookReceiver(address(_hookReceiver)).afterAction(address(silo1), Hook.DEPOSIT, bytes(""));
     }
 
+    function _mockGaugeAfterTransfer(
+        address _notificationReceiver,
+        address _sender,
+        address _recipient,
+        uint256 _amount,
+        uint256 _senderBalance,
+        uint256 _recipientBalance,
+        uint256 _totalSupply
+    ) internal {
+        bytes memory data = abi.encodeCall(
+            INotificationReceiver.afterTokenTransfer,
+            (
+                _sender,
+                _senderBalance,
+                _recipient,
+                _recipientBalance,
+                _totalSupply,
+                _amount
+            )
+        );
+
+        vm.mockCall(_notificationReceiver, data, abi.encode(true));
+        vm.expectCall(_notificationReceiver, data);
+    }
+
     function _testHookReceiverInitializationForSilo(address _silo) internal view {
         IHookReceiver hookReceiver = IHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
 

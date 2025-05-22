@@ -210,8 +210,6 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
 
         (protected, collateral, debt) = siloConfig.getShareTokens(silo1);
         isValid = _shareToken == collateral || _shareToken == protected || _shareToken == debt;
-
-        require(isValid, InvalidShareToken());
     }
 
     /// @notice Configure the hooks for the silo
@@ -228,6 +226,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
     /// - FLASH_LOAN
     function _configureHooksIfNotConfigured(address _silo) internal {
         uint256 hooksBefore = uint256(_getHooksBefore(_silo));
+
         uint256 allHooks = Hook.DEPOSIT |
             Hook.WITHDRAW |
             Hook.BORROW |
