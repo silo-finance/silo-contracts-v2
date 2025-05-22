@@ -108,6 +108,31 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(siloLeverage)), 0, "no token0");
         assertEq(token1.balanceOf(address(siloLeverage)), 0, "no token1");
         // TODO check debt approval to be 0
+
+        // CLOSING LEVERAGE
+
+        flashArgs = ISiloLeverage.FlashArgs({
+            amount: silo0.previewRedeem(silo0.balanceOf(user)),
+            token: silo1.asset(),
+            flashDebtLender: address(silo1)
+        });
+
+        ISiloLeverage.CloseLeverageArgs memory args = ISiloLeverage.CloseLeverageArgs({
+            borrower: user,
+            siloWithDebt: silo1,
+            borrowerDebtShares: IERC20(debtShareToken).balanceOf(user),
+            siloWithCollateral: silo0,
+            collateralType: ISilo.CollateralType.Collateral,
+            collateralShares: silo0.balanceOf(user)
+        });
+
+        // mock the swap
+        swap.setSwap(token0, flashArgs.amount, token1, flashArgs.amount);
+
+        siloLeverage.closeLeverage(flashArgs, swapArgs, args);
+
+        assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
+        assertEq(silo1.maxRepay(user), 0, "user has NO debt");
     }
 
     function _calculateDebtReceiveApproval(

@@ -26,7 +26,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
 
     // TODO transient
     address internal _lock;
-    address internal _action;
+    uint256 internal _action;
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -55,27 +55,31 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
     }
 
     function closeLeverage(
-        ISilo _silo,
+        FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
-        ISilo.CollateralType _collateralType,
-        IERC3156FlashLender _flashLoanLender
-    ) external view virtual returns (ISilo silo) {
+        CloseLeverageArgs calldata _closeLeverageArgs
+    ) external virtual {
         _lock = _flashArgs.flashDebtLender;
         _action = _ACTION_CLOSE_LEVERAGE;
 
-        // TODO
-        // take flashloan to repay all USD
+        bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
 
-        bytes memory data = abi.encode(_swapArgs, _depositArgs, _borrowSilo);
-
-        _borrowFlashloan(_flashArgs, data);
-
+        _repayFlashloan(_flashArgs, data);
 
         _lock = address(0);
         _action = 0;
     }
 
     function _borrowFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
+        require(IERC3156FlashLender(_flashArgs.flashDebtLender).flashLoan({
+            _receiver: this,
+            _token: _flashArgs.token,
+            _amount: _flashArgs.amount,
+            _data: _data
+        }), FlashloanFailed());
+    }
+
+    function _repayFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
         require(IERC3156FlashLender(_flashArgs.flashDebtLender).flashLoan({
             _receiver: this,
             _token: _flashArgs.token,
@@ -151,9 +155,9 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         (
             SwapArgs memory swapArgs,
             CloseLeverageArgs memory closeArgs
-        ) = abi.decode(_data, (SwapArgs, DepositArgs, ISilo));
+        ) = abi.decode(_data, (SwapArgs, CloseLeverageArgs));
 
-        closeArgs.siloWithDebt.repayshares(closeArgs.borrowerDebtShares);
+        closeArgs.siloWithDebt.repayShares(closeArgs.borrowerDebtShares, closeArgs.borrower);
 
         closeArgs.siloWithCollateral.redeem(closeArgs.collateralShares, address(this), closeArgs.borrower);
 
