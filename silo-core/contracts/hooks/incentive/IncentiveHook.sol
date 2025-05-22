@@ -19,12 +19,6 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
     using Hook for uint256;
     using Hook for bytes;
 
-    error InvalidSilo();
-    error ZeroAddress();
-    error InvalidShareToken();
-    error AllProgramsNotStopped();
-    error NoNotificationReceivers();
-
     mapping(ISilo silo => EnumerableSet.AddressSet claimingLogics) internal _claimingLogics;
     mapping(IShareToken shareToken => EnumerableSet.AddressSet notificationReceivers) internal _notificationReceivers;
 
@@ -74,7 +68,10 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
     {
         require(address(_notificationReceiver) != address(0), ZeroAddress());
         require(_validShareToken(address(_shareToken)), InvalidShareToken());
-        require(_notificationReceivers[_shareToken].add(address(_notificationReceiver)), NotificationReceiverAlreadyAdded());
+        require(
+            _notificationReceivers[_shareToken].add(address(_notificationReceiver)),
+            NotificationReceiverAlreadyAdded()
+        );
 
         address silo = address(_shareToken.silo());
 
@@ -98,8 +95,12 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
         INotificationReceiver _notificationReceiver,
         bool _allProgramsStopped
     ) external onlyOwner {
-        require(_allProgramsStopped, AllProgramsNotStopped()); // this is a sanity to remind that we need to stop all programs
-        require(_notificationReceivers[_shareToken].remove(address(_notificationReceiver)), NotificationReceiverNotAdded());
+        // this is a sanity to remind that we need to stop all programs
+        require(_allProgramsStopped, AllProgramsNotStopped());
+        require(
+            _notificationReceivers[_shareToken].remove(address(_notificationReceiver)),
+            NotificationReceiverNotAdded()
+        );
         emit NotificationReceiverRemoved(_shareToken, _notificationReceiver);
     }
 
