@@ -18,6 +18,11 @@ interface IIncentiveHook {
     error ClaimingLogicNotAdded();
     error NotificationReceiverAlreadyAdded();
     error NotificationReceiverNotAdded();
+    error InvalidSilo();
+    error ZeroAddress();
+    error InvalidShareToken();
+    error AllProgramsNotStopped();
+    error NoNotificationReceivers();
 
     /// @notice Add an incentives claiming logic for the silo.
     /// @param _silo The silo to add the logic for.

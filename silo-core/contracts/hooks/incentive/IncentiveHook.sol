@@ -122,9 +122,7 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
     {
         address[] memory receivers = _notificationReceivers[IShareToken(msg.sender)].values();
 
-        require(receivers.length != 0, NoNotificationReceivers());
-
-        if (!_getHooksAfter(_silo).matchAction(_action)) return;
+        if (receivers.length == 0 ||!_getHooksAfter(_silo).matchAction(_action)) return;
 
         if (beforeActionExecutedFor == Hook.NONE) { // This is a token transfer, and we need to claim the incentives.
             _claimIncentives(_silo);
@@ -212,6 +210,8 @@ abstract contract IncentiveHook is BaseHookReceiver, Ownable2Step, IIncentiveHoo
 
         (protected, collateral, debt) = siloConfig.getShareTokens(silo1);
         isValid = _shareToken == collateral || _shareToken == protected || _shareToken == debt;
+
+        require(isValid, InvalidShareToken());
     }
 
     /// @notice Configure the hooks for the silo

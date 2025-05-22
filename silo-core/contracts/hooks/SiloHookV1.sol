@@ -25,6 +25,7 @@ contract SiloHookV1 is IncentiveHook, PartialLiquidation {
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
+        onlySilo()
         override(IncentiveHook, IHookReceiver)
     {
         IncentiveHook.beforeAction(_silo, _action, _inputAndOutput);
@@ -34,6 +35,7 @@ contract SiloHookV1 is IncentiveHook, PartialLiquidation {
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
+        onlySilo()
         override(IncentiveHook, IHookReceiver)
     {
         IncentiveHook.afterAction(_silo, _action, _inputAndOutput);

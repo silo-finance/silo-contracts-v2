@@ -17,14 +17,17 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IIncentiveHook} from "silo-core/contracts/interfaces/IIncentiveHook.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
+import {MockClaimingLogic} from "silo-core/test/foundry/_mocks/MockClaimingLogic.sol";
+import {MockClaimingLogicReverts} from "silo-core/test/foundry/_mocks/MockClaimingLogicReverts.sol";
 
 import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
+
+// Custom error
+error OnlySilo();
 
 // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc IncentiveHookTest
 contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
@@ -39,12 +42,19 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
     IShareToken internal _shareToken1;
     IShareToken internal _shareToken2;
 
+    // Mocks for beforeAction tests
+    MockClaimingLogic internal mockLogic1;
+    MockClaimingLogic internal mockLogic2;
+
+    MockClaimingLogicReverts internal mockLogicReverts1;
+    MockClaimingLogicReverts internal mockLogicReverts2;
+
     event IncentivesClaimingLogicAdded(ISilo indexed silo, IIncentivesClaimingLogic indexed logic);
     event IncentivesClaimingLogicRemoved(ISilo indexed silo, IIncentivesClaimingLogic indexed logic);
     event NotificationReceiverAdded(IShareToken indexed shareToken, INotificationReceiver indexed receiver);
     event NotificationReceiverRemoved(IShareToken indexed shareToken, INotificationReceiver indexed receiver);
 
-    function setUp() public {
+    function setUp() public virtual {
         AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _dao);
 
         _siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_INCENTIVE_HOOK_RECEIVER);
@@ -56,6 +66,13 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         (address protectedShareToken,address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
         _shareToken1 = IShareToken(collateralShareToken);
         _shareToken2 = IShareToken(protectedShareToken);
+
+        // Deploy mocks for tests that need them
+        mockLogic1 = new MockClaimingLogic();
+        mockLogic2 = new MockClaimingLogic();
+
+        mockLogicReverts1 = new MockClaimingLogicReverts();
+        mockLogicReverts2 = new MockClaimingLogicReverts();
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt testReInitialization
@@ -307,6 +324,100 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         IShareToken nonExistentShareToken = IShareToken(makeAddr("NonExistentShareToken"));
         receivers = _hookReceiver.getNotificationReceivers(nonExistentShareToken);
         assertEq(receivers.length, 0, "Receivers for non-existent shareToken should be empty");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_onlySiloModifier
+    function test_beforeAction_onlySiloModifier() public {
+        vm.expectRevert(IHookReceiver.OnlySilo.selector);
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.DEPOSIT, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_noClaimingLogics
+    function test_beforeAction_noClaimingLogics() public {
+        // Call beforeAction
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.DEPOSIT, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_singleClaimingLogic_success
+    function test_beforeAction_singleClaimingLogic_success() public {
+        vm.prank(_dao);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogic1)));
+
+        // Expect event from mock logic via delegatecall from silo0
+        vm.expectEmit(true, true, true, true, address(silo0));
+        emit MockClaimingLogic.ClaimRewardsCalled(address(silo0), address(mockLogic1), address(_hookReceiver), 1);
+
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.DEPOSIT, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_multipleClaimingLogics_success
+    function test_beforeAction_multipleClaimingLogics_success() public {
+        vm.startPrank(_dao);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogic1)));
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogic2)));
+        vm.stopPrank();
+
+        // Expect events from both mock logics
+        vm.expectEmit(true, true, true, true, address(silo0));
+        emit MockClaimingLogic.ClaimRewardsCalled(address(silo0), address(mockLogic1), address(_hookReceiver), 1);
+        vm.expectEmit(true, true, true, true, address(silo0));
+        emit MockClaimingLogic.ClaimRewardsCalled(address(silo0), address(mockLogic2), address(_hookReceiver), 1);
+
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.WITHDRAW, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_singleClaimingLogic_reverts
+    function test_beforeAction_singleClaimingLogic_reverts() public {
+        vm.prank(_dao);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogicReverts1)));
+        
+        vm.expectRevert(abi.encodeWithSelector(
+            MockClaimingLogicReverts.ClaimRewardsReverts.selector, address(silo0), address(mockLogicReverts1), address(_hookReceiver))
+        );
+
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.BORROW, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_multipleClaimingLogics_firstReverts
+    function test_beforeAction_multipleClaimingLogics_firstReverts() public {
+        vm.startPrank(_dao);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogicReverts1)));
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogic2)));
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(
+            MockClaimingLogicReverts.ClaimRewardsReverts.selector, address(silo0), address(mockLogicReverts1), address(_hookReceiver))
+        );
+
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.REPAY, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_multipleClaimingLogics_secondReverts
+    function test_beforeAction_multipleClaimingLogics_secondReverts() public {
+        vm.startPrank(_dao);
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogic1)));
+        _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogicReverts2)));
+        vm.stopPrank();
+        
+        // Expect call to mockLogic1 to succeed
+        vm.expectEmit(true, true, true, true, address(silo0));
+        emit MockClaimingLogic.ClaimRewardsCalled(address(silo0), address(mockLogic1), address(_hookReceiver), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(
+            MockClaimingLogicReverts.ClaimRewardsReverts.selector, address(silo0), address(mockLogicReverts2), address(_hookReceiver))
+        );
+
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.LIQUIDATION, bytes(""));
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testOnlySiloModifier
+    function testOnlySiloModifier() public {
     }
 
     function _testHookReceiverInitializationForSilo(address _silo) internal view {

@@ -12,6 +12,12 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
 
     mapping(address silo => HookConfig) private _hookConfig;
 
+    modifier onlySilo() {
+        (address silo0, address silo1) = siloConfig.getSilos();
+        require(msg.sender == silo0 || msg.sender == silo1, OnlySilo());
+        _;
+    }
+
     constructor() {
         _disableInitializers();
     }
