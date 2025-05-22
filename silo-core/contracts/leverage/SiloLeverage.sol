@@ -15,6 +15,8 @@ import {RevenueModule} from "./modules/RevenueModule.sol";
 
 // TODO nonReentrant
 // TODO ensure it will that work for Pendle
+// TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
+// and swap module can be picked up by argument
 contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC3156FlashBorrower {
     using SafeERC20 for IERC20;
 
