@@ -10,29 +10,24 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
-import {ISilo, IERC3156FlashLender} from "../interfaces/ISilo.sol";
-import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
 import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
 
 import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
+import {FlashloanModule} from "./modules/FlashloanModule.sol";
 
 // TODO nonReentrant
+// TODO events on state changes
 // TODO ensure it will that work for Pendle
 // TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
 // and swap module can be picked up by argument
-contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC3156FlashBorrower {
+contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, FlashloanModule {
     using SafeERC20 for IERC20;
 
-    bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     uint256 internal constant _DECIMALS = 1e18;
 
-    uint256 internal constant _ACTION_OPEN_LEVERAGE = 1;
-    uint256 internal constant _ACTION_CLOSE_LEVERAGE = 2;
-
     // TODO transient
-    uint256 internal __action;
-    address internal __flashloanTarget;
     address internal __msgSender;
     uint256 internal __totalDeposit;
     uint256 internal __totalBorrow;
@@ -46,7 +41,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         SwapArgs calldata _swapArgs,
         DepositArgs calldata _depositArgs
     ) external virtual returns (uint256 totalDeposit, uint256 totalBorrow) {
-        _setTransient(_depositArgs.silo, _ACTION_OPEN_LEVERAGE, _flashArgs.flashloanTarget);
+        _setTransient(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget);
 
         bytes memory data = abi.encode(_swapArgs, _depositArgs);
 
@@ -65,45 +60,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         SwapArgs calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external virtual {
-        _setTransient(_closeLeverageArgs.siloWithCollateral, _ACTION_CLOSE_LEVERAGE, _flashArgs.flashloanTarget);
+        _setTransient(_closeLeverageArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget);
 
         bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
 
         _executeFlashloan(_flashArgs, data);
 
         _resetTransient();
-    }
-
-    function _executeFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
-        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
-            _receiver: this,
-            _token: _flashArgs.token,
-            _amount: _flashArgs.amount,
-            _data: _data
-        }), FlashloanFailed());
-    }
-
-    function onFlashLoan(
-        address _initiator,
-        address _borrowToken,
-        uint256 _flashloanAmount,
-        uint256 _flashloanFee,
-        bytes calldata _data
-    )
-        external
-        returns (bytes32)
-    {
-        // this check prevents call `onFlashLoan` directly
-        require(__flashloanTarget == msg.sender, InvalidFlashloanLender());
-
-        // TODO: _initiator check might be redundant, because of how `__flashloanTarget` works, but atm I see no harm to check it
-        require(_initiator == address(this), InvalidInitiator());
-
-        if (__action == _ACTION_OPEN_LEVERAGE) _openLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
-        else if (__action == _ACTION_CLOSE_LEVERAGE) _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
-        else revert UnknownAction();
-
-        return _FLASHLOAN_CALLBACK;
     }
 
     function _openLeverage(
@@ -113,6 +76,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         bytes calldata _data
     )
         internal
+        override
     {
         (
             SwapArgs memory swapArgs,
@@ -152,6 +116,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         bytes calldata _data
     )
         internal
+        override
     {
         (
             SwapArgs memory swapArgs,
@@ -226,7 +191,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
     }
 
-    function _setTransient(ISilo _silo, uint256 _action, address _flashloanTarget) internal {
+    function _setTransient(ISilo _silo, LeverageAction _action, address _flashloanTarget) internal {
         __flashloanTarget = _flashloanTarget;
         __action = _action;
         __msgSender = msg.sender;
@@ -237,7 +202,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
         __totalDeposit = 0;
         __totalBorrow = 0;
         __flashloanTarget = address(0);
-        __action = 0;
+        __action = LeverageAction.Undefined;
         __msgSender = address(0);
     }
 }
