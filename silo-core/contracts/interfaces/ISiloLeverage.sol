@@ -8,11 +8,11 @@ import {IZeroExSwapModule} from "./IZeroExSwapModule.sol";
 /// @notice Interface for a contract that enables leveraged deposits using flash loans and token swaps
 interface ISiloLeverage {
     /// @notice Parameters for a flash loan
-    /// @param flashDebtLender The address of the lender providing the flash loan
+    /// @param flashloanTarget The address of the contract providing the flash loan
     /// @param token The token to borrow
     /// @param amount The amount of tokens to borrow
     struct FlashArgs {
-        address flashDebtLender;
+        address flashloanTarget;
         address token;
         uint256 amount;
     }
