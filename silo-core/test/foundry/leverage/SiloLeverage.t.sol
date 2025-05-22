@@ -23,6 +23,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
 
     ISiloConfig cfg;
     SiloLeverage siloLeverage;
+    address collateralShareToken;
     address debtShareToken;
     SwapRouterMock swap;
 
@@ -32,6 +33,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         _deposit(1000e18, address(1));
         _depositForBorrow(2000e18, address(2));
 
+        (,collateralShareToken,) = cfg.getShareTokens(address(silo0));
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
 
         siloLeverage = new SiloLeverage(address(this));
@@ -99,8 +101,6 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
 
         uint256 finalMultiplier = siloLeverage.leverage(flashArgs, swapArgs, depositArgs, borrowSilo);
 
-        vm.stopPrank();
-
         assertEq(finalMultiplier, 10e18, "finalMultiplier 10x");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 1.4e18, "user got deposit x 10");
         assertEq(silo1.maxRepay(user), 1.0101e18, "user has debt equal to flashloan + fees");
@@ -126,13 +126,18 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
             collateralShares: silo0.balanceOf(user)
         });
 
-        // mock the swap
-        swap.setSwap(token0, flashArgs.amount, token1, flashArgs.amount);
+        // mock the swap + 20%
+        swap.setSwap(token0, flashArgs.amount, token1, flashArgs.amount * 1.2e18 / 1e18);
+
+        // APPROVALS
+        IERC20(collateralShareToken).forceApprove(address(siloLeverage), args.collateralShares);
 
         siloLeverage.closeLeverage(flashArgs, swapArgs, args);
 
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
+
+        vm.stopPrank();
     }
 
     function _calculateDebtReceiveApproval(

@@ -157,17 +157,21 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, IERC315
             CloseLeverageArgs memory closeArgs
         ) = abi.decode(_data, (SwapArgs, CloseLeverageArgs));
 
+        IERC20(_debtToken).forceApprove(address(closeArgs.siloWithDebt), _flashloanAmount);
         closeArgs.siloWithDebt.repayShares(closeArgs.borrowerDebtShares, closeArgs.borrower);
 
         closeArgs.siloWithCollateral.redeem(closeArgs.collateralShares, address(this), closeArgs.borrower);
 
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
-        uint256 change = amountOut - _flashloanAmount - _flashloanFee;
+        uint256 obligation = _flashloanAmount + _flashloanFee;
+        require(amountOut >= obligation, SwapDidNotCoverObligations());
+
+        uint256 change = amountOut - obligation;
 
         IERC20(_debtToken).safeTransfer(closeArgs.borrower, change);
 
-        IERC20(_debtToken).forceApprove(_lock, _flashloanAmount + _flashloanFee);
+        IERC20(_debtToken).forceApprove(_lock, obligation);
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
