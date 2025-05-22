@@ -90,6 +90,61 @@ contract DIAOracleTest is DIAConfigDefault {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_twoFeeds_noInvert
+    */
+    function test_DIAOracle_quote_twoFeeds_noInvert() public {
+        string memory firstFeed = "RDPX/USD";
+        string memory secondFeed = "ETH/USD";
+
+        (uint256 firstFeedValue,) = IDIAOracleV2(DIA_ORACLE_V2).getValue(firstFeed);
+        (uint256 secondFeedValue,) = IDIAOracleV2(DIA_ORACLE_V2).getValue(secondFeed);
+        uint256 divider = 10 ** (2 * 8); // removes decimals of both feeds
+
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfigTwoFeeds({
+            _firstFeed: firstFeed,
+            _secondFeed: secondFeed,
+            _divider: divider,
+            _multiplier: 0,
+            _invert: false
+        });
+
+        uint256 baseTokenDecimals = IERC20Metadata(cfg.baseToken).decimals();
+        assertEq(baseTokenDecimals, 18);
+
+        DIAOracleConfig oracleConfig = new DIAOracleConfig(cfg);
+        DIAOracle oracle = DIAOracle(Clones.clone(address(new DIAOracle())));
+        oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
+
+        uint256 price = oracle.quote(1e18, address(tokens["RDPX"]));
+        assertEq(firstFeedValue / 10 ** 8, 17, "RDPX ~17$");
+        assertEq(secondFeedValue / 10 ** 8, 1651, "ETH ~1651$");
+        assertEq(price, firstFeedValue * secondFeedValue * 10 ** baseTokenDecimals / divider);
+        assertTrue(price / 10 ** 18 > 2000, "price is not zero, test is not false positive");
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_twoFeeds_InvertIdenticalProducesOne
+    */
+    function test_DIAOracle_quote_twoFeeds_InvertIdenticalProducesOne() public {
+        string memory feed = "ETH/USD";
+        uint256 divider = 10**3;
+
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfigTwoFeeds({
+            _firstFeed: feed,
+            _secondFeed: feed,
+            _divider: divider,
+            _multiplier: 0,
+            _invert: true
+        });
+
+        DIAOracleConfig oracleConfig = new DIAOracleConfig(cfg);
+        DIAOracle oracle = DIAOracle(Clones.clone(address(new DIAOracle())));
+        oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
+
+        assertEq(oracle.quote(1e18, address(tokens["RDPX"])), 10 ** (IERC20Metadata(cfg.baseToken).decimals()) / divider);
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_ZeroPrice_oneFeed
     */
     function test_DIAOracle_quote_ZeroPrice_oneFeed() public {
