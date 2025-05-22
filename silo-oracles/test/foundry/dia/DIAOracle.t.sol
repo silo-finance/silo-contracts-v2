@@ -119,7 +119,7 @@ contract DIAOracleTest is DIAConfigDefault {
         assertEq(firstFeedValue / 10 ** 8, 17, "RDPX ~17$");
         assertEq(secondFeedValue / 10 ** 8, 1651, "ETH ~1651$");
         assertEq(price, firstFeedValue * secondFeedValue * 10 ** baseTokenDecimals / divider);
-        assertTrue(price / 10 ** 18 > 2000, "price is not zero, test is not false positive");
+        assertTrue(price / 10 ** 18 > 28000 ** price / 10 ** 18 < 30000, "price is expected (17*1651)");
     }
 
     /*
@@ -127,7 +127,7 @@ contract DIAOracleTest is DIAConfigDefault {
     */
     function test_DIAOracle_quote_twoFeeds_InvertIdenticalProducesOne() public {
         string memory feed = "ETH/USD";
-        uint256 divider = 10**3;
+        uint256 divider = 10 ** 3;
 
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfigTwoFeeds({
             _firstFeed: feed,
