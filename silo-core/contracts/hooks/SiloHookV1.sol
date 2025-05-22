@@ -8,8 +8,6 @@ import {IncentiveHook} from "silo-core/contracts/hooks/incentive/IncentiveHook.s
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 contract SiloHookV1 is IncentiveHook, PartialLiquidation {
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data)
@@ -40,7 +38,6 @@ contract SiloHookV1 is IncentiveHook, PartialLiquidation {
         onlySiloOrShareToken()
         override(IncentiveHook, IHookReceiver)
     {
-        console2.log("[afterAction] SiloHookV1");
         IncentiveHook.afterAction(_silo, _action, _inputAndOutput);
     }
 }

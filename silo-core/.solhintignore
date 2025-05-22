@@ -1,3 +1,4 @@
 contracts/utils/CrossReentrancyGuard.sol
 contracts/utils/liquidationHelper/LiquidationHelper.sol
 contracts/hooks/_common/TransientReentrancy.sol
+contracts/hooks/incentive/IncentiveHook.sol
