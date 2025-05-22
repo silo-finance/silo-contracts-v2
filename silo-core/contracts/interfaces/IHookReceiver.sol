@@ -17,6 +17,8 @@ interface IHookReceiver {
     error AlreadyConfigured();
     /// @dev Revert if the hook receiver is called by an address other than the silo
     error OnlySilo();
+    /// @dev Revert if the hook receiver is called by an address other than the silo or a share token
+    error OnlySiloOrShareToken();
 
     /// @notice Initialize a hook receiver
     /// @param _siloConfig Silo configuration with all the details about the silo

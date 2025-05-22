@@ -375,8 +375,11 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.addIncentivesClaimingLogic(silo0, IIncentivesClaimingLogic(address(mockLogicReverts1)));
         
         vm.expectRevert(abi.encodeWithSelector(
-            MockClaimingLogicReverts.ClaimRewardsReverts.selector, address(silo0), address(mockLogicReverts1), address(_hookReceiver))
-        );
+            MockClaimingLogicReverts.ClaimRewardsReverts.selector,
+            address(silo0),
+            address(mockLogicReverts1),
+            address(_hookReceiver)
+        ));
 
         vm.prank(address(silo0));
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.BORROW, bytes(""));
@@ -390,8 +393,11 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         vm.stopPrank();
 
         vm.expectRevert(abi.encodeWithSelector(
-            MockClaimingLogicReverts.ClaimRewardsReverts.selector, address(silo0), address(mockLogicReverts1), address(_hookReceiver))
-        );
+            MockClaimingLogicReverts.ClaimRewardsReverts.selector,
+            address(silo0),
+            address(mockLogicReverts1),
+            address(_hookReceiver)
+        ));
 
         vm.prank(address(silo0));
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.REPAY, bytes(""));
@@ -409,15 +415,60 @@ contract IncentiveHookTest is SiloLittleHelper, Test, TransferOwnership {
         emit MockClaimingLogic.ClaimRewardsCalled(address(silo0), address(mockLogic1), address(_hookReceiver), 1);
 
         vm.expectRevert(abi.encodeWithSelector(
-            MockClaimingLogicReverts.ClaimRewardsReverts.selector, address(silo0), address(mockLogicReverts2), address(_hookReceiver))
-        );
+            MockClaimingLogicReverts.ClaimRewardsReverts.selector,
+            address(silo0),
+            address(mockLogicReverts2),
+            address(_hookReceiver)
+        ));
 
         vm.prank(address(silo0));
         IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.LIQUIDATION, bytes(""));
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testOnlySiloModifier
-    function testOnlySiloModifier() public {
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_beforeAction_onlySiloOrShareTokenModifier
+    function test_beforeAction_onlySiloOrShareTokenModifier() public {
+        vm.expectRevert(IHookReceiver.OnlySiloOrShareToken.selector);
+        IHookReceiver(address(_hookReceiver)).beforeAction(address(silo0), Hook.DEPOSIT, bytes(""));
+    }
+
+    /*
+     FOUNDRY_PROFILE=core_test forge test -vvv --ffi \
+        --mt test_afterAction_onlySiloOrShareTokenModifier_success_without_config
+    */
+    function test_afterAction_onlySiloOrShareTokenModifier_success_without_config() public {
+        vm.prank(address(silo0));
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo0), Hook.DEPOSIT, bytes(""));
+
+        vm.prank(address(silo1));
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo1), Hook.DEPOSIT, bytes(""));
+
+        address protectedCollateralShareToken;
+        address collateralShareToken;
+        address debtShareToken;
+
+        (protectedCollateralShareToken, collateralShareToken, debtShareToken) =
+            _siloConfig.getShareTokens(address(silo0));
+
+        vm.prank(protectedCollateralShareToken);
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo0), Hook.DEPOSIT, bytes(""));
+
+        vm.prank(collateralShareToken);
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo0), Hook.DEPOSIT, bytes(""));
+
+        vm.prank(debtShareToken);
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo0), Hook.DEPOSIT, bytes(""));
+
+        (protectedCollateralShareToken, collateralShareToken, debtShareToken) =
+            _siloConfig.getShareTokens(address(silo1));
+
+        vm.prank(protectedCollateralShareToken);
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo1), Hook.DEPOSIT, bytes(""));
+
+        vm.prank(collateralShareToken);
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo1), Hook.DEPOSIT, bytes(""));
+
+        vm.prank(debtShareToken);
+        IHookReceiver(address(_hookReceiver)).afterAction(address(silo1), Hook.DEPOSIT, bytes(""));
     }
 
     function _testHookReceiverInitializationForSilo(address _silo) internal view {

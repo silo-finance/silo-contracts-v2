@@ -35,7 +35,7 @@ contract SiloHookV1 is IncentiveHook, PartialLiquidation {
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
-        onlySilo()
+        onlySiloOrShareToken()
         override(IncentiveHook, IHookReceiver)
     {
         IncentiveHook.afterAction(_silo, _action, _inputAndOutput);

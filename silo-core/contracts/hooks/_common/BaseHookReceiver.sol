@@ -18,6 +18,33 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
         _;
     }
 
+    modifier onlySiloOrShareToken() {
+        (address silo0, address silo1) = siloConfig.getSilos();
+
+        if (msg.sender == silo0 || msg.sender == silo1) return;
+
+        address protectedCollateralShareToken;
+        address collateralShareToken;
+        address debtShareToken;
+
+        (protectedCollateralShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(silo0);
+
+        if (msg.sender == protectedCollateralShareToken ||
+            msg.sender == collateralShareToken ||
+            msg.sender == debtShareToken
+        ) return;
+
+        (protectedCollateralShareToken, collateralShareToken, debtShareToken) = siloConfig.getShareTokens(silo1);
+
+        require(msg.sender == protectedCollateralShareToken ||
+            msg.sender == collateralShareToken ||
+            msg.sender == debtShareToken,
+            OnlySiloOrShareToken()
+        );
+
+        _;
+    }
+
     constructor() {
         _disableInitializers();
     }
