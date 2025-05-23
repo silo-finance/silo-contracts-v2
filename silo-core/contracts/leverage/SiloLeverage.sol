@@ -101,9 +101,6 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         emit OpenLeverage(__msgSender, depositArgs.amount, amountOut, _flashloanAmount, __totalBorrow);
 
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
-
-        // approval for repay flashloan
-        _giveMaxAllowance(IERC20(_borrowToken), __flashloanTarget, _flashloanAmount + _flashloanFee);
     }
 
     function _closeLeverage(
@@ -142,14 +139,6 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         emit CloseLeverage(__msgSender, _flashloanAmount, amountOut, depositWithdrawn);
 
         IERC20(_debtToken).safeTransfer(__msgSender, change);
-
-        // approval for repay flashloan
-        _giveMaxAllowance(IERC20(_debtToken), __flashloanTarget, obligation);
-    }
-
-    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal {
-        uint256 allowance = _asset.allowance(address(this), _spender);
-        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
@@ -199,6 +188,11 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
 
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
+    }
+
+    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal {
+        uint256 allowance = _asset.allowance(address(this), _spender);
+        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
     }
 
     function _setTransient(ISilo _silo, LeverageAction _action, address _flashloanTarget) internal {
