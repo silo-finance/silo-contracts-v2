@@ -137,28 +137,64 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
             CloseLeverageArgs memory closeArgs
         ) = abi.decode(_data, (SwapArgs, CloseLeverageArgs));
 
-        ISilo siloWithDebt = _otherSilo(closeArgs.siloWithCollateral);
-
-        _giveMaxAllowance(IERC20(_debtToken), address(siloWithDebt), _flashloanAmount);
-        siloWithDebt.repayShares(_resolveRepayShareBalanceOfMsgSender(siloWithDebt), __msgSender);
-
-        uint256 redeemShares = _resolveRedeemBalanceOfBorrower(closeArgs);
-
-        uint256 depositWithdrawn = closeArgs.siloWithCollateral.redeem(
-            redeemShares, address(this), __msgSender, closeArgs.collateralType
-        );
+        uint256 depositWithdrawn = _closeLeverageFlowBeforeSwap({
+            _closeArgs: closeArgs,
+            _debtToken: IERC20(_debtToken),
+            _flashloanAmount: _flashloanAmount,
+            _flashloanFee: _flashloanFee
+        });
 
         // swap debt to collateral
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
+        _closeLeverageFlowAfterSwap({
+            _availableDebtBalance: amountOut,
+            _debtToken: IERC20(_debtToken),
+            _flashloanAmount: _flashloanAmount,
+            _flashloanFee: _flashloanFee,
+            _depositWithdrawn: depositWithdrawn
+        });
+
+    }
+
+    function _closeLeverageFlowBeforeSwap(
+        CloseLeverageArgs memory _closeArgs,
+        IERC20 _debtToken,
+        uint256 _flashloanAmount,
+        uint256 _flashloanFee
+    )
+        internal
+        returns (uint256 depositWithdrawn)
+    {
+        ISilo siloWithDebt = _otherSilo(_closeArgs.siloWithCollateral);
+
+        _giveMaxAllowance(_debtToken, address(siloWithDebt), _flashloanAmount);
+        siloWithDebt.repayShares(_resolveRepayShareBalanceOfMsgSender(siloWithDebt), __msgSender);
+
+        uint256 redeemShares = _resolveRedeemBalanceOfBorrower(_closeArgs);
+
+        depositWithdrawn = _closeArgs.siloWithCollateral.redeem(
+            redeemShares, address(this), __msgSender, _closeArgs.collateralType
+        );
+    }
+
+    function _closeLeverageFlowAfterSwap(
+        uint256 _availableDebtBalance,
+        IERC20 _debtToken,
+        uint256 _flashloanAmount,
+        uint256 _flashloanFee,
+        uint256 _depositWithdrawn
+    )
+        internal
+    {
         uint256 obligation = _flashloanAmount + _flashloanFee;
-        require(amountOut >= obligation, SwapDidNotCoverObligations());
+        require(_availableDebtBalance >= obligation, SwapDidNotCoverObligations());
 
-        uint256 change = amountOut - obligation;
+        uint256 borrowerDebtChange = _availableDebtBalance - obligation;
 
-        emit CloseLeverage(__msgSender, _flashloanAmount, amountOut, depositWithdrawn);
+        emit CloseLeverage(__msgSender, _flashloanAmount, _availableDebtBalance, _depositWithdrawn);
 
-        IERC20(_debtToken).safeTransfer(__msgSender, change);
+        IERC20(_debtToken).safeTransfer(__msgSender, borrowerDebtChange);
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
