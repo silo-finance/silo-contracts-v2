@@ -103,4 +103,8 @@ abstract contract RevenueModule is Ownable2Step {
         leverageFeeAmount = Math.mulDiv(_amount, fee, FEE_DECIMALS, Math.Rounding.Ceil);
         if (leverageFeeAmount == 0) leverageFeeAmount = 1;
     }
+
+    function transferFee(address _borrowToken, uint256 _leverageFee) public virtual {
+        if (_leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, _leverageFee);
+    }
 }
