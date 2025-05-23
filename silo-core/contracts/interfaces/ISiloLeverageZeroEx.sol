@@ -79,7 +79,8 @@ interface ISiloLeverageZeroEx is IZeroExSwapModule {
         DepositArgs calldata _depositArgs
     ) external returns (uint256 totalDeposit, uint256 totalBorrow);
 
-    /// @param _swapArgs Swap call data and settings, that should swap enough collateral to repay flashloan in debt token
+    /// @param _swapArgs Swap call data and settings,
+    /// that should swap enough collateral to repay flashloan in debt token
     function closeLeveragePosition(
         FlashArgs calldata _flashArgs,
         IZeroExSwapModule.SwapArgs calldata _swapArgs,
