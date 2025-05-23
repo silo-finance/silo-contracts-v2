@@ -16,20 +16,20 @@ import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
 import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
 import {FlashloanModule} from "./modules/FlashloanModule.sol";
+import {LeverageModule} from "./modules/LeverageModule.sol";
 
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
 // TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
 // and swap module can be picked up by argument
-contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, FlashloanModule {
+contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, FlashloanModule, LeverageModule {
     using SafeERC20 for IERC20;
 
     uint256 internal constant _DECIMALS = 1e18;
 
-    address transient __msgSender;
-    uint256 transient __totalDeposit;
-    uint256 transient __totalBorrow;
-    ISiloConfig transient __siloConfig;
+    address internal __msgSender;
+    uint256 internal __totalDeposit;
+    uint256 internal __totalBorrow;
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -81,26 +81,20 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         ) = abi.decode(_data, (SwapArgs, DepositArgs));
 
         // swap all flashloan amount into collateral token
-        uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
-
-        // deposit with leverage: swapped collateral + user collateral
-        _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
-
-        ISilo borrowSilo = _otherSilo(depositArgs.silo);
+        uint256 swapAmountOut = _fillQuote(swapArgs, _flashloanAmount);
 
         // fee is based on flashloan amount, we do not cound user own amount
         uint256 leverageFee = calculateLeverageFee(_flashloanAmount);
 
-        __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
-
-        // borrow asset wil be used to pay fees
-        borrowSilo.borrow({
-            _assets: __totalBorrow,
-            _receiver: address(this),
-            _borrower: __msgSender
+        __totalBorrow = _executeLeverageFlow({
+            borrower: __msgSender,
+            _borrowToken: _borrowToken,
+            _flashloanAmount: _flashloanAmount,
+            _flashloanFee: _flashloanFee,
+            _leverageFee: leverageFee,
+            _swapAmountOut: swapAmountOut,
+            _depositArgs: depositArgs
         });
-
-        emit OpenLeverage(__msgSender, depositArgs.amount, amountOut, _flashloanAmount, __totalBorrow);
 
         transferFee(_borrowToken, leverageFee);
     }
@@ -141,60 +135,6 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         emit CloseLeverage(__msgSender, _flashloanAmount, amountOut, depositWithdrawn);
 
         IERC20(_debtToken).safeTransfer(__msgSender, change);
-    }
-
-    function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
-        internal
-        virtual
-    {
-        // transfer collateral tokens from borrower
-        _asset.safeTransferFrom(__msgSender, address(this), _depositArgs.amount);
-
-        __totalDeposit = _depositArgs.amount + _swapAmountOut;
-
-        _giveMaxAllowance(_asset, address(_depositArgs.silo), __totalDeposit);
-
-        _depositArgs.silo.deposit(__totalDeposit, __msgSender, _depositArgs.collateralType);
-    }
-    
-    function _resolveRepayShareBalanceOfMsgSender(ISilo _siloWithDebt)
-        internal
-        view
-        virtual
-        returns (uint256 repayShareBalance)
-    {
-        (,, address shareDebtToken) = __siloConfig.getShareTokens(address(_siloWithDebt));
-        repayShareBalance = IERC20(shareDebtToken).balanceOf(__msgSender);
-    }
-
-    function _resolveRedeemBalanceOfMsgSender(CloseLeverageArgs memory _closeArgs)
-        internal
-        view
-        virtual
-        returns (uint256 balanceOf)
-    {
-        console2.log("__msgSender", __msgSender);
-        console2.log("_closeArgs.siloWithCollateral.balanceOf(__msgSender)", _closeArgs.siloWithCollateral.balanceOf(__msgSender));
-
-        if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
-            return _closeArgs.siloWithCollateral.balanceOf(__msgSender);
-        }
-
-        (address protectedShareToken,,) = __siloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
-
-        balanceOf = ISilo(protectedShareToken).balanceOf(__msgSender);
-    }
-
-    function _otherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
-        (address silo0, address silo1) = __siloConfig.getSilos();
-        require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
-
-        otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
-    }
-
-    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual override {
-        uint256 allowance = _asset.allowance(address(this), _spender);
-        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
     }
 
     function _setTransient(ISilo _silo, LeverageAction _action, address _flashloanTarget) internal {
