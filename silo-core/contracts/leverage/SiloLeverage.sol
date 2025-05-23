@@ -104,7 +104,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
 
         // approval for repay flashloan
-        IERC20(_borrowToken).forceApprove(__flashloanTarget, _flashloanAmount + _flashloanFee);
+        _giveMaxAllowance(IERC20(_borrowToken), __flashloanTarget, _flashloanAmount + _flashloanFee);
     }
 
     function _closeLeverage(
@@ -123,12 +123,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
         ISilo siloWithDebt = _otherSilo(closeArgs.siloWithCollateral);
 
-        IERC20(_debtToken).forceApprove(address(siloWithDebt), _flashloanAmount);
+        _giveMaxAllowance(IERC20(_debtToken), address(siloWithDebt), _flashloanAmount);
         siloWithDebt.repayShares(_resolveRepayShareBalanceOfMsgSender(siloWithDebt), __msgSender);
 
         uint256 redeemShares = _resolveRedeemBalanceOfMsgSender(closeArgs);
         closeArgs.siloWithCollateral.redeem(redeemShares, address(this), __msgSender, closeArgs.collateralType);
 
+        // swap debt to collateral
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
         uint256 obligation = _flashloanAmount + _flashloanFee;
@@ -139,7 +140,12 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         IERC20(_debtToken).safeTransfer(__msgSender, change);
 
         // approval for repay flashloan
-        IERC20(_debtToken).forceApprove(__flashloanTarget, obligation);
+        _giveMaxAllowance(IERC20(_debtToken), __flashloanTarget, obligation);
+    }
+
+    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal {
+        uint256 allowance = _asset.allowance(address(this), _spender);
+        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
@@ -151,8 +157,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
         __totalDeposit = _depositArgs.amount + _swapAmountOut;
 
-        uint256 allowance = _asset.allowance(address(this), address(_depositArgs.silo));
-        if (allowance < __totalDeposit) _asset.forceApprove(address(_depositArgs.silo), type(uint256).max);
+        _giveMaxAllowance(_asset, address(_depositArgs.silo), __totalDeposit);
 
         _depositArgs.silo.deposit(__totalDeposit, __msgSender, _depositArgs.collateralType);
     }
