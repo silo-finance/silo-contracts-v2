@@ -29,7 +29,7 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
     uint256 internal  __totalDeposit;
     uint256 internal  __totalBorrow;
     ISiloConfig  __siloConfig;
-    ISiloLeverage.LeverageAction  __action;
+    LeverageAction  __action;
     address  __flashloanTarget;
 
     modifier nonReentrant() { // TODO params?
@@ -53,16 +53,16 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
         returns (bytes32)
     {
         // this check prevents call `onFlashLoan` directly
-        require(__flashloanTarget == msg.sender, ISiloLeverage.InvalidFlashloanLender());
+        require(__flashloanTarget == msg.sender, InvalidFlashloanLender());
 
         // TODO: _initiator check might be redundant, because of how `__flashloanTarget` works, but atm I see no harm to check it
-        require(_initiator == address(this), ISiloLeverage.InvalidInitiator());
+        require(_initiator == address(this), InvalidInitiator());
 
-        if (__action == ISiloLeverage.LeverageAction.Open) {
+        if (__action == LeverageAction.Open) {
             _openLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
-        } else if (__action == ISiloLeverage.LeverageAction.Close) {
+        } else if (__action == LeverageAction.Close) {
             _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
-        } else revert ISiloLeverage.UnknownAction();
+        } else revert UnknownAction();
 
         // approval for repay flashloan
         _setMaxAllowance(IERC20(_borrowToken), __flashloanTarget, _flashloanAmount + _flashloanFee);
@@ -98,13 +98,13 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
         _executeFlashloan(_flashArgs, data);
     }
 
-    function _executeFlashloan(ISiloLeverage.FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
+    function _executeFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: _flashArgs.token,
             _amount: _flashArgs.amount,
             _data: _data
-        }), ISiloLeverage.FlashloanFailed());
+        }), FlashloanFailed());
     }
 
     function _openLeverage(
@@ -136,12 +136,12 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
         // borrow asset wil be used to pay fees
         borrowSilo.borrow({_assets: __totalBorrow, _receiver: address(this), _borrower: __msgSender});
 
-        emit ISiloLeverage.OpenLeverage(__msgSender, depositArgs.amount, collateralAmountAfterSwap, _flashloanAmount, __totalBorrow);
+        emit OpenLeverage(__msgSender, depositArgs.amount, collateralAmountAfterSwap, _flashloanAmount, __totalBorrow);
 
         _payLeverageFee(_borrowToken, feeForLeverage);
     }
 
-    function _deposit(ISiloLeverage.DepositArgs memory depositArgs, uint256 collateralAmountAfterSwap, address _asset)
+    function _deposit(DepositArgs memory depositArgs, uint256 collateralAmountAfterSwap, address _asset)
         internal
         virtual
         returns (uint256 totalDeposit)
@@ -180,17 +180,22 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
             redeemShares, address(this), __msgSender, closeArgs.collateralType
         );
 
-        // swap debt to collateral
-        uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
+        // swap collateral to debt to repay flashloan
+        // TODO change this to balanceOf, that way we dont care about donation and not rely on swap module
+        uint256 availableDebtAssets = _fillQuote(swapArgs, withdrawnDeposit);
 
         uint256 obligation = _flashloanAmount + _flashloanFee;
-        require(amountOut >= obligation, ISiloLeverage.SwapDidNotCoverObligations());
+        require(availableDebtAssets >= obligation, SwapDidNotCoverObligations());
 
-        uint256 borrowerDebtChange = amountOut - obligation;
+        uint256 borrowerDebtChange = availableDebtAssets - obligation;
 
-        emit ISiloLeverage.CloseLeverage(__msgSender, _flashloanAmount, amountOut, withdrawnDeposit);
+        emit CloseLeverage(__msgSender, _flashloanAmount, availableDebtAssets, withdrawnDeposit);
 
-        IERC20(_debtToken).safeTransfer(__msgSender, borrowerDebtChange);
+        if (borrowerDebtChange != 0) IERC20(_debtToken).safeTransfer(__msgSender, borrowerDebtChange);
+
+        IERC20 collateralAsset = IERC20(closeArgs.siloWithCollateral.asset());
+        uint256 collateralToTransfer = collateralAsset.balanceOf(address(this));
+        if (collateralToTransfer != 0) collateralAsset.safeTransfer(__msgSender, collateralToTransfer);
     }
     
     function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
@@ -203,7 +208,7 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
         repayShareBalance = IERC20(shareDebtToken).balanceOf(__msgSender);
     }
 
-    function _getBorrowerTotalShareCollateralBalance(ISiloLeverage.CloseLeverageArgs memory closeArgs)
+    function _getBorrowerTotalShareCollateralBalance(CloseLeverageArgs memory closeArgs)
         internal
         view
         virtual
@@ -220,7 +225,7 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
 
     function _resolveOtherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
         (address silo0, address silo1) = __siloConfig.getSilos();
-        require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, ISiloLeverage.InvalidSilo());
+        require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
 
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
     }
