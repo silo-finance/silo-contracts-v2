@@ -138,6 +138,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
         IERC20(_debtToken).safeTransfer(__msgSender, change);
 
+        // approval for repay flashloan
         IERC20(_debtToken).forceApprove(__flashloanTarget, obligation);
     }
 
@@ -152,7 +153,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
         uint256 allowance = _asset.allowance(address(this), address(_depositArgs.silo));
         if (allowance < __totalDeposit) _asset.forceApprove(address(_depositArgs.silo), type(uint256).max);
-    
+
         _depositArgs.silo.deposit(__totalDeposit, __msgSender, _depositArgs.collateralType);
     }
     
