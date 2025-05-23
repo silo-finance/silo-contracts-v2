@@ -91,24 +91,22 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
             CloseLeverageArgs memory closeArgs
         ) = abi.decode(_data, (SwapArgs, CloseLeverageArgs));
 
-        uint256 depositWithdrawn = _closeLeverageFlowBeforeSwap({
+        uint256 depositWithdrawn = _repayDebtAndRedeemCollateral({
             _closeArgs: closeArgs,
             _debtToken: IERC20(_debtToken),
-            _flashloanAmount: _flashloanAmount,
-            _flashloanFee: _flashloanFee
+            _flashloanAmount: _flashloanAmount
         });
 
         // swap debt to collateral
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
-        _closeLeverageFlowAfterSwap({
+        _sendProfitInDebtTokenToBorrower({
             _availableDebtBalance: amountOut,
             _debtToken: IERC20(_debtToken),
             _flashloanAmount: _flashloanAmount,
             _flashloanFee: _flashloanFee,
             _depositWithdrawn: depositWithdrawn
         });
-
     }
 
     function _setTransient(ISilo _silo, LeverageAction _action, address _flashloanTarget) internal {
@@ -128,20 +126,20 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         leverageFeeAmount = RevenueModule._calculateLeverageFee(_amount);
     }
 
-    function _transferFee(address _borrowToken, uint256 _leverageFee)
+    function _payLeverageFee(address _borrowToken, uint256 _leverageFee)
         internal
         virtual
         override(LeverageModule, RevenueModule)
     {
-        RevenueModule._transferFee(_borrowToken, _leverageFee);
+        RevenueModule._payLeverageFee(_borrowToken, _leverageFee);
     }
 
-    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount)
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount)
         internal
         virtual
         override(FlashloanModule, LeverageModule)
     {
-        LeverageModule._giveMaxAllowance(_asset, _spender, _requiredAmount);
+        LeverageModule._setMaxAllowance(_asset, _spender, _requiredAmount);
     }
 
 }
