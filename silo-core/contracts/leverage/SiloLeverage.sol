@@ -26,10 +26,10 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
     uint256 internal constant _DECIMALS = 1e18;
 
-    address transient __msgSender;
-    uint256 transient __totalDeposit;
-    uint256 transient __totalBorrow;
-    ISiloConfig transient __siloConfig;
+    address internal __msgSender;
+    uint256 internal __totalDeposit;
+    uint256 internal __totalBorrow;
+    ISiloConfig internal __siloConfig;
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -84,25 +84,21 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
         // deposit with leverage: swapped collateral + user collateral
-        _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
+        __totalDeposit = _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
 
         ISilo borrowSilo = _otherSilo(depositArgs.silo);
 
         // fee is based on flashloan amount, we do not cound user own amount
-        uint256 leverageFee = calculateLeverageFee(_flashloanAmount);
+        uint256 feeForLeverage = calculateLeverageFee(_flashloanAmount);
 
-        __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
+        __totalBorrow = _flashloanAmount + _flashloanFee + feeForLeverage;
 
         // borrow asset wil be used to pay fees
-        borrowSilo.borrow({
-            _assets: __totalBorrow,
-            _receiver: address(this),
-            _borrower: __msgSender
-        });
+        borrowSilo.borrow({_assets: __totalBorrow, _receiver: address(this), _borrower: __msgSender});
 
         emit OpenLeverage(__msgSender, depositArgs.amount, amountOut, _flashloanAmount, __totalBorrow);
 
-        transferFee(_borrowToken, leverageFee);
+        transferFee(_borrowToken, feeForLeverage);
     }
 
     function _closeLeverage(
@@ -146,15 +142,16 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
     function _deposit(DepositArgs memory _depositArgs, uint256 _swapAmountOut, IERC20 _asset)
         internal
         virtual
+        returns (uint256 totalDeposit)
     {
         // transfer collateral tokens from borrower
         _asset.safeTransferFrom(__msgSender, address(this), _depositArgs.amount);
 
-        __totalDeposit = _depositArgs.amount + _swapAmountOut;
+        totalDeposit = _depositArgs.amount + _swapAmountOut;
 
-        _giveMaxAllowance(_asset, address(_depositArgs.silo), __totalDeposit);
+        _giveMaxAllowance(_asset, address(_depositArgs.silo), totalDeposit);
 
-        _depositArgs.silo.deposit(__totalDeposit, __msgSender, _depositArgs.collateralType);
+        _depositArgs.silo.deposit(totalDeposit, __msgSender, _depositArgs.collateralType);
     }
     
     function _resolveRepayShareBalanceOfMsgSender(ISilo _siloWithDebt)
@@ -173,9 +170,6 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         virtual
         returns (uint256 balanceOf)
     {
-        console2.log("__msgSender", __msgSender);
-        console2.log("_closeArgs.siloWithCollateral.balanceOf(__msgSender)", _closeArgs.siloWithCollateral.balanceOf(__msgSender));
-
         if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
             return _closeArgs.siloWithCollateral.balanceOf(__msgSender);
         }
@@ -186,6 +180,8 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
     }
 
     function _otherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
+        require(__siloConfig != address(0), SiloConfigNotSet());
+
         (address silo0, address silo1) = __siloConfig.getSilos();
         require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
 
