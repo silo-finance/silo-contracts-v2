@@ -108,7 +108,7 @@ abstract contract RevenueModule is Ownable2Step {
         if (leverageFeeAmount == 0) leverageFeeAmount = 1;
     }
 
-    function _transferFee(address _borrowToken, uint256 _leverageFee) internal virtual {
+    function _payLeverageFee(address _borrowToken, uint256 _leverageFee) internal virtual {
         if (_leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, _leverageFee);
     }
 }

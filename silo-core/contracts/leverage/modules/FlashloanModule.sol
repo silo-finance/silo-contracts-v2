@@ -46,12 +46,12 @@ abstract contract FlashloanModule is IERC3156FlashBorrower {
         } else revert ISiloLeverage.UnknownAction();
 
         // approval for repay flashloan
-        _giveMaxAllowance(IERC20(_borrowToken), __flashloanTarget, _flashloanAmount + _flashloanFee);
+        _setMaxAllowance(IERC20(_borrowToken), __flashloanTarget, _flashloanAmount + _flashloanFee);
 
         return _FLASHLOAN_CALLBACK;
     }
 
-    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual;
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual;
 
     function _openLeverage(
         address _borrowToken,

@@ -37,7 +37,7 @@ abstract contract LeverageModule {
         // deposit with leverage: swapped collateral + user collateral
         totalDeposit = _deposit(_depositArgs, _swapAmountOut, _depositAsset);
 
-        ISilo borrowSilo = _otherSilo(_depositArgs.silo);
+        ISilo borrowSilo = _resolveOtherSilo(_depositArgs.silo);
 
         // fee is based on flashloan amount, we do not cound user own amount
         uint256 feeForLeverage = _calculateLeverageFee(_flashloanAmount);
@@ -49,10 +49,10 @@ abstract contract LeverageModule {
 
         emit ISiloLeverage.OpenLeverage(__msgSender, _depositArgs.amount, _swapAmountOut, _flashloanAmount, totalBorrow);
 
-        _transferFee(_borrowToken, feeForLeverage);
+        _payLeverageFee(_borrowToken, feeForLeverage);
     }
 
-    function _closeLeverageFlowBeforeSwap(
+    function _repayDebtAndRedeemCollateral(
         ISiloLeverage.CloseLeverageArgs memory _closeArgs,
         IERC20 _debtToken,
         uint256 _flashloanAmount
@@ -60,19 +60,19 @@ abstract contract LeverageModule {
         internal
         returns (uint256 depositWithdrawn)
     {
-        ISilo siloWithDebt = _otherSilo(_closeArgs.siloWithCollateral);
+        ISilo siloWithDebt = _resolveOtherSilo(_closeArgs.siloWithCollateral);
 
-        _giveMaxAllowance(_debtToken, address(siloWithDebt), _flashloanAmount);
-        siloWithDebt.repayShares(_resolveRepayShareBalanceOfMsgSender(siloWithDebt), __msgSender);
+        _setMaxAllowance(_debtToken, address(siloWithDebt), _flashloanAmount);
+        siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), __msgSender);
 
-        uint256 redeemShares = _resolveRedeemBalanceOfBorrower(_closeArgs);
+        uint256 redeemShares = _getBorrowerTotalShareCollateralBalance(_closeArgs);
 
         depositWithdrawn = _closeArgs.siloWithCollateral.redeem(
             redeemShares, address(this), __msgSender, _closeArgs.collateralType
         );
     }
 
-    function _closeLeverageFlowAfterSwap(
+    function _sendProfitInDebtTokenToBorrower(
         uint256 _availableDebtBalance,
         IERC20 _debtToken,
         uint256 _flashloanAmount,
@@ -101,12 +101,12 @@ abstract contract LeverageModule {
 
         totalDeposit = _depositArgs.amount + _swapAmountOut;
 
-        _giveMaxAllowance(_asset, address(_depositArgs.silo), totalDeposit);
+        _setMaxAllowance(_asset, address(_depositArgs.silo), totalDeposit);
 
         _depositArgs.silo.deposit(totalDeposit, __msgSender, _depositArgs.collateralType);
     }
     
-    function _resolveRepayShareBalanceOfMsgSender(ISilo _siloWithDebt)
+    function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
         internal
         view
         virtual
@@ -116,7 +116,7 @@ abstract contract LeverageModule {
         repayShareBalance = IERC20(shareDebtToken).balanceOf(__msgSender);
     }
 
-    function _resolveRedeemBalanceOfBorrower(ISiloLeverage.CloseLeverageArgs memory _closeArgs)
+    function _getBorrowerTotalShareCollateralBalance(ISiloLeverage.CloseLeverageArgs memory _closeArgs)
         internal
         view
         virtual
@@ -131,19 +131,19 @@ abstract contract LeverageModule {
         balanceOf = ISilo(protectedShareToken).balanceOf(__msgSender);
     }
 
-    function _otherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
+    function _resolveOtherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
         (address silo0, address silo1) = __siloConfig.getSilos();
         require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, ISiloLeverage.InvalidSilo());
 
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
     }
 
-    function _giveMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
         uint256 allowance = _asset.allowance(address(this), _spender);
         if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
     }
 
     function _calculateLeverageFee(uint256 _amount) internal view virtual returns (uint256 leverageFeeAmount);
 
-    function _transferFee(address _borrowToken, uint256 _leverageFee) internal virtual;
+    function _payLeverageFee(address _borrowToken, uint256 _leverageFee) internal virtual;
 }
