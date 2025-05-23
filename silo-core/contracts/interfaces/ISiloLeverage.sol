@@ -64,7 +64,6 @@ interface ISiloLeverage {
     error UnknownAction();
     error SwapDidNotCoverObligations();
     error InvalidSilo();
-    error SiloConfigNotSet();
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails
