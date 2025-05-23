@@ -8,8 +8,8 @@ import {IERC3156FlashLender} from "../../interfaces/IERC3156FlashLender.sol";
 
 abstract contract FlashloanModule is IERC3156FlashBorrower {
     // TODO transient
-    ISiloLeverage.LeverageAction internal __action;
-    address internal __flashloanTarget;
+    ISiloLeverage.LeverageAction transient __action;
+    address transient __flashloanTarget;
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 

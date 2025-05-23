@@ -27,11 +27,10 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
     uint256 internal constant _DECIMALS = 1e18;
 
-    // TODO transient
-    address internal __msgSender;
-    uint256 internal __totalDeposit;
-    uint256 internal __totalBorrow;
-    ISiloConfig internal __siloConfig;
+    address transient __msgSender;
+    uint256 transient __totalDeposit;
+    uint256 transient __totalBorrow;
+    ISiloConfig transient __siloConfig;
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
