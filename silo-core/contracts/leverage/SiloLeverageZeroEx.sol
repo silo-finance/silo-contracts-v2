@@ -7,7 +7,6 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {RevertLib} from "../lib/RevertLib.sol";
 
-import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {ISiloLeverageZeroEx} from "../interfaces/ISiloLeverageZeroEx.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
@@ -205,15 +204,14 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         // Approve token for spending by the exchange
         IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, _approval); // TODO max?
 
-        // solhint-disable-next-line avoid-low-level-calls
         // Perform low-level call to external exchange proxy
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = _swapArgs.exchangeProxy.call(_swapArgs.swapCallData);
         if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
 
         // Reset approval to 1 to avoid lingering allowances
         IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, 1);
 
-        // TODO will this work if anyone delegate token?
         amountOut = IERC20(_swapArgs.buyToken).balanceOf(address(this));
     }
 
