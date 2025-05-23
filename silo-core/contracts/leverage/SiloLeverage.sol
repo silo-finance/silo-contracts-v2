@@ -81,15 +81,17 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         ) = abi.decode(_data, (SwapArgs, DepositArgs));
 
         // swap all flashloan amount into collateral token
-        ISilo borrowSilo = _otherSilo(depositArgs.silo);
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
         // deposit with leverage: swapped collateral + user collateral
         _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
-        __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
+
+        ISilo borrowSilo = _otherSilo(depositArgs.silo);
 
         // fee is based on flashloan amount, we do not cound user own amount
         uint256 leverageFee = calculateLeverageFee(_flashloanAmount);
+
+        __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
 
         // borrow asset wil be used to pay fees
         borrowSilo.borrow({
