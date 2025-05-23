@@ -49,7 +49,6 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         totalDeposit = __totalDeposit;
         totalBorrow = __totalBorrow;
 
-        // transient lock will force design pattern, eg flashloan can not be module
         _resetTransient();
         // TODO: does is worth to add check for delta balance + fee at the end?
     }
