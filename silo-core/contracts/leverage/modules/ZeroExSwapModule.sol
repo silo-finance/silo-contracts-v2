@@ -22,7 +22,7 @@ contract ZeroExSwapModule is IZeroExSwapModule {
         if (_swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
         // Approve token for spending by the exchange
-        IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, _approval);
+        IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, _approval); // TODO max?
 
         // solhint-disable-next-line avoid-low-level-calls
         // Perform low-level call to external exchange proxy
