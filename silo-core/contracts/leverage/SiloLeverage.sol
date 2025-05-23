@@ -13,6 +13,7 @@ import {RevenueModule} from "./modules/RevenueModule.sol";
 import {FlashloanModule} from "./modules/FlashloanModule.sol";
 import {LeverageModule} from "./modules/LeverageModule.sol";
 
+// TODO same asset leverage
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
 // TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
@@ -20,12 +21,20 @@ import {LeverageModule} from "./modules/LeverageModule.sol";
 contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, FlashloanModule, LeverageModule {
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
+    modifier nonReentrant() {
+        require(__msgSender == address(0), Reentrancy());
+
+        _;
+
+        _resetTransient();
+    }
+
     /// @inheritdoc ISiloLeverage
     function openLeveragePosition(
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
         DepositArgs calldata _depositArgs
-    ) external virtual returns (uint256 totalDeposit, uint256 totalBorrow) {
+    ) external virtual nonReentrant returns (uint256 totalDeposit, uint256 totalBorrow) {
         _setTransient(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget);
 
         bytes memory data = abi.encode(_swapArgs, _depositArgs);
@@ -34,15 +43,13 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
         totalDeposit = __totalDeposit;
         totalBorrow = __totalBorrow;
-
-        // TODO: does is worth to add check for delta balance + fee at the end?
     }
 
     function closeLeveragePosition(
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
-    ) external virtual {
+    ) external virtual nonReentrant {
         _setTransient(_closeLeverageArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget);
 
         bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
@@ -142,4 +149,11 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         LeverageModule._setMaxAllowance(_asset, _spender, _requiredAmount);
     }
 
+    function _resetTransient() internal {
+        __totalDeposit = 0;
+        __totalBorrow = 0;
+        __flashloanTarget = address(0);
+        __action = LeverageAction.Undefined;
+        __msgSender = address(0);
+    }
 }
