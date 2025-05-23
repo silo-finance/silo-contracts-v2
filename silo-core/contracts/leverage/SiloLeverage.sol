@@ -150,7 +150,9 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
 
         __totalDeposit = _depositArgs.amount + _swapAmountOut;
 
-        _asset.forceApprove(address(_depositArgs.silo), __totalDeposit);
+        uint256 allowance = _asset.allowance(address(this), address(_depositArgs.silo));
+        if (allowance < __totalDeposit) _asset.forceApprove(address(_depositArgs.silo), type(uint256).max);
+    
         _depositArgs.silo.deposit(__totalDeposit, __msgSender, _depositArgs.collateralType);
     }
     
