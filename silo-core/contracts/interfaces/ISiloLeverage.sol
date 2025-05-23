@@ -43,8 +43,16 @@ interface ISiloLeverage {
     event OpenLeverage(
         address indexed borrower,
         uint256 borrowerDeposit,
+        uint256 swapAmountOut,
         uint256 flashloanDeposit,
         uint256 totalBorrow
+    );
+
+    event CloseLeverage(
+        address indexed borrower,
+        uint256 flashloanRepay,
+        uint256 swapAmountOut,
+        uint256 depositWithdrawn
     );
 
     /// @notice Thrown when the flash loan fails to execute

@@ -17,7 +17,6 @@ import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
 import {FlashloanModule} from "./modules/FlashloanModule.sol";
 
-// TODO nonReentrant
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
 // TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
@@ -99,7 +98,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
             _borrower: __msgSender
         });
 
-        emit OpenLeverage(__msgSender, depositArgs.amount, _flashloanAmount, __totalBorrow);
+        emit OpenLeverage(__msgSender, depositArgs.amount, amountOut, _flashloanAmount, __totalBorrow);
 
         if (leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, leverageFee);
 
@@ -127,7 +126,10 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         siloWithDebt.repayShares(_resolveRepayShareBalanceOfMsgSender(siloWithDebt), __msgSender);
 
         uint256 redeemShares = _resolveRedeemBalanceOfMsgSender(closeArgs);
-        closeArgs.siloWithCollateral.redeem(redeemShares, address(this), __msgSender, closeArgs.collateralType);
+
+        uint256 depositWithdrawn = closeArgs.siloWithCollateral.redeem(
+            redeemShares, address(this), __msgSender, closeArgs.collateralType
+        );
 
         // swap debt to collateral
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
@@ -136,6 +138,8 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         require(amountOut >= obligation, SwapDidNotCoverObligations());
 
         uint256 change = amountOut - obligation;
+
+        emit CloseLeverage(__msgSender, _flashloanAmount, amountOut, depositWithdrawn);
 
         IERC20(_debtToken).safeTransfer(__msgSender, change);
 
