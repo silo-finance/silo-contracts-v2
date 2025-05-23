@@ -8,7 +8,6 @@ import {IERC3156FlashBorrower} from "../../interfaces/IERC3156FlashBorrower.sol"
 import {IERC3156FlashLender} from "../../interfaces/IERC3156FlashLender.sol";
 
 abstract contract FlashloanModule is IERC3156FlashBorrower {
-    // TODO transient
     ISiloLeverage.LeverageAction transient __action;
     address transient __flashloanTarget;
 

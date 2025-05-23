@@ -8,19 +8,19 @@ import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloLeverage} from "../../interfaces/ISiloLeverage.sol";
 
-// TODO events on state changes
-// TODO ensure it will that work for Pendle
-// TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
-// and swap module can be picked up by argument
 abstract contract LeverageModule {
     using SafeERC20 for IERC20;
 
     uint256 internal constant _DECIMALS = 1e18;
 
-    address internal __msgSender;
-    uint256 internal __totalDeposit;
-    uint256 internal __totalBorrow;
-    ISiloConfig internal __siloConfig;
+    address internal transient __msgSender;
+    uint256 internal transient __totalDeposit;
+    uint256 internal transient __totalBorrow;
+    ISiloConfig transient __siloConfig;
+
+    constructor () {
+        __msgSender = address(0);
+    }
 
     // this method is created to separate swap from other actions, it will be easier to override in future
     function _openLeverageFlow(
@@ -39,7 +39,7 @@ abstract contract LeverageModule {
 
         ISilo borrowSilo = _resolveOtherSilo(_depositArgs.silo);
 
-        // fee is based on flashloan amount, we do not cound user own amount
+        // fee is based on flashloan amount, we do not count user own amount
         uint256 feeForLeverage = _calculateLeverageFee(_flashloanAmount);
 
         totalBorrow = _flashloanAmount + _flashloanFee + feeForLeverage;
