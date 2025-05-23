@@ -14,38 +14,23 @@ import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 
 import {RevenueModule} from "./modules/RevenueModule.sol";
+import {LeverageReentrancy} from "./modules/LeverageReentrancy.sol";
 
 /*
     @notice This contract allow to create and close leverage position using flasnloan and swap.
     It supports 0x interface for swap.
 */
-// TODO same asset leverage
+// TODO same asset leverage in phase 2
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
-// TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
 // and swap module can be picked up by argument
-contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, RevenueModule {
+contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, RevenueModule, LeverageReentrancy {
     using SafeERC20 for IERC20;
 
     string public constant VERSION = "Leverage with 0x (or compatible) swap";
-    
+
     uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-
-    address internal  __msgSender;
-    uint256 internal  __totalDeposit;
-    uint256 internal  __totalBorrow;
-    ISiloConfig  __siloConfig;
-    LeverageAction  __action;
-    address  __flashloanTarget;
-
-    modifier nonReentrant() { // TODO params?
-        require(__msgSender == address(0), Reentrancy());
-        
-        _;
-        
-        _resetTransient();
-    }
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
@@ -62,7 +47,8 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         // this check prevents call `onFlashLoan` directly
         require(__flashloanTarget == msg.sender, InvalidFlashloanLender());
 
-        // TODO: _initiator check might be redundant, because of how `__flashloanTarget` works, but atm I see no harm to check it
+        // _initiator check might be redundant, because of how `__flashloanTarget` works,
+        // but atm I see no harm to check it
         require(_initiator == address(this), InvalidInitiator());
 
         if (__action == LeverageAction.Open) {
@@ -188,7 +174,6 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         );
 
         // swap collateral to debt to repay flashloan
-        // TODO change this to balanceOf, that way we dont care about donation and not rely on swap module
         uint256 availableDebtAssets = _fillQuote(swapArgs, withdrawnDeposit);
 
         uint256 obligation = _flashloanAmount + _flashloanFee;
@@ -206,10 +191,10 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
     }
 
     /// @notice Executes a token swap using a prebuilt swap quote
-    /// @dev The contract must hold the sell token balance before calling. Requires ETH attached equal to the swap quote value.
+    /// @dev The contract must hold the sell token balance before calling.
     /// @param _swapArgs Struct containing all parameters for executing a swap
     /// @param _approval Amount of sell token to approve before the swap
-    /// @return amountOut Amount of buy token received after the swap
+    /// @return amountOut Amount of buy token received after the swap including any previous balance that contract has
     function _fillQuote(SwapArgs memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut) {
         if (_swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
@@ -226,6 +211,11 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
 
         // TODO will this work if anyone delegate token?
         amountOut = IERC20(_swapArgs.buyToken).balanceOf(address(this));
+    }
+
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
+        uint256 allowance = _asset.allowance(address(this), _spender);
+        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
     }
 
     function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
@@ -258,25 +248,5 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
 
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
-    }
-
-    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
-        uint256 allowance = _asset.allowance(address(this), _spender);
-        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
-    }
-    
-    function _setTransient(ISilo _silo, LeverageAction _action, address _flashloanTarget) internal {
-        __flashloanTarget = _flashloanTarget;
-        __action = _action;
-        __msgSender = msg.sender;
-        __siloConfig = _silo.config();
-    }
-
-    function _resetTransient() internal {
-        __totalDeposit = 0;
-        __totalBorrow = 0;
-        __flashloanTarget = address(0);
-        __action = LeverageAction.Undefined;
-        __msgSender = address(0);
     }
 }
