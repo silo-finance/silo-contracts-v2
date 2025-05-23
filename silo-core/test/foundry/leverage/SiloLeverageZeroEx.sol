@@ -10,7 +10,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IZeroExSwapModule} from "silo-core/contracts/interfaces/IZeroExSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {SiloLeverage, ISiloLeverage} from "silo-core/contracts/leverage/SiloLeverage.sol";
+import {SiloLeverageZeroEx, ISiloLeverageZeroEx} from "silo-core/contracts/leverage/SiloLeverageZeroEx.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -22,7 +22,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
     using SafeERC20 for IERC20;
 
     ISiloConfig cfg;
-    SiloLeverage siloLeverage;
+    SiloLeverageZeroEx siloLeverage;
     address collateralShareToken;
     address debtShareToken;
     SwapRouterMock swap;
@@ -36,7 +36,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         (,collateralShareToken,) = cfg.getShareTokens(address(silo0));
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
 
-        siloLeverage = new SiloLeverage(address(this));
+        siloLeverage = new SiloLeverageZeroEx(address(this));
         siloLeverage.setRevenueReceiver(makeAddr("RevenueReceiver"));
         siloLeverage.setLeverageFee(0.0001e18);
 
@@ -56,13 +56,13 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
 
         token0.mint(user, depositAmount);
 
-        ISiloLeverage.FlashArgs memory flashArgs = ISiloLeverage.FlashArgs({
+        ISiloLeverageZeroEx.FlashArgs memory flashArgs = ISiloLeverageZeroEx.FlashArgs({
             amount: depositAmount * multiplier,
             token: silo1.asset(),
             flashloanTarget: address(silo1)
         });
 
-        ISiloLeverage.DepositArgs memory depositArgs = ISiloLeverage.DepositArgs({
+        ISiloLeverageZeroEx.DepositArgs memory depositArgs = ISiloLeverageZeroEx.DepositArgs({
             amount: depositAmount,
             collateralType: ISilo.CollateralType.Collateral,
             silo: silo0
@@ -108,13 +108,13 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
 
         // CLOSING LEVERAGE
 
-        flashArgs = ISiloLeverage.FlashArgs({
+        flashArgs = ISiloLeverageZeroEx.FlashArgs({
             amount: silo0.previewRedeem(silo0.balanceOf(user)),
             token: silo1.asset(),
             flashloanTarget: address(silo1)
         });
 
-        ISiloLeverage.CloseLeverageArgs memory args = ISiloLeverage.CloseLeverageArgs({
+        ISiloLeverageZeroEx.CloseLeverageArgs memory args = ISiloLeverageZeroEx.CloseLeverageArgs({
             siloWithCollateral: silo0,
             collateralType: ISilo.CollateralType.Collateral
         });

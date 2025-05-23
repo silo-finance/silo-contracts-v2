@@ -6,7 +6,7 @@ import {IZeroExSwapModule} from "./IZeroExSwapModule.sol";
 
 /// @title ISiloLeverage Interface
 /// @notice Interface for a contract that enables leveraged deposits using flash loans and token swaps
-interface ISiloLeverage {
+interface ISiloLeverageZeroEx is IZeroExSwapModule {
     enum LeverageAction {
         Undefined,
         Open,

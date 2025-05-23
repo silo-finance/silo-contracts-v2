@@ -5,23 +5,30 @@ import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
+import {RevertLib} from "../lib/RevertLib.sol";
+
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloLeverage} from "../interfaces/ISiloLeverage.sol";
+import {ISiloLeverageZeroEx} from "../interfaces/ISiloLeverageZeroEx.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 
-import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
 
+/*
+    @notice This contract allow to create and close leverage position using flasnloan and swap.
+    It supports 0x interface for swap.
+*/
 // TODO same asset leverage
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
 // TODO is it worth to make swap module external contract and do delegate call? that way we can stay with one SiloLeverage
 // and swap module can be picked up by argument
-contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule, RevenueModule {
+contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, RevenueModule {
     using SafeERC20 for IERC20;
 
+    string public constant VERSION = "Leverage with 0x (or compatible) swap";
+    
     uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
@@ -70,7 +77,7 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
         return _FLASHLOAN_CALLBACK;
     }
     
-    /// @inheritdoc ISiloLeverage
+    /// @inheritdoc ISiloLeverageZeroEx
     function openLeveragePosition(
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
@@ -197,7 +204,30 @@ contract SiloLeverage is ISiloLeverage, IERC3156FlashBorrower, ZeroExSwapModule,
         uint256 collateralToTransfer = collateralAsset.balanceOf(address(this));
         if (collateralToTransfer != 0) collateralAsset.safeTransfer(__msgSender, collateralToTransfer);
     }
-    
+
+    /// @notice Executes a token swap using a prebuilt swap quote
+    /// @dev The contract must hold the sell token balance before calling. Requires ETH attached equal to the swap quote value.
+    /// @param _swapArgs Struct containing all parameters for executing a swap
+    /// @param _approval Amount of sell token to approve before the swap
+    /// @return amountOut Amount of buy token received after the swap
+    function _fillQuote(SwapArgs memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut) {
+        if (_swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
+
+        // Approve token for spending by the exchange
+        IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, _approval); // TODO max?
+
+        // solhint-disable-next-line avoid-low-level-calls
+        // Perform low-level call to external exchange proxy
+        (bool success, bytes memory data) = _swapArgs.exchangeProxy.call(_swapArgs.swapCallData);
+        if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
+
+        // Reset approval to 1 to avoid lingering allowances
+        IERC20(_swapArgs.sellToken).forceApprove(_swapArgs.allowanceTarget, 1);
+
+        // TODO will this work if anyone delegate token?
+        amountOut = IERC20(_swapArgs.buyToken).balanceOf(address(this));
+    }
+
     function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
         internal
         view
