@@ -85,7 +85,7 @@ contract SiloLeverage is ISiloLeverage, ZeroExSwapModule, RevenueModule, Flashlo
         ISilo borrowSilo = _otherSilo(depositArgs.silo);
         uint256 amountOut = _fillQuote(swapArgs, _flashloanAmount);
 
-        // deposit with leverage
+        // deposit with leverage: swapped collateral + user collateral
         _deposit(depositArgs, amountOut, IERC20(swapArgs.buyToken));
         __totalBorrow = _flashloanAmount + _flashloanFee + leverageFee;
 
