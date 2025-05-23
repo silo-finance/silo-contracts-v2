@@ -97,6 +97,10 @@ abstract contract RevenueModule is Ownable2Step {
     /// @param _amount The amount to calculate the fee for
     /// @return leverageFeeAmount The calculated fee amount
     function calculateLeverageFee(uint256 _amount) public virtual view returns (uint256 leverageFeeAmount) {
+        return _calculateLeverageFee(_amount);
+    }
+
+    function _calculateLeverageFee(uint256 _amount) internal virtual view returns (uint256 leverageFeeAmount) {
         uint256 fee = leverageFee;
         if (fee == 0) return 0;
 
@@ -104,7 +108,7 @@ abstract contract RevenueModule is Ownable2Step {
         if (leverageFeeAmount == 0) leverageFeeAmount = 1;
     }
 
-    function transferFee(address _borrowToken, uint256 _leverageFee) public virtual {
+    function _transferFee(address _borrowToken, uint256 _leverageFee) internal virtual {
         if (_leverageFee != 0) IERC20(_borrowToken).safeTransfer(revenueReceiver, _leverageFee);
     }
 }

@@ -95,7 +95,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         // user must set receive approval for debt share token
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
 
-        (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.leverage(flashArgs, swapArgs, depositArgs);
+        (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
         uint256 finalMultiplier = totalDeposit * 1e18 / depositArgs.amount;
 
         assertEq(finalMultiplier, 14e18, "finalMultiplier 14x");
@@ -134,7 +134,7 @@ contract SiloLeverageTest is SiloLittleHelper, Test {
         uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(user);
         IERC20(collateralShareToken).forceApprove(address(siloLeverage), collateralSharesApproval);
 
-        siloLeverage.closeLeverage(flashArgs, swapArgs, args);
+        siloLeverage.closeLeveragePosition(flashArgs, swapArgs, args);
 
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
