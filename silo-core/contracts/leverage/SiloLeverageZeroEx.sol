@@ -68,9 +68,11 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
         DepositArgs calldata depositArgs
-    ) external virtual nonReentrant returns (uint256 totalDeposit, uint256 totalBorrow) {
-        _setTransient(depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget);
-
+    )
+        external
+        virtual nonReentrant(depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
+        returns (uint256 totalDeposit, uint256 totalBorrow)
+    {
         bytes memory data = abi.encode(_swapArgs, depositArgs);
 
         _executeFlashloan(_flashArgs, data);
@@ -83,9 +85,11 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
-    ) external virtual nonReentrant {
-        _setTransient(_closeLeverageArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget);
-
+    )
+        external
+        virtual
+        nonReentrant(_closeLeverageArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
+    {
         bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
 
         _executeFlashloan(_flashArgs, data);
