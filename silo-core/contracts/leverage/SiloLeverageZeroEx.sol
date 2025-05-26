@@ -26,7 +26,7 @@ import {LeverageReentrancy} from "./modules/LeverageReentrancy.sol";
 contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, RevenueModule, LeverageReentrancy {
     using SafeERC20 for IERC20;
 
-    string public constant VERSION = "Leverage with 0x (or compatible) swap";
+    string public constant VERSION = "Leverage with 0x (or compatible) swap and silo flashloan";
 
     uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
