@@ -69,6 +69,11 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example
     */
     function test_leverage_example() public {
+        _openLeverageExample();
+        _closeLeverageExample();
+    }
+
+    function _openLeverageExample() internal {
         address user = makeAddr("user");
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 1.08e18;
@@ -114,6 +119,22 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         // user must set receive approval for debt share token
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
 
+        {
+            uint256 swapAmountOut = flashArgs.amount * 99 / 100;
+            uint256 leverageFee = siloLeverage.calculateLeverageFee(depositArgs.amount + swapAmountOut);
+            uint256 totalDeposit = depositArgs.amount + swapAmountOut - leverageFee;
+
+            vm.expectEmit(address(siloLeverage));
+            emit ILeverageUsingSiloWithZeroEx.OpenLeverage({
+                totalBorrow: flashArgs.amount + ISilo(flashArgs.flashloanTarget).flashFee(flashArgs.token, flashArgs.amount),
+                totalDeposit: totalDeposit,
+                flashloanAmount: flashArgs.amount,
+                swapAmountOut: swapAmountOut,
+                borrowerDeposit: depositArgs.amount,
+                borrower: user
+            });
+        }
+
         (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
         uint256 finalMultiplier = totalDeposit * _PRECISION / depositArgs.amount;
 
@@ -135,11 +156,13 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         assertEq(token0.balanceOf(address(siloLeverage)), 0, "no token0");
         assertEq(token1.balanceOf(address(siloLeverage)), 0, "no token1");
         // TODO check debt approval to be 0
+    }
 
-        // CLOSING LEVERAGE
+    function _closeLeverageExample() internal {
+        address user = makeAddr("user");
 
-        flashArgs = ILeverageUsingSiloWithZeroEx.FlashArgs({
-            amount: silo0.previewRedeem(silo0.balanceOf(user)),
+        ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs = ILeverageUsingSiloWithZeroEx.FlashArgs({
+            amount: silo1.maxRepay(user),
             token: silo1.asset(),
             flashloanTarget: address(silo1)
         });
@@ -149,7 +172,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
             collateralType: ISilo.CollateralType.Collateral
         });
 
-        swapArgs = IZeroExSwapModule.SwapArgs({
+        IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
             sellToken: address(silo0.asset()),
             buyToken: address(silo1.asset()),
             allowanceTarget: makeAddr("this is address provided by API"),
@@ -158,12 +181,28 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         });
 
         // mock the swap: part of collateral token -> debt token, so we can repay flashloan
-        uint256 amountIn = flashArgs.amount * 102 / 100; // swap bit more so we can count for fee or slippage
-        swap.setSwap(token0, amountIn, token1, flashArgs.amount * 99 / 100);
+        // for this test case price is 1:1
+        // we need swap bit more, so we can count for fee or slippage, here we simulate +11%
+        uint256 amountIn = flashArgs.amount * 111 / 100;
+        swap.setSwap(token0, amountIn, token1, amountIn * 99 / 100);
 
         // APPROVALS
         uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(user);
         IERC20(collateralShareToken).forceApprove(address(siloLeverage), collateralSharesApproval);
+
+        {
+            vm.expectEmit(address(siloLeverage));
+
+            // CloseLeverage(borrower: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], flashloanRepay: 206899308000000000 [2.068e17], swapAmountOut: 204830314920000000 [2.048e17], depositWithdrawn: 206899308000000000 [2.068e17])
+            // CloseLeverage(borrower: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], flashloanRepay: 206899308000000000 [2.068e17], swapAmountOut: 302649622920000000 [3.026e17], depositWithdrawn: 206899308000000000 [2.068e17])
+
+            emit ILeverageUsingSiloWithZeroEx.CloseLeverage({
+                depositWithdrawn: silo0.previewRedeem(silo0.balanceOf(user)),
+                swapAmountOut: amountIn * 99 / 100,
+                flashloanRepay: flashArgs.amount,
+                borrower: user
+            });
+        }
 
         siloLeverage.closeLeveragePosition(flashArgs, swapArgs, args);
 
@@ -178,9 +217,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         ISilo _flashFrom
     ) internal view returns (uint256 debtReceiveApproval) {
         uint256 flashFee = _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
-        uint256 leverageFee = siloLeverage.calculateLeverageFee(_flashAmount);
-
-        debtReceiveApproval = _flashAmount + flashFee + leverageFee;
+        debtReceiveApproval = _flashAmount + flashFee;
     }
 
     // TODO nonReentrant test

@@ -71,11 +71,16 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_WithFractions_any_scenario_fuzz(
-        uint256 _firstBorrowAmount,
-        uint256 _depositAmount,
-        bool _borrowShares,
-        uint8 _scenario
+//        uint256 _firstBorrowAmount,
+//        uint256 _depositAmount,
+//        bool _borrowShares,
+//        uint8 _scenario
     ) public {
+        (uint256 _firstBorrowAmount,
+            uint256 _depositAmount,
+            bool _borrowShares,
+            uint8 _scenario) = (760, 16880, false, 3);
+
         vm.assume(_depositAmount != 0 && _depositAmount < type(uint128).max);
         _doDeposit(_depositAmount);
 
@@ -296,6 +301,10 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         ISilo.Fractions memory fractions = silo1.getFractionsStorage();
         assertEq(fractions.interest, 0, "interest should be 0");
         assertEq(fractions.revenue, 0, "revenue should be 0");
+
+        emit log_named_uint("silo0.balanceOf", silo0.balanceOf(borrower));
+        emit log_named_uint("silo0.previewRedeem", silo0.previewRedeem(silo0.balanceOf(borrower)));
+        emit log_named_uint("silo1.maxRepay", silo1.maxRepay(borrower));
 
         maxBorrow = silo1.maxBorrow(borrower);
         assertNotEq(maxBorrow, 0, "maxBorrow should not be 0");

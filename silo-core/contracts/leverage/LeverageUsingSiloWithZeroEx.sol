@@ -38,6 +38,7 @@ contract LeverageUsingSiloWithZeroEx is
 
     constructor (address _initialOwner) Ownable(_initialOwner) {}
 
+    /// @inheritdoc IERC3156FlashBorrower
     function onFlashLoan(
         address _initiator,
         address _borrowToken,
