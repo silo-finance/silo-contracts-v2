@@ -81,7 +81,7 @@ contract LeverageUsingSiloWithZeroEx is
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
-            _token: _flashArgs.token,
+            _token: ISilo(_flashArgs.flashloanTarget).asset(),
             _amount: _flashArgs.amount,
             _data: abi.encode(_swapArgs, depositArgs)
         }), FlashloanFailed());
@@ -101,7 +101,7 @@ contract LeverageUsingSiloWithZeroEx is
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
-            _token: _flashArgs.token,
+            _token: ISilo(_flashArgs.flashloanTarget).asset(),
             _amount: _flashArgs.amount,
             _data: abi.encode(_swapArgs, _closeLeverageArgs)
         }), FlashloanFailed());

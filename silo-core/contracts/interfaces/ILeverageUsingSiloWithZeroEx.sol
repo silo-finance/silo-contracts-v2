@@ -16,11 +16,9 @@ interface ILeverageUsingSiloWithZeroEx is IZeroExSwapModule {
 
     /// @notice Parameters for a flash loan
     /// @param flashloanTarget The address of the contract providing the flash loan
-    /// @param token The token to borrow
     /// @param amount The amount of tokens to borrow
     struct FlashArgs {
         address flashloanTarget;
-        address token;
         uint256 amount;
     }
 
