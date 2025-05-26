@@ -13,8 +13,8 @@ contract SwapRouterMock {
 
     MintableToken sellToken;
     MintableToken buyToken;
-    uint256 amountIn;
-    uint256 amountOut;
+    uint256 public amountIn;
+    uint256 public amountOut;
 
     function setSwap(
         MintableToken _sellToken,
