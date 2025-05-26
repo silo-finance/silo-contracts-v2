@@ -30,15 +30,10 @@ contract SwapRouterMock {
     }
 
     fallback() external {
-        // in real case user should give allowance, but here we simply force it,
-        // because in this mock we dont know the user
-        sellToken.setOnDemand(true);
-        buyToken.setOnDemand(true);
-
         IERC20(sellToken).safeTransferFrom(msg.sender, address(this), amountIn);
-        IERC20(buyToken).safeTransfer(msg.sender, amountOut);
 
-        sellToken.setOnDemand(false);
+        buyToken.setOnDemand(true);
+        IERC20(buyToken).safeTransfer(msg.sender, amountOut);
         buyToken.setOnDemand(false);
     }
 }
