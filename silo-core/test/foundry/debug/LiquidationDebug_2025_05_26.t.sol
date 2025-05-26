@@ -37,9 +37,9 @@ contract LiquidationDebug_2025_05_26 is IntegrationTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_05_26 --mt test_liquidation_20250526 --ffi -vvv
+    FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_05_26 --mt test_skip_liquidation_20250526 --ffi -vvv
     */
-    function test_liquidation_20250526() public {
+    function test_skip_liquidation_20250526() public {
         address user = 0x62a4A8f9f5F3AaE9Ee9CEE780285A0D501C12d09;
         ISilo flashLoanFrom = ISilo(0x5e7Dfe2Ab5321125dD30E7D177bD544d83427D2a);
         vm.label(address(flashLoanFrom), "flashLoanFrom");
