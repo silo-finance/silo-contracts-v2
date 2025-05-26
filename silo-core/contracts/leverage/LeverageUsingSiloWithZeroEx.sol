@@ -78,9 +78,12 @@ contract LeverageUsingSiloWithZeroEx is
         nonReentrant(depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
         returns (uint256 totalDeposit, uint256 totalBorrow)
     {
-        bytes memory data = abi.encode(_swapArgs, depositArgs);
-
-        _executeFlashloan(_flashArgs, data);
+        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
+            _receiver: this,
+            _token: _flashArgs.token,
+            _amount: _flashArgs.amount,
+            _data: abi.encode(_swapArgs, depositArgs)
+        }), FlashloanFailed());
 
         totalDeposit = __totalDeposit;
         totalBorrow = __totalBorrow;
@@ -95,17 +98,11 @@ contract LeverageUsingSiloWithZeroEx is
         virtual
         nonReentrant(_closeLeverageArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
     {
-        bytes memory data = abi.encode(_swapArgs, _closeLeverageArgs);
-
-        _executeFlashloan(_flashArgs, data);
-    }
-
-    function _executeFlashloan(FlashArgs memory _flashArgs, bytes memory _data) internal virtual {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: _flashArgs.token,
             _amount: _flashArgs.amount,
-            _data: _data
+            _data: abi.encode(_swapArgs, _closeLeverageArgs)
         }), FlashloanFailed());
     }
 
