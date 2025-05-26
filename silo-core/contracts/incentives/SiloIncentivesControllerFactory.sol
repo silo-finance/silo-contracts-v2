@@ -15,9 +15,10 @@ contract SiloIncentivesControllerFactory is Create2Factory, ISiloIncentivesContr
     function create(
         address _owner,
         address _notifier,
+        address _shareToken,
         bytes32 _externalSalt
     ) external returns (address controller) {
-        controller = address(new SiloIncentivesController{salt: _salt(_externalSalt)}(_owner, _notifier));
+        controller = address(new SiloIncentivesController{salt: _salt(_externalSalt)}(_owner, _notifier, _shareToken));
 
         isSiloIncentivesController[controller] = true;
 

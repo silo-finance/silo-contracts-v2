@@ -10,8 +10,8 @@ import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/Intere
 import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {IGaugeHookReceiver, GaugeHookReceiver, IGauge} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
-import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
@@ -254,7 +254,9 @@ contract SiloVerifierScriptTest is Test {
         (, address silo1) = WS_USDC_CONFIG.getSilos();
         ISiloConfig.ConfigData memory configData1 = WS_USDC_CONFIG.getConfig(silo1);
 
-        IGaugeLike incentives1 = IGaugeHookReceiver(configData1.hookReceiver).configuredGauges(IShareToken(configData1.collateralShareToken));
+        ISiloIncentivesController incentives1 = IGaugeHookReceiver(configData1.hookReceiver).configuredGauges(
+            IShareToken(configData1.collateralShareToken)
+        );
 
        vm.mockCall(
             address(incentives1),
@@ -273,11 +275,13 @@ contract SiloVerifierScriptTest is Test {
         (, address silo1) = WS_USDC_CONFIG.getSilos();
         ISiloConfig.ConfigData memory configData1 = WS_USDC_CONFIG.getConfig(silo1);
 
-        IGaugeLike incentives1 = IGaugeHookReceiver(configData1.hookReceiver).configuredGauges(IShareToken(configData1.collateralShareToken));
+        ISiloIncentivesController incentives1 = IGaugeHookReceiver(configData1.hookReceiver).configuredGauges(
+            IShareToken(configData1.collateralShareToken)
+        );
 
        vm.mockCall(
             address(incentives1),
-            abi.encodeWithSelector(IGaugeLike.share_token.selector),
+            abi.encodeWithSelector(ISiloIncentivesController.SHARE_TOKEN.selector),
             abi.encode(address(2))
         );
 
