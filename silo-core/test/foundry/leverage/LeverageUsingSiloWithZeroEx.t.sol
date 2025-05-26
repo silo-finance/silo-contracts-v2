@@ -101,21 +101,20 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
         uint256 finalMultiplier = totalDeposit * _PRECISION / depositArgs.amount;
 
-        assertEq(finalMultiplier, 2.0692e18, "finalMultiplier");
-        assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 0.20692e18, "users collateral");
+        assertEq(finalMultiplier, 2.06899308e18, "finalMultiplier");
+        assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 0.206899308e18, "users collateral");
 
         {
             uint256 flashFee = silo1.flashFee(address(token1), flashArgs.amount);
-            uint256 leverageFee = siloLeverage.calculateLeverageFee(flashArgs.amount);
 
             assertEq(
                 silo1.maxRepay(user),
-                flashArgs.amount + flashFee + leverageFee,
-                "user has debt equal to flashloan + flashloan fee + leverage fee"
+                flashArgs.amount + flashFee,
+                "user has debt equal to flashloan + flashloan fee"
             );
         }
 
-        assertEq(silo1.maxRepay(user), 0.1090908e18, "users debt");
+        assertEq(silo1.maxRepay(user), 0.10908e18, "users debt");
 
         assertEq(token0.balanceOf(address(siloLeverage)), 0, "no token0");
         assertEq(token1.balanceOf(address(siloLeverage)), 0, "no token1");
