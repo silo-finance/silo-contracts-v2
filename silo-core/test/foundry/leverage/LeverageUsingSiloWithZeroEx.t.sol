@@ -50,6 +50,22 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_alwaysRevert_InvalidFlashloanLender
+    */
+    function test_leverage_alwaysRevert_InvalidFlashloanLender(address _caller) public {
+        vm.prank(_caller);
+        vm.expectRevert(ILeverageUsingSiloWithZeroEx.InvalidFlashloanLender.selector);
+
+        siloLeverage.onFlashLoan({
+            _initiator: address(0),
+            _borrowToken: address(0),
+            _flashloanAmount: 0,
+            _flashloanFee: 0,
+            _data: ""
+        });
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example
     */
     function test_leverage_example() public {
