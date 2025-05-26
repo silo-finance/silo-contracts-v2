@@ -82,7 +82,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
         ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs = ILeverageUsingSiloWithZeroEx.FlashArgs({
             amount: depositAmount * multiplier / _PRECISION,
-            token: silo1.asset(),
             flashloanTarget: address(silo1)
         });
 
@@ -126,7 +125,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
             vm.expectEmit(address(siloLeverage));
             emit ILeverageUsingSiloWithZeroEx.OpenLeverage({
-                totalBorrow: flashArgs.amount + ISilo(flashArgs.flashloanTarget).flashFee(flashArgs.token, flashArgs.amount),
+                totalBorrow: flashArgs.amount + ISilo(flashArgs.flashloanTarget).flashFee(address(token1), flashArgs.amount),
                 totalDeposit: totalDeposit,
                 flashloanAmount: flashArgs.amount,
                 swapAmountOut: swapAmountOut,
@@ -163,7 +162,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
         ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs = ILeverageUsingSiloWithZeroEx.FlashArgs({
             amount: silo1.maxRepay(user),
-            token: silo1.asset(),
             flashloanTarget: address(silo1)
         });
 
@@ -192,9 +190,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
         {
             vm.expectEmit(address(siloLeverage));
-
-            // CloseLeverage(borrower: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], flashloanRepay: 206899308000000000 [2.068e17], swapAmountOut: 204830314920000000 [2.048e17], depositWithdrawn: 206899308000000000 [2.068e17])
-            // CloseLeverage(borrower: user: [0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D], flashloanRepay: 206899308000000000 [2.068e17], swapAmountOut: 302649622920000000 [3.026e17], depositWithdrawn: 206899308000000000 [2.068e17])
 
             emit ILeverageUsingSiloWithZeroEx.CloseLeverage({
                 depositWithdrawn: silo0.previewRedeem(silo0.balanceOf(user)),
