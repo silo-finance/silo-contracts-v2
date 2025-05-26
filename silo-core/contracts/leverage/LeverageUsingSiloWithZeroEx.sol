@@ -56,7 +56,7 @@ contract LeverageUsingSiloWithZeroEx is
         require(_initiator == address(this), InvalidInitiator());
 
         if (__action == LeverageAction.Open) {
-            _openLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
+            _openLeverage(_flashloanAmount, _flashloanFee, _data);
         } else if (__action == LeverageAction.Close) {
             _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
         } else revert UnknownAction();
@@ -107,7 +107,6 @@ contract LeverageUsingSiloWithZeroEx is
     }
 
     function _openLeverage(
-        address _borrowToken,
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
         bytes calldata _data
