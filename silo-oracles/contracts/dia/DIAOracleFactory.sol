@@ -9,6 +9,9 @@ import {OracleFactory} from "../_common/OracleFactory.sol";
 import {DIAOracle, IDIAOracle} from "../dia/DIAOracle.sol";
 import {DIAOracleConfig} from "../dia/DIAOracleConfig.sol";
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
+import {console2} from "forge-std/console2.sol";
+import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
+
 
 contract DIAOracleFactory is Create2Factory, OracleFactory {
     /// @dev decimals in DIA oracle
@@ -23,6 +26,7 @@ contract DIAOracleFactory is Create2Factory, OracleFactory {
         bytes32 _externalSalt
     ) external virtual returns (DIAOracle oracle)
     {
+        console2.log("Salt inside DIA oracle factory", VmLib.vm().toString(_externalSalt));
         bytes32 id = hashConfig(_config);
         DIAOracleConfig oracleConfig = DIAOracleConfig(getConfigAddress[id]);
 

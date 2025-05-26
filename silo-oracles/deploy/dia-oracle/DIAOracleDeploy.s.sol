@@ -10,9 +10,9 @@ import {DIAOracle} from "silo-oracles/contracts/dia/DIAOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=DIA_Demo_config \
+FOUNDRY_PROFILE=oracles CONFIG=DIA_PEAS_USD \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleDeploy.s.sol \
-    --ffi --broadcast --rpc-url http://127.0.0.1:8545
+    --ffi --rpc-url $RPC_ARBITRUM --broadcast
  */
 contract DIAOracleDeploy is CommonDeploy {
     function run() public returns (DIAOracle oracle) {
@@ -28,7 +28,7 @@ contract DIAOracleDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = DIAOracleFactory(factory).create(config);
+        oracle = DIAOracleFactory(factory).create(config, bytes32(0));
 
         vm.stopBroadcast();
 

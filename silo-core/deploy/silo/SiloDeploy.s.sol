@@ -273,7 +273,7 @@ contract SiloDeploy is CommonDeploy {
         );
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
+        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(uint256(type(uint256).max))));
     }
 
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {

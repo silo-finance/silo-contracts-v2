@@ -7,10 +7,12 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {IDIAOracle} from "silo-oracles/contracts/interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "silo-oracles/contracts/external/dia/IDIAOracleV2.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 library DIAOraclesConfigsParser {
     string constant public CONFIGS_DIR = "silo-oracles/deploy/dia-oracle/configs/";
     string constant internal _EXTENSION = ".json";
+    string constant internal _EMPTY_STR = "\"\"";
 
     function getConfig(
         string memory _network,
@@ -26,6 +28,11 @@ library DIAOraclesConfigsParser {
         string memory quoteTokenKey = KV.getString(configJson, _name, "quoteToken");
         string memory primaryKey = KV.getString(configJson, _name, "primaryKey");
         string memory secondaryKey = KV.getString(configJson, _name, "secondaryKey");
+
+        if (Strings.equal(secondaryKey, _EMPTY_STR)){
+            secondaryKey = "";
+        }
+
         uint256 heartbeat = KV.getUint(configJson, _name, "heartbeat");
         uint256 normalizationDivider = KV.getUint(configJson, _name, "normalizationDivider");
         uint256 normalizationMultiplier = KV.getUint(configJson, _name, "normalizationMultiplier");

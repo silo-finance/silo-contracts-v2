@@ -13,6 +13,8 @@ import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
 import {Create2Factory} from "common/utils/Create2Factory.sol";
+import {console2} from "forge-std/console2.sol";
+import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 
 /// @notice Silo Deployer
 contract SiloDeployer is Create2Factory, ISiloDeployer {
@@ -187,7 +189,9 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
         if (factory == address(0)) return address(0);
 
+        console2.log(VmLib.vm().toString(_txData.txInput));
         _updateSalt(_txData.txInput);
+        console2.log(VmLib.vm().toString(_txData.txInput));
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = factory.call(_txData.txInput);
@@ -236,9 +240,11 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @param _txInput The tx input for the oracle factory
     function _updateSalt(bytes memory _txInput) internal {
         bytes32 salt = _salt();
+        console2.log("salt");
+        console2.log(VmLib.vm().toString(salt));
 
         assembly { // solhint-disable-line no-inline-assembly
-            let pointer := add(add(_txInput, 0x20), sub(mload(_txInput), 0x20))
+            let pointer := add(_txInput, 0x44)//, sub(mload(_txInput), 0x20))
             mstore(pointer, salt)
         }
     }
