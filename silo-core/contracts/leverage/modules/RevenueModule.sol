@@ -76,12 +76,12 @@ abstract contract RevenueModule is Ownable2Step {
     /// @param _tokens List of tokens to rescue
     function rescueTokens(IERC20[] calldata _tokens) external {
         for (uint256 i; i < _tokens.length; i++) {
-            withdrawRevenue(_tokens[i]);
+            rescueTokens(_tokens[i]);
         }
     }
 
     /// @param _token ERC20 token to rescue
-    function withdrawRevenue(IERC20 _token) public {
+    function rescueTokens(IERC20 _token) public {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, NoRevenue());
 
