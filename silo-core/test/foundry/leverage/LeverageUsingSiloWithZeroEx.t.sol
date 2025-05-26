@@ -33,8 +33,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     function setUp() public {
         cfg = _setUpLocalFixture();
 
-        _deposit(1000e18, address(1));
-        _depositForBorrow(2000e18, address(2));
+        _deposit(1e18, address(1));
+        _depositForBorrow(1e18, address(2));
 
         (,collateralShareToken,) = cfg.getShareTokens(address(silo0));
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
@@ -66,9 +66,9 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_noInterest
     */
-    function test_leverage_example() public {
+    function test_leverage_example_noInterest() public {
         _openLeverageExample();
         _closeLeverageExample();
     }
@@ -76,9 +76,9 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     /*
     accrue interest then close
 
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest_solvent
     */
-    function test_leverage_example_withInterest() public {
+    function test_leverage_example_withInterest_solvent() public {
         address user = makeAddr("user");
 
         _openLeverageExample();
@@ -95,6 +95,24 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         _closeLeverageExample();
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest_inSolvent
+    */
+    function test_leverage_example_withInterest_inSolvent() public {
+        address user = makeAddr("user");
+
+        _openLeverageExample();
+
+        vm.startPrank(user);
+        silo0.withdraw(silo0.maxWithdraw(user), user, user);
+
+        vm.warp(block.timestamp + 1000 days);
+
+        assertLt(siloLens.getUserLTV(silo1, user), 0.90e18, "we want case when there is no bad debt");
+        assertFalse(silo1.isSolvent(user), "we want example with inSolvent user");
+
+        _closeLeverageExample();
+    }
     function _openLeverageExample() internal {
         address user = makeAddr("user");
         uint256 depositAmount = 0.1e18;
@@ -118,7 +136,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
             buyToken: address(silo0.asset()),
             sellToken: address(silo1.asset()),
-            allowanceTarget: makeAddr("this is address provided by API"),
+            allowanceTarget: address(swap),
             exchangeProxy: address(swap),
             swapCallData: "mocked swap data"
         });
@@ -156,7 +174,12 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
             });
         }
 
-        (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
+        (
+            uint256 totalDeposit, uint256 totalBorrow
+        ) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
+
+        vm.stopPrank();
+
         uint256 finalMultiplier = totalDeposit * _PRECISION / depositArgs.amount;
 
         assertEq(finalMultiplier, 2.06899308e18, "finalMultiplier");
@@ -182,6 +205,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     function _closeLeverageExample() internal {
         address user = makeAddr("user");
 
+        vm.startPrank(user);
+
         ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs = ILeverageUsingSiloWithZeroEx.FlashArgs({
             amount: silo1.maxRepay(user),
             flashloanTarget: address(silo1)
@@ -195,7 +220,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
             sellToken: address(silo0.asset()),
             buyToken: address(silo1.asset()),
-            allowanceTarget: makeAddr("this is address provided by API"),
+            allowanceTarget: address(swap),
             exchangeProxy: address(swap),
             swapCallData: "mocked swap data"
         });
