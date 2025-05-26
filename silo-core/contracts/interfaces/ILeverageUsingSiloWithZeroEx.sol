@@ -4,9 +4,10 @@ pragma solidity ^0.8.0;
 import {ISilo, IERC3156FlashLender} from "./ISilo.sol";
 import {IZeroExSwapModule} from "./IZeroExSwapModule.sol";
 
-/// @title ISiloLeverage Interface
-/// @notice Interface for a contract that enables leveraged deposits using flash loans and token swaps
-interface ISiloLeverageZeroEx is IZeroExSwapModule {
+/// @title LeverageUsingSiloWithZeroEx Interface
+/// @notice Interface for a contract that enables leveraged deposits using flash loans from silo
+/// and token swaps with 0x os compatible interface
+interface ILeverageUsingSiloWithZeroEx is IZeroExSwapModule {
     enum LeverageAction {
         Undefined,
         Open,

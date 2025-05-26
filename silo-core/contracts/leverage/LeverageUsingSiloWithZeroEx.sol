@@ -8,7 +8,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {RevertLib} from "../lib/RevertLib.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ISiloLeverageZeroEx} from "../interfaces/ISiloLeverageZeroEx.sol";
+import {ILeverageUsingSiloWithZeroEx} from "../interfaces/ILeverageUsingSiloWithZeroEx.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 
@@ -23,7 +23,7 @@ import {LeverageReentrancy} from "./modules/LeverageReentrancy.sol";
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
 // and swap module can be picked up by argument
-contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, RevenueModule, LeverageReentrancy {
+contract LeverageUsingSiloWithZeroEx is ILeverageUsingSiloWithZeroEx, IERC3156FlashBorrower, RevenueModule, LeverageReentrancy {
     using SafeERC20 for IERC20;
 
     string public constant VERSION = "Leverage with 0x (or compatible) swap and silo flashloan";
@@ -62,7 +62,7 @@ contract SiloLeverageZeroEx is ISiloLeverageZeroEx, IERC3156FlashBorrower, Reven
         return _FLASHLOAN_CALLBACK;
     }
     
-    /// @inheritdoc ISiloLeverageZeroEx
+    /// @inheritdoc ILeverageUsingSiloWithZeroEx
     function openLeveragePosition(
         FlashArgs calldata _flashArgs,
         SwapArgs calldata _swapArgs,
