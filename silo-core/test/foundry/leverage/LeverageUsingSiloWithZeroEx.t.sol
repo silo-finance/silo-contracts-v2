@@ -73,6 +73,28 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         _closeLeverageExample();
     }
 
+    /*
+    accrue interest then close
+
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest
+    */
+    function test_leverage_example_withInterest() public {
+        address user = makeAddr("user");
+
+        _openLeverageExample();
+
+        uint256 totalAssetsBefore = silo1.totalAssets();
+
+        vm.warp(block.timestamp + 2000 days);
+
+        uint256 totalAssetsAfter = silo1.totalAssets();
+        assertGt(totalAssetsAfter, totalAssetsBefore * 1005 / 1000, "expect at least 0.5% generated interest");
+
+        assertTrue(silo1.isSolvent(user), "we want example with solvent user");
+
+        _closeLeverageExample();
+    }
+
     function _openLeverageExample() internal {
         address user = makeAddr("user");
         uint256 depositAmount = 0.1e18;
