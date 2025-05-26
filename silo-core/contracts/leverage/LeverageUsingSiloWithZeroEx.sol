@@ -23,10 +23,15 @@ import {LeverageReentrancy} from "./modules/LeverageReentrancy.sol";
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
 // and swap module can be picked up by argument
-contract LeverageUsingSiloWithZeroEx is ILeverageUsingSiloWithZeroEx, IERC3156FlashBorrower, RevenueModule, LeverageReentrancy {
+contract LeverageUsingSiloWithZeroEx is
+    ILeverageUsingSiloWithZeroEx,
+    IERC3156FlashBorrower,
+    RevenueModule,
+    LeverageReentrancy
+{
     using SafeERC20 for IERC20;
 
-    string public constant VERSION = "Leverage with 0x (or compatible) swap and silo flashloan";
+    string public constant VERSION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
     uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
