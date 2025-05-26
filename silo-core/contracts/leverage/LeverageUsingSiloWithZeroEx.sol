@@ -122,37 +122,48 @@ contract LeverageUsingSiloWithZeroEx is
         // swap all flashloan amount into collateral token
         uint256 collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
 
-        // deposit with leverage: swapped collateral + user collateral
-        __totalDeposit = _deposit(depositArgs, collateralAmountAfterSwap, depositArgs.silo.asset());
+        uint256 totalAssets = depositArgs.amount + collateralAmountAfterSwap;
+        // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
+        uint256 feeForLeverage = _calculateLeverageFee(totalAssets);
+
+        address collateralAsset = depositArgs.silo.asset();
+
+        // deposit with leverage: user collateral + swapped collateral - fee
+        // TODO qa if posible that feeForLeverage > collateralAmountAfterSwap
+        __totalDeposit = _deposit(depositArgs, collateralAmountAfterSwap - feeForLeverage, collateralAsset);
 
         ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
-        // fee is based on flashloan amount, we do not count user own amount
-        uint256 feeForLeverage = _calculateLeverageFee(_flashloanAmount);
-
-        __totalBorrow = _flashloanAmount + _flashloanFee + feeForLeverage;
+        __totalBorrow = _flashloanAmount + _flashloanFee;
 
         // borrow asset wil be used to pay fees
         borrowSilo.borrow({_assets: __totalBorrow, _receiver: address(this), _borrower: __msgSender});
 
-        emit OpenLeverage(__msgSender, depositArgs.amount, collateralAmountAfterSwap, _flashloanAmount, __totalBorrow);
+        emit OpenLeverage({
+            borrower: __msgSender,
+            borrowerDeposit: depositArgs.amount,
+            swapAmountOut: collateralAmountAfterSwap,
+            flashloanAmount: _flashloanAmount,
+            totalDeposit: __totalDeposit,
+            totalBorrow: __totalBorrow
+        });
 
-        _payLeverageFee(_borrowToken, feeForLeverage);
+        _payLeverageFee(collateralAsset, feeForLeverage);
     }
 
-    function _deposit(DepositArgs memory depositArgs, uint256 collateralAmountAfterSwap, address _asset)
+    function _deposit(DepositArgs memory _depositArgs, uint256 _leverageAmount, address _asset)
         internal
         virtual
         returns (uint256 totalDeposit)
     {
         // transfer collateral tokens from borrower
-        IERC20(_asset).safeTransferFrom(__msgSender, address(this), depositArgs.amount);
+        IERC20(_asset).safeTransferFrom(__msgSender, address(this), _depositArgs.amount);
 
-        totalDeposit = depositArgs.amount + collateralAmountAfterSwap;
+        totalDeposit = _depositArgs.amount + _leverageAmount;
 
-        _setMaxAllowance(IERC20(_asset), address(depositArgs.silo), totalDeposit);
+        _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), totalDeposit);
 
-        depositArgs.silo.deposit(totalDeposit, __msgSender, depositArgs.collateralType);
+        _depositArgs.silo.deposit(totalDeposit, __msgSender, _depositArgs.collateralType);
     }
     
     function _closeLeverage(

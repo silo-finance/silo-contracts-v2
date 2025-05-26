@@ -41,11 +41,15 @@ interface ILeverageUsingSiloWithZeroEx is IZeroExSwapModule {
         ISilo.CollateralType collateralType;
     }
 
+    /// @dev emited when leverate position is open,
+    /// - leverage fee = borrowerDeposit + swapAmountOut - totalDeposit
+    /// - flashloan fee = totalBorrow - flashloanAmount
     event OpenLeverage(
         address indexed borrower,
         uint256 borrowerDeposit,
         uint256 swapAmountOut,
-        uint256 flashloanDeposit,
+        uint256 flashloanAmount,
+        uint256 totalDeposit,
         uint256 totalBorrow
     );
 
