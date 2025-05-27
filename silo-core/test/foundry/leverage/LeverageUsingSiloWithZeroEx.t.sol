@@ -68,22 +68,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         });
     }
 
-//    /*
-//    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_alwaysRevert_InvalidFlashloanLender
-//    */
-//    function test_leverage_open(address _caller) public {
-//        vm.prank(_caller);
-//        vm.expectRevert(ILeverageUsingSiloWithZeroEx.InvalidFlashloanLender.selector);
-//
-//        siloLeverage.onFlashLoan({
-//            _initiator: address(0),
-//            _borrowToken: address(0),
-//            _flashloanAmount: 0,
-//            _flashloanFee: 0,
-//            _data: ""
-//        });
-//    }
-
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_noInterest
     */
@@ -150,6 +134,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_anySiloForFlashloan
     */
     function test_leverage_anySiloForFlashloan() public {
+        // SEPARATE SILO FOR FLASHLOAN
+
         SiloFixture siloFixture = new SiloFixture();
 
         MintableToken tokenA = new MintableToken(18);
@@ -161,11 +147,44 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
         (, , ISilo siloFlashloan,,,) = siloFixture.deploy_local(overrides);
 
+        vm.label(address(siloFlashloan), "siloFlashloan");
+
         token1.mint(address(this), 5e18);
+        token1.approve(address(siloFlashloan), 5e18);
         siloFlashloan.deposit(5e18, address(this));
 
-        _openLeverageExample();
-        _closeLeverageExample();
+        // OPEN
+
+        address user = makeAddr("user");
+        uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 1.08e18;
+
+        (
+            ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs,
+            ILeverageUsingSiloWithZeroEx.DepositArgs memory depositArgs,
+            IZeroExSwapModule.SwapArgs memory swapArgs
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(siloFlashloan));
+
+        (uint256 totalDeposited, ) = _openLeverage(user, flashArgs, depositArgs, swapArgs);
+
+        assertGt(silo1.maxRepay(user), 0, "users has debt");
+
+        uint256 fee = siloFlashloan.flashFee(siloFlashloan.asset(), flashArgs.amount);
+        assertGt(fee, 0, "we want setup with some fee");
+        assertEq(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got flashloan fees");
+
+        // CLOSE
+
+        ILeverageUsingSiloWithZeroEx.CloseLeverageArgs memory closeArgs;
+
+        (flashArgs, closeArgs, swapArgs) = _defaultCloseArgs(user, address(siloFlashloan));
+
+        _closeLeverage(user, flashArgs, closeArgs, swapArgs);
+
+        _assertUserHasNoPosition(user);
+        _assertSiloLeverageHasNoTokens();
+
+        assertGt(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got another flashloan fee");
     }
 
     function _openLeverageExample() internal {
@@ -200,8 +219,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
         assertEq(silo1.maxRepay(user), 0.10908e18, "users debt");
 
-        assertEq(token0.balanceOf(address(siloLeverage)), 0, "no token0");
-        assertEq(token1.balanceOf(address(siloLeverage)), 0, "no token1");
+        _assertSiloLeverageHasNoTokens();
+
         // TODO check debt approval to be 0
     }
 
@@ -211,6 +230,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         ILeverageUsingSiloWithZeroEx.DepositArgs memory _depositArgs,
         IZeroExSwapModule.SwapArgs memory _swapArgs
     ) internal returns (uint256 totalDeposit, uint256 totalBorrow) {
+        vm.startPrank(_user);
         token0.mint(_user, _depositArgs.amount);
 
         // mock the swap: debt token -> collateral token, price is 1:1, lt's mock some fee
@@ -272,7 +292,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
 
-        vm.stopPrank();
+        _assertSiloLeverageHasNoTokens();
     }
 
     function _closeLeverage(
@@ -381,5 +401,28 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
             exchangeProxy: address(swap),
             swapCallData: "mocked swap data"
         });
+    }
+
+    function _assertUserHasNoPosition(address _user) internal view {
+        assertEq(silo0.balanceOf(_user), 0, "[_assertUserHasNoPosition] user nas NO collateral");
+        assertEq(silo1.balanceOf(_user), 0, "[_assertUserHasNoPosition] user has NO debt balance");
+        assertEq(silo1.maxRepay(_user), 0, "[_assertUserHasNoPosition] user has NO debt");
+    }
+
+    function _assertSiloLeverageHasNoTokens() internal view {
+        _assertSiloLeverageHasNoTokens(address(0));
+    }
+
+    function _assertSiloLeverageHasNoTokens(address _customToken) internal view {
+        assertEq(token0.balanceOf(address(siloLeverage)), 0, "siloLeverage has no  token0");
+        assertEq(token1.balanceOf(address(siloLeverage)), 0, "siloLeverage has no  token1");
+
+        if (_customToken != address(0)) {
+            assertEq(
+                IERC20(_customToken).balanceOf(address(siloLeverage)),
+                0,
+                "siloLeverage has no custom tokens"
+            );
+        }
     }
 }
