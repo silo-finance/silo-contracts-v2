@@ -50,7 +50,10 @@ contract PendleLPTOracle is ISiloOracle {
         address lpUnderlyingToken = getLpUnderlyingToken(_market);
         uint256 lpUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(lpUnderlyingToken);
 
-        require(lpUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(lpUnderlyingToken), TokensDecimalsDoesNotMatch());
+        require(
+            lpUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(lpUnderlyingToken),
+            TokensDecimalsDoesNotMatch()
+        );
 
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             PENDLE_ORACLE.getOracleState(_market, TWAP_DURATION);

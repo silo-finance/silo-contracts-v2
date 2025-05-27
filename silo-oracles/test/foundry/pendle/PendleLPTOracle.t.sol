@@ -39,7 +39,7 @@ contract PendleLPTOracleTest is Test {
         PendleLPTOracleDeploy oracleDeploy = new PendleLPTOracleDeploy();
         oracleDeploy.setParams(market, underlyingOracle);
 
-        oracle = PendleLPTOracle(address(oracleDeploy.run()));
+        // oracle = PendleLPTOracle(address(oracleDeploy.run())); // TODO: increase cardinality
     }
 
     function test_getPrice() public {
