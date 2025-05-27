@@ -81,9 +81,6 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
     */
     function test_leverage_borrowUSDC() public {
         uint256 depositAmount = 1e6;
-        uint256 multiplier = 1.10e18;
-
-        _displayBorrowerState();
 
         assertGt(wstkscUSDAsset.balanceOf(borrower), depositAmount, "borrower needs deposit token");
 
@@ -134,15 +131,16 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
             flashArgs.amount, ISilo(flashArgs.flashloanTarget)
         );
 
-        // user must set receive approval for debt share token
+        // user must set approvals for debt share token
         IERC20(debtShareToken).forceApprove(address(siloLeverage), debtReceiveApproval);
-        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
 
         // OPEN
 
-        (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+        _displayBorrowerState();
 
+        (uint256 totalDeposit, uint256 totalBorrow) = siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
         vm.stopPrank();
+
         _displayBorrowerState();
     }
 
@@ -150,13 +148,19 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         uint256 _flashAmount,
         ISilo _flashFrom
     ) internal view returns (uint256 debtReceiveApproval) {
-        uint256 flashFee = _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
-        debtReceiveApproval = _flashAmount + flashFee;
+        uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
+        debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }
 
     function _displayBorrowerState() internal {
         uint256 shares = wstkscUSDSilo.balanceOf(borrower);
         emit log_named_decimal_uint("COLLATERAL", wstkscUSDSilo.previewRedeem(shares), 6);
         emit log_named_decimal_uint("DEBT SHARES", IERC20(debtShareToken).balanceOf(borrower), 6);
+
+        uint256 debtAllowance = IERC20(debtShareToken).allowance(borrower, address(siloLeverage));
+        uint256 debtReceiveAllowance = IERC20R(debtShareToken).receiveAllowance(borrower,address(siloLeverage));
+
+        emit log_named_decimal_uint("DEBT allowance", debtAllowance, 6);
+        emit log_named_decimal_uint("DEBT receiveAllowance", debtReceiveAllowance, 6);
     }
 }
