@@ -190,6 +190,64 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         assertGt(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got another flashloan fee");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_hi
+    */
+    function test_leverage_hi() public {
+        address user = makeAddr("user");
+        uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 2.80e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        (
+            ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs,
+            ILeverageUsingSiloWithZeroEx.DepositArgs memory depositArgs,
+            IZeroExSwapModule.SwapArgs memory swapArgs
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        _prepareForOpeningLeverage(user, flashArgs, depositArgs, swapArgs);
+
+        // counterexample
+        vm.prank(user);
+        (uint256 totalUserCollateral,) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
+
+        emit log_named_decimal_uint("totalUserCollateral", totalUserCollateral, 18);
+        emit log_named_decimal_uint("leverage", totalUserCollateral * 100 / depositAmount, 2);
+        emit log_named_decimal_uint("LTV", siloLens.getUserLTV(silo0, user), 16);
+
+        _assertThereIsNoDebtApprovals(user);
+        _assertSiloLeverageHasNoTokens();
+    }
+
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_AboveMaxLtv
+    */
+    function test_leverage_AboveMaxLtv() public {
+        address user = makeAddr("user");
+        uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 2.81e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        (
+            ILeverageUsingSiloWithZeroEx.FlashArgs memory flashArgs,
+            ILeverageUsingSiloWithZeroEx.DepositArgs memory depositArgs,
+            IZeroExSwapModule.SwapArgs memory swapArgs
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        _prepareForOpeningLeverage(user, flashArgs, depositArgs, swapArgs);
+
+        // counterexample
+        vm.prank(user);
+        vm.expectRevert(ISilo.AboveMaxLtv.selector);
+        (uint256 totalUserCollateral,) = siloLeverage.openLeveragePosition(flashArgs, swapArgs, depositArgs);
+
+        _assertThereIsNoDebtApprovals(user);
+        _assertSiloLeverageHasNoTokens();
+    }
+
     function _openLeverageExample() internal {
         address user = makeAddr("user");
         uint256 depositAmount = 0.1e18;
@@ -225,33 +283,40 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         _assertSiloLeverageHasNoTokens();
     }
 
+    function _prepareForOpeningLeverage(
+        address _user,
+        ILeverageUsingSiloWithZeroEx.FlashArgs memory _flashArgs,
+        ILeverageUsingSiloWithZeroEx.DepositArgs memory _depositArgs,
+        IZeroExSwapModule.SwapArgs memory _swapArgs
+    ) internal returns (uint256 totalDeposit, uint256 totalBorrow) {
+        token0.mint(_user, _depositArgs.amount);
+
+        // mock the swap: debt token -> collateral token, price is 1:1, lt's mock some fee
+        swap.setSwap(_swapArgs.sellToken, _flashArgs.amount, _swapArgs.buyToken, _flashArgs.amount * 99 / 100);
+
+        // APPROVALS
+
+        vm.startPrank(_user);
+        // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
+        IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
+
+
+        uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
+            _flashArgs.amount, ISilo(_flashArgs.flashloanTarget)
+        );
+
+        // user must set receive approval for debt share token
+        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
+        vm.stopPrank();
+    }
+
     function _openLeverage(
         address _user,
         ILeverageUsingSiloWithZeroEx.FlashArgs memory _flashArgs,
         ILeverageUsingSiloWithZeroEx.DepositArgs memory _depositArgs,
         IZeroExSwapModule.SwapArgs memory _swapArgs
     ) internal returns (uint256 totalDeposit, uint256 totalBorrow) {
-        vm.startPrank(_user);
-        token0.mint(_user, _depositArgs.amount);
-
-        // mock the swap: debt token -> collateral token, price is 1:1, lt's mock some fee
-        swap.setSwap(_swapArgs.sellToken, _flashArgs.amount, _swapArgs.buyToken, _flashArgs.amount * 99 / 100);
-
-        vm.startPrank(_user);
-
-        // APPROVALS
-
-        // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
-        IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
-
-        {
-            uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
-                _flashArgs.amount, ISilo(_flashArgs.flashloanTarget)
-            );
-
-            // user must set receive approval for debt share token
-            IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), debtReceiveApproval);
-        }
+        _prepareForOpeningLeverage(_user, _flashArgs, _depositArgs, _swapArgs);
 
         {
             uint256 swapAmountOut = _flashArgs.amount * 99 / 100;
