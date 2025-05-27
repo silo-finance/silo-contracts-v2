@@ -28,6 +28,4 @@ library AddrKey {
     string constant public EGGS = "EGGS";
     string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
     string constant public PYTH_SHADOW_USD_aggregator = "PYTH_SHADOW_USD_aggregator";
-    string constant public PENDLE_SWAP = "PENDLE_SWAP";
-    string constant public PENDLE_ROUTER_V4 = "PENDLE_ROUTER_V4";
 }
