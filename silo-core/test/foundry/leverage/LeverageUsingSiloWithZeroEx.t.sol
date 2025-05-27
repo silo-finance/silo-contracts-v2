@@ -296,7 +296,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
         IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
 
-
         uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
             _flashArgs.amount, ISilo(_flashArgs.flashloanTarget)
         );
