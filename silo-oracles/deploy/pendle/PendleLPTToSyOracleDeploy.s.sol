@@ -54,7 +54,7 @@ contract PendleLPTToSyOracleDeploy is CommonDeploy {
             underlyingOracleName
         );
 
-        OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
+        OraclesDeployments.save(ChainsLib.chainAlias(), oracleName, address(oracle));
     }
 
     function setParams(address _market, ISiloOracle _underlyingOracle) external {
