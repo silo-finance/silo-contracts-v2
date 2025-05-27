@@ -18,7 +18,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
     IPendleOracleHelper public constant PENDLE_ORACLE =
         IPendleOracleHelper(0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2);
 
-    /// @dev oracle to get the price of PT underlying asset.
+    /// @dev oracle to get the price of LP underlying asset.
     ISiloOracle public immutable UNDERLYING_ORACLE; // solhint-disable-line var-name-mixedcase
 
     /// @dev LP_TOKEN underlying asset 
