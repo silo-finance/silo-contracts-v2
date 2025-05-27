@@ -3,9 +3,7 @@ pragma solidity 0.8.28;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPendleOracleHelper} from "silo-oracles/contracts/pendle/interfaces/IPendleOracleHelper.sol";
-import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
-import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
 
 abstract contract PendleLPTOracle is ISiloOracle {
     /// @dev getLpToSyRate unit of measurement.
@@ -24,7 +22,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
     ISiloOracle public immutable UNDERLYING_ORACLE; // solhint-disable-line var-name-mixedcase
 
     /// @dev LP_TOKEN underlying asset 
-    address public immutable LP_UNDERLYING_TOKEN; // solhint-disable-line var-name-mixedcase
+    address public immutable UNDERLYING_TOKEN; // solhint-disable-line var-name-mixedcase
 
     /// @dev Pendle market. This address is used to get getLpToSyRate.
     address public immutable MARKET; // solhint-disable-line var-name-mixedcase
@@ -43,11 +41,13 @@ abstract contract PendleLPTOracle is ISiloOracle {
     /// return non-zero value for _market address and TWAP_DURATION. If underlying oracle reverts, constructor will
     /// revert with original revert reason.
     constructor(ISiloOracle _underlyingOracle, address _market) {
-        address lpUnderlyingToken = getLpUnderlyingToken(_market);
-        uint256 lpUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(lpUnderlyingToken);
+        MARKET = _market;
+
+        address underlyingToken = _getUnderlyingToken();
+        uint256 underlyingTokenDecimals = TokenHelper.assertAndGetDecimals(underlyingToken);
 
         require(
-            lpUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(lpUnderlyingToken),
+            underlyingTokenDecimals == TokenHelper.assertAndGetDecimals(underlyingToken),
             TokensDecimalsDoesNotMatch()
         );
 
@@ -57,12 +57,11 @@ abstract contract PendleLPTOracle is ISiloOracle {
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
         require(_getRate() != 0, PendleGetLpToSyRateIsZero());
 
-        uint256 underlyingSampleToQuote = 10 ** lpUnderlyingTokenDecimals;
-        require(_underlyingOracle.quote(underlyingSampleToQuote, lpUnderlyingToken) != 0, InvalidUnderlyingOracle());
+        uint256 underlyingSampleToQuote = 10 ** underlyingTokenDecimals;
+        require(_underlyingOracle.quote(underlyingSampleToQuote, underlyingToken) != 0, InvalidUnderlyingOracle());
 
         UNDERLYING_ORACLE = _underlyingOracle;
-        LP_UNDERLYING_TOKEN = lpUnderlyingToken;
-        MARKET = _market;
+        UNDERLYING_TOKEN = underlyingToken;
 
         QUOTE_TOKEN = _underlyingOracle.quoteToken();
     }
@@ -72,9 +71,9 @@ abstract contract PendleLPTOracle is ISiloOracle {
 
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
-        require(_baseToken == LP_UNDERLYING_TOKEN, AssetNotSupported());
+        require(_baseToken == UNDERLYING_TOKEN, AssetNotSupported());
 
-        quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, LP_UNDERLYING_TOKEN);
+        quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, UNDERLYING_TOKEN);
         quoteAmount = quoteAmount * _getRate() / PENDLE_RATE_PRECISION;
 
         require(quoteAmount != 0, ZeroPrice());
@@ -85,10 +84,6 @@ abstract contract PendleLPTOracle is ISiloOracle {
         return QUOTE_TOKEN;
     }
 
-    function getLpUnderlyingToken(address _market) public virtual view returns (address lpUnderlyingToken) {
-        (address syToken,,) = IPendleMarketV3Like(_market).readTokens();
-        lpUnderlyingToken = IPendleSYTokenLike(syToken).yieldToken();
-    }
-
     function _getRate() internal virtual view returns (uint256) {}
+    function _getUnderlyingToken() internal virtual view returns (address) {}
 }
