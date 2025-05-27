@@ -46,11 +46,6 @@ abstract contract PendleLPTOracle is ISiloOracle {
         address underlyingToken = _getUnderlyingToken();
         uint256 underlyingTokenDecimals = TokenHelper.assertAndGetDecimals(underlyingToken);
 
-        require(
-            underlyingTokenDecimals == TokenHelper.assertAndGetDecimals(_market),
-            TokensDecimalsDoesNotMatch()
-        );
-
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             PENDLE_ORACLE.getOracleState(_market, TWAP_DURATION);
         
@@ -71,7 +66,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
 
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
-        require(_baseToken == UNDERLYING_TOKEN, AssetNotSupported());
+        require(_baseToken == MARKET, AssetNotSupported());
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, UNDERLYING_TOKEN);
         quoteAmount = quoteAmount * _getRate() / PENDLE_RATE_PRECISION;

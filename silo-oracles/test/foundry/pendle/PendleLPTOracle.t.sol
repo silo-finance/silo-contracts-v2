@@ -11,6 +11,7 @@ import {PendleLPTToSyOracleFactory} from "silo-oracles/contracts/pendle/PendleLP
 import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracleFactory.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/PendleLPTOracle.sol";
 import {PendleLPTToSyOracleDeploy} from "silo-oracles/deploy/pendle/PendleLPTToSyOracleDeploy.s.sol";
+import {PendleLPTToAssetOracleDeploy} from "silo-oracles/deploy/pendle/PendleLPTToAssetOracleDeploy.s.sol";
 import {PendleLPTToSyOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendleLPTToSyOracleFactoryDeploy.s.sol";
 import {
     PendleLPTToAssetOracleFactoryDeploy
@@ -25,12 +26,9 @@ import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/Sil
 contract PendleLPTOracleTest is Test {
     PendleLPTToSyOracleFactory factoryToSy;
     PendleLPTToAssetOracleFactory factoryToAsset;
-    PendleLPTOracle oracle;
-    IPyYtLpOracleLike pendleOracle = IPyYtLpOracleLike(0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2);
-    ISiloOracle underlyingOracle;
-
-    address market = 0xC1fd739f2Bf1Aad96F04d6AE35ED04DA4D68366b; // WOS
-    address ptUnderlyingToken = 0x689783B8A4D8288fBacbeDCCA43e5b9B2A7ab174; // chainlink woS wS
+    PendleLPTOracle oracleSy;
+    PendleLPTOracle oracleAsset;
+    address underlyingToken; // USDC/USD
 
     event PendleLPTOracleCreated(ISiloOracle indexed pendleLPTOracle);
 
@@ -44,13 +42,27 @@ contract PendleLPTOracleTest is Test {
         PendleLPTToAssetOracleFactoryDeploy factoryAssetDeploy = new PendleLPTToAssetOracleFactoryDeploy();
         factoryToAsset = PendleLPTToAssetOracleFactory(factoryAssetDeploy.run());
 
-        PendleLPTToSyOracleDeploy oracleSyDeploy = new PendleLPTToSyOracleDeploy();
-        oracleSyDeploy.setParams(market, underlyingOracle);
+        // PendleLPTToSyOracleDeploy oracleSyDeploy = new PendleLPTToSyOracleDeploy();
+        // oracleSyDeploy.setParams(market, underlyingOracle);
 
-        // oracle = PendleLPTOracle(address(oracleDeploy.run())); // TODO: increase cardinality
+        // oracle = PendleLPTOracle(address(oracleSyDeploy.run()));
     }
 
-    function test_getPrice() public {
+    function test_LPTToAssetOracle_getPrice() public {
+        IPyYtLpOracleLike pendleOracle = IPyYtLpOracleLike(0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2);
+        ISiloOracle underlyingOracle = ISiloOracle(0x8c5bb146f416De3fbcD8168cC844aCf4Aa2098c5);
 
+        address market = 0x3F5EA53d1160177445B1898afbB16da111182418; // AUSDC
+
+        PendleLPTToAssetOracleDeploy oracleAssetDeploy = new PendleLPTToAssetOracleDeploy();
+        oracleAssetDeploy.setParams(market, underlyingOracle);
+
+        oracleAsset = PendleLPTOracle(address(oracleAssetDeploy.run()));
+
+        // 2049835019614218201342436720000
+
+        uint256 price = oracleAsset.quote(1e6, market);
+        emit log_named_uint("price", price);
+        emit log_named_uint("price", price / 1e18);
     }
 }
