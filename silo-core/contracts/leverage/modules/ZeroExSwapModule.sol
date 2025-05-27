@@ -9,7 +9,8 @@ import {IZeroExSwapModule} from "../../interfaces/IZeroExSwapModule.sol";
 
 /// @title 0x and ODOS Compatible ERC20 Swap Module
 /// @notice Enables ERC20 token swaps via an external exchange proxy (e.g., 0x, ODOS)
-/// @dev Based on the 0x demo contract: https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
+/// @dev Based on the 0x demo contract:
+/// https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
 contract ZeroExSwapModule is IZeroExSwapModule {
     using SafeERC20 for IERC20;
 
