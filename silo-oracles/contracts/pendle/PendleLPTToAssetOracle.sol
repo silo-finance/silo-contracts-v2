@@ -11,7 +11,7 @@ import {PendleLPTOracle} from "./PendleLPTOracle.sol";
 /// to 30 minutes. UNDERLYING_ORACLE must return the price of SY.assetInfo() asset. Quote token
 /// of PendleLPTToAssetOracle is equal to UNDERLYING_ORACLE quote token. PendleLPTToAssetOracle decimals are equal
 /// to underlying oracle's decimals.
-/// This oracle must be used for Pendle PT tokens with rebasing underlying assets and other cases with SY-to-asset
+/// This oracle must be used for Pendle LP tokens with rebasing underlying assets and other cases with SY-to-asset
 /// rate not equal to 100%. These cases are described here
 /// https://docs.pendle.finance/Developers/Contracts/StandardizedYield#non-standard-sys
 contract PendleLPTToAssetOracle is PendleLPTOracle {
