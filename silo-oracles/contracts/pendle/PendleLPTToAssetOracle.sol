@@ -6,7 +6,7 @@ import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPend
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {PendleLPTOracle} from "./PendleLPTOracle.sol";
 
-/// @notice PendleLPTToAssetOracle is an oracle, which multiplies the SY.assetInfo() asset price by PtToAssetRate.
+/// @notice PendleLPTToAssetOracle is an oracle, which multiplies the SY.assetInfo() asset price by LpToAssetRate.
 /// This oracle must be deployed using PendleLPTToAssetOracleFactory contract. TWAP duration is constant and equal
 /// to 30 minutes. UNDERLYING_ORACLE must return the price of SY.assetInfo() asset. Quote token
 /// of PendleLPTToAssetOracle is equal to UNDERLYING_ORACLE quote token. PendleLPTToAssetOracle decimals are equal
