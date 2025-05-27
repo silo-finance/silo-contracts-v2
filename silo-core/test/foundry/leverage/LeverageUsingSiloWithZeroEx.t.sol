@@ -23,6 +23,9 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
     FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloWithZeroExTest
 
 TODO triple check approvals
+- Leverage contract should never have any tokens
+- close should repay all debt (if position solvent?)
+
 */
 contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     using SafeERC20 for IERC20;
@@ -77,19 +80,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         _openLeverageExample();
         _closeLeverageExample();
     }
-
-    /*
-    Leverage contract should never have any tokens
-
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example
-    */
-
-
-    /*
-    close should repay all debt (if position solvent?)
-
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example
-    */
 
     /*
     accrue interest then close
@@ -219,7 +209,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         _assertThereIsNoDebtApprovals(user);
         _assertSiloLeverageHasNoTokens();
     }
-
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_AboveMaxLtv
