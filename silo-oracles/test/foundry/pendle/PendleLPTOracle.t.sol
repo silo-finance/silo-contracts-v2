@@ -56,8 +56,8 @@ contract PendleLPTOracleTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_LPTToSyOracle_getPrice --ffi -vv
      */
     function test_LPTToSyOracle_getPrice() public {
-        ISiloOracle underlyingOracle = ISiloOracle(0x689783B8A4D8288fBacbeDCCA43e5b9B2A7ab174); // chainlink woS wS
-        address market = 0x4E82347Bc41CFD5d62cEF483C7f0a739a8158963; // WOS (may 29 2025)
+        ISiloOracle underlyingOracle = ISiloOracle(0x4D7262786976917f0d7a83d6Ef3089273e117cF7); // stS/USD
+        address market = 0x3aeF1d372d0a7a7E482F465Bc14A42D78f920392; // stS (may 29 2025)
 
         PendleLPTToSyOracleDeploy oracleSyDeploy = new PendleLPTToSyOracleDeploy();
         oracleSyDeploy.setParams(market, underlyingOracle);
@@ -65,6 +65,6 @@ contract PendleLPTOracleTest is Test {
         oracleSy = PendleLPTOracle(address(oracleSyDeploy.run()));
 
         uint256 price = oracleSy.quote(1e18, market);
-        assertEq(price, 2260752160791343792);
+        assertEq(price, 1115338829967733590);
     }
 }
