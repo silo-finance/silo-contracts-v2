@@ -12,6 +12,11 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
 
     mapping(address silo => HookConfig) private _hookConfig;
 
+    modifier onlySilo() {
+        require(_isSilo(msg.sender), OnlySilo());
+        _;
+    }
+
     constructor() {
         _disableInitializers();
     }
@@ -73,5 +78,13 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
     /// @return hooksAfter Hooks after
     function _getHooksAfter(address _silo) internal view virtual returns (uint256 hooksAfter) {
         hooksAfter = _hookConfig[_silo].hooksAfter;
+    }
+
+    /// @notice Check if the address is a silo
+    /// @param _addr Address to check
+    /// @return result True if the address is a silo, false otherwise
+    function _isSilo(address _addr) internal view virtual returns (bool result) {
+        (address silo0, address silo1) = siloConfig.getSilos();
+        result = _addr == silo0 || _addr == silo1;
     }
 }
