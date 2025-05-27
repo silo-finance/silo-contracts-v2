@@ -5,12 +5,16 @@ import {Test} from "forge-std/Test.sol";
 
 import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/PendleLPTOracle.sol";
-import {IPendleLPTOracleFactory} from "silo-oracles/contracts/interfaces/IPendleLPTOracleFactory.sol";
+import {IPendleLPTToSyOracleFactory} from "silo-oracles/contracts/interfaces/IPendleLPTToSyOracleFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {PendleLPTOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTOracleFactory.sol";
+import {PendleLPTToSyOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToSyOracleFactory.sol";
+import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracleFactory.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/PendleLPTOracle.sol";
-import {PendleLPTOracleDeploy} from "silo-oracles/deploy/pendle/PendleLPTOracleDeploy.s.sol";
-import {PendleLPTOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendleLPTOracleFactoryDeploy.s.sol";
+import {PendleLPTToSyOracleDeploy} from "silo-oracles/deploy/pendle/PendleLPTToSyOracleDeploy.s.sol";
+import {PendleLPTToSyOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendleLPTToSyOracleFactoryDeploy.s.sol";
+import {
+    PendleLPTToAssetOracleFactoryDeploy
+} from "silo-oracles/deploy/pendle/PendleLPTToAssetOracleFactoryDeploy.s.sol";
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
@@ -19,7 +23,8 @@ import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/Sil
     FOUNDRY_PROFILE=oracles forge test -vv --match-contract PendleLPTOracleTest --ffi
 */
 contract PendleLPTOracleTest is Test {
-    PendleLPTOracleFactory factory;
+    PendleLPTToSyOracleFactory factoryToSy;
+    PendleLPTToAssetOracleFactory factoryToAsset;
     PendleLPTOracle oracle;
     IPyYtLpOracleLike pendleOracle = IPyYtLpOracleLike(0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2);
     ISiloOracle underlyingOracle;
@@ -32,12 +37,15 @@ contract PendleLPTOracleTest is Test {
     function setUp() public {
         vm.createSelectFork(vm.envString("RPC_SONIC"), 29883290);
 
-        PendleLPTOracleFactoryDeploy factoryDeploy = new PendleLPTOracleFactoryDeploy();
-        factoryDeploy.disableDeploymentsSync();
-        factory = PendleLPTOracleFactory(factoryDeploy.run());
+        PendleLPTToSyOracleFactoryDeploy factorySyDeploy = new PendleLPTToSyOracleFactoryDeploy();
+        factorySyDeploy.disableDeploymentsSync();
+        factoryToSy = PendleLPTToSyOracleFactory(factorySyDeploy.run());
 
-        PendleLPTOracleDeploy oracleDeploy = new PendleLPTOracleDeploy();
-        oracleDeploy.setParams(market, underlyingOracle);
+        PendleLPTToAssetOracleFactoryDeploy factoryAssetDeploy = new PendleLPTToAssetOracleFactoryDeploy();
+        factoryToAsset = PendleLPTToAssetOracleFactory(factoryAssetDeploy.run());
+
+        PendleLPTToSyOracleDeploy oracleSyDeploy = new PendleLPTToSyOracleDeploy();
+        oracleSyDeploy.setParams(market, underlyingOracle);
 
         // oracle = PendleLPTOracle(address(oracleDeploy.run())); // TODO: increase cardinality
     }

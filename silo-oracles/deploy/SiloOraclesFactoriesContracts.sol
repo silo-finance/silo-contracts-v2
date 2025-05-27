@@ -13,7 +13,8 @@ library SiloOraclesFactoriesContracts {
     string public constant ORACLE_SCALER_FACTORY = "OracleScalerFactory.sol";
     string public constant PENDLE_PT_ORACLE_FACTORY = "PendlePTOracleFactory.sol";
     string public constant PENDLE_PT_TO_ASSET_ORACLE_FACTORY = "PendlePTToAssetOracleFactory.sol";
-    string public constant PENDLE_LPT_ORACLE_FACTORY = "PendleLPTOracleFactory.sol";
+    string public constant PENDLE_LPT_TO_SY_ORACLE_FACTORY = "PendleLPTToSyOracleFactory.sol";
+    string public constant PENDLE_LPT_TO_ASSET_ORACLE_FACTORY = "PendleLPTToAssetOracleFactory.sol";
 }
 
 library SiloOraclesFactoriesDeployments {

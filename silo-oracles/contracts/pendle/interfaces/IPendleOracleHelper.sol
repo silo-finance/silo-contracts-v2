@@ -5,6 +5,7 @@ interface IPendleOracleHelper {
     function getPtToSyRate(address market, uint32 duration) external view returns (uint256);
     function getLpToSyRate(address market, uint32 duration) external view returns (uint256);
     function getPtToAssetRate(address market, uint32 duration) external view returns (uint256);
+    function getLpToAssetRate(address market, uint32 duration) external view returns (uint256);
 
     function getOracleState(
         address market,

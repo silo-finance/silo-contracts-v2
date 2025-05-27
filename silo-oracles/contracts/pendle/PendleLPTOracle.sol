@@ -7,11 +7,7 @@ import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPen
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
 
-/// @notice PendleLPTOracle is an oracle, which multiplies the underlying LP token price by getLpToSyRate from Pendle.
-/// This oracle must be deployed using PendleLPTOracleFactory contract. PendleLPTOracle decimals are equal to underlying
-/// oracle's decimals. TWAP duration is constant and equal to 30 minutes. UNDERLYING_ORACLE must return the price of 
-/// LP token's underlying asset. Quote token of PendleLPTOracle is equal to UNDERLYING_ORACLE quote token.
-contract PendleLPTOracle is ISiloOracle {
+abstract contract PendleLPTOracle is ISiloOracle {
     /// @dev getLpToSyRate unit of measurement.
     uint256 public constant PENDLE_RATE_PRECISION = 10 ** 18;
 
@@ -59,7 +55,7 @@ contract PendleLPTOracle is ISiloOracle {
             PENDLE_ORACLE.getOracleState(_market, TWAP_DURATION);
         
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
-        require(PENDLE_ORACLE.getLpToSyRate(_market, TWAP_DURATION) != 0, PendleGetLpToSyRateIsZero());
+        require(_getRate() != 0, PendleGetLpToSyRateIsZero());
 
         uint256 underlyingSampleToQuote = 10 ** lpUnderlyingTokenDecimals;
         require(_underlyingOracle.quote(underlyingSampleToQuote, lpUnderlyingToken) != 0, InvalidUnderlyingOracle());
@@ -79,7 +75,7 @@ contract PendleLPTOracle is ISiloOracle {
         require(_baseToken == LP_UNDERLYING_TOKEN, AssetNotSupported());
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, LP_UNDERLYING_TOKEN);
-        quoteAmount = quoteAmount * PENDLE_ORACLE.getLpToSyRate(MARKET, TWAP_DURATION) / PENDLE_RATE_PRECISION;
+        quoteAmount = quoteAmount * _getRate() / PENDLE_RATE_PRECISION;
 
         require(quoteAmount != 0, ZeroPrice());
     }
@@ -93,4 +89,6 @@ contract PendleLPTOracle is ISiloOracle {
         (address syToken,,) = IPendleMarketV3Like(_market).readTokens();
         lpUnderlyingToken = IPendleSYTokenLike(syToken).yieldToken();
     }
+
+    function _getRate() internal virtual view returns (uint256) {}
 }

@@ -2,12 +2,11 @@
 pragma solidity >=0.5.0;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
 
-interface IPendleLPTOracleFactory {
-    event PendleLPTOracleCreated(ISiloOracle indexed pendlePTOracle);
+interface IPendleLPTToAssetOracleFactory {
+    event PendleLPTToAssetOracleCreated(ISiloOracle indexed pendleLPTToAssetOracle);
 
-    /// @notice Create a new PendleLPTOracle
+    /// @notice Create a new PendleLPTToAssetOracle
     /// @param _underlyingOracle Oracle for LP token's underlying asset.
     /// @param _market Pendle market's address.
     /// @param _externalSalt The external salt to be used together with factory salt

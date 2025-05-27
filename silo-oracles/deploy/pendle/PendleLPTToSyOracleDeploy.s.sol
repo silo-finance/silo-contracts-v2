@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {PendleLPTOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTOracleFactory.sol";
-import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
+import {PendleLPTToSyOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToSyOracleFactory.sol";
+import {PendleLPTToSyOracle} from "silo-oracles/contracts/pendle/PendleLPTToSyOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
-import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 
 /**
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=PYTH_REDSTONE_wstkscETH_ETH MARKET=0xd14117baf6EC5D12BE68CD06e763A4B82C9B6d1D \
-    forge script silo-oracles/deploy/pendle/PendleLPTOracleDeploy.s.sol \
+    forge script silo-oracles/deploy/pendle/PendleLPTToSyOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
-contract PendleLPTOracleDeploy is CommonDeploy {
+contract PendleLPTToSyOracleDeploy is CommonDeploy {
     ISiloOracle underlyingOracle;
     address market;
 
     function run() public returns (ISiloOracle oracle) {
-        PendleLPTOracleFactory factory =
-            PendleLPTOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_LPT_ORACLE_FACTORY));
+        PendleLPTToSyOracleFactory factory =
+            PendleLPTToSyOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_LPT_TO_SY_ORACLE_FACTORY));
 
         string memory underlyingOracleName;
 
