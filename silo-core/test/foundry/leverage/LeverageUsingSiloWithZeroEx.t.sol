@@ -21,6 +21,8 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
 
 /*
     FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloWithZeroExTest
+
+TODO triple check approvals
 */
 contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
     using SafeERC20 for IERC20;
@@ -183,6 +185,7 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
 
         _assertUserHasNoPosition(user);
         _assertSiloLeverageHasNoTokens();
+        _assertThereIsNoDebtApprovals(user);
 
         assertGt(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got another flashloan fee");
     }
@@ -220,8 +223,6 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         assertEq(silo1.maxRepay(user), 0.10908e18, "users debt");
 
         _assertSiloLeverageHasNoTokens();
-
-        // TODO check debt approval to be 0
     }
 
     function _openLeverage(
@@ -276,6 +277,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         (totalDeposit, totalBorrow) = siloLeverage.openLeveragePosition(_flashArgs, _swapArgs, _depositArgs);
 
         vm.stopPrank();
+
+        _assertThereIsNoDebtApprovals(_user);
     }
 
     function _closeLeverageExample() internal {
@@ -325,6 +328,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         siloLeverage.closeLeveragePosition(_flashArgs, _swapArgs, _closeArgs);
 
         vm.stopPrank();
+
+        _assertThereIsNoDebtApprovals(_user);
     }
 
     function _calculateDebtReceiveApproval(
@@ -407,6 +412,14 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         assertEq(silo0.balanceOf(_user), 0, "[_assertUserHasNoPosition] user nas NO collateral");
         assertEq(silo1.balanceOf(_user), 0, "[_assertUserHasNoPosition] user has NO debt balance");
         assertEq(silo1.maxRepay(_user), 0, "[_assertUserHasNoPosition] user has NO debt");
+    }
+
+    function _assertThereIsNoDebtApprovals(address _user) internal view {
+        assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(siloLeverage)), 0, "[NoDebtApprovals] for siloLeverage");
+        assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(swap)), 0, "[NoDebtApprovals] for swap");
+        assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(swap)), 0, "[NoDebtApprovals] for swap");
+        assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(silo0)), 0, "[NoDebtApprovals] for silo0");
+        assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(silo1)), 0, "[NoDebtApprovals] for silo1");
     }
 
     function _assertSiloLeverageHasNoTokens() internal view {
