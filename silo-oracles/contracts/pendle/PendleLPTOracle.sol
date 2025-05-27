@@ -47,7 +47,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
         uint256 underlyingTokenDecimals = TokenHelper.assertAndGetDecimals(underlyingToken);
 
         require(
-            underlyingTokenDecimals == TokenHelper.assertAndGetDecimals(underlyingToken),
+            underlyingTokenDecimals == TokenHelper.assertAndGetDecimals(_market),
             TokensDecimalsDoesNotMatch()
         );
 
