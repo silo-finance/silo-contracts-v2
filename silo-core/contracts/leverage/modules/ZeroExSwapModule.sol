@@ -36,5 +36,6 @@ contract ZeroExSwapModule is IZeroExSwapModule {
         IERC20(swapArgs.sellToken).forceApprove(swapArgs.allowanceTarget, 1);
 
         amountOut = IERC20(swapArgs.buyToken).balanceOf(address(this));
+        if (amountOut == 0) revert ZeroAmountOut();
     }
 }
