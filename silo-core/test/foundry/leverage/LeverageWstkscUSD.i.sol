@@ -142,6 +142,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
         // user must set approvals for debt share token
         IERC20(debtShareToken).forceApprove(address(siloLeverage), debtReceiveApproval);
+        // receiveAllowance will be needed for newest Silos
 
         // OPEN
 
