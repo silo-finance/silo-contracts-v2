@@ -30,10 +30,9 @@ abstract contract PendleLPTOracle is ISiloOracle {
     /// @dev This oracle's quote token is equal to UNDERLYING_ORACLE's quote token.
     address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
-    error TokensDecimalsDoesNotMatch();
     error InvalidUnderlyingOracle();
     error PendleOracleNotReady();
-    error PendleGetLpToSyRateIsZero();
+    error PendleRateIsZero();
     error AssetNotSupported();
     error ZeroPrice();
 
@@ -50,7 +49,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
             PENDLE_ORACLE.getOracleState(_market, TWAP_DURATION);
         
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
-        require(_getRate() != 0, PendleGetLpToSyRateIsZero());
+        require(_getRate() != 0, PendleRateIsZero());
 
         uint256 underlyingSampleToQuote = 10 ** underlyingTokenDecimals;
         require(_underlyingOracle.quote(underlyingSampleToQuote, underlyingToken) != 0, InvalidUnderlyingOracle());
