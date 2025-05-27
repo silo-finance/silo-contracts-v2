@@ -11,15 +11,15 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 contract SwapRouterMock {
     using SafeERC20 for IERC20;
 
-    MintableToken sellToken;
-    MintableToken buyToken;
+    address sellToken;
+    address buyToken;
     uint256 public amountIn;
     uint256 public amountOut;
 
     function setSwap(
-        MintableToken _sellToken,
+        address _sellToken,
         uint256 _amountIn,
-        MintableToken _buyToken,
+        address _buyToken,
         uint256 _amountOut
     ) external {
         sellToken = _sellToken;
@@ -32,8 +32,8 @@ contract SwapRouterMock {
     fallback() external {
         IERC20(sellToken).safeTransferFrom(msg.sender, address(this), amountIn);
 
-        buyToken.setOnDemand(true);
+        MintableToken(buyToken).setOnDemand(true);
         IERC20(buyToken).safeTransfer(msg.sender, amountOut);
-        buyToken.setOnDemand(false);
+        MintableToken(buyToken).setOnDemand(false);
     }
 }
