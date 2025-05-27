@@ -4,18 +4,15 @@ pragma solidity 0.8.28;
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {ILeverageUsingSilo} from "../interfaces/ILeverageUsingSilo.sol";
-
-import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
 import {LeverageUsingSilo} from "./LeverageUsingSilo.sol";
 
 /*
     @notice This contract allow to create and close leverage position using flasnloan and swap.
-    It supports 0x interface for swap.
+    It supports Pendle swap.
 */
-contract LeverageUsingSiloWithZeroEx is
+contract LeverageUsingSiloWithPendle is
     ILeverageUsingSilo,
-    LeverageUsingSilo,
-    ZeroExSwapModule
+    LeverageUsingSilo
 {
     constructor (address _initialOwner) Ownable(_initialOwner) {
     }
@@ -23,9 +20,9 @@ contract LeverageUsingSiloWithZeroEx is
     function _fillQuote(bytes memory _swapArgs, uint256 _approval)
         internal
         virtual
-        override(LeverageUsingSilo, ZeroExSwapModule)
+        override
         returns (uint256 amountOut)
     {
-        amountOut = ZeroExSwapModule._fillQuote(_swapArgs, _approval);
+        // TODO execute pendle swap
     }
 }
