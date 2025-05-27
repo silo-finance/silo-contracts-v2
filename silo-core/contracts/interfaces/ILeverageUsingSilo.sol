@@ -38,7 +38,8 @@ interface ILeverageUsingSilo {
         ISilo.CollateralType collateralType;
     }
 
-    /// @dev emited when leverate position is open,
+    /// @dev emit when leverage position is open
+    /// Fees can be calculated based on event data:
     /// - leverage fee = borrowerDeposit + swapAmountOut - totalDeposit
     /// - flashloan fee = totalBorrow - flashloanAmount
     event OpenLeverage(
@@ -57,10 +58,7 @@ interface ILeverageUsingSilo {
         uint256 depositWithdrawn
     );
 
-    /// @notice Thrown when the flash loan fails to execute
     error FlashloanFailed();
-
-    /// @notice Thrown if the provided flash loan lender is invalid or unsupported
     error InvalidFlashloanLender();
     error InvalidInitiator();
     error UnknownAction();
@@ -81,8 +79,10 @@ interface ILeverageUsingSilo {
         DepositArgs calldata _depositArgs
     ) external returns (uint256 totalDeposit, uint256 totalBorrow);
 
+    /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings,
     /// that should swap enough collateral to repay flashloan in debt token
+    /// @param _closeLeverageArgs configuration for closing position
     function closeLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
