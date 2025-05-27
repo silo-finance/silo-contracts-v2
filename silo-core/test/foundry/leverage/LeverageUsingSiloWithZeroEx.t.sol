@@ -396,8 +396,8 @@ contract LeverageUsingSiloWithZeroExTest is SiloLittleHelper, Test {
         uint256 _flashAmount,
         ISilo _flashFrom
     ) internal view returns (uint256 debtReceiveApproval) {
-        uint256 flashFee = _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
-        debtReceiveApproval = _flashAmount + flashFee;
+        uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
+        debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }
 
     // TODO nonReentrant test
