@@ -21,6 +21,7 @@ import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialL
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 
 /// @title PendleRewardsClaimer
 /// @notice This hook allows to redeem rewards from Pendle for the silo.
@@ -158,9 +159,10 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         collateralRewards = new uint256[](rewardTokens.length);
         protectedRewards = new uint256[](rewardTokens.length);
         uint256[] memory rewards = _pendleMarket.redeemRewards({user: address(this)});
-        uint256 totalCollateral = IERC20(address(this)).totalSupply();
-        address protectedToken = IGauge(address(_incentivesControllerProtected)).share_token();
-        uint256 totalProtected = IERC20(protectedToken).totalSupply();
+
+        ISilo.SiloStorage storage siloStorage = SiloStorageLib.getSiloStorage();
+        uint256 totalCollateral = siloStorage.totalAssets[ISilo.AssetType.Collateral];
+        uint256 totalProtected = siloStorage.totalAssets[ISilo.AssetType.Protected];
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
             uint256 rewardAmount = rewards[i];
