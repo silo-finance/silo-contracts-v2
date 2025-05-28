@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -129,7 +128,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
 
         address silo = asset0 == _pendleMarket ? silo0 : silo1;
 
-        _configureHooksBefore(silo);
+        _configureHooks(silo);
     }
 
     /// @notice Redeem rewards from Pendle
@@ -264,19 +263,30 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         (rewardTokens, collateralRewards, protectedRewards) = abi.decode(data, (address[], uint256[], uint256[]));
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
-            if (collateralRewards[i] != 0) {
-                incentivesControllerCollateral.immediateDistribution(
-                    rewardTokens[i],
-                    SafeCast.toUint104(collateralRewards[i])
-                );
-            }
+            _immediateDistribution(incentivesControllerCollateral, rewardTokens[i], collateralRewards[i]);
+            _immediateDistribution(incentivesControllerProtected, rewardTokens[i], protectedRewards[i]);
+        }
+    }
 
-            if (protectedRewards[i] != 0) {
-                incentivesControllerProtected.immediateDistribution(
-                    rewardTokens[i],
-                    SafeCast.toUint104(protectedRewards[i])
-                );
-            }
+    /// @notice Distribute the rewards to the incentives controller
+    /// @dev Distribute the rewards to the incentives controller in chunks of 2^104 to avoid overflows.
+    /// @param _incentivesController Incentives controller
+    /// @param _rewardToken Reward token
+    /// @param _amount Amount of rewards to distribute
+    function _immediateDistribution(
+        ISiloIncentivesController _incentivesController,
+        address _rewardToken,
+        uint256 _amount
+    ) internal {
+        if (_amount == 0) return;
+
+        uint256 amountToDistribute = _amount > type(uint104).max ? type(uint104).max : _amount;
+
+        _incentivesController.immediateDistribution(_rewardToken, uint104(amountToDistribute));
+
+        if (amountToDistribute != _amount) {
+            uint256 remainingAmount = _amount - amountToDistribute;
+            _immediateDistribution(_incentivesController, _rewardToken, remainingAmount);
         }
     }
 
@@ -292,7 +302,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// - SWITCH_COLLATERAL
     /// - LIQUIDATION
     /// - FLASH_LOAN
-    function _configureHooksBefore(address _silo) internal {
+    function _configureHooks(address _silo) internal {
         uint256 requiredHooksBefore = 
             Hook.DEPOSIT | Hook.COLLATERAL_TOKEN |
             Hook.DEPOSIT | Hook.PROTECTED_TOKEN |
