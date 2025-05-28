@@ -130,7 +130,6 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
             // API output field: $.tx.to
             exchangeProxy: address(0x888888888889758F76e7103c6CbF23ABbF58F946),
             // API output field: $.tx.data
-            // tokenInAmount: 1.5
             swapCallData: abi.encodePacked(
                 hex"c81f847a000000000000000000000000",
                 address(siloLeverage),
@@ -197,6 +196,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
             // API output field: $.tx.to
             exchangeProxy: address(0x888888888889758F76e7103c6CbF23ABbF58F946),
             // API output field: $.tx.data
+            // tokenInAmount: 1.5
             swapCallData: abi.encodePacked(
                 hex"594a88cc000000000000000000000000",
                 address(siloLeverage),
