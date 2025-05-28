@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -278,7 +279,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         address _rewardToken,
         uint256 _totalToDistribute
     ) internal {
-        uint256 amountToDistribute = _totalToDistribute > type(uint104).max ? type(uint104).max : _totalToDistribute;
+        uint256 amountToDistribute = Math.min(_totalToDistribute, type(uint104).max);
 
         _incentivesController.immediateDistribution(_rewardToken, uint104(amountToDistribute));
 
