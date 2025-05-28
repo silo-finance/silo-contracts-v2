@@ -20,7 +20,7 @@ library SiloCoreContracts {
     string public constant SHARE_PROTECTED_COLLATERAL_TOKEN = "ShareProtectedCollateralToken.sol";
     string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
     string public constant SILO_LENS = "SiloLens.sol";
-    string public constant SILO_LEVERAGE_USING_SILO_0X = "LeverageUsingSiloWithZeroEx.sol";
+    string public constant SILO_LEVERAGE_USING_SILO = "LeverageUsingSiloWithGeneralSwap.sol";
     string public constant SILO_ROUTER_V2 = "SiloRouterV2.sol";
     string public constant INCENTIVES_CONTROLLER_FACTORY = "SiloIncentivesControllerFactory.sol";
     string public constant INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY
