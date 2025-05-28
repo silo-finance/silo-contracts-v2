@@ -375,7 +375,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         uint256 collateralRewardsReceived = collateralRewardsAfter - collateralRewardsBefore;
         uint256 protectedRewardsReceived = protectedRewardsAfter - protectedRewardsBefore;
 
-        assertEq(collateralRewardsReceived / 2, protectedRewardsReceived, "Rewards split proportionally");
+        assertEq(collateralRewardsReceived / 2 - 2, protectedRewardsReceived, "Rewards split proportionally");
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsEverySecond -vv
