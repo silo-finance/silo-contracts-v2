@@ -375,6 +375,8 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         uint256 collateralRewardsReceived = collateralRewardsAfter - collateralRewardsBefore;
         uint256 protectedRewardsReceived = protectedRewardsAfter - protectedRewardsBefore;
 
+        // -2 because of the rounding error that we have in PendleRewardsClaimer.redeemRewardsFromPendle fn
+        // when calculating the rewards.
         assertEq(collateralRewardsReceived / 2 - 2, protectedRewardsReceived, "Rewards split proportionally");
     }
 
