@@ -8,7 +8,7 @@ import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 /// @dev reentrancy contract that stores transient variables for current tx
 /// this is done because leverage uses flashloan and because of the flow, we loosing access to eg msg.sender
 /// also we can not pass return variables via flashloan
-contract LeverageReentrancy {
+abstract contract LeverageReentrancy {
     /// @dev origin tx msg.sender, acts also as reentrancy flag
     address internal transient __msgSender;
 
