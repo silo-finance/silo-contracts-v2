@@ -380,21 +380,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsEverySecond -vv
     function test_redeemRewardsEverySecond() public {
-        IERC20 asset = IERC20(silo0.asset());
-
-        vm.prank(_dao);
-        _hookReceiver.setConfig(
-            IPendleMarketLike(address(asset)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
-        );
-
-        uint256 amount = asset.balanceOf(_depositor);
-
-        vm.prank(_depositor);
-        asset.approve(address(silo0), amount);
-        vm.prank(_depositor);
-        silo0.deposit(amount, _depositor, ISilo.CollateralType.Collateral);
+        _configureHookAndDeposit();
 
         for (uint256 i = 0; i < 100; i++) {
             vm.warp(block.timestamp + 1 seconds);
@@ -412,5 +398,23 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
             assertGt(rewardsAfter, rewardsBefore, "Depositor should have received rewards");
         }
+    }
+
+    function _configureHookAndDeposit() internal {
+        IERC20 asset = IERC20(silo0.asset());
+
+        vm.prank(_dao);
+        _hookReceiver.setConfig(
+            IPendleMarketLike(address(asset)),
+            _incentivesControllerCollateral,
+            _incentivesControllerProtected
+        );
+
+        uint256 amount = asset.balanceOf(_depositor);
+
+        vm.prank(_depositor);
+        asset.approve(address(silo0), amount);
+        vm.prank(_depositor);
+        silo0.deposit(amount, _depositor, ISilo.CollateralType.Collateral);
     }
 }
