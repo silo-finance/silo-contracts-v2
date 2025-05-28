@@ -24,6 +24,6 @@ interface IPendleRewardsClaimer is IHookReceiver {
 
     /// @notice Set the config for the hook receiver
     /// @param _pendleMarket Pendle market address
-    /// @param _incentivesController Incentives controller address
+    /// @param _incentivesController Incentives controller address for the protected share token
     function setConfig(IPendleMarketLike _pendleMarket, ISiloIncentivesController _incentivesController) external;
 }
