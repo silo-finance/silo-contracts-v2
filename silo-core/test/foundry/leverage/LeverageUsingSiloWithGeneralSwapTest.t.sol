@@ -6,6 +6,10 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
+import {LeverageUsingSiloWithGeneralSwapDeploy} from "silo-core/deploy/LeverageUsingSiloWithGeneralSwapDeploy.s.sol";
+
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
@@ -32,6 +36,11 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
     address collateralShareToken;
     address debtShareToken;
     SwapRouterMock swap;
+    
+    constructor() {
+        AddrLib.init();
+        AddrLib.setAddress(AddrKey.DAO, address(this));
+    }
 
     function setUp() public {
         cfg = _setUpLocalFixture();
@@ -42,7 +51,7 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         (,collateralShareToken,) = cfg.getShareTokens(address(silo0));
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
 
-        siloLeverage = new LeverageUsingSiloWithGeneralSwap(address(this));
+        siloLeverage = _deployLeverage();
         siloLeverage.setRevenueReceiver(makeAddr("RevenueReceiver"));
         siloLeverage.setLeverageFee(0.0001e18);
 
@@ -50,6 +59,12 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
+    }
+    
+    function _deployLeverage() internal returns (LeverageUsingSiloWithGeneralSwap) {
+        LeverageUsingSiloWithGeneralSwapDeploy deployer = new LeverageUsingSiloWithGeneralSwapDeploy();
+        deployer.disableDeploymentsSync();
+        return deployer.run();
     }
 
     /*
