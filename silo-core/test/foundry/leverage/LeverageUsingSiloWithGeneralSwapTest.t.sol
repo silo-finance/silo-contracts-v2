@@ -36,11 +36,6 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
     address collateralShareToken;
     address debtShareToken;
     SwapRouterMock swap;
-    
-    constructor() {
-        AddrLib.init();
-        AddrLib.setAddress(AddrKey.DAO, address(this));
-    }
 
     function setUp() public {
         cfg = _setUpLocalFixture();
@@ -62,6 +57,9 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
     }
     
     function _deployLeverage() internal returns (LeverageUsingSiloWithGeneralSwap) {
+        AddrLib.init();
+        AddrLib.setAddress(AddrKey.DAO, address(this));
+
         LeverageUsingSiloWithGeneralSwapDeploy deployer = new LeverageUsingSiloWithGeneralSwapDeploy();
         deployer.disableDeploymentsSync();
         return deployer.run();
