@@ -5,13 +5,13 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RevertLib} from "../../lib/RevertLib.sol";
-import {IZeroExSwapModule} from "../../interfaces/IZeroExSwapModule.sol";
+import {IGeneralSwapModule} from "../../interfaces/IGeneralSwapModule.sol";
 
-/// @title 0x and ODOS Compatible ERC20 Swap Module
-/// @notice Enables ERC20 token swaps via an external exchange proxy (e.g., 0x, ODOS)
+/// @title ERC20 General use Swap Module
+/// @notice Enables ERC20 token swaps via an external exchange (e.g., 0x, ODOS, Pendle)
 /// @dev Based on the 0x demo contract:
 /// https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
-contract ZeroExSwapModule is IZeroExSwapModule {
+contract GeneralSwapModule is IGeneralSwapModule {
     using SafeERC20 for IERC20;
 
     /// @notice Executes a token swap using a prebuilt swap quote
