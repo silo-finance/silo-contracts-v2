@@ -307,22 +307,22 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// - FLASH_LOAN
     function _configureHooks(address _silo) internal {
         uint256 requiredHooksBefore = 
-            Hook.DEPOSIT | Hook.COLLATERAL_TOKEN |
-            Hook.DEPOSIT | Hook.PROTECTED_TOKEN |
-            Hook.WITHDRAW | Hook.COLLATERAL_TOKEN |
-            Hook.WITHDRAW | Hook.PROTECTED_TOKEN |
+            Hook.DEPOSIT |
+            Hook.WITHDRAW |
             Hook.BORROW |
             Hook.BORROW_SAME_ASSET |
             Hook.REPAY |
-            Hook.TRANSITION_COLLATERAL | Hook.COLLATERAL_TOKEN |
-            Hook.TRANSITION_COLLATERAL | Hook.PROTECTED_TOKEN |
+            Hook.TRANSITION_COLLATERAL |
             Hook.SWITCH_COLLATERAL |
             Hook.LIQUIDATION |
-            Hook.FLASH_LOAN;
+            Hook.FLASH_LOAN |
+            Hook.COLLATERAL_TOKEN |
+            Hook.PROTECTED_TOKEN;
 
         uint256 requiredHooksAfter = _getHooksAfter(_silo) |
-            Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER |
-            Hook.PROTECTED_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+            Hook.COLLATERAL_TOKEN |
+            Hook.PROTECTED_TOKEN |
+            Hook.SHARE_TOKEN_TRANSFER;
 
         _setHookConfig(_silo, uint24(requiredHooksBefore), uint24(requiredHooksAfter));
     }
