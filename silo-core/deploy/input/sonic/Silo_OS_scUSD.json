@@ -19,7 +19,7 @@
     "solvencyOracle1": "CHAINLINK_scUSD_USD",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2.sol",
-    "interestRateModelConfig1": "stableHighCapv12",
+    "interestRateModelConfig1": "stableHighCapV12",
     "maxLtv1": 6800,
     "lt1": 7300,
     "liquidationTargetLtv1": 7100,
