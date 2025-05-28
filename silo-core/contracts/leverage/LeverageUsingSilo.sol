@@ -66,18 +66,18 @@ abstract contract LeverageUsingSilo is
     function openLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
-        DepositArgs calldata depositArgs
+        DepositArgs calldata _depositArgs
     )
         external
         virtual
-        nonReentrant(depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
+        nonReentrant(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
         returns (uint256 totalDeposit, uint256 totalBorrow)
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: ISilo(_flashArgs.flashloanTarget).asset(),
             _amount: _flashArgs.amount,
-            _data: abi.encode(_swapArgs, depositArgs)
+            _data: abi.encode(_swapArgs, _depositArgs)
         }), FlashloanFailed());
 
         totalDeposit = __totalDeposit;
@@ -87,17 +87,17 @@ abstract contract LeverageUsingSilo is
     function closeLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
-        CloseLeverageArgs calldata _closeLeverageArgs
+        CloseLeverageArgs calldata _closeArgs
     )
         external
         virtual
-        nonReentrant(_closeLeverageArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
+        nonReentrant(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: ISilo(_flashArgs.flashloanTarget).asset(),
             _amount: _flashArgs.amount,
-            _data: abi.encode(_swapArgs, _closeLeverageArgs)
+            _data: abi.encode(_swapArgs, _closeArgs)
         }), FlashloanFailed());
     }
 
@@ -124,7 +124,11 @@ abstract contract LeverageUsingSilo is
 
         // deposit with leverage: user collateral + swapped collateral - fee
         // TODO qa if posible that feeForLeverage > collateralAmountAfterSwap
-        __totalDeposit = _deposit(depositArgs, collateralAmountAfterSwap - feeForLeverage, collateralAsset);
+        __totalDeposit = _deposit({
+            _depositArgs: depositArgs,
+            _leverageAmount: collateralAmountAfterSwap - feeForLeverage,
+            _asset: collateralAsset
+        });
 
         ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
@@ -157,7 +161,11 @@ abstract contract LeverageUsingSilo is
 
         _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), totalDeposit);
 
-        _depositArgs.silo.deposit(totalDeposit, __msgSender, _depositArgs.collateralType);
+        _depositArgs.silo.deposit({
+            _assets: totalDeposit,
+            _receiver: __msgSender,
+            _collateralType: _depositArgs.collateralType
+        });
     }
     
     function _closeLeverage(
@@ -175,14 +183,22 @@ abstract contract LeverageUsingSilo is
 
         ISilo siloWithDebt = _resolveOtherSilo(closeArgs.siloWithCollateral);
 
-        _setMaxAllowance(IERC20(_debtToken), address(siloWithDebt), _flashloanAmount);
+        _setMaxAllowance({
+            _asset: IERC20(_debtToken),
+            _spender: address(siloWithDebt),
+            _requiredAmount: _flashloanAmount
+        });
+
         siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), __msgSender);
 
         uint256 redeemShares = _getBorrowerTotalShareCollateralBalance(closeArgs);
 
-        uint256 withdrawnDeposit = closeArgs.siloWithCollateral.redeem(
-            redeemShares, address(this), __msgSender, closeArgs.collateralType
-        );
+        uint256 withdrawnDeposit = closeArgs.siloWithCollateral.redeem({
+            _shares: redeemShares,
+            _receiver: address(this),
+            _owner: __msgSender,
+            _collateralType: closeArgs.collateralType
+        });
 
         // swap collateral to debt to repay flashloan
         uint256 availableDebtAssets = _fillQuote(swapArgs, withdrawnDeposit);
@@ -192,7 +208,12 @@ abstract contract LeverageUsingSilo is
 
         uint256 borrowerDebtChange = availableDebtAssets - obligation;
 
-        emit CloseLeverage(__msgSender, _flashloanAmount, availableDebtAssets, withdrawnDeposit);
+        emit CloseLeverage({
+            borrower: __msgSender,
+            flashloanRepay: _flashloanAmount,
+            swapAmountOut: availableDebtAssets,
+            depositWithdrawn: withdrawnDeposit
+        });
 
         if (borrowerDebtChange != 0) IERC20(_debtToken).safeTransfer(__msgSender, borrowerDebtChange);
 
