@@ -182,13 +182,8 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             }
 
             // Split the rewards proportionally to the total supply of the collateral and protected tokens
-            if (totalCollateral >= totalProtected) {
-                collateralRewards[i] = rewardAmount * totalCollateral / (totalCollateral + totalProtected);
-                protectedRewards[i] = rewardAmount - collateralRewards[i];
-            } else {
-                protectedRewards[i] = rewardAmount * totalProtected / (totalCollateral + totalProtected);
-                collateralRewards[i] = rewardAmount - protectedRewards[i];
-            }
+            protectedRewards[i] = rewardAmount * totalProtected / (totalCollateral + totalProtected);
+            collateralRewards[i] = rewardAmount - protectedRewards[i];
 
             // Transfer the rewards to the incentives controllers
             if (collateralRewards[i] != 0) {
