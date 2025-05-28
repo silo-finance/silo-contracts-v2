@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
@@ -19,7 +18,9 @@ import {LeverageReentrancy} from "./modules/LeverageReentrancy.sol";
 // TODO same asset leverage in phase 2
 // TODO events on state changes
 // TODO ensure it will that work for Pendle
-// and swap module can be picked up by argument
+// TODO triple check approvals
+//- Leverage contract should never have any tokens
+//- close should repay all debt (if position solvent?)
 abstract contract LeverageUsingSilo is
     ILeverageUsingSilo,
     IERC3156FlashBorrower,
@@ -27,8 +28,6 @@ abstract contract LeverageUsingSilo is
     LeverageReentrancy
 {
     using SafeERC20 for IERC20;
-
-    string public constant VERSION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
     uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");

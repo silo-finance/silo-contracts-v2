@@ -8,10 +8,10 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IZeroExSwapModule} from "silo-core/contracts/interfaces/IZeroExSwapModule.sol";
+import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageUsingSilo} from "silo-core/contracts/interfaces/ILeverageUsingSilo.sol";
-import {LeverageUsingSiloWithZeroEx} from "silo-core/contracts/leverage/LeverageUsingSiloWithZeroEx.sol";
+import {LeverageUsingSiloWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloWithGeneralSwap.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -41,7 +41,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
     uint256 constant _PRECISION = 1e18;
 
-    LeverageUsingSiloWithZeroEx siloLeverage;
+    LeverageUsingSiloWithGeneralSwap siloLeverage;
     address collateralShareToken;
     address debtShareToken;
 
@@ -51,7 +51,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         (,collateralShareToken,) = siloConfig.getShareTokens(address(wstkscUSDSilo));
         (,, debtShareToken) = siloConfig.getShareTokens(address(usdcSilo));
 
-        siloLeverage = new LeverageUsingSiloWithZeroEx(address(this));
+        siloLeverage = new LeverageUsingSiloWithGeneralSwap(address(this));
         siloLeverage.setRevenueReceiver(makeAddr("RevenueReceiver"));
         siloLeverage.setLeverageFee(0.0001e18);
 
@@ -109,7 +109,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         - receiver: must be leverage contract
         */
 
-        IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
+        IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
             sellToken: address(usdcAsset),
             buyToken: address(wstkscUSDAsset),
             // API output field: $.tx.to
@@ -172,7 +172,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         - receiver: must be leverage contract
         */
 
-        IZeroExSwapModule.SwapArgs memory swapArgs = IZeroExSwapModule.SwapArgs({
+        IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
             sellToken: address(wstkscUSDAsset),
             buyToken: address(usdcAsset),
             // API output field: $.tx.to

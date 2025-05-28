@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IZeroExSwapModule {
+interface IGeneralSwapModule {
     /// @notice data for exchange proxy to perform the swap
     /// @param sellToken The `sellTokenAddress` field from the API response.
     /// @param buyToken The `buyTokenAddress` field from the API response.

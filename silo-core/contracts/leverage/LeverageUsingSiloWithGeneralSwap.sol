@@ -5,27 +5,28 @@ import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {ILeverageUsingSilo} from "../interfaces/ILeverageUsingSilo.sol";
 
-import {ZeroExSwapModule} from "./modules/ZeroExSwapModule.sol";
+import {GeneralSwapModule} from "./modules/GeneralSwapModule.sol";
 import {LeverageUsingSilo} from "./LeverageUsingSilo.sol";
 
 /*
     @notice This contract allow to create and close leverage position using flasnloan and swap.
-    It supports 0x interface for swap.
 */
-contract LeverageUsingSiloWithZeroEx is
+contract LeverageUsingSiloWithGeneralSwap is
     ILeverageUsingSilo,
     LeverageUsingSilo,
-    ZeroExSwapModule
+    GeneralSwapModule
 {
+    string public constant VERSION = "Leverage with silo flashloan and 0x (or compatible) swap";
+
     constructor (address _initialOwner) Ownable(_initialOwner) {
     }
 
     function _fillQuote(bytes memory _swapArgs, uint256 _approval)
         internal
         virtual
-        override(LeverageUsingSilo, ZeroExSwapModule)
+        override(LeverageUsingSilo, GeneralSwapModule)
         returns (uint256 amountOut)
     {
-        amountOut = ZeroExSwapModule._fillQuote(_swapArgs, _approval);
+        amountOut = GeneralSwapModule._fillQuote(_swapArgs, _approval);
     }
 }
