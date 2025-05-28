@@ -58,13 +58,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     }
 
     /// @inheritdoc IPendleRewardsClaimer
-    function redeemRewards()
-        external
-        returns (
-            address[] memory rewardTokens,
-            uint256[] memory rewards
-        )
-    {
+    function redeemRewards() external returns (address[] memory rewardTokens, uint256[] memory rewards) {
         (address silo0, address silo1) = siloConfig.getSilos();
 
         if (ISilo(silo0).asset() == address(pendleMarket)) {
@@ -147,13 +141,12 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
-        onlySilo()
         override
     {
         uint256 collateralDepositAction = Hook.depositAction(ISilo.CollateralType.Collateral);
         require(!collateralDepositAction.matchAction(_action), CollateralDepositNotAllowed());
 
-        beforeActionExecutedFor = _action;
+        _beforeActionExecutedFor = _action;
         _redeemRewards(_silo);
     }
 
@@ -161,7 +154,6 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
-        onlySiloOrShareToken()
         override(GaugeHookReceiver, IHookReceiver)
     {
         if (_beforeActionExecutedFor == Hook.NONE) {
@@ -208,9 +200,9 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         (rewardTokens, rewards) = abi.decode(data, (address[], uint256[]));
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
-            if (rewards[i] != 0) {
-                _immediateDistribution(incentivesController, rewardTokens[i], rewards[i]);
-            }
+            if (rewards[i] == 0) continue;
+
+            _immediateDistribution(incentivesController, rewardTokens[i], rewards[i]);
         }
     }
 

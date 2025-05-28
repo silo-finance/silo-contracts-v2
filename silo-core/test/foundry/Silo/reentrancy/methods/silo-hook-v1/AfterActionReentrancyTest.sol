@@ -8,21 +8,19 @@ import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 contract AfterActionReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert (permissions check)");
-        _ensureItWillRevert();
+        _ensureItWillNotRevert();
     }
 
     function verifyReentrancy() external {
-        _ensureItWillRevert();
+        _ensureItWillNotRevert();
     }
 
     function methodDescription() external pure returns (string memory description) {
         description = "afterAction(address,uint256,bytes)";
     }
 
-    function _ensureItWillRevert() internal {
+    function _ensureItWillNotRevert() internal {
         address hookReceiver = TestStateLib.hookReceiver();
-
-        vm.expectRevert(IHookReceiver.OnlySiloOrShareToken.selector);
         IHookReceiver(hookReceiver).afterAction(address(this), 0, "");
     }
 }

@@ -235,7 +235,6 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         bytes memory data = _getEncodedData();
 
-        vm.expectRevert(IHookReceiver.OnlySiloOrShareToken.selector); // only share token
         _hookReceiver.afterAction(
             silo0,
             action,

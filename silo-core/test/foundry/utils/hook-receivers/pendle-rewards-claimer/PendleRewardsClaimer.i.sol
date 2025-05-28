@@ -209,18 +209,6 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         );
     }
 
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_beforeAction_onlySilo -vv
-    function test_beforeAction_onlySilo() public {
-        vm.expectRevert(abi.encodeWithSelector(IHookReceiver.OnlySilo.selector));
-        _hookReceiver.beforeAction(address(0), 0, "");
-    }
-
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_afterAction_onlySiloOrShareToken -vv
-    function test_afterAction_onlySiloOrShareToken() public {
-        vm.expectRevert(abi.encodeWithSelector(IHookReceiver.OnlySiloOrShareToken.selector));
-        _hookReceiver.afterAction(address(0), 0, "");
-    }
-
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewards_missingConfiguration -vv
     function test_redeemRewards_missingConfiguration() public {
         vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.MissingConfiguration.selector));
