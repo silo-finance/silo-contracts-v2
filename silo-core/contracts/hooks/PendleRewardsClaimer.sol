@@ -263,8 +263,13 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         (rewardTokens, collateralRewards, protectedRewards) = abi.decode(data, (address[], uint256[], uint256[]));
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
-            _immediateDistribution(incentivesControllerCollateral, rewardTokens[i], collateralRewards[i]);
-            _immediateDistribution(incentivesControllerProtected, rewardTokens[i], protectedRewards[i]);
+            if (collateralRewards[i] != 0) {
+                _immediateDistribution(incentivesControllerCollateral, rewardTokens[i], collateralRewards[i]);
+            }
+
+            if (protectedRewards[i] != 0) {
+                _immediateDistribution(incentivesControllerProtected, rewardTokens[i], protectedRewards[i]);
+            }
         }
     }
 
@@ -272,20 +277,18 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// @dev Distribute the rewards to the incentives controller in chunks of 2^104 to avoid overflows.
     /// @param _incentivesController Incentives controller
     /// @param _rewardToken Reward token
-    /// @param _amount Amount of rewards to distribute
+    /// @param _totalToDistribute Amount of rewards to distribute
     function _immediateDistribution(
         ISiloIncentivesController _incentivesController,
         address _rewardToken,
-        uint256 _amount
+        uint256 _totalToDistribute
     ) internal {
-        if (_amount == 0) return;
-
-        uint256 amountToDistribute = _amount > type(uint104).max ? type(uint104).max : _amount;
+        uint256 amountToDistribute = _totalToDistribute > type(uint104).max ? type(uint104).max : _totalToDistribute;
 
         _incentivesController.immediateDistribution(_rewardToken, uint104(amountToDistribute));
 
-        if (amountToDistribute != _amount) {
-            uint256 remainingAmount = _amount - amountToDistribute;
+        if (amountToDistribute < _totalToDistribute) {
+            uint256 remainingAmount = _totalToDistribute - amountToDistribute;
             _immediateDistribution(_incentivesController, _rewardToken, remainingAmount);
         }
     }
