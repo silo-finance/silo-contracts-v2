@@ -209,7 +209,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         override
     {
         beforeActionExecutedFor = _action;
-        _redeemRewards(msg.sender);
+        _redeemRewards(_silo);
     }
 
     /// @inheritdoc IHookReceiver
