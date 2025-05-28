@@ -12,7 +12,7 @@ import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 
 import {RevenueModule} from "./modules/RevenueModule.sol";
-import {LeverageReentrancy} from "./modules/LeverageReentrancy.sol";
+import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
 
 // TODO same asset leverage in phase 2
@@ -25,7 +25,7 @@ abstract contract LeverageUsingSilo is
     ILeverageUsingSilo,
     IERC3156FlashBorrower,
     RevenueModule,
-    LeverageReentrancy
+LeverageTxState
 {
     using SafeERC20 for IERC20;
 
@@ -70,7 +70,7 @@ abstract contract LeverageUsingSilo is
     )
         external
         virtual
-        nonReentrant(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
+        atomicTxFlow(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
         returns (uint256 totalDeposit, uint256 totalBorrow)
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
@@ -91,7 +91,7 @@ abstract contract LeverageUsingSilo is
     )
         external
         virtual
-        nonReentrant(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
+        atomicTxFlow(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,

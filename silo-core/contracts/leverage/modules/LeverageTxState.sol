@@ -8,7 +8,7 @@ import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 /// @dev reentrancy contract that stores transient variables for current tx
 /// this is done because leverage uses flashloan and because of the flow, we loosing access to eg msg.sender
 /// also we can not pass return variables via flashloan
-abstract contract LeverageReentrancy {
+abstract contract LeverageTxState {
     /// @dev origin tx msg.sender, acts also as reentrancy flag
     address internal transient __msgSender;
 
@@ -27,7 +27,7 @@ abstract contract LeverageReentrancy {
     /// @dev address of contract from where we getting flashloan
     address internal transient __flashloanTarget;
 
-    modifier nonReentrant(ISilo _silo, ILeverageUsingSilo.LeverageAction _action, address _flashloanTarget) {
+    modifier atomicTxFlow(ISilo _silo, ILeverageUsingSilo.LeverageAction _action, address _flashloanTarget) {
         require(__msgSender == address(0), ILeverageUsingSilo.Reentrancy());
         _setTransient(_silo, _action, _flashloanTarget);
 
