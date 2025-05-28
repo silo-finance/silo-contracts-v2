@@ -2,6 +2,9 @@
 pragma solidity ^0.8.19;
 
 // Contracts
+import {XSilo} from "x-silo/contracts/XSilo.sol";
+import {Stream} from "x-silo/contracts/modules/Stream.sol";
+
 import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {
@@ -85,7 +88,9 @@ abstract contract BaseStorage {
     ISiloFactory siloFactory;
     IInterestRateModelV2Factory interestRateModelV2ConfigFactory;
 
-    /// @notice silo Config
+    XSilo internal xSilo;
+    Stream internal stream;
+
     ISiloConfig internal siloConfig;
 
     /// @notice The interest rate model for the market

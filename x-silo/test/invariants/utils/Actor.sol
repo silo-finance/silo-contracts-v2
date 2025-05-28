@@ -16,6 +16,7 @@ contract Actor {
     constructor(address[] memory _tokens, address[] memory _contracts) payable {
         tokens = _tokens;
         contracts = _contracts;
+
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 j = 0; j < contracts.length; j++) {
                 IERC20(tokens[i]).approve(contracts[j], type(uint256).max);
