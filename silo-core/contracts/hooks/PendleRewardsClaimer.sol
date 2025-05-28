@@ -283,12 +283,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         address _rewardToken,
         uint256 _totalToDistribute
     ) internal {
-        if (_totalToDistribute > type(uint104).max) {
-            _immediateDistribution(_incentivesController, _rewardToken, _totalToDistribute - type(uint104).max);
-            return;
-        }
-        
-        _incentivesController.immediateDistribution(_rewardToken, uint104(amountToDistribute));
+        uint256 amountToDistribute = _totalToDistribute > type(uint104).max ? type(uint104).max : _totalToDistribute;
 
         _incentivesController.immediateDistribution(_rewardToken, uint104(amountToDistribute));
 
