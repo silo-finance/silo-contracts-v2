@@ -42,6 +42,6 @@ contract LeverageUsingSiloWithGeneralSwapDeploy is CommonDeploy {
 
         console2.log("LeverageUsingSiloWithGeneralSwap redeployed - remember to run `TowerRegistration` script!");
 
-        _registerDeployment(address(leverage), SiloCoreContracts.SILO_LEVERAGE_USING_SILO_0X);
+        _registerDeployment(address(leverage), SiloCoreContracts.SILO_LEVERAGE_USING_SILO);
     }
 }
