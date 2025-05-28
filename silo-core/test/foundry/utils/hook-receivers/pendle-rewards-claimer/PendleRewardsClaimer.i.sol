@@ -45,15 +45,10 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
     IPendleRewardsClaimer internal _hookReceiver;
     ISiloConfig internal _siloConfig;
-    ISiloIncentivesController internal _incentivesControllerCollateral;
-    ISiloIncentivesController internal _incentivesControllerProtected;
+    ISiloIncentivesController internal _incentivesController;
     ISiloIncentivesControllerGaugeLikeFactory internal _factory;
 
-    event ConfigUpdated(
-        IPendleMarketLike _pendleMarket,
-        ISiloIncentivesController _incentivesControllerCollateral,
-        ISiloIncentivesController _incentivesControllerProtected
-    );
+    event ConfigUpdated(IPendleMarketLike _pendleMarket, ISiloIncentivesController _incentivesController);
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), _BLOCK_TO_FORK);
@@ -69,15 +64,9 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             ChainsLib.chainAlias()
         ));
 
-        _incentivesControllerCollateral = ISiloIncentivesController(_factory.createGaugeLike(
-            _dao,
-            address(_hookReceiver),
-            address(silo0))
-        );
-
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
 
-        _incentivesControllerProtected = ISiloIncentivesController(_factory.createGaugeLike(
+        _incentivesController = ISiloIncentivesController(_factory.createGaugeLike(
             _dao,
             address(_hookReceiver),
             address(protected))
@@ -87,13 +76,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         gaugeHookReceiver.setGauge(
-            IGauge(address(_incentivesControllerCollateral)),
-            IShareToken(address(silo0))
-        );
-
-        vm.prank(_dao);
-        gaugeHookReceiver.setGauge(
-            IGauge(address(_incentivesControllerProtected)),
+            IGauge(address(_incentivesController)),
             IShareToken(address(protected))
         );
     }
@@ -119,8 +102,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, _depositor));
         _hookReceiver.setConfig(
             IPendleMarketLike(address(0)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
+            _incentivesController
         );
     }
 
@@ -130,8 +112,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.WrongPendleMarket.selector));
         _hookReceiver.setConfig(
             IPendleMarketLike(address(0)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
+            _incentivesController
         );
     }
 
@@ -143,15 +124,6 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.EmptyAddress.selector));
         _hookReceiver.setConfig(
             IPendleMarketLike(asset),
-            ISiloIncentivesController(address(0)),
-            _incentivesControllerProtected
-        );
-
-        vm.prank(_dao);
-        vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.EmptyAddress.selector));
-        _hookReceiver.setConfig(
-            IPendleMarketLike(asset),
-            _incentivesControllerCollateral,
             ISiloIncentivesController(address(0))
         );
     }
@@ -164,8 +136,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectRevert();
         _hookReceiver.setConfig(
             IPendleMarketLike(asset),
-            ISiloIncentivesController(makeAddr("InvalidNotifier")),
-            _incentivesControllerProtected
+            ISiloIncentivesController(makeAddr("InvalidNotifier"))
         );
     }
 
@@ -182,23 +153,11 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         vm.expectRevert(
-            abi.encodeWithSelector(IPendleRewardsClaimer.WrongCollateralIncentivesControllerNotifier.selector)
+            abi.encodeWithSelector(IPendleRewardsClaimer.WrongIncentivesControllerNotifier.selector)
         );
 
         _hookReceiver.setConfig(
             IPendleMarketLike(asset),
-            controller,
-            _incentivesControllerProtected
-        );
-
-        vm.prank(_dao);
-        vm.expectRevert(
-            abi.encodeWithSelector(IPendleRewardsClaimer.WrongProtectedIncentivesControllerNotifier.selector)
-        );
-
-        _hookReceiver.setConfig(
-            IPendleMarketLike(asset),
-            _incentivesControllerCollateral,
             controller
         );
     }
@@ -215,23 +174,11 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         vm.expectRevert(
-            abi.encodeWithSelector(IPendleRewardsClaimer.WrongCollateralIncentivesControllerShareToken.selector)
+            abi.encodeWithSelector(IPendleRewardsClaimer.WrongIncentivesControllerShareToken.selector)
         );
 
         _hookReceiver.setConfig(
             IPendleMarketLike(asset),
-            controller,
-            _incentivesControllerProtected
-        );
-
-        vm.prank(_dao);
-        vm.expectRevert(
-            abi.encodeWithSelector(IPendleRewardsClaimer.WrongProtectedIncentivesControllerShareToken.selector)
-        );
-
-        _hookReceiver.setConfig(
-            IPendleMarketLike(asset),
-            _incentivesControllerCollateral,
             controller
         );
     }
@@ -243,15 +190,13 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectEmit(true, true, true, true);
         emit ConfigUpdated(
             IPendleMarketLike(asset),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
+            _incentivesController
         );
 
         vm.prank(_dao);
         _hookReceiver.setConfig(
             IPendleMarketLike(asset),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
+            _incentivesController
         );
     }
 
@@ -260,8 +205,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.OnlyHookReceiver.selector));
         PendleRewardsClaimer(address(_hookReceiver)).redeemRewardsFromPendle(
             IPendleMarketLike(address(0)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
+            _incentivesController
         );
     }
 
@@ -283,15 +227,14 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         _hookReceiver.redeemRewards();
     }
 
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsSilo -vv
-    function test_redeemRewardsSilo() public {
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_collateralDeposits_notPossible -vv
+    function test_collateralDeposits_notPossible() public {
         IERC20 asset = IERC20(silo0.asset());
 
         vm.prank(_dao);
         _hookReceiver.setConfig(
             IPendleMarketLike(address(asset)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
+            _incentivesController
         );
 
         uint256 amount = asset.balanceOf(_depositor);
@@ -299,17 +242,26 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         vm.prank(_depositor);
         asset.approve(address(silo0), amount);
         vm.prank(_depositor);
+        vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.CollateralDepositNotAllowed.selector));
         silo0.deposit(amount, _depositor, ISilo.CollateralType.Collateral);
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsSilo -vv
+    function test_redeemRewardsSilo() public {
+        IERC20 asset = IERC20(silo0.asset());
+        uint256 amount = asset.balanceOf(_depositor);
+
+        _configureHookAndDeposit();
 
         vm.warp(block.timestamp + 2 days);
         vm.roll(vm.getBlockNumber() + 100);
 
         vm.prank(_depositor);
-        silo0.withdraw(amount, _depositor, _depositor, ISilo.CollateralType.Collateral);
+        silo0.withdraw(amount, _depositor, _depositor, ISilo.CollateralType.Protected);
 
         string memory rewardTokenProgramName = "0x808507121b80c02388fad14726482e061b8da827";
 
-        string[] memory programs = IDistributionManager(address(_incentivesControllerCollateral)).getAllProgramsNames();
+        string[] memory programs = IDistributionManager(address(_incentivesController)).getAllProgramsNames();
 
         assertEq(programs.length, 1, "Expected 1 program");
         assertEq(programs[0], rewardTokenProgramName, "Expected reward token");
@@ -320,64 +272,11 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         // user claim rewards from the silo incentives controller
         vm.prank(_depositor);
-        _incentivesControllerCollateral.claimRewards(_depositor);
+        _incentivesController.claimRewards(_depositor);
 
         uint256 rewardsAfter = IERC20(_rewardToken).balanceOf(_depositor);
 
         assertGt(rewardsAfter, rewardsBefore, "Depositor should have received rewards");
-    }
-
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewards_withProtected -vv
-    function test_redeemRewards_withProtected() public {
-        IERC20 asset = IERC20(silo0.asset());
-
-        vm.prank(_dao);
-        _hookReceiver.setConfig(
-            IPendleMarketLike(address(asset)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
-        );
-
-        uint256 collateralAmount = asset.balanceOf(_depositor);
-
-        vm.prank(_depositor);
-        asset.approve(address(silo0), collateralAmount);
-        vm.prank(_depositor);
-        silo0.deposit(collateralAmount, _depositor, ISilo.CollateralType.Collateral);
-
-        uint256 protectedAmount = collateralAmount / 2;
-
-        vm.prank(_lptWhale);
-        asset.approve(address(silo0), protectedAmount);
-        vm.prank(_lptWhale);
-        silo0.deposit(protectedAmount, _lptWhale, ISilo.CollateralType.Protected);
-
-        vm.warp(block.timestamp + 2 days);
-        vm.roll(vm.getBlockNumber() + 100);
-
-        uint256 collateralRewardsBefore = IERC20(_rewardToken).balanceOf(_depositor);
-        uint256 protectedRewardsBefore = IERC20(_rewardToken).balanceOf(_lptWhale);
-
-        _hookReceiver.redeemRewards();
-
-        // users claim rewards from the silo incentives controller
-        vm.prank(_depositor);
-        _incentivesControllerCollateral.claimRewards(_depositor);
-        vm.prank(_lptWhale);
-        _incentivesControllerProtected.claimRewards(_lptWhale);
-
-        uint256 collateralRewardsAfter = IERC20(_rewardToken).balanceOf(_depositor);
-        uint256 protectedRewardsAfter = IERC20(_rewardToken).balanceOf(_lptWhale);
-
-        assertGt(collateralRewardsAfter, collateralRewardsBefore, "Depositor should have received rewards");
-        assertGt(protectedRewardsAfter, protectedRewardsBefore, "Lpt whale should have received rewards");
-
-        uint256 collateralRewardsReceived = collateralRewardsAfter - collateralRewardsBefore;
-        uint256 protectedRewardsReceived = protectedRewardsAfter - protectedRewardsBefore;
-
-        // -2 because of the rounding error that we have in PendleRewardsClaimer.redeemRewardsFromPendle fn
-        // when calculating the rewards.
-        assertEq(collateralRewardsReceived / 2 - 2, protectedRewardsReceived, "Rewards split proportionally");
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsEverySecond -vv
@@ -394,7 +293,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
             // user claim rewards from the silo incentives controller
             vm.prank(_depositor);
-            _incentivesControllerCollateral.claimRewards(_depositor);
+            _incentivesController.claimRewards(_depositor);
 
             uint256 rewardsAfter = IERC20(_rewardToken).balanceOf(_depositor);
 
@@ -402,21 +301,42 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         }
     }
 
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_transferShouldClaimRewards -vv
+    function test_transferShouldClaimRewards() public {
+        _configureHookAndDeposit();
+
+        vm.warp(block.timestamp + 1 seconds);
+        vm.roll(vm.getBlockNumber() + 1);
+
+        (address protected,,) = _siloConfig.getShareTokens(address(silo0));
+
+        uint256 rewardsBefore = IERC20(_rewardToken).balanceOf(_depositor);
+
+        uint256 amount = IERC20(protected).balanceOf(_depositor);
+        assertNotEq(amount, 0, "Depositor should have some protected tokens");
+
+        vm.prank(_depositor);
+        IERC20(protected).transfer(address(this), amount);
+
+        vm.prank(_depositor);
+        _incentivesController.claimRewards(_depositor);
+
+        uint256 rewardsAfter = IERC20(_rewardToken).balanceOf(_depositor);
+
+        assertGt(rewardsAfter, rewardsBefore, "Depositor should have received rewards");
+    }
+
     function _configureHookAndDeposit() internal {
         IERC20 asset = IERC20(silo0.asset());
 
         vm.prank(_dao);
-        _hookReceiver.setConfig(
-            IPendleMarketLike(address(asset)),
-            _incentivesControllerCollateral,
-            _incentivesControllerProtected
-        );
+        _hookReceiver.setConfig(IPendleMarketLike(address(asset)), _incentivesController);
 
         uint256 amount = asset.balanceOf(_depositor);
 
         vm.prank(_depositor);
         asset.approve(address(silo0), amount);
         vm.prank(_depositor);
-        silo0.deposit(amount, _depositor, ISilo.CollateralType.Collateral);
+        silo0.deposit(amount, _depositor, ISilo.CollateralType.Protected);
     }
 }
