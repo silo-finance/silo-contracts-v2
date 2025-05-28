@@ -163,9 +163,9 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
             uint256 rewardAmount = rewards[i];
-            IERC20 rewardToken = IERC20(rewardTokens[i]);
-
             if (rewardAmount == 0) continue;
+
+            IERC20 rewardToken = IERC20(rewardTokens[i]);
 
             if (totalProtected == 0) {
                 collateralRewards[i] = rewardAmount;
