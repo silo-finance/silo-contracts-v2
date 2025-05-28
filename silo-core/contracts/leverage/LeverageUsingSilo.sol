@@ -124,6 +124,9 @@ abstract contract LeverageUsingSilo is
 
         // deposit with leverage: user collateral + swapped collateral - fee
         // TODO qa if posible that feeForLeverage > collateralAmountAfterSwap
+        // we could take cut on user original deposit amount to pay fee, but that's the point of doing leverage then?
+        require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
+
         __totalDeposit = _deposit({
             _depositArgs: depositArgs,
             _leverageAmount: collateralAmountAfterSwap - feeForLeverage,

@@ -65,6 +65,7 @@ interface ILeverageUsingSilo {
     error SwapDidNotCoverObligations();
     error InvalidSilo();
     error Reentrancy();
+    error LeverageToLowToCoverFee();
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails
