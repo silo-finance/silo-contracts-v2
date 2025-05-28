@@ -47,6 +47,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     ISiloConfig internal _siloConfig;
     ISiloIncentivesController internal _incentivesControllerCollateral;
     ISiloIncentivesController internal _incentivesControllerProtected;
+    ISiloIncentivesControllerGaugeLikeFactory internal _factory;
 
     event ConfigUpdated(
         IPendleMarketLike _pendleMarket,
@@ -63,14 +64,12 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         _hookReceiver = IPendleRewardsClaimer(address(IShareToken(address(silo0)).hookSetup().hookReceiver));
 
-        ISiloIncentivesControllerGaugeLikeFactory factory;
-
-        factory = ISiloIncentivesControllerGaugeLikeFactory(SiloCoreDeployments.get(
+        _factory = ISiloIncentivesControllerGaugeLikeFactory(SiloCoreDeployments.get(
             SiloCoreContracts.INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY,
             ChainsLib.chainAlias()
         ));
 
-        _incentivesControllerCollateral = ISiloIncentivesController(factory.createGaugeLike(
+        _incentivesControllerCollateral = ISiloIncentivesController(_factory.createGaugeLike(
             _dao,
             address(_hookReceiver),
             address(silo0))
@@ -78,7 +77,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
 
-        _incentivesControllerProtected = ISiloIncentivesController(factory.createGaugeLike(
+        _incentivesControllerProtected = ISiloIncentivesController(_factory.createGaugeLike(
             _dao,
             address(_hookReceiver),
             address(protected))
@@ -167,6 +166,73 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             IPendleMarketLike(asset),
             ISiloIncentivesController(makeAddr("InvalidNotifier")),
             _incentivesControllerProtected
+        );
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_WrongNotifier -vv
+    function test_setConfig_WrongNotifier() public {
+        address asset = address(silo0.asset());
+        (address protected,,) = _siloConfig.getShareTokens(address(silo0));
+
+        ISiloIncentivesController controller = ISiloIncentivesController(_factory.createGaugeLike(
+            _dao,
+            address(this),
+            address(protected)
+        ));
+
+        vm.prank(_dao);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPendleRewardsClaimer.WrongCollateralIncentivesControllerNotifier.selector)
+        );
+
+        _hookReceiver.setConfig(
+            IPendleMarketLike(asset),
+            controller,
+            _incentivesControllerProtected
+        );
+
+        vm.prank(_dao);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPendleRewardsClaimer.WrongProtectedIncentivesControllerNotifier.selector)
+        );
+
+        _hookReceiver.setConfig(
+            IPendleMarketLike(asset),
+            _incentivesControllerCollateral,
+            controller
+        );
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_WrongShareToken -vv
+    function test_setConfig_WrongShareToken() public {
+        address asset = address(silo0.asset());
+
+        ISiloIncentivesController controller = ISiloIncentivesController(_factory.createGaugeLike(
+            _dao,
+            address(_hookReceiver),
+            address(this)
+        ));
+
+        vm.prank(_dao);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPendleRewardsClaimer.WrongCollateralIncentivesControllerShareToken.selector)
+        );
+
+        _hookReceiver.setConfig(
+            IPendleMarketLike(asset),
+            controller,
+            _incentivesControllerProtected
+        );
+
+        vm.prank(_dao);
+        vm.expectRevert(
+            abi.encodeWithSelector(IPendleRewardsClaimer.WrongProtectedIncentivesControllerShareToken.selector)
+        );
+
+        _hookReceiver.setConfig(
+            IPendleMarketLike(asset),
+            _incentivesControllerCollateral,
+            controller
         );
     }
 
