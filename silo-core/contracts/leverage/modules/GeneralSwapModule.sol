@@ -11,7 +11,7 @@ import {IGeneralSwapModule} from "../../interfaces/IGeneralSwapModule.sol";
 /// @notice Enables ERC20 token swaps via an external exchange (e.g., 0x, ODOS, Pendle)
 /// @dev Based on the 0x demo contract:
 /// https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
-contract GeneralSwapModule is IGeneralSwapModule {
+abstract contract GeneralSwapModule is IGeneralSwapModule {
     using SafeERC20 for IERC20;
 
     /// @notice Executes a token swap using a prebuilt swap quote
