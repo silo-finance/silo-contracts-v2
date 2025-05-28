@@ -12,6 +12,9 @@ import {IPendleMarketLike} from "silo-core/contracts/interfaces/IPendleMarketLik
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IPendleRewardsClaimer} from "silo-core/contracts/interfaces/IPendleRewardsClaimer.sol";
+import {
+    ISiloIncentivesControllerGetters
+} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGetters.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
@@ -90,6 +93,33 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         require(asset0 == _pendleMarket || asset1 == _pendleMarket, WrongPendleMarket());
         require(address(_incentivesControllerCollateral) != address(0), EmptyAddress());
         require(address(_incentivesControllerProtected) != address(0), EmptyAddress());
+
+        address collateralNotifier =
+            ISiloIncentivesControllerGetters(address(_incentivesControllerCollateral)).NOTIFIER();
+
+        address protectedNotifier =
+            ISiloIncentivesControllerGetters(address(_incentivesControllerProtected)).NOTIFIER();
+
+        require(collateralNotifier == address(this), WrongCollateralIncentivesControllerNotifier());
+        require(protectedNotifier == address(this), WrongProtectedIncentivesControllerNotifier());
+
+        address protectedShareToken;
+        address collateralShareToken;
+
+        if (asset0 == _pendleMarket) {
+            (protectedShareToken, collateralShareToken,) = siloConfig.getShareTokens(silo0);
+        } else {
+            (protectedShareToken, collateralShareToken,) = siloConfig.getShareTokens(silo1);
+        }
+
+        address controllerCollateral =
+            ISiloIncentivesControllerGetters(address(_incentivesControllerCollateral)).SHARE_TOKEN();
+
+        address controllerProtected =
+            ISiloIncentivesControllerGetters(address(_incentivesControllerProtected)).SHARE_TOKEN();
+
+        require(collateralShareToken == controllerCollateral, WrongCollateralIncentivesControllerShareToken());
+        require(protectedShareToken == controllerProtected, WrongProtectedIncentivesControllerShareToken());
 
         pendleMarket = _pendleMarket;
         incentivesControllerCollateral = _incentivesControllerCollateral;

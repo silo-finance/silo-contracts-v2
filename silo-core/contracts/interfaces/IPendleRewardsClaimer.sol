@@ -18,6 +18,10 @@ interface IPendleRewardsClaimer is IHookReceiver {
     error EmptyAddress();
     error OnlyHookReceiver();
     error MissingConfiguration();
+    error WrongCollateralIncentivesControllerNotifier();
+    error WrongProtectedIncentivesControllerNotifier();
+    error WrongCollateralIncentivesControllerShareToken();
+    error WrongProtectedIncentivesControllerShareToken();
 
     /// @notice Redeem rewards from Pendle
     /// @return rewardTokens Reward tokens

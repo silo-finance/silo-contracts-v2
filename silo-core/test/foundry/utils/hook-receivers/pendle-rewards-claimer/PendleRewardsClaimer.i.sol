@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
@@ -98,6 +99,21 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         );
     }
 
+    // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt testReInitialization
+    function testReInitialization() public {
+        address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.PENDLE_REWARDS_CLAIMER);
+
+        bytes memory data = abi.encode(address(this));
+
+        // Pendle rewards claimer implementation is not initializable
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        IHookReceiver(hookReceiverImpl).initialize(ISiloConfig(address(0)), data);
+
+        // Pendle rewards claimer can't be re-initialized
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        _hookReceiver.initialize(ISiloConfig(address(0)), data);
+    }
+
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_onlyOwner -vv
     function test_setConfig_onlyOwner() public {
         vm.prank(_depositor);
@@ -109,8 +125,8 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         );
     }
 
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_reverts -vv
-    function test_setConfig_reverts() public {
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_WrongPendleMarket -vv
+    function test_setConfig_WrongPendleMarket() public {
         vm.prank(_dao);
         vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.WrongPendleMarket.selector));
         _hookReceiver.setConfig(
@@ -118,7 +134,10 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             _incentivesControllerCollateral,
             _incentivesControllerProtected
         );
+    }
 
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_EmptyAddress -vv
+    function test_setConfig_EmptyAddress() public {
         address asset = address(silo0.asset());
 
         vm.prank(_dao);
@@ -135,6 +154,19 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             IPendleMarketLike(asset),
             _incentivesControllerCollateral,
             ISiloIncentivesController(address(0))
+        );
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_setConfig_reverts_invalidNotifier -vv
+    function test_setConfig_reverts_invalidNotifier() public {
+        address asset = address(silo0.asset());
+
+        vm.prank(_dao);
+        vm.expectRevert();
+        _hookReceiver.setConfig(
+            IPendleMarketLike(asset),
+            ISiloIncentivesController(makeAddr("InvalidNotifier")),
+            _incentivesControllerProtected
         );
     }
 
@@ -171,6 +203,18 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     function test_beforeAction_onlySilo() public {
         vm.expectRevert(abi.encodeWithSelector(IHookReceiver.OnlySilo.selector));
         _hookReceiver.beforeAction(address(0), 0, "");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_afterAction_onlySiloOrShareToken -vv
+    function test_afterAction_onlySiloOrShareToken() public {
+        vm.expectRevert(abi.encodeWithSelector(IHookReceiver.OnlySiloOrShareToken.selector));
+        _hookReceiver.afterAction(address(0), 0, "");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewards_missingConfiguration -vv
+    function test_redeemRewards_missingConfiguration() public {
+        vm.expectRevert(abi.encodeWithSelector(IPendleRewardsClaimer.MissingConfiguration.selector));
+        _hookReceiver.redeemRewards();
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsSilo -vv
