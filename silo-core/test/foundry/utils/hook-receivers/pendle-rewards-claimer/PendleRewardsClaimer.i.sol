@@ -31,6 +31,7 @@ import {
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
+import {PendleMarketThatReverts} from "../../../_mocks/PendleMarketThatReverts.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 
@@ -48,6 +49,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     ISiloIncentivesController internal _incentivesController;
     ISiloIncentivesControllerGaugeLikeFactory internal _factory;
 
+    event FailedToClaimIncentives(address _silo);
     event ConfigUpdated(IPendleMarketLike _pendleMarket, ISiloIncentivesController _incentivesController);
 
     function setUp() public virtual {
@@ -312,6 +314,32 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         uint256 rewardsAfter = IERC20(_rewardToken).balanceOf(_depositor);
 
         assertGt(rewardsAfter, rewardsBefore, "Depositor should have received rewards");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewards_reverts -vv
+    function test_redeemRewards_reverts() public {
+        _configureHookAndDeposit();
+
+        IERC20 asset = IERC20(silo0.asset());
+
+        (address protected,,) = _siloConfig.getShareTokens(address(silo0));
+
+        uint256 amount = IERC20(protected).balanceOf(_depositor);
+        assertNotEq(amount, 0, "Depositor should have deposit");
+
+        PendleMarketThatReverts pendleMarket = new PendleMarketThatReverts();
+        vm.etch(address(asset), address(pendleMarket).code);
+
+        uint256 maxWithdrawAmount = silo0.maxWithdraw(_depositor, ISilo.CollateralType.Protected);
+
+        vm.expectEmit(true, true, true, true);
+        emit FailedToClaimIncentives(address(silo0));
+
+        vm.prank(_depositor);
+        silo0.withdraw(maxWithdrawAmount, _depositor, _depositor, ISilo.CollateralType.Protected);
+
+        amount = IERC20(protected).balanceOf(_depositor);
+        assertEq(amount, 0, "Depositor should be able to withdraw when redeeming reverts");
     }
 
     function _configureHookAndDeposit() internal {
