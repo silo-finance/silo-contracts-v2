@@ -5,11 +5,10 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../CommonDeploy.sol";
-import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
+import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from "../SiloOraclesFactoriesContracts.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracleFactory.sol";
 import {PendleLPTToAssetOracle} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracle.sol";
-import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 
@@ -23,15 +22,19 @@ contract PendleLPTToAssetOracleDeploy is CommonDeploy {
     address market;
 
     function run() public returns (ISiloOracle oracle) {
-        PendleLPTToAssetOracleFactory factory =
-            PendleLPTToAssetOracleFactory(getDeployedAddress(SiloOraclesFactoriesContracts.PENDLE_LPT_TO_ASSET_ORACLE_FACTORY));
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        PendleLPTToAssetOracleFactory factory = PendleLPTToAssetOracleFactory(SiloOraclesFactoriesDeployments.get(
+            SiloOraclesFactoriesContracts.PENDLE_LPT_TO_ASSET_ORACLE_FACTORY,
+            chainAlias
+        ));
 
         string memory underlyingOracleName;
 
         if (address(market) == address(0)) {
             underlyingOracleName = vm.envString("UNDERLYING_ORACLE_NAME");
             market = vm.envAddress("MARKET");
-            underlyingOracle = ISiloOracle(OraclesDeployments.get(ChainsLib.chainAlias(), underlyingOracleName));
+            underlyingOracle = ISiloOracle(OraclesDeployments.get(chainAlias, underlyingOracleName));
         }
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
@@ -54,7 +57,7 @@ contract PendleLPTToAssetOracleDeploy is CommonDeploy {
             underlyingOracleName
         );
 
-        OraclesDeployments.save(ChainsLib.chainAlias(), oracleName, address(oracle));
+        OraclesDeployments.save(chainAlias, oracleName, address(oracle));
     }
 
     function setParams(address _market, ISiloOracle _underlyingOracle) external {
