@@ -206,6 +206,8 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         uint256 rewardsBefore = IERC20(_rewardToken).balanceOf(_depositor);
 
+        vm.warp(block.timestamp + 1 seconds);
+
         // user claim rewards from the silo incentives controller
         vm.prank(_depositor);
         _incentivesControllerCollateral.claimRewards(_depositor);

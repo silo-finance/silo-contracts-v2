@@ -55,15 +55,6 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
         require(address(configuredGauge) != address(0), GaugeIsNotConfigured());
         require(configuredGauge.is_killed(), CantRemoveActiveGauge());
 
-        address silo = address(_shareToken.silo());
-        
-        uint256 tokenType = _getTokenType(silo, address(_shareToken));
-        uint256 hooksAfter = _getHooksAfter(silo);
-
-        hooksAfter = hooksAfter.removeAction(tokenType);
-
-        _setHookConfig(silo, uint24(_getHooksBefore(silo)), uint24(hooksAfter));
-
         delete configuredGauges[_shareToken];
 
         emit GaugeRemoved(address(_shareToken));
@@ -77,8 +68,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
     {
         IGauge theGauge = configuredGauges[IShareToken(msg.sender)];
 
-        require(theGauge != IGauge(address(0)), GaugeIsNotConfigured());
-
+        if (theGauge == IGauge(address(0))) return;
         if (!_getHooksAfter(_silo).matchAction(_action)) return; // Should not happen, but just in case
 
         Hook.AfterTokenTransfer memory input = _inputAndOutput.afterTokenTransferDecode();

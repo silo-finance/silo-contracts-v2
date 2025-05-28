@@ -35,6 +35,7 @@ contract SiloHookV1 is GaugeHookReceiver, PartialLiquidation {
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
+        onlySiloOrShareToken()
         override(GaugeHookReceiver, IHookReceiver)
     {
         GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);

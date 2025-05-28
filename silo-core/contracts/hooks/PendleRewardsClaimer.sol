@@ -187,6 +187,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
+        onlySiloOrShareToken()
         override(GaugeHookReceiver, IHookReceiver)
     {
         if (beforeActionExecutedFor == Hook.NONE) {
@@ -262,7 +263,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// - LIQUIDATION
     /// - FLASH_LOAN
     function _configureHooksBefore(address _silo) internal {
-        uint256 allHooks = 
+        uint256 requiredHooksBefore = 
             Hook.DEPOSIT | Hook.COLLATERAL_TOKEN |
             Hook.DEPOSIT | Hook.PROTECTED_TOKEN |
             Hook.WITHDRAW | Hook.COLLATERAL_TOKEN |
@@ -275,8 +276,11 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             Hook.SWITCH_COLLATERAL |
             Hook.LIQUIDATION |
             Hook.FLASH_LOAN;
-            // Share token transfer ignored as it has no before token transfer hook.
 
-        _setHookConfig(_silo, uint24(allHooks), uint24(_getHooksAfter(_silo)));
+        uint256 requiredHooksAfter = _getHooksAfter(_silo) |
+            Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER |
+            Hook.PROTECTED_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+
+        _setHookConfig(_silo, uint24(requiredHooksBefore), uint24(requiredHooksAfter));
     }
 }

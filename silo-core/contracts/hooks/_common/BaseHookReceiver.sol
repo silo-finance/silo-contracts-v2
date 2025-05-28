@@ -17,6 +17,11 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
         _;
     }
 
+    modifier onlySiloOrShareToken() {
+        require(_isSiloOrShareToken(msg.sender), OnlySiloOrShareToken());
+        _;
+    }
+
     constructor() {
         _disableInitializers();
     }
@@ -86,5 +91,25 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
     function _isSilo(address _addr) internal view virtual returns (bool result) {
         (address silo0, address silo1) = siloConfig.getSilos();
         result = _addr == silo0 || _addr == silo1;
+    }
+
+    /// @notice Check if the address is a silo or a share token
+    /// @param _addr Address to check
+    /// @return result True if the address is a silo or a share token, false otherwise
+    function _isSiloOrShareToken(address _addr) internal view virtual returns (bool result) {
+        (address silo0, address silo1) = siloConfig.getSilos();
+
+        if (_addr == silo0 || _addr == silo1) return true;
+
+        address protectedCollateralShareToken;
+        address debtShareToken;
+
+        (protectedCollateralShareToken,, debtShareToken) = siloConfig.getShareTokens(silo0);
+        if (_addr == protectedCollateralShareToken || _addr == debtShareToken) return true;
+
+        (protectedCollateralShareToken,, debtShareToken) = siloConfig.getShareTokens(silo1);
+        if (_addr == protectedCollateralShareToken || _addr == debtShareToken) return true;
+
+        return false;
     }
 }
