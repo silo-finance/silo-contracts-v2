@@ -221,7 +221,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     {
         if (beforeActionExecutedFor == Hook.NONE) {
             // This is a token transfer, and we need to redeem the rewards.
-            _redeemRewards(msg.sender);
+            _redeemRewards(_silo);
         }
 
         GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
