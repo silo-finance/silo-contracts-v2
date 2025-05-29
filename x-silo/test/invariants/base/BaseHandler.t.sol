@@ -19,23 +19,6 @@ contract BaseHandler is HookAggregator {
     //                                         HELPERS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice Helper function to get a random base asset
-    function _getRandomSilo(uint256 i) internal view returns (address) {
-        return silos[i % silos.length];
-    }
-
-    function _getRandomShareToken(uint256 i) internal view returns (address) {
-        return shareTokens[i % shareTokens.length];
-    }
-
-    function _getRandomDebtToken(uint256 i) internal view returns (address) {
-        return debtTokens[i % debtTokens.length];
-    }
-
-    function _getRandomOracle(uint256 i) internal view returns (address) {
-        return (i % 2) == 0 ? oracle0 : oracle1;
-    }
-
     /// @notice Helper function to randomize a uint256 seed with a string salt
     function _randomize(uint256 seed, string memory salt)
         internal

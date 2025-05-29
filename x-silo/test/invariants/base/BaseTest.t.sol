@@ -5,6 +5,7 @@ pragma solidity ^0.8.19;
 import {ISilo} from "silo-core/contracts/Silo.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
+import {IERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 
 // Libraries
 import {Vm} from "forge-std/Base.sol";
@@ -83,37 +84,12 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _hasDebt(address user) internal returns (bool) {
-        for (uint256 i; i < debtTokens.length; i++) {
-            if (IERC20(debtTokens[i]).balanceOf(user) > 0) return true;
-        }
-    }
-
-    function _getUserAssets(address silo, address user) internal view returns (uint256) {
-        (address protectedShareToken,) =
-            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Protected);
-        (address collateralShareToken,) =
-            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Collateral);
-        uint256 protectedShares = IERC20(protectedShareToken).balanceOf(user);
-        uint256 collateralShares = IERC20(collateralShareToken).balanceOf(user);
-        return ISilo(silo).convertToAssets(protectedShares, ISilo.AssetType.Protected)
-            + ISilo(silo).convertToAssets(collateralShares, ISilo.AssetType.Collateral);
-    }
-
-    function _getUserProtectedAssets(address silo, address user) internal view returns (uint256) {
-        (address protectedShareToken,) =
-            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Protected);
-        uint256 protectedShares = IERC20(protectedShareToken).balanceOf(user);
-        return ISilo(silo).convertToAssets(protectedShares, ISilo.AssetType.Protected);
+    function _getUserAssets(address _xSilo, address _user) internal view returns (uint256) {
+        return IERC4626(_xSilo).previewRedeem(IERC4626(_xSilo).balanceOf(_user));
     }
 
     function _setTargetActor(address user) internal {
         targetActor = user;
-    }
-
-    /// @notice Get DAO and Deployer fees
-    function _getDaoAndDeployerFees(address silo) internal view returns (uint192 daoAndDeployerFees) {
-        (daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
     }
 
     /// @notice Get a random address

@@ -9,29 +9,20 @@ import {DefaultBeforeAfterHooks} from "./DefaultBeforeAfterHooks.t.sol";
 abstract contract HookAggregator is DefaultBeforeAfterHooks {
     /// @notice Modular hook selector, per module
     function _before() internal {
-        for (uint256 i; i < silos.length; i++) {
-            _defaultHooksBefore(silos[i]);
-        }
+        _defaultHooksBefore(xSilo);
     }
 
     /// @notice Modular hook selector, per module
     function _after() internal {
-        for (uint256 i; i < silos.length; i++) {
-            _defaultHooksAfter(silos[i]);
+        _defaultHooksAfter(xSilo);
 
-            // Postconditions
-            _checkPostConditions(silos[i]);
-        }
+        // Postconditions
+        _checkPostConditions(xSilo);
     }
 
     /// @notice Postconditions for the handlers
-    function _checkPostConditions(address silo) internal {
+    function _checkPostConditions(address _xSilo) internal {
         // BASE
-        assert_BASE_GPOST_A(silo);
-        assert_BASE_GPOST_BC(silo);
-        assert_BASE_GPOST_D(silo);
-
-        // BORROWING
-        assert_BORROWING_GPOST_C(silo);
+        // assert_BASE_GPOST_A(silo);
     }
 }
