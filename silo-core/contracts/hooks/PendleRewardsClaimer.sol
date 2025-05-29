@@ -91,7 +91,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         address shareToken;
 
         if (asset0 == _pendleMarket) {
-            (shareToken,,) = siloConfig.getShareTokens(silo0);
+            (protectedShareToken,,) = siloConfig.getShareTokens(silo0);
         } else {
             (shareToken,,) = siloConfig.getShareTokens(silo1);
         }
