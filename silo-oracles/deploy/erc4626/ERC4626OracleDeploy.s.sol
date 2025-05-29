@@ -37,7 +37,7 @@ contract ERC4626OracleDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = ERC4626OracleFactory(factory).createERC4626Oracle(vault);
+        oracle = ERC4626OracleFactory(factory).createERC4626Oracle(vault, bytes32(0));
 
         vm.stopBroadcast();
 
