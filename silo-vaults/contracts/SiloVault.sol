@@ -479,8 +479,18 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* ERC4626 (PUBLIC) */
 
-    /// @dev Decimals by design are 18 to improve compatibility for external integrations.
+    /// @notice Decimals by design are 18 to improve compatibility for external integrations.
     /// SiloVault do not have an initial 1:1 shares-to-assets rate with underlying markets.
+    /// @dev SiloVault is using decimal offset of 1e3. This means that depositing 1 asset results in 1,000 shares,
+    /// although this is not a fixed ratio.
+    ///
+    /// Learn more about the offset here:
+    /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/a7d38c7a3321e3832ca84f7ba1125dff9a91361e/contracts/token/ERC20/extensions/ERC4626.sol#L31
+    ///
+    /// The share-to-asset ratio may change over time due to interest accrual. As assets grow with interest
+    /// but the number of shares remains constant, the ratio will adjust dynamically.
+    ///
+    /// To determine the current conversion rate, use the vault’s `convertToShares(1 asset)` method.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
         return 18;
     }
