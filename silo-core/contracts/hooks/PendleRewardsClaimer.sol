@@ -11,15 +11,12 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IPendleMarketLike} from "silo-core/contracts/interfaces/IPendleMarketLike.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IPendleRewardsClaimer} from "silo-core/contracts/interfaces/IPendleRewardsClaimer.sol";
-import {
-    ISiloIncentivesControllerGetters
-} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGetters.sol";
-
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /// @title PendleRewardsClaimer
 /// @notice This hook allows to redeem rewards from Pendle for the silo.
@@ -27,22 +24,13 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     using SafeERC20 for IERC20;
     using Hook for uint256;
 
-    IPendleMarketLike public pendleMarket;
-    ISiloIncentivesController public incentivesController;
+    IPendleMarketLike internal _pendleMarket;
+    ISilo internal _pendleMarketSilo;
+    IShareToken internal _protectedShareToken;
 
     /// @notice Transient variable to store the action type for which `beforeAction` was executed.
     /// @dev This is used in `afterAction` to determine if incentives need to be claimed for token transfers.
-    uint256 transient internal _txBeforeActionExecutedFor;
-
-    /// @dev Modifier that checks if the caller is the hook receiver.
-    /// Designed to be used in the functions that are called by the hook from the silo via delegatecall.
-    modifier onlyHookReceiverFromSilo() {
-        require(
-            msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
-            OnlyHookReceiver()
-        );
-        _;
-    }
+    bool transient internal _rewardsClaimedInTheBeforeAction;
 
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data)
@@ -54,50 +42,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
 
         BaseHookReceiver.__BaseHookReceiver_init(_config);
         GaugeHookReceiver.__GaugeHookReceiver_init(owner);
-    }
-
-    /// @inheritdoc IPendleRewardsClaimer
-    function redeemRewards() external returns (address[] memory rewardTokens, uint256[] memory rewards) {
-        (address silo0, address silo1) = siloConfig.getSilos();
-
-        if (ISilo(silo0).asset() == address(pendleMarket)) {
-            return _redeemRewards(silo0);
-        }
-
-        if (ISilo(silo1).asset() == address(pendleMarket)) {
-            return _redeemRewards(silo1);
-        }
-
-        revert MissingConfiguration();
-    }
-
-    /// @inheritdoc IPendleRewardsClaimer
-    function setConfig(
-        IPendleMarketLike _pendleMarket,
-        ISiloIncentivesController _incentivesController
-    ) external onlyOwner {
-        (address silo0, address silo1) = siloConfig.getSilos();
-
-        IPendleMarketLike asset0 = IPendleMarketLike(ISilo(silo0).asset());
-        IPendleMarketLike asset1 = IPendleMarketLike(ISilo(silo1).asset());
-
-        require(asset0 == _pendleMarket || asset1 == _pendleMarket, WrongPendleMarket());
-        require(address(_incentivesController) != address(0), EmptyAddress());
-
-        address notifier = ISiloIncentivesControllerGetters(address(_incentivesController)).NOTIFIER();
-        require(notifier == address(this), WrongIncentivesControllerNotifier());
-
-        address silo = asset0 == _pendleMarket ? silo0 : silo1;
-        (address protectedShareToken,,) = siloConfig.getShareTokens(address(silo));
-        address controllerShareToken = ISiloIncentivesControllerGetters(address(_incentivesController)).SHARE_TOKEN();
-        require(protectedShareToken == controllerShareToken, WrongIncentivesControllerShareToken());
-
-        pendleMarket = _pendleMarket;
-        incentivesController = _incentivesController;
-
-        emit ConfigUpdated(_pendleMarket, _incentivesController);
-
-        _configureHooks(silo);
+        PendleRewardsClaimer.__PendleRewardsClaimer_init();
     }
 
     /// @notice Redeem rewards from Pendle
@@ -112,20 +57,29 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         ISiloIncentivesController _incentivesController
     )
         external
-        onlyHookReceiverFromSilo()
+        virtual
         returns (
             address[] memory rewardTokens,
             uint256[] memory rewards
         )
     {
-        rewardTokens = _pendleMarket.getRewardTokens();
-        rewards = _pendleMarket.redeemRewards({user: address(this)});
+        IPendleMarketLike pendleMarket = _pendleMarket;
+        rewardTokens = pendleMarket.getRewardTokens();
+        pendleMarket.redeemRewards({user: address(this)});
+        rewards = new uint256[](rewardTokens.length);
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
-            uint256 rewardAmount = rewards[i];
+            address rewardToken = rewardTokens[i];
+            // Pendle should never distribute rewards in the Pendle market LP tokens.
+            // However, we have this check in place as a safety measure,
+            // so we will ensure that we do not transfer assets from the Silo balance.
+            if (rewardToken == address(pendleMarket)) continue;
+
+            uint256 rewardAmount = IERC20(rewardToken).balanceOf(address(this));
             if (rewardAmount == 0) continue;
 
-            IERC20(rewardTokens[i]).safeTransfer(address(_incentivesController), rewardAmount);
+            IERC20(rewardToken).safeTransfer(address(_incentivesController), rewardAmount);
+            rewards[i] = rewardAmount;
         }
     }
 
@@ -133,49 +87,48 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
+        onlySilo()
         override
     {
         uint256 collateralDepositAction = Hook.depositAction(ISilo.CollateralType.Collateral);
         require(!collateralDepositAction.matchAction(_action), CollateralDepositNotAllowed());
 
-        _txBeforeActionExecutedFor = _action;
-        _redeemRewards(_silo);
+        _rewardsClaimedInTheBeforeAction = true;
+        redeemRewards();
     }
 
     /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
         virtual
+        onlySiloOrShareToken()
         override(GaugeHookReceiver, IHookReceiver)
     {
-        if (_txBeforeActionExecutedFor == Hook.NONE) {
-            // This is a token transfer, and we need to redeem the rewards.
+        // As we have configured all before actions to be executed,
+        // we expect that rewards be redeemed in the before action. But, share tokens do not have before action hook.
+        // Therefore, we need to verify if this is a protected share token transfer,
+        // and if so, we must redeem the rewards.
+        if (!_rewardsClaimedInTheBeforeAction) {
             uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
-            if (protectedTransferAction.matchAction(_action)) _redeemRewards(_silo);
+            if (protectedTransferAction.matchAction(_action)) redeemRewards();
         }
 
         GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
 
-        _txBeforeActionExecutedFor = Hook.NONE;
+        _rewardsClaimedInTheBeforeAction = false;
     }
 
-    /// @notice Redeem rewards from Pendle for the silo
+    /// @notice Redeem rewards from Pendle for the Silo
     /// @dev Redeem rewards from Pendle and transfer them to the incentives controller for immediate distribution.
-    /// @param _silo Silo address
     /// @return rewardTokens Reward tokens
     /// @return rewards Rewards for collateral token
-    function _redeemRewards(address _silo)
-        internal
-        returns (
-            address[] memory rewardTokens,
-            uint256[] memory rewards
-        )
-    {
-        ISiloIncentivesController controller = incentivesController;
-
+    function redeemRewards() public virtual returns (address[] memory rewardTokens, uint256[] memory rewards) {
+        ISilo silo = _pendleMarketSilo;
+        IPendleMarketLike pendleMarket = _pendleMarket;
+        ISiloIncentivesController controller = _getIncentivesControllerSafe();
         bytes memory input = abi.encodeWithSelector(this.redeemRewardsFromPendle.selector, pendleMarket, controller);
 
-        (bool success, bytes memory data) = ISilo(_silo).callOnBehalfOfSilo({
+        (bool success, bytes memory data) = silo.callOnBehalfOfSilo({
             _target: address(this),
             _value: 0,
             _callType: ISilo.CallType.Delegatecall,
@@ -183,7 +136,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         });
 
         if (!success) {
-            emit FailedToClaimIncentives(_silo);
+            emit FailedToClaimIncentives(silo);
             return (rewardTokens, rewards);
         }
 
@@ -193,71 +146,81 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             uint256 rewardAmount = rewards[i];
             if (rewardAmount == 0) continue;
 
-            _immediateDistribution(controller, rewardTokens[i], rewardAmount);
+            // Rewards amount for distribution is capped to 2^104 to avoid overflows.
+            // Also, to avoid code over complication we do not distribute rewards amounts above 2^104.
+            // In the case if we will receive for any reason abnormal amount of rewards
+            // all rewards will be sent to the incentives controller and can be rescued if needed
+            // and redistributed by the incentives controller owner.
+            uint256 amountToDistribute = Math.min(rewardAmount, type(uint104).max);
+            controller.immediateDistribution(rewardTokens[i], uint104(amountToDistribute));
         }
     }
 
-    /// @notice Distribute the rewards to the incentives controller
-    /// @dev Distribute the rewards to the incentives controller in chunks of 2^104 to avoid overflows.
-    /// @param _incentivesController Incentives controller
-    /// @param _rewardToken Reward token
-    /// @param _totalToDistribute Amount of rewards to distribute
-    function _immediateDistribution(
-        ISiloIncentivesController _incentivesController,
-        address _rewardToken,
-        uint256 _totalToDistribute
-    ) internal {
-        uint256 amountToDistribute = Math.min(_totalToDistribute, type(uint104).max);
+    /// @notice Initialize the `PendleRewardsClaimer`
+    /// @dev Initialize the `PendleRewardsClaimer` by detecting the Pendle market and Silo.
+    /// Also, configure the hooks for the Silo.
+    function __PendleRewardsClaimer_init() internal virtual {
+        (ISilo silo, IPendleMarketLike pendleMarket) = _getPendleMarketSilo();
 
-        _incentivesController.immediateDistribution(_rewardToken, uint104(amountToDistribute));
+        _configureHooks(address(silo));
 
-        if (amountToDistribute < _totalToDistribute) {
-            uint256 remainingAmount = _totalToDistribute - amountToDistribute;
-            _immediateDistribution(_incentivesController, _rewardToken, remainingAmount);
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(silo));
+
+        _pendleMarketSilo = silo;
+        _pendleMarket = pendleMarket;
+        _protectedShareToken = IShareToken(protectedShareToken);
+    }
+
+    /// @notice Get the Pendle market and Silo
+    /// @dev Detects the Pendle market and Silo by calling `redeemRewards` on the asset.
+    /// @return silo
+    /// @return pendleMarket
+    function _getPendleMarketSilo() private returns (ISilo silo, IPendleMarketLike pendleMarket) {
+        (address silo0, address silo1) = siloConfig.getSilos();
+
+        IPendleMarketLike asset0 = IPendleMarketLike(ISilo(silo0).asset());
+        IPendleMarketLike asset1 = IPendleMarketLike(ISilo(silo1).asset());
+
+        if (!_redeemRewardsReverts(asset0)) {
+            // If it does not revert for the silo0, we require it to revert for the silo1
+            require(_redeemRewardsReverts(asset1), WrongSiloConfig());
+            return (ISilo(silo0), asset0);
+        } else {
+            // If it reverts for silo0, we require it not to revert for the silo1.
+            require(!_redeemRewardsReverts(asset1), WrongSiloConfig());
+            return (ISilo(silo1), asset1);
+        }
+    }
+
+    /// @notice Check if the `redeemRewards` function reverts
+    /// @param _market Pendle market
+    /// @return result True if the `redeemRewards` function reverts, false otherwise
+    function _redeemRewardsReverts(IPendleMarketLike _market) private returns (bool result) {
+        try _market.redeemRewards(address(this)) returns (uint256[] memory) {
+            result = false;
+        } catch {
+            result = true;
         }
     }
 
     /// @notice Configure the hooks for the silo
     /// @param _silo Silo address
-    /// @dev Actions to be configured:
-    /// - DEPOSIT
-    /// - WITHDRAW
-    /// - BORROW
-    /// - BORROW_SAME_ASSET
-    /// - REPAY
-    /// - TRANSITION_COLLATERAL
-    /// - SWITCH_COLLATERAL
-    /// - LIQUIDATION
-    /// - FLASH_LOAN
-    function _configureHooks(address _silo) internal {
-        uint256 hooksBefore = _getHooksBefore(_silo);
-
-        {
-            hooksBefore = hooksBefore
-                .addAction(Hook.DEPOSIT)
-                .addAction(Hook.WITHDRAW)
-                .addAction(Hook.BORROW)
-                .addAction(Hook.BORROW_SAME_ASSET)
-                .addAction(Hook.REPAY)
-                .addAction(Hook.TRANSITION_COLLATERAL);
-        }
-
-        {
-            hooksBefore = hooksBefore
-                .addAction(Hook.SWITCH_COLLATERAL)
-                .addAction(Hook.LIQUIDATION)
-                .addAction(Hook.FLASH_LOAN)
-                .addAction(Hook.COLLATERAL_TOKEN)
-                .addAction(Hook.PROTECTED_TOKEN);
-        }
+    function _configureHooks(address _silo) private {
+        // we require all before actions to be configured
+        uint24 hooksBefore = type(uint24).max;
 
         uint256 hooksAfter = _getHooksAfter(_silo);
+        uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
+        hooksAfter = hooksAfter.addAction(protectedTransferAction);
 
-        {
-            uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
-            hooksAfter = hooksAfter.addAction(protectedTransferAction);
-        }
+        _setHookConfig(_silo, hooksBefore, uint24(hooksAfter));
+    }
 
-        _setHookConfig(_silo, uint24(hooksBefore), uint24(hooksAfter));
+    /// @notice Get the incentives controller from the `GaugeHookReceiver` configuration.
+    /// @dev Reverts if the incentives controller is not configured.
+    /// @return controller
+    function _getIncentivesControllerSafe() private returns (ISiloIncentivesController controller) {
+        controller = ISiloIncentivesController(address(configuredGauges[_protectedShareToken]));
+        require(address(controller) != address(0), IncentivesControllerRequired());
     }
 }
