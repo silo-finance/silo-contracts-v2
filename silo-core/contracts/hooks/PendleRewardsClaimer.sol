@@ -10,7 +10,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IPendleMarketLike} from "silo-core/contracts/interfaces/IPendleMarketLike.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IPendleRewardsClaimer} from "silo-core/contracts/interfaces/IPendleRewardsClaimer.sol";
 import {
     ISiloIncentivesControllerGetters
