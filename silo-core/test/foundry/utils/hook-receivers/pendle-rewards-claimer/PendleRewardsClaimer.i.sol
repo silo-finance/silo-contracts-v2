@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
@@ -340,6 +341,63 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         amount = IERC20(protected).balanceOf(_depositor);
         assertEq(amount, 0, "Depositor should be able to withdraw when redeeming reverts");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewards_above104max -vv
+    function test_redeemRewards_above104max() public {
+        _configureHookAndDeposit();
+
+        IERC20 asset = IERC20(silo0.asset());
+
+        (address protected,,) = _siloConfig.getShareTokens(address(silo0));
+
+        uint256 amount = IERC20(protected).balanceOf(_depositor);
+        assertNotEq(amount, 0, "Depositor should have deposit");
+
+        ERC20Mock token = new ERC20Mock();
+
+        address[] memory rewardTokens = new address[](1);
+        rewardTokens[0] = address(token);
+
+        uint256 someAmount = uint256(type(uint104).max) * 10 + 3;
+
+        token.mint(address(silo0), someAmount);
+
+        assertEq(token.balanceOf(address(silo0)), someAmount, "Token should have rewards");
+        assertEq(token.balanceOf(_depositor), 0, "Depositor should have no rewards");
+
+        vm.mockCall(
+            address(asset),
+            abi.encodeWithSelector(IPendleMarketLike.getRewardTokens.selector),
+            abi.encode(rewardTokens)
+        );
+
+        uint256[] memory rewards = new uint256[](1);
+        rewards[0] = someAmount;
+
+        vm.mockCall(
+            address(asset),
+            abi.encodeWithSelector(IPendleMarketLike.redeemRewards.selector, address(silo0)),
+            abi.encode(rewards)
+        );
+
+        _hookReceiver.redeemRewards();
+
+        assertEq(token.balanceOf(address(silo0)), 0, "Token should have no rewards");
+
+        assertEq(
+            token.balanceOf(address(_incentivesController)),
+            someAmount,
+            "Incentives controller should have rewards"
+        );
+
+        vm.prank(_depositor);
+        _incentivesController.claimRewards(_depositor);
+
+        // -1wei because of the rounding error in the Silo incentives controller
+        assertEq(token.balanceOf(_depositor), someAmount - 1, "Depositor should have rewards");
+        // 1wei because of the rounding error in the Silo incentives controller
+        assertEq(token.balanceOf(address(_incentivesController)), 1, "Incentives controller should have no rewards");
     }
 
     function _configureHookAndDeposit() internal {
