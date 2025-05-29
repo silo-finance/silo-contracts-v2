@@ -88,23 +88,15 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         address notifier = ISiloIncentivesControllerGetters(address(_incentivesController)).NOTIFIER();
         require(notifier == address(this), WrongIncentivesControllerNotifier());
 
-        address shareToken;
-
-        if (asset0 == _pendleMarket) {
-            (protectedShareToken,,) = siloConfig.getShareTokens(silo0);
-        } else {
-            (shareToken,,) = siloConfig.getShareTokens(silo1);
-        }
-
+        address silo = asset0 == _pendleMarket ? silo0 : silo1;
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(silo));
         address controllerShareToken = ISiloIncentivesControllerGetters(address(_incentivesController)).SHARE_TOKEN();
-        require(shareToken == controllerShareToken, WrongIncentivesControllerShareToken());
+        require(protectedShareToken == controllerShareToken, WrongIncentivesControllerShareToken());
 
         pendleMarket = _pendleMarket;
         incentivesController = _incentivesController;
 
         emit ConfigUpdated(_pendleMarket, _incentivesController);
-
-        address silo = asset0 == _pendleMarket ? silo0 : silo1;
 
         _configureHooks(silo);
     }
@@ -134,7 +126,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             uint256 rewardAmount = rewards[i];
             if (rewardAmount == 0) continue;
 
-            IERC20(rewardTokens[i]).safeTransfer(address(_incentivesController), rewards[i]);
+            IERC20(rewardTokens[i]).safeTransfer(address(_incentivesController), rewardAmount);
         }
     }
 
@@ -147,7 +139,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         uint256 collateralDepositAction = Hook.depositAction(ISilo.CollateralType.Collateral);
         require(!collateralDepositAction.matchAction(_action), CollateralDepositNotAllowed());
 
-        _beforeActionExecutedFor = _action;
+        _txBeforeActionExecutedFor = _action;
         _redeemRewards(_silo);
     }
 
@@ -157,7 +149,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         virtual
         override(GaugeHookReceiver, IHookReceiver)
     {
-        if (_beforeActionExecutedFor == Hook.NONE) {
+        if (_txBeforeActionExecutedFor == Hook.NONE) {
             // This is a token transfer, and we need to redeem the rewards.
             uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
             if (protectedTransferAction.matchAction(_action)) _redeemRewards(_silo);
@@ -165,7 +157,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
 
         GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
 
-        _beforeActionExecutedFor = Hook.NONE;
+        _txBeforeActionExecutedFor = Hook.NONE;
     }
 
     /// @notice Redeem rewards from Pendle for the silo
@@ -180,11 +172,9 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             uint256[] memory rewards
         )
     {
-        bytes memory input = abi.encodeWithSelector(
-            this.redeemRewardsFromPendle.selector,
-            pendleMarket,
-            incentivesController
-        );
+        ISiloIncentivesController controller = incentivesController;
+
+        bytes memory input = abi.encodeWithSelector(this.redeemRewardsFromPendle.selector, pendleMarket, controller);
 
         (bool success, bytes memory data) = ISilo(_silo).callOnBehalfOfSilo({
             _target: address(this),
@@ -201,9 +191,10 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         (rewardTokens, rewards) = abi.decode(data, (address[], uint256[]));
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
-            if (rewards[i] == 0) continue;
+            uint256 rewardAmount = rewards[i];
+            if (rewardAmount == 0) continue;
 
-            _immediateDistribution(incentivesController, rewardTokens[i], rewards[i]);
+            _immediateDistribution(controller, rewardTokens[i], rewardAmount);
         }
     }
 
@@ -240,21 +231,34 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// - LIQUIDATION
     /// - FLASH_LOAN
     function _configureHooks(address _silo) internal {
-        uint256 requiredHooksBefore = Hook.DEPOSIT
-            .addAction(Hook.WITHDRAW)
-            .addAction(Hook.BORROW)
-            .addAction(Hook.BORROW_SAME_ASSET)
-            .addAction(Hook.REPAY)
-            .addAction(Hook.TRANSITION_COLLATERAL)
-            .addAction(Hook.SWITCH_COLLATERAL)
-            .addAction(Hook.LIQUIDATION)
-            .addAction(Hook.FLASH_LOAN)
-            .addAction(Hook.COLLATERAL_TOKEN)
-            .addAction(Hook.PROTECTED_TOKEN);
+        uint256 hooksBefore = _getHooksBefore(_silo);
 
-        uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
-        uint256 requiredHooksAfter = _getHooksAfter(_silo).addAction(protectedTransferAction);
+        {
+            hooksBefore = hooksBefore
+                .addAction(Hook.DEPOSIT)
+                .addAction(Hook.WITHDRAW)
+                .addAction(Hook.BORROW)
+                .addAction(Hook.BORROW_SAME_ASSET)
+                .addAction(Hook.REPAY)
+                .addAction(Hook.TRANSITION_COLLATERAL);
+        }
 
-        _setHookConfig(_silo, uint24(requiredHooksBefore), uint24(requiredHooksAfter));
+        {
+            hooksBefore = hooksBefore
+                .addAction(Hook.SWITCH_COLLATERAL)
+                .addAction(Hook.LIQUIDATION)
+                .addAction(Hook.FLASH_LOAN)
+                .addAction(Hook.COLLATERAL_TOKEN)
+                .addAction(Hook.PROTECTED_TOKEN);
+        }
+
+        uint256 hooksAfter = _getHooksAfter(_silo);
+
+        {
+            uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
+            hooksAfter = hooksAfter.addAction(protectedTransferAction);
+        }
+
+        _setHookConfig(_silo, uint24(hooksBefore), uint24(hooksAfter));
     }
 }
