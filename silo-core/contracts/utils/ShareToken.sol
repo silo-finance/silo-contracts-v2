@@ -174,6 +174,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         ERC20PermitUpgradeable.permit(owner, spender, value, deadline, v, r, s);
     }
 
+    /* solhint-disable */
     /// @notice The decimals of the share token match those of the underlying asset token.
     /// @dev This does not imply a 1:1 ratio between shares and assets. There are three types of share tokens:
     /// collateral, protected, and debt. Debt share token has offset 0. For collateral and protected share tokens,
@@ -190,6 +191,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     function decimals() public view virtual override(ERC20Upgradeable, IERC20Metadata) returns (uint8) {
         return ShareTokenLib.decimals();
     }
+    /* solhint-enable */
 
     /// @dev Name convention:
     ///      NAME - asset name
