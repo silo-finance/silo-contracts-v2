@@ -131,7 +131,8 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         rewards = _pendleMarket.redeemRewards({user: address(this)});
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
-            if (rewards[i] == 0) continue;
+            uint256 rewardAmount = rewards[i];
+            if (rewardAmount == 0) continue;
 
             IERC20(rewardTokens[i]).safeTransfer(address(_incentivesController), rewards[i]);
         }
