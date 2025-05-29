@@ -33,7 +33,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
 
     /// @notice Transient variable to store the action type for which `beforeAction` was executed.
     /// @dev This is used in `afterAction` to determine if incentives need to be claimed for token transfers.
-    uint256 transient internal _beforeActionExecutedFor;
+    uint256 transient internal _txBeforeActionExecutedFor;
 
     /// @dev Modifier that checks if the caller is the hook receiver.
     /// Designed to be used in the functions that are called by the hook from the silo via delegatecall.
