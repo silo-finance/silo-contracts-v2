@@ -8,7 +8,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
 // Contracts
-import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.sol";
+import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.s.sol";
 
 // Test Contracts
 import {BaseTest} from "./base/BaseTest.t.sol";
