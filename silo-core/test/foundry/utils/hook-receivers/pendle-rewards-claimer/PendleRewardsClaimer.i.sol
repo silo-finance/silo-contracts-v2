@@ -84,7 +84,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt testReInitialization
-    function testReInitialization() public {
+    function test_reInitialization() public {
         address hookReceiverImpl = AddrLib.getAddress(SiloCoreContracts.PENDLE_REWARDS_CLAIMER);
 
         bytes memory data = abi.encode(address(this));
