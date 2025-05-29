@@ -31,7 +31,8 @@ abstract contract PendleLPTOracle is ISiloOracle {
     address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
     error InvalidUnderlyingOracle();
-    error PendleOracleNotReady();
+    error IncreaseCardinalityRequired();
+    error OldestObservationSatisfied();
     error PendleRateIsZero();
     error AssetNotSupported();
     error ZeroPrice();
@@ -43,15 +44,15 @@ abstract contract PendleLPTOracle is ISiloOracle {
         MARKET = _market;
 
         address underlyingToken = _getUnderlyingToken();
-        uint256 underlyingTokenDecimals = TokenHelper.assertAndGetDecimals(underlyingToken);
 
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             PENDLE_ORACLE.getOracleState(_market, TWAP_DURATION);
-        
-        require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
+
+        require(!increaseCardinalityRequired, IncreaseCardinalityRequired());
+        require(oldestObservationSatisfied, OldestObservationSatisfied());
         require(_getRate() != 0, PendleRateIsZero());
 
-        uint256 underlyingSampleToQuote = 10 ** underlyingTokenDecimals;
+        uint256 underlyingSampleToQuote = 10 ** TokenHelper.assertAndGetDecimals(underlyingToken);
         require(_underlyingOracle.quote(underlyingSampleToQuote, underlyingToken) != 0, InvalidUnderlyingOracle());
 
         UNDERLYING_ORACLE = _underlyingOracle;
