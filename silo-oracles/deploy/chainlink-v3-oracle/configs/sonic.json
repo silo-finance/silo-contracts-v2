@@ -280,7 +280,7 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
-    "CHAINLINK_xUSD_USD": {
+    "EORACLE_xUSD_USD": {
         "baseToken": "xUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "EORACLE_xUSD_USD_aggregator",
