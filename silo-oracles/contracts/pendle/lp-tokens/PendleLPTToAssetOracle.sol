@@ -17,12 +17,12 @@ import {PendleLPTOracle} from "./PendleLPTOracle.sol";
 contract PendleLPTToAssetOracle is PendleLPTOracle {
     constructor(ISiloOracle _underlyingOracle, address _market) PendleLPTOracle(_underlyingOracle, _market) {}
 
-    function _getRate() internal view override returns (uint256) {
-        return PENDLE_ORACLE.getLpToAssetRate(MARKET, TWAP_DURATION);
+    function _getRateLpToUnderlying() internal view override returns (uint256) {
+        return PENDLE_ORACLE.getLpToAssetRate(PENDLE_MARKET, TWAP_DURATION);
     }
 
     function _getUnderlyingToken() internal virtual view override returns (address token) {
-        (address syToken,,) = IPendleMarketV3Like(MARKET).readTokens();
+        (address syToken,,) = IPendleMarketV3Like(PENDLE_MARKET).readTokens();
         (, token,) = IPendleSYTokenLike(syToken).assetInfo();
     }
 }

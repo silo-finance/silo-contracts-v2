@@ -131,6 +131,21 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         silo0.deposit(amount, _depositor, ISilo.CollateralType.Collateral);
     }
 
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_transitionCollateral_notPossible -vv
+    function test_transitionCollateral_notPossible() public {
+        _depositProtected();
+
+        (address protected,,) = _siloConfig.getShareTokens(address(silo0));
+        uint256 balance = IERC20(protected).balanceOf(_depositor);
+
+        vm.expectRevert(abi.encodeWithSelector(
+            IPendleRewardsClaimer.TransitionProtectedCollateralNotAllowed.selector
+        ));
+
+        vm.prank(_depositor);
+        silo0.transitionCollateral(balance, _depositor, ISilo.CollateralType.Protected);
+    }
+
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewardsFromPendle_and_claim -vv
     function test_redeemRewardsFromPendle_and_claim() public {
         IERC20 asset = IERC20(silo0.asset());
@@ -175,6 +190,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             uint256 rewardsBefore = IERC20(_rewardToken).balanceOf(_depositor);
 
             _hookReceiver.redeemRewards();
+            _hookReceiverHarness.resetTransientRewardsClaimed();
 
             // user claim rewards from the silo incentives controller
             vm.prank(_depositor);

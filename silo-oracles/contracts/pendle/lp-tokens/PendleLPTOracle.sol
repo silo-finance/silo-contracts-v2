@@ -12,7 +12,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
     /// @dev time range for TWAP to get getLpToSyRate, in seconds.
     uint32 public constant TWAP_DURATION = 30 minutes;
 
-    /// @dev Pendle oracle helper to get getLpToSyRate for a market.
+    /// @dev Pendle oracle helper to get getLpToSyRate for a PENDLE_MARKET.
     /// It was deployed to have the same address for all networks.
     /// https://docs.pendle.finance/Developers/Oracles/HowToIntegratePtAndLpOracle
     IPendleOracleHelper public constant PENDLE_ORACLE =
@@ -21,11 +21,11 @@ abstract contract PendleLPTOracle is ISiloOracle {
     /// @dev oracle to get the price of LP underlying asset.
     ISiloOracle public immutable UNDERLYING_ORACLE; // solhint-disable-line var-name-mixedcase
 
-    /// @dev LP_TOKEN underlying asset 
+    /// @dev LP_TOKEN underlying asset.
     address public immutable UNDERLYING_TOKEN; // solhint-disable-line var-name-mixedcase
 
     /// @dev Pendle market. This address is used to get getLpToSyRate.
-    address public immutable MARKET; // solhint-disable-line var-name-mixedcase
+    address public immutable PENDLE_MARKET; // solhint-disable-line var-name-mixedcase
 
     /// @dev This oracle's quote token is equal to UNDERLYING_ORACLE's quote token.
     address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
@@ -38,19 +38,19 @@ abstract contract PendleLPTOracle is ISiloOracle {
     error ZeroPrice();
 
     /// @dev constructor has sanity check for _underlyingOracle to not return zero or revert and for _pendleOracle to
-    /// return non-zero value for _market address and TWAP_DURATION. If underlying oracle reverts, constructor will
+    /// return non-zero value for _pendleMarket address and TWAP_DURATION. If underlying oracle reverts, constructor will
     /// revert with original revert reason.
-    constructor(ISiloOracle _underlyingOracle, address _market) {
-        MARKET = _market;
+    constructor(ISiloOracle _underlyingOracle, address _pendleMarket) {
+        PENDLE_MARKET = _pendleMarket;
 
         address underlyingToken = _getUnderlyingToken();
 
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
-            PENDLE_ORACLE.getOracleState(_market, TWAP_DURATION);
+            PENDLE_ORACLE.getOracleState(_pendleMarket, TWAP_DURATION);
 
         require(!increaseCardinalityRequired, IncreaseCardinalityRequired());
         require(oldestObservationSatisfied, OldestObservationSatisfied());
-        require(_getRate() != 0, PendleRateIsZero());
+        require(_getRateLpToUnderlying() != 0, PendleRateIsZero());
 
         uint256 underlyingSampleToQuote = 10 ** TokenHelper.assertAndGetDecimals(underlyingToken);
         require(_underlyingOracle.quote(underlyingSampleToQuote, underlyingToken) != 0, InvalidUnderlyingOracle());
@@ -61,24 +61,27 @@ abstract contract PendleLPTOracle is ISiloOracle {
         QUOTE_TOKEN = _underlyingOracle.quoteToken();
     }
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
+    /// @dev Pendle LPs might be susceptible to read-only reentrancy IF the underlying yieldToken
+    /// surrenders the control flow to an external caller at any point.
+    /// Contact Pendle team before deploying this oracle.
     function beforeQuote(address) external virtual {}
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
-        require(_baseToken == MARKET, AssetNotSupported());
+        require(_baseToken == PENDLE_MARKET, AssetNotSupported());
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, UNDERLYING_TOKEN);
-        quoteAmount = quoteAmount * _getRate() / PENDLE_RATE_PRECISION;
+        quoteAmount = quoteAmount * _getRateLpToUnderlying() / PENDLE_RATE_PRECISION;
 
         require(quoteAmount != 0, ZeroPrice());
     }
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
     }
 
-    function _getRate() internal virtual view returns (uint256) {}
-    function _getUnderlyingToken() internal virtual view returns (address) {}
+    function _getRateLpToUnderlying() internal virtual view returns (uint256);
+    function _getUnderlyingToken() internal virtual view returns (address);
 }

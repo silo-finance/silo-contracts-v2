@@ -4,14 +4,14 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {IPendleOracleHelper} from "silo-oracles/contracts/pendle/interfaces/IPendleOracleHelper.sol";
-import {PendleLPTOracle} from "silo-oracles/contracts/pendle/PendleLPTOracle.sol";
+import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {PendleLPTToSyOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToSyOracleFactory.sol";
-import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracleFactory.sol";
+import {PendleLPTToSyOracleFactory} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToSyOracleFactory.sol";
+import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracleFactory.sol";
 import {PendleLPTToSyOracleDeploy} from "silo-oracles/deploy/pendle/PendleLPTToSyOracleDeploy.s.sol";
 import {PendleLPTToAssetOracleDeploy} from "silo-oracles/deploy/pendle/PendleLPTToAssetOracleDeploy.s.sol";
 import {PendleLPTToSyOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendleLPTToSyOracleFactoryDeploy.s.sol";
-import {PendleLPTToAssetOracle} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracle.sol";
+import {PendleLPTToAssetOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracle.sol";
 import {
     PendleLPTToAssetOracleFactoryDeploy
 } from "silo-oracles/deploy/pendle/PendleLPTToAssetOracleFactoryDeploy.s.sol";

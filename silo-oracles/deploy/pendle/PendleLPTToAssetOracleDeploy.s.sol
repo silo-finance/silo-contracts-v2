@@ -7,8 +7,8 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from "../SiloOraclesFactoriesContracts.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracleFactory.sol";
-import {PendleLPTToAssetOracle} from "silo-oracles/contracts/pendle/PendleLPTToAssetOracle.sol";
+import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracleFactory.sol";
+import {PendleLPTToAssetOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracle.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 
