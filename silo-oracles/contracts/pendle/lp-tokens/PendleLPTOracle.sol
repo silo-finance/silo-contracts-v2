@@ -38,8 +38,8 @@ abstract contract PendleLPTOracle is ISiloOracle {
     error ZeroPrice();
 
     /// @dev constructor has sanity check for _underlyingOracle to not return zero or revert and for _pendleOracle to
-    /// return non-zero value for _pendleMarket address and TWAP_DURATION. If underlying oracle reverts, constructor will
-    /// revert with original revert reason.
+    /// return non-zero value for _pendleMarket address and TWAP_DURATION. If underlying oracle reverts,
+    /// constructor will revert with original revert reason.
     constructor(ISiloOracle _underlyingOracle, address _pendleMarket) {
         PENDLE_MARKET = _pendleMarket;
 
