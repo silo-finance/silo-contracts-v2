@@ -25,8 +25,8 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     using Hook for uint256;
 
     IPendleMarketLike public pendleMarket;
-    ISilo internal pendleMarketSilo;
-    IShareToken internal protectedShareToken;
+    ISilo public pendleMarketSilo;
+    IShareToken public protectedShareToken;
 
     /// @notice Transient variable to store the action type for which `beforeAction` was executed.
     /// @dev This is used in `afterAction` to determine if incentives need to be claimed for token transfers.
