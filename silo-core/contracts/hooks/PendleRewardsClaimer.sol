@@ -184,12 +184,17 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         if (!_redeemRewardsReverts(asset0)) {
             // If it does not revert for the silo0, we require it to revert for the silo1
             require(_redeemRewardsReverts(asset1), WrongSiloConfig());
-            return (ISilo(silo0), asset0);
+            silo = ISilo(silo0);
+            pendleMarket = asset0;
         } else {
             // If it reverts for silo0, we require it not to revert for the silo1.
             require(!_redeemRewardsReverts(asset1), WrongSiloConfig());
-            return (ISilo(silo1), asset1);
+            silo = ISilo(silo1);
+            pendleMarket = asset1;
         }
+
+        // As an additional sanity check, we call getRewardTokens on the Pendle market as we use this method as well.
+        pendleMarket.getRewardTokens();
     }
 
     /// @notice Check if the `redeemRewards` function reverts
