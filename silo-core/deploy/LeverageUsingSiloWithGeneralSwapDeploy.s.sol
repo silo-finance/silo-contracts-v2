@@ -32,7 +32,8 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 contract LeverageUsingSiloWithGeneralSwapDeploy is CommonDeploy {
     function run() public returns (LeverageUsingSiloWithGeneralSwap leverage) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        address dao = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
+        // address dao = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
+        address dao = vm.addr(deployerPrivateKey); // TODO temporary override
 
         vm.startBroadcast(deployerPrivateKey);
 
