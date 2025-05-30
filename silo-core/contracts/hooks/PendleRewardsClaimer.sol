@@ -24,9 +24,9 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     using SafeERC20 for IERC20;
     using Hook for uint256;
 
-    IPendleMarketLike internal _pendleMarket;
-    ISilo internal _pendleMarketSilo;
-    IShareToken internal _protectedShareToken;
+    IPendleMarketLike public pendleMarket;
+    ISilo internal pendleMarketSilo;
+    IShareToken internal protectedShareToken;
 
     /// @notice Transient variable to store the action type for which `beforeAction` was executed.
     /// @dev This is used in `afterAction` to determine if incentives need to be claimed for token transfers.
@@ -48,12 +48,12 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// @notice Redeem rewards from Pendle
     /// @dev Redeem rewards from Pendle and transfer them to the incentives controller for immediate distribution.
     /// This function is designed to be called by the hook from the silo via delegatecall.
-    /// @param _pendleMarket Pendle market address
+    /// @param _market Pendle market address
     /// @param _incentivesController Incentives controller address
     /// @return rewardTokens Reward tokens
     /// @return rewards Rewards for collateral token
     function redeemRewardsFromPendle(
-        IPendleMarketLike _pendleMarket,
+        IPendleMarketLike _market,
         ISiloIncentivesController _incentivesController
     )
         external
@@ -63,9 +63,8 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             uint256[] memory rewards
         )
     {
-        IPendleMarketLike pendleMarket = _pendleMarket;
-        rewardTokens = pendleMarket.getRewardTokens();
-        pendleMarket.redeemRewards({user: address(this)});
+        rewardTokens = _market.getRewardTokens();
+        _market.redeemRewards({user: address(this)});
         rewards = new uint256[](rewardTokens.length);
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
@@ -73,7 +72,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             // Pendle should never distribute rewards in the Pendle market LP tokens.
             // However, we have this check in place as a safety measure,
             // so we will ensure that we do not transfer assets from the Silo balance.
-            if (rewardToken == address(pendleMarket)) continue;
+            if (rewardToken == address(_market)) continue;
 
             uint256 rewardAmount = IERC20(rewardToken).balanceOf(address(this));
             if (rewardAmount == 0) continue;
@@ -123,8 +122,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// @return rewardTokens Reward tokens
     /// @return rewards Rewards for collateral token
     function redeemRewards() public virtual returns (address[] memory rewardTokens, uint256[] memory rewards) {
-        ISilo silo = _pendleMarketSilo;
-        IPendleMarketLike pendleMarket = _pendleMarket;
+        ISilo silo = pendleMarketSilo;
         ISiloIncentivesController controller = _getIncentivesControllerSafe();
         bytes memory input = abi.encodeWithSelector(this.redeemRewardsFromPendle.selector, pendleMarket, controller);
 
@@ -160,15 +158,15 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// @dev Initialize the `PendleRewardsClaimer` by detecting the Pendle market and Silo.
     /// Also, configure the hooks for the Silo.
     function __PendleRewardsClaimer_init() internal virtual {
-        (ISilo silo, IPendleMarketLike pendleMarket) = _getPendleMarketSilo();
+        (ISilo silo, IPendleMarketLike market) = _getPendleMarketSilo();
 
         _configureHooks(address(silo));
 
-        (address protectedShareToken,,) = siloConfig.getShareTokens(address(silo));
+        (address siloProtectedShareToken,,) = siloConfig.getShareTokens(address(silo));
 
-        _pendleMarketSilo = silo;
-        _pendleMarket = pendleMarket;
-        _protectedShareToken = IShareToken(protectedShareToken);
+        pendleMarketSilo = silo;
+        pendleMarket = market;
+        protectedShareToken = IShareToken(siloProtectedShareToken);
     }
 
     /// @notice Get the Pendle market and Silo
@@ -225,7 +223,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// @dev Reverts if the incentives controller is not configured.
     /// @return controller
     function _getIncentivesControllerSafe() private returns (ISiloIncentivesController controller) {
-        controller = ISiloIncentivesController(address(configuredGauges[_protectedShareToken]));
+        controller = ISiloIncentivesController(address(configuredGauges[protectedShareToken]));
         require(address(controller) != address(0), IncentivesControllerRequired());
     }
 }
