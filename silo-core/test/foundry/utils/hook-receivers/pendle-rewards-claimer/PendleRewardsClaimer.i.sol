@@ -34,6 +34,9 @@ import {
 import {
     ISiloIncentivesControllerGaugeLikeFactory
 } from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGaugeLikeFactory.sol";
+import {
+    PendleRewardsClaimerHarness
+} from "silo-core/test/foundry/utils/hook-receivers/pendle-rewards-claimer/PendleRewardsClaimerHarness.sol";
 
 // FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
 contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
@@ -45,6 +48,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     address internal _lptWhale = 0x6E799758CEE75DAe3d84e09D40dc416eCf713652;
 
     IPendleRewardsClaimer internal _hookReceiver;
+    PendleRewardsClaimerHarness internal _hookReceiverHarness;
     ISiloConfig internal _siloConfig;
     ISiloIncentivesController internal _incentivesController;
     ISiloIncentivesControllerGaugeLikeFactory internal _factory;
@@ -80,6 +84,12 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             IGauge(address(_incentivesController)),
             IShareToken(address(protected))
         );
+
+        PendleRewardsClaimerHarness claimer = new PendleRewardsClaimerHarness();
+
+        vm.etch(address(_hookReceiver), address(claimer).code);
+
+        _hookReceiverHarness = PendleRewardsClaimerHarness(address(_hookReceiver));
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi -vvv --mt test_reInitialization
@@ -300,54 +310,6 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         assertTrue(Hook.matchAction(protectedTransferAction, hooksAfter), "After actions should be configured");
     }
 
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_WrongSiloConfig_reverts -vv
-    function test_WrongSiloConfig_reverts() public {
-        PendleRewardsClaimer claimerImpl = new PendleRewardsClaimer();
-        PendleRewardsClaimer claimer = PendleRewardsClaimer(Clones.clone(address(claimerImpl)));
-
-        address siloConfig = makeAddr("SILO_CONFIG");
-        address silo0 = makeAddr("SILO_0");
-        address silo1 = makeAddr("SILO_1");
-
-        address asset0 = address(new ERC20Mock());
-        address asset1 = address(new ERC20Mock());
-
-        bytes memory data = abi.encode(address(this));
-
-        bytes memory getSilosInput = abi.encodeWithSelector(ISiloConfig.getSilos.selector);
-
-        vm.mockCall(address(siloConfig), getSilosInput, abi.encode(silo0, silo1));
-        vm.expectCall(address(siloConfig), getSilosInput);
-
-        bytes memory assetInput = abi.encodeWithSelector(IERC4626.asset.selector);
-
-        vm.mockCall(silo0, assetInput, abi.encode(asset0));
-        vm.expectCall(silo0, assetInput);
-
-        vm.mockCall(silo1, assetInput, abi.encode(asset1));
-        vm.expectCall(silo1, assetInput);
-
-        // If it reverts for silo0, we require it not to revert for the silo1.
-        vm.expectRevert(IPendleRewardsClaimer.WrongSiloConfig.selector);
-        claimer.initialize(ISiloConfig(siloConfig), data);
-
-        vm.mockCall(
-            asset0,
-            abi.encodeWithSelector(IPendleMarketLike.redeemRewards.selector, address(_hookReceiver)),
-            abi.encode(new uint256[](0))
-        );
-
-        vm.mockCall(
-            asset1,
-            abi.encodeWithSelector(IPendleMarketLike.redeemRewards.selector, address(_hookReceiver)),
-            abi.encode(new uint256[](0))
-        );
-
-        // If it does not revert for the silo0, we require it to revert for the silo1
-        vm.expectRevert(IPendleRewardsClaimer.WrongSiloConfig.selector);
-        claimer.initialize(ISiloConfig(siloConfig), data);
-    }
-
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_rewardToken_isSiloAsset -vv
     function test_rewardToken_isSiloAsset() public {
         _depositProtected();
@@ -401,5 +363,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         asset.approve(address(silo0), amount);
         vm.prank(_depositor);
         silo0.deposit(amount, _depositor, ISilo.CollateralType.Protected);
+
+        _hookReceiverHarness.resetTransientRewardsClaimed();
     }
 }

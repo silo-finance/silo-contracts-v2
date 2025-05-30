@@ -28,9 +28,8 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     ISilo public pendleMarketSilo;
     IShareToken public protectedShareToken;
 
-    /// @notice Transient variable to store the action type for which `beforeAction` was executed.
-    /// @dev This is used in `afterAction` to determine if incentives need to be claimed for token transfers.
-    bool transient internal _rewardsClaimedInTheBeforeAction;
+    /// @notice The flag that show if the rewards were claimed.
+    bool transient internal _rewardsClaimed;
 
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data)
@@ -64,7 +63,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         )
     {
         rewardTokens = _market.getRewardTokens();
-        _market.redeemRewards({user: address(this)});
+        _market.redeemRewards({user: address(this)}); // address(this) is a Silo as we do a delegatecall.
         rewards = new uint256[](rewardTokens.length);
 
         for (uint256 i = 0; i < rewardTokens.length; i++) {
@@ -89,10 +88,11 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         onlySilo()
         override
     {
+        if (_rewardsClaimed) return;
+
         uint256 collateralDepositAction = Hook.depositAction(ISilo.CollateralType.Collateral);
         require(!collateralDepositAction.matchAction(_action), CollateralDepositNotAllowed());
 
-        _rewardsClaimedInTheBeforeAction = true;
         redeemRewards();
     }
 
@@ -107,14 +107,12 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         // we expect that rewards be redeemed in the before action. But, share tokens do not have before action hook.
         // Therefore, we need to verify if this is a protected share token transfer,
         // and if so, we must redeem the rewards.
-        if (!_rewardsClaimedInTheBeforeAction) {
+        if (!_rewardsClaimed) {
             uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
             if (protectedTransferAction.matchAction(_action)) redeemRewards();
         }
 
         GaugeHookReceiver.afterAction(_silo, _action, _inputAndOutput);
-
-        _rewardsClaimedInTheBeforeAction = false;
     }
 
     /// @notice Redeem rewards from Pendle for the Silo
@@ -126,7 +124,10 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
         ISiloIncentivesController controller = _getIncentivesControllerSafe();
         bytes memory input = abi.encodeWithSelector(this.redeemRewardsFromPendle.selector, pendleMarket, controller);
 
-        (bool success, bytes memory data) = silo.callOnBehalfOfSilo({
+        // We limit the gas to 5M to prevent the silo from being locked in the case of any issues in the Pendle market.
+        // From our tests, we observe that for the market with two reward tokens,
+        // when we accrue rewards in one of these tokens, this call requires ~200,000 gas.
+        (bool success, bytes memory data) = silo.callOnBehalfOfSilo{gas: 5_000_000}({
             _target: address(this),
             _value: 0,
             _callType: ISilo.CallType.Delegatecall,
@@ -152,58 +153,33 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
             uint256 amountToDistribute = Math.min(rewardAmount, type(uint104).max);
             controller.immediateDistribution(rewardTokens[i], uint104(amountToDistribute));
         }
+
+        _rewardsClaimed = true;
     }
 
     /// @notice Initialize the `PendleRewardsClaimer`
     /// @dev Initialize the `PendleRewardsClaimer` by detecting the Pendle market and Silo.
     /// Also, configure the hooks for the Silo.
-    function __PendleRewardsClaimer_init() internal virtual {
-        (ISilo silo, IPendleMarketLike market) = _getPendleMarketSilo();
+    function __PendleRewardsClaimer_init() internal onlyInitializing virtual {
+        (address silo, IPendleMarketLike market) = _getPendleMarketSilo();
 
-        _configureHooks(address(silo));
+        _configureHooks(silo);
 
-        (address siloProtectedShareToken,,) = siloConfig.getShareTokens(address(silo));
+        (address siloProtectedShareToken,,) = siloConfig.getShareTokens(silo);
 
-        pendleMarketSilo = silo;
+        pendleMarketSilo = ISilo(silo);
         pendleMarket = market;
         protectedShareToken = IShareToken(siloProtectedShareToken);
     }
 
     /// @notice Get the Pendle market and Silo
-    /// @dev Detects the Pendle market and Silo by calling `redeemRewards` on the asset.
-    /// @return silo
-    /// @return pendleMarket
-    function _getPendleMarketSilo() private returns (ISilo silo, IPendleMarketLike pendleMarket) {
-        (address silo0, address silo1) = siloConfig.getSilos();
+    /// @dev The Pendle market is always should be assets of the Silo0.
+    function _getPendleMarketSilo() private returns (address silo, IPendleMarketLike market) {
+        (silo,) = siloConfig.getSilos();
 
-        IPendleMarketLike asset0 = IPendleMarketLike(ISilo(silo0).asset());
-        IPendleMarketLike asset1 = IPendleMarketLike(ISilo(silo1).asset());
-
-        if (!_redeemRewardsReverts(asset0)) {
-            // If it does not revert for the silo0, we require it to revert for the silo1
-            require(_redeemRewardsReverts(asset1), WrongSiloConfig());
-            silo = ISilo(silo0);
-            pendleMarket = asset0;
-        } else {
-            // If it reverts for silo0, we require it not to revert for the silo1.
-            require(!_redeemRewardsReverts(asset1), WrongSiloConfig());
-            silo = ISilo(silo1);
-            pendleMarket = asset1;
-        }
-
-        // As an additional sanity check, we call getRewardTokens on the Pendle market as we use this method as well.
-        pendleMarket.getRewardTokens();
-    }
-
-    /// @notice Check if the `redeemRewards` function reverts
-    /// @param _market Pendle market
-    /// @return redeemReverts True if the `redeemRewards` function reverts, false otherwise
-    function _redeemRewardsReverts(IPendleMarketLike _market) private returns (bool redeemReverts) {
-        try _market.redeemRewards(address(this)) returns (uint256[] memory) {
-            redeemReverts = false;
-        } catch {
-            redeemReverts = true;
-        }
+        market = IPendleMarketLike(ISilo(silo).asset());
+        market.getRewardTokens();
+        market.redeemRewards(address(this));
     }
 
     /// @notice Configure the hooks for the silo
