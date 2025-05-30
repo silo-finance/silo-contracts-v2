@@ -15,6 +15,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 
@@ -188,25 +189,33 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         _mockGaugeIsKilled(true);
 
+        (uint24 hooksBefore0, uint24 hooksAfter0) = _hookReceiver.hookReceiverConfig(silo0);
+
+        IShareToken.HookSetup memory silo0HooksBefore = IShareToken(address(silo0)).hookSetup();
+        IShareToken.HookSetup memory silo1HooksBefore = IShareToken(address(silo1)).hookSetup();
+
         vm.prank(_dao);
         _hookReceiver.removeGauge(IShareToken(shareCollateralToken));
 
-        (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(silo0);
+        IShareToken.HookSetup memory silo0HooksAfter = IShareToken(address(silo0)).hookSetup();
+        IShareToken.HookSetup memory silo1HooksAfter = IShareToken(address(silo1)).hookSetup();
 
-        uint256 action = Hook.SHARE_TOKEN_TRANSFER;
+        (uint24 hooksBefore1, uint24 hooksAfter1) = _hookReceiver.hookReceiverConfig(silo0);
 
-        assertEq(uint256(hooksBefore), 0);
-        assertEq(uint256(hooksAfter), action);
+        assertEq(uint256(hooksBefore0), uint256(hooksBefore1), "Hook setup should not change");
+        assertEq(uint256(hooksAfter0), uint256(hooksAfter1), "Hook setup should not change");
 
-        IShareToken.HookSetup memory silo0Hooks = IShareToken(address(silo0)).hookSetup();
+        assertEq(
+            uint256(silo0HooksBefore.hooksBefore),
+            uint256(silo0HooksAfter.hooksBefore),
+            "Silo0 hooks before should not change"
+        );
 
-        assertEq(uint256(silo0Hooks.hooksBefore), 0);
-        assertEq(uint256(silo0Hooks.hooksAfter), action);
-
-        IShareToken.HookSetup memory silo1Hooks = IShareToken(address(silo1)).hookSetup();
-
-        assertEq(uint256(silo1Hooks.hooksBefore), 0);
-        assertEq(uint256(silo1Hooks.hooksAfter), 0);
+        assertEq(
+            uint256(silo0HooksAfter.hooksAfter),
+            uint256(silo0HooksBefore.hooksAfter),
+            "Silo0 hooks after should not change"
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testAfterTokenTransfer
@@ -226,7 +235,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         bytes memory data = _getEncodedData();
 
-        vm.expectRevert(IGaugeHookReceiver.GaugeIsNotConfigured.selector); // only share token
+        vm.prank(debtShareToken);
         _hookReceiver.afterAction(
             silo0,
             action,

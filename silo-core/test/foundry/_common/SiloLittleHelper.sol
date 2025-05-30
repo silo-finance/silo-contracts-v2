@@ -46,6 +46,16 @@ abstract contract SiloLittleHelper is CommonBase {
         return _localFixture("", SiloFixture(address(siloFixture)));
     }
 
+    function _setUpLocalFixtureNoOverrides(string memory _configName) internal returns (ISiloConfig siloConfig) {
+        SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
+
+        address hook;
+        (siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(_configName);
+
+        partialLiquidation = IPartialLiquidation(hook);
+        siloFactory = silo0.factory();
+    }
+
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
         SiloFixtureWithVeSilo siloFixture = new SiloFixtureWithVeSilo();
         return _localFixture(_configName, SiloFixture(address(siloFixture)));

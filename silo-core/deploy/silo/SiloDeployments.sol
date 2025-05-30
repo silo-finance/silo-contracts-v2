@@ -16,6 +16,7 @@ library SiloConfigsNames {
 
     string public constant SILO_FULL_CONFIG_TEST = "Silo_FULL_CONFIG_TEST";
     string public constant SILO_ETH_USDC_UNI_V3 = "Silo_ETH-USDC_UniswapV3";
+    string public constant SILO_PENDLE_REWARDS_TEST = "Silo_PENDLE_REWARDS_TEST";
 }
 
 library SiloDeployments {
