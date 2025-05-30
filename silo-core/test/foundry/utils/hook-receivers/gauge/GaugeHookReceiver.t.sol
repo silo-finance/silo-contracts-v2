@@ -235,6 +235,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         bytes memory data = _getEncodedData();
 
+        vm.prank(debtShareToken);
         _hookReceiver.afterAction(
             silo0,
             action,
