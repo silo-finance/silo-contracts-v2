@@ -194,12 +194,12 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
 
     /// @notice Check if the `redeemRewards` function reverts
     /// @param _market Pendle market
-    /// @return result True if the `redeemRewards` function reverts, false otherwise
+    /// @return redeemReverts True if the `redeemRewards` function reverts, false otherwise
     function _redeemRewardsReverts(IPendleMarketLike _market) private returns (bool redeemReverts) {
         try _market.redeemRewards(address(this)) returns (uint256[] memory) {
-            result = false;
+            redeemReverts = false;
         } catch {
-            result = true;
+            redeemReverts = true;
         }
     }
 
