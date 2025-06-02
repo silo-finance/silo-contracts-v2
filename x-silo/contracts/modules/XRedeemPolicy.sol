@@ -11,7 +11,7 @@ import {IXRedeemPolicy} from "../interfaces/IXRedeemPolicy.sol";
 /// @dev based on Camelot's xGRAIL
 /// @notice Policy for redeem xSilo back to Silo
 abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentrancy {
-    uint256 internal constant _PRECISION = 100;
+    uint256 internal constant _PRECISION = 1e18;
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public constant MAX_REDEEM_RATIO = _PRECISION; // 1:1
@@ -23,7 +23,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     // Except for the max redeem ratio, which is capped at 1:1.
 
     /// @inheritdoc IXRedeemPolicy
-    uint256 public minRedeemRatio = 0.5e2; // 1:0.5
+    uint256 public minRedeemRatio = 0.5e18; // 1:0.5
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public minRedeemDuration = 0 days;

@@ -556,8 +556,8 @@ contract XSiloTest is Test {
     function _defaultSetupVerification() internal view {
         // all tests are done for this setup:
 
-        assertEq(xSilo.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
-        assertEq(xSilo.MAX_REDEEM_RATIO(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(xSilo.minRedeemRatio(), 0.5e18, "expected initial setup for minRedeemRatio");
+        assertEq(xSilo.MAX_REDEEM_RATIO(), 1e18, "expected initial setup for maxRedeemRatio");
         assertEq(xSilo.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
         assertEq(xSilo.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
     }
