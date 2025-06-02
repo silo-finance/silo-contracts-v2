@@ -16,8 +16,8 @@ import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
 
 // TODO same asset leverage in phase 2
-// TODO events on state changes
-// TODO ensure it will that work for Pendle
+// TODO events on state changes or action that we need to track
+// TODO ensure it will that work for Pendle (show test)
 // TODO triple check approvals
 //- Leverage contract should never have any tokens
 //- close should repay all debt (if position solvent?)
@@ -25,42 +25,12 @@ abstract contract LeverageUsingSilo is
     ILeverageUsingSilo,
     IERC3156FlashBorrower,
     RevenueModule,
-LeverageTxState
+    LeverageTxState
 {
     using SafeERC20 for IERC20;
 
     uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-
-    /// @inheritdoc IERC3156FlashBorrower
-    function onFlashLoan(
-        address _initiator,
-        address _borrowToken,
-        uint256 _flashloanAmount,
-        uint256 _flashloanFee,
-        bytes calldata _data
-    )
-        external
-        returns (bytes32)
-    {
-        // this check prevents call `onFlashLoan` directly
-        require(_txFlashloanTarget == msg.sender, InvalidFlashloanLender());
-
-        // _initiator check might be redundant, because of how `_txFlashloanTarget` works,
-        // but atm I see no harm to check it
-        require(_initiator == address(this), InvalidInitiator());
-
-        if (_txAction == LeverageAction.Open) {
-            _openLeverage(_flashloanAmount, _flashloanFee, _data);
-        } else if (_txAction == LeverageAction.Close) {
-            _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
-        } else revert UnknownAction();
-
-        // approval for repay flashloan
-        _setMaxAllowance(IERC20(_borrowToken), _txFlashloanTarget, _flashloanAmount + _flashloanFee);
-
-        return _FLASHLOAN_CALLBACK;
-    }
     
     /// @inheritdoc ILeverageUsingSilo
     function openLeveragePosition(
@@ -101,6 +71,33 @@ LeverageTxState
         }), FlashloanFailed());
     }
 
+    /// @inheritdoc IERC3156FlashBorrower
+    function onFlashLoan(
+        address _initiator,
+        address _borrowToken,
+        uint256 _flashloanAmount,
+        uint256 _flashloanFee,
+        bytes calldata _data
+    )
+        external
+        returns (bytes32)
+    {
+        // this check prevents call `onFlashLoan` directly
+        require(_txFlashloanTarget == msg.sender, InvalidFlashloanLender());
+        require(_initiator == address(this), InvalidInitiator());
+
+        if (_txAction == LeverageAction.Open) {
+            _openLeverage(_flashloanAmount, _flashloanFee, _data);
+        } else if (_txAction == LeverageAction.Close) {
+            _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
+        } else revert UnknownAction();
+
+        // approval for repay flashloan
+        _setMaxAllowance(IERC20(_borrowToken), _txFlashloanTarget, _flashloanAmount + _flashloanFee);
+
+        return _FLASHLOAN_CALLBACK;
+    }
+
     function _openLeverage(
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
@@ -116,17 +113,16 @@ LeverageTxState
         // swap all flashloan amount into collateral token
         uint256 collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
 
-        uint256 totalAssets = depositArgs.amount + collateralAmountAfterSwap;
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
-        uint256 feeForLeverage = _calculateLeverageFee(totalAssets);
+        uint256 feeForLeverage = _calculateLeverageFee(depositArgs.amount + collateralAmountAfterSwap);
 
         address collateralAsset = depositArgs.silo.asset();
 
-        // deposit with leverage: user collateral + swapped collateral - fee
         // TODO qa if posible that feeForLeverage > collateralAmountAfterSwap
-        // we could take cut on user original deposit amount to pay fee, but that's the point of doing leverage then?
+        // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
         require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
+        // deposit with leverage: user collateral + swapped collateral - fee
         _txTotalDeposit = _deposit({
             _depositArgs: depositArgs,
             _leverageAmount: collateralAmountAfterSwap - feeForLeverage,
@@ -135,9 +131,8 @@ LeverageTxState
 
         ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
-        _txTotalBorrow = _flashloanAmount + _flashloanFee;
-
         // borrow asset wil be used to pay fees
+        _txTotalBorrow = _flashloanAmount + _flashloanFee;
         borrowSilo.borrow({_assets: _txTotalBorrow, _receiver: address(this), _borrower: _txMsgSender});
 
         emit OpenLeverage({
@@ -194,10 +189,11 @@ LeverageTxState
 
         siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), _txMsgSender);
 
-        uint256 redeemShares = _getBorrowerTotalShareCollateralBalance(closeArgs);
+        uint256 sharesToRedeem = _getBorrowerTotalShareCollateralBalance(closeArgs);
 
+        // withdraw all collateral
         uint256 withdrawnDeposit = closeArgs.siloWithCollateral.redeem({
-            _shares: redeemShares,
+            _shares: sharesToRedeem,
             _receiver: address(this),
             _owner: _txMsgSender,
             _collateralType: closeArgs.collateralType
