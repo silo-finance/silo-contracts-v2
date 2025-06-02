@@ -217,7 +217,7 @@ contract XRedeemPolicyTest is Test {
         vm.expectEmit(address(policy));
         emit IXRedeemPolicy.StartRedeem({
             userAddress: user,
-            currentSiloAmount: policy.previewRedeem(_toRedeem),
+            currentSiloAmount: policy.convertToAssets(_toRedeem),
             xSiloToBurn: _toRedeem,
             siloAmountAfterVesting: _siloAmountAfterVesting,
             duration: _duration
@@ -674,11 +674,11 @@ contract XRedeemPolicyTest is Test {
         vm.prank(user2);
         policy.finalizeRedeem(0);
 
-        uint256 allRewards = 0.01e18 * 1 days;
+        uint256 allRewards = _withStream ? 0.01e18 * 1 days : 0;
 
         assertEq(stream.pendingRewards(), 0, "no pending rewards");
         assertEq(policy.totalSupply(), 0, "no shares, everyone left");
-        assertEq(policy.totalAssets(), allRewards, "all rewards left");
+        assertEq(policy.totalAssets(), allRewards, "only rewards left");
         assertEq(policy.pendingLockedSilo(), 0, "pendingLockedSilo is empty");
 
         assertEq(
