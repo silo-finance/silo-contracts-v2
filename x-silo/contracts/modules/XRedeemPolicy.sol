@@ -76,14 +76,10 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
         require(siloAmountAfterVesting != 0, NoSiloToRedeem());
 
-        uint256 currentSiloAmount; // will stay 0 for immediate redeem
+        uint256 currentSiloAmount = _convertToAssets(_xSiloAmountToBurn, Math.Rounding.Floor);
 
         // if redeeming is not immediate, go through vesting process
         if (_duration != 0) {
-            // redeem assets burn shares immediately so they leave the active pool
-            // at the same time it busted other users share value
-            currentSiloAmount = _redeemSilo(_xSiloAmountToBurn, address(this), msg.sender);
-
             // add redeeming entry
             _userRedeems[msg.sender].push(
                 RedeemInfo({
@@ -93,6 +89,16 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                     endTime: block.timestamp + _duration
                 })
             );
+
+            // withdraw assets burn shares immediately so they leave the active pool
+            // at the same time it busted other users share value
+            _withdraw({
+                _caller: msg.sender,
+                _receiver: address(this),
+                _owner: msg.sender,
+                _assetsToTransfer: currentSiloAmount,
+                _sharesToBurn: _xSiloAmountToBurn
+            });
 
             /*
                 track the owed SILO separately
