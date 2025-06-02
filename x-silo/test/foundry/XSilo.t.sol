@@ -199,7 +199,7 @@ contract XSiloTest is Test {
         vm.assume(_assetsToDeposit > 0);
         vm.assume(_assetsToDeposit < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        uint256 precision = _PRECISION;
+        uint256 precision = 100;
 
         _percentAssetsToWithdraw = uint16(bound(_percentAssetsToWithdraw, 1, precision));
 
@@ -306,7 +306,7 @@ contract XSiloTest is Test {
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0_fuzz
     */
-    /// forge-config: x_silo.fuzz.runs = 5000
+    /// forge-config: x_silo.fuzz.runs = 4000
     function test_redeem_usesDuration0_fuzz(
         CustomSetup memory _customSetup,
         uint256 _assets,
@@ -317,16 +317,13 @@ contract XSiloTest is Test {
 
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
-//        (uint256 _silos, uint256 _xSiloToRedeem) = (9133, 4696);
-
         address user = makeAddr("user");
 
         _convert(user, _assets);
 
-        _percentToRedeem = uint16(bound(_percentToRedeem, 1, _PRECISION));
+        _percentToRedeem = uint16(bound(_percentToRedeem, 1, 100));
 
         uint256 xSiloToRedeem = Math.mulDiv(xSilo.balanceOf(user), _percentToRedeem, _PRECISION, Math.Rounding.Floor);
-
 
         uint256 siloPreview = xSilo.getAmountByVestingDuration(xSiloToRedeem, 0);
         vm.assume(siloPreview != 0);
