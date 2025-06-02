@@ -79,12 +79,11 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
-        // TODO
-//        if (totalSupply() == 0) {
-//            // xSilo is empty and if we have any Silo left (eg after last user gone) to redistribute
-//            // by resetting totalAssets, the Silo that we have will go to first depositor and we starts from clean state
-//            return 0;
-//        }
+        if (totalSupply() == 0) {
+            // xSilo is empty and if we have any Silo left (eg after last user gone) to redistribute
+            // by resetting totalAssets, the Silo that we have will go to first depositor and we starts from clean state
+            return 0;
+        }
 
         total = super.totalAssets();
 
