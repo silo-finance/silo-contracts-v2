@@ -65,6 +65,28 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getXAmountByVestingDuration_math
+    */
+    function test_getXAmountByVestingDuration_math() public view {
+        uint256 maxTime = policy.maxRedeemDuration();
+
+        assertEq(policy.getXAmountByVestingDuration({_xSiloAmount: 2, _duration: 0}), 1, "[1] loosing 50%");
+        assertEq(policy.getXAmountByVestingDuration({_xSiloAmount: 100, _duration: 0}), 50, "[2] loosing 50%");
+
+        assertEq(
+            policy.getXAmountByVestingDuration({_xSiloAmount: 100, _duration: maxTime / 2}),
+            75,
+            "[3] preserve 75%"
+        );
+
+        assertEq(
+            policy.getXAmountByVestingDuration({_xSiloAmount: 100, _duration: maxTime}),
+            100,
+            "[4] preserve 100%"
+        );
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getAmountInByVestingDuration_zeroDuration_fuzz
     */
     /// forge-config: x_silo.fuzz.runs = 10000
