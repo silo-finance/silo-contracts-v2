@@ -22,7 +22,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     /// @inheritdoc IXRedeemPolicy
     uint256 public constant MAX_REDEEM_DURATION_CAP = 365 days;
 
-    /// @dev total Silo amount represent sum of all user redeems items, including penalty and fees
+    /// @dev total Silo amount being locked in pending redeems, including penalty and fees
     uint256 public pendingLockedSilo;
 
     // Redeeming min/max settings are updatable at any time by owner.
