@@ -198,7 +198,7 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
 
 ### Shares decimals
 
-Decimals are not issue, but we putting it here to ward developers. `SiloVault` and `Silo` share tokens 
+Decimals are not an issue, but we are putting it here to warn developers. `SiloVault` and `Silo` share tokens 
 (collateral, protected and debt types), are using decimal offset. debt share token has offset 0, `SiloVault` 
 and protected and collateral share tokens offset 1e3. 
 For offset 1e3 means that depositing 1 asset results in 1,000 shares, although this is not a fixed ratio.
