@@ -252,8 +252,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
     }
 
-    function _depositSilo(uint256 _assets, address _receiver) internal virtual returns (uint256 shares);
-
     function _convertToAssets(uint256 _shares, Math.Rounding _rounding) internal view virtual returns (uint256);
 
     function _convertToShares(uint256 _assets, Math.Rounding _rounding) internal view virtual returns (uint256);
@@ -262,9 +260,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         _userRedeems[msg.sender][_index] = _userRedeems[msg.sender][_userRedeems[msg.sender].length - 1];
         _userRedeems[msg.sender].pop();
     }
-
-    /// @dev this is alias for `redeem()`, we can not use public method directly because of reentrancy
-    function _redeemSilo(uint256 _shares, address _receiver, address _owner) internal virtual returns (uint256 assets);
 
     function _withdraw(
         address _caller,

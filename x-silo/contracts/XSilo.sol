@@ -130,16 +130,6 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         assets = _convertToAssets(xSiloAfterVesting, Math.Rounding.Floor);
     }
 
-    /// @dev this method is created as workaround, we can not use `deposit()` internally because of reentrancy
-    function _depositSilo(uint256 _assets, address _receiver)
-        internal
-        virtual
-        override
-        returns (uint256 shares)
-    {
-        shares = super.deposit(_assets, _receiver);
-    }
-
     /**
      * @dev Deposit/mint common workflow.
      */
@@ -148,16 +138,6 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         require(_assets != 0, ZeroAssets());
 
         super._deposit(_caller, _receiver, _assets, _shares);
-    }
-
-    /// @dev this method is created as workaround, we can not use `redeem()` internally because of reentrancy
-    function _redeemSilo(uint256 _shares, address _receiver, address _owner)
-        internal
-        virtual
-        override
-        returns (uint256 assets)
-    {
-        assets = ERC4626.redeem(_shares, _receiver, _owner);
     }
 
     function _withdraw(
