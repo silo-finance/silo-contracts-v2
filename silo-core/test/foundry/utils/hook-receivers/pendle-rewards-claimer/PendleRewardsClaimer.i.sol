@@ -26,6 +26,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {PendleMarketThatReverts} from "../../../_mocks/PendleMarketThatReverts.sol";
+import {PendleMarketGasWaster} from "../../../_mocks/PendleMarketGasWaster.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 import {
@@ -239,6 +240,32 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         assertNotEq(amount, 0, "Depositor should have deposit");
 
         PendleMarketThatReverts pendleMarket = new PendleMarketThatReverts();
+        vm.etch(address(asset), address(pendleMarket).code);
+
+        uint256 maxWithdrawAmount = silo0.maxWithdraw(_depositor, ISilo.CollateralType.Protected);
+
+        vm.expectEmit(true, true, true, true);
+        emit FailedToClaimIncentives(address(silo0));
+
+        vm.prank(_depositor);
+        silo0.withdraw(maxWithdrawAmount, _depositor, _depositor, ISilo.CollateralType.Protected);
+
+        amount = IERC20(protected).balanceOf(_depositor);
+        assertEq(amount, 0, "Depositor should be able to withdraw when redeeming reverts");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_redeemRewards_outOfGas -vv
+    function test_redeemRewards_outOfGas() public {
+        _depositProtected();
+
+        IERC20 asset = IERC20(silo0.asset());
+
+        (address protected,,) = _siloConfig.getShareTokens(address(silo0));
+
+        uint256 amount = IERC20(protected).balanceOf(_depositor);
+        assertNotEq(amount, 0, "Depositor should have deposit");
+
+        PendleMarketGasWaster pendleMarket = new PendleMarketGasWaster();
         vm.etch(address(asset), address(pendleMarket).code);
 
         uint256 maxWithdrawAmount = silo0.maxWithdraw(_depositor, ISilo.CollateralType.Protected);
