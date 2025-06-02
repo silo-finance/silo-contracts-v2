@@ -35,6 +35,7 @@ interface IXRedeemPolicy {
     error InvalidDurationOrder();
     error MaxRatioOverflow();
     error DurationTooLow();
+    error DurationTooHi();
     error VestingNotOver();
     error DurationTooHigh();
 
