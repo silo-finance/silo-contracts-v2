@@ -537,34 +537,46 @@ contract XRedeemPolicyTest is Test {
         vm.prank(user);
         policy.redeemSilo(userShares, maxDuration);
 
+        (
+            uint256 currentSiloAmount,
+            uint256 xSiloAmount,
+            uint256 siloAmountAfterVesting,
+        ) = policy.getUserRedeem(user, 0);
+
+        assertEq(currentSiloAmount, siloAmount / 2, "user looses 50%");
+        assertEq(xSiloAmount, userShares, "userShares");
+        assertEq(siloAmountAfterVesting, siloAmount, "user does not loose Silo if he redeem for max time");
+
         assertEq(
             policy.totalAssets(),
             siloAmount + (siloAmount / 2),
             "total assets after redeem is one user deposit + 50% fee for pending redeem"
         );
 
-        assertEq(policy.pendingLockedSilo(), siloAmount / 2, "pendingLockedSilo == user redeem with highers penalty");
+        assertEq(policy.pendingLockedSilo(), siloAmount / 2, "pendingLockedSilo == user redeem with highest penalty");
 
         vm.warp(block.timestamp + maxDuration + 1 days);
 
         uint256 user3shares = _convert(user3, siloAmount);
-        uint256 usereRedeemAmountBefore = policy.previewRedeem(user3shares);
+        uint256 userRedeemAmountBefore = policy.previewRedeem(user3shares);
 
         vm.prank(user);
         policy.cancelRedeem(0);
 
         assertEq(
             policy.previewRedeem(user3shares),
-            usereRedeemAmountBefore,
+            userRedeemAmountBefore,
             "user3 just deposited, should not gain any extra rewards because of other user cancel redeem"
         );
 
         assertEq(policy.pendingLockedSilo(), 0, "pendingLockedSilo is reset");
 
         assertEq(
+            // vesting for maxDuration should not give us penalty, so we expecting 100% os SILO as return
             policy.getAmountByVestingDuration(policy.balanceOf(user), maxDuration),
-            siloAmount, // can we be more precise?
-            "after canceling there is no gain on tokens, user should get silo amount restored, equal to deposit value"
+            // -273 is
+            currentSiloAmount - 273,
+            "after canceling Silos recreated based on `currentSiloAmount`, means we take max penalty for canceling"
         );
 
         assertEq(stream.pendingRewards(), 0, "there should be no pending rewards");
@@ -573,13 +585,13 @@ contract XRedeemPolicyTest is Test {
 
         assertEq(
             policy.totalAssets(),
-            siloAmount * 2 + allRewards,
+            siloAmount * 3 + allRewards,
             "total assets is again both users deposits + all rewards"
         );
 
         assertEq(
             asset.balanceOf(address(policy)),
-            siloAmount * 2 + allRewards,
+            siloAmount * 3 + allRewards,
             "xSilo holds both deposits + all rewards"
         );
     }
