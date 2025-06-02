@@ -101,19 +101,8 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                 _sharesToBurn: _xSiloAmountToBurn
             });
 
-            /*
-                track the owed SILO separately
-
-                NOTE: `currentSiloAmount` includes the highest penalty fees. `siloAmountAfterVesting` is always equal
-                or greater than it. Delta amounts depends on redeem duration and we can call is fee.
-
-                While a redemption is pending, other users’ withdrawals or redemptions compute their share based on
-                `totalAssets()`. If we leave the fee in `totalAssets()` and then a user cancels, `totalAssets()`
-                suddenly jumps back up by the fee amount — and every other user who just transacted against the
-                smaller pool ends up getting more than they should.
-                By holding the fee out of totalAssets() until finalization, we guarantee that no one can benefit from
-                a fee that has not actually been paid out yet.
-            */
+            // keep `currentSiloAmount` in `totalAssets` until user finalizes the redeem
+            // otherwise, other users could withdraw part of the pending withdrawal
             pendingLockedSilo += currentSiloAmount;
         } else {
             // immediately redeem for SILO
