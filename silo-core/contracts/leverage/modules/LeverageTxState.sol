@@ -10,25 +10,25 @@ import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 /// also we can not pass return variables via flashloan
 abstract contract LeverageTxState {
     /// @dev origin tx msg.sender, acts also as reentrancy flag
-    address internal transient __msgSender;
+    address internal transient _txMsgSender;
 
     /// @dev total deposit made for user
-    uint256 internal transient __totalDeposit;
+    uint256 internal transient _txTotalDeposit;
 
     /// @dev total borrower assets
-    uint256 internal transient __totalBorrow;
+    uint256 internal transient _txTotalBorrow;
 
     /// @dev cached silo config
-    ISiloConfig internal transient __siloConfig;
+    ISiloConfig internal transient _txSiloConfig;
 
     /// @dev information about current action
-    ILeverageUsingSilo.LeverageAction internal transient __action;
+    ILeverageUsingSilo.LeverageAction internal transient _txAction;
 
     /// @dev address of contract from where we getting flashloan
-    address internal transient __flashloanTarget;
+    address internal transient _txFlashloanTarget;
 
     modifier atomicTxFlow(ISilo _silo, ILeverageUsingSilo.LeverageAction _action, address _flashloanTarget) {
-        require(__msgSender == address(0), ILeverageUsingSilo.Reentrancy());
+        require(_txMsgSender == address(0), ILeverageUsingSilo.Reentrancy());
         _setTransient(_silo, _action, _flashloanTarget);
 
         _;
@@ -39,17 +39,17 @@ abstract contract LeverageTxState {
     function _setTransient(ISilo _silo, ILeverageUsingSilo.LeverageAction _action, address _flashloanTarget)
         private
     {
-        __flashloanTarget = _flashloanTarget;
-        __action = _action;
-        __msgSender = msg.sender;
-        __siloConfig = _silo.config();
+        _txFlashloanTarget = _flashloanTarget;
+        _txAction = _action;
+        _txMsgSender = msg.sender;
+        _txSiloConfig = _silo.config();
     }
 
     function _resetTransient() private {
-        __totalDeposit = 0;
-        __totalBorrow = 0;
-        __flashloanTarget = address(0);
-        __action = ILeverageUsingSilo.LeverageAction.Undefined;
-        __msgSender = address(0);
+        _txTotalDeposit = 0;
+        _txTotalBorrow = 0;
+        _txFlashloanTarget = address(0);
+        _txAction = ILeverageUsingSilo.LeverageAction.Undefined;
+        _txMsgSender = address(0);
     }
 }

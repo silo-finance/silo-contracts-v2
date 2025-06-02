@@ -44,20 +44,20 @@ LeverageTxState
         returns (bytes32)
     {
         // this check prevents call `onFlashLoan` directly
-        require(__flashloanTarget == msg.sender, InvalidFlashloanLender());
+        require(_txFlashloanTarget == msg.sender, InvalidFlashloanLender());
 
-        // _initiator check might be redundant, because of how `__flashloanTarget` works,
+        // _initiator check might be redundant, because of how `_txFlashloanTarget` works,
         // but atm I see no harm to check it
         require(_initiator == address(this), InvalidInitiator());
 
-        if (__action == LeverageAction.Open) {
+        if (_txAction == LeverageAction.Open) {
             _openLeverage(_flashloanAmount, _flashloanFee, _data);
-        } else if (__action == LeverageAction.Close) {
+        } else if (_txAction == LeverageAction.Close) {
             _closeLeverage(_borrowToken, _flashloanAmount, _flashloanFee, _data);
         } else revert UnknownAction();
 
         // approval for repay flashloan
-        _setMaxAllowance(IERC20(_borrowToken), __flashloanTarget, _flashloanAmount + _flashloanFee);
+        _setMaxAllowance(IERC20(_borrowToken), _txFlashloanTarget, _flashloanAmount + _flashloanFee);
 
         return _FLASHLOAN_CALLBACK;
     }
@@ -80,8 +80,8 @@ LeverageTxState
             _data: abi.encode(_swapArgs, _depositArgs)
         }), FlashloanFailed());
 
-        totalDeposit = __totalDeposit;
-        totalBorrow = __totalBorrow;
+        totalDeposit = _txTotalDeposit;
+        totalBorrow = _txTotalBorrow;
     }
 
     function closeLeveragePosition(
@@ -127,7 +127,7 @@ LeverageTxState
         // we could take cut on user original deposit amount to pay fee, but that's the point of doing leverage then?
         require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
-        __totalDeposit = _deposit({
+        _txTotalDeposit = _deposit({
             _depositArgs: depositArgs,
             _leverageAmount: collateralAmountAfterSwap - feeForLeverage,
             _asset: collateralAsset
@@ -135,18 +135,18 @@ LeverageTxState
 
         ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
-        __totalBorrow = _flashloanAmount + _flashloanFee;
+        _txTotalBorrow = _flashloanAmount + _flashloanFee;
 
         // borrow asset wil be used to pay fees
-        borrowSilo.borrow({_assets: __totalBorrow, _receiver: address(this), _borrower: __msgSender});
+        borrowSilo.borrow({_assets: _txTotalBorrow, _receiver: address(this), _borrower: _txMsgSender});
 
         emit OpenLeverage({
-            borrower: __msgSender,
+            borrower: _txMsgSender,
             borrowerDeposit: depositArgs.amount,
             swapAmountOut: collateralAmountAfterSwap,
             flashloanAmount: _flashloanAmount,
-            totalDeposit: __totalDeposit,
-            totalBorrow: __totalBorrow
+            totalDeposit: _txTotalDeposit,
+            totalBorrow: _txTotalBorrow
         });
 
         _payLeverageFee(collateralAsset, feeForLeverage);
@@ -158,7 +158,7 @@ LeverageTxState
         returns (uint256 totalDeposit)
     {
         // transfer collateral tokens from borrower
-        IERC20(_asset).safeTransferFrom(__msgSender, address(this), _depositArgs.amount);
+        IERC20(_asset).safeTransferFrom(_txMsgSender, address(this), _depositArgs.amount);
 
         totalDeposit = _depositArgs.amount + _leverageAmount;
 
@@ -166,7 +166,7 @@ LeverageTxState
 
         _depositArgs.silo.deposit({
             _assets: totalDeposit,
-            _receiver: __msgSender,
+            _receiver: _txMsgSender,
             _collateralType: _depositArgs.collateralType
         });
     }
@@ -192,14 +192,14 @@ LeverageTxState
             _requiredAmount: _flashloanAmount
         });
 
-        siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), __msgSender);
+        siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), _txMsgSender);
 
         uint256 redeemShares = _getBorrowerTotalShareCollateralBalance(closeArgs);
 
         uint256 withdrawnDeposit = closeArgs.siloWithCollateral.redeem({
             _shares: redeemShares,
             _receiver: address(this),
-            _owner: __msgSender,
+            _owner: _txMsgSender,
             _collateralType: closeArgs.collateralType
         });
 
@@ -212,17 +212,17 @@ LeverageTxState
         uint256 borrowerDebtChange = availableDebtAssets - obligation;
 
         emit CloseLeverage({
-            borrower: __msgSender,
+            borrower: _txMsgSender,
             flashloanRepay: _flashloanAmount,
             swapAmountOut: availableDebtAssets,
             depositWithdrawn: withdrawnDeposit
         });
 
-        if (borrowerDebtChange != 0) IERC20(_debtToken).safeTransfer(__msgSender, borrowerDebtChange);
+        if (borrowerDebtChange != 0) IERC20(_debtToken).safeTransfer(_txMsgSender, borrowerDebtChange);
 
         IERC20 collateralAsset = IERC20(closeArgs.siloWithCollateral.asset());
         uint256 collateralToTransfer = collateralAsset.balanceOf(address(this));
-        if (collateralToTransfer != 0) collateralAsset.safeTransfer(__msgSender, collateralToTransfer);
+        if (collateralToTransfer != 0) collateralAsset.safeTransfer(_txMsgSender, collateralToTransfer);
     }
 
     function _fillQuote(bytes memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut);
@@ -238,8 +238,8 @@ LeverageTxState
         virtual
         returns (uint256 repayShareBalance)
     {
-        (,, address shareDebtToken) = __siloConfig.getShareTokens(address(_siloWithDebt));
-        repayShareBalance = IERC20(shareDebtToken).balanceOf(__msgSender);
+        (,, address shareDebtToken) = _txSiloConfig.getShareTokens(address(_siloWithDebt));
+        repayShareBalance = IERC20(shareDebtToken).balanceOf(_txMsgSender);
     }
 
     function _getBorrowerTotalShareCollateralBalance(CloseLeverageArgs memory closeArgs)
@@ -249,16 +249,16 @@ LeverageTxState
         returns (uint256 balanceOf)
     {
         if (closeArgs.collateralType == ISilo.CollateralType.Collateral) {
-            return closeArgs.siloWithCollateral.balanceOf(__msgSender);
+            return closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
         }
 
-        (address protectedShareToken,,) = __siloConfig.getShareTokens(address(closeArgs.siloWithCollateral));
+        (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(closeArgs.siloWithCollateral));
 
-        balanceOf = ISilo(protectedShareToken).balanceOf(__msgSender);
+        balanceOf = ISilo(protectedShareToken).balanceOf(_txMsgSender);
     }
 
     function _resolveOtherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
-        (address silo0, address silo1) = __siloConfig.getSilos();
+        (address silo0, address silo1) = _txSiloConfig.getSilos();
         require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
 
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
