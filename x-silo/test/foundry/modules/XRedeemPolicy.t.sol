@@ -679,7 +679,7 @@ contract XRedeemPolicyTest is Test {
 
         assertEq(stream.pendingRewards(), 0, "no pending rewards");
         assertEq(policy.totalSupply(), 0, "no shares, everyone left");
-        assertEq(policy.totalAssets(), allRewards, "only rewards left");
+        assertEq(policy.totalAssets(), 0, "totalAssets hides balance when no shares");
         assertEq(policy.pendingLockedSilo(), 0, "pendingLockedSilo is empty");
 
         assertEq(
