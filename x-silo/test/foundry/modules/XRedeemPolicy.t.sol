@@ -811,14 +811,29 @@ contract XRedeemPolicyTest is Test {
 
         uint256 user2MaxWithdrawBefore = policy.maxWithdraw(user2);
 
+        emit log_named_uint("total assets before finalizeRedeem", policy.totalAssets());
+        emit log_named_uint("pendingLockedSilo before finalizeRedeem", policy.pendingLockedSilo());
+
+        (
+            uint256 currentSiloAmount_, uint256 xSiloAmount_, uint256 siloAmountAfterVesting_,
+        ) = policy.getUserRedeem(user, 0);
+
+        emit log_named_uint("currentSiloAmount", currentSiloAmount_);
+        emit log_named_uint("xSiloAmount", xSiloAmount_);
+        emit log_named_uint("siloAmountAfterVesting", siloAmountAfterVesting_);
+
         policy.finalizeRedeem(0);
 
-        assertEq(
+        emit log_named_uint(" total assets after finalizeRedeem", policy.totalAssets());
+        emit log_named_uint(" pendingLockedSilo after finalizeRedeem", policy.pendingLockedSilo());
+
+        assertGe(
             policy.maxWithdraw(user2),
             user2MaxWithdrawBefore,
             string.concat(
-                "user2 did not get boost on finalizeRedeem because ",
-                "it was done on creating redeem position"
+                _msg,
+                " user2 might get boost because after finalize redeem fee is paid (if duration is not max) "
+                "and this is distributed as reward fee is calculated"
             )
         );
     }
