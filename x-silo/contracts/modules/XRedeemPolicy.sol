@@ -76,12 +76,14 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
         require(siloAmountAfterVesting != 0, NoSiloToRedeem());
 
-        uint256 currentSiloAmount = _convertToAssets(_xSiloAmountToBurn, Math.Rounding.Floor);
-
-        emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
+        uint256 currentSiloAmount; // will stay 0 for immediate redeem
 
         // if redeeming is not immediate, go through vesting process
         if (_duration != 0) {
+            // redeem assets burn shares immediately so they leave the active pool
+            // at the same time it busted other users share value
+            currentSiloAmount = _redeemSilo(_xSiloAmountToBurn, address(this), msg.sender);
+
             // add redeeming entry
             _userRedeems[msg.sender].push(
                 RedeemInfo({
@@ -92,12 +94,20 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                 })
             );
 
-            // burn shares immediately so they leave the active pool
-            // at the same time it busted other users share value
-            _burnShares(msg.sender,_xSiloAmountToBurn);
+            /*
+                track the owed SILO separately
 
-            // track the owed SILO separately
-            pendingLockedSilo += siloAmountAfterVesting;
+                NOTE: `currentSiloAmount` includes the highest penalty fees. `siloAmountAfterVesting` is always equal
+                or greater than it. Fee/penalty = siloAmountAfterVesting - currentSiloAmount.
+
+                While a redemption is pending, other users’ withdrawals or redemptions compute their share based on
+                `totalAssets()`. If we leave the fee in `totalAssets()` and then a user cancels, `totalAssets()`
+                suddenly jumps back up by the fee amount — and every other user who just transacted against the smaller pool
+                ends up getting more than they should.
+                By holding the fee out of totalAssets() until finalization, we guarantee that no one can benefit from
+                a fee that has not actually been paid out yet.
+            */
+            pendingLockedSilo += currentSiloAmount;
         } else {
             // immediately redeem for SILO
             _withdraw({
@@ -108,6 +118,8 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                 _sharesToBurn: _xSiloAmountToBurn
             });
         }
+
+        emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
     }
 
     /// @inheritdoc IXRedeemPolicy
@@ -118,7 +130,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         emit FinalizeRedeem(msg.sender, redeem_.siloAmountAfterVesting);
 
         // release the SILO owed
-        pendingLockedSilo -= redeem_.siloAmountAfterVesting;
+        pendingLockedSilo -= redeem_.currentSiloAmount;
         // transfer the vested funds to the user
         IERC20(_getSiloToken()).safeTransfer(msg.sender, redeem_.siloAmountAfterVesting);
 
@@ -135,8 +147,9 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
 
         // mint back exact deposit equivalent before unmarking (i.e. deposit not yet in vault)
         _mintShares(address(msg.sender), shares);
+
         // free up SILO owed to users
-        pendingLockedSilo -= redeemCache.siloAmountAfterVesting;
+        pendingLockedSilo -= redeemCache.currentSiloAmount;
 
         emit CancelRedeem(msg.sender, redeemCache.currentSiloAmount, shares);
 
@@ -233,6 +246,8 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
     }
 
+    function _depositSilo(uint256 _assets, address _receiver) internal virtual returns (uint256 shares);
+
     function _convertToAssets(uint256 _shares, Math.Rounding _rounding) internal view virtual returns (uint256);
 
     function _convertToShares(uint256 _assets, Math.Rounding _rounding) internal view virtual returns (uint256);
@@ -241,6 +256,8 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         _userRedeems[msg.sender][_index] = _userRedeems[msg.sender][_userRedeems[msg.sender].length - 1];
         _userRedeems[msg.sender].pop();
     }
+
+    function _redeemSilo(uint256 _shares, address _receiver, address _owner) internal virtual returns (uint256 assets);
 
     function _withdraw(
         address _caller,
@@ -251,8 +268,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     ) internal virtual;
 
     function _getSiloToken() internal view virtual returns (address tokenAddress);
-
-    function _burnShares(address _account, uint256 _shares) internal virtual;
 
     function _mintShares(address _account, uint256 _shares) internal virtual;
 

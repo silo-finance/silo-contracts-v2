@@ -79,11 +79,11 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
-        if (totalSupply() == 0) {
-            // xSilo is empty and if we have any Silo left (eg after last user gone) to redistribute
-            // by resetting totalAssets, the Silo that we have will go to first depositor and we starts from clean state
-            return 0;
-        }
+//        if (totalSupply() == 0) { TODO
+//            // xSilo is empty and if we have any Silo left (eg after last user gone) to redistribute
+//            // by resetting totalAssets, the Silo that we have will go to first depositor and we starts from clean state
+//            return 0;
+//        }
 
         total = super.totalAssets();
 
@@ -130,6 +130,16 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         assets = _convertToAssets(xSiloAfterVesting, Math.Rounding.Floor);
     }
 
+    /// @dev this method is created as workaround, we can not use `deposit()` internally because of reentrancy
+    function _depositSilo(uint256 _assets, address _receiver)
+        internal
+        virtual
+        override
+        returns (uint256 shares)
+    {
+        shares = super.deposit(_assets, _receiver);
+    }
+
     /**
      * @dev Deposit/mint common workflow.
      */
@@ -138,6 +148,16 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         require(_assets != 0, ZeroAssets());
 
         super._deposit(_caller, _receiver, _assets, _shares);
+    }
+
+    /// @dev this method is created as workaround, we can not use `redeem()` internally because of reentrancy
+    function _redeemSilo(uint256 _shares, address _receiver, address _owner)
+        internal
+        virtual
+        override
+        returns (uint256 assets)
+    {
+        assets = ERC4626.redeem(_shares, _receiver, _owner);
     }
 
     function _withdraw(
@@ -155,10 +175,6 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
     function _transferShares(address _from, address _to, uint256 _shares) internal virtual override {
         return ERC20._transfer(_from, _to, _shares);
-    }
-
-    function _burnShares(address _account, uint256 _shares) internal virtual override {
-        return ERC20._burn(_account, _shares);
     }
 
     function _mintShares(address _account, uint256 _shares) internal virtual override {
