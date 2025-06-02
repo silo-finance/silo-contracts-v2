@@ -92,7 +92,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                 })
             );
 
-            // withdraw assets burns shares immediately so busted other users share value
             _withdraw({
                 _caller: msg.sender,
                 _receiver: address(this),
