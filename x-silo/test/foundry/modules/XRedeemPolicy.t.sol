@@ -860,11 +860,11 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_deposit_ZeroShares
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_donationAttack
     */
-    function test_deposit_ZeroShares() public {
+    function test_donationAttack() public {
         address user = makeAddr("user");
-        // this wil create huge ratio, so we can test zero shares
+        // this will NOT create huge ratio, because when totalSupply is zero we will distribute all balance to 1st user
         _setupStream();
 
         vm.warp(block.timestamp + 1 minutes);
@@ -874,8 +874,8 @@ contract XRedeemPolicyTest is Test {
         asset.mint(user, 100);
         asset.approve(address(policy), 100);
 
-        vm.expectRevert(XSilo.ZeroShares.selector);
-        policy.deposit(100, user);
+        assertEq(policy.deposit(100, user), 100, "user got normal shares amount");
+
     }
 
     /*
