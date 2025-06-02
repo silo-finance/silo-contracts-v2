@@ -48,6 +48,23 @@ contract StreamTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_setEmissions_zero
+    */
+    function test_setEmissions_zero() public {
+        stream.setEmissions(100, block.timestamp + 100);
+        assertEq(stream.emissionPerSecond(), 100, "emissionPerSecond 100");
+        assertEq(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is current one #1");
+        assertEq(stream.distributionEnd(), block.timestamp + 100, "distributionEnd is in future");
+
+        vm.warp(block.timestamp + 10);
+
+        stream.setEmissions(0, block.timestamp + 1 days);
+        assertEq(stream.emissionPerSecond(), 0, "emissionPerSecond should be reset to 0");
+        assertEq(stream.lastUpdateTimestamp(), block.timestamp, "lastUpdateTimestamp is current one #2");
+        assertEq(stream.distributionEnd(), block.timestamp, "distributionEnd is ignored and set to current");
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_1perSecFlow
     */
     function test_1perSecFlow() public {

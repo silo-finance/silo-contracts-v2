@@ -41,7 +41,7 @@ contract Stream is IStream, Ownable2Step {
         claimRewards();
 
         if (_emissionPerSecond == 0) {
-            _distributionEnd == block.timestamp;
+            _distributionEnd = block.timestamp;
         } else {
             require(_distributionEnd > block.timestamp, DistributionTimeExpired());
         }
