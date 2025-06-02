@@ -217,7 +217,7 @@ contract XRedeemPolicyTest is Test {
         vm.expectEmit(address(policy));
         emit IXRedeemPolicy.StartRedeem({
             userAddress: user,
-            currentSiloAmount: _toRedeem,
+            currentSiloAmount: policy.previewRedeem(_toRedeem),
             xSiloToBurn: _toRedeem,
             siloAmountAfterVesting: _siloAmountAfterVesting,
             duration: _duration
@@ -619,29 +619,51 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax_withStream
     */
-    function test_redeemSilo_everyoneRedeemMax() public {
+    function test_redeemSilo_everyoneRedeemMax_withStream() public {
+        _redeemSilo_everyoneRedeemMax(true);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax_withoutStream
+    */
+    function test_redeemSilo_everyoneRedeemMax_withoutStream() public {
+        _redeemSilo_everyoneRedeemMax(false);
+    }
+
+    function _redeemSilo_everyoneRedeemMax(bool _withStream) public {
         uint256 siloAmount = 1e18;
         uint256 maxDuration = policy.maxRedeemDuration();
 
         address user = makeAddr("user");
         address user2 = makeAddr("user2");
 
-        _convert(user, siloAmount);
-        _convert(user2, siloAmount);
+        uint256 shares1 = _convert(user, siloAmount);
+        uint256 shares2 = _convert(user2, siloAmount);
 
-        _setupStream(); // 0.01/s for 1 day
+        if (_withStream) _setupStream(); // 0.01/s for 1 day
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("total supply", policy.totalSupply());
 
         vm.prank(user);
-        policy.redeemSilo(siloAmount, maxDuration);
+        uint256 siloAmountAfterVesting = policy.redeemSilo(shares1, maxDuration);
+        assertEq(siloAmountAfterVesting, siloAmount, "user1 will redeem 100% of Silos");
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("total supply", policy.totalSupply());
 
         vm.prank(user2);
-        policy.redeemSilo(siloAmount, maxDuration);
+        siloAmountAfterVesting = policy.redeemSilo(siloAmount, maxDuration);
+        assertEq(siloAmountAfterVesting, siloAmount, "user2 will redeem 100% of Silos");
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("total supply", policy.totalSupply());
 
         vm.warp(block.timestamp + maxDuration);
 
-        stream.claimRewards();
+        if (_withStream) stream.claimRewards();
 
         vm.prank(user);
         policy.finalizeRedeem(0);
