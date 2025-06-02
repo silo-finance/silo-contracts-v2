@@ -413,11 +413,14 @@ contract XRedeemPolicyTest is Test {
         uint256 expectedSharesAfterRedeem = policy.convertToShares(siloAmountBeforeRedeem);
 
         uint256 xSiloToMint = policy.convertToShares(currentSiloAmount);
+        uint256 leftSilos = asset.balanceOf(address(policy));
 
         emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("real balance", leftSilos);
         emit log_named_uint("total shares", policy.totalSupply());
         emit log_named_uint("expectedSharesAfterRedeem", expectedSharesAfterRedeem);
         emit log_named_uint("xSiloToMint", xSiloToMint);
+        emit log_named_uint("stream.pendingRewards()", stream.pendingRewards());
 
         if (xSiloToMint == 0) {
             vm.expectRevert(IXRedeemPolicy.CancelGeneratesZeroShares.selector);
@@ -434,7 +437,14 @@ contract XRedeemPolicyTest is Test {
 
         vm.stopPrank();
 
-        assertLt(expectedSharesAfterRedeem, sharesBeforeRedeem, "cancel will recalculate (reduce) shares");
+        if (_twoUsers) {
+            assertLe(expectedSharesAfterRedeem, sharesBeforeRedeem, "cancel will recalculate (reduce) shares");
+        } else {
+            // with one/last user it is possible to get more, because of leftover in contract
+            // -1 is for rounding down for shares
+            assertEq(expectedSharesAfterRedeem, leftSilos + stream.pendingRewards() - 1, "this case is like reset, user will get all left Silos");
+        }
+
         assertEq(policy.balanceOf(user), expectedSharesAfterRedeem, "expectedShares");
         assertEq(asset.balanceOf(user), 0, "user did not get any Silo");
 
