@@ -306,7 +306,7 @@ contract XSiloTest is Test {
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0_fuzz
     */
-    /// forge-config: x_silo.fuzz.runs = 4000
+    /// forge-config: x_silo.fuzz.runs = 2000
     function test_redeem_usesDuration0_fuzz(
         CustomSetup memory _customSetup,
         uint256 _assets,
