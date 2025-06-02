@@ -78,6 +78,8 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
 
         uint256 currentSiloAmount = _convertToAssets(_xSiloAmountToBurn, Math.Rounding.Floor);
 
+        emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
+
         // if redeeming is not immediate, go through vesting process
         if (_duration != 0) {
             // add redeeming entry
@@ -124,8 +126,6 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                 _sharesToBurn: _xSiloAmountToBurn
             });
         }
-
-        emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
     }
 
     /// @inheritdoc IXRedeemPolicy

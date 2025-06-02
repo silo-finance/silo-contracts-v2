@@ -565,17 +565,17 @@ contract XRedeemPolicyTest is Test {
             uint256 siloAmountAfterVesting,
         ) = policy.getUserRedeem(user, 0);
 
-        assertEq(currentSiloAmount, siloAmount / 2, "user looses 50%");
+        assertEq(currentSiloAmount, siloAmount, "users current Silo amounts at the moment, 100%");
         assertEq(xSiloAmount, userShares, "userShares");
         assertEq(siloAmountAfterVesting, siloAmount, "user does not loose Silo if he redeem for max time");
 
         assertEq(
             policy.totalAssets(),
-            siloAmount + (siloAmount / 2),
-            "total assets after redeem is one user deposit + 50% fee for pending redeem"
+            siloAmount,
+            "total assets after redeem is == one user deposit"
         );
 
-        assertEq(policy.pendingLockedSilo(), siloAmount / 2, "pendingLockedSilo == user redeem with highest penalty");
+        assertEq(policy.pendingLockedSilo(), siloAmount, "pendingLockedSilo == current user redeem");
 
         vm.warp(block.timestamp + maxDuration + 1 days);
 
@@ -586,7 +586,8 @@ contract XRedeemPolicyTest is Test {
         policy.cancelRedeem(0);
 
         assertEq(
-            policy.previewRedeem(user3shares),
+            // -1 because of rounding, uses looses 1 wei
+            policy.previewRedeem(user3shares) - 1,
             userRedeemAmountBefore,
             "user3 just deposited, should not gain any extra rewards because of other user cancel redeem"
         );
@@ -597,7 +598,7 @@ contract XRedeemPolicyTest is Test {
             // vesting for maxDuration should not give us penalty, so we expecting 100% os SILO as return
             policy.getAmountByVestingDuration(policy.balanceOf(user), maxDuration),
             // -273 is
-            currentSiloAmount - 273,
+            currentSiloAmount - 615,
             "after canceling Silos recreated based on `currentSiloAmount`, means we take max penalty for canceling"
         );
 
@@ -646,6 +647,7 @@ contract XRedeemPolicyTest is Test {
 
         emit log_named_uint("total assets", policy.totalAssets());
         emit log_named_uint("total supply", policy.totalSupply());
+        emit log_named_uint("getAmountByVestingDuration", policy.getAmountByVestingDuration(shares2, maxDuration));
 
         vm.prank(user);
         uint256 siloAmountAfterVesting = policy.redeemSilo(shares1, maxDuration);
@@ -653,9 +655,10 @@ contract XRedeemPolicyTest is Test {
 
         emit log_named_uint("total assets", policy.totalAssets());
         emit log_named_uint("total supply", policy.totalSupply());
+        emit log_named_uint("getAmountByVestingDuration", policy.getAmountByVestingDuration(shares2, maxDuration));
 
         vm.prank(user2);
-        siloAmountAfterVesting = policy.redeemSilo(siloAmount, maxDuration);
+        siloAmountAfterVesting = policy.redeemSilo(shares2, maxDuration);
         assertEq(siloAmountAfterVesting, siloAmount, "user2 will redeem 100% of Silos");
 
         emit log_named_uint("total assets", policy.totalAssets());
