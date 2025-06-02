@@ -365,21 +365,32 @@ contract XRedeemPolicyTest is Test {
         uint256 amount = 1e18;
         uint256 duration = 10 hours;
 
-        _redeemSilo_expectNoRewardsOnCancel(amount, duration);
+        _redeemSilo_expectNoRewardsOnCancel(amount, duration, false);
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnCancel_fuzz
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnCancel_twoUsers_fuzz
     */
-    function test_redeemSilo_expectNoRewardsOnCancel_fuzz(uint256 _amount, uint256 _duration) public {
-        _redeemSilo_expectNoRewardsOnCancel(_amount, _duration);
+    function test_redeemSilo_expectNoRewardsOnCancel_twoUsers_fuzz(uint256 _amount, uint256 _duration) public {
+        _redeemSilo_expectNoRewardsOnCancel(_amount, _duration, true);
     }
 
-    function _redeemSilo_expectNoRewardsOnCancel(uint256 _amount, uint256 _duration) public {
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnCancel_oneUser_fuzz
+    */
+    function test_redeemSilo_expectNoRewardsOnCancel_oneUser_fuzz(uint256 _amount, uint256 _duration) public {
+        _redeemSilo_expectNoRewardsOnCancel(_amount, _duration, false);
+    }
+
+    function _redeemSilo_expectNoRewardsOnCancel(uint256 _amount, uint256 _duration, bool _twoUsers) public {
         vm.assume(_amount > 0);
         vm.assume(_amount < 2 ** 128);
         vm.assume(_duration > 0);
         vm.assume(_duration <= policy.maxRedeemDuration());
+
+        if (_twoUsers) {
+            _convert(makeAddr("user2"), _amount / 2 + 1);
+        }
 
         address user = makeAddr("user");
 
@@ -403,7 +414,6 @@ contract XRedeemPolicyTest is Test {
 
         uint256 xSiloToMint = policy.convertToShares(currentSiloAmount);
 
-        // avoid  CancelGeneratesZeroShares() error
         emit log_named_uint("total assets", policy.totalAssets());
         emit log_named_uint("total shares", policy.totalSupply());
         emit log_named_uint("expectedSharesAfterRedeem", expectedSharesAfterRedeem);
