@@ -257,6 +257,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         _userRedeems[msg.sender].pop();
     }
 
+    /// @dev this is alias for `redeem()`, we can not use public method directly because of reentrancy
     function _redeemSilo(uint256 _shares, address _receiver, address _owner) internal virtual returns (uint256 assets);
 
     function _withdraw(
