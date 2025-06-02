@@ -152,7 +152,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         require(shares != 0, CancelGeneratesZeroShares());
 
         // mint back exact deposit equivalent before unmarking (i.e. deposit not yet in vault)
-        _mintShares(address(msg.sender), shares);
+        _mintShares(msg.sender, shares);
 
         // free up SILO owed to users
         pendingLockedSilo -= redeemCache.currentSiloAmount;
