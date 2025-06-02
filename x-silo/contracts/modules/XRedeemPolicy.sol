@@ -69,7 +69,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
         require(siloAmountAfterVesting != 0, NoSiloToRedeem());
 
-        uint256 currentSiloAmount = convertToAssets(_xSiloAmountToBurn);
+        uint256 currentSiloAmount = _convertToAssets(_xSiloAmountToBurn, Math.Rounding.Floor);
 
         emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
 
@@ -124,7 +124,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
         RedeemInfo storage redeemCache = _userRedeems[msg.sender][_redeemIndex];
 
-        uint256 toTransfer = convertToShares(redeemCache.currentSiloAmount);
+        uint256 toTransfer = _convertToShares(redeemCache.currentSiloAmount, Math.Rounding.Floor);
         uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
 
         emit CancelRedeem(msg.sender, toTransfer, toBurn);
@@ -188,7 +188,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         returns (uint256 siloAmountAfterVesting)
     {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmount, _duration);
-        siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
+        siloAmountAfterVesting = _convertToAssets(xSiloAfterVesting, Math.Rounding.Floor);
     }
 
     /// @inheritdoc IXRedeemPolicy
@@ -226,9 +226,9 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
     }
 
-    function convertToAssets(uint256 _shares) public view virtual returns (uint256);
+    function _convertToAssets(uint256 _shares, Math.Rounding _rounding) internal view virtual returns (uint256);
 
-    function convertToShares(uint256 _assets) public view virtual returns (uint256);
+    function _convertToShares(uint256 _assets, Math.Rounding _rounding) internal view virtual returns (uint256);
 
     function _deleteRedeemEntry(uint256 _index) internal {
         _userRedeems[msg.sender][_index] = _userRedeems[msg.sender][_userRedeems[msg.sender].length - 1];
