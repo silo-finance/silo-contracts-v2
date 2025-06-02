@@ -84,6 +84,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         IStream stream_ = stream;
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
 
+        total -= pendingLockedSilo;
     }
 
     /// @inheritdoc IERC4626
@@ -152,6 +153,14 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
     function _burnShares(address _account, uint256 _shares) internal virtual override {
         return ERC20._burn(_account, _shares);
+    }
+
+    function _mintShares(address _account, uint256 _shares) internal virtual override {
+        return ERC20._mint(_account, _shares);
+    }
+
+    function _getSiloToken() internal view virtual override returns (address tokenAddress) {
+        tokenAddress = asset();
     }
 
     function _convertToAssets(uint256 _shares, Math.Rounding _rounding)
