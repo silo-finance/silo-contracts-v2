@@ -18,7 +18,7 @@ import {IXRedeemPolicy} from "../../../contracts/interfaces/IXRedeemPolicy.sol";
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XRedeemPolicyTest
 */
 contract XRedeemPolicyTest is Test {
-    uint256 internal constant _PRECISION = 100;
+    uint256 internal constant _PRECISION = 1e18;
 
     Stream stream;
     XSilo policy;
@@ -43,8 +43,8 @@ contract XRedeemPolicyTest is Test {
 
         // all tests are done for this setup:
 
-        assertEq(policy.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
-        assertEq(policy.MAX_REDEEM_RATIO(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(policy.minRedeemRatio(), 0.5e18, "expected initial setup for minRedeemRatio");
+        assertEq(policy.MAX_REDEEM_RATIO(), 1e18, "expected initial setup for maxRedeemRatio");
         assertEq(policy.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
         assertEq(policy.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
     }
@@ -142,13 +142,37 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_revertsOnInvalidDuration
+    */
+    function test_redeemSilo_revertsOnInvalidDuration() public {
+        policy.updateRedeemSettings({
+            _minRedeemRatio: 1,
+            _minRedeemDuration: 1,
+            _maxRedeemDuration: 2
+        });
+
+        uint256 amount = 1e18;
+        address user = makeAddr("user");
+
+        _convert(user, amount);
+
+        vm.expectRevert(IXRedeemPolicy.DurationTooLow.selector);
+        policy.redeemSilo(1, 0);
+
+        vm.expectRevert(IXRedeemPolicy.DurationTooHi.selector);
+        policy.redeemSilo(1, 3);
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_emits_StartRedeem_noRewards_1s
     */
     function test_redeemSilo_emits_StartRedeem_noRewards_1s() public {
         uint256 toRedeem = 0.5e18;
         uint256 duration = 1 seconds;
 
-        _redeemSilo_emits_StartRedeem_noRewards_halfTime(toRedeem, duration, toRedeem / 2);
+        _redeemSilo_emits_StartRedeem_noRewards(
+            toRedeem, duration, (toRedeem + toRedeem / policy.maxRedeemDuration()) / 2
+        );
     }
 
     /*
@@ -158,10 +182,10 @@ contract XRedeemPolicyTest is Test {
         uint256 toRedeem = 0.5e18;
         uint256 halfTime = policy.maxRedeemDuration() / 2;
 
-        _redeemSilo_emits_StartRedeem_noRewards_halfTime(toRedeem, halfTime, toRedeem * 3 / 4);
+        _redeemSilo_emits_StartRedeem_noRewards(toRedeem, halfTime, toRedeem * 3 / 4);
     }
 
-    function _redeemSilo_emits_StartRedeem_noRewards_halfTime(
+    function _redeemSilo_emits_StartRedeem_noRewards(
         uint256 _toRedeem,
         uint256 _duration,
         uint256 _siloAmountAfterVesting

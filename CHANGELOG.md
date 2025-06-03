@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Fixed
-
+- x-silo: use rounding direction in favor of protocol for cancel redeem 
+- x-silo: ensure we set `distrubutionEnd` when reset emission
+- x-silo: add restriction when redeem duration is too hi
 
 ### [3.6.0] - 2025-05-19
 #Added 

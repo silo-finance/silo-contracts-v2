@@ -11,7 +11,7 @@ import {IXRedeemPolicy} from "../interfaces/IXRedeemPolicy.sol";
 /// @dev based on Camelot's xGRAIL
 /// @notice Policy for redeem xSilo back to Silo
 abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentrancy {
-    uint256 internal constant _PRECISION = 100;
+    uint256 internal constant _PRECISION = 1e18;
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public constant MAX_REDEEM_RATIO = _PRECISION; // 1:1
@@ -23,7 +23,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     // Except for the max redeem ratio, which is capped at 1:1.
 
     /// @inheritdoc IXRedeemPolicy
-    uint256 public minRedeemRatio = 0.5e2; // 1:0.5
+    uint256 public minRedeemRatio = 0.5e18; // 1:0.5
 
     /// @inheritdoc IXRedeemPolicy
     uint256 public minRedeemDuration = 0 days;
@@ -64,12 +64,13 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     {
         require(_xSiloAmountToBurn > 0, ZeroAmount());
         require(_duration >= minRedeemDuration, DurationTooLow());
+        require(_duration <= maxRedeemDuration, DurationTooHi());
 
         // get corresponding SILO amount based on duration
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);
         require(siloAmountAfterVesting != 0, NoSiloToRedeem());
 
-        uint256 currentSiloAmount = convertToAssets(_xSiloAmountToBurn);
+        uint256 currentSiloAmount = _convertToAssets(_xSiloAmountToBurn, Math.Rounding.Floor);
 
         emit StartRedeem(msg.sender, currentSiloAmount,_xSiloAmountToBurn, siloAmountAfterVesting, _duration);
 
@@ -124,7 +125,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     function cancelRedeem(uint256 _redeemIndex) external nonReentrant validateRedeem(msg.sender, _redeemIndex) {
         RedeemInfo storage redeemCache = _userRedeems[msg.sender][_redeemIndex];
 
-        uint256 toTransfer = convertToShares(redeemCache.currentSiloAmount);
+        uint256 toTransfer = _convertToShares(redeemCache.currentSiloAmount, Math.Rounding.Floor);
         uint256 toBurn = redeemCache.xSiloAmountToBurn - toTransfer;
 
         emit CancelRedeem(msg.sender, toTransfer, toBurn);
@@ -188,7 +189,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         returns (uint256 siloAmountAfterVesting)
     {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_xSiloAmount, _duration);
-        siloAmountAfterVesting = convertToAssets(xSiloAfterVesting);
+        siloAmountAfterVesting = _convertToAssets(xSiloAfterVesting, Math.Rounding.Floor);
     }
 
     /// @inheritdoc IXRedeemPolicy
@@ -226,9 +227,9 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
         xSiloAmountIn = Math.mulDiv(_xSiloAfterVesting, _PRECISION, ratio, Math.Rounding.Ceil);
     }
 
-    function convertToAssets(uint256 _shares) public view virtual returns (uint256);
+    function _convertToAssets(uint256 _shares, Math.Rounding _rounding) internal view virtual returns (uint256);
 
-    function convertToShares(uint256 _assets) public view virtual returns (uint256);
+    function _convertToShares(uint256 _assets, Math.Rounding _rounding) internal view virtual returns (uint256);
 
     function _deleteRedeemEntry(uint256 _index) internal {
         _userRedeems[msg.sender][_index] = _userRedeems[msg.sender][_userRedeems[msg.sender].length - 1];
