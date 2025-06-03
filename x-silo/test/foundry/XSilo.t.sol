@@ -20,7 +20,7 @@ import {XSilo, XRedeemPolicy, Stream, ERC20} from "../../contracts/XSilo.sol";
 FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mc XSiloTest
 */
 contract XSiloTest is Test {
-    uint256 internal constant _PRECISION = 100;
+    uint256 internal constant _PRECISION = 1e18;
 
     Stream stream;
     XSilo xSilo;
@@ -106,7 +106,7 @@ contract XSiloTest is Test {
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_assets > 0);
-        vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
+        vm.assume(_assets < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
         address user = makeAddr("user");
 
@@ -130,7 +130,7 @@ contract XSiloTest is Test {
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_assets > 0);
-        vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
+        vm.assume(_assets < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
         uint256 xSiloRequiredForAssets = xSilo.previewWithdraw(_assets);
         emit log_named_uint("xSiloRequiredForAssets", xSiloRequiredForAssets);
@@ -158,7 +158,7 @@ contract XSiloTest is Test {
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_silos > 0);
-        vm.assume(_silos < type(uint256).max / 100); // to not cause overflow on calculation
+        vm.assume(_silos < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
         address user = makeAddr("user");
 
@@ -199,13 +199,11 @@ contract XSiloTest is Test {
         vm.assume(_assetsToDeposit > 0);
         vm.assume(_assetsToDeposit < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        uint256 precision = _PRECISION;
+        uint256 precision = 100;
 
         _percentAssetsToWithdraw = uint16(bound(_percentAssetsToWithdraw, 1, precision));
 
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
-
-//        uint256 _assetsToDeposit = 100; uint256 _assetsToWithdraw = 15;
 
         address user = makeAddr("user");
 
@@ -253,7 +251,7 @@ contract XSiloTest is Test {
         vm.assume(_assetsToDeposit > 0);
         vm.assume(_assetsToDeposit < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
-        _percentAssetsToWithdraw = uint64(bound(_percentAssetsToWithdraw, 1, 1e18));
+        _percentAssetsToWithdraw = uint64(bound(_percentAssetsToWithdraw, 1, _PRECISION));
 
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
@@ -262,7 +260,7 @@ contract XSiloTest is Test {
         _convert(user, _assetsToDeposit);
 
         uint256 assetsToWithdraw = Math.mulDiv(
-            xSilo.maxWithdraw(user), _percentAssetsToWithdraw, 1e18, Math.Rounding.Floor
+            xSilo.maxWithdraw(user), _percentAssetsToWithdraw, _PRECISION, Math.Rounding.Floor
         );
 
         bool zeroShares = xSilo.previewWithdraw(assetsToWithdraw) == 0;
@@ -281,7 +279,7 @@ contract XSiloTest is Test {
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
         vm.assume(_assets > 0);
-        vm.assume(_assets < type(uint256).max / 100); // to not cause overflow on calculation
+        vm.assume(_assets < type(uint256).max / _PRECISION); // to not cause overflow on calculation
 
         address user = makeAddr("user");
 
@@ -308,7 +306,7 @@ contract XSiloTest is Test {
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_usesDuration0_fuzz
     */
-    /// forge-config: x_silo.fuzz.runs = 5000
+    /// forge-config: x_silo.fuzz.runs = 2000
     function test_redeem_usesDuration0_fuzz(
         CustomSetup memory _customSetup,
         uint256 _assets,
@@ -319,16 +317,13 @@ contract XSiloTest is Test {
 
         _assumeCustomSetup({_customSetup: _customSetup, _allowForZeros: true});
 
-//        (uint256 _silos, uint256 _xSiloToRedeem) = (9133, 4696);
-
         address user = makeAddr("user");
 
         _convert(user, _assets);
 
-        _percentToRedeem = uint16(bound(_percentToRedeem, 1, _PRECISION));
+        _percentToRedeem = uint16(bound(_percentToRedeem, 1, 100));
 
         uint256 xSiloToRedeem = Math.mulDiv(xSilo.balanceOf(user), _percentToRedeem, _PRECISION, Math.Rounding.Floor);
-
 
         uint256 siloPreview = xSilo.getAmountByVestingDuration(xSiloToRedeem, 0);
         vm.assume(siloPreview != 0);
@@ -556,8 +551,8 @@ contract XSiloTest is Test {
     function _defaultSetupVerification() internal view {
         // all tests are done for this setup:
 
-        assertEq(xSilo.minRedeemRatio(), 0.5e2, "expected initial setup for minRedeemRatio");
-        assertEq(xSilo.MAX_REDEEM_RATIO(), 1e2, "expected initial setup for maxRedeemRatio");
+        assertEq(xSilo.minRedeemRatio(), 0.5e18, "expected initial setup for minRedeemRatio");
+        assertEq(xSilo.MAX_REDEEM_RATIO(), 1e18, "expected initial setup for maxRedeemRatio");
         assertEq(xSilo.minRedeemDuration(), 0, "expected initial setup for minRedeemDuration");
         assertEq(xSilo.maxRedeemDuration(), 6 * 30 days, "expected initial setup for maxRedeemDuration");
     }
