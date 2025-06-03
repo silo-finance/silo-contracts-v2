@@ -100,8 +100,8 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
                 _sharesToBurn: _xSiloAmountToBurn
             });
 
-            // keep `currentSiloAmount` in `totalAssets` until user finalizes the redeem
-            // otherwise, other users could withdraw part of the pending withdrawal
+            // Exclude `currentSiloAmount` from `totalAssets` until user finalizes or cancels
+            // the redemption. Otherwise, other users could withdraw part of the pending withdrawal
             pendingLockedSilo += currentSiloAmount;
         } else {
             // immediately redeem for SILO
