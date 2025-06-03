@@ -231,7 +231,6 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         if (_action.matchAction(Hook.FLASH_LOAN)) emit log("FLASH_LOAN");
         if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) emit log("TRANSITION_COLLATERAL");
         if (_action.matchAction(Hook.SWITCH_COLLATERAL)) emit log("SWITCH_COLLATERAL");
-        if (_action.matchAction(Hook.LIQUIDATION)) emit log("LIQUIDATION");
         if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) emit log("SHARE_TOKEN_TRANSFER");
         if (_action.matchAction(Hook.COLLATERAL_TOKEN)) emit log("COLLATERAL_TOKEN");
         if (_action.matchAction(Hook.PROTECTED_TOKEN)) emit log("PROTECTED_TOKEN");
