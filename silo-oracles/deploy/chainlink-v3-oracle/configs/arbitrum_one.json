@@ -10,6 +10,39 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
+    "CHAINLINK_WBTC_USD": {
+        "baseToken": "WBTC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_WBTC_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e2,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_PENDLE_USD": {
+        "baseToken": "PENDLE",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_PENDLE_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_wstETH_ETH": {
+        "baseToken": "wstETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_wstETH_stETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_stETH_ETH_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e36,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_WETH_USD": {
         "baseToken": "WETH",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -18,6 +51,17 @@
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_ezETH_WETH": {
+        "baseToken": "ezETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_ezETH_ETH_aggregator",
+        "primaryHeartbeat": 22201,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
