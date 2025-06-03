@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ERC4626, IERC4626, ERC20, IERC20} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
@@ -78,20 +79,18 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
+        if (totalSupply() == 0) {
+            // when xSilo is empty and everyone withdrew but there are still SILO assets left
+            // then, reset totalAssets to 0 so the Silo that remains goes to first depositor
+            return 0;
+        }
+
         total = super.totalAssets();
 
         IStream stream_ = stream;
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
-    }
 
-    /// @inheritdoc IERC4626
-    function convertToShares(uint256 _assets) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
-        return ERC4626.convertToShares(_assets);
-    }
-
-    /// @inheritdoc IERC4626
-    function convertToAssets(uint256 _shares) public view virtual override(ERC4626, XRedeemPolicy) returns (uint256) {
-        return ERC4626.convertToAssets(_shares);
+        total -= pendingLockedSilo;
     }
 
     /// @inheritdoc IERC4626
@@ -100,7 +99,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     /// different duration.
     function maxWithdraw(address _owner) public view virtual override returns (uint256 assets) {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(balanceOf(_owner), 0);
-        assets = convertToAssets(xSiloAfterVesting);
+        assets = _convertToAssets(xSiloAfterVesting, Math.Rounding.Floor);
     }
 
     /// @inheritdoc IERC4626
@@ -118,7 +117,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     /// for asset withdrawals. To obtain a better deal, please use the custom method `getAmountByVestingDuration` with
     /// different duration.
     function previewWithdraw(uint256 _assets) public view virtual override returns (uint256 shares) {
-        uint256 _xSiloAfterVesting = convertToShares(_assets);
+        uint256 _xSiloAfterVesting = _convertToShares(_assets, Math.Rounding.Ceil);
         shares = getAmountInByVestingDuration(_xSiloAfterVesting, 0);
     }
 
@@ -128,7 +127,7 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
     /// different duration.
     function previewRedeem(uint256 _shares) public view virtual override returns (uint256 assets) {
         uint256 xSiloAfterVesting = getXAmountByVestingDuration(_shares, 0);
-        assets = convertToAssets(xSiloAfterVesting);
+        assets = _convertToAssets(xSiloAfterVesting, Math.Rounding.Floor);
     }
 
     /**
@@ -158,8 +157,32 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         return ERC20._transfer(_from, _to, _shares);
     }
 
-    function _burnShares(address _account, uint256 _shares) internal virtual override {
-        return ERC20._burn(_account, _shares);
+    function _mintShares(address _account, uint256 _shares) internal virtual override {
+        return ERC20._mint(_account, _shares);
+    }
+
+    function _getSiloToken() internal view virtual override returns (address tokenAddress) {
+        tokenAddress = asset();
+    }
+
+    function _convertToAssets(uint256 _shares, Math.Rounding _rounding)
+        internal
+        view
+        virtual
+        override(ERC4626, XRedeemPolicy)
+        returns (uint256)
+    {
+        return ERC4626._convertToAssets(_shares, _rounding);
+    }
+
+    function _convertToShares(uint256 _assets, Math.Rounding _rounding)
+        internal
+        view
+        virtual
+        override(ERC4626, XRedeemPolicy)
+        returns (uint256)
+    {
+        return ERC4626._convertToShares(_assets, _rounding);
     }
 
     function _update(address _from, address _to, uint256 _value) internal virtual override {
