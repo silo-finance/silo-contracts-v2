@@ -24,6 +24,7 @@ import {ShareTokenLib} from "./ShareTokenLib.sol";
 import {SiloStorageLib} from "./SiloStorageLib.sol";
 import {Views} from "./Views.sol";
 import {Rounding} from "./Rounding.sol";
+import {TokenHelper} from "./TokenHelper.sol";
 
 library Actions {
     using Address for address;
@@ -48,6 +49,13 @@ library Actions {
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
         _sharedStorage.siloConfig = _siloConfig;
+
+        // offset calculation
+        uint256 assetDecimals = TokenHelper.assertAndGetDecimals(configData.token);
+        // require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
+        uint8 decimalsOffset = 3; //uint8(UtilsLib.zeroFloorSub(18 + 6, assetDecimals));
+
+        SiloStorageLib.getSiloStorage().decimalsOffset = decimalsOffset;
 
         return configData.hookReceiver;
     }

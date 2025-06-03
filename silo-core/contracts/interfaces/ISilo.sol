@@ -129,6 +129,9 @@ interface ISilo is IERC20, IERC4626, IERC3156FlashLender {
         /// `totalAssets` can have outdated value (without interest), if you doing view call (of off-chain call)
         /// please use getters eg `getCollateralAssets()` to fetch value that includes interest.
         mapping(AssetType assetType => uint256 assets) totalAssets;
+
+        /// @dev decimals offset for the asset
+        uint8 decimalsOffset;
     }
 
     /// @notice Emitted on protected deposit

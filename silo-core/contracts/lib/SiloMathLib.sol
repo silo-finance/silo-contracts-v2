@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
+import {SiloStorageLib} from "./SiloStorageLib.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
@@ -143,7 +144,7 @@ library SiloMathLib {
         Math.Rounding _roundingToAssets,
         Math.Rounding _roundingToShares,
         ISilo.AssetType _assetType
-    ) internal pure returns (uint256 assets, uint256 shares) {
+    ) internal view returns (uint256 assets, uint256 shares) {
         if (_assets == 0) {
             require(_shares != 0, ISilo.InputZeroShares());
             shares = _shares;
@@ -166,7 +167,7 @@ library SiloMathLib {
         uint256 _totalShares,
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
-    ) internal pure returns (uint256 shares) {
+    ) internal view returns (uint256 shares) {
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
         // initially, in case of debt, if silo is empty we return shares==assets
@@ -184,7 +185,7 @@ library SiloMathLib {
         uint256 _totalShares,
         Math.Rounding _rounding,
         ISilo.AssetType _assetType
-    ) internal pure returns (uint256 assets) {
+    ) internal view returns (uint256 assets) {
         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);
 
         // initially, in case of debt, if silo is empty we return shares==assets
@@ -270,7 +271,7 @@ library SiloMathLib {
         uint256 _totalAssets,
         uint256 _assetTypeShareTokenTotalSupply,
         uint256 _liquidity
-    ) internal pure returns (uint256 assets, uint256 shares) {
+    ) internal view returns (uint256 assets, uint256 shares) {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
@@ -317,7 +318,7 @@ library SiloMathLib {
         uint256 _totalAssets,
         uint256 _totalShares,
         ISilo.AssetType _assetType
-    ) private pure returns (uint256 totalShares, uint256 totalAssets) {
+    ) private view returns (uint256 totalShares, uint256 totalAssets) {
         if (_totalShares == 0) {
             // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
             // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
@@ -325,9 +326,11 @@ library SiloMathLib {
             _totalAssets = 0;
         }
 
+        uint256 decimalsOffset = SiloStorageLib.getSiloStorage().decimalsOffset;
+
             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
                 ? (_totalShares, _totalAssets)
-                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
+                : (_totalShares + 10 ** decimalsOffset, _totalAssets + 1);
     }
 
     /// @dev Calculates the fraction of a given total and percentage
