@@ -79,11 +79,18 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
+        if (totalSupply() == 0) {
+            // when xSilo is empty and everyone withdrew but there are still SILO assets left
+            // then, reset totalAssets to 0 so the Silo that remains goes to first depositor
+            return 0;
+        }
+
         total = super.totalAssets();
 
         IStream stream_ = stream;
         if (address(stream_) != address(0)) total += stream_.pendingRewards();
 
+        total -= pendingLockedSilo;
     }
 
     /// @inheritdoc IERC4626
@@ -150,8 +157,12 @@ contract XSilo is ERC4626, XSiloManagement, XRedeemPolicy {
         return ERC20._transfer(_from, _to, _shares);
     }
 
-    function _burnShares(address _account, uint256 _shares) internal virtual override {
-        return ERC20._burn(_account, _shares);
+    function _mintShares(address _account, uint256 _shares) internal virtual override {
+        return ERC20._mint(_account, _shares);
+    }
+
+    function _getSiloToken() internal view virtual override returns (address tokenAddress) {
+        tokenAddress = asset();
     }
 
     function _convertToAssets(uint256 _shares, Math.Rounding _rounding)
