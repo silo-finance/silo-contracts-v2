@@ -74,8 +74,11 @@ abstract contract InvariantsSpec {
     string constant LENDING_INVARIANT_A =
         "LENDING_INVARIANT_A: Result of maxWithdraw() should never be more than liquidity of the Silo";
 
-    string constant LENDING_INVARIANT_B =
-        "LENDING_INVARIANT_B: Result of maxWithdraw() used as input to withdraw() should never revert";
+    string constant MAX_WITHDRAW_NEVER_REVERTS =
+        "MAX_WITHDRAW_NEVER_REVERTS: maxWithdraw() used as input to withdraw() should never revert";
+
+    string constant MAX_WITHDRAW_AS_INPUT =
+        "MAX_WITHDRAW_AS_INPUT: Result of maxWithdraw() used as input to withdraw() should never revert";
 
     string constant LENDING_INVARIANT_C = "LENDING_INVARIANT_C: If user has no debt and liquidity > 1, maxRedeem() output equals shareToken.balanceOf(user)";
 

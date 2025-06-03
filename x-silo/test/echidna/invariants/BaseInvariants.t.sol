@@ -13,11 +13,11 @@ import "forge-std/console.sol";
 /// @notice Implements Invariants for the protocol
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
 abstract contract BaseInvariants is HandlerAggregator {
-    function assert_BASE_INVARIANT_A() internal {
+//    function assert_BASE_INVARIANT_A() internal {
 //        uint256 totalAssets = ISilo(silo).totalAssets();
 //        uint256 totalSupply = ISilo(silo).totalSupply();
 //        assertEq(totalAssets == 0, totalSupply == 0, BASE_INVARIANT_A);
-    }
+//    }
 
 //    function assert_BASE_INVARIANT_B(address silo, address debtShareToken) internal {
 //        uint256 totalAtotalSupplyssets = IERC20(debtShareToken).totalSupply();

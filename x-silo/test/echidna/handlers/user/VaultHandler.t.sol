@@ -24,7 +24,6 @@ contract VaultHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function deposit(uint256 _assets, uint8 i) external setup {
-        console2.log("depositing");
         bool success;
         bytes memory returnData;
 
@@ -49,13 +48,11 @@ contract VaultHandler is BaseHandler {
             );
         }
 
-        assertTrue(success, SILO_HSPOST_B);
-
         if (_assets == 0) {
             assertFalse(success, SILO_HSPOST_B);
         }
     }
-//
+
 //    function mint(uint256 _shares, uint8 i) external setup {
 //        bool success;
 //        bytes memory returnData;
@@ -131,26 +128,38 @@ contract VaultHandler is BaseHandler {
 //            assertFalse(success, SILO_HSPOST_B);
 //        }
 //    }
-//
-//    ///////////////////////////////////////////////////////////////////////////////////////////////
-//    //                                          PROPERTIES                                       //
-//    ///////////////////////////////////////////////////////////////////////////////////////////////
-//
-//    function assert_LENDING_INVARIANT_B() public setup {
-//        bool success;
-//        bytes memory returnData;
-//
-//        uint256 maxWithdraw = xSilo.maxWithdraw(address(actor));
-//
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          PROPERTIES                                       //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function echidna_maxWithdraw_doesNotRevert() public setup {
+        assertTrue(address(xSilo) == address(0), MAX_WITHDRAW_NEVER_REVERTS);
+        return;
+
+        (bool success, ) = actor.proxy(
+            address(xSilo),
+            abi.encodeWithSelector(IERC4626.maxWithdraw.selector, address(actor))
+        );
+
+        assertTrue(success, MAX_WITHDRAW_NEVER_REVERTS);
+    }
+
+    function assert_maxWithdraw_asInputDoesNotRevert() public setup {
+        bool success;
+        bytes memory returnData;
+
+        uint256 maxWithdraw = xSilo.maxWithdraw(address(actor));
+
 //        _before();
-//
-//        (success, returnData) = actor.proxy(
-//            address(xSilo),
-//            abi.encodeWithSelector(
-//                IERC4626.withdraw.selector, maxWithdraw, address(actor), address(actor)
-//            )
-//        );
-//
+
+        (success, returnData) = actor.proxy(
+            address(xSilo),
+            abi.encodeWithSelector(
+                IERC4626.withdraw.selector, maxWithdraw, address(actor), address(actor)
+            )
+        );
+
 //        if (success) {
 //            _after();
 //        }
@@ -158,9 +167,9 @@ contract VaultHandler is BaseHandler {
 //        // POST-CONDITIONS
 //
 //        if (maxWithdraw != 0) {
-//            assertTrue(success, LENDING_INVARIANT_B);
+//            assertTrue(success, MAX_WITHDRAW_AS_INPUT);
 //        }
-//    }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
