@@ -18,17 +18,18 @@ interface IXRedeemPolicy {
     );
 
     event StartRedeem(
-        address indexed _userAddress,
+        address indexed userAddress,
         uint256 currentSiloAmount,
         uint256 xSiloToBurn,
         uint256 siloAmountAfterVesting,
         uint256 duration
     );
 
-    event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
-    event CancelRedeem(address indexed _userAddress, uint256 xSiloToTransfer, uint256 xSiloToBurn);
+    event FinalizeRedeem(address indexed userAddress, uint256 siloToRedeem);
+    event CancelRedeem(address indexed userAddress, uint256 siloAmountRestored, uint256 xSiloMinted);
 
     error ZeroAmount();
+    error CancelGeneratesZeroShares();
     error NoSiloToRedeem();
     error RedeemIndexDoesNotExist();
     error InvalidRatioOrder();

@@ -11,7 +11,7 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.s.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
-import {XSilo, XRedeemPolicy, Stream, ERC20} from "../../../contracts/XSilo.sol";
+import {XSilo, XRedeemPolicy, Stream, ERC20, IStream} from "../../../contracts/XSilo.sol";
 import {IXRedeemPolicy} from "../../../contracts/interfaces/IXRedeemPolicy.sol";
 
 /*
@@ -23,11 +23,6 @@ contract XRedeemPolicyTest is Test {
     Stream stream;
     XSilo policy;
     ERC20Mock asset;
-
-    event UpdateRedeemSettings(uint256 minRedeemRatio, uint256 maxRedeemRatio, uint256 minRedeemDuration, uint256 maxRedeemDuration);
-    event StartRedeem(address indexed _userAddress, uint256 currentSiloAmount, uint256 xSiloToBurn, uint256 siloAmountAfterVesting, uint256 duration);
-    event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
-    event CancelRedeem(address indexed _userAddress, uint256 xSiloToTransfer, uint256 xSiloToBurn);
 
     function setUp() public {
         AddrLib.init();
@@ -67,6 +62,28 @@ contract XRedeemPolicyTest is Test {
     /// forge-config: x_silo.fuzz.runs = 10000
     function test_getXAmountByVestingDuration_neverReverts_fuzz(uint256 _amount, uint256 _duration) public view {
         policy.getXAmountByVestingDuration(_amount, _duration);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_getXAmountByVestingDuration_math
+    */
+    function test_getXAmountByVestingDuration_math() public view {
+        uint256 maxTime = policy.maxRedeemDuration();
+
+        assertEq(policy.getXAmountByVestingDuration({_xSiloAmount: 2, _duration: 0}), 1, "[1] loosing 50%");
+        assertEq(policy.getXAmountByVestingDuration({_xSiloAmount: 100, _duration: 0}), 50, "[2] loosing 50%");
+
+        assertEq(
+            policy.getXAmountByVestingDuration({_xSiloAmount: 100, _duration: maxTime / 2}),
+            75,
+            "[3] preserve 75%"
+        );
+
+        assertEq(
+            policy.getXAmountByVestingDuration({_xSiloAmount: 100, _duration: maxTime}),
+            100,
+            "[4] preserve 100%"
+        );
     }
 
     /*
@@ -198,7 +215,13 @@ contract XRedeemPolicyTest is Test {
         _convert(user, amount);
 
         vm.expectEmit(address(policy));
-        emit StartRedeem(user, _toRedeem, _toRedeem, _siloAmountAfterVesting, _duration);
+        emit IXRedeemPolicy.StartRedeem({
+            userAddress: user,
+            currentSiloAmount: policy.convertToAssets(_toRedeem),
+            xSiloToBurn: _toRedeem,
+            siloAmountAfterVesting: _siloAmountAfterVesting,
+            duration: _duration
+        });
 
         vm.prank(user);
         policy.redeemSilo(_toRedeem, _duration);
@@ -364,21 +387,32 @@ contract XRedeemPolicyTest is Test {
         uint256 amount = 1e18;
         uint256 duration = 10 hours;
 
-        _redeemSilo_expectNoRewardsOnCancel(amount, duration);
+        _redeemSilo_expectNoRewardsOnCancel(amount, duration, false);
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnCancel_fuzz
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnCancel_twoUsers_fuzz
     */
-    function test_redeemSilo_expectNoRewardsOnCancel_fuzz(uint256 _amount, uint256 _duration) public {
-        _redeemSilo_expectNoRewardsOnCancel(_amount, _duration);
+    function test_redeemSilo_expectNoRewardsOnCancel_twoUsers_fuzz(uint256 _amount, uint256 _duration) public {
+        _redeemSilo_expectNoRewardsOnCancel(_amount, _duration, true);
     }
 
-    function _redeemSilo_expectNoRewardsOnCancel(uint256 _amount, uint256 _duration) public {
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnCancel_oneUser_fuzz
+    */
+    function test_redeemSilo_expectNoRewardsOnCancel_oneUser_fuzz(uint256 _amount, uint256 _duration) public {
+        _redeemSilo_expectNoRewardsOnCancel(_amount, _duration, false);
+    }
+
+    function _redeemSilo_expectNoRewardsOnCancel(uint256 _amount, uint256 _duration, bool _twoUsers) public {
         vm.assume(_amount > 0);
         vm.assume(_amount < 2 ** 128);
         vm.assume(_duration > 0);
         vm.assume(_duration <= policy.maxRedeemDuration());
+
+        if (_twoUsers) {
+            _convert(makeAddr("user2"), _amount / 2 + 1);
+        }
 
         address user = makeAddr("user");
 
@@ -396,86 +430,295 @@ contract XRedeemPolicyTest is Test {
         policy.redeemSilo(sharesBeforeRedeem, _duration);
         vm.warp(block.timestamp + 1 days);
 
+        (uint256 currentSiloAmount,,,) = policy.getUserRedeem(user, 0);
+
         uint256 expectedSharesAfterRedeem = policy.convertToShares(siloAmountBeforeRedeem);
 
-        vm.expectEmit(address(policy));
-        emit CancelRedeem(user, expectedSharesAfterRedeem, sharesBeforeRedeem - expectedSharesAfterRedeem);
+        uint256 xSiloToMint = policy.convertToShares(currentSiloAmount);
+        uint256 leftSilos = asset.balanceOf(address(policy));
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("real balance", leftSilos);
+        emit log_named_uint("total shares", policy.totalSupply());
+        emit log_named_uint("expectedSharesAfterRedeem", expectedSharesAfterRedeem);
+        emit log_named_uint("xSiloToMint", xSiloToMint);
+        emit log_named_uint("stream.pendingRewards()", stream.pendingRewards());
+
+        if (xSiloToMint == 0) {
+            vm.expectRevert(IXRedeemPolicy.CancelGeneratesZeroShares.selector);
+        } else {
+            vm.expectEmit(address(policy));
+            emit IXRedeemPolicy.CancelRedeem({
+                userAddress: user,
+                siloAmountRestored: currentSiloAmount,
+                xSiloMinted: xSiloToMint
+            });
+        }
 
         policy.cancelRedeem(0);
 
         vm.stopPrank();
 
-        assertLt(expectedSharesAfterRedeem, sharesBeforeRedeem, "cancel will recalculate (reduce) shares");
+        if (_twoUsers) {
+            assertLe(expectedSharesAfterRedeem, sharesBeforeRedeem, "cancel will recalculate (reduce) shares");
+        } else {
+            // with one/last user it is possible to get more, because of leftover in contract
+            // cancel will work like xSilo restart if this is last user
+        }
+
         assertEq(policy.balanceOf(user), expectedSharesAfterRedeem, "expectedShares");
         assertEq(asset.balanceOf(user), 0, "user did not get any Silo");
+
+        // we should be able to deposit at the end
+        _convert(address(1), 1e18);
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSiloImmediately_isClaimingRewardsBefore
     */
-    function test_redeemSilo_everyoneRedeemMax() public {
+    function test_redeemSiloImmediately_isClaimingRewardsBefore() public {
+        bytes memory data = abi.encodeCall(policy.redeemSilo, (1e15, 0));
+        _method_isClaimingRewardsBefore(data);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSiloWithDuration_isClaimingRewardsBefore
+    */
+    function test_redeemSiloWithDuration_isClaimingRewardsBefore() public {
+        bytes memory data = abi.encodeCall(policy.redeemSilo, (1e15, 1));
+        _method_isClaimingRewardsBefore(data);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeem_isClaimingRewardsBefore
+    */
+    function test_redeem_isClaimingRewardsBefore() public {
+        address user = makeAddr("user");
+        bytes memory data = abi.encodeCall(policy.redeem, (1e15, user, user));
+        _method_isClaimingRewardsBefore(data);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_withdraw_isClaimingRewardsBefore
+    */
+    function test_withdraw_isClaimingRewardsBefore() public {
+        address user = makeAddr("user");
+        bytes memory data = abi.encodeCall(policy.withdraw, (1e15, user, user));
+        _method_isClaimingRewardsBefore(data);
+    }
+
+    function _method_isClaimingRewardsBefore(bytes memory _policyCalldata) internal {
         uint256 _amount = 1e18;
+        address user = makeAddr("user");
+
+        _convert(user, _amount);
+
+        _setupStream(); // 0.01/s for 1 day
+
+        uint256 balanceBefore = asset.balanceOf(address(policy));
+
+        vm.warp(block.timestamp + 1 hours);
+
+        vm.expectEmit(address(stream));
+        emit IStream.RewardsClaimed(0.01e18 * 1 hours);
+
+        vm.prank(user);
+        (bool success,) = address(policy).call(_policyCalldata);
+        assertTrue(success);
+
+        uint256 balanceAfter = asset.balanceOf(address(policy));
+
+        assertGt(balanceAfter, balanceBefore, "rewards delivered");
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_audit_M01_case
+    */
+    function test_audit_M01_case() public {
+        uint256 siloAmount = 1e18;
+        uint256 maxDuration = policy.maxRedeemDuration();
+
+        address user = makeAddr("user");
+        address user2 = makeAddr("user2");
+        address user3 = makeAddr("last user3");
+
+        uint256 userShares = _convert(user, siloAmount);
+        _convert(user2, siloAmount);
+
+        _setupStream(); // 0.01/s for 1 day
+
+        // redeem is started on the same time as setup stream, so there will be no rewards at all for this user
+        vm.prank(user);
+        policy.redeemSilo(userShares, maxDuration);
+
+        (
+            uint256 currentSiloAmount,
+            uint256 xSiloAmount,
+            uint256 siloAmountAfterVesting,
+        ) = policy.getUserRedeem(user, 0);
+
+        assertEq(currentSiloAmount, siloAmount, "users current Silo amounts at the moment, 100%");
+        assertEq(xSiloAmount, userShares, "userShares");
+        assertEq(siloAmountAfterVesting, siloAmount, "user does not loose Silo if he redeem for max time");
+
+        assertEq(
+            policy.totalAssets(),
+            siloAmount,
+            "total assets after redeem is == one user deposit"
+        );
+
+        assertEq(policy.pendingLockedSilo(), siloAmount, "pendingLockedSilo == current user redeem");
+
+        vm.warp(block.timestamp + maxDuration + 1 days);
+
+        uint256 user3shares = _convert(user3, siloAmount);
+        uint256 userRedeemAmountBefore = policy.previewRedeem(user3shares);
+
+        vm.prank(user);
+        policy.cancelRedeem(0);
+
+        assertEq(
+            // -1 because of rounding, uses looses 1 wei
+            policy.previewRedeem(user3shares) - 1,
+            userRedeemAmountBefore,
+            "user3 just deposited, should not gain any extra rewards because of other user cancel redeem"
+        );
+
+        assertEq(policy.pendingLockedSilo(), 0, "pendingLockedSilo is reset");
+
+        assertEq(
+            // vesting for maxDuration should not give us penalty, so we expecting 100% os SILO as return
+            policy.getAmountByVestingDuration(policy.balanceOf(user), maxDuration),
+            // -273 is
+            currentSiloAmount - 615,
+            "after canceling Silos recreated based on `currentSiloAmount`, means we take max penalty for canceling"
+        );
+
+        assertEq(stream.pendingRewards(), 0, "there should be no pending rewards");
+
+        uint256 allRewards = 0.01e18 * 1 days;
+
+        assertEq(
+            policy.totalAssets(),
+            siloAmount * 3 + allRewards,
+            "total assets is again both users deposits + all rewards"
+        );
+
+        assertEq(
+            asset.balanceOf(address(policy)),
+            siloAmount * 3 + allRewards,
+            "xSilo holds both deposits + all rewards"
+        );
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax_withStream
+    */
+    function test_redeemSilo_everyoneRedeemMax_withStream() public {
+        _redeemSilo_everyoneRedeemMax(true);
+    }
+
+    /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_everyoneRedeemMax_withoutStream
+    */
+    function test_redeemSilo_everyoneRedeemMax_withoutStream() public {
+        _redeemSilo_everyoneRedeemMax(false);
+    }
+
+    function _redeemSilo_everyoneRedeemMax(bool _withStream) public {
+        uint256 siloAmount = 1e18;
         uint256 maxDuration = policy.maxRedeemDuration();
 
         address user = makeAddr("user");
         address user2 = makeAddr("user2");
 
-        _convert(user, _amount);
-        _convert(user2, _amount);
+        uint256 shares1 = _convert(user, siloAmount);
+        uint256 shares2 = _convert(user2, siloAmount);
 
-        _setupStream(); // 0.01/s for 1 day
+        if (_withStream) _setupStream(); // 0.01/s for 1 day
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("total supply", policy.totalSupply());
+        emit log_named_uint("getAmountByVestingDuration", policy.getAmountByVestingDuration(shares2, maxDuration));
 
         vm.prank(user);
-        policy.redeemSilo(_amount, maxDuration);
+        uint256 siloAmountAfterVesting = policy.redeemSilo(shares1, maxDuration);
+        assertEq(siloAmountAfterVesting, siloAmount, "user1 will redeem 100% of Silos");
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("total supply", policy.totalSupply());
+        emit log_named_uint("getAmountByVestingDuration", policy.getAmountByVestingDuration(shares2, maxDuration));
 
         vm.prank(user2);
-        policy.redeemSilo(_amount, maxDuration);
+        siloAmountAfterVesting = policy.redeemSilo(shares2, maxDuration);
+        assertEq(siloAmountAfterVesting, siloAmount, "user2 will redeem 100% of Silos");
+
+        emit log_named_uint("total assets", policy.totalAssets());
+        emit log_named_uint("total supply", policy.totalSupply());
 
         vm.warp(block.timestamp + maxDuration);
 
+        if (_withStream) stream.claimRewards();
+
         vm.prank(user);
         policy.finalizeRedeem(0);
 
         vm.prank(user2);
         policy.finalizeRedeem(0);
 
+        uint256 allRewards = _withStream ? 0.01e18 * 1 days : 0;
 
+        assertEq(stream.pendingRewards(), 0, "no pending rewards");
         assertEq(policy.totalSupply(), 0, "no shares, everyone left");
-        assertEq(asset.balanceOf(address(policy)), 0.01e18 * 1 days, "even with max vesting, noone got rewards");
-        assertEq(asset.balanceOf(user), _amount, "with max vesting user did not lose tokens");
-        assertEq(asset.balanceOf(user2), _amount, "with max vesting user2 did not lose tokens");
+        assertEq(policy.totalAssets(), 0, "totalAssets hides balance when no shares");
+        assertEq(policy.pendingLockedSilo(), 0, "pendingLockedSilo is empty");
+
+        assertEq(
+            asset.balanceOf(address(policy)),
+            allRewards,
+            "even with max vesting, noone got rewards, because redeem was started at rewards distribution"
+        );
+
+        assertEq(asset.balanceOf(user), siloAmount, "with max vesting user did not lose tokens");
+        assertEq(asset.balanceOf(user2), siloAmount, "with max vesting user2 did not lose tokens");
     }
 
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_oneRedeemMax
     */
     function test_redeemSilo_oneRedeemMax() public {
-        uint256 _amount = 1e18;
+        uint256 siloAmount = 1e18;
         uint256 maxDuration = policy.maxRedeemDuration();
 
         address user = makeAddr("user");
         address user2 = makeAddr("user2");
 
-        _convert(user, _amount);
-        _convert(user2, _amount);
+        _convert(user, siloAmount);
+        _convert(user2, siloAmount);
 
         _setupStream(); // 0.01/s for 1 day
 
         vm.prank(user);
-        policy.redeemSilo(_amount, maxDuration);
+        policy.redeemSilo(siloAmount, maxDuration);
 
         vm.warp(block.timestamp + maxDuration);
 
         vm.prank(user);
         policy.finalizeRedeem(0);
 
-        assertEq(policy.totalSupply(),1e18, "one user left");
-        assertEq(asset.balanceOf(address(policy)), 1e18 + 0.01e18 * 1 days, "user deposit + all rewards left");
-        assertEq(asset.balanceOf(user), _amount, "with max vesting user did not lose tokens");
-        assertEq(asset.balanceOf(address(stream)), 0, "no stream rewards");
+        uint256 allRewards = 0.01e18 * 1 days;
+
+        assertEq(policy.totalSupply(), siloAmount, "one user left");
+        assertEq(
+            asset.balanceOf(address(policy)),
+            siloAmount,
+            "user deposit, no rewards, because rewards are claimed before share transfer, finalize does not claim"
+        );
+        assertEq(asset.balanceOf(user), siloAmount, "with max vesting user did not lose tokens");
+        assertEq(asset.balanceOf(address(stream)), allRewards, "stream has all rewards yet, pending for claim");
 
         vm.prank(user2);
-        policy.redeemSilo(_amount, maxDuration);
+        policy.redeemSilo(siloAmount, maxDuration);
         vm.warp(block.timestamp + maxDuration);
 
         vm.prank(user2);
@@ -497,13 +740,13 @@ contract XRedeemPolicyTest is Test {
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_expectNoRewardsOnVestingPeriod
     */
     function test_redeemSilo_expectNoRewardsOnVestingPeriod() public {
-        uint256 _amount = 1e18;
+        uint256 siloAmount = 1e18;
 
         address user = makeAddr("user");
         address user2 = makeAddr("user2");
 
-        _convert(user, _amount);
-        _convert(user2, _amount);
+        _convert(user, siloAmount);
+        _convert(user2, siloAmount);
 
         assertEq(asset.balanceOf(address(policy)), 2e18, "users Silos");
 
@@ -530,11 +773,11 @@ contract XRedeemPolicyTest is Test {
         assertGt(
             policy.maxWithdraw(user2),
             user2MaxWithdrawBefore,
-            "user2 got bust after user1 redeem before max vesting"
+            "user2 got boost after user1 redeem before max vesting"
         );
 
         policy.redeemSilo(0.25e18, 11 hours);
-        assertEq(policy.balanceOf(user), 0.5e18, "shres left on user balance");
+        assertEq(policy.balanceOf(user), 0.5e18, "shares left on user balance");
 
         policy.redeemSilo(0.25e18, 23 hours);
         policy.redeemSilo(0.25e18, 6 * 30 days);
@@ -559,18 +802,33 @@ contract XRedeemPolicyTest is Test {
 
         uint256 user2MaxWithdrawBefore = policy.maxWithdraw(user2);
 
+        emit log_named_uint("total assets before finalizeRedeem", policy.totalAssets());
+        emit log_named_uint("pendingLockedSilo before finalizeRedeem", policy.pendingLockedSilo());
+
+        (
+            uint256 currentSiloAmount_, uint256 xSiloAmount_, uint256 siloAmountAfterVesting_,
+        ) = policy.getUserRedeem(user, 0);
+
+        emit log_named_uint("currentSiloAmount", currentSiloAmount_);
+        emit log_named_uint("xSiloAmount", xSiloAmount_);
+        emit log_named_uint("siloAmountAfterVesting", siloAmountAfterVesting_);
+
         policy.finalizeRedeem(0);
 
-        assertGt(
+        emit log_named_uint(" total assets after finalizeRedeem", policy.totalAssets());
+        emit log_named_uint(" pendingLockedSilo after finalizeRedeem", policy.pendingLockedSilo());
+
+        assertGe(
             policy.maxWithdraw(user2),
             user2MaxWithdrawBefore,
             string.concat(
-                "user2 got bust after user1 redeem because",
-                "on redeem before max vesting, shares are burned -> so value of 1 share is up, ",
-                "on redeem after max vesting??"
+                _msg,
+                " user2 might get boost because after finalize redeem fee is paid (if duration is not max) "
+                "and this is distributed as reward fee is calculated"
             )
         );
     }
+
     /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_settings_zero
     */
@@ -608,11 +866,11 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_deposit_ZeroShares
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_donationAttack
     */
-    function test_deposit_ZeroShares() public {
+    function test_donationAttack() public {
         address user = makeAddr("user");
-        // this wil create huge ratio, so we can test zero shares
+        // this will NOT create huge ratio, because when totalSupply is zero we will distribute all balance to 1st user
         _setupStream();
 
         vm.warp(block.timestamp + 1 minutes);
@@ -622,8 +880,8 @@ contract XRedeemPolicyTest is Test {
         asset.mint(user, 100);
         asset.approve(address(policy), 100);
 
-        vm.expectRevert(XSilo.ZeroShares.selector);
-        policy.deposit(100, user);
+        assertEq(policy.deposit(100, user), 100, "user got normal shares amount");
+
     }
 
     /*
@@ -650,7 +908,7 @@ contract XRedeemPolicyTest is Test {
         assertEq(asset.balanceOf(address(stream)), 0.01e18 * 1 days, "pending rewards balance");
     }
 
-    function _convert(address _user, uint256 _amount) public returns (uint256 shares){
+    function _convert(address _user, uint256 _amount) public returns (uint256 shares) {
         vm.startPrank(_user);
 
         asset.mint(_user, _amount);
