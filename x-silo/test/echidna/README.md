@@ -1,4 +1,4 @@
-# Actor Based Invariant Testing Suite Silo v2 Core
+# Actor Based Invariant Testing Suite X-Silo
 
 <img src="./docs/invariant-suite-overview.png" alt="Enigma Dark suite" width="90%" height="75%">
 

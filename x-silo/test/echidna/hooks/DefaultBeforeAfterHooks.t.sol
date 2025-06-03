@@ -67,10 +67,11 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _setXSiloValues(DefaultVars storage _defaultVars) internal {
+        _defaultVars.exchangeRate = xSilo.convertToShares(1e18);
         _defaultVars.totalSupply = xSilo.totalSupply();
         _defaultVars.totalAssets = xSilo.totalAssets();
+        _defaultVars.balance = IERC20(siloToken).balanceOf(address(xSilo));
     }
-
 
     /*/////////////////////////////////////////////////////////////////////////////////////////////
     //                                  GLOBAL POST CONDITIONS                                   //
