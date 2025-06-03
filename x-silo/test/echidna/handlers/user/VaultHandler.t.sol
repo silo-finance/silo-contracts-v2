@@ -27,6 +27,8 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
+        assertTrue(targetActor != address(0), "targetActor ZERO!");
+
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
@@ -134,15 +136,9 @@ contract VaultHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function echidna_maxWithdraw_doesNotRevert() public setup returns (bool) {
-        return targetActor != address(0);
 
-        (bool success, ) = actor.proxy(
-            address(xSilo),
-            abi.encodeWithSelector(IERC4626.maxWithdraw.selector, address(actor))
-        );
-
-//        assertTrue(success, MAX_WITHDRAW_NEVER_REVERTS);
-        return success;
+        xSilo.maxWithdraw(msg.sender);
+        return true;
     }
 
     function assert_maxWithdraw_asInputDoesNotRevert() public setup {
