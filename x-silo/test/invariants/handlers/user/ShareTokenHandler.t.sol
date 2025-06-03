@@ -41,7 +41,7 @@ contract ShareTokenHandler is BaseHandler {
         address spender = _getRandomActor(i);
 
         (success, returnData) = actor.proxy(
-            xSilo,
+            address(xSilo),
             abi.encodeWithSelector(IERC20.approve.selector, spender, _amount)
         );
 
@@ -62,7 +62,7 @@ contract ShareTokenHandler is BaseHandler {
         address to = _getRandomActor(i);
 
         (success, returnData) = actor.proxy(
-            xSilo,
+            address(xSilo),
             abi.encodeWithSelector(IERC20.transfer.selector, to, _amount)
         );
 
@@ -92,7 +92,7 @@ contract ShareTokenHandler is BaseHandler {
         address to = _getRandomActor(j);
 
         (success, returnData) = actor.proxy(
-            xSilo,
+            address(xSilo),
             abi.encodeWithSelector(
                 IERC20.transferFrom.selector,
                 from,

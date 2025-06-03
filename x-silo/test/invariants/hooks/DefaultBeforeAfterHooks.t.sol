@@ -54,21 +54,21 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     //                                           HOOKS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _defaultHooksBefore(address _xSilo) internal {
-        _setXSiloValues(_xSilo, defaultVarsBefore[_xSilo]);
+    function _defaultHooksBefore() internal {
+        _setXSiloValues(defaultVarsBefore[address(xSilo)]);
     }
 
-    function _defaultHooksAfter(address _xSilo) internal {
-        _setXSiloValues(_xSilo, defaultVarsAfter[_xSilo]);
+    function _defaultHooksAfter() internal {
+        _setXSiloValues(defaultVarsAfter[address(xSilo)]);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           SETTERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _setXSiloValues(address _xSilo, DefaultVars storage _defaultVars) internal {
-        _defaultVars.totalSupply = IERC4626(_xSilo).totalSupply();
-        _defaultVars.totalAssets = IERC4626(_xSilo).totalAssets();
+    function _setXSiloValues(DefaultVars storage _defaultVars) internal {
+        _defaultVars.totalSupply = xSilo.totalSupply();
+        _defaultVars.totalAssets = xSilo.totalAssets();
     }
 
 

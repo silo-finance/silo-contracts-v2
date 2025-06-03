@@ -41,8 +41,8 @@ contract VaultHandler is BaseHandler {
             _after();
 
             assertApproxEqAbs(
-                defaultVarsBefore[xSilo].totalAssets + _assets,
-                defaultVarsAfter[xSilo].totalAssets,
+                defaultVarsBefore[address(xSilo)].totalAssets + _assets,
+                defaultVarsAfter[address(xSilo)].totalAssets,
                 1,
                 LENDING_HSPOST_A
             );
@@ -71,8 +71,8 @@ contract VaultHandler is BaseHandler {
             _after();
 
             assertEq(
-                defaultVarsBefore[xSilo].totalSupply + _shares,
-                defaultVarsAfter[xSilo].totalSupply,
+                defaultVarsBefore[address(xSilo)].totalSupply + _shares,
+                defaultVarsAfter[address(xSilo)].totalSupply,
                 LENDING_HSPOST_A
             );
         }
