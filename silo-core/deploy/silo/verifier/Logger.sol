@@ -27,6 +27,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
+import {IDIAOracle, DIAOracle, DIAOracleConfig} from "silo-oracles/contracts/dia/DIAOracle.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -57,6 +58,7 @@ contract Logger is Test {
 
     uint256 internal constant  _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
+    uint256 internal constant _DIA_CONFIG_DATA_LEN = 256;
 
     /// @dev this function must log all details about Silo setup, including current spot prices. This information
     /// must be enough to review the Silo deployment configuration and oracles setup.
@@ -324,11 +326,64 @@ contract Logger is Test {
 
                 primaryAggregator = address(config.primaryAggregator);
                 secondaryAggregator = address(config.secondaryAggregator);
+            } else if (data.length == _DIA_CONFIG_DATA_LEN) {
+                IDIAOracle.DIAConfig memory config = abi.decode(data, (IDIAOracle.DIAConfig));
+
+                string memory primaryKey =
+                    DIAOracle(address(_oracle)).primaryKey(DIAOracleConfig(address(oracleConfig)));
+
+                string memory secondaryKey =
+                    DIAOracle(address(_oracle)).secondaryKey(DIAOracleConfig(address(oracleConfig)));
+
+                if (_logDetails) {
+                    _printDiaOracleDetails({
+                        _primaryKey: primaryKey,
+                        _secondaryKey: secondaryKey,
+                        _diaSourceFeed: address(config.diaOracle),
+                        _heartbeat: config.heartbeat,
+                        _normalizationDivider: config.normalizationDivider,
+                        _normalizationMultiplier: config.normalizationMultiplier,
+                        _convertToQuote: config.convertToQuote,
+                        _invertSecondPrice: config.invertSecondPrice
+                    });
+                }
             } else {
-                console2.log(WARNING_SYMBOL, "can't recognize Chainlink config: invalid return data len");
+                console2.log(WARNING_SYMBOL, "can't recognize Chainlink/DIA config: invalid return data len");
             }
         } catch {
             console2.log(WARNING_SYMBOL, "Oracle does not have a ChainlinkV3OracleConfig, may be expected");
+        }
+    }
+
+    function _printDiaOracleDetails(
+        string memory _primaryKey,
+        string memory _secondaryKey,
+        address _diaSourceFeed,
+        uint32 _heartbeat,
+        uint256 _normalizationDivider,
+        uint256 _normalizationMultiplier,
+        bool _convertToQuote,
+        bool _invertSecondPrice
+    )
+        internal
+        pure
+    {
+        console2.log("\nDIA underlying feed setup:");
+        console2.log("\tPrimary key: ", _primaryKey);
+
+        if (!Strings.equal(_secondaryKey, "")) {
+            console2.log("\tSecondary key: ", _secondaryKey);
+        }
+
+        console2.log("\tHeartbeat: ", _heartbeat);
+        console2.log("\tNormalization multiplier: ", _normalizationMultiplier);
+        console2.log("\tNormalization divider: ", _normalizationDivider);
+        console2.log("\tConvert to quote: ", _convertToQuote);
+        console2.log("\tInvert second price: ", _invertSecondPrice);
+        console2.log("\tDIA source feed address: ", _diaSourceFeed);
+
+        if (Strings.equal(_secondaryKey, "\"\"")) {
+            console2.log(FAIL_SYMBOL, "secondary feed is string with quotes \"\"");
         }
     }
 
