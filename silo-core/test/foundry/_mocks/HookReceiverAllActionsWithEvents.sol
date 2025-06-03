@@ -222,8 +222,6 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
             _processSwitchCollateral(_action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.TRANSITION_COLLATERAL)) {
             _processTransitionCollateral(_silo, _inputAndOutput, _isBefore);
-        } else if (_action.matchAction(Hook.LIQUIDATION)) {
-            revert("Hook.LIQUIDATION should not be called, because liquidator is a hook");
         } else {
             revert UnknownAction();
         }
