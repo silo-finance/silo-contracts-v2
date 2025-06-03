@@ -31,6 +31,7 @@ contract VaultHandler is BaseHandler {
         address receiver = _getRandomActor(i);
 
         _before();
+
         (success, returnData) =
             actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
 

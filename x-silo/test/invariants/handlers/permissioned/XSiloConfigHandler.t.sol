@@ -11,9 +11,9 @@ import "forge-std/console.sol";
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
-/// @title SiloFactoryHandler
+/// @title SiloConfigHandler
 /// @notice Handler test contract for a set of actions
-contract SiloFactoryHandler is BaseHandler {
+contract XSiloConfigHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,21 +22,35 @@ contract SiloFactoryHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setDaoFee(uint128 _minFee, uint128 _maxFee) external {
-        siloFactory.setDaoFee(_minFee, _maxFee);
-    }
+    // TODO add here policy setup
 
-    function setMaxDeployerFee(uint256 _newMaxDeployerFee) internal {
-        siloFactory.setMaxDeployerFee(_newMaxDeployerFee);
-    }
-
-    function setMaxFlashloanFee(uint256 _newMaxFlashloanFee) internal {
-        siloFactory.setMaxFlashloanFee(_newMaxFlashloanFee);
-    }
-
-    function setMaxLiquidationFee(uint256 _newMaxLiquidationFee) internal {
-        siloFactory.setMaxLiquidationFee(_newMaxLiquidationFee);
-    }
+//    function accrueInterestForSilo(uint8 i) external {
+//        address silo = _getRandomSilo(i);
+//
+//        _before();
+//        siloConfig.accrueInterestForSilo(silo);
+//        _after();
+//
+//        // POST-CONDITIONS
+//
+//        if (defaultVarsBefore[silo].debtAssets > 1) {
+//            // We account for fractions delta
+//            assertGe(defaultVarsAfter[silo].debtAssets, defaultVarsBefore[silo].debtAssets - 2, SILO_HSPOST_A);
+//        }
+//
+//        if (defaultVarsBefore[silo].collateralAssets > 1) {
+//            // We account for fractions delta
+//            assertGe(
+//                defaultVarsAfter[silo].collateralAssets, defaultVarsBefore[silo].collateralAssets - 2, SILO_HSPOST_A
+//            );
+//        }
+//    }
+//
+//    function accrueInterestForBothSilos() external {
+//        _before();
+//        siloConfig.accrueInterestForBothSilos();
+//        _after();
+//    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
