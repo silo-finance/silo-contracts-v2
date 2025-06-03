@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 // Interfaces
+import {IERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {ISilo} from "silo-core/contracts/Silo.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -23,35 +23,28 @@ contract VaultHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function deposit(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup {
+    function deposit(uint256 _assets, uint8 i) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = _getRandomSilo(j);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(ISilo.deposit.selector, _assets, receiver, _collateralType));
+            actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
 
         // POST-CONDITIONS
 
         if (success) {
             _after();
 
-            if (_collateralType == ISilo.CollateralType.Collateral) {
-                (uint256 totalCollateralAssets,) = vault1.getCollateralAndDebtTotalsStorage();
-                assertApproxEqAbs(
-                    defaultVarsBefore[target].totalAssets + _assets,
-                    defaultVarsAfter[target].totalAssets,
-                    1,
-                    LENDING_HSPOST_A
-                );
-            }
+            assertApproxEqAbs(
+                defaultVarsBefore[xSilo].totalAssets + _assets,
+                defaultVarsAfter[xSilo].totalAssets,
+                1,
+                LENDING_HSPOST_A
+            );
         }
 
         if (_assets == 0) {
@@ -59,33 +52,28 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function mint(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
+    function mint(uint256 _shares, uint8 i) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = _getRandomSilo(j);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-
         _before();
+
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(ISilo.mint.selector, _shares, receiver, _collateralType));
+            actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.mint.selector, _shares, receiver));
 
         // POST-CONDITIONS
 
         if (success) {
             _after();
 
-            if (_collateralType == ISilo.CollateralType.Collateral) {
-                assertEq(
-                    defaultVarsBefore[target].totalSupply + _shares,
-                    defaultVarsAfter[target].totalSupply,
-                    LENDING_HSPOST_A
-                );
-            }
+            assertEq(
+                defaultVarsBefore[xSilo].totalSupply + _shares,
+                defaultVarsAfter[xSilo].totalSupply,
+                LENDING_HSPOST_A
+            );
         }
 
         if (_shares == 0) {
@@ -93,20 +81,17 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function withdraw(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup {
+    function withdraw(uint256 _assets, uint8 i) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = _getRandomSilo(j);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-
         _before();
+
         (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(ISilo.withdraw.selector, _assets, receiver, address(actor), _collateralType)
+            address(xSilo), abi.encodeWithSelector(IERC4626.withdraw.selector, _assets, receiver, address(actor))
         );
 
         // POST-CONDITIONS
@@ -120,20 +105,17 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function redeem(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
+    function redeem(uint256 _shares, uint8 i) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        address target = _getRandomSilo(j);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-
         _before();
+
         (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(ISilo.redeem.selector, _shares, receiver, address(actor), _collateralType)
+            address(xSilo), abi.encodeWithSelector(IERC4626.redeem.selector, _shares, receiver, address(actor))
         );
 
         if (success) {
@@ -150,21 +132,18 @@ contract VaultHandler is BaseHandler {
     //                                          PROPERTIES                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_LENDING_INVARIANT_B(uint8 i, uint8 j) public setup {
+    function assert_LENDING_INVARIANT_B() public setup {
         bool success;
         bytes memory returnData;
 
-        address target = _getRandomSilo(i);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(j % 2);
-
-        uint256 maxWithdraw = ISilo(target).maxWithdraw(address(actor), _collateralType);
+        uint256 maxWithdraw = xSilo.maxWithdraw(address(actor));
 
         _before();
+
         (success, returnData) = actor.proxy(
-            target,
+            address(xSilo),
             abi.encodeWithSelector(
-                ISilo.withdraw.selector, maxWithdraw, address(actor), address(actor), _collateralType
+                IERC4626.withdraw.selector, maxWithdraw, address(actor), address(actor)
             )
         );
 
