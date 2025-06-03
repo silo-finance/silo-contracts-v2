@@ -3,6 +3,8 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {XSilo} from "x-silo/contracts/XSilo.sol";
+import {IXRedeemPolicy} from "x-silo/contracts/interfaces/IXRedeemPolicy.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -11,44 +13,58 @@ import "forge-std/console.sol";
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
-/// @title SiloConfigHandler
+/// @title SiloHandler
 /// @notice Handler test contract for a set of actions
-contract SiloConfigHandler is BaseHandler {
+contract XSiloHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* 
+    
+    E.g. num of active pools
+    uint256 public activePools;
+        
+    */
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function accrueInterestForSilo(uint8 i) external {
-        address silo = _getRandomSilo(i);
+//    function redeemSilo(uint256 _xSiloAmountToBurn, uint256 _duration) external setup { TODO
+//        bool success;
+//        bytes memory returnData;
+//
+//        _before();
+//
+//        (success, returnData) = actor.proxy(
+//            address(xSilo),
+//            abi.encodeWithSelector(IXRedeemPolicy.redeemSilo.selector, _xSiloAmountToBurn, _duration)
+//        );
+//
+//        if (success) {
+//            _after();
+//        }
+//    }
 
-        _before();
-        siloConfig.accrueInterestForSilo(silo);
-        _after();
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                           PROPERTIES                                      //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
-        // POST-CONDITIONS
-
-        if (defaultVarsBefore[silo].debtAssets > 1) {
-            // We account for fractions delta
-            assertGe(defaultVarsAfter[silo].debtAssets, defaultVarsBefore[silo].debtAssets - 2, SILO_HSPOST_A);
-        }
-
-        if (defaultVarsBefore[silo].collateralAssets > 1) {
-            // We account for fractions delta
-            assertGe(
-                defaultVarsAfter[silo].collateralAssets, defaultVarsBefore[silo].collateralAssets - 2, SILO_HSPOST_A
-            );
-        }
-    }
-
-    function accrueInterestForBothSilos() external {
-        _before();
-        siloConfig.accrueInterestForBothSilos();
-        _after();
-    }
+//    function assert_SILO_HSPOST_D() external {
+//        bool success;
+//
+//        _before();
+//        ISilo(xSilo).withdrawFees();
+//        try ISilo(target).withdrawFees()  {
+//            success = true;
+//        } catch {
+//            success = false;
+//        }
+//        _after();
+//
+//        assertFalse(success, SILO_HSPOST_D);
+//    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
