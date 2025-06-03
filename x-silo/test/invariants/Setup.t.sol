@@ -8,7 +8,8 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
 // Contracts
-import {XSiloAndStreamDeploy} from "x-silo/deploy/XSiloAndStreamDeploy.s.sol";
+import {XSilo} from "x-silo/contracts/XSilo.sol";
+import {Stream} from "x-silo/contracts/modules/Stream.sol";
 
 // Test Contracts
 import {BaseTest} from "./base/BaseTest.t.sol";
@@ -39,14 +40,10 @@ contract Setup is BaseTest {
     }
 
     function _deployXSilos() internal {
-        AddrLib.init();
-
-        AddrLib.setAddress(AddrKey.SILO_TOKEN_V2, address(siloToken));
-        AddrLib.setAddress(AddrKey.DAO, address(this));
-
-        XSiloAndStreamDeploy deployer = new XSiloAndStreamDeploy();
-        deployer.disableDeploymentsSync();
-        (xSilo, stream) = deployer.run();
+        // Calculate contract addresses that will be created
+        xSilo = new XSilo(address(this), siloToken, address(0));
+        stream = new Stream(address(this), address(xSilo));
+        xSilo.setStream(stream);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
