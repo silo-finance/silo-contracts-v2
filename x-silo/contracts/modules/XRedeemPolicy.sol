@@ -64,6 +64,7 @@ abstract contract XRedeemPolicy is IXRedeemPolicy, Ownable2Step, TransientReentr
     {
         require(_xSiloAmountToBurn > 0, ZeroAmount());
         require(_duration >= minRedeemDuration, DurationTooLow());
+        require(_duration <= maxRedeemDuration, DurationTooHi());
 
         // get corresponding SILO amount based on duration
         siloAmountAfterVesting = getAmountByVestingDuration(_xSiloAmountToBurn, _duration);

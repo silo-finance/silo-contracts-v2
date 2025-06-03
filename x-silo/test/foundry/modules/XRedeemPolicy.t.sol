@@ -142,6 +142,28 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_revertsOnInvalidDuration
+    */
+    function test_redeemSilo_revertsOnInvalidDuration() public {
+        policy.updateRedeemSettings({
+            _minRedeemRatio: 1,
+            _minRedeemDuration: 1,
+            _maxRedeemDuration: 2
+        });
+
+        uint256 amount = 1e18;
+        address user = makeAddr("user");
+
+        _convert(user, amount);
+
+        vm.expectRevert(IXRedeemPolicy.DurationTooLow.selector);
+        policy.redeemSilo(1, 0);
+
+        vm.expectRevert(IXRedeemPolicy.DurationTooHi.selector);
+        policy.redeemSilo(1, 3);
+    }
+
+    /*
     FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_redeemSilo_emits_StartRedeem_noRewards_1s
     */
     function test_redeemSilo_emits_StartRedeem_noRewards_1s() public {
