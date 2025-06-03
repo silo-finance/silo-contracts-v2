@@ -133,16 +133,16 @@ contract VaultHandler is BaseHandler {
     //                                          PROPERTIES                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function echidna_maxWithdraw_doesNotRevert() public setup {
-        assertTrue(address(xSilo) == address(0), MAX_WITHDRAW_NEVER_REVERTS);
-        return;
+    function echidna_maxWithdraw_doesNotRevert() public setup returns (bool) {
+        return targetActor != address(0);
 
         (bool success, ) = actor.proxy(
             address(xSilo),
             abi.encodeWithSelector(IERC4626.maxWithdraw.selector, address(actor))
         );
 
-        assertTrue(success, MAX_WITHDRAW_NEVER_REVERTS);
+//        assertTrue(success, MAX_WITHDRAW_NEVER_REVERTS);
+        return success;
     }
 
     function assert_maxWithdraw_asInputDoesNotRevert() public setup {

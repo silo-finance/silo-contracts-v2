@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 // Interfaces
-import {ISilo} from "silo-core/contracts/Silo.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
 import {IERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
@@ -10,7 +9,8 @@ import {IERC4626} from "openzeppelin5/token/ERC20/extensions/ERC4626.sol";
 // Libraries
 import {Vm} from "forge-std/Base.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
-import "forge-std/console.sol";
+import {console2} from "forge-std/console2.sol";
+import {console} from "forge-std/console.sol";
 
 // Utils
 import {Actor} from "../utils/Actor.sol";
@@ -34,6 +34,9 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     modifier setup() virtual {
         actor = actors[msg.sender];
         targetActor = address(actor);
+
+        emit LogAddress("targetActor", targetActor);
+
         _;
         actor = Actor(payable(address(0)));
         targetActor = address(0);
@@ -64,28 +67,28 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _maxRedeem(address silo, address user) internal view returns (uint256) {
-        try ISilo(silo).maxRedeem(user) returns (uint256 maxRedeem) {
-            return maxRedeem;
-        } catch {
-            return 0;
-        }
-    }
-
-    function _maxWithdraw(address silo, address user) internal view returns (uint256) {
-        try ISilo(silo).maxWithdraw(user) returns (uint256 maxWithdraw) {
-            return maxWithdraw;
-        } catch {
-            return 0;
-        }
-    }
+//    function _maxRedeem(address silo, address user) internal view returns (uint256) {
+//        try ISilo(silo).maxRedeem(user) returns (uint256 maxRedeem) {
+//            return maxRedeem;
+//        } catch {
+//            return 0;
+//        }
+//    }
+//
+//    function _maxWithdraw(address silo, address user) internal view returns (uint256) {
+//        try ISilo(silo).maxWithdraw(user) returns (uint256 maxWithdraw) {
+//            return maxWithdraw;
+//        } catch {
+//            return 0;
+//        }
+//    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _getUserAssets(address _xSilo, address _user) internal view returns (uint256) {
-        return IERC4626(_xSilo).previewRedeem(IERC4626(_xSilo).balanceOf(_user));
+    function _getUserAssets(address _user) internal view returns (uint256) {
+        return xSilo.previewRedeem(xSilo.balanceOf(_user));
     }
 
     function _setTargetActor(address user) internal {
