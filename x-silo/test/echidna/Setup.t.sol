@@ -4,9 +4,6 @@ pragma solidity ^0.8.19;
 // Utils
 import {Actor} from "./utils/Actor.sol";
 
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
-import {AddrKey} from "common/addresses/AddrKey.sol";
-
 // Contracts
 import {XSilo} from "x-silo/contracts/XSilo.sol";
 import {Stream} from "x-silo/contracts/modules/Stream.sol";

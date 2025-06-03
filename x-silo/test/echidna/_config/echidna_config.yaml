@@ -51,9 +51,11 @@ cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/propert
 maxValue: 1e+23 # 100000 eth
 
 #quiet produces (much) less verbose output
-quiet: true
+#quiet: true
 
 format: "text"
 
 # concurrent workers
 workers: 10
+
+#testingMode: assertion
