@@ -35,7 +35,7 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _deployAssets() internal {
-        siloToken = address(new TestERC20("Silo Token", "Silo", 18));
+        siloToken = address(new TestERC20("Silo Token", "SILO", 18));
     }
 
     function _deployXSilos() internal {
@@ -65,10 +65,9 @@ contract Setup is BaseTest {
         address[] memory tokens = new address[](1);
         tokens[0] = address(siloToken);
 
-        address[] memory contracts = new address[](3);
-        contracts[0] = address(_vault0);
-        contracts[1] = address(_vault1);
-        contracts[2] = address(liquidationModule);
+        address[] memory contracts = new address[](2);
+        contracts[0] = address(xSilo);
+        contracts[1] = address(stream);
 
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deploy actor proxies and approve system contracts

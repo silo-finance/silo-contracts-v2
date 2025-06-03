@@ -3,9 +3,7 @@ pragma solidity ^0.8.19;
 
 // Import User Actions Handler contracts,
 import {ShareTokenHandler} from './handlers/user/ShareTokenHandler.t.sol';
-import {BorrowingHandler} from './handlers/user/BorrowingHandler.t.sol';
 import {VaultHandler} from './handlers/user/VaultHandler.t.sol';
-import {LiquidationHandler} from './handlers/user/LiquidationHandler.t.sol';
 import {SiloHandler} from './handlers/user/SiloHandler.t.sol';
 
 // Import Permissioned Actions Handler contracts,
@@ -15,9 +13,7 @@ import {SiloFactoryHandler} from './handlers/permissioned/SiloFactoryHandler.t.s
 /// @notice Helper contract to aggregate all handler contracts, inherited in BaseInvariants
 abstract contract HandlerAggregator is
   ShareTokenHandler, // User Actions
-  BorrowingHandler,
   VaultHandler,
-  LiquidationHandler,
   SiloHandler,
   SiloConfigHandler, // Permissioned Actions
   SiloFactoryHandler
