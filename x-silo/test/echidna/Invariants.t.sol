@@ -19,29 +19,30 @@ abstract contract Invariants is BaseInvariants {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function echidna_BASE_INVARIANT() public returns (bool) {
-//        for (uint256 i = 0; i < silos.length; i++) {
-//            assert_BASE_INVARIANT_B(silos[i], debtTokens[i]);
-//            assert_BASE_INVARIANT_C(silos[i]);
-//            assert_BASE_INVARIANT_E(silos[i], siloToken);
-//            assert_BASE_INVARIANT_F(silos[i], siloToken);
-//            assert_BASE_INVARIANT_H();
-//            assert_BASE_INVARIANT_J(silos[i]);
-//            for (uint256 j = 0; j < actorAddresses.length; j++) {
-//                address collateralSilo = siloConfig.borrowerCollateralSilo(actorAddresses[j]);
-//
-//                if (collateralSilo != address(0)) {
-//                    (address protectedShareToken,,) = siloConfig.getShareTokens(collateralSilo);
-//
-//                    assert_BASE_INVARIANT_D(
-//                        silos[i], debtTokens[i], collateralSilo, protectedShareToken, actorAddresses[j]
-//                    );
-//                }
-//            }
-//        }
+        for (uint256 i = 0; i < silos.length; i++) {
+            assert_BASE_INVARIANT_B(silos[i], debtTokens[i]);
+            assert_BASE_INVARIANT_C(silos[i]);
+            assert_BASE_INVARIANT_E(silos[i], siloToken);
+            assert_BASE_INVARIANT_F(silos[i], siloToken);
+            assert_BASE_INVARIANT_H();
+            assert_BASE_INVARIANT_J(silos[i]);
+            for (uint256 j = 0; j < actorAddresses.length; j++) {
+                address collateralSilo = siloConfig.borrowerCollateralSilo(actorAddresses[j]);
+
+                if (collateralSilo != address(0)) {
+                    (address protectedShareToken,,) = siloConfig.getShareTokens(collateralSilo);
+
+                    assert_BASE_INVARIANT_D(
+                        silos[i], debtTokens[i], collateralSilo, protectedShareToken, actorAddresses[j]
+                    );
+                }
+            }
+        }
+
         return true;
     }
 
-    function echidna_SILO_INVARIANT() public returns (bool) {
+    function echidna_maxWithdrawDoesNotRevert() public returns (bool) {
 //        for (uint256 i = 0; i < silos.length; i++) {
 //            assert_SILO_INVARIANT_A(silos[i]);
 //        }
