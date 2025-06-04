@@ -56,11 +56,9 @@ abstract contract PostconditionsSpec {
     //                                          LENDING                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice related to silo property HLP_integrity_deposit_collateral_no_interest
     string constant DEPOSIT_TOTAL_ASSETS = "DEPOSIT_TOTAL_ASSETS: after deposit, xSilo.totalAssets increases by amount deposited";
 
-    /// @notice related to silo property HLP_integrity_deposit_collateral_no_interest
-    string constant LENDING_HSPOST_B = "LENDING_HSPOST_B: after mint, silo.totalSupply increases by amount minted";
+    string constant MINT_TOTAL_SHARES = "MINT_TOTAL_SHARES: after mint, xSilo.totalSupply increases by amount minted";
 
     /// @notice related to silo property RA_Silo_withdraw_all_shares
     string constant LENDING_HSPOST_C = "LENDING_HSPOST_C: A user can withdraw all with max shares amount and not be able to withdraw more."; // TODO

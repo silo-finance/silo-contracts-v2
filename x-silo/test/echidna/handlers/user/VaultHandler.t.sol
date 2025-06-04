@@ -34,8 +34,9 @@ contract VaultHandler is BaseHandler {
 
         _beforeCall();
 
-        (success, returnData) =
-            actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
+        (
+            success, returnData
+        ) = actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
 
         // POST-CONDITIONS
 
@@ -55,34 +56,36 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-//    function mint(uint256 _shares, uint8 i) external setup {
-//        bool success;
-//        bytes memory returnData;
-//
-//        // Get one of the three actors randomly
-//        address receiver = _getRandomActor(i);
-//
-//        _before();
-//
-//        (success, returnData) =
-//            actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.mint.selector, _shares, receiver));
-//
-//        // POST-CONDITIONS
-//
-//        if (success) {
-//            _after();
-//
-//            assertEq(
-//                defaultVarsBefore[address(xSilo)].totalSupply + _shares,
-//                defaultVarsAfter[address(xSilo)].totalSupply,
-//                LENDING_HSPOST_A
-//            );
-//        }
-//
-//        if (_shares == 0) {
-//            assertFalse(success, SILO_HSPOST_B);
-//        }
-//    }
+    function mint(uint256 _shares, uint8 i) external setup {
+        bool success;
+        bytes memory returnData;
+
+        _shares = _boundSharesForActor(_shares);
+
+        // Get one of the three actors randomly
+        address receiver = _getRandomActor(i);
+
+        _beforeCall();
+
+        (success, returnData) =
+            actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.mint.selector, _shares, receiver));
+
+        // POST-CONDITIONS
+
+        if (success) {
+            _afterSuccessCall();
+
+            assertEq(
+                defaultVarsBefore[address(xSilo)].totalSupply + _shares,
+                defaultVarsAfter[address(xSilo)].totalSupply,
+                MINT_TOTAL_SHARES
+            );
+        }
+
+        if (_shares == 0) {
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
+        }
+    }
 //
 //    function withdraw(uint256 _assets, uint8 i) external setup {
 //        bool success;
@@ -91,7 +94,7 @@ contract VaultHandler is BaseHandler {
 //        // Get one of the three actors randomly
 //        address receiver = _getRandomActor(i);
 //
-//        _before();
+//        _beforeCall();
 //
 //        (success, returnData) = actor.proxy(
 //            address(xSilo), abi.encodeWithSelector(IERC4626.withdraw.selector, _assets, receiver, address(actor))
@@ -100,7 +103,7 @@ contract VaultHandler is BaseHandler {
 //        // POST-CONDITIONS
 //
 //        if (success) {
-//            _after();
+//            _afterSuccessCall();
 //        }
 //
 //        if (_assets == 0) {
@@ -115,14 +118,14 @@ contract VaultHandler is BaseHandler {
 //        // Get one of the three actors randomly
 //        address receiver = _getRandomActor(i);
 //
-//        _before();
+//        _beforeCall();
 //
 //        (success, returnData) = actor.proxy(
 //            address(xSilo), abi.encodeWithSelector(IERC4626.redeem.selector, _shares, receiver, address(actor))
 //        );
 //
 //        if (success) {
-//            _after();
+//            _afterSuccessCall();
 //        }
 //
 //        // POST-CONDITIONS
@@ -147,7 +150,7 @@ contract VaultHandler is BaseHandler {
 //
 //        uint256 maxWithdraw = xSilo.maxWithdraw(address(actor));
 //
-//        _before();
+//        _beforeCall();
 //
 //        (success, returnData) = actor.proxy(
 //            address(xSilo),
@@ -159,7 +162,7 @@ contract VaultHandler is BaseHandler {
 //        assertTrue(false); // check if assertion is executed
 //
 //        if (success) {
-//            _after();
+//            _afterSuccessCall();
 //        }
 //
 //        // POST-CONDITIONS
