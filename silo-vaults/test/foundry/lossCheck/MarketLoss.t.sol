@@ -286,7 +286,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
         printUser(_user);
         vm.startPrank(_user);
-        // we can use all shares instead od maxRedeem because maxRedeem can underestimate
+        // we can use all shares instead of maxRedeem because maxRedeem can underestimate
         uint256 balance = vault.balanceOf(_user);
         emit log_named_uint("_vaultWithdrawAll", balance);
         if (balance == 0) return 0;
