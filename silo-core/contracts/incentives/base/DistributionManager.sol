@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
@@ -22,6 +23,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
 
     EnumerableSet.Bytes32Set internal _incentivesProgramIds;
 
+    mapping(bytes32 => bool) internal _isImmediateDistributionProgram;
     mapping(bytes32 => IncentivesProgram) public incentivesPrograms;
 
     /// @dev notifier is contract with IERC20 interface with users balances, based based on which
@@ -134,7 +136,11 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
      * @param _programId The id of the incentives program
      * @return The name of the incentives program
      */
-    function getProgramName(bytes32 _programId) public pure virtual returns (string memory) {
+    function getProgramName(bytes32 _programId) public view virtual returns (string memory) {
+        if (_isImmediateDistributionProgram[_programId]) {
+            return Strings.toHexString(uint256(_programId), 20);
+        }
+
         return string(TokenHelper.removeZeros(abi.encodePacked(_programId)));
     }
 

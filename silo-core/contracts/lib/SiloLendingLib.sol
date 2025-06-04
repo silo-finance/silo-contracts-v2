@@ -236,6 +236,21 @@ library SiloLendingLib {
             _debtShareBalanceCached: 0 /* no cache */
         });
 
+        // Workaround for fractions. We assume the worst case scenario that we will have integral revenue
+        // that will be subtracted from collateral and integral interest that will be added to debt.
+        {
+            // We need to decrease borrowerCollateralAssets
+            // since we cannot access totalCollateralAssets before calculations.
+            if (ltvData.borrowerCollateralAssets != 0) ltvData.borrowerCollateralAssets--;
+
+            // We need to increase borrowerDebtAssets since we cannot access totalDebtAssets before calculations.
+            // If borrowerDebtAssets is 0 then we have no interest
+            if (ltvData.borrowerDebtAssets != 0) ltvData.borrowerDebtAssets++;
+
+            // It _totalDebtAssets is 0 then we have no interest
+            if (_totalDebtAssets != 0) _totalDebtAssets++;
+        }
+
         (
             uint256 sumOfBorrowerCollateralValue, uint256 borrowerDebtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, _collateralConfig.token, _debtConfig.token);
@@ -257,6 +272,11 @@ library SiloLendingLib {
         if (assets == 0 || shares == 0) return (0, 0);
 
         uint256 liquidityWithInterest = getLiquidity(_siloConfig);
+
+        if (liquidityWithInterest != 0) {
+            // We need to count for fractions, when fractions are applied liquidity may be decreased
+            unchecked { liquidityWithInterest -= 1; }
+        }
 
         if (assets > liquidityWithInterest) {
             assets = liquidityWithInterest;
@@ -365,6 +385,36 @@ library SiloLendingLib {
         shares = SiloMathLib.convertToShares(
             assets, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_SHARES, ISilo.AssetType.Debt
         );
+
+        {
+            /*
+            This is a workaround for handling fractions:
+
+            - Fractions are not applied in view methods, so we need to account for them manually.
+            - `_totalDebtAssets` is incremented earlier to compensate for these fractions.
+
+            Due to this, increasing `_totalDebtAssets` raises the debt share price. As a result, converting
+            assets to shares yields fewer shares, and this same reduced ratio is applied
+            to the next conversion (shown below). Ultimately, this means we receive fewer shares for the same amount
+            of assets.
+
+            When we call `borrow(assets)` and there are no fractions to apply, `_totalDebtAssets` is not incremented.
+            A lower `_totalDebtAssets` means a lower share price, so the same amount of assets
+            (as calculated by `maxBorrow()`) will result in more shares. At the final step, when checking maxLtv,
+            having more shares translates to more assets—exceeding the allowed maximum LTV.
+
+            Solution:
+            Having fewer shares is acceptable because it underestimates the value due to missing fractions.
+            When recalculating assets (due to the issue described above), we want a lower share price
+            (which occurs when there are no fractions), as this leads to fewer assets and keeps us within the LTV limit.
+
+            Therefore, we decrement `_totalDebtAssets` with `_totalDebtAssets--`
+            to offset the earlier `_totalDebtAssets++`.
+            */
+            if (_totalDebtAssets != 0) {
+                unchecked { _totalDebtAssets--; }
+            }
+        }
 
         // we need to recalculate assets, because what we did above is assets => shares with rounding down, but when
         // we input assets, they will generate more shares, so we need to calculate assets based on final shares

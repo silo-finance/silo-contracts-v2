@@ -1,7 +1,7 @@
 {
     "arbitrum_one": [
         {
-            "implementation": "0x457D104a79995fB76CE582D06B02E7cB89aA2860",
+            "implementation": "0x9b550BF0351986342959d4447c5851e570766238",
             "description": "original implementation"
         }
     ],
@@ -13,11 +13,21 @@
         {
             "implementation": "0xCfBEbcf6Bc36F631cBb1011633fFC014dB3dB22d",
             "description": "Changed share token decimals to 18"
+        },
+        {
+            "implementation": "0x435Ab368F5fCCcc71554f4A8ac5F5b922bC4Dc06",
+            "description": "after code4arena contest and max borrow fix"
         }
     ],
     "optimism": [
         {
-            "implementation": "0xd483138B7e40bCBCa16654FE9AD4bC0E565736Da",
+            "implementation": "0x7ef3055d2B76214Df9Ae74D42944e2917D08Bd78",
+            "description": "original implementation"
+        }
+    ],
+    "ink": [
+        {
+            "implementation": "0xd3De080436b9d38DC315944c16d89C050C414Fed",
             "description": "original implementation"
         }
     ]

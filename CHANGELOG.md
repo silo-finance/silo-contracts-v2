@@ -5,6 +5,57 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- x-silo: use rounding direction in favor of protocol for cancel redeem 
+- x-silo: ensure we set `distrubutionEnd` when reset emission
+- x-silo: add restriction when redeem duration is too hi
+- x-silo: ensure cancel redeem does not give more tokens that user should receive
+- x-silo: at xSilo restart, ensure leftovers are distributed and not create min deposit restriction 
+
+### [3.6.0] - 2025-05-19
+#Added 
+- certora specs for the Silo Vaults
+- silo-core: incentive program name conversion
+- silo-core: liquidation helper deployment ink
+- silo-oracles: revert on zero price in DIA
+- silo-oracles: pyth deployment
+- SiloIncentivesController and SiloVaultDeployer deployment
+- new markets:
+  - silo-core: WETH USDC market on Arbitrum
+  - silo-core: sUSDX USDC new market Arbitrum
+  - silo-core: ARB USDC new market on Arbitrum
+  - silo-core: WETH USDT market on Ink
+
+### [3.5.0] - 2025-05-15
+- silo-core: fix `maxBorrow`, see explanation in code, method `maxBorrowValueToAssetsAndShares()`
+- silo-core: Silo implementation redeploy
+- silo-core: SiloLens isTokenAddress fn check code size
+- silo-core: wstkscUSD USDC.e new market
+- silo-core: wOS wS borrowable new market
+- silo-core: EURC.e USDC.e new market
+
+### [3.4.0] - 2025-05-09
+- silo-core: prioritize DAO fee to ensure it is not zero-out by precision error
+- silo-core: count for fractions when calculate maxBorrow
+- silo-core: underestimate `maxWithdraw` to count for interest fractions
+- silo-core: fix maxRedeem for dust
+- silo-core: proper name conversion in the getProgramName fn
+- silo-core: silo lens getter for programs names
+- silo-core: Incentives controller for ws in beS / wS Silo
+- silo-vaults: helper contract to deploy claiming logics
+- x-silo: Silo Token V2
+- sonic deployment: silo-core, silo-oracles
+- arbitrum deployment: silo-core, silo-oracles, silo-vaults
+- optimism deployment: silo-core, silo-oracles, silo-vaults
+- ink deployment: silo-core, silo-oracles, silo-vaults
+
+## [3.3.0] - 2025-05-01
+- silo-vaults: SiloIncentivesControllerCLDeployer helper contract to deploy claiming logics
+- silo-core: moved hooks into silo-core/contracts/hooks
+
+## [3.2.0] - 2025-04-30
+- Revert "silo-vaults: deployment sonic 1 min timelock"
+- silo-core: silo lens getter for programs names
 
 ## [3.1.0-rc.3] - 2025-04-23
 - silo-vaults: deployment sonic 1 min timelock

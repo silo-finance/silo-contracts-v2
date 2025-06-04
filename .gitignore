@@ -2,6 +2,7 @@ node_modules
 .idea
 .editorconfig
 .vscode
+.cursor
 .env
 cache
 **/foundry/out/
@@ -35,6 +36,7 @@ common/addresses/anvil.json
 coverage
 !coverage/silo-core.txt
 !coverage/silo-oracles.txt
+!coverage/x-silo.txt
 
 # echidna
 corpus/
@@ -51,4 +53,8 @@ silo-core/deploy/input/_importFromCsv/
 **/broadcast/
 **/broadcast/*
 !silo-core/broadcast/SiloDeployerDeploy.s.sol/**/run-latest.json
+
+# certora
+.certora_internal
+certora/harness/vaults/contracts
 emv-**/*

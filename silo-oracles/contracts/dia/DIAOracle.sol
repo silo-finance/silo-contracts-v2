@@ -61,9 +61,12 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
         if (!priceUpToDate) revert OldPrice();
 
         if (!data.convertToQuote) {
-            return OracleNormalization.normalizePrice(
+            quoteAmount = OracleNormalization.normalizePrice(
                 _baseAmount, assetPrice, data.normalizationDivider, data.normalizationMultiplier
             );
+
+            if (quoteAmount == 0) revert ZeroQuote();
+            return quoteAmount;
         }
 
         (
@@ -72,7 +75,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
 
         if (!secondaryPriceValid) revert OldSecondaryPrice();
 
-        return OracleNormalization.normalizePrices(
+        quoteAmount = OracleNormalization.normalizePrices(
             _baseAmount,
             assetPrice,
             secondaryPrice,
@@ -80,6 +83,8 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
             data.normalizationMultiplier,
             data.invertSecondPrice
         );
+
+        if (quoteAmount == 0) revert ZeroQuote();
     }
 
     /// @inheritdoc ISiloOracle

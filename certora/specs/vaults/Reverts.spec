@@ -11,7 +11,10 @@ methods {
     function lock() external returns (bool) envfree;
 }
 
-// Check that vault can't have reentrancy lock on after interaction
+/*
+ * @title Check that vault can't have reentrancy lock on after interaction
+ * @status Verified
+ */
 rule reentrancyLockFalseAfterInteraction (method f, env e, calldataarg args)
     filtered {
         f -> (f.contract == currentContract)
@@ -22,7 +25,10 @@ rule reentrancyLockFalseAfterInteraction (method f, env e, calldataarg args)
     assert !lock();
 }
 
-// Check all the revert conditions of the setCurator function.
+/*
+ * @title Check all the revert conditions of the setCurator function.
+ * @status Verified
+ */
 rule setCuratorRevertCondition(env e, address newCurator) {
     address owner = owner();
     address oldCurator = curator();
@@ -35,7 +41,10 @@ rule setCuratorRevertCondition(env e, address newCurator) {
         newCurator == oldCurator;
 }
 
-// Check all the revert conditions of the setIsAllocator function.
+/*
+ * @title Check all the revert conditions of the setIsAllocator function.
+ * @status Verified
+ */
 rule setIsAllocatorRevertCondition(env e, address newAllocator, bool newIsAllocator) {
     address owner = owner();
     bool wasAllocator = isAllocator(newAllocator);
@@ -48,21 +57,11 @@ rule setIsAllocatorRevertCondition(env e, address newAllocator, bool newIsAlloca
         newIsAllocator == wasAllocator;
 }
 
-// Check all the revert conditions of the setSkimRecipient function.
-rule setSkimRecipientRevertCondition(env e, address newSkimRecipient) {
-    address owner = owner();
-    address oldSkimRecipient = skimRecipient();
-
-    setSkimRecipient@withrevert(e, newSkimRecipient);
-
-    assert lastReverted <=>
-        e.msg.value != 0 ||
-        e.msg.sender != owner ||
-        newSkimRecipient == oldSkimRecipient;
-}
-
-// Check the input validation conditions under which the setFee function reverts.
-// This function can also revert if interest accrual reverts.
+/*
+ * @title Check the input validation conditions under which the setFee function reverts.
+ * @notice This function can also revert if interest accrual reverts.
+ * @status Verified
+ */
 rule setFeeInputValidation(env e, uint256 newFee) {
     address owner = owner();
     uint96 oldFee = fee();
@@ -77,8 +76,11 @@ rule setFeeInputValidation(env e, uint256 newFee) {
         => lastReverted;
 }
 
-// Check the input validation conditions under which the setFeeRecipient function reverts.
-// This function can also revert if interest accrual reverts.
+/*
+ * @title Check the input validation conditions under which the setFeeRecipient function reverts.
+ * @notice This function can also revert if interest accrual reverts.
+ * @status Verified
+ */
 rule setFeeRecipientInputValidation(env e, address newFeeRecipient) {
     address owner = owner();
     uint96 fee = fee();
@@ -93,7 +95,10 @@ rule setFeeRecipientInputValidation(env e, address newFeeRecipient) {
         => lastReverted;
 }
 
-// Check all the revert conditions of the submitGuardian function.
+/*
+ * @title Check all the revert conditions of the submitGuardian function.
+ * @status Verified
+ */
 rule submitGuardianRevertCondition(env e, address newGuardian) {
     address owner = owner();
     address oldGuardian = guardian();
@@ -112,41 +117,47 @@ rule submitGuardianRevertCondition(env e, address newGuardian) {
         pendingGuardianValidAt != 0;
 }
 
-// Check all the revert conditions of the submitCap function.
-rule submitCapRevertCondition(env e, address id, uint256 newSupplyCap) {
+/*
+ * @title Check all the revert conditions of the submitCap function.
+ * @status Verified
+ */
+rule submitCapRevertCondition(env e, address market, uint256 newSupplyCap) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
     address asset = asset();
-    uint256 pendingCapValidAt = pendingCap_(id).validAt;
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    uint256 pendingCapValidAt = pendingCap_(market).validAt;
+    SiloVaultHarness.MarketConfig config = config_(market);
 
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
     require e.block.timestamp < 2^63;
-    requireInvariant supplyCapIsEnabled(id);
+    requireInvariant supplyCapIsEnabled(market);
 
-    submitCap@withrevert(e, id, newSupplyCap);
+    submitCap@withrevert(e, market, newSupplyCap);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
         !hasCuratorRole ||
-        getVaultAsset(id) != asset ||
+        getVaultAsset(market) != asset ||
         pendingCapValidAt != 0 ||
         config.removableAt != 0 ||
         newSupplyCap == assert_uint256(config.cap) ||
         newSupplyCap >= 2^184;
 }
 
-// Check all the revert conditions of the submitMarketRemoval function.
-rule submitMarketRemovalRevertCondition(env e, address id) {
+/*
+ * @title Check all the revert conditions of the submitMarketRemoval function.
+ * @status Verified
+ */
+rule submitMarketRemovalRevertCondition(env e, address market) {
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
-    uint256 pendingCapValidAt = pendingCap_(id).validAt;
-    MetaMorphoHarness.MarketConfig config = config_(id);
+    uint256 pendingCapValidAt = pendingCap_(market).validAt;
+    SiloVaultHarness.MarketConfig config = config_(market);
 
     requireInvariant timelockInRange();
     // Safe require as it corresponds to some time very far into the future.
     require e.block.timestamp < 2^63;
 
-    submitMarketRemoval@withrevert(e, id);
+    submitMarketRemoval@withrevert(e, market);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
@@ -157,8 +168,11 @@ rule submitMarketRemovalRevertCondition(env e, address id) {
         config.removableAt != 0;
 }
 
-// Check the input validation conditions under which the setSupplyQueue function reverts.
-// There are no other condition under which this function reverts, but it cannot be expressed easily because of the encoding of the universal quantifier chosen.
+/*
+ * @title Check the input validation conditions under which the setSupplyQueue function reverts.
+ * @notice There are no other condition under which this function reverts, but it cannot be expressed easily because of the encoding of the universal quantifier chosen.
+ * @status Verified
+ */
 rule setSupplyQueueInputValidation(env e, address[] newSupplyQueue) {
     bool hasAllocatorRole = hasAllocatorRole(e.msg.sender);
     uint256 maxQueueLength = maxQueueLength();
@@ -175,11 +189,14 @@ rule setSupplyQueueInputValidation(env e, address[] newSupplyQueue) {
         => lastReverted;
 }
 
-// Check the input validation conditions under which the updateWithdrawQueue function reverts.
-// This function can also revert if a market is removed when it shouldn't:
-//   - a removed market should have 0 supply cap
-//   - a removed market should not have a pending cap
-//   - a removed market should either have no supply or (be marked for forced removal and that timestamp has elapsed)
+/*
+ * @title Check the input validation conditions under which the updateWithdrawQueue function reverts.
+ * @notice This function can also revert if a market is removed when it shouldn't:
+ * @notice  - a removed market should have 0 supply cap
+ * @notice  - a removed market should not have a pending cap
+ * @notice  - a removed market should either have no supply or (be marked for forced removal and that timestamp has elapsed)
+ * @status Verified
+ */
 rule updateWithdrawQueueInputValidation(env e, uint256[] indexes) {
     bool hasAllocatorRole = hasAllocatorRole(e.msg.sender);
     uint256 i;
@@ -199,9 +216,12 @@ rule updateWithdrawQueueInputValidation(env e, uint256[] indexes) {
         => lastReverted;
 }
 
-// Check the input validation conditions under which the reallocate function reverts.
-// This function can also revert for non enabled markets and if the total withdrawn differs from the total supplied.
-rule reallocateInputValidation(env e, MetaMorphoHarness.MarketAllocation[] allocations) {
+/*
+ * @title Check the input validation conditions under which the reallocate function reverts.
+ * @notice This function can also revert for non enabled markets and if the total withdrawn differs from the total supplied.
+ * @status Verified
+ */
+rule reallocateInputValidation(env e, SiloVaultHarness.MarketAllocation[] allocations) {
     bool hasAllocatorRole = hasAllocatorRole(e.msg.sender);
 
     reallocate@withrevert(e, allocations);
@@ -211,7 +231,10 @@ rule reallocateInputValidation(env e, MetaMorphoHarness.MarketAllocation[] alloc
         => lastReverted;
 }
 
-// Check all the revert conditions of the revokePendingTimelock function.
+/*
+ * @title Check all the revert conditions of the revokePendingTimelock function.
+ * @status Verified
+ */
 rule revokePendingTimelockRevertCondition(env e) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
 
@@ -222,7 +245,10 @@ rule revokePendingTimelockRevertCondition(env e) {
         !hasGuardianRole;
 }
 
-// Check all the revert conditions of the revokePendingGuardian function.
+/*
+ * @title Check all the revert conditions of the revokePendingGuardian function.
+ * @status Verified
+ */
 rule revokePendingGuardianRevertCondition(env e) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
 
@@ -233,31 +259,40 @@ rule revokePendingGuardianRevertCondition(env e) {
         !hasGuardianRole;
 }
 
-// Check all the revert conditions of the revokePendingCap function.
-rule revokePendingCapRevertCondition(env e, address id) {
+/*
+ * @title Check all the revert conditions of the revokePendingCap function.
+ * @status Verified
+ */
+rule revokePendingCapRevertCondition(env e, address market) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
 
-    revokePendingCap@withrevert(e, id);
+    revokePendingCap@withrevert(e, market);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
         !(hasGuardianRole || hasCuratorRole);
 }
 
-// Check all the revert conditions of the revokePendingMarketRemoval function.
-rule revokePendingMarketRemovalRevertCondition(env e, address id) {
+/*
+ * @title Check all the revert conditions of the revokePendingMarketRemoval function.
+ * @status Verified
+ */
+rule revokePendingMarketRemovalRevertCondition(env e, address market) {
     bool hasGuardianRole = hasGuardianRole(e.msg.sender);
     bool hasCuratorRole = hasCuratorRole(e.msg.sender);
 
-    revokePendingMarketRemoval@withrevert(e, id);
+    revokePendingMarketRemoval@withrevert(e, market);
 
     assert lastReverted <=>
         e.msg.value != 0 ||
         !(hasGuardianRole || hasCuratorRole);
 }
 
-// Check all the revert conditions of the acceptTimelock function.
+/*
+ * @title Check all the revert conditions of the acceptTimelock function.
+ * @status Verified
+ */
 rule acceptTimelockRevertCondition(env e) {
     uint256 pendingTimelockValidAt = pendingTimelock_().validAt;
 
@@ -269,7 +304,10 @@ rule acceptTimelockRevertCondition(env e) {
         pendingTimelockValidAt > e.block.timestamp;
 }
 
-// Check all the revert conditions of the acceptGuardian function.
+/*
+ * @title Check all the revert conditions of the acceptGuardian function.
+ * @status Verified
+ */
 rule acceptGuardianRevertCondition(env e) {
     uint256 pendingGuardianValidAt = pendingGuardian_().validAt;
 
@@ -281,12 +319,15 @@ rule acceptGuardianRevertCondition(env e) {
         pendingGuardianValidAt > e.block.timestamp;
 }
 
-// Check the input validation conditions under which the acceptCap function reverts.
-// This function can also revert if interest accrual reverts or if it would lead to growing the withdraw queue past the max length.
-rule acceptCapInputValidation(env e, address id) {
-    uint256 pendingCapValidAt = pendingCap_(id).validAt;
+/*
+ * @title Check the input validation conditions under which the acceptCap function reverts.
+ * @notice This function can also revert if interest accrual reverts or if it would lead to growing the withdraw queue past the max length.
+ * @status Verified
+ */
+rule acceptCapInputValidation(env e, address market) {
+    uint256 pendingCapValidAt = pendingCap_(market).validAt;
 
-    acceptCap@withrevert(e, id);
+    acceptCap@withrevert(e, market);
 
     assert e.msg.value != 0 ||
            pendingCapValidAt == 0 ||
@@ -294,15 +335,3 @@ rule acceptCapInputValidation(env e, address id) {
         => lastReverted;
 }
 
-// Check all the revert conditions of the skim function.
-rule skimRevertCondition(env e, address token) {
-    address skimRecipient = skimRecipient();
-
-    require skimRecipient != currentContract => ERC20.balanceOf(token, skimRecipient) + ERC20.balanceOf(token, currentContract) <= to_mathint(ERC20.totalSupply(token));
-
-    skim@withrevert(e, token);
-
-    assert lastReverted <=>
-        e.msg.value != 0 ||
-        skimRecipient == 0;
-}

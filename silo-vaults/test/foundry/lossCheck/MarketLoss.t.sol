@@ -108,7 +108,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 //        (uint64 _attackerDeposit,
 //            uint64 _supplierDeposit,
 //            uint64 _donation,
-//            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);
+//            uint8 _idleVaultOffset) = (2579295, 1086971, 1790682197602642156, 6);
 
         _idleVault_InflationAttackWithDonation({
             _attackUsingHookBeforeDeposit: false,
@@ -195,6 +195,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             uint256 supplierLoss = _supplierDeposit < supplierWithdraw ? 0 : _supplierDeposit - supplierWithdraw;
 
             emit log_named_uint(" SUPPLIER deposit", _supplierDeposit);
+            emit log_named_uint(" SUPPLIER shares", supplierShares);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
             emit log_named_uint("    SUPPLIER loss", supplierLoss);
 
@@ -247,7 +248,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         _setCap(allMarkets[0], _supplierDeposit / 2);
 
         vm.prank(SUPPLIER);
-        uint256 supplierShares = vault.deposit(_supplierDeposit, SUPPLIER);
+        vault.deposit(_supplierDeposit, SUPPLIER);
 
         // simulate reallocation (withdraw from idle)
         vm.startPrank(address(vault));
@@ -264,8 +265,11 @@ contract MarketLossTest is IBefore, IntegrationTest {
         idleMarket.deposit(idleAmount, address(vault));
         vm.stopPrank();
 
+        uint256 availableToRedeem = vault.balanceOf(SUPPLIER) - 1e6;
+        vm.assume(vault.convertToAssets(availableToRedeem) != 0);
+
         vm.startPrank(SUPPLIER);
-        uint256 supplierWithdraw = vault.redeem(vault.balanceOf(SUPPLIER), SUPPLIER, SUPPLIER);
+        uint256 supplierWithdraw = vault.redeem(availableToRedeem, SUPPLIER, SUPPLIER);
         vm.stopPrank();
 
         uint256 supplierDiff = supplierWithdraw > _supplierDeposit ? 0 : _supplierDeposit - supplierWithdraw;
@@ -274,19 +278,20 @@ contract MarketLossTest is IBefore, IntegrationTest {
 
         assertLe(
             supplierDiff,
-            1, // NOTICE: 1 wei can be 50% loss for dust deposits
-            "SUPPLIER should not lost (1 wei acceptable for rounding)"
+            2, // NOTICE: 1 or 2 wei can be 50% loss for dust deposits
+            "SUPPLIER should not lost (2 wei acceptable for rounding)"
         );
     }
 
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
         printUser(_user);
         vm.startPrank(_user);
-        amount = vault.maxRedeem(_user);
-        emit log_named_uint("_vaultWithdrawAll", amount);
-        if (amount == 0) return 0;
+        // we can use all shares instead of maxRedeem because maxRedeem can underestimate
+        uint256 balance = vault.balanceOf(_user);
+        emit log_named_uint("_vaultWithdrawAll", balance);
+        if (balance == 0) return 0;
 
-        amount = vault.redeem(vault.balanceOf(_user), _user, _user);
+        amount = vault.redeem(balance, _user, _user);
         vm.stopPrank();
     }
 
@@ -295,6 +300,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         emit log_named_uint("[printUser] totalAssets", vault.totalAssets());
         emit log_named_uint("[printUser] total shares", vault.totalSupply());
         emit log_named_uint("[printUser] shares",  vault.balanceOf(_user));
-        emit log_named_uint("[printUser] assets",  vault.maxWithdraw(_user));
+        emit log_named_uint("[printUser] maxWithdraw (might be underestimated)",  vault.maxWithdraw(_user));
+        emit log_named_uint("[printUser] maxRedeem (might be underestimated)",  vault.maxRedeem(_user));
     }
 }

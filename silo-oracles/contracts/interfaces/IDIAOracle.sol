@@ -57,4 +57,5 @@ interface IDIAOracle {
     error HugeDivider();
     error HugeMultiplier();
     error MultiplierAndDividerZero();
+    error ZeroQuote();
 }
