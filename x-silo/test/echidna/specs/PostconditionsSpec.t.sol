@@ -31,7 +31,7 @@ abstract contract PostconditionsSpec {
 
     string constant MINT_BURN_ZERO_SHARES_IMPOSSIBLE = "MINT_BURN_ZERO_SHARES_IMPOSSIBLE: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in xSilo";
     string constant DEPOSIT_TOTAL_ASSETS = "DEPOSIT_TOTAL_ASSETS: after deposit, xSilo.totalAssets increases by amount deposited";
-    string constant DEPOSIT_AFTER_RESET = "DEPOSIT_AFTER_RESET: if vault has no shares, total assets will return 0 even if contract has balance, on first deposit it will be propagated";
+    string constant TOTAL_ASSETS_AFTER_RESET = "TOTAL_ASSETS_AFTER_RESET: if vault has no shares, total assets will return 0 even if contract has balance, on first deposit it will be propagated";
     string constant DEPOSIT_TOO_MUCH = "DEPOSIT_TOO_MUCH: user can not deposit more SILO tokens than it has";
     string constant WITHDRAW_TOTAL_ASSETS = "WITHDRAW_TOTAL_ASSETS: after withdraw, xSilo.totalAssets decreases by withdrawn amount";
     string constant MAX_WITHDRAW_AMOUNT_NOT_REVERT = "MAX_WITHDRAW_AMOUNT_NOT_REVERT: withdrawing amount that is less or equal maxWithdraw should be always possible";

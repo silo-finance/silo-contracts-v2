@@ -51,7 +51,7 @@ contract VaultHandler is BaseHandler {
                     DEPOSIT_TOTAL_ASSETS
                 );
             } else {
-                assertEq(defaultVarsBefore[address(xSilo)].totalAssets, 0, DEPOSIT_AFTER_RESET);
+                assertEq(defaultVarsBefore[address(xSilo)].totalAssets, 0, TOTAL_ASSETS_AFTER_RESET);
 
                 assertApproxEqAbs(
                     defaultVarsBefore[address(xSilo)].balance + _assets,
@@ -155,12 +155,16 @@ contract VaultHandler is BaseHandler {
             _afterSuccessCall();
 
             // on withdraw we get max penalty
-            assertApproxEqAbs(
-                defaultVarsBefore[address(xSilo)].totalAssets - assets,
-                defaultVarsAfter[address(xSilo)].totalAssets,
-                1,
-                WITHDRAW_TOTAL_ASSETS
-            );
+            if (defaultVarsAfter[address(xSilo)].totalSupply != 0) {
+                assertApproxEqAbs(
+                    defaultVarsBefore[address(xSilo)].totalAssets - assets,
+                    defaultVarsAfter[address(xSilo)].totalAssets,
+                    1,
+                    WITHDRAW_TOTAL_ASSETS
+                );
+            } else {
+                assertEq(defaultVarsAfter[address(xSilo)].totalAssets, 0, TOTAL_ASSETS_AFTER_RESET);
+            }
         } else {
             if (assets != 0) assertTrue(success, MAX_WITHDRAW_AMOUNT_NOT_REVERT);
         }
