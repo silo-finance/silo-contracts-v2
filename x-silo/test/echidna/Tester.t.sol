@@ -7,6 +7,7 @@ import {Setup} from "./Setup.t.sol";
 /// @title Tester
 /// @notice Entry point for invariant testing, inherits all contracts, invariants & handler
 /// @dev Mono contract that contains all the testing logic
+/// tutorial https://secure-contracts.com/program-analysis/echidna/index.html
 contract Tester is Invariants, Setup {
     constructor() payable {
         // Deploy protocol contracts and protocol actors

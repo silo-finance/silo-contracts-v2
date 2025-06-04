@@ -27,12 +27,12 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        _assets = _boundSiloAmountForActor(_assets);
-
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
         _beforeCall();
+
+        uint256 balanceBefore = IERC20(siloToken).balanceOf(targetActor);
 
         (
             success, returnData
@@ -49,6 +49,10 @@ contract VaultHandler is BaseHandler {
                 1,
                 DEPOSIT_TOTAL_ASSETS
             );
+
+            assertLe(_assets, balanceBefore, DEPOSIT_TOO_MUCH);
+        } else {
+            assertGt(_assets, balanceBefore, DEPOSIT_TOO_MUCH);
         }
 
         if (_assets == 0) {
@@ -59,8 +63,6 @@ contract VaultHandler is BaseHandler {
     function mint(uint256 _shares, uint8 i) external setup {
         bool success;
         bytes memory returnData;
-
-        _shares = _boundSharesForMint(_shares);
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
@@ -157,8 +159,6 @@ contract VaultHandler is BaseHandler {
     function redeem(uint256 _shares, uint8 i) external setup {
         bool success;
         bytes memory returnData;
-
-        _shares = _boundSharesForRedeem(_shares);
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);

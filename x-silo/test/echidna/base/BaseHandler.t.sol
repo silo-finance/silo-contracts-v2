@@ -80,23 +80,6 @@ contract BaseHandler is HookAggregator {
         if (retdata.length > 0) assert(abi.decode(retdata, (bool)));
     }
 
-    function _boundSiloAmountForActor(uint256 _amount) internal returns (uint256 boundedAmount) {
-        boundedAmount = _amount % TestERC20(siloToken).balanceOf(targetActor);
-    }
-
-    function _boundXSiloAmountForActor(uint256 _amount) internal returns (uint256 boundedAmount) {
-        boundedAmount = _amount % xSilo.balanceOf(targetActor);
-    }
-
-    function _boundSharesForMint(uint256 _shares) internal returns (uint256 boundedAmount) {
-        uint256 maxSharesMintForActor = xSilo.previewDeposit(TestERC20(siloToken).balanceOf(targetActor));
-        boundedAmount = _shares % maxSharesMintForActor;
-    }
-
-    function _boundSharesForRedeem(uint256 _shares) internal returns (uint256 boundedAmount) {
-        boundedAmount = _shares % xSilo.balanceOf(targetActor);
-    }
-
     /// @notice Helper function to mint an amount of tokens to an address
     function _mint(
         address token,
