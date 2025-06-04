@@ -72,6 +72,10 @@ contract BaseHandler is BaseHooks {
         TestERC20(token).mint(receiver, amount);
     }
 
+    function _capAmountForActor(uint256 _amount) internal returns (uint256 amount) {
+        return _amount % TestERC20(siloToken).balanceOf();
+    }
+
     /// @notice Helper function to mint an amount of tokens to an address and approve them to a spender
     /// @param token Address of the token to mint
     /// @param owner Address of the new owner of the tokens

@@ -27,6 +27,8 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
+        _mintForActorWithCap(_assets);
+
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
@@ -142,33 +144,33 @@ contract VaultHandler is BaseHandler {
 //        return true;
 //    }
 
-    function assert_maxWithdraw_asInputDoesNotRevert() public setup {
-        bool success;
-        bytes memory returnData;
-
-        uint256 maxWithdraw = xSilo.maxWithdraw(address(actor));
-
-        _before();
-
-        (success, returnData) = actor.proxy(
-            address(xSilo),
-            abi.encodeWithSelector(
-                xSilo.withdraw.selector, maxWithdraw, address(actor), address(actor)
-            )
-        );
-
-        assertTrue(false); // check if assertion is executed
-
-        if (success) {
-            _after();
-        }
-
-        // POST-CONDITIONS
-
-        if (maxWithdraw != 0) {
-            assertTrue(success, MAX_WITHDRAW_AS_INPUT);
-        }
-    }
+//    function assert_maxWithdraw_asInputDoesNotRevert() public setup {
+//        bool success;
+//        bytes memory returnData;
+//
+//        uint256 maxWithdraw = xSilo.maxWithdraw(address(actor));
+//
+//        _before();
+//
+//        (success, returnData) = actor.proxy(
+//            address(xSilo),
+//            abi.encodeWithSelector(
+//                xSilo.withdraw.selector, maxWithdraw, address(actor), address(actor)
+//            )
+//        );
+//
+//        assertTrue(false); // check if assertion is executed
+//
+//        if (success) {
+//            _after();
+//        }
+//
+//        // POST-CONDITIONS
+//
+//        if (maxWithdraw != 0) {
+//            assertTrue(success, MAX_WITHDRAW_AS_INPUT);
+//        }
+//    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //

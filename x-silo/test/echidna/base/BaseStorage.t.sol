@@ -5,11 +5,6 @@ pragma solidity ^0.8.19;
 import {XSilo} from "x-silo/contracts/XSilo.sol";
 import {Stream} from "x-silo/contracts/modules/Stream.sol";
 
-// Mock Contracts
-import {TestERC20} from "../utils/mocks/TestERC20.sol";
-
-// Test Contracts
-
 // Utils
 import {Actor} from "../utils/Actor.sol";
 
@@ -27,7 +22,6 @@ abstract contract BaseStorage {
 
     uint256 internal constant NUMBER_OF_ACTORS = 3;
     uint256 internal constant INITIAL_ETH_BALANCE = 1e26;
-    uint256 internal constant INITIAL_COLL_BALANCE = 1e21;
 
     address internal constant QUOTE_TOKEN_ADDRESS = address(0xdead);
 
@@ -57,10 +51,5 @@ abstract contract BaseStorage {
     XSilo internal xSilo;
     Stream internal stream;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                       EXTRA VARIABLES                                     //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
     address internal siloToken;
-
 }
