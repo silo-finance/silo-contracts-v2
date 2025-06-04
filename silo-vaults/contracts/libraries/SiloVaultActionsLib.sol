@@ -26,7 +26,7 @@ library SiloVaultActionsLib {
 
         uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
         require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
-        decimalsOffset = uint8(UtilsLib.zeroFloorSub(18 + 6, assetDecimals));
+        decimalsOffset = 6;
     }
 
     function setIsAllocator(
