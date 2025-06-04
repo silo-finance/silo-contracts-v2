@@ -25,7 +25,7 @@ import {
 */
 contract XSiloIntegrationTest is Test {
     address public constant SILO_WHALE = 0xE641Dca2E131FA8BFe1D7931b9b040e3fE0c5BDc;
-    address public constant USDC_WHALE = 0x7214e1D350Ba8E2b19dE4f77DDd3609Af06AAdE2;
+    address public constant USDC_WHALE = 0x578Ee1ca3a8E1b54554Da1Bf7C583506C4CD11c6;
 
     ISiloIncentivesControllerFactory public siloIncentivesControllerFactory;
     ISiloIncentivesController public controller;
@@ -57,6 +57,8 @@ contract XSiloIntegrationTest is Test {
         dao = AddrLib.getAddress(AddrKey.DAO);
 
         uint256 whaleBalance = siloTokenV2.balanceOf(SILO_WHALE);
+        assertGt(whaleBalance, 1e18, "expect SILO_WHALE to have tokens");
+        emit log_named_address("usdcToken", address(usdcToken));
 
         userInitialSiloBalance = whaleBalance / 10;
 
@@ -153,6 +155,7 @@ contract XSiloIntegrationTest is Test {
         vm.prank(dao);
         controller.createIncentivesProgram(input);
 
+        assertGe(usdcToken.balanceOf(USDC_WHALE), INCENTIVE_DURATION * emissionPerSecond, "whale don't have tokens");
         vm.prank(USDC_WHALE);
         usdcToken.transfer(address(controller), INCENTIVE_DURATION * emissionPerSecond);
 
