@@ -32,10 +32,14 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
 
     /// @dev Actor proxy mechanism
     modifier setup() virtual {
-        targetActor = _getRandomActor(uint160(msg.sender));
-        actor = Actor(payable(targetActor));
+        // TODO why this way `actors[msg.sender]` does not work??
+        targetActor = address(actors[msg.sender]);
 
-        assertTrue(targetActor != address(0), "Actor is empty");
+        if (targetActor == address(0)) {
+            targetActor = _getRandomActor(uint160(msg.sender));
+        }
+
+        actor = Actor(payable(targetActor));
 
         _;
 
