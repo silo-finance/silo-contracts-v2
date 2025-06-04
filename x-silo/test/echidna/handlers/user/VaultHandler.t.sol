@@ -43,12 +43,23 @@ contract VaultHandler is BaseHandler {
         if (success) {
             _afterSuccessCall();
 
-            assertApproxEqAbs(
-                defaultVarsBefore[address(xSilo)].totalAssets + _assets,
-                defaultVarsAfter[address(xSilo)].totalAssets,
-                1,
-                DEPOSIT_TOTAL_ASSETS
-            );
+            if (defaultVarsBefore[address(xSilo)].totalSupply != 0) {
+                assertApproxEqAbs(
+                    defaultVarsBefore[address(xSilo)].totalAssets + _assets,
+                    defaultVarsAfter[address(xSilo)].totalAssets,
+                    1,
+                    DEPOSIT_TOTAL_ASSETS
+                );
+            } else {
+                assertEq(defaultVarsBefore[address(xSilo)].totalAssets, 0, DEPOSIT_AFTER_RESET);
+
+                assertApproxEqAbs(
+                    defaultVarsBefore[address(xSilo)].balance + _assets,
+                    defaultVarsAfter[address(xSilo)].totalAssets,
+                    1,
+                    DEPOSIT_TOTAL_ASSETS
+                );
+            }
 
             assertLe(_assets, balanceBefore, DEPOSIT_TOO_MUCH);
         } else {
