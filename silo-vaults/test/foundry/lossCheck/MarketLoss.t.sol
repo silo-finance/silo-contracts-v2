@@ -108,7 +108,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
 //        (uint64 _attackerDeposit,
 //            uint64 _supplierDeposit,
 //            uint64 _donation,
-//            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);
+//            uint8 _idleVaultOffset) = (2579295, 1086971, 1790682197602642156, 6);
 
         _idleVault_InflationAttackWithDonation({
             _attackUsingHookBeforeDeposit: false,
@@ -247,7 +247,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         _setCap(allMarkets[0], _supplierDeposit / 2);
 
         vm.prank(SUPPLIER);
-        uint256 supplierShares = vault.deposit(_supplierDeposit, SUPPLIER);
+        vault.deposit(_supplierDeposit, SUPPLIER);
 
         // simulate reallocation (withdraw from idle)
         vm.startPrank(address(vault));
@@ -285,11 +285,12 @@ contract MarketLossTest is IBefore, IntegrationTest {
     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {
         printUser(_user);
         vm.startPrank(_user);
-        amount = vault.maxRedeem(_user);
-        emit log_named_uint("_vaultWithdrawAll", amount);
-        if (amount == 0) return 0;
+        // we can use all shares instead od maxRedeem because maxRedeem can underestimate
+        uint256 balance = vault.balanceOf(_user);
+        emit log_named_uint("_vaultWithdrawAll", balance);
+        if (balance == 0) return 0;
 
-        amount = vault.redeem(vault.balanceOf(_user), _user, _user);
+        amount = vault.redeem(balance, _user, _user);
         vm.stopPrank();
     }
 
@@ -298,6 +299,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
         emit log_named_uint("[printUser] totalAssets", vault.totalAssets());
         emit log_named_uint("[printUser] total shares", vault.totalSupply());
         emit log_named_uint("[printUser] shares",  vault.balanceOf(_user));
-        emit log_named_uint("[printUser] assets",  vault.maxWithdraw(_user));
+        emit log_named_uint("[printUser] maxWithdraw (might be underestimated)",  vault.maxWithdraw(_user));
+        emit log_named_uint("[printUser] maxRedeem (might be underestimated)",  vault.maxRedeem(_user));
     }
 }
