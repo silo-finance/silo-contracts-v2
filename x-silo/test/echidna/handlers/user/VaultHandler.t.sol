@@ -48,6 +48,9 @@ contract VaultHandler is BaseHandler {
             );
         }
 
+        // check if assertion is executed
+        assert(success);
+
         if (_assets == 0) {
             assertFalse(success, SILO_HSPOST_B);
         }
@@ -140,6 +143,8 @@ contract VaultHandler is BaseHandler {
 //    }
 
     function assert_maxWithdraw_asInputDoesNotRevert() public setup {
+        assert(false); // check if assertion is executed
+
         bool success;
         bytes memory returnData;
 
