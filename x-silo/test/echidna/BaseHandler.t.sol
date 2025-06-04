@@ -5,11 +5,12 @@ pragma solidity ^0.8.19;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Libraries
-import {TestERC20} from "../utils/mocks/TestERC20.sol";
+import {BaseHooks} from "./base/BaseHooks.t.sol";
+import {TestERC20} from "./utils/mocks/TestERC20.sol";
 
 // Contracts
-import {Actor} from "../utils/Actor.sol";
-import {HookAggregator} from "../hooks/HookAggregator.t.sol";
+import {Actor} from "./utils/Actor.sol";
+import {HookAggregator} from "./hooks/HookAggregator.t.sol";
 
 /// @title BaseHandler
 /// @notice Contains common logic for all handlers
@@ -70,10 +71,6 @@ contract BaseHandler is BaseHooks {
         uint256 amount
     ) internal {
         TestERC20(token).mint(receiver, amount);
-    }
-
-    function _capAmountForActor(uint256 _amount) internal returns (uint256 amount) {
-        return _amount % TestERC20(siloToken).balanceOf();
     }
 
     /// @notice Helper function to mint an amount of tokens to an address and approve them to a spender

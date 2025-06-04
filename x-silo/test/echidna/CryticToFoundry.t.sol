@@ -49,8 +49,13 @@ contract CryticToFoundry is Invariants, Setup {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    function test_replay_accrueInterestForSilo() public {
-
+    /*
+    FOUNDRY_PROFILE=x_silo_echidna forge test -vv --ffi --mt test_deposit_1
+    */
+    function test_deposit_1() public {
+        Tester.deposit(3,1);
+        Tester.withdrawMax(0);
+        Tester.deposit(1,0);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -125,6 +125,16 @@ src = 'x-silo/test/foundry'
 out = 'cache/foundry/out/x-silo'
 broadcast = 'x-silo/broadcast'
 
+[profile.x_silo_echidna]
+src = 'x-silo/contracts'
+test = 'x-silo/test/echidna'
+out = 'cache/foundry/out/x-silo'
+broadcast = 'x-silo/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"}
+]
+
 [profile.oracles]
 src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'

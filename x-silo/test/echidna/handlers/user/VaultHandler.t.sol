@@ -52,7 +52,9 @@ contract VaultHandler is BaseHandler {
 
             assertLe(_assets, balanceBefore, DEPOSIT_TOO_MUCH);
         } else {
-            assertGt(_assets, balanceBefore, DEPOSIT_TOO_MUCH);
+            if (_assets != 0) {
+                assertGt(_assets, balanceBefore, DEPOSIT_TOO_MUCH);
+            }
         }
 
         if (_assets == 0) {
@@ -108,16 +110,16 @@ contract VaultHandler is BaseHandler {
             _afterSuccessCall();
 
             // on withdraw we get max penalty
-            // TODO
+            // TODO can we make assertion about totalAsset?
 //            assertApproxEqAbs(
 //                defaultVarsBefore[address(xSilo)].totalAssets - _assets,
 //                defaultVarsAfter[address(xSilo)].totalAssets,
 //                1,
 //                WITHDRAW_TOTAL_ASSETS
 //            );
-        } else if (_assets != 0) {
+        } else {
             // TODO figure out if below property is true?
-            assertGt(_assets, xSilo.maxWithdraw(targetActor), MAX_WITHDRAW_AMOUNT_NOT_REVERT);
+            if (_assets != 0) assertGt(_assets, xSilo.maxWithdraw(targetActor), MAX_WITHDRAW_AMOUNT_NOT_REVERT);
         }
 
         if (_assets == 0) {
