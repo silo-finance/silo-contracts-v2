@@ -81,6 +81,11 @@ contract BaseHandler is HookAggregator {
     }
 
     /// @notice Helper function to mint an amount of tokens to an address
+    function _capAmountForActor(uint256 _amount) internal returns (uint256 cappedAmount) {
+        cappedAmount = _amount % TestERC20(siloToken).balanceOf(targetActor);
+    }
+
+    /// @notice Helper function to mint an amount of tokens to an address
     function _mint(
         address token,
         address receiver,

@@ -3,9 +3,12 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {TestERC20} from "../utils/mocks/TestERC20.sol";
 
 /// @notice Proxy contract for invariant suite actors to avoid aTester calling contracts
 contract Actor {
+    uint256 internal constant INITIAL_BALANCE = 2 ** 112;
+
     /// @notice last targetted contract
     address public lastTarget;
     /// @notice list of tokens to approve
@@ -18,6 +21,8 @@ contract Actor {
         contracts = _contracts;
 
         for (uint256 i = 0; i < tokens.length; i++) {
+            TestERC20(tokens[i]).mint(address(this), INITIAL_BALANCE);
+
             for (uint256 j = 0; j < contracts.length; j++) {
                 IERC20(tokens[i]).approve(contracts[j], type(uint256).max);
             }

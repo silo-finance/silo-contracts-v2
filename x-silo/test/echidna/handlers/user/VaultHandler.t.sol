@@ -27,7 +27,7 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        _mintForActorWithCap(_assets);
+        _assets = _capAmountForActor(_assets);
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
@@ -49,9 +49,6 @@ contract VaultHandler is BaseHandler {
                 LENDING_HSPOST_A
             );
         }
-
-        // check if assertion is executed
-        assert(success);
 
         if (_assets == 0) {
             assertFalse(success, SILO_HSPOST_B);
