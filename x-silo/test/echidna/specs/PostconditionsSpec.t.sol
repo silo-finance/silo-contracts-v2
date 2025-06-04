@@ -46,7 +46,7 @@ abstract contract PostconditionsSpec {
 
     string constant SILO_HSPOST_A = "SILO_HSPOST_A: accrueInterest() should never decrease total collateral and total debt";
 
-    string constant SILO_HSPOST_B = "SILO_HSPOST_B: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in Silo";
+    string constant MINT_BURN_ZERO_SHARES_IMPOSSIBLE = "MINT_BURN_ZERO_SHARES_IMPOSSIBLE: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in xSilo";
 
     string constant SILO_GPOST_C = "SILO_GPOST_C: withdraw()/redeem()/borrow()/borrowShares() should always call accrueInterest() on both Silos"; // TODO
 
@@ -57,7 +57,7 @@ abstract contract PostconditionsSpec {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice related to silo property HLP_integrity_deposit_collateral_no_interest
-    string constant LENDING_HSPOST_A = "LENDING_HSPOST_A: after deposit, silo.totalAssets[ISilo.AssetType.Collateral] increases by amount deposited";
+    string constant DEPOSIT_TOTAL_ASSETS = "DEPOSIT_TOTAL_ASSETS: after deposit, xSilo.totalAssets increases by amount deposited";
 
     /// @notice related to silo property HLP_integrity_deposit_collateral_no_interest
     string constant LENDING_HSPOST_B = "LENDING_HSPOST_B: after mint, silo.totalSupply increases by amount minted";

@@ -80,8 +80,7 @@ contract BaseHandler is HookAggregator {
         if (retdata.length > 0) assert(abi.decode(retdata, (bool)));
     }
 
-    /// @notice Helper function to mint an amount of tokens to an address
-    function _capAmountForActor(uint256 _amount) internal returns (uint256 cappedAmount) {
+    function _boundAmountForActor(uint256 _amount) internal returns (uint256 cappedAmount) {
         cappedAmount = _amount % TestERC20(siloToken).balanceOf(targetActor);
     }
 

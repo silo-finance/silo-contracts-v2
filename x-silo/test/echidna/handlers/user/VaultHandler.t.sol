@@ -27,7 +27,7 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        _assets = _capAmountForActor(_assets);
+        _assets = _boundAmountForActor(_assets);
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
@@ -46,12 +46,12 @@ contract VaultHandler is BaseHandler {
                 defaultVarsBefore[address(xSilo)].totalAssets + _assets,
                 defaultVarsAfter[address(xSilo)].totalAssets,
                 1,
-                LENDING_HSPOST_A
+                DEPOSIT_TOTAL_ASSETS
             );
         }
 
         if (_assets == 0) {
-            assertFalse(success, SILO_HSPOST_B);
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
         }
     }
 

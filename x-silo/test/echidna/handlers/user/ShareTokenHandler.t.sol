@@ -65,7 +65,7 @@ contract ShareTokenHandler is BaseHandler {
         // POST-CONDITIONS
 
         if (_amount == 0) {
-            assertFalse(success, SILO_HSPOST_B);
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
         }
     }
 
@@ -95,7 +95,7 @@ contract ShareTokenHandler is BaseHandler {
         // POST-CONDITIONS
 
         if (_amount == 0) {
-            assertFalse(success, SILO_HSPOST_B);
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
         }
     }
 
