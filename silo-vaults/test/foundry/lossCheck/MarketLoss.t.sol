@@ -195,6 +195,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             uint256 supplierLoss = _supplierDeposit < supplierWithdraw ? 0 : _supplierDeposit - supplierWithdraw;
 
             emit log_named_uint(" SUPPLIER deposit", _supplierDeposit);
+            emit log_named_uint(" SUPPLIER shares", supplierShares);
             emit log_named_uint("SUPPLIER withdraw", supplierWithdraw);
             emit log_named_uint("    SUPPLIER loss", supplierLoss);
 
