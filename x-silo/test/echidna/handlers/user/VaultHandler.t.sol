@@ -143,8 +143,6 @@ contract VaultHandler is BaseHandler {
 //    }
 
     function assert_maxWithdraw_asInputDoesNotRevert() public setup {
-        assert(false); // check if assertion is executed
-
         bool success;
         bytes memory returnData;
 
@@ -158,6 +156,8 @@ contract VaultHandler is BaseHandler {
                 xSilo.withdraw.selector, maxWithdraw, address(actor), address(actor)
             )
         );
+
+        assertTrue(false); // check if assertion is executed
 
         if (success) {
             _after();
