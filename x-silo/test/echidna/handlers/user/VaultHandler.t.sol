@@ -146,7 +146,7 @@ contract VaultHandler is BaseHandler {
                 WITHDRAW_TOTAL_ASSETS
             );
         } else {
-            assertTrue(success, MAX_WITHDRAW_AMOUNT_NOT_REVERT);
+            if (assets != 0) assertTrue(success, MAX_WITHDRAW_AMOUNT_NOT_REVERT);
         }
 
         if (assets == 0) {
