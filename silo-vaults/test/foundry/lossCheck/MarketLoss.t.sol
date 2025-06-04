@@ -48,7 +48,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
     address attacker = makeAddr("attacker");
     uint256 donationAmount;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         // previous idle market removal

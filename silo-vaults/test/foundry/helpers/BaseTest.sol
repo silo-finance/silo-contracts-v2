@@ -47,8 +47,8 @@ contract BaseTest is SiloLittleHelper, Test {
     address internal GUARDIAN = makeAddr("Guardian");
     address internal FEE_RECIPIENT = makeAddr("FeeRecipient");
 
-    MintableToken internal loanToken = new MintableToken(18);
-    MintableToken internal collateralToken = new MintableToken(18);
+    MintableToken internal loanToken;
+    MintableToken internal collateralToken;
     SiloVaultsFactory siloVaultsFactory;
 
     IERC4626[] internal allMarkets;
@@ -60,6 +60,8 @@ contract BaseTest is SiloLittleHelper, Test {
     uint256 internal OFFSET_POW;
 
     function setUp() public virtual {
+        _setTokens();
+
         assertEq(allMarkets.length, 0, "allMarkets is fresh");
 
         collateralToken.setOnDemand(true);
@@ -162,6 +164,11 @@ contract BaseTest is SiloLittleHelper, Test {
 
     function _accrueInterest(IERC4626 _market) internal {
         ISilo(address(_market)).accrueInterest();
+    }
+
+    function _setTokens() internal virtual {
+        loanToken = new MintableToken(18);
+        collateralToken = new MintableToken(18);
     }
 
     /// @dev Returns a random market params from the list of markets enabled on Blue (except the idle market).
