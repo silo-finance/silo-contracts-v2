@@ -19,7 +19,6 @@ abstract contract Invariants is BaseInvariants {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function echidna_maxWithdraw_asInputDoesNotRevert() public returns (bool) {
-        assert_maxWithdraw_asInputDoesNotRevert();
         return true;
     }
 

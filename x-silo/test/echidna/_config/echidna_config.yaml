@@ -58,4 +58,4 @@ format: "text"
 # concurrent workers
 workers: 1
 
-#testingMode: assertion
+testMode: assertion
