@@ -35,7 +35,6 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
         targetActor = _getRandomActor(uint160(msg.sender));
         actor = Actor(payable(targetActor));
 
-        emit LogAddress("targetActor", targetActor);
         assertTrue(targetActor != address(0), "Actor is empty");
 
         _;

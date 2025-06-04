@@ -27,7 +27,7 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        _assets = _boundAmountForActor(_assets);
+        _assets = _boundSiloAmountForActor(_assets);
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
@@ -60,7 +60,7 @@ contract VaultHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-        _shares = _boundSharesForActor(_shares);
+        _shares = _boundSharesForMint(_shares);
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
@@ -86,53 +86,98 @@ contract VaultHandler is BaseHandler {
             assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
         }
     }
-//
-//    function withdraw(uint256 _assets, uint8 i) external setup {
-//        bool success;
-//        bytes memory returnData;
-//
-//        // Get one of the three actors randomly
-//        address receiver = _getRandomActor(i);
-//
-//        _beforeCall();
-//
-//        (success, returnData) = actor.proxy(
-//            address(xSilo), abi.encodeWithSelector(IERC4626.withdraw.selector, _assets, receiver, address(actor))
-//        );
-//
-//        // POST-CONDITIONS
-//
-//        if (success) {
-//            _afterSuccessCall();
-//        }
-//
-//        if (_assets == 0) {
-//            assertFalse(success, SILO_HSPOST_B);
-//        }
-//    }
-//
-//    function redeem(uint256 _shares, uint8 i) external setup {
-//        bool success;
-//        bytes memory returnData;
-//
-//        // Get one of the three actors randomly
-//        address receiver = _getRandomActor(i);
-//
-//        _beforeCall();
-//
-//        (success, returnData) = actor.proxy(
-//            address(xSilo), abi.encodeWithSelector(IERC4626.redeem.selector, _shares, receiver, address(actor))
-//        );
-//
-//        if (success) {
-//            _afterSuccessCall();
-//        }
-//
-//        // POST-CONDITIONS
-//        if (_shares == 0) {
-//            assertFalse(success, SILO_HSPOST_B);
-//        }
-//    }
+
+    function withdraw(uint256 _assets, uint8 i) external setup {
+        bool success;
+        bytes memory returnData;
+
+        // Get one of the three actors randomly
+        address receiver = _getRandomActor(i);
+
+        _beforeCall();
+
+        (success, returnData) = actor.proxy(
+            address(xSilo), abi.encodeWithSelector(IERC4626.withdraw.selector, _assets, receiver, address(actor))
+        );
+
+        // POST-CONDITIONS
+
+        if (success) {
+            _afterSuccessCall();
+
+            // on withdraw we get max penalty
+            // TODO
+//            assertApproxEqAbs(
+//                defaultVarsBefore[address(xSilo)].totalAssets - _assets,
+//                defaultVarsAfter[address(xSilo)].totalAssets,
+//                1,
+//                WITHDRAW_TOTAL_ASSETS
+//            );
+        } else if (_assets != 0) {
+            // TODO figure out if below property is true?
+            assertGt(_assets, xSilo.maxWithdraw(targetActor), MAX_WITHDRAW_AMOUNT_NOT_REVERT);
+        }
+
+        if (_assets == 0) {
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
+        }
+    }
+
+    function withdrawMax(uint8 i) external setup {
+        bool success;
+        bytes memory returnData;
+
+        _beforeCall();
+
+        uint256 assets = xSilo.maxWithdraw(targetActor);
+
+        (success, returnData) = actor.proxy(
+            address(xSilo), abi.encodeWithSelector(IERC4626.withdraw.selector, assets, targetActor, address(actor))
+        );
+
+        if (success) {
+            _afterSuccessCall();
+
+            // on withdraw we get max penalty
+            assertApproxEqAbs(
+                defaultVarsBefore[address(xSilo)].totalAssets - assets,
+                defaultVarsAfter[address(xSilo)].totalAssets,
+                1,
+                WITHDRAW_TOTAL_ASSETS
+            );
+        } else {
+            assertTrue(success, MAX_WITHDRAW_AMOUNT_NOT_REVERT);
+        }
+
+        if (assets == 0) {
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
+        }
+    }
+
+    function redeem(uint256 _shares, uint8 i) external setup {
+        bool success;
+        bytes memory returnData;
+
+        _shares = _boundSharesForRedeem(_shares);
+
+        // Get one of the three actors randomly
+        address receiver = _getRandomActor(i);
+
+        _beforeCall();
+
+        (success, returnData) = actor.proxy(
+            address(xSilo), abi.encodeWithSelector(IERC4626.redeem.selector, _shares, receiver, address(actor))
+        );
+
+        if (success) {
+            _afterSuccessCall();
+        }
+
+        // POST-CONDITIONS
+        if (_shares == 0) {
+            assertFalse(success, MINT_BURN_ZERO_SHARES_IMPOSSIBLE);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          PROPERTIES                                       //

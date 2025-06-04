@@ -26,8 +26,15 @@ abstract contract PostconditionsSpec {
     /////////////////////////////////////////////////////////////////////////////////////////////*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                          BASE                                             //
+    //                                          VAULT                                             //
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    string constant MINT_BURN_ZERO_SHARES_IMPOSSIBLE = "MINT_BURN_ZERO_SHARES_IMPOSSIBLE: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in xSilo";
+    string constant DEPOSIT_TOTAL_ASSETS = "DEPOSIT_TOTAL_ASSETS: after deposit, xSilo.totalAssets increases by amount deposited";
+    string constant WITHDRAW_TOTAL_ASSETS = "WITHDRAW_TOTAL_ASSETS: after withdraw, xSilo.totalAssets decreases by withdrawn amount";
+    string constant MAX_WITHDRAW_AMOUNT_NOT_REVERT = "MAX_WITHDRAW_AMOUNT_NOT_REVERT: withdrawing amount that is less or equal maxWithdraw should be always possible";
+
+    string constant MINT_TOTAL_SHARES = "MINT_TOTAL_SHARES: after mint, xSilo.totalSupply increases by amount minted";
 
     /// @notice related to silo property UT_Silo_accrueInterest
     string constant BASE_GPOST_A = "BASE_GPOST_A: accrueInterest can only be executed on deposit, mint, withdraw, redeem, liquidationCall, accrueInterest, leverage, repay, repayShares.";
@@ -46,8 +53,6 @@ abstract contract PostconditionsSpec {
 
     string constant SILO_HSPOST_A = "SILO_HSPOST_A: accrueInterest() should never decrease total collateral and total debt";
 
-    string constant MINT_BURN_ZERO_SHARES_IMPOSSIBLE = "MINT_BURN_ZERO_SHARES_IMPOSSIBLE: impossible to mint 0 shares or burn 0 shares or transfer 0 assets inside any function in xSilo";
-
     string constant SILO_GPOST_C = "SILO_GPOST_C: withdraw()/redeem()/borrow()/borrowShares() should always call accrueInterest() on both Silos"; // TODO
 
     string constant SILO_HSPOST_D = "SILO_GPOST_D: withdrawFees() always reverts in a second call in the same block";
@@ -56,9 +61,6 @@ abstract contract PostconditionsSpec {
     //                                          LENDING                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant DEPOSIT_TOTAL_ASSETS = "DEPOSIT_TOTAL_ASSETS: after deposit, xSilo.totalAssets increases by amount deposited";
-
-    string constant MINT_TOTAL_SHARES = "MINT_TOTAL_SHARES: after mint, xSilo.totalSupply increases by amount minted";
 
     /// @notice related to silo property RA_Silo_withdraw_all_shares
     string constant LENDING_HSPOST_C = "LENDING_HSPOST_C: A user can withdraw all with max shares amount and not be able to withdraw more."; // TODO
