@@ -32,7 +32,7 @@ contract VaultHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        _before();
+        _beforeCall();
 
         (success, returnData) =
             actor.proxy(address(xSilo), abi.encodeWithSelector(IERC4626.deposit.selector, _assets, receiver));
@@ -40,7 +40,7 @@ contract VaultHandler is BaseHandler {
         // POST-CONDITIONS
 
         if (success) {
-            _after();
+            _afterSuccessCall();
 
             assertApproxEqAbs(
                 defaultVarsBefore[address(xSilo)].totalAssets + _assets,

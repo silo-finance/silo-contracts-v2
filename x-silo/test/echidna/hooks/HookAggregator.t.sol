@@ -8,12 +8,12 @@ import {DefaultBeforeAfterHooks} from "./DefaultBeforeAfterHooks.t.sol";
 /// @notice Helper contract to aggregate all before / after hook contracts, inherited on each handler
 abstract contract HookAggregator is DefaultBeforeAfterHooks {
     /// @notice Modular hook selector, per module
-    function _before() internal {
+    function _beforeCall() internal {
         _defaultHooksBefore();
     }
 
     /// @notice Modular hook selector, per module
-    function _after() internal {
+    function _afterSuccessCall() internal {
         _defaultHooksAfter();
 
         // Postconditions
