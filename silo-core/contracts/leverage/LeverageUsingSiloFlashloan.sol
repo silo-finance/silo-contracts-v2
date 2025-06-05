@@ -13,6 +13,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
+import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 
 import {RevenueModule} from "./modules/RevenueModule.sol";
 import {LeverageTxState} from "./modules/LeverageTxState.sol";
@@ -34,8 +35,16 @@ abstract contract LeverageUsingSiloFlashloan is
 {
     using SafeERC20 for IERC20;
 
+    IWrappedNativeToken public immutable NATIVE_TOKEN;
+
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
-    
+
+    constructor(address _native) {
+        require(_native != address(0), EmptyNativeToken());
+
+        NATIVE_TOKEN = IWrappedNativeToken(_native);
+    }
+
     function openLeveragePositionPermit(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
@@ -57,10 +66,17 @@ abstract contract LeverageUsingSiloFlashloan is
         DepositArgs calldata _depositArgs
     )
         public
+        payable
         virtual
         nonReentrant
         setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
+        if (msg.value != 0) {
+            require(msg.value == _depositArgs.amount, NativeTokenAmountNotEnough());
+
+            NATIVE_TOKEN.deposit{value: msg.value}();
+        }
+
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: ISilo(_flashArgs.flashloanTarget).asset(),
@@ -128,10 +144,6 @@ abstract contract LeverageUsingSiloFlashloan is
         return _FLASHLOAN_CALLBACK;
     }
 
-    // TODO support ETH - do we REALLY need it? wrap ETH to WETH is common, so user can easily doit itself, does is worth complexity?
-
-    // TODO approve based on sigs ("probably" can not be done for debt)
-
     function _openLeverage(
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
@@ -163,7 +175,6 @@ abstract contract LeverageUsingSiloFlashloan is
 
         address collateralAsset = depositArgs.silo.asset();
 
-        // TODO qa if possible that feeForLeverage > collateralAmountAfterSwap
         // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
         require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
@@ -195,8 +206,10 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _totalDeposit, address _asset) internal virtual {
-        // transfer collateral tokens from borrower
-        IERC20(_asset).safeTransferFrom(_txMsgSender, address(this), _depositArgs.amount);
+        if (!_txUseNative) {
+            // transfer collateral tokens from borrower
+            IERC20(_asset).safeTransferFrom(_txMsgSender, address(this), _depositArgs.amount);
+        } // else, we expect to have deposited native and got wrapped
 
         _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), _totalDeposit);
 

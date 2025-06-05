@@ -16,6 +16,7 @@ import {LeverageUsingSiloFlashloanWithGeneralSwapDeploy} from "silo-core/deploy/
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
+import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
@@ -235,6 +236,64 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withETH
+    */
+    function test_leverage_withETH() public {
+        address user = wallet.addr;
+        vm.deal(user, 0.2e18);
+
+        uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 2.0e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        _prepareForOpeningLeverage({
+            _user: user,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _depositWithPermit: true // we dont want approval, we will use ETH
+        });
+
+        assertEq(siloLens.getUserLTV(silo0, user), 0, "user has no position");
+
+        vm.startPrank(user);
+
+        // "mock" sending ETH
+        address native = address(siloLeverage.NATIVE_TOKEN());
+        vm.mockCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector), "");
+        vm.expectCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector));
+
+        token0.burn(token0.balanceOf(user));
+        token0.mint(address(siloLeverage), depositArgs.amount);
+
+        assertEq(
+            IERC20(silo0.asset()).balanceOf(user),
+            0,
+            "make sure user do not have any tokens, so we can't transferFrom"
+        );
+
+        siloLeverage.openLeveragePosition{value: depositArgs.amount}({
+            _flashArgs: flashArgs,
+            _swapArgs: abi.encode(swapArgs),
+            _depositArgs: depositArgs
+        });
+
+        vm.stopPrank();
+
+        assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
+
+        _assertThereIsNoDebtApprovals(user);
+        _assertSiloLeverageHasNoTokens();
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withDepositPermit
     */
     function test_leverage_withDepositPermit() public {
@@ -276,7 +335,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertThereIsNoDebtApprovals(user);
         _assertSiloLeverageHasNoTokens();
     }
-
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_closeWithPermit

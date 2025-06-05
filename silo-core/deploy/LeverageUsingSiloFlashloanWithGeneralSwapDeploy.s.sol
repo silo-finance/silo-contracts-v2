@@ -33,10 +33,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapDeploy is CommonDeploy {
     function run() public returns (LeverageUsingSiloFlashloanWithGeneralSwap leverage) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address dao = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
+        address nativeToken = _nativeToken();
 
         vm.startBroadcast(deployerPrivateKey);
 
-        leverage = new LeverageUsingSiloFlashloanWithGeneralSwap(dao);
+        leverage = new LeverageUsingSiloFlashloanWithGeneralSwap(dao, nativeToken);
 
         vm.stopBroadcast();
 

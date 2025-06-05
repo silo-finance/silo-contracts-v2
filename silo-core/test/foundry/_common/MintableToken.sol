@@ -17,6 +17,10 @@ contract MintableToken is ERC20, ERC20Permit {
         _mint(_owner, _amount);
     }
 
+    function burn(uint256 _amount) external virtual {
+        _burn(msg.sender, _amount);
+    }
+
     function setOnDemand(bool _onDemand) external {
         onDemand = _onDemand;
     }

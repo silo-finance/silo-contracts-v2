@@ -66,6 +66,8 @@ interface ILeverageUsingSiloFlashloan {
         uint256 depositWithdrawn
     );
 
+    error EmptyNativeToken();
+    error NativeTokenAmountNotEnough();
     error FlashloanFailed();
     error InvalidFlashloanLender();
     error InvalidInitiator();
@@ -86,7 +88,7 @@ interface ILeverageUsingSiloFlashloan {
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs
-    ) external;
+    ) external payable;
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails

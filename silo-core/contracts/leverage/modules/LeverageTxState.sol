@@ -21,6 +21,9 @@ abstract contract LeverageTxState {
     /// @dev address of contract from where we getting flashloan
     address internal transient _txFlashloanTarget;
 
+    /// @dev it will inform that we dealing with native token
+    bool internal transient _txUseNative;
+
     modifier setupTxState(ISilo _silo, ILeverageUsingSiloFlashloan.LeverageAction _action, address _flashloanTarget) {
         _set(_silo, _action, _flashloanTarget);
 
@@ -32,5 +35,6 @@ abstract contract LeverageTxState {
         _txAction = _action;
         _txMsgSender = msg.sender;
         _txSiloConfig = _silo.config();
+        _txUseNative = msg.value != 0;
     }
 }

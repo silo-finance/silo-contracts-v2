@@ -31,9 +31,6 @@ contract SwapRouterMock {
 
     fallback() external {
         IERC20(sellToken).safeTransferFrom(msg.sender, address(this), amountIn);
-
-        MintableToken(buyToken).setOnDemand(true);
-        IERC20(buyToken).safeTransfer(msg.sender, amountOut);
-        MintableToken(buyToken).setOnDemand(false);
+        MintableToken(buyToken).mint(msg.sender, amountOut);
     }
 }

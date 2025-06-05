@@ -18,7 +18,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
 {
     string public constant DESCRIPTION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
-    constructor (address _initialOwner) Ownable(_initialOwner) {
+    constructor (address _initialOwner, address _native) Ownable(_initialOwner) LeverageUsingSiloFlashloan(_native) {
     }
 
     function _fillQuote(bytes memory _swapArgs, uint256 _approval)
