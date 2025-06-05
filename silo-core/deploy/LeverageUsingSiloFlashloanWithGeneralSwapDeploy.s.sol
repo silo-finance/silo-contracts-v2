@@ -10,17 +10,17 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {LeverageUsingSiloWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 /**
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/LeverageUsingSiloWithGeneralSwapDeploy.s.sol \
+        forge script silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/LeverageUsingSiloWithGeneralSwapDeploy.s.sol \
+        forge script silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC \
         --verify \
         --verifier blockscout --verifier-url $VERIFIER_URL_INK \
@@ -29,18 +29,18 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
     remember to run `TowerRegistration` script after deployment!
  */
-contract LeverageUsingSiloWithGeneralSwapDeploy is CommonDeploy {
-    function run() public returns (LeverageUsingSiloWithGeneralSwap leverage) {
+contract LeverageUsingSiloFlashloanWithGeneralSwapDeploy is CommonDeploy {
+    function run() public returns (LeverageUsingSiloFlashloanWithGeneralSwap leverage) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address dao = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        leverage = new LeverageUsingSiloWithGeneralSwap(dao);
+        leverage = new LeverageUsingSiloFlashloanWithGeneralSwap(dao);
 
         vm.stopBroadcast();
 
-        console2.log("LeverageUsingSiloWithGeneralSwap redeployed - remember to run `TowerRegistration` script!");
+        console2.log("LeverageUsingSiloFlashloanWithGeneralSwap redeployed - remember to run `TowerRegistration` script!");
 
         _registerDeployment(address(leverage), SiloCoreContracts.SILO_LEVERAGE_USING_SILO);
     }

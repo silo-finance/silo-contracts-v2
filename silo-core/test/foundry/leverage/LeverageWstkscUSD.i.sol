@@ -8,14 +8,14 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
-import {LeverageUsingSiloWithGeneralSwapDeploy} from "silo-core/deploy/LeverageUsingSiloWithGeneralSwapDeploy.s.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwapDeploy} from "silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ILeverageUsingSilo} from "silo-core/contracts/interfaces/ILeverageUsingSilo.sol";
-import {LeverageUsingSiloWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloWithGeneralSwap.sol";
+import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -45,7 +45,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
     uint256 constant _PRECISION = 1e18;
 
-    LeverageUsingSiloWithGeneralSwap siloLeverage;
+    LeverageUsingSiloFlashloanWithGeneralSwap siloLeverage;
     address collateralShareToken;
     address debtShareToken;
 
@@ -72,11 +72,11 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         emit log_named_address("siloLeverage", address(siloLeverage));
     }
 
-    function _deployLeverage() internal returns (LeverageUsingSiloWithGeneralSwap) {
+    function _deployLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         AddrLib.init();
         AddrLib.setAddress(AddrKey.DAO, address(this));
 
-        LeverageUsingSiloWithGeneralSwapDeploy deployer = new LeverageUsingSiloWithGeneralSwapDeploy();
+        LeverageUsingSiloFlashloanWithGeneralSwapDeploy deployer = new LeverageUsingSiloFlashloanWithGeneralSwapDeploy();
         deployer.disableDeploymentsSync();
         return deployer.run();
     }
@@ -107,7 +107,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
         // flashloan USDC
 
-        ILeverageUsingSilo.FlashArgs memory flashArgs = ILeverageUsingSilo.FlashArgs({
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
             amount: 1.1e6,
             flashloanTarget: address(usdcSilo)
         });
@@ -138,7 +138,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         });
 
         // deposit PT
-        ILeverageUsingSilo.DepositArgs memory depositArgs = ILeverageUsingSilo.DepositArgs({
+        ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
             amount: depositAmount,
             collateralType: ISilo.CollateralType.Collateral,
             silo: wstkscUSDSilo
@@ -173,7 +173,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
     function _closeLeverageOnBorrowUSDC() internal {
         // flashloan USDC so we can repay debt
 
-        ILeverageUsingSilo.FlashArgs memory flashArgs = ILeverageUsingSilo.FlashArgs({
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
             amount: usdcSilo.maxRepay(borrower),
             flashloanTarget: address(usdcSilo)
         });
@@ -204,7 +204,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
             )
         });
 
-        ILeverageUsingSilo.CloseLeverageArgs memory closeArgs = ILeverageUsingSilo.CloseLeverageArgs({
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
             siloWithCollateral: wstkscUSDSilo,
             collateralType: ISilo.CollateralType.Collateral
         });

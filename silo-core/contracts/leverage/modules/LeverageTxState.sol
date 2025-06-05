@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {ILeverageUsingSilo} from "../../interfaces/ILeverageUsingSilo.sol";
+import {ILeverageUsingSiloFlashloan} from "../../interfaces/ILeverageUsingSiloFlashloan.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 
@@ -16,18 +16,18 @@ abstract contract LeverageTxState {
     ISiloConfig internal transient _txSiloConfig;
 
     /// @dev information about current action
-    ILeverageUsingSilo.LeverageAction internal transient _txAction;
+    ILeverageUsingSiloFlashloan.LeverageAction internal transient _txAction;
 
     /// @dev address of contract from where we getting flashloan
     address internal transient _txFlashloanTarget;
 
-    modifier setupTxState(ISilo _silo, ILeverageUsingSilo.LeverageAction _action, address _flashloanTarget) {
+    modifier setupTxState(ISilo _silo, ILeverageUsingSiloFlashloan.LeverageAction _action, address _flashloanTarget) {
         _set(_silo, _action, _flashloanTarget);
 
         _;
     }
 
-    function _set(ISilo _silo, ILeverageUsingSilo.LeverageAction _action, address _flashloanTarget) private {
+    function _set(ISilo _silo, ILeverageUsingSiloFlashloan.LeverageAction _action, address _flashloanTarget) private {
         _txFlashloanTarget = _flashloanTarget;
         _txAction = _action;
         _txMsgSender = msg.sender;

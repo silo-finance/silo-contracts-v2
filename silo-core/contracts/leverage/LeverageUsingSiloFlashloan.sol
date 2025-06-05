@@ -9,22 +9,23 @@ import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
 import {RevertLib} from "../lib/RevertLib.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
-import {ILeverageUsingSilo} from "../interfaces/ILeverageUsingSilo.sol";
+import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 
 import {RevenueModule} from "./modules/RevenueModule.sol";
 import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
+// TODO add example what means leverage 2x
 
 // TODO same asset leverage in phase 2
 // TODO events on state changes or action that we need to track
 // TODO ensure it will that work for Pendle (show test)
 // TODO triple check approvals
 //- Leverage contract should never have any tokens
-//- close should repay all debt (if position solvent?)
-abstract contract LeverageUsingSilo is
-    ILeverageUsingSilo,
+//- close should repay all debt
+abstract contract LeverageUsingSiloFlashloan is
+    ILeverageUsingSiloFlashloan,
     IERC3156FlashBorrower,
     RevenueModule,
     TransientReentrancy,
@@ -34,7 +35,7 @@ abstract contract LeverageUsingSilo is
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     
-    /// @inheritdoc ILeverageUsingSilo
+    /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
@@ -97,6 +98,9 @@ abstract contract LeverageUsingSilo is
 
         return _FLASHLOAN_CALLBACK;
     }
+
+    // TODO support ETH
+    // TODO approve based on sigs ("probably" can not be done for debt)
 
     function _openLeverage(
         uint256 _flashloanAmount,

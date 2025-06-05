@@ -3,19 +3,20 @@ pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
-import {ILeverageUsingSilo} from "../interfaces/ILeverageUsingSilo.sol";
+import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlashloan.sol";
 
 import {GeneralSwapModule} from "./modules/GeneralSwapModule.sol";
-import {LeverageUsingSilo} from "./LeverageUsingSilo.sol";
+import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
 
 /*
     @notice This contract allow to create and close leverage position using flasnloan and swap.
 */
-contract LeverageUsingSiloWithGeneralSwap is
-    ILeverageUsingSilo,
-    LeverageUsingSilo,
+contract LeverageUsingSiloFlashloanWithGeneralSwap is // TODO LeverageUsingSiloFlashloanFlashloanWithGeneralSwap
+    ILeverageUsingSiloFlashloan,
+    LeverageUsingSiloFlashloan,
     GeneralSwapModule
 {
+    // TODO rename to DESCRIPTION
     string public constant VERSION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
     constructor (address _initialOwner) Ownable(_initialOwner) {
@@ -24,7 +25,7 @@ contract LeverageUsingSiloWithGeneralSwap is
     function _fillQuote(bytes memory _swapArgs, uint256 _approval)
         internal
         virtual
-        override(LeverageUsingSilo, GeneralSwapModule)
+        override(LeverageUsingSiloFlashloan, GeneralSwapModule)
         returns (uint256 amountOut)
     {
         amountOut = GeneralSwapModule._fillQuote(_swapArgs, _approval);

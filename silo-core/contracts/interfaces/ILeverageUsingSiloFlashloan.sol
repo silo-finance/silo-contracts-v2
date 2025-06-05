@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import {ISilo, IERC3156FlashLender} from "./ISilo.sol";
 
-/// @title LeverageUsingSilo Interface
+/// @title LeverageUsingSiloFlashloan Interface
 /// @notice Interface for a contract that enables leveraged deposits using flash loans from silo
 /// and token swaps with 0x os compatible interface
-interface ILeverageUsingSilo {
+interface ILeverageUsingSiloFlashloan {
     enum LeverageAction {
         Undefined,
         Open,
@@ -40,6 +40,7 @@ interface ILeverageUsingSilo {
 
     /// @dev emit when leverage position is open
     /// Fees can be calculated based on event data:
+    // TODO add fees to event
     /// - leverage fee = borrowerDeposit + swapAmountOut - totalDeposit
     /// - flashloan fee = totalBorrow - flashloanAmount
     event OpenLeverage(

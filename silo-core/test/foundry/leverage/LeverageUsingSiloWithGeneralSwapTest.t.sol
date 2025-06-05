@@ -8,14 +8,14 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
-import {LeverageUsingSiloWithGeneralSwapDeploy} from "silo-core/deploy/LeverageUsingSiloWithGeneralSwapDeploy.s.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwapDeploy} from "silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ILeverageUsingSilo} from "silo-core/contracts/interfaces/ILeverageUsingSilo.sol";
-import {LeverageUsingSiloWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloWithGeneralSwap.sol";
+import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -24,15 +24,15 @@ import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 
 /*
-    FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloWithGeneralSwapTest
+    FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloFlashloanWithGeneralSwapTest
 */
-contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
+contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test {
     using SafeERC20 for IERC20;
 
     uint256 constant _PRECISION = 1e18;
 
     ISiloConfig cfg;
-    LeverageUsingSiloWithGeneralSwap siloLeverage;
+    LeverageUsingSiloFlashloanWithGeneralSwap siloLeverage;
     address collateralShareToken;
     address debtShareToken;
     SwapRouterMock swap;
@@ -56,11 +56,11 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         token1.setOnDemand(false);
     }
     
-    function _deployLeverage() internal returns (LeverageUsingSiloWithGeneralSwap) {
+    function _deployLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         AddrLib.init();
         AddrLib.setAddress(AddrKey.DAO, address(this));
 
-        LeverageUsingSiloWithGeneralSwapDeploy deployer = new LeverageUsingSiloWithGeneralSwapDeploy();
+        LeverageUsingSiloFlashloanWithGeneralSwapDeploy deployer = new LeverageUsingSiloFlashloanWithGeneralSwapDeploy();
         deployer.disableDeploymentsSync();
         return deployer.run();
     }
@@ -70,7 +70,7 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
     */
     function test_leverage_alwaysRevert_InvalidFlashloanLender(address _caller) public {
         vm.prank(_caller);
-        vm.expectRevert(ILeverageUsingSilo.InvalidFlashloanLender.selector);
+        vm.expectRevert(ILeverageUsingSiloFlashloan.InvalidFlashloanLender.selector);
 
         siloLeverage.onFlashLoan({
             _initiator: address(0),
@@ -131,7 +131,7 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_anySiloForFlashloan
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_anySiloForFlashloan -vv
     */
     function test_leverage_anySiloForFlashloan() public {
         // SEPARATE SILO FOR FLASHLOAN
@@ -160,8 +160,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         uint256 multiplier = 1.08e18;
 
         (
-            ILeverageUsingSilo.FlashArgs memory flashArgs,
-            ILeverageUsingSilo.DepositArgs memory depositArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(siloFlashloan));
 
@@ -175,7 +175,7 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
         // CLOSE
 
-        ILeverageUsingSilo.CloseLeverageArgs memory closeArgs;
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
 
         (flashArgs, closeArgs, swapArgs) = _defaultCloseArgs(user, address(siloFlashloan));
 
@@ -199,8 +199,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         _depositForBorrow(1000e18, address(3));
 
         (
-            ILeverageUsingSilo.FlashArgs memory flashArgs,
-            ILeverageUsingSilo.DepositArgs memory depositArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
 
@@ -229,8 +229,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         _depositForBorrow(1000e18, address(3));
 
         (
-            ILeverageUsingSilo.FlashArgs memory flashArgs,
-            ILeverageUsingSilo.DepositArgs memory depositArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
 
@@ -251,8 +251,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         uint256 multiplier = 1.08e18;
 
         (
-            ILeverageUsingSilo.FlashArgs memory flashArgs,
-            ILeverageUsingSilo.DepositArgs memory depositArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
 
@@ -278,8 +278,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
     function _prepareForOpeningLeverage(
         address _user,
-        ILeverageUsingSilo.FlashArgs memory _flashArgs,
-        ILeverageUsingSilo.DepositArgs memory _depositArgs,
+        ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
+        ILeverageUsingSiloFlashloan.DepositArgs memory _depositArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs
     ) internal {
         token0.mint(_user, _depositArgs.amount);
@@ -304,8 +304,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
     function _openLeverage(
         address _user,
-        ILeverageUsingSilo.FlashArgs memory _flashArgs,
-        ILeverageUsingSilo.DepositArgs memory _depositArgs,
+        ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
+        ILeverageUsingSiloFlashloan.DepositArgs memory _depositArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs
     ) internal returns (uint256 totalDeposit, uint256 totalBorrow) {
         _prepareForOpeningLeverage(_user, _flashArgs, _depositArgs, _swapArgs);
@@ -321,7 +321,7 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
             vm.expectEmit(address(siloLeverage));
 
-            emit ILeverageUsingSilo.OpenLeverage({
+            emit ILeverageUsingSiloFlashloan.OpenLeverage({
                 totalBorrow: _flashArgs.amount + ISilo(_flashArgs.flashloanTarget).flashFee(address(token1), _flashArgs.amount),
                 totalDeposit: totalUserDeposit,
                 flashloanAmount: _flashArgs.amount,
@@ -344,8 +344,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         address user = makeAddr("user");
 
         (
-            ILeverageUsingSilo.FlashArgs memory _flashArgs,
-            ILeverageUsingSilo.CloseLeverageArgs memory _closeArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
         ) = _defaultCloseArgs(user, address(silo1));
 
@@ -359,8 +359,8 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
     function _closeLeverage(
         address _user,
-        ILeverageUsingSilo.FlashArgs memory _flashArgs,
-        ILeverageUsingSilo.CloseLeverageArgs memory _closeArgs,
+        ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs
     ) internal {
         vm.startPrank(_user);
@@ -377,7 +377,7 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
         vm.expectEmit(address(siloLeverage));
 
-        emit ILeverageUsingSilo.CloseLeverage({
+        emit ILeverageUsingSiloFlashloan.CloseLeverage({
             depositWithdrawn: silo0.previewRedeem(silo0.balanceOf(_user)),
             swapAmountOut: (_flashArgs.amount * 111 / 100) * 99 / 100,
             flashloanRepay: _flashArgs.amount,
@@ -409,17 +409,17 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         internal
         view
         returns(
-            ILeverageUsingSilo.FlashArgs memory flashArgs,
-            ILeverageUsingSilo.DepositArgs memory depositArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         )
     {
-        flashArgs = ILeverageUsingSilo.FlashArgs({
+        flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
             amount: _depositAmount * _multiplier / _PRECISION,
             flashloanTarget: _flashloanTarget
         });
 
-        depositArgs = ILeverageUsingSilo.DepositArgs({
+        depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
             amount: _depositAmount,
             collateralType: ISilo.CollateralType.Collateral,
             silo: silo0
@@ -443,17 +443,17 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         internal
         view
         returns (
-            ILeverageUsingSilo.FlashArgs memory flashArgs,
-            ILeverageUsingSilo.CloseLeverageArgs memory closeArgs,
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         )
     {
-        flashArgs = ILeverageUsingSilo.FlashArgs({
+        flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
             amount: silo1.maxRepay(_borrower),
             flashloanTarget: _flashloanTarget
         });
 
-        closeArgs = ILeverageUsingSilo.CloseLeverageArgs({
+        closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
             siloWithCollateral: silo0,
             collateralType: ISilo.CollateralType.Collateral
         });
