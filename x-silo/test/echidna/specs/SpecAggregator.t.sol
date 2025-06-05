@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 // Test Contracts
-import {InvariantsSpec} from "./specs/InvariantsSpec.t.sol";
-import {PostconditionsSpec} from "./specs/PostconditionsSpec.t.sol";
+import {InvariantsSpec} from "./InvariantsSpec.t.sol";
+import {PostconditionsSpec} from "./PostconditionsSpec.t.sol";
 
 /// @title SpecAggregator
 /// @notice Helper contract to aggregate all spec contracts, inherited in BaseHooks

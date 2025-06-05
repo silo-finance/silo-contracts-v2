@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import {ProtocolAssertions} from "./ProtocolAssertions.t.sol";
 
 // Test Contracts
-import {SpecAggregator} from "../SpecAggregator.t.sol";
+import {SpecAggregator} from "../specs/SpecAggregator.t.sol";
 
 /// @title BaseHooks
 /// @notice Contains common logic for all hooks

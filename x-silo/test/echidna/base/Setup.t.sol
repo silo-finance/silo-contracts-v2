@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-// Utils
-import {Actor} from "./utils/Actor.sol";
+import "forge-std/console2.sol";
 
 // Contracts
 import {XSilo} from "x-silo/contracts/XSilo.sol";
 import {Stream} from "x-silo/contracts/modules/Stream.sol";
 
+// Utils
+import {Actor} from "../utils/Actor.sol";
+
 // Test Contracts
-import {BaseTest} from "./base/BaseTest.t.sol";
+import {BaseTest} from "./BaseTest.t.sol";
 
 // Mock Contracts
-import {TestERC20} from "./utils/mocks/TestERC20.sol";
+import {TestERC20} from "../utils/mocks/TestERC20.sol";
 
-// Interfaces
-
-import "forge-std/console2.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {

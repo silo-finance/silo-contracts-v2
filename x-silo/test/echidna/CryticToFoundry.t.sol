@@ -6,8 +6,8 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 // Contracts
-import {Invariants} from "./Invariants.t.sol";
-import {Setup} from "./Setup.t.sol";
+import {Invariants} from "./invariants/Invariants.t.sol";
+import {Setup} from "./base/Setup.t.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 /*

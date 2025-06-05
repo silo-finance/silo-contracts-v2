@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Invariants} from "./Invariants.t.sol";
-import {Setup} from "./Setup.t.sol";
+import {Invariants} from "./invariants/Invariants.t.sol";
+import {Setup} from "./base/Setup.t.sol";
 
 /// @title Tester
 /// @notice Entry point for invariant testing, inherits all contracts, invariants & handler

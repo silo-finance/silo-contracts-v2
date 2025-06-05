@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Contracts
-import {HandlerAggregator} from "../HandlerAggregator.t.sol";
+import {HandlerAggregator} from "../handlers/HandlerAggregator.t.sol";
 
 import "forge-std/console.sol";
 
