@@ -21,10 +21,12 @@ contract StreamHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO
-//    function setDaoFee(uint128 _minFee, uint128 _maxFee) external {
-//        stream.setDaoFee(_minFee, _maxFee);
-//    }
+    function setDaoFee(uint96 _emissionPerSecond, uint64 _distributionEnd) external {
+        fail(); // working?
+        stream.setEmissions(_emissionPerSecond, _distributionEnd % 30 days);
+
+        assertEq(stream.lastUpdateTimestamp(), block.timestamp, SET_EMISSION_TIME);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
