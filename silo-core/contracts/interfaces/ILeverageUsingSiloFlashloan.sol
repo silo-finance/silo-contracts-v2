@@ -76,6 +76,9 @@ interface ILeverageUsingSiloFlashloan {
 
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails
+    /// This method requires approval for transfer collateral from borrower to leverage contract and to create
+    /// debt position. Approval for collateral can be done using Permit (if asset supports it), for that case please
+    /// use `openLeveragePositionPermit`
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
     /// @param _depositArgs Final deposit configuration into a Silo
@@ -85,6 +88,21 @@ interface ILeverageUsingSiloFlashloan {
         DepositArgs calldata _depositArgs
     ) external;
 
+    /// @notice Performs leverage operation using a flash loan and token swap
+    /// @dev Reverts if the amount is so high that fee calculation fails
+    /// @param _flashArgs Flash loan configuration
+    /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
+    /// @param _depositArgs Final deposit configuration into a Silo
+    /// @param _depositAllowance Permit for leverage contract to transfer collateral from borrower
+    function openLeveragePositionPermit(
+        FlashArgs calldata _flashArgs,
+        bytes calldata _swapArgs,
+        DepositArgs calldata _depositArgs,
+        Permit calldata _depositAllowance
+    ) external;
+
+    /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
+    /// borrower balance). Approval can be done using Permit, for that case please use `closeLeveragePositionPermit`
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings,
     /// that should swap enough collateral to repay flashloan in debt token
@@ -93,5 +111,17 @@ interface ILeverageUsingSiloFlashloan {
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
+    ) external;
+
+    /// @param _flashArgs Flash loan configuration
+    /// @param _swapArgs Swap call data and settings,
+    /// that should swap enough collateral to repay flashloan in debt token
+    /// @param _closeLeverageArgs configuration for closing position
+    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral tokens
+    function closeLeveragePositionPermit(
+        FlashArgs calldata _flashArgs,
+        bytes calldata _swapArgs,
+        CloseLeverageArgs calldata _closeLeverageArgs,
+        Permit calldata _withdrawAllowance
     ) external;
 }

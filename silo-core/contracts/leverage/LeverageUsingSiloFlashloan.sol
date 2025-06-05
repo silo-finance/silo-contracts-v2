@@ -41,16 +41,11 @@ abstract contract LeverageUsingSiloFlashloan is
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs,
         Permit calldata _depositAllowance
-    ) external {
-        IERC20Permit(_depositArgs.silo.asset()).permit({
-            owner: _depositAllowance.owner,
-            spender: _depositAllowance.spender,
-            value: _depositAllowance.value,
-            deadline: _depositAllowance.deadline,
-            v: _depositAllowance.v,
-            r: _depositAllowance.r,
-            s: _depositAllowance.s
-        });
+    )
+        external
+        virtual
+    {
+        _executePermit(_depositAllowance, _depositArgs.silo.asset());
 
         openLeveragePosition(_flashArgs, _swapArgs, _depositArgs);
     }
@@ -74,12 +69,26 @@ abstract contract LeverageUsingSiloFlashloan is
         }), FlashloanFailed());
     }
 
+    function closeLeveragePositionPermit(
+        FlashArgs calldata _flashArgs,
+        bytes calldata _swapArgs,
+        CloseLeverageArgs calldata _closeArgs,
+        Permit calldata _withdrawAllowance
+    )
+        external
+        virtual
+    {
+        _executePermit(_withdrawAllowance, address(_closeArgs.siloWithCollateral));
+
+        closeLeveragePosition(_flashArgs, _swapArgs, _closeArgs);
+    }
+
     function closeLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs
     )
-        external
+        public
         virtual
         nonReentrant
         setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
@@ -290,5 +299,17 @@ abstract contract LeverageUsingSiloFlashloan is
         require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
 
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
+    }
+
+    function _executePermit(Permit memory _permit, address _token) internal virtual {
+        IERC20Permit(_token).permit({
+            owner: _permit.owner,
+            spender: _permit.spender,
+            value: _permit.value,
+            deadline: _permit.deadline,
+            v: _permit.v,
+            r: _permit.r,
+            s: _permit.s
+        });
     }
 }

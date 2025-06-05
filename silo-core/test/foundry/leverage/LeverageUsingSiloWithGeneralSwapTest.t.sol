@@ -43,10 +43,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     address debtShareToken;
     SwapRouterMock swap;
 
-    Vm.Wallet wallet;
+    Vm.Wallet wallet = vm.createWallet("Signer");
 
     function setUp() public {
-        wallet = vm.createWallet("Signer");
+        // wallet = vm.createWallet("Signer");
 
         cfg = _setUpLocalFixture();
 
@@ -277,6 +277,29 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertSiloLeverageHasNoTokens();
     }
 
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_closeWithPermit
+    */
+    function test_leverage_closeWithPermit() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
+            IGeneralSwapModule.SwapArgs memory _swapArgs
+        ) = _defaultCloseArgs(user, address(silo1));
+
+        _closeLeverage(user, _flashArgs, _closeArgs, _swapArgs, _generatePermit(collateralShareToken));
+
+        assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
+        assertEq(silo1.maxRepay(user), 0, "user has NO debt");
+
+        _assertSiloLeverageHasNoTokens();
+    }
+
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_AboveMaxLtv
     */
@@ -440,6 +463,17 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs
     ) internal {
+        ILeverageUsingSiloFlashloan.Permit memory _withdrawPermit;
+        _closeLeverage(_user, _flashArgs, _closeArgs, _swapArgs, _withdrawPermit);
+    }
+
+    function _closeLeverage(
+        address _user,
+        ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
+        IGeneralSwapModule.SwapArgs memory _swapArgs,
+        ILeverageUsingSiloFlashloan.Permit memory _withdrawPermit
+    ) internal {
         vm.startPrank(_user);
 
         // mock the swap: part of collateral token -> debt token, so we can repay flashloan
@@ -449,8 +483,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         swap.setSwap(_swapArgs.sellToken, amountIn, _swapArgs.buyToken, amountIn * 99 / 100);
 
         // APPROVALS
-        uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
-        IERC20(collateralShareToken).forceApprove(address(siloLeverage), collateralSharesApproval);
+        if (_withdrawPermit.owner == address(0)) {
+            // uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
+            IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
+        }
 
         vm.expectEmit(address(siloLeverage));
 
@@ -461,7 +497,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             borrower: _user
         });
 
-        siloLeverage.closeLeveragePosition(_flashArgs, abi.encode(_swapArgs), _closeArgs);
+        if (_withdrawPermit.owner == address(0)) {
+            siloLeverage.closeLeveragePosition(_flashArgs, abi.encode(_swapArgs), _closeArgs);
+        } else {
+            siloLeverage.closeLeveragePositionPermit(_flashArgs, abi.encode(_swapArgs), _closeArgs, _withdrawPermit);
+        }
 
         vm.stopPrank();
 
@@ -586,7 +626,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         permit = ILeverageUsingSiloFlashloan.Permit({
             owner: wallet.addr,
             spender: address(siloLeverage),
-            value: 100e18,
+            value: 1000e18,
             deadline: block.timestamp + 1000,
             v: 0,
             r: "",
@@ -602,17 +642,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _deadline: permit.deadline,
             _token: _token
         });
-
-//        uint256 allowanceBefore = _shareToken.allowance(wallet.addr, spender);
-//        assertEq(allowanceBefore, 0, "expect no allowance");
-//
-//        ERC20PermitUpgradeable(address(_shareToken)).permit(wallet.addr, spender, value, deadline, v, r, s);
-//
-//        uint256 allowanceAfter = _shareToken.allowance(wallet.addr, spender);
-//        assertEq(allowanceAfter, value, "expect valid allowance");
-//
-//        nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
-//        assertEq(nonce, 1, "expect nonce to be 1");
     }
 
     function _createPermit(

@@ -11,13 +11,12 @@ import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
 /*
     @notice This contract allow to create and close leverage position using flasnloan and swap.
 */
-contract LeverageUsingSiloFlashloanWithGeneralSwap is // TODO LeverageUsingSiloFlashloanFlashloanWithGeneralSwap
+contract LeverageUsingSiloFlashloanWithGeneralSwap is
     ILeverageUsingSiloFlashloan,
     LeverageUsingSiloFlashloan,
     GeneralSwapModule
 {
-    // TODO rename to DESCRIPTION
-    string public constant VERSION = "Leverage with silo flashloan and 0x (or compatible) swap";
+    string public constant DESCRIPTION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
     constructor (address _initialOwner) Ownable(_initialOwner) {
     }
