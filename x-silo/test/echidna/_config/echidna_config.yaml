@@ -26,7 +26,7 @@ propMaxGas: 1000000000
 testMaxGas: 1000000000
 
 # list of methods to filter
-filterFunctions: [ "Tester.onERC721Received(address,address,uint256,bytes)" ]
+filterFunctions: [ "XSiloTester.onERC721Received(address,address,uint256,bytes)" ]
 # by default, blacklist methods in filterFunctions
 #filterBlacklist: false
 
