@@ -11,8 +11,6 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
-
 import {
     MarketConfig,
     ArbitraryLossThreshold,
@@ -53,7 +51,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     uint256 public constant DEFAULT_LOST_THRESHOLD = 1e6;
 
     /// @inheritdoc ISiloVaultBase
-    uint8 public immutable DECIMALS_OFFSET;
+    uint8 public constant DECIMALS_OFFSET = 6;
 
     /// @inheritdoc ISiloVaultBase
     IVaultIncentivesModule public immutable INCENTIVES_MODULE;
@@ -129,8 +127,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
-
-        DECIMALS_OFFSET = SiloVaultActionsLib.vaultDecimals(_asset);
+        require(decimals() <= 18, ErrorsLib.NotSupportedDecimals());
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -494,7 +491,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     ///
     /// To determine the current conversion rate, use the vault’s `convertToShares(1 asset)` method.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return uint8(TokenHelper.assertAndGetDecimals(asset()));
+        return SiloVaultActionsLib.decimals(asset());
     }
 
     /// @inheritdoc IERC4626
