@@ -11,6 +11,8 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+
 import {
     MarketConfig,
     ArbitraryLossThreshold,
@@ -479,10 +481,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* ERC4626 (PUBLIC) */
 
-    /// @dev Decimals by design are 18 to improve compatibility for external integrations.
+    /// @dev SiloVault decimals are the same as the underlying asset decimals.
     /// SiloVault do not have an initial 1:1 shares-to-assets rate with underlying markets.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return 18;
+        return uint8(TokenHelper.assertAndGetDecimals(asset()));
     }
 
     /// @inheritdoc IERC4626
