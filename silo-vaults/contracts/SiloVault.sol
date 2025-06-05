@@ -11,6 +11,8 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {UtilsLib} from "morpho-blue/libraries/UtilsLib.sol";
 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+
 import {
     MarketConfig,
     ArbitraryLossThreshold,
@@ -479,7 +481,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* ERC4626 (PUBLIC) */
 
-    /// @notice Decimals are the same as underlaying asset. Decimal offset is not accounted for in decimals.
+    /// @notice Decimals are the same as underlying asset. Decimal offset is not accounted for in decimals.
     /// SiloVault do not have an initial 1:1 shares-to-assets rate with underlying markets.
     /// @dev SiloVault is using decimal offset of 1e6. This means that depositing 1 asset results in 1,000,000 shares,
     /// although this is not a fixed ratio and will grow over time.
@@ -492,7 +494,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     ///
     /// To determine the current conversion rate, use the vault’s `convertToShares(1 asset)` method.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return 18;
+        return uint8(TokenHelper.assertAndGetDecimals(asset()));
     }
 
     /// @inheritdoc IERC4626
