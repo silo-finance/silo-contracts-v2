@@ -305,8 +305,4 @@ library SiloVaultActionsLib {
 
         return newWithdrawQueue;
     }
-
-    function decimals(address _asset) external view returns (uint8) {
-        return uint8(TokenHelper.assertAndGetDecimals(_asset));
-    }
 }

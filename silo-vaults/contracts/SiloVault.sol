@@ -491,7 +491,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     ///
     /// To determine the current conversion rate, use the vault’s `convertToShares(1 asset)` method.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return SiloVaultActionsLib.decimals(asset());
+        return IERC20Metadata(asset()).decimals();
     }
 
     /// @inheritdoc IERC4626
