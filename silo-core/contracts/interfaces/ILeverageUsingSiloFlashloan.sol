@@ -38,18 +38,15 @@ interface ILeverageUsingSiloFlashloan {
         ISilo.CollateralType collateralType;
     }
 
-    /// @dev emit when leverage position is open
-    /// Fees can be calculated based on event data:
-    // TODO add fees to event
-    /// - leverage fee = borrowerDeposit + swapAmountOut - totalDeposit
-    /// - flashloan fee = totalBorrow - flashloanAmount
     event OpenLeverage(
         address indexed borrower,
         uint256 borrowerDeposit,
         uint256 swapAmountOut,
         uint256 flashloanAmount,
         uint256 totalDeposit,
-        uint256 totalBorrow
+        uint256 totalBorrow,
+        uint256 leverageFee,
+        uint256 flashloanFee
     );
 
     event CloseLeverage(

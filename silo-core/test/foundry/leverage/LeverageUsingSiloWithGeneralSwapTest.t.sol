@@ -314,20 +314,24 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             uint256 swapAmountOut = _flashArgs.amount * 99 / 100;
             uint256 totalUserDeposit;
 
-            {
+
                 uint256 leverageFee = siloLeverage.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
                 totalUserDeposit = _depositArgs.amount + swapAmountOut - leverageFee;
-            }
+
+
+            uint256 flashloanFee = ISilo(_flashArgs.flashloanTarget).flashFee(address(token1), _flashArgs.amount);
 
             vm.expectEmit(address(siloLeverage));
 
             emit ILeverageUsingSiloFlashloan.OpenLeverage({
-                totalBorrow: _flashArgs.amount + ISilo(_flashArgs.flashloanTarget).flashFee(address(token1), _flashArgs.amount),
+                totalBorrow: _flashArgs.amount + flashloanFee,
                 totalDeposit: totalUserDeposit,
                 flashloanAmount: _flashArgs.amount,
                 swapAmountOut: swapAmountOut,
                 borrowerDeposit: _depositArgs.amount,
-                borrower: _user
+                borrower: _user,
+                leverageFee: leverageFee,
+                flashloanFee: flashloanFee
             });
         }
 

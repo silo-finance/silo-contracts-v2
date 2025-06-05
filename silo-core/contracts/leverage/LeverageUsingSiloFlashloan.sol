@@ -109,13 +109,20 @@ abstract contract LeverageUsingSiloFlashloan is
     )
         internal
     {
-        (
-            bytes memory swapArgs,
-            DepositArgs memory depositArgs
-        ) = abi.decode(_data, (bytes, DepositArgs));
+        DepositArgs memory depositArgs;
+        uint256 collateralAmountAfterSwap;
 
-        // swap all flashloan amount into collateral token
-        uint256 collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
+        {
+            bytes memory swapArgs;
+
+            (
+                swapArgs,
+                depositArgs
+            ) = abi.decode(_data, (bytes, DepositArgs));
+
+            // swap all flashloan amount into collateral token
+            collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
+        }
 
         uint256 totalDeposit = depositArgs.amount + collateralAmountAfterSwap;
 
@@ -132,11 +139,16 @@ abstract contract LeverageUsingSiloFlashloan is
 
         _deposit({_depositArgs: depositArgs, _totalDeposit: totalDeposit, _asset: collateralAsset});
 
-        ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
+        {
+            ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
-        // borrow asset wil be used to pay fees
-        uint256 totalBorrow = _flashloanAmount + _flashloanFee;
-        borrowSilo.borrow({_assets: totalBorrow, _receiver: address(this), _borrower: _txMsgSender});
+            // borrow asset wil be used to repay flashloan with fee
+            borrowSilo.borrow({
+                _assets: _flashloanAmount + _flashloanFee,
+                _receiver: address(this),
+                _borrower: _txMsgSender
+            });
+        }
 
         emit OpenLeverage({
             borrower: _txMsgSender,
@@ -144,7 +156,9 @@ abstract contract LeverageUsingSiloFlashloan is
             swapAmountOut: collateralAmountAfterSwap,
             flashloanAmount: _flashloanAmount,
             totalDeposit: totalDeposit,
-            totalBorrow: totalBorrow
+            totalBorrow: _flashloanAmount + _flashloanFee,
+            leverageFee: feeForLeverage,
+            flashloanFee: _flashloanFee
         });
 
         _payLeverageFee(collateralAsset, feeForLeverage);
