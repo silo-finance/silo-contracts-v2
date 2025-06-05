@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
@@ -42,7 +43,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     address debtShareToken;
     SwapRouterMock swap;
 
+    Vm.Wallet wallet;
+
     function setUp() public {
+        wallet = vm.createWallet("Signer");
+
         cfg = _setUpLocalFixture();
 
         _deposit(1e18, address(1));
@@ -100,7 +105,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest_solvent
     */
     function test_leverage_example_withInterest_solvent() public {
-        address user = makeAddr("user");
+        address user = wallet.addr;
 
         _openLeverageExample();
 
@@ -120,7 +125,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest_inSolvent
     */
     function test_leverage_example_withInterest_inSolvent() public {
-        address user = makeAddr("user");
+        address user = wallet.addr;
 
         _openLeverageExample();
 
@@ -194,10 +199,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_almostMAx
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_almostMax
     */
-    function test_leverage_almostMAx() public {
-        address user = makeAddr("user");
+    function test_leverage_almostMax() public {
+        address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 2.80e18;
 
@@ -233,7 +238,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withDepositPermit
     */
     function test_leverage_withDepositPermit() public {
-        address user = makeAddr("user");
+        address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 2.0e18;
 
@@ -253,20 +258,20 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _depositWithPermit: true
         });
 
-        assertEq(siloLens.getUserLTV(), 0, "user has no position");
+        assertEq(siloLens.getUserLTV(silo0, user), 0, "user has no position");
 
-        Permit memory depositAllowance;
+        vm.startPrank(user);
 
-        // counterexample
-        vm.prank(user);
-        siloLeverage.openLeveragePosition({
+        siloLeverage.openLeveragePositionPermit({
             _flashArgs: flashArgs,
             _swapArgs: abi.encode(swapArgs),
             _depositArgs: depositArgs,
-            _depositAllowance: depositAllowance
+            _depositAllowance: _generatePermit(silo0.asset())
         });
 
-        assertEq(siloLens.getUserLTV(), 0.5e18, "user has leverage position");
+        vm.stopPrank();
+
+        assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
         _assertSiloLeverageHasNoTokens();
@@ -276,7 +281,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_AboveMaxLtv
     */
     function test_leverage_AboveMaxLtv() public {
-        address user = makeAddr("user");
+        address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 2.81e18;
 
@@ -306,7 +311,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     function _openLeverageExample() internal {
-        address user = makeAddr("user");
+        address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 1.08e18;
 
@@ -413,7 +418,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     function _closeLeverageExample() internal {
-        address user = makeAddr("user");
+        address user = wallet.addr;
 
         (
             ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
@@ -570,35 +575,44 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         }
     }
 
-    function _generateDepositPermit() internal returns (ILeverageUsingSiloFlashloan.Permit memory depositPermit) {
-        Vm.Wallet memory wallet = vm.createWallet("Signer");
-        address spender = makeAddr("user");
-        uint256 value = 100e18;
-        uint256 nonce = IERC20Permit(address(silo0.asset())).nonces(wallet.addr);
-        uint256 deadline = block.timestamp + 1000;
+    function _generatePermit(address _token)
+        internal
+        returns (ILeverageUsingSiloFlashloan.Permit memory permit)
+    {
+        uint256 nonce = IERC20Permit(_token).nonces(wallet.addr);
 
-        assertEq(nonce, 0, "expect nonce to be 0");
+//        assertEq(nonce, 0, "expect nonce to be 0");
 
-        (uint8 v, bytes32 r, bytes32 s) = _createPermit({
-            _signer: wallet.addr,
-            _signerPrivateKey: wallet.privateKey,
-            _spender: spender,
-            _value: value,
-            _nonce: nonce,
-            _deadline: deadline,
-            _shareToken: address(_shareToken)
+        permit = ILeverageUsingSiloFlashloan.Permit({
+            owner: wallet.addr,
+            spender: address(siloLeverage),
+            value: 100e18,
+            deadline: block.timestamp + 1000,
+            v: 0,
+            r: "",
+            s: ""
         });
 
-        uint256 allowanceBefore = _shareToken.allowance(wallet.addr, spender);
-        assertEq(allowanceBefore, 0, "expect no allowance");
+        (permit.v, permit.r, permit.s) = _createPermit({
+            _signer: permit.owner,
+            _signerPrivateKey: wallet.privateKey,
+            _spender: permit.spender,
+            _value: permit.value,
+            _nonce: nonce,
+            _deadline: permit.deadline,
+            _token: _token
+        });
 
-        ERC20PermitUpgradeable(address(_shareToken)).permit(wallet.addr, spender, value, deadline, v, r, s);
-
-        uint256 allowanceAfter = _shareToken.allowance(wallet.addr, spender);
-        assertEq(allowanceAfter, value, "expect valid allowance");
-
-        nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
-        assertEq(nonce, 1, "expect nonce to be 1");
+//        uint256 allowanceBefore = _shareToken.allowance(wallet.addr, spender);
+//        assertEq(allowanceBefore, 0, "expect no allowance");
+//
+//        ERC20PermitUpgradeable(address(_shareToken)).permit(wallet.addr, spender, value, deadline, v, r, s);
+//
+//        uint256 allowanceAfter = _shareToken.allowance(wallet.addr, spender);
+//        assertEq(allowanceAfter, value, "expect valid allowance");
+//
+//        nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
+//        assertEq(nonce, 1, "expect nonce to be 1");
     }
 
     function _createPermit(
@@ -608,11 +622,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         uint256 _value,
         uint256 _nonce,
         uint256 _deadline,
-        address _shareToken
+        address _token
     ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
         bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, _signer, _spender, _value, _nonce, _deadline));
 
-        bytes32 domainSeparator = IERC20Permit(_shareToken).DOMAIN_SEPARATOR();
+        bytes32 domainSeparator = IERC20Permit(_token).DOMAIN_SEPARATOR();
         bytes32 digest = MessageHashUtils.toTypedDataHash(domainSeparator, structHash);
 
         (v, r, s) = vm.sign(_signerPrivateKey, digest);

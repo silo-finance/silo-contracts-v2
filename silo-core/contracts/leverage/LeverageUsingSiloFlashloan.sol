@@ -41,7 +41,7 @@ abstract contract LeverageUsingSiloFlashloan is
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs,
         Permit calldata _depositAllowance
-    ) {
+    ) external {
         IERC20Permit(_depositArgs.silo.asset()).permit({
             owner: _depositAllowance.owner,
             spender: _depositAllowance.spender,
