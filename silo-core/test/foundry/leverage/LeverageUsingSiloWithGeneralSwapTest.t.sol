@@ -208,10 +208,10 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
 
         // counterexample
         vm.prank(user);
-        (uint256 totalUserCollateral,) = siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+        siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
 
-        emit log_named_decimal_uint("totalUserCollateral", totalUserCollateral, 18);
-        emit log_named_decimal_uint("leverage", totalUserCollateral * 100 / depositAmount, 2);
+        // emit log_named_decimal_uint("totalUserCollateral", totalUserCollateral, 18);
+        // emit log_named_decimal_uint("leverage", totalUserCollateral * 100 / depositAmount, 2);
         emit log_named_decimal_uint("LTV", siloLens.getUserLTV(silo0, user), 16);
 
         _assertThereIsNoDebtApprovals(user);
@@ -332,9 +332,12 @@ contract LeverageUsingSiloWithGeneralSwapTest is SiloLittleHelper, Test {
         }
 
         vm.prank(_user);
-        (totalDeposit, totalBorrow) = siloLeverage.openLeveragePosition(_flashArgs, abi.encode(_swapArgs), _depositArgs);
+        siloLeverage.openLeveragePosition(_flashArgs, abi.encode(_swapArgs), _depositArgs);
 
         _assertThereIsNoDebtApprovals(_user);
+
+        totalDeposit = silo0.previewRedeem(silo0.balanceOf(_user));
+        totalBorrow = silo1.maxRepay(_user);
     }
 
     function _closeLeverageExample() internal {

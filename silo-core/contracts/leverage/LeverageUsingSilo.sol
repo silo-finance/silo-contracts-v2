@@ -4,6 +4,8 @@ pragma solidity 0.8.28;
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
+import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
+
 import {RevertLib} from "../lib/RevertLib.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -25,6 +27,7 @@ abstract contract LeverageUsingSilo is
     ILeverageUsingSilo,
     IERC3156FlashBorrower,
     RevenueModule,
+    TransientReentrancy,
     LeverageTxState
 {
     using SafeERC20 for IERC20;
@@ -40,8 +43,8 @@ abstract contract LeverageUsingSilo is
     )
         external
         virtual
-        atomicTxFlow(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
-        returns (uint256 totalDeposit, uint256 totalBorrow)
+        nonReentrant
+        setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
@@ -49,9 +52,6 @@ abstract contract LeverageUsingSilo is
             _amount: _flashArgs.amount,
             _data: abi.encode(_swapArgs, _depositArgs)
         }), FlashloanFailed());
-
-        totalDeposit = _txTotalDeposit;
-        totalBorrow = _txTotalBorrow;
     }
 
     function closeLeveragePosition(
@@ -61,7 +61,8 @@ abstract contract LeverageUsingSilo is
     )
         external
         virtual
-        atomicTxFlow(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
+        nonReentrant
+        setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
     {
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
@@ -113,12 +114,12 @@ abstract contract LeverageUsingSilo is
         // swap all flashloan amount into collateral token
         uint256 collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
 
-        _txTotalDeposit = depositArgs.amount + collateralAmountAfterSwap;
+        uint256 totalDeposit = depositArgs.amount + collateralAmountAfterSwap;
 
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
-        uint256 feeForLeverage = _calculateLeverageFee(_txTotalDeposit);
+        uint256 feeForLeverage = _calculateLeverageFee(totalDeposit);
 
-        _txTotalDeposit -= feeForLeverage;
+        totalDeposit -= feeForLeverage;
 
         address collateralAsset = depositArgs.silo.asset();
 
@@ -126,21 +127,21 @@ abstract contract LeverageUsingSilo is
         // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
         require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
-        _deposit({_depositArgs: depositArgs, _totalDeposit: _txTotalDeposit, _asset: collateralAsset});
+        _deposit({_depositArgs: depositArgs, _totalDeposit: totalDeposit, _asset: collateralAsset});
 
         ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
         // borrow asset wil be used to pay fees
-        _txTotalBorrow = _flashloanAmount + _flashloanFee;
-        borrowSilo.borrow({_assets: _txTotalBorrow, _receiver: address(this), _borrower: _txMsgSender});
+        uint256 totalBorrow = _flashloanAmount + _flashloanFee;
+        borrowSilo.borrow({_assets: totalBorrow, _receiver: address(this), _borrower: _txMsgSender});
 
         emit OpenLeverage({
             borrower: _txMsgSender,
             borrowerDeposit: depositArgs.amount,
             swapAmountOut: collateralAmountAfterSwap,
             flashloanAmount: _flashloanAmount,
-            totalDeposit: _txTotalDeposit,
-            totalBorrow: _txTotalBorrow
+            totalDeposit: totalDeposit,
+            totalBorrow: totalBorrow
         });
 
         _payLeverageFee(collateralAsset, feeForLeverage);
