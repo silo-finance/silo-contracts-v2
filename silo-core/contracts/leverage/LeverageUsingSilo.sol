@@ -32,7 +32,6 @@ abstract contract LeverageUsingSilo is
 {
     using SafeERC20 for IERC20;
 
-    uint256 internal constant _DECIMALS = 1e18;
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     
     /// @inheritdoc ILeverageUsingSilo
