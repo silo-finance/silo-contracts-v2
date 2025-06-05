@@ -6,6 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
+import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -29,6 +30,9 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
 */
 contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test {
     using SafeERC20 for IERC20;
+
+    bytes32 constant internal _PERMIT_TYPEHASH =
+        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
     uint256 constant _PRECISION = 1e18;
 
@@ -575,8 +579,15 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         assertEq(nonce, 0, "expect nonce to be 0");
 
-        (uint8 v, bytes32 r, bytes32 s) =
-                        _createPermit(wallet.addr, wallet.privateKey, spender, value, nonce, deadline, address(_shareToken));
+        (uint8 v, bytes32 r, bytes32 s) = _createPermit({
+            _signer: wallet.addr,
+            _signerPrivateKey: wallet.privateKey,
+            _spender: spender,
+            _value: value,
+            _nonce: nonce,
+            _deadline: deadline,
+            _shareToken: address(_shareToken)
+        });
 
         uint256 allowanceBefore = _shareToken.allowance(wallet.addr, spender);
         assertEq(allowanceBefore, 0, "expect no allowance");
@@ -588,5 +599,22 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
         assertEq(nonce, 1, "expect nonce to be 1");
+    }
+
+    function _createPermit(
+        address _signer,
+        uint256 _signerPrivateKey,
+        address _spender,
+        uint256 _value,
+        uint256 _nonce,
+        uint256 _deadline,
+        address _shareToken
+    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, _signer, _spender, _value, _nonce, _deadline));
+
+        bytes32 domainSeparator = IERC20Permit(_shareToken).DOMAIN_SEPARATOR();
+        bytes32 digest = MessageHashUtils.toTypedDataHash(domainSeparator, structHash);
+
+        (v, r, s) = vm.sign(_signerPrivateKey, digest);
     }
 }
