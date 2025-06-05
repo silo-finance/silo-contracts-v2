@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -189,9 +190,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_hi
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_almostMAx
     */
-    function test_leverage_hi() public {
+    function test_leverage_almostMAx() public {
         address user = makeAddr("user");
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 2.80e18;
@@ -204,7 +205,13 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
 
-        _prepareForOpeningLeverage(user, flashArgs, depositArgs, swapArgs);
+        _prepareForOpeningLeverage({
+            _user: user,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _depositWithPermit: false
+        });
 
         // counterexample
         vm.prank(user);
@@ -213,6 +220,49 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // emit log_named_decimal_uint("totalUserCollateral", totalUserCollateral, 18);
         // emit log_named_decimal_uint("leverage", totalUserCollateral * 100 / depositAmount, 2);
         emit log_named_decimal_uint("LTV", siloLens.getUserLTV(silo0, user), 16);
+
+        _assertThereIsNoDebtApprovals(user);
+        _assertSiloLeverageHasNoTokens();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withDepositPermit
+    */
+    function test_leverage_withDepositPermit() public {
+        address user = makeAddr("user");
+        uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 2.0e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        _prepareForOpeningLeverage({
+            _user: user,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _depositWithPermit: true
+        });
+
+        assertEq(siloLens.getUserLTV(), 0, "user has no position");
+
+        Permit memory depositAllowance;
+
+        // counterexample
+        vm.prank(user);
+        siloLeverage.openLeveragePosition({
+            _flashArgs: flashArgs,
+            _swapArgs: abi.encode(swapArgs),
+            _depositArgs: depositArgs,
+            _depositAllowance: depositAllowance
+        });
+
+        assertEq(siloLens.getUserLTV(), 0.5e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
         _assertSiloLeverageHasNoTokens();
@@ -234,7 +284,13 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
 
-        _prepareForOpeningLeverage(user, flashArgs, depositArgs, swapArgs);
+        _prepareForOpeningLeverage({
+            _user: user,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _depositWithPermit: false
+        });
 
         // counterexample
         vm.prank(user);
@@ -280,7 +336,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address _user,
         ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
         ILeverageUsingSiloFlashloan.DepositArgs memory _depositArgs,
-        IGeneralSwapModule.SwapArgs memory _swapArgs
+        IGeneralSwapModule.SwapArgs memory _swapArgs,
+        bool _depositWithPermit
     ) internal {
         token0.mint(_user, _depositArgs.amount);
 
@@ -290,8 +347,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // APPROVALS
 
         vm.startPrank(_user);
-        // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
-        IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
+
+        if (!_depositWithPermit) {
+            // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
+            IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
+        }
 
         uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
             _flashArgs.amount, ISilo(_flashArgs.flashloanTarget)
@@ -308,16 +368,20 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         ILeverageUsingSiloFlashloan.DepositArgs memory _depositArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs
     ) internal returns (uint256 totalDeposit, uint256 totalBorrow) {
-        _prepareForOpeningLeverage(_user, _flashArgs, _depositArgs, _swapArgs);
+        _prepareForOpeningLeverage({
+            _user: _user,
+            _flashArgs: _flashArgs,
+            _depositArgs: _depositArgs,
+            _swapArgs: _swapArgs,
+            _depositWithPermit: false
+        });
 
         {
             uint256 swapAmountOut = _flashArgs.amount * 99 / 100;
             uint256 totalUserDeposit;
 
-
-                uint256 leverageFee = siloLeverage.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
-                totalUserDeposit = _depositArgs.amount + swapAmountOut - leverageFee;
-
+            uint256 leverageFee = siloLeverage.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
+            totalUserDeposit = _depositArgs.amount + swapAmountOut - leverageFee;
 
             uint256 flashloanFee = ISilo(_flashArgs.flashloanTarget).flashFee(address(token1), _flashArgs.amount);
 
@@ -500,5 +564,29 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
                 "siloLeverage has no custom tokens"
             );
         }
+    }
+
+    function _generateDepositPermit() internal returns (ILeverageUsingSiloFlashloan.Permit memory depositPermit) {
+        Vm.Wallet memory wallet = vm.createWallet("Signer");
+        address spender = makeAddr("user");
+        uint256 value = 100e18;
+        uint256 nonce = IERC20Permit(address(silo0.asset())).nonces(wallet.addr);
+        uint256 deadline = block.timestamp + 1000;
+
+        assertEq(nonce, 0, "expect nonce to be 0");
+
+        (uint8 v, bytes32 r, bytes32 s) =
+                        _createPermit(wallet.addr, wallet.privateKey, spender, value, nonce, deadline, address(_shareToken));
+
+        uint256 allowanceBefore = _shareToken.allowance(wallet.addr, spender);
+        assertEq(allowanceBefore, 0, "expect no allowance");
+
+        ERC20PermitUpgradeable(address(_shareToken)).permit(wallet.addr, spender, value, deadline, v, r, s);
+
+        uint256 allowanceAfter = _shareToken.allowance(wallet.addr, spender);
+        assertEq(allowanceAfter, value, "expect valid allowance");
+
+        nonce = ERC20PermitUpgradeable(address(_shareToken)).nonces(wallet.addr);
+        assertEq(nonce, 1, "expect nonce to be 1");
     }
 }

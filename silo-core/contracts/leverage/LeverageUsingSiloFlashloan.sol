@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
@@ -35,13 +36,32 @@ abstract contract LeverageUsingSiloFlashloan is
 
     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
     
+    function openLeveragePositionPermit(
+        FlashArgs calldata _flashArgs,
+        bytes calldata _swapArgs,
+        DepositArgs calldata _depositArgs,
+        Permit calldata _depositAllowance
+    ) {
+        IERC20Permit(_depositArgs.silo.asset()).permit({
+            owner: _depositAllowance.owner,
+            spender: _depositAllowance.spender,
+            value: _depositAllowance.value,
+            deadline: _depositAllowance.deadline,
+            v: _depositAllowance.v,
+            r: _depositAllowance.r,
+            s: _depositAllowance.s
+        });
+
+        openLeveragePosition(_flashArgs, _swapArgs, _depositArgs);
+    }
+
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs
     )
-        external
+        public
         virtual
         nonReentrant
         setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
@@ -99,7 +119,8 @@ abstract contract LeverageUsingSiloFlashloan is
         return _FLASHLOAN_CALLBACK;
     }
 
-    // TODO support ETH
+    // TODO support ETH - do we REALLY need it? wrap ETH to WETH is common, so user can easily doit itself, does is worth complexity?
+
     // TODO approve based on sigs ("probably" can not be done for debt)
 
     function _openLeverage(

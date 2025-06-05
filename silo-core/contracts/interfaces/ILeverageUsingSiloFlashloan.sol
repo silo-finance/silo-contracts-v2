@@ -38,6 +38,16 @@ interface ILeverageUsingSiloFlashloan {
         ISilo.CollateralType collateralType;
     }
 
+    struct Permit {
+        address owner;
+        address spender;
+        uint256 value;
+        uint256 deadline;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+    }
+
     event OpenLeverage(
         address indexed borrower,
         uint256 borrowerDeposit,
