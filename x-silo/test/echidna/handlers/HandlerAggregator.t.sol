@@ -13,10 +13,10 @@ import {StreamHandler} from './permissioned/StreamHandler.t.sol';
 /// @notice Helper contract to aggregate all handler contracts, inherited in BaseInvariants
 abstract contract HandlerAggregator is
   ShareTokenHandler, // User Actions
-  VaultHandler
+  VaultHandler,
 //  XSiloHandler,
 //  XSiloConfigHandler, // Permissioned Actions
-//  StreamHandler
+//  StreamHandler - do not include here, it has separate Test contract
 {
   /// @notice Helper function in case any handler requires additional setup
   function _setUpHandlers() internal {}
