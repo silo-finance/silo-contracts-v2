@@ -25,15 +25,12 @@ abstract contract GeneralSwapModule is IGeneralSwapModule {
         if (swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
         // Approve token for spending by the exchange
-        IERC20(swapArgs.sellToken).forceApprove(swapArgs.allowanceTarget, _approval); // TODO max?
+        IERC20(swapArgs.sellToken).forceApprove(swapArgs.allowanceTarget, _approval);
 
         // Perform low-level call to external exchange proxy
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = swapArgs.exchangeProxy.call(swapArgs.swapCallData);
         if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
-
-        // Reset approval to 1 to avoid lingering allowances
-        IERC20(swapArgs.sellToken).forceApprove(swapArgs.allowanceTarget, 1);
 
         amountOut = IERC20(swapArgs.buyToken).balanceOf(address(this));
         if (amountOut == 0) revert ZeroAmountOut();
