@@ -113,21 +113,20 @@ abstract contract LeverageUsingSilo is
         // swap all flashloan amount into collateral token
         uint256 collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
 
+        _txTotalDeposit = depositArgs.amount + collateralAmountAfterSwap;
+
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
-        uint256 feeForLeverage = _calculateLeverageFee(depositArgs.amount + collateralAmountAfterSwap);
+        uint256 feeForLeverage = _calculateLeverageFee(_txTotalDeposit);
+
+        _txTotalDeposit -= feeForLeverage;
 
         address collateralAsset = depositArgs.silo.asset();
 
-        // TODO qa if posible that feeForLeverage > collateralAmountAfterSwap
+        // TODO qa if possible that feeForLeverage > collateralAmountAfterSwap
         // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
         require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
-        // deposit with leverage: user collateral + swapped collateral - fee
-        _txTotalDeposit = _deposit({
-            _depositArgs: depositArgs,
-            _leverageAmount: collateralAmountAfterSwap - feeForLeverage,
-            _asset: collateralAsset
-        });
+        _deposit({_depositArgs: depositArgs, _totalDeposit: _txTotalDeposit, _asset: collateralAsset});
 
         ISilo borrowSilo = _resolveOtherSilo(depositArgs.silo);
 
@@ -147,20 +146,14 @@ abstract contract LeverageUsingSilo is
         _payLeverageFee(collateralAsset, feeForLeverage);
     }
 
-    function _deposit(DepositArgs memory _depositArgs, uint256 _leverageAmount, address _asset)
-        internal
-        virtual
-        returns (uint256 totalDeposit)
-    {
+    function _deposit(DepositArgs memory _depositArgs, uint256 _totalDeposit, address _asset) internal virtual {
         // transfer collateral tokens from borrower
         IERC20(_asset).safeTransferFrom(_txMsgSender, address(this), _depositArgs.amount);
 
-        totalDeposit = _depositArgs.amount + _leverageAmount;
-
-        _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), totalDeposit);
+        _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), _totalDeposit);
 
         _depositArgs.silo.deposit({
-            _assets: totalDeposit,
+            _assets: _totalDeposit,
             _receiver: _txMsgSender,
             _collateralType: _depositArgs.collateralType
         });
