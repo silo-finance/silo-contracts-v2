@@ -2,13 +2,14 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 /// @title Revenue Module for Leverage Operations
 /// @notice This contract collects and distributes revenue from leveraged operations.
-abstract contract RevenueModule is Ownable2Step {
+abstract contract RevenueModule is Ownable2Step, Pausable {
     using SafeERC20 for IERC20;
 
     /// @notice Fee base constant (1e18 represents 100%)
@@ -51,6 +52,14 @@ abstract contract RevenueModule is Ownable2Step {
 
     /// @dev Thrown when revenue receiver is not set
     error ReceiverNotSet();
+
+    function pause() external virtual onlyOwner {
+        _pause();
+    }
+
+    function unpause() external virtual onlyOwner {
+        _unpause();
+    }
 
     /// @notice Set the leverage fee
     /// @param _fee New leverage fee (must be < FEE_PRECISION)

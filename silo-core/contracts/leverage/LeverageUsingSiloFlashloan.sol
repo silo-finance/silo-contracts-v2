@@ -80,6 +80,7 @@ abstract contract LeverageUsingSiloFlashloan is
         public
         payable
         virtual
+        whenNotPaused
         nonReentrant
         setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
@@ -114,6 +115,7 @@ abstract contract LeverageUsingSiloFlashloan is
     )
         public
         virtual
+        whenNotPaused
         nonReentrant
         setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
     {
