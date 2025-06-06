@@ -602,8 +602,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertThereIsNoDebtApprovals(_user);
     }
 
-    // TODO nonReentrant test
-
     function _defaultOpenArgs(
         uint256 _depositAmount,
         uint256 _multiplier,
