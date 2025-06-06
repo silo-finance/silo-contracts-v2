@@ -41,6 +41,8 @@ import {LeverageTxState} from "./modules/LeverageTxState.sol";
     Your total ETH exposure is $2,000, but your own money is $1,000.
 
     So, your leverage is: Leverage = Total Exposure / Your Own Capital = 2000 / 1000 = 2.0𝑥
+
+    RISK: If ETH price drops, your position can be liquidated.
 */
 abstract contract LeverageUsingSiloFlashloan is
     ILeverageUsingSiloFlashloan,
