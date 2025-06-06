@@ -8,6 +8,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
+import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -29,7 +30,7 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
 
 
 contract WETH {
-    MintableToken wrapped;
+    MintableToken immutable wrapped;
 
     constructor(MintableToken _wrapped) {
         wrapped = _wrapped;
@@ -83,6 +84,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         weth = new WETH(token0);
         vm.etch(address(siloLeverage.NATIVE_TOKEN()), address(weth).code);
+
+        // for some weird reason, etch start to work only when I added below line
+        siloLeverage.NATIVE_TOKEN().deposit{value: 1}();
     }
     
     function _deployLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
@@ -211,6 +215,30 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertGt(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got another flashloan fee");
     }
 
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable -vv
+    */
+    function test_leverage_pausable() public {
+        // OPEN
+
+        siloLeverage.pause();
+
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
+        ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+
+        // CLOSE
+
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        siloLeverage.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
+    }
+
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_almostMax
     */
@@ -232,7 +260,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _flashArgs: flashArgs,
             _depositArgs: depositArgs,
             _swapArgs: swapArgs,
-            _depositWithPermit: false
+            _approveAssets: true
         });
 
         // counterexample
@@ -248,9 +276,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withETH
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withETH_pass
     */
-    function test_leverage_withETH() public {
+    function test_leverage_withETH_pass() public {
         address user = wallet.addr;
         vm.deal(user, 0.2e18);
 
@@ -270,26 +298,35 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _flashArgs: flashArgs,
             _depositArgs: depositArgs,
             _swapArgs: swapArgs,
-            _depositWithPermit: true // we dont want approval, we will use ETH
+            _approveAssets: false // we dont want approval, we will use ETH
         });
 
         assertEq(siloLens.getUserLTV(silo0, user), 0, "user has no position");
 
         vm.startPrank(user);
 
-        // "mock" sending ETH
-//        address native = address(siloLeverage.NATIVE_TOKEN());
-//        vm.mockCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector), "");
-//        vm.expectCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector));
-
+        // to make sure we have no tokens to transferFrom
         token0.burn(token0.balanceOf(user));
-//        token0.mint(address(siloLeverage), depositArgs.amount);
 
         assertEq(
             IERC20(silo0.asset()).balanceOf(user),
             0,
             "make sure user do not have any tokens, so we can't transferFrom"
         );
+
+        vm.expectRevert(ILeverageUsingSiloFlashloan.IncorrectNativeTokenAmount.selector);
+        siloLeverage.openLeveragePosition{value: depositArgs.amount - 1}({
+            _flashArgs: flashArgs,
+            _swapArgs: abi.encode(swapArgs),
+            _depositArgs: depositArgs
+        });
+
+        vm.expectRevert(ILeverageUsingSiloFlashloan.IncorrectNativeTokenAmount.selector);
+        siloLeverage.openLeveragePosition{value: depositArgs.amount + 1}({
+            _flashArgs: flashArgs,
+            _swapArgs: abi.encode(swapArgs),
+            _depositArgs: depositArgs
+        });
 
         siloLeverage.openLeveragePosition{value: depositArgs.amount}({
             _flashArgs: flashArgs,
@@ -326,7 +363,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _flashArgs: flashArgs,
             _depositArgs: depositArgs,
             _swapArgs: swapArgs,
-            _depositWithPermit: true
+            _approveAssets: false
         });
 
         assertEq(siloLens.getUserLTV(silo0, user), 0, "user has no position");
@@ -390,7 +427,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _flashArgs: flashArgs,
             _depositArgs: depositArgs,
             _swapArgs: swapArgs,
-            _depositWithPermit: false
+            _approveAssets: true
         });
 
         // counterexample
@@ -438,7 +475,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
         ILeverageUsingSiloFlashloan.DepositArgs memory _depositArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs,
-        bool _depositWithPermit
+        bool _approveAssets
     ) internal {
         token0.mint(_user, _depositArgs.amount);
 
@@ -449,7 +486,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         vm.startPrank(_user);
 
-        if (!_depositWithPermit) {
+        if (_approveAssets) {
             // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
             IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
         }
@@ -474,7 +511,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _flashArgs: _flashArgs,
             _depositArgs: _depositArgs,
             _swapArgs: _swapArgs,
-            _depositWithPermit: false
+            _approveAssets: true
         });
 
         {

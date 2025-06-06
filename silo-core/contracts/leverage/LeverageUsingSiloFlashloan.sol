@@ -84,7 +84,7 @@ abstract contract LeverageUsingSiloFlashloan is
         nonReentrant
         setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
-        _handleNativeToken(_depositArgs.amount);
+        _txMsgValue = msg.value;
 
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
@@ -209,10 +209,7 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     function _deposit(DepositArgs memory _depositArgs, uint256 _totalDeposit, address _asset) internal virtual {
-        if (!_txUseNative) {
-            // transfer collateral tokens from borrower
-            IERC20(_asset).safeTransferFrom(_txMsgSender, address(this), _depositArgs.amount);
-        } // else, we expect to have deposited native and got wrapped
+        _transferTokensFromUser(_asset, _depositArgs.amount);
 
         _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), _totalDeposit);
 
@@ -330,13 +327,14 @@ abstract contract LeverageUsingSiloFlashloan is
         });
     }
 
-    // TODO figure out the best place for this method
-    function _handleNativeToken(uint256 _expectedValue) internal {
-        if (msg.value != 0) {
-            require(msg.value == _expectedValue, NativeTokenAmountNotEnough());
+    function _transferTokensFromUser(address _asset, uint256 _expectedValue) internal {
+        if (_txMsgValue == 0) {
+            // transfer collateral tokens from borrower
+            IERC20(_asset).safeTransferFrom(_txMsgSender, address(this), _expectedValue);
+        } else {
+            require(_txMsgValue == _expectedValue, IncorrectNativeTokenAmount());
 
-            NATIVE_TOKEN.deposit{value: msg.value}();
-            _txUseNative = true;
+            NATIVE_TOKEN.deposit{value: _txMsgValue}();
         }
     }
 }

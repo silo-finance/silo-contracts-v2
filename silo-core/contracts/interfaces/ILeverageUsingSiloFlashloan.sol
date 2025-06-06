@@ -71,7 +71,7 @@ interface ILeverageUsingSiloFlashloan {
     );
 
     error EmptyNativeToken();
-    error NativeTokenAmountNotEnough();
+    error IncorrectNativeTokenAmount();
     error FlashloanFailed();
     error InvalidFlashloanLender();
     error InvalidInitiator();
