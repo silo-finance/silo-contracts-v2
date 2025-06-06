@@ -164,10 +164,8 @@ abstract contract LeverageUsingSiloFlashloan is
         uint256 totalDeposit = depositArgs.amount + collateralAmountAfterSwap;
 
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
-        uint256 feeForLeverage = _calculateLeverageFee(totalDeposit);
-        // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
-        require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
-
+        uint256 feeForLeverage = calculateLeverageFee(totalDeposit);
+        
         totalDeposit -= feeForLeverage;
 
         address collateralAsset = depositArgs.silo.asset();
