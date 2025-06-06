@@ -115,7 +115,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
     /// @inheritdoc IERC3156FlashBorrower
     function onFlashLoan(
-        address _initiator,
+        address /* _initiator */,
         address _borrowToken,
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
@@ -126,7 +126,6 @@ abstract contract LeverageUsingSiloFlashloan is
     {
         // this check prevents call `onFlashLoan` directly
         require(_txFlashloanTarget == msg.sender, InvalidFlashloanLender());
-        require(_initiator == address(this), InvalidInitiator());
 
         if (_txAction == LeverageAction.Open) {
             _openLeverage(_flashloanAmount, _flashloanFee, _data);
