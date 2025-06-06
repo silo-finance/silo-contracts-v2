@@ -91,7 +91,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     */
     function test_leverage_alwaysRevert_InvalidFlashloanLender(address _caller) public {
         vm.assume(_caller != address(0));
-        
+
         vm.prank(_caller);
         vm.expectRevert(ILeverageUsingSiloFlashloan.InvalidFlashloanLender.selector);
 
