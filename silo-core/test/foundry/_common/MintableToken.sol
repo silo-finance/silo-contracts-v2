@@ -2,18 +2,23 @@
 pragma solidity ^0.8.28;
 
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 
-contract MintableToken is ERC20 {
+contract MintableToken is ERC20, ERC20Permit {
     uint8 immutable private _decimals;
 
     bool onDemand;
 
-    constructor(uint8 _setDecimals) ERC20("a", "b") {
+    constructor(uint8 _setDecimals) ERC20("a", "b") ERC20Permit("MintableToken") {
         _decimals = _setDecimals;
     }
 
     function mint(address _owner, uint256 _amount) external virtual {
         _mint(_owner, _amount);
+    }
+
+    function burn(uint256 _amount) external virtual {
+        _burn(msg.sender, _amount);
     }
 
     function setOnDemand(bool _onDemand) external {

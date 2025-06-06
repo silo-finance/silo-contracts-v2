@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- silo-core: leverage
+
 ### Fixed
 - x-silo: use rounding direction in favor of protocol for cancel redeem 
 - x-silo: ensure we set `distrubutionEnd` when reset emission
