@@ -18,6 +18,30 @@ import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
 import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
+/*
+    @title Contract with leverage logic
+    @notice What does leverage means?
+
+    You are using a Silo lending protocol that allows you to supply collateral and borrow against it.
+
+    Collateral asset: ETH (price = $1,000)
+    Debt asset: USDC (stablecoin = $1)
+
+    Step-by-step to reach 2x leverage:
+
+    Start with $1,000 worth of ETH.
+    Leverage contract will flashloan $1,000 USDC. Flashloaned USDC will be swapped into 1 ETH.
+    Contract will deposit 2 ETH as collateral and borrow 1000 USDC on your behalf against your ETH to repay flashloan.
+
+    Now you hold 2 ETH total exposure
+
+    - 1 ETH from your original deposit
+    - 1 ETH bought using flashloan funds
+
+    Your total ETH exposure is $2,000, but your own money is $1,000.
+
+    So, your leverage is: Leverage = Total Exposure / Your Own Capital = 2000 / 1000 = 2.0𝑥
+*/
 abstract contract LeverageUsingSiloFlashloan is
     ILeverageUsingSiloFlashloan,
     IERC3156FlashBorrower,
