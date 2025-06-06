@@ -95,7 +95,6 @@ abstract contract LeverageUsingSiloFlashloan is
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePositionPermit(
-        FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs,
         Permit calldata _withdrawAllowance
@@ -105,24 +104,23 @@ abstract contract LeverageUsingSiloFlashloan is
     {
         _executePermit(_withdrawAllowance, address(_closeArgs.siloWithCollateral));
 
-        closeLeveragePosition(_flashArgs, _swapArgs, _closeArgs);
+        closeLeveragePosition(_swapArgs, _closeArgs);
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePosition(
-        FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs
     )
         public
         virtual
         nonReentrant
-        setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _flashArgs.flashloanTarget)
+        setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
     {
-        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
+        require(IERC3156FlashLender(_closeArgs.flashloanTarget).flashLoan({
             _receiver: this,
-            _token: ISilo(_flashArgs.flashloanTarget).asset(),
-            _amount: _flashArgs.amount,
+            _token: ISilo(_closeArgs.flashloanTarget).asset(),
+            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(msg.sender),
             _data: abi.encode(_swapArgs, _closeArgs)
         }), FlashloanFailed());
     }
@@ -166,12 +164,9 @@ abstract contract LeverageUsingSiloFlashloan is
         {
             bytes memory swapArgs;
 
-            (
-                swapArgs,
-                depositArgs
-            ) = abi.decode(_data, (bytes, DepositArgs));
+            (swapArgs, depositArgs) = abi.decode(_data, (bytes, DepositArgs));
 
-            // swap all flashloan amount into collateral token
+            // swap all flashloan (debt token) amount into collateral token
             collateralAmountAfterSwap = _fillQuote(swapArgs, _flashloanAmount);
         }
 
@@ -179,7 +174,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
         uint256 feeForLeverage = calculateLeverageFee(totalDeposit);
-        
+
         totalDeposit -= feeForLeverage;
 
         address collateralAsset = depositArgs.silo.asset();

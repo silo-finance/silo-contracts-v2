@@ -173,11 +173,6 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
     function _closeLeverageOnBorrowUSDC() internal {
         // flashloan USDC so we can repay debt
 
-        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
-            amount: usdcSilo.maxRepay(borrower),
-            flashloanTarget: address(usdcSilo)
-        });
-
         // calculate (this is arbitrary math) amount of PT token (collateral) to swap for USDC, to repay flashloan
 
         /* this data should be provided by BE API
@@ -205,6 +200,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         });
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
+            flashloanTarget: address(usdcSilo),
             siloWithCollateral: wstkscUSDSilo,
             collateralType: ISilo.CollateralType.Collateral
         });
@@ -221,7 +217,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
         _displayBorrowerState();
 
-        siloLeverage.closeLeveragePosition(flashArgs, abi.encode(swapArgs), closeArgs);
+        siloLeverage.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
         vm.stopPrank();
 
         _displayBorrowerState();

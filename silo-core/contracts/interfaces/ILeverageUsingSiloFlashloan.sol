@@ -14,7 +14,8 @@ interface ILeverageUsingSiloFlashloan {
     }
 
     /// @notice Parameters for a flash loan
-    /// @param flashloanTarget The address of the contract providing the flash loan
+    /// @param flashloanTarget The address of the contract providing the flash loan.
+    /// For opening position it should be equal to swap amount in.
     /// @param amount The amount of tokens to borrow
     struct FlashArgs {
         address flashloanTarget;
@@ -31,9 +32,12 @@ interface ILeverageUsingSiloFlashloan {
         ISilo.CollateralType collateralType;
     }
 
+    /// @param flashloanTarget The address of the contract providing the flash loan, it must have enough liquidity
+    /// to cover borrower debt
     /// @param siloWithCollateral address of silo with collateral, the other silo is expected to have debt
     /// @param collateralType The type of collateral to use
     struct CloseLeverageArgs {
+        address flashloanTarget;
         ISilo siloWithCollateral;
         ISilo.CollateralType collateralType;
     }
@@ -112,23 +116,18 @@ interface ILeverageUsingSiloFlashloan {
 
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval can be done using Permit, for that case please use `closeLeveragePositionPermit`
-    /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings,
     /// that should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
     function closeLeveragePosition(
-        FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external;
 
-    /// @param _flashArgs Flash loan configuration
-    /// @param _swapArgs Swap call data and settings,
     /// that should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
     /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral tokens
     function closeLeveragePositionPermit(
-        FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs,
         Permit calldata _withdrawAllowance

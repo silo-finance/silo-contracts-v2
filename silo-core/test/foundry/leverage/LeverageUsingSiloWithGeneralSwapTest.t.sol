@@ -200,9 +200,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
 
-        (flashArgs, closeArgs, swapArgs) = _defaultCloseArgs(user, address(siloFlashloan));
+        (closeArgs, swapArgs) = _defaultCloseArgs(user, address(siloFlashloan));
 
-        _closeLeverage(user, flashArgs, closeArgs, swapArgs);
+        _closeLeverage(user, closeArgs, swapArgs);
 
         _assertUserHasNoPosition(user);
         _assertSiloLeverageHasNoTokens();
@@ -357,12 +357,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address user = wallet.addr;
 
         (
-            ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
         ) = _defaultCloseArgs(user, address(silo1));
 
-        _closeLeverage(user, _flashArgs, _closeArgs, _swapArgs, _generatePermit(collateralShareToken));
+        _closeLeverage(user, _closeArgs, _swapArgs, _generatePermit(collateralShareToken));
 
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
@@ -514,12 +513,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address user = wallet.addr;
 
         (
-            ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
         ) = _defaultCloseArgs(user, address(silo1));
 
-        _closeLeverage(user, _flashArgs, _closeArgs, _swapArgs);
+        _closeLeverage(user, _closeArgs, _swapArgs);
 
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
@@ -529,17 +527,15 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
     function _closeLeverage(
         address _user,
-        ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs
     ) internal {
         ILeverageUsingSiloFlashloan.Permit memory _withdrawPermit;
-        _closeLeverage(_user, _flashArgs, _closeArgs, _swapArgs, _withdrawPermit);
+        _closeLeverage(_user, _closeArgs, _swapArgs, _withdrawPermit);
     }
 
     function _closeLeverage(
         address _user,
-        ILeverageUsingSiloFlashloan.FlashArgs memory _flashArgs,
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
         IGeneralSwapModule.SwapArgs memory _swapArgs,
         ILeverageUsingSiloFlashloan.Permit memory _withdrawPermit
@@ -549,7 +545,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // mock the swap: part of collateral token -> debt token, so we can repay flashloan
         // for this test case price is 1:1
         // we need swap bit more, so we can count for fee or slippage, here we simulate +11%
-        uint256 amountIn = _flashArgs.amount * 111 / 100;
+        uint256 flashAmount = silo1.maxRepay(_user);
+        uint256 amountIn = flashAmount * 111 / 100;
         swap.setSwap(_swapArgs.sellToken, amountIn, _swapArgs.buyToken, amountIn * 99 / 100);
 
         // APPROVALS
@@ -562,16 +559,16 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         emit ILeverageUsingSiloFlashloan.CloseLeverage({
             depositWithdrawn: silo0.previewRedeem(silo0.balanceOf(_user)),
-            swapAmountOut: (_flashArgs.amount * 111 / 100) * 99 / 100,
-            flashloanAmount: _flashArgs.amount,
-            flashloanFee: _flashFee(ISilo(_flashArgs.flashloanTarget), _flashArgs.amount),
+            swapAmountOut: (flashAmount * 111 / 100) * 99 / 100,
+            flashloanAmount: flashAmount,
+            flashloanFee: _flashFee(ISilo(_closeArgs.flashloanTarget), flashAmount),
             borrower: _user
         });
 
         if (_withdrawPermit.owner == address(0)) {
-            siloLeverage.closeLeveragePosition(_flashArgs, abi.encode(_swapArgs), _closeArgs);
+            siloLeverage.closeLeveragePosition(abi.encode(_swapArgs), _closeArgs);
         } else {
-            siloLeverage.closeLeveragePositionPermit(_flashArgs, abi.encode(_swapArgs), _closeArgs, _withdrawPermit);
+            siloLeverage.closeLeveragePositionPermit(abi.encode(_swapArgs), _closeArgs, _withdrawPermit);
         }
 
         vm.stopPrank();
@@ -623,17 +620,12 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         internal
         view
         returns (
-            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         )
     {
-        flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
-            amount: silo1.maxRepay(_borrower),
-            flashloanTarget: _flashloanTarget
-        });
-
         closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
+            flashloanTarget: _flashloanTarget,
             siloWithCollateral: silo0,
             collateralType: ISilo.CollateralType.Collateral
         });
