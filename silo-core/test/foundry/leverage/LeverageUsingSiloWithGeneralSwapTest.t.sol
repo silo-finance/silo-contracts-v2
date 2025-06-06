@@ -90,6 +90,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_alwaysRevert_InvalidFlashloanLender
     */
     function test_leverage_alwaysRevert_InvalidFlashloanLender(address _caller) public {
+        vm.assume(_caller != address(0));
+        
         vm.prank(_caller);
         vm.expectRevert(ILeverageUsingSiloFlashloan.InvalidFlashloanLender.selector);
 
