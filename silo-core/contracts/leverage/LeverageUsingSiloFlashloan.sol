@@ -318,8 +318,8 @@ abstract contract LeverageUsingSiloFlashloan is
 
     function _executePermit(Permit memory _permit, address _token) internal virtual {
         IERC20Permit(_token).permit({
-            owner: _permit.owner,
-            spender: _permit.spender,
+            owner: msg.sender,
+            spender: address(this),
             value: _permit.value,
             deadline: _permit.deadline,
             v: _permit.v,

@@ -550,7 +550,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         swap.setSwap(_swapArgs.sellToken, amountIn, _swapArgs.buyToken, amountIn * 99 / 100);
 
         // APPROVALS
-        if (_withdrawPermit.owner == address(0)) {
+        if (_withdrawPermit.value == 0) {
             // uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
             IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
         }
@@ -565,7 +565,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             borrower: _user
         });
 
-        if (_withdrawPermit.owner == address(0)) {
+        if (_withdrawPermit.value == 0) {
             siloLeverage.closeLeveragePosition(abi.encode(_swapArgs), _closeArgs);
         } else {
             siloLeverage.closeLeveragePositionPermit(abi.encode(_swapArgs), _closeArgs, _withdrawPermit);
@@ -677,11 +677,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     {
         uint256 nonce = IERC20Permit(_token).nonces(wallet.addr);
 
-//        assertEq(nonce, 0, "expect nonce to be 0");
-
         permit = ILeverageUsingSiloFlashloan.Permit({
-            owner: wallet.addr,
-            spender: address(siloLeverage),
             value: 1000e18,
             deadline: block.timestamp + 1000,
             v: 0,
@@ -690,9 +686,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         });
 
         (permit.v, permit.r, permit.s) = _createPermit({
-            _signer: permit.owner,
+            _signer: wallet.addr,
             _signerPrivateKey: wallet.privateKey,
-            _spender: permit.spender,
+            _spender: address(siloLeverage),
             _value: permit.value,
             _nonce: nonce,
             _deadline: permit.deadline,

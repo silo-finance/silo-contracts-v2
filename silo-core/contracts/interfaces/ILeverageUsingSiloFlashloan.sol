@@ -42,9 +42,8 @@ interface ILeverageUsingSiloFlashloan {
         ISilo.CollateralType collateralType;
     }
 
+    /// @dev owner argument in signature should be msg.sender, spender should be leverage contract
     struct Permit {
-        address owner;
-        address spender;
         uint256 value;
         uint256 deadline;
         uint8 v;
