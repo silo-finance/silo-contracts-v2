@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlashloan.sol";
 
@@ -28,5 +29,13 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
         returns (uint256 amountOut)
     {
         amountOut = GeneralSwapModule._fillQuote(_swapArgs, _approval);
+    }
+
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount)
+        internal
+        virtual
+        override(GeneralSwapModule, LeverageUsingSiloFlashloan)
+    {
+        LeverageUsingSiloFlashloan._setMaxAllowance(_asset, _spender, _requiredAmount);
     }
 }

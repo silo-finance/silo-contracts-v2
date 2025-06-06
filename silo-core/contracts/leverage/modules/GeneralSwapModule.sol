@@ -17,15 +17,15 @@ abstract contract GeneralSwapModule is IGeneralSwapModule {
     /// @notice Executes a token swap using a prebuilt swap quote
     /// @dev The contract must hold the sell token balance before calling.
     /// @param _swapArgs SwapArgs struct as bytes containing containing all parameters for executing a swap
-    /// @param _approval Amount of sell token to approve before the swap
+    /// @param _maxApprovalAmount Amount of sell token to approve before the swap
     /// @return amountOut Amount of buy token received after the swap including any previous balance that contract has
-    function _fillQuote(bytes memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut) {
+    function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount) internal virtual returns (uint256 amountOut) {
         SwapArgs memory swapArgs = abi.decode(_swapArgs, (SwapArgs));
 
         if (swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
         // Approve token for spending by the exchange
-        IERC20(swapArgs.sellToken).forceApprove(swapArgs.allowanceTarget, _approval);
+        _setMaxAllowance(IERC20(swapArgs.sellToken), swapArgs.allowanceTarget, _maxApprovalAmount);
 
         // Perform low-level call to external exchange proxy
         // solhint-disable-next-line avoid-low-level-calls
@@ -35,4 +35,6 @@ abstract contract GeneralSwapModule is IGeneralSwapModule {
         amountOut = IERC20(swapArgs.buyToken).balanceOf(address(this));
         if (amountOut == 0) revert ZeroAmountOut();
     }
+
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual;
 }
