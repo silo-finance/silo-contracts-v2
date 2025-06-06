@@ -12,7 +12,7 @@ abstract contract RevenueModule is Ownable2Step {
     using SafeERC20 for IERC20;
 
     /// @notice Fee base constant (1e18 represents 100%)
-    uint256 public constant FEE_DECIMALS = 1e18;
+    uint256 public constant FEE_PRECISION = 1e18;
 
     /// @notice The leverage fee expressed as a fraction of 1e18
     uint256 public leverageFee;
@@ -53,11 +53,11 @@ abstract contract RevenueModule is Ownable2Step {
     error ReceiverNotSet();
 
     /// @notice Set the leverage fee
-    /// @param _fee New leverage fee (must be < FEE_DECIMALS)
+    /// @param _fee New leverage fee (must be < FEE_PRECISION)
     function setLeverageFee(uint256 _fee) external onlyOwner {
         require(revenueReceiver != address(0), ReceiverZero());
         require(leverageFee != _fee, FeeDidNotChanged());
-        require(_fee < FEE_DECIMALS, InvalidFee());
+        require(_fee < FEE_PRECISION, InvalidFee());
 
         leverageFee = _fee;
         emit LeverageFeeChanged(_fee);
@@ -97,14 +97,10 @@ abstract contract RevenueModule is Ownable2Step {
     /// @param _amount The amount to calculate the fee for
     /// @return leverageFeeAmount The calculated fee amount
     function calculateLeverageFee(uint256 _amount) public virtual view returns (uint256 leverageFeeAmount) {
-        return _calculateLeverageFee(_amount);
-    }
-
-    function _calculateLeverageFee(uint256 _amount) internal virtual view returns (uint256 leverageFeeAmount) {
         uint256 fee = leverageFee;
         if (fee == 0) return 0;
 
-        leverageFeeAmount = Math.mulDiv(_amount, fee, FEE_DECIMALS, Math.Rounding.Ceil);
+        leverageFeeAmount = Math.mulDiv(_amount, fee, FEE_PRECISION, Math.Rounding.Ceil);
         if (leverageFeeAmount == 0) leverageFeeAmount = 1;
     }
 
