@@ -71,6 +71,7 @@ abstract contract LeverageUsingSiloFlashloan is
         nonReentrant
         setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
+        // BUG: deposit will transfer tokens to this contract, then SWAP will include this as amountOut
         if (msg.value != 0) {
             require(msg.value == _depositArgs.amount, NativeTokenAmountNotEnough());
 
@@ -170,13 +171,12 @@ abstract contract LeverageUsingSiloFlashloan is
 
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
         uint256 feeForLeverage = _calculateLeverageFee(totalDeposit);
+        // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
+        require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
         totalDeposit -= feeForLeverage;
 
         address collateralAsset = depositArgs.silo.asset();
-
-        // we could take cut on user original deposit amount to pay fee, but what's the point of doing leverage then?
-        require(collateralAmountAfterSwap > feeForLeverage, LeverageToLowToCoverFee());
 
         _deposit({_depositArgs: depositArgs, _totalDeposit: totalDeposit, _asset: collateralAsset});
 
