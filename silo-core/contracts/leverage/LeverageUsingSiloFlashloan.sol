@@ -268,7 +268,10 @@ abstract contract LeverageUsingSiloFlashloan is
         if (collateralToTransfer != 0) collateralAsset.safeTransfer(_txMsgSender, collateralToTransfer);
     }
 
-    function _fillQuote(bytes memory _swapArgs, uint256 _approval) internal virtual returns (uint256 amountOut);
+    function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount)
+        internal
+        virtual
+        returns (uint256 amountOut);
 
     function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
         uint256 allowance = _asset.allowance(address(this), _spender);

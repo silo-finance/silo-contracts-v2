@@ -22,13 +22,13 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
     constructor (address _initialOwner, address _native) Ownable(_initialOwner) LeverageUsingSiloFlashloan(_native) {
     }
 
-    function _fillQuote(bytes memory _swapArgs, uint256 _approval)
+    function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount)
         internal
         virtual
         override(LeverageUsingSiloFlashloan, GeneralSwapModule)
         returns (uint256 amountOut)
     {
-        amountOut = GeneralSwapModule._fillQuote(_swapArgs, _approval);
+        amountOut = GeneralSwapModule._fillQuote(_swapArgs, _maxApprovalAmount);
     }
 
     function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount)

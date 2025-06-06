@@ -19,7 +19,11 @@ abstract contract GeneralSwapModule is IGeneralSwapModule {
     /// @param _swapArgs SwapArgs struct as bytes containing containing all parameters for executing a swap
     /// @param _maxApprovalAmount Amount of sell token to approve before the swap
     /// @return amountOut Amount of buy token received after the swap including any previous balance that contract has
-    function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount) internal virtual returns (uint256 amountOut) {
+    function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount)
+        internal
+        virtual
+        returns (uint256 amountOut)
+    {
         SwapArgs memory swapArgs = abi.decode(_swapArgs, (SwapArgs));
 
         if (swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
