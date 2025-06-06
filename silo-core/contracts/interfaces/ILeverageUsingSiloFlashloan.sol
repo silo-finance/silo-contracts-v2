@@ -61,7 +61,8 @@ interface ILeverageUsingSiloFlashloan {
 
     event CloseLeverage(
         address indexed borrower,
-        uint256 flashloanRepay,
+        uint256 flashloanAmount,
+        uint256 flashloanFee,
         uint256 swapAmountOut,
         uint256 depositWithdrawn
     );

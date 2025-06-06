@@ -255,7 +255,8 @@ abstract contract LeverageUsingSiloFlashloan is
 
         emit CloseLeverage({
             borrower: _txMsgSender,
-            flashloanRepay: _flashloanAmount,
+            flashloanAmount: _flashloanAmount,
+            flashloanFee: _flashloanFee,
             swapAmountOut: availableDebtAssets,
             depositWithdrawn: withdrawnDeposit
         });

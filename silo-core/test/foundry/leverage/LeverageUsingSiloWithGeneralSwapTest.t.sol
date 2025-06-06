@@ -101,13 +101,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         vm.prank(_caller);
         vm.expectRevert(ILeverageUsingSiloFlashloan.InvalidFlashloanLender.selector);
 
-        siloLeverage.onFlashLoan({
-            _initiator: address(0),
-            _borrowToken: address(0),
-            _flashloanAmount: 0,
-            _flashloanFee: 0,
-            _data: ""
-        });
+        siloLeverage.onFlashLoan(address(0), address(0), 0, 0, "");
     }
 
     /*
@@ -198,7 +192,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         assertGt(silo1.maxRepay(user), 0, "users has debt");
 
-        uint256 fee = siloFlashloan.flashFee(siloFlashloan.asset(), flashArgs.amount);
+        uint256 fee = _flashFee(siloFlashloan, flashArgs.amount);
         assertGt(fee, 0, "we want setup with some fee");
         assertEq(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got flashloan fees");
 
@@ -427,7 +421,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(finalMultiplier, 2.06899308e18, "finalMultiplier");
         assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 0.206899308e18, "users collateral");
 
-        uint256 flashFee = silo1.flashFee(address(token1), flashArgs.amount);
+        uint256 flashFee = _flashFee(silo1, flashArgs.amount);
 
         assertEq(
             silo1.maxRepay(user),
@@ -491,7 +485,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             uint256 leverageFee = siloLeverage.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
             totalUserDeposit = _depositArgs.amount + swapAmountOut - leverageFee;
 
-            uint256 flashloanFee = ISilo(_flashArgs.flashloanTarget).flashFee(address(token1), _flashArgs.amount);
+            uint256 flashloanFee = _flashFee(ISilo(_flashArgs.flashloanTarget), _flashArgs.amount);
 
             vm.expectEmit(address(siloLeverage));
 
@@ -569,7 +563,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         emit ILeverageUsingSiloFlashloan.CloseLeverage({
             depositWithdrawn: silo0.previewRedeem(silo0.balanceOf(_user)),
             swapAmountOut: (_flashArgs.amount * 111 / 100) * 99 / 100,
-            flashloanRepay: _flashArgs.amount,
+            flashloanAmount: _flashArgs.amount,
+            flashloanFee: _flashFee(ISilo(_flashArgs.flashloanTarget), _flashArgs.amount),
             borrower: _user
         });
 
@@ -588,7 +583,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         uint256 _flashAmount,
         ISilo _flashFrom
     ) internal view returns (uint256 debtReceiveApproval) {
-        uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
+        uint256 borrowAssets = _flashAmount + _flashFee(_flashFrom, _flashAmount);
         debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }
 
@@ -693,6 +688,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
     function _generatePermit(address _token)
         internal
+        view
         returns (ILeverageUsingSiloFlashloan.Permit memory permit)
     {
         uint256 nonce = IERC20Permit(_token).nonces(wallet.addr);
@@ -735,5 +731,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         bytes32 digest = MessageHashUtils.toTypedDataHash(domainSeparator, structHash);
 
         (v, r, s) = vm.sign(_signerPrivateKey, digest);
+    }
+
+    function _flashFee(ISilo _flashloanTarget, uint256 _amount) internal view returns (uint256 fee) {
+        address token = _flashloanTarget.asset();
+        fee = _flashloanTarget.flashFee(token, _amount);
     }
 }
