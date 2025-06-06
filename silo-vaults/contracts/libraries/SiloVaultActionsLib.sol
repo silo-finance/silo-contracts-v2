@@ -21,14 +21,6 @@ library SiloVaultActionsLib {
     using PendingLib for PendingAddress;
     using PendingLib for PendingUint192;
 
-    function vaultDecimals(address _asset) external view returns (uint8 decimalsOffset) {
-        require(_asset != address(0), ErrorsLib.ZeroAddress());
-
-        uint256 assetDecimals = TokenHelper.assertAndGetDecimals(_asset);
-        require(assetDecimals <= 18, ErrorsLib.NotSupportedDecimals());
-        decimalsOffset = uint8(UtilsLib.zeroFloorSub(18 + 6, assetDecimals));
-    }
-
     function setIsAllocator(
         address _newAllocator,
         bool _newIsAllocator,

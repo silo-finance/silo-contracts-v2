@@ -6,18 +6,26 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {BaseTest} from "./BaseTest.sol";
 import {SiloVault, ConstantsLib} from "../../../contracts/SiloVault.sol";
 import {VaultIncentivesModule} from "../../../contracts/incentives/VaultIncentivesModule.sol";
+import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
 contract InternalTest is BaseTest, SiloVault {
 
     constructor()
         SiloVault(
-            OWNER, ConstantsLib.MIN_TIMELOCK, new VaultIncentivesModule(), address(loanToken), "SiloVault Vault", "MM"
+            OWNER,
+            ConstantsLib.MIN_TIMELOCK,
+            new VaultIncentivesModule(),
+            address(new MintableToken(18)),
+            "SiloVault Vault", "MM"
         )
     {
 
     }
 
     function setUp() public virtual override {
+        loanToken = MintableToken(asset());
+        collateralToken = new MintableToken(18);
+
         _createNewMarkets();
 
         vm.startPrank(OWNER);

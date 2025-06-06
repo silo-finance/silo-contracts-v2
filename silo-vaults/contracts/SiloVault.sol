@@ -51,7 +51,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     uint256 public constant DEFAULT_LOST_THRESHOLD = 1e6;
 
     /// @inheritdoc ISiloVaultBase
-    uint8 public immutable DECIMALS_OFFSET;
+    uint8 public constant DECIMALS_OFFSET = 6;
 
     /// @inheritdoc ISiloVaultBase
     IVaultIncentivesModule public immutable INCENTIVES_MODULE;
@@ -127,8 +127,7 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
         require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
-
-        DECIMALS_OFFSET = SiloVaultActionsLib.vaultDecimals(_asset);
+        require(decimals() <= 18, ErrorsLib.NotSupportedDecimals());
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
@@ -479,10 +478,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* ERC4626 (PUBLIC) */
 
-    /// @dev Decimals by design are 18 to improve compatibility for external integrations.
+    /// @dev SiloVault decimals are the same as the underlying asset decimals.
     /// SiloVault do not have an initial 1:1 shares-to-assets rate with underlying markets.
     function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return 18;
+        return IERC20Metadata(asset()).decimals();
     }
 
     /// @inheritdoc IERC4626
