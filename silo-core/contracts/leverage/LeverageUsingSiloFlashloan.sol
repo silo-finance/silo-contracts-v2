@@ -18,14 +18,6 @@ import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 import {RevenueModule} from "./modules/RevenueModule.sol";
 import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
-// TODO add example what means leverage 2x
-
-// TODO same asset leverage in phase 2
-// TODO events on state changes or action that we need to track
-// TODO ensure it will that work for Pendle (show test)
-// TODO triple check approvals
-//- Leverage contract should never have any tokens
-//- close should repay all debt
 abstract contract LeverageUsingSiloFlashloan is
     ILeverageUsingSiloFlashloan,
     IERC3156FlashBorrower,
