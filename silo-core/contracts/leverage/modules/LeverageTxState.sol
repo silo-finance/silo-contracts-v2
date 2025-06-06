@@ -35,6 +35,5 @@ abstract contract LeverageTxState {
         _txAction = _action;
         _txMsgSender = msg.sender;
         _txSiloConfig = _silo.config();
-        _txUseNative = msg.value != 0;
     }
 }

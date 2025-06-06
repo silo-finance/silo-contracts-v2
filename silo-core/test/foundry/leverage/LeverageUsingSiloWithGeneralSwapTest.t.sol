@@ -27,6 +27,19 @@ import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 
+
+contract WETH {
+    MintableToken wrapped;
+
+    constructor(MintableToken _wrapped) {
+        wrapped = _wrapped;
+    }
+
+    function deposit() payable external {
+        wrapped.mint(msg.sender, msg.value);
+    }
+}
+
 /*
     FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloFlashloanWithGeneralSwapTest
 */
@@ -37,6 +50,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
     uint256 constant _PRECISION = 1e18;
+
+    WETH weth;
 
     ISiloConfig cfg;
     LeverageUsingSiloFlashloanWithGeneralSwap siloLeverage;
@@ -65,6 +80,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
+
+        weth = new WETH(token0);
+        vm.etch(address(siloLeverage.NATIVE_TOKEN()), address(weth).code);
     }
     
     function _deployLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
@@ -266,12 +284,12 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         vm.startPrank(user);
 
         // "mock" sending ETH
-        address native = address(siloLeverage.NATIVE_TOKEN());
-        vm.mockCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector), "");
-        vm.expectCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector));
+//        address native = address(siloLeverage.NATIVE_TOKEN());
+//        vm.mockCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector), "");
+//        vm.expectCall(native, abi.encodeWithSelector(IWrappedNativeToken.deposit.selector));
 
         token0.burn(token0.balanceOf(user));
-        token0.mint(address(siloLeverage), depositArgs.amount);
+//        token0.mint(address(siloLeverage), depositArgs.amount);
 
         assertEq(
             IERC20(silo0.asset()).balanceOf(user),

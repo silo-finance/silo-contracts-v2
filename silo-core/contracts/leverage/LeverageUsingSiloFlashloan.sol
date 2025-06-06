@@ -71,12 +71,7 @@ abstract contract LeverageUsingSiloFlashloan is
         nonReentrant
         setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
-        // BUG: deposit will transfer tokens to this contract, then SWAP will include this as amountOut
-        if (msg.value != 0) {
-            require(msg.value == _depositArgs.amount, NativeTokenAmountNotEnough());
-
-            NATIVE_TOKEN.deposit{value: msg.value}();
-        }
+        _handleNativeToken(_depositArgs.amount);
 
         require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
             _receiver: this,
@@ -324,5 +319,15 @@ abstract contract LeverageUsingSiloFlashloan is
             r: _permit.r,
             s: _permit.s
         });
+    }
+
+    // TODO figure out the best place for this method
+    function _handleNativeToken(uint256 _expectedValue) internal {
+        if (msg.value != 0) {
+            require(msg.value == _expectedValue, NativeTokenAmountNotEnough());
+
+            NATIVE_TOKEN.deposit{value: msg.value}();
+            _txUseNative = true;
+        }
     }
 }
