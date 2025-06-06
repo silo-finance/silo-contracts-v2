@@ -76,6 +76,13 @@ interface ILeverageUsingSiloFlashloan {
     error SwapDidNotCoverObligations();
     error InvalidSilo();
 
+    /// @return debtReceiveApproval amount of approval (receive approval) that is required on debt share token
+    /// in order to borow on behalf of user when opening leverage position
+    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
+        external
+        view
+        returns (uint256 debtReceiveApproval);
+
     /// @notice Performs leverage operation using a flash loan and token swap
     /// @dev Reverts if the amount is so high that fee calculation fails
     /// This method requires approval for transfer collateral from borrower to leverage contract and to create

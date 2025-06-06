@@ -45,6 +45,18 @@ abstract contract LeverageUsingSiloFlashloan is
         NATIVE_TOKEN = IWrappedNativeToken(_native);
     }
 
+    /// @inheritdoc ILeverageUsingSiloFlashloan
+    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
+        external
+        view
+        returns (uint256 debtReceiveApproval)
+    {
+        address token = _flashFrom.asset();
+        uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(token, _flashAmount);
+        debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
+    }
+
+    /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePositionPermit(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
@@ -81,6 +93,7 @@ abstract contract LeverageUsingSiloFlashloan is
         }), FlashloanFailed());
     }
 
+    /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePositionPermit(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
@@ -95,6 +108,7 @@ abstract contract LeverageUsingSiloFlashloan is
         closeLeveragePosition(_flashArgs, _swapArgs, _closeArgs);
     }
 
+    /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePosition(
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,

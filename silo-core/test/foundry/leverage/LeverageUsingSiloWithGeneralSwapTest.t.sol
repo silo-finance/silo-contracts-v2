@@ -455,8 +455,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IERC20(_depositArgs.silo.asset()).forceApprove(address(siloLeverage), _depositArgs.amount);
         }
 
-        uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
-            _flashArgs.amount, ISilo(_flashArgs.flashloanTarget)
+        uint256 debtReceiveApproval = siloLeverage.calculateDebtReceiveApproval(
+            ISilo(_flashArgs.flashloanTarget), _flashArgs.amount
         );
 
         // user must set receive approval for debt share token
@@ -577,14 +577,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         vm.stopPrank();
 
         _assertThereIsNoDebtApprovals(_user);
-    }
-
-    function _calculateDebtReceiveApproval(
-        uint256 _flashAmount,
-        ISilo _flashFrom
-    ) internal view returns (uint256 debtReceiveApproval) {
-        uint256 borrowAssets = _flashAmount + _flashFee(_flashFrom, _flashAmount);
-        debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }
 
     // TODO nonReentrant test
