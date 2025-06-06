@@ -17,29 +17,17 @@ import {LeverageUsingSiloFlashloanWithGeneralSwapDeploy} from "silo-core/deploy/
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
-import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
+import {WETH} from "./mocks/WETH.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 
-
-contract WETH {
-    MintableToken immutable wrapped;
-
-    constructor(MintableToken _wrapped) {
-        wrapped = _wrapped;
-    }
-
-    function deposit() payable external {
-        wrapped.mint(msg.sender, msg.value);
-    }
-}
 
 /*
     FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloFlashloanWithGeneralSwapTest
@@ -204,7 +192,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
 
-        (closeArgs, swapArgs) = _defaultCloseArgs(user, address(siloFlashloan));
+        (closeArgs, swapArgs) = _defaultCloseArgs( address(siloFlashloan));
 
         _closeLeverage(user, closeArgs, swapArgs);
 
@@ -214,7 +202,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         assertGt(token1.balanceOf(address(siloFlashloan)), 5e18 + fee, "siloFlashloan got another flashloan fee");
     }
-
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable -vv
@@ -396,7 +383,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         (
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
-        ) = _defaultCloseArgs(user, address(silo1));
+        ) = _defaultCloseArgs( address(silo1));
 
         _closeLeverage(user, _closeArgs, _swapArgs, _generatePermit(collateralShareToken));
 
@@ -552,7 +539,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         (
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
-        ) = _defaultCloseArgs(user, address(silo1));
+        ) = _defaultCloseArgs(address(silo1));
 
         _closeLeverage(user, _closeArgs, _swapArgs);
 
@@ -650,10 +637,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         });
     }
 
-    function _defaultCloseArgs(
-        address _borrower,
-        address _flashloanTarget
-    )
+    function _defaultCloseArgs(address _flashloanTarget)
         internal
         view
         returns (
