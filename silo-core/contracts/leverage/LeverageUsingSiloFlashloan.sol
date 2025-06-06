@@ -294,17 +294,17 @@ abstract contract LeverageUsingSiloFlashloan is
         repayShareBalance = IERC20(shareDebtToken).balanceOf(_txMsgSender);
     }
 
-    function _getBorrowerTotalShareCollateralBalance(CloseLeverageArgs memory closeArgs)
+    function _getBorrowerTotalShareCollateralBalance(CloseLeverageArgs memory _closeArgs)
         internal
         view
         virtual
         returns (uint256 balanceOf)
     {
-        if (closeArgs.collateralType == ISilo.CollateralType.Collateral) {
-            return closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
+        if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
+            return _closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
         }
 
-        (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(closeArgs.siloWithCollateral));
+        (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
 
         balanceOf = ISilo(protectedShareToken).balanceOf(_txMsgSender);
     }
