@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 
 /// @notice Proxy contract for invariant suite actors to avoid aTester calling contracts
 contract Actor {
@@ -19,6 +20,12 @@ contract Actor {
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 j = 0; j < contracts.length; j++) {
                 IERC20(tokens[i]).approve(contracts[j], type(uint256).max);
+
+                try IERC20R(tokens[i]).setReceiveApproval(contracts[j], type(uint256).max) {
+                    // nothing to do
+                } catch {
+                    // it might be not debt share token, ignore fail
+                }
             }
         }
     }

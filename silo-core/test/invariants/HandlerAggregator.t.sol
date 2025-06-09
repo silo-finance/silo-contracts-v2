@@ -6,6 +6,7 @@ import {ShareTokenHandler} from './handlers/user/ShareTokenHandler.t.sol';
 import {BorrowingHandler} from './handlers/user/BorrowingHandler.t.sol';
 import {VaultHandler} from './handlers/user/VaultHandler.t.sol';
 import {LiquidationHandler} from './handlers/user/LiquidationHandler.t.sol';
+import {LeverageHandler} from './handlers/user/LeverageHandler.t.sol';
 import {SiloHandler} from './handlers/user/SiloHandler.t.sol';
 
 // Import Permissioned Actions Handler contracts,
@@ -20,6 +21,7 @@ abstract contract HandlerAggregator is
   BorrowingHandler,
   VaultHandler,
   LiquidationHandler,
+  LeverageHandler,
   SiloHandler,
   SiloConfigHandler, // Permissioned Actions
   SiloFactoryHandler,
