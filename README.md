@@ -2,7 +2,7 @@
 Monorepository for Silo V2.
 
 ### Info
-[Known Issues](https://github.com/silo-finance/silo-contracts-v2/blob/develop/KnowIssues.md) \
+[Known Issues](https://github.com/silo-finance/silo-contracts-v2/blob/develop/KnownIssues.md) \
 [Deployed silo versions](https://github.com/silo-finance/silo-contracts-v2/tree/develop/silo-core/docs/DeployedSiloVersions.md)
 
 ## How to deploy a Silo or implement an integration
