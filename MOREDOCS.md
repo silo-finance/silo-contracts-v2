@@ -227,6 +227,7 @@ of shares remains constant, the ratio will adjust dynamically.
 
 To determine the current conversion rate, use the vault’s `convertToShares(1 asset)` method.
 
+For `SiloVault` and `Silo` `decimals()` fn return underlying asset decimals (USDC - 6, WETH - 18).
 
 ### `getProgramName()`
 
