@@ -196,16 +196,33 @@ In case you deploying without ve-silo, go to `SiloFactoryDeploy` and `SiloDeploy
 
 ## Known issues:
 
-### Shares decimals
+### Decimals
 
-Decimals are not an issue, but we are putting it here to warn developers. `SiloVault` and `Silo` share tokens 
-(collateral, protected and debt types), are using decimal offset. debt share token has offset 0, `SiloVault` 
-and protected and collateral share tokens offset 1e3. 
-For offset 1e3 means that depositing 1 asset results in 1,000 shares, although this is not a fixed ratio.
+`decimals()` function in `SiloVault` and `Silo` does not add decimal offset to decimals of underlaying asset. Both contracts use decimal offset but it is not reflected in `decimals()` function return value.
+
+SiloVault:
+  decimals(): same as underlying asset
+  offset: 6
+  minted shares per 1 wei of asset deposited: 1000000
+
+Silo:
+  decimals(): same as underlying asset
+  offset: 3
+  minted shares per 1 wei of asset deposited: 1000
+
+ProtectedShareToken:
+  decimals(): same as underlying asset
+  offset: 3
+  minted shares per 1 wei of asset deposited: 1000
+
+DebtShareToken:
+  decimals(): same as underlying asset
+  offset: 0
+  shares per 1 wei of asset borrowed: 1
 
 Learn more about the [decimal offset here](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/a7d38c7a3321e3832ca84f7ba1125dff9a91361e/contracts/token/ERC20/extensions/ERC4626.sol#L31)
 
-The share-to-asset ratio may change over time due to interest accrual. As assets grow with interest but the number 
+The share-to-asset ratio may change over time due to interest accrual. Assets grow with interest but the number 
 of shares remains constant, the ratio will adjust dynamically.
 
 To determine the current conversion rate, use the vault’s `convertToShares(1 asset)` method.
