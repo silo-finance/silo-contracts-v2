@@ -5,8 +5,7 @@ import {Invariants} from "./invariants/Invariants.t.sol";
 import {Setup} from "./base/Setup.t.sol";
 
 /// @title Tester
-/// @notice Entry point for invariant testing, inherits all contracts, invariants & handler
-/// @dev Mono contract that contains all the testing logic
+/// @dev make echidna-x-silo
 /// tutorial https://secure-contracts.com/program-analysis/echidna/index.html
 contract XSiloTester is Invariants, Setup {
     constructor() payable {
