@@ -1,0 +1,24 @@
+{
+    "DIA_PEAS_USD": {
+        "diaOracle": "DIA_FEED_PEAS_USD",
+        "baseToken": "PEAS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "heartbeat": 87001,
+        "primaryKey": "PEAS/USD",
+        "secondaryKey": "",
+        "normalizationMultiplier": 0,
+        "normalizationDivider": 1e8,
+        "invertSecondPrice": false
+    },
+    "DIA_GRAIL_USD": {
+        "diaOracle": "DIA_FEED_GRAIL_USD",
+        "baseToken": "GRAIL",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "heartbeat": 87001,
+        "primaryKey": "GRAIL/USD",
+        "secondaryKey": "",
+        "normalizationMultiplier": 0,
+        "normalizationDivider": 1e8,
+        "invertSecondPrice": false
+    }
+}

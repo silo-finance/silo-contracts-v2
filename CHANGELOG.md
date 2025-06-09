@@ -5,7 +5,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- silo-core: leverage
+
 ### Fixed
+- x-silo: use rounding direction in favor of protocol for cancel redeem 
+- x-silo: ensure we set `distrubutionEnd` when reset emission
+- x-silo: add restriction when redeem duration is too hi
+- x-silo: ensure cancel redeem does not give more tokens that user should receive
+- x-silo: at xSilo restart, ensure leftovers are distributed and not create min deposit restriction 
+
+### [3.6.0] - 2025-05-19
+#Added 
+- certora specs for the Silo Vaults
+- silo-core: incentive program name conversion
+- silo-core: liquidation helper deployment ink
+- silo-oracles: revert on zero price in DIA
+- silo-oracles: pyth deployment
+- SiloIncentivesController and SiloVaultDeployer deployment
+- new markets:
+  - silo-core: WETH USDC market on Arbitrum
+  - silo-core: sUSDX USDC new market Arbitrum
+  - silo-core: ARB USDC new market on Arbitrum
+  - silo-core: WETH USDT market on Ink
 
 ### [3.5.0] - 2025-05-15
 - silo-core: fix `maxBorrow`, see explanation in code, method `maxBorrowValueToAssetsAndShares()`

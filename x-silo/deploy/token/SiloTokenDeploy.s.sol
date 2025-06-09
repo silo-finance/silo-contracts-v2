@@ -2,7 +2,7 @@
 pragma solidity >=0.7.6;
 
 import {CommonDeploy} from "x-silo/deploy/CommonDeploy.sol";
-import {XSiloContracts} from "x-silo/deploy/XSiloContracts.sol";
+import {XSiloContracts} from "x-silo/common/XSiloContracts.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {ERC20Burnable} from "openzeppelin5/token/ERC20/extensions/ERC20Burnable.sol";

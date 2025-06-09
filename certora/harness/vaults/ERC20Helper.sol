@@ -17,4 +17,8 @@ contract ERC20Helper {
     function safeTransferFrom(address token, address from, address to, uint256 amount) external {
         IERC20(token).safeTransferFrom(from, to, amount);
     }
+
+    function allowance(address token, address owner, address spender) external view returns (uint256) {
+        return IERC20(token).allowance(owner, spender);
+    }
 }

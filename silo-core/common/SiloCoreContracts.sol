@@ -13,12 +13,14 @@ library SiloCoreContracts {
     string public constant SILO_DEPLOYER = "SiloDeployer.sol";
     string public constant SILO = "Silo.sol";
     string public constant PARTIAL_LIQUIDATION = "PartialLiquidation.sol";
+    string public constant PENDLE_REWARDS_CLAIMER = "PendleRewardsClaimer.sol";
     string public constant LIQUIDATION_HELPER = "LiquidationHelper.sol";
     string public constant MANUAL_LIQUIDATION_HELPER = "ManualLiquidationHelper.sol";
     string public constant TOWER = "Tower.sol";
     string public constant SHARE_PROTECTED_COLLATERAL_TOKEN = "ShareProtectedCollateralToken.sol";
     string public constant SHARE_DEBT_TOKEN = "ShareDebtToken.sol";
     string public constant SILO_LENS = "SiloLens.sol";
+    string public constant SILO_LEVERAGE_USING_SILO = "LeverageUsingSiloFlashloanWithGeneralSwap.sol";
     string public constant SILO_ROUTER_V2 = "SiloRouterV2.sol";
     string public constant INCENTIVES_CONTROLLER_FACTORY = "SiloIncentivesControllerFactory.sol";
     string public constant INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY
