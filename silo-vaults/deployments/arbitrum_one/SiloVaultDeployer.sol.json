@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "address": "0xDD9382667f4D22472991c73C686FcAe91B26BD61",
+=======
+  "address": "0xF56dFE44F0Eb577C7264a4ca2ea1CA5ED453c78e",
+>>>>>>> Stashed changes
   "abi": [
     {
       "inputs": [
