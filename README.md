@@ -1,6 +1,10 @@
 # Silo V2
 Monorepository for Silo V2.
 
+### Info
+[Known Issues](https://github.com/silo-finance/silo-contracts-v2/blob/develop/KnowIssues.md) \
+[Deployed silo versions](https://github.com/silo-finance/silo-contracts-v2/tree/develop/silo-core/docs/DeployedSiloVersions.md)
+
 ## How to deploy a Silo or implement an integration
 ### Prepare local environment, run the tests
 
