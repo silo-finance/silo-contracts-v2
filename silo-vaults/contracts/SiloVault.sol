@@ -479,10 +479,10 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /* ERC4626 (PUBLIC) */
 
-    /// @notice Decimals by design are 18 to improve compatibility for external integrations.
+    /// @notice Decimals are the same as underlaying asset. Decimal offset is not accounted for in decimals.
     /// SiloVault do not have an initial 1:1 shares-to-assets rate with underlying markets.
-    /// @dev SiloVault is using decimal offset of 1e3. This means that depositing 1 asset results in 1,000 shares,
-    /// although this is not a fixed ratio.
+    /// @dev SiloVault is using decimal offset of 1e6. This means that depositing 1 asset results in 1,000,000 shares,
+    /// although this is not a fixed ratio and will grow over time.
     ///
     /// Learn more about the offset here:
     /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/a7d38c7a3321e3832ca84f7ba1125dff9a91361e/contracts/token/ERC20/extensions/ERC4626.sol#L31
