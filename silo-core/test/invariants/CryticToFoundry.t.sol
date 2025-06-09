@@ -51,7 +51,7 @@ contract CryticToFoundry is Invariants, Setup {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /*
-
+    FOUNDRY_PROFILE=core-with-invariants forge test -vv --ffi --mt test_replay_leverage
     */
     function test_replay_leverage() public {
         Tester.deposit(2,0,0,1);
