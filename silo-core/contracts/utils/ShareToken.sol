@@ -175,11 +175,21 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     }
 
     /* solhint-disable */
-    /// @notice The decimals of the share token match those of the underlying asset token.
-    /// @dev This does not imply a 1:1 ratio between shares and assets. There are three types of share tokens:
-    /// collateral, protected, and debt. Debt share token has offset 0. For collateral and protected share tokens,
-    /// a decimal offset of 1e3 is used. This means that depositing 1 asset results in 1,000 shares,
-    /// although this is not a fixed ratio.
+    /// @notice Decimals are the same as underlaying asset. Decimal offset is not accounted for in decimals.
+    /// @dev This does not imply a 1:1 ratio between shares and assets.
+    ///
+    /// Silo:
+    ///     decimals(): same as underlying asset
+    ///     offset: 3
+    ///     minted shares per 1 wei of asset deposited: 1000
+    /// ProtectedShareToken:
+    ///     decimals(): same as underlying asset
+    ///     offset: 3
+    ///     minted shares per 1 wei of asset deposited: 1000
+    /// DebtShareToken:
+    ///     decimals(): same as underlying asset
+    ///     offset: 0
+    ///     minted shares per 1 wei of asset borrowed: 1
     ///
     /// Learn more about the offset here:
     /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/a7d38c7a3321e3832ca84f7ba1125dff9a91361e/contracts/token/ERC20/extensions/ERC4626.sol#L31
