@@ -35,6 +35,6 @@ For `SiloVault` and `Silo` `decimals()` fn return underlying asset decimals (USD
 
 ### `getProgramName()`
 
-- Silo incentives controller with version < 3.6.0 has issue with `getProgramName` fn. It fails to convert the immediate 
+Silo incentives controller with version < 3.6.0 has issue with `getProgramName` fn. It fails to convert the immediate 
 distribution program name into a proper string representation.
 Silos incentives controller with this issue: Sonic 1 - 101, Arbitrum 100 - 111, Optimism - 100, Ink - 100 - 101.
