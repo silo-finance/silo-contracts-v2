@@ -74,8 +74,22 @@ contract LeverageHandler is BaseHandler {
         swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, flashArgs.amount * 995 / 1000);
 
         _before();
-        siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
-        _after();
+
+        (bool success, bytes memory returnData) = actor.proxy(
+            address(siloLeverage),
+            abi.encodeWithSelector(
+                ILeverageUsingSiloFlashloan.openLeveragePosition.selector,
+                flashArgs,
+                abi.encode(swapArgs),
+                depositArgs
+            )
+        );
+
+        if (success) {
+            _after();
+        }
+
+        fail(); // will this be executed?
     }
 
 //        _before();

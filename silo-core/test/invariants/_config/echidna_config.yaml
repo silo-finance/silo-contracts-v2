@@ -31,7 +31,7 @@ filterFunctions: [ "Tester.onERC721Received(address,address,uint256,bytes)" ]
 #filterBlacklist: false
 
 #stopOnFail makes echidna terminate as soon as any property fails and has been shrunk
-stopOnFail: false
+stopOnFail: true
 
 #coverage controls coverage guided testing
 coverage: true
@@ -53,9 +53,9 @@ deployContracts: [ [ "0xf01", "Actions" ], [ "0xf02", "ShareCollateralTokenLib" 
 maxValue: 1e+23 # 100000 eth
 
 #quiet produces (much) less verbose output
-quiet: true
+quiet: false
 
 format: "text"
 
 # concurrent workers
-workers: 10
+workers: 1

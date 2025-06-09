@@ -50,6 +50,13 @@ contract CryticToFoundry is Invariants, Setup {
     //                              FAILING POSTCONDITIONS REPLAY                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    /*
+
+    */
+    function test_replay_leverage() public {
+        Tester.deposit(2,0,0,1);
+    }
+
     function test_replay_assert_BORROWING_HSPOST_F() public {
         _setUpActor(0x0000000000000000000000000000000000010000);
         _delay(193410);
