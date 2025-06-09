@@ -345,5 +345,16 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
+    },
+    "REDSTONE_sfrxUSD_dUSD": {
+        "baseToken": "sfrxUSD",
+        "quoteToken": "dUSD",
+        "primaryAggregator": "REDSTONE_sfrxUSD_frxUSD_aggregator",
+        "primaryHeartbeat": 22001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
