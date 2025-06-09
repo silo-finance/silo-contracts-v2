@@ -17,12 +17,15 @@ import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";
 
 // Test Contracts
 import {BaseTest} from "./base/BaseTest.t.sol";
 import {MockFlashLoanReceiver} from "./helpers/FlashLoanReceiver.sol";
 
 // Mock Contracts
+import {TestWETH} from "./utils/mocks/TestWETH.sol";
 import {TestERC20} from "./utils/mocks/TestERC20.sol";
 import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
 
@@ -65,7 +68,7 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _deployAssets() internal {
-        _asset0 = new TestERC20("Test Token0", "TT0", 18);
+        _asset0 = new TestWETH("Test Token0", "TT0", 18);
         _asset1 = new TestERC20("Test Token1", "TT1", 6);
         baseAssets.push(address(_asset0));
         baseAssets.push(address(_asset1));
@@ -134,6 +137,17 @@ contract Setup is BaseTest {
     /// @notice Setup liquidation module and flashLoan receiver
     function _deployExternalContracts() internal {
         flashLoanReceiver = address(new MockFlashLoanReceiver());
+
+        // deploy leverage
+        (siloLeverage, swapRouterMock) = _deployLeverage();
+    }
+
+    function _deployLeverage()
+        internal
+        returns (LeverageUsingSiloFlashloanWithGeneralSwap leverage, SwapRouterMock swap)
+    {
+        leverage = new LeverageUsingSiloFlashloanWithGeneralSwap(address(this), address(_asset0));
+        swap = new SwapRouterMock();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,25 +312,34 @@ contract Setup is BaseTest {
         addresses[1] = USER2;
         addresses[2] = USER3;
 
+        uint256 underlyingAssetsLength = 2;
+
         // Initialize the tokens array
-        address[] memory tokens = new address[](2);
+        address[] memory tokens = new address[](underlyingAssetsLength + 6);
         tokens[0] = address(_asset0);
         tokens[1] = address(_asset1);
 
-        address[] memory contracts = new address[](3);
+        // share tokens array
+        (tokens[2], tokens[3], tokens[4]) = vault0.config().getShareTokens(_vault0);
+        (tokens[5], tokens[6], tokens[7]) = vault0.config().getShareTokens(_vault1);
+
+        address[] memory contracts = new address[](5);
         contracts[0] = address(_vault0);
         contracts[1] = address(_vault1);
         contracts[2] = address(liquidationModule);
+        contracts[3] = address(siloLeverage);
+        contracts[4] = address(swapRouterMock);
 
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deploy actor proxies and approve system contracts
             address _actor = _setUpActor(addresses[i], tokens, contracts);
 
             // Mint initial balances to actors
-            for (uint256 j = 0; j < tokens.length; j++) {
+            for (uint256 j = 0; j < underlyingAssetsLength; j++) {
                 TestERC20 _token = TestERC20(tokens[j]);
                 _token.mint(_actor, INITIAL_BALANCE);
             }
+
             actorAddresses.push(_actor);
         }
     }

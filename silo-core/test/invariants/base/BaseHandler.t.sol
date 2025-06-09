@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 // Interfaces
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Libraries
@@ -27,6 +28,11 @@ contract BaseHandler is HookAggregator {
     /// @notice Helper function to get a random base asset
     function _getRandomSilo(uint256 i) internal view returns (address) {
         return silos[i % silos.length];
+    }
+
+    function _getOtherSilo(address _silo) internal view returns (address otherSilo) {
+        (address silo0, address silo1) = ISilo(_silo).config().getSilos();
+        otherSilo = silo0 == _silo ? silo1 : silo0;
     }
 
     function _getRandomShareToken(uint256 i) internal view returns (address) {
