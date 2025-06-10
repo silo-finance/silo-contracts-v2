@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

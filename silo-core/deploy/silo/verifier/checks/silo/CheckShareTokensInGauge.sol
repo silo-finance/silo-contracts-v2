@@ -4,8 +4,8 @@ pragma solidity 0.8.28;
 import {ICheck} from "silo-core/deploy/silo/verifier/checks/ICheck.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {GaugeHookReceiver, IGauge} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
-import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
@@ -57,7 +57,7 @@ contract CheckShareTokensInGauge is ICheck {
             return true;
         }
 
-        if (address(IGaugeLike(_gauge).share_token()) != _shareToken) {
+        if (address(ISiloIncentivesController(_gauge).SHARE_TOKEN()) != _shareToken) {
             shareToken = _shareToken;
             return false;
         }

@@ -6,7 +6,6 @@ name: CORE Quality Test
 env:
     RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
     RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
-    RPC_SEPOLIA: ${{ secrets.RPC_SEPOLIA }}
     RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
     RPC_SONIC: ${{ secrets.RPC_SONIC }}
@@ -158,7 +157,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:
