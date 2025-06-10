@@ -62,7 +62,6 @@ contract EchidnaE2E is Deployers, PropertiesAsserts {
         hevm.roll(startBlockHeight);
 
         // Deploy the relevant contracts
-        ve_setUp(startTimestamp);
         core_setUp(address(this));
         _setupBasicData();
 

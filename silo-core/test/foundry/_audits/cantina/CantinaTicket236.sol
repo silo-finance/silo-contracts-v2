@@ -6,7 +6,7 @@ import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncen
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {DummyOracle} from "../../_common/DummyOracle.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {CantinaTicket} from "./CantinaTicket.sol";

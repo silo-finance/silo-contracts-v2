@@ -7,7 +7,7 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";

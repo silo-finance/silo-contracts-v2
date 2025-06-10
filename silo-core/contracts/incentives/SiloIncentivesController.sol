@@ -21,10 +21,17 @@ contract SiloIncentivesController is BaseIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
+    /// @notice Silo share token
+    address public immutable SHARE_TOKEN;
+
     /// @param _owner address of wallet that can manage the storage
-    /// @param _notifier is contract with IERC20 interface with users balances, based based on which
+    /// @param _notifier address of the notifier
+    /// @param _shareToken is contract with IERC20 interface with users balances, based based on which
     /// rewards distribution is calculated
-    constructor(address _owner, address _notifier) BaseIncentivesController(_owner, _notifier) {}
+    constructor(address _owner, address _notifier, address _shareToken) BaseIncentivesController(_owner, _notifier) {
+        require(_shareToken != address(0), EmptyShareToken());
+        SHARE_TOKEN = _shareToken;
+    }
 
     /// @inheritdoc ISiloIncentivesController
     function afterTokenTransfer(
@@ -138,5 +145,9 @@ contract SiloIncentivesController is BaseIncentivesController {
 
             _createIncentiveProgram(programId, _incentivesProgramInput);
         }
+    }
+
+    function _shareToken() internal view override returns (IERC20 shareToken) {
+        shareToken = IERC20(SHARE_TOKEN);
     }
 }

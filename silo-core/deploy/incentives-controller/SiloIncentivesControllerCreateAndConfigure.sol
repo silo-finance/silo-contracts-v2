@@ -5,7 +5,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
-import {SiloIncentivesControllerGLCreate} from "./SiloIncentivesControllerGLCreate.s.sol";
+import {SiloIncentivesControllerCreate} from "./SiloIncentivesControllerCreate.s.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -13,16 +13,16 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 /**
     INCENTIVES_OWNER=GROWTH_MULTISIG SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerGLCreateAndConfigure.s.sol \
+        forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreateAndConfigure.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
-contract SiloIncentivesControllerGLCreateAndConfigure is CommonDeploy {
-    SiloIncentivesControllerGLCreate public createIncentivesController;
+contract SiloIncentivesControllerCreateAndConfigure is CommonDeploy {
+    SiloIncentivesControllerCreate public createIncentivesController;
 
     error NotHookReceiverOwner();
 
     constructor() {
-        createIncentivesController = new SiloIncentivesControllerGLCreate();
+        createIncentivesController = new SiloIncentivesControllerCreate();
     }
 
     function run() public {

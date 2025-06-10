@@ -9,7 +9,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
-import {VeSiloContracts, VeSiloDeployments} from "ve-silo/common/VeSiloContracts.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
@@ -145,7 +144,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
     */
     function test_SiloLens_getFeesAndFeeReceivers() public {
         string memory chainAlias = ChainsLib.chainAlias();
-        address daoFeeReceiverConfig = VeSiloDeployments.get(VeSiloContracts.FEE_DISTRIBUTOR, chainAlias);
+        address daoFeeReceiverConfig = makeAddr("DaoFeeReceiver");
 
         // hardcoded in the silo config for the local testing
         address deployerFeeReceiverConfig = 0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE;
@@ -157,16 +156,19 @@ contract SiloLensTest is SiloLittleHelper, Test {
         uint256 daoFee;
         uint256 deployerFee;
 
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        address deployer = vm.addr(deployerPrivateKey);
+
         (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee) = siloLens.getFeesAndFeeReceivers(silo0);
 
-        assertEq(daoFeeReceiver, daoFeeReceiverConfig);
+        assertEq(daoFeeReceiver, deployer);
         assertEq(deployerFeeReceiver, deployerFeeReceiverConfig);
         assertEq(daoFee, 150000000000000000);
         assertEq(deployerFee, 100000000000000000);
 
         (daoFeeReceiver, deployerFeeReceiver, daoFee, deployerFee) = siloLens.getFeesAndFeeReceivers(silo1);
 
-        assertEq(daoFeeReceiver, daoFeeReceiverConfig);
+        assertEq(daoFeeReceiver, deployer);
         assertEq(deployerFeeReceiver, deployerFeeReceiverConfig);
         assertEq(daoFee, 150000000000000000);
         assertEq(deployerFee, 100000000000000000);

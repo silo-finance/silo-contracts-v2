@@ -10,8 +10,8 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
-library SiloIncentivesControllerGLDeployments {
-    string constant public DEPLOYMENTS_FILE = "silo-core/deploy/incentives-controller/_siloIncentivesControllerGLDeployments.json";
+library SiloIncentivesControllerDeployments {
+    string constant public DEPLOYMENTS_FILE = "silo-core/deploy/incentives-controller/_siloIncentivesControllerDeployments.json";
 
     error InvalidShareToken();
 

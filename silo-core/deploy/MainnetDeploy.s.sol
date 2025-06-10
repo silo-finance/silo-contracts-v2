@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {CommonDeploy} from "../_CommonDeploy.sol";
+import {CommonDeploy} from "./_CommonDeploy.sol";
 
-import {InterestRateModelV2FactoryDeploy} from "../InterestRateModelV2FactoryDeploy.s.sol";
-import {InterestRateModelV2Deploy} from "../InterestRateModelV2Deploy.s.sol";
-import {SiloHookV1Deploy} from "../SiloHookV1Deploy.s.sol";
-import {PendleRewardsClaimerDeploy} from "../PendleRewardsClaimerDeploy.s.sol";
-import {SiloDeployerDeploy} from "../SiloDeployerDeploy.s.sol";
-import {LiquidationHelperDeploy} from "../LiquidationHelperDeploy.s.sol";
-import {TowerDeploy} from "../TowerDeploy.s.sol";
-import {SiloLensDeploy} from "../SiloLensDeploy.s.sol";
-import {SiloRouterV2Deploy} from "../SiloRouterV2Deploy.s.sol";
-import {SiloIncentivesControllerGaugeLikeFactoryDeploy} from "../SiloIncentivesControllerGaugeLikeFactoryDeploy.sol";
+import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
+import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
+import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
+import {PendleRewardsClaimerDeploy} from "./PendleRewardsClaimerDeploy.s.sol";
+import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
+import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
+import {TowerDeploy} from "./TowerDeploy.s.sol";
+import {SiloLensDeploy} from "./SiloLensDeploy.s.sol";
+import {SiloRouterV2Deploy} from "./SiloRouterV2Deploy.s.sol";
+import {SiloFactoryDeploy} from "./SiloFactoryDeploy.s.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {ManualLiquidationHelperDeploy} from "silo-core/deploy/ManualLiquidationHelperDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
-        --ffi --rpc-url http://127.0.0.1:8545 --verify --broadcast
+        --ffi --rpc-url $RPC_SONIC --verify --broadcast
  */
-abstract contract MainnetDeploy is CommonDeploy {
+contract MainnetDeploy is CommonDeploy {
     function run() public {
         InterestRateModelV2FactoryDeploy interestRateModelV2ConfigFactoryDeploy =
             new InterestRateModelV2FactoryDeploy();
@@ -34,9 +34,6 @@ abstract contract MainnetDeploy is CommonDeploy {
         TowerDeploy towerDeploy = new TowerDeploy();
         SiloRouterV2Deploy SiloRouterV2Deploy = new SiloRouterV2Deploy();
         ManualLiquidationHelperDeploy manualLiquidationHelperDeploy = new ManualLiquidationHelperDeploy();
-
-        SiloIncentivesControllerGaugeLikeFactoryDeploy siloIncentivesControllerGaugeLikeFactoryDeploy =
-            new SiloIncentivesControllerGaugeLikeFactoryDeploy();
 
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
@@ -51,10 +48,12 @@ abstract contract MainnetDeploy is CommonDeploy {
         siloLensDeploy.run();
         towerDeploy.run();
         SiloRouterV2Deploy.run();
-        siloIncentivesControllerGaugeLikeFactoryDeploy.run();
         siloIncentivesControllerFactoryDeploy.run();
         manualLiquidationHelperDeploy.run();
     }
 
-    function _deploySiloFactory() internal virtual {}
+    function _deploySiloFactory() internal virtual {
+        SiloFactoryDeploy siloFactoryDeploy = new SiloFactoryDeploy();
+        siloFactoryDeploy.run();
+    }
 }
