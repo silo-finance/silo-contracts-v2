@@ -18,17 +18,18 @@ interface IXRedeemPolicy {
     );
 
     event StartRedeem(
-        address indexed _userAddress,
+        address indexed userAddress,
         uint256 currentSiloAmount,
         uint256 xSiloToBurn,
         uint256 siloAmountAfterVesting,
         uint256 duration
     );
 
-    event FinalizeRedeem(address indexed _userAddress, uint256 siloToRedeem, uint256 xSiloToBurn);
-    event CancelRedeem(address indexed _userAddress, uint256 xSiloToTransfer, uint256 xSiloToBurn);
+    event FinalizeRedeem(address indexed userAddress, uint256 siloToRedeem);
+    event CancelRedeem(address indexed userAddress, uint256 siloAmountRestored, uint256 xSiloMinted);
 
     error ZeroAmount();
+    error CancelGeneratesZeroShares();
     error NoSiloToRedeem();
     error RedeemIndexDoesNotExist();
     error InvalidRatioOrder();
@@ -42,14 +43,14 @@ interface IXRedeemPolicy {
     function MAX_REDEEM_DURATION_CAP() external view returns (uint256);
 
     /// @dev `minRedeemRatio` together with `MAX_REDEEM_RATIO` is used to create range of ratios
-    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 100 means ratio of 1:1.
+    /// based on which redeem amount is calculated, value is in 18 decimals, 1e18 == 1.0, eg 1e18 means ratio of 1:1.
     // `MAX_REDEEM_RATIO` is capped at 1:1.
     function MAX_REDEEM_RATIO() external view returns (uint256);
 
     // Redeeming min/max settings are updatable at any time by owner
 
     /// @dev `minRedeemRatio` together with `maxRedeemRatio` is used to create range of ratios
-    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 50 means ratio of 1:0.5
+    /// based on which redeem amount is calculated, value is in 18 decimals, 1e18 == 1.0, eg 0.5e18 means ratio of 1:0.5
     function minRedeemRatio() external view returns (uint256);
 
     /// @dev `minRedeemDuration` together with `maxRedeemDuration` is used to create range of durations
@@ -70,7 +71,7 @@ interface IXRedeemPolicy {
 
     /// @dev updates main settings for redeem policy
     /// @param _minRedeemRatio together with `maxRedeemRatio` is used to create range of ratios
-    /// based on which redeem amount is calculated, value is in 2 decimals, 100 == 1.0, eg 50 means ratio of 1:0.5
+    /// based on which redeem amount is calculated, value is in 18 decimals, 1e18 == 1.0, eg 0.5e18 means ratio of 1:0.5
     /// @param _minRedeemDuration together with `maxRedeemDuration` is used to create range of durations
     /// based on which redeem amount is calculated, value is in seconds.
     /// Eg if set to 2 days, redeem attempt for less duration will be reverted and preview method for lower duration

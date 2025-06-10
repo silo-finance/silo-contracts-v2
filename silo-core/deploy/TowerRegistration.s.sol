@@ -19,6 +19,7 @@ contract TowerRegistration is CommonDeploy {
         _register("SiloFactory", getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
         _register("LiquidationHelper", getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER));
         _register("SiloLens", getDeployedAddress(SiloCoreContracts.SILO_LENS));
+        _register("SiloLeverage", getDeployedAddress(SiloCoreContracts.SILO_LEVERAGE));
     }
 
     function _register(string memory _name, address _currentAddress) internal {
