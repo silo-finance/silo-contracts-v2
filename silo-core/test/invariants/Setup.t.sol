@@ -46,7 +46,7 @@ import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {
-    function _setUp() internal {
+    function _setUp() internal virtual {
         // Deploy assets
         _deployAssets();
 
@@ -137,17 +137,6 @@ contract Setup is BaseTest {
     /// @notice Setup liquidation module and flashLoan receiver
     function _deployExternalContracts() internal {
         flashLoanReceiver = address(new MockFlashLoanReceiver());
-
-        // deploy leverage
-        (siloLeverage, swapRouterMock) = _deployLeverage();
-    }
-
-    function _deployLeverage()
-        internal
-        returns (LeverageUsingSiloFlashloanWithGeneralSwap leverage, SwapRouterMock swap)
-    {
-        leverage = new LeverageUsingSiloFlashloanWithGeneralSwap(address(this), address(_asset0));
-        swap = new SwapRouterMock();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,37 +294,29 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice Deploy protocol actors and initialize their balances
-    function _setUpActors() internal {
+    function _setUpActors() internal virtual {
         // Initialize the three actors of the fuzzers
         address[] memory addresses = new address[](3);
         addresses[0] = USER1;
         addresses[1] = USER2;
         addresses[2] = USER3;
 
-        uint256 underlyingAssetsLength = 2;
-
         // Initialize the tokens array
-        address[] memory tokens = new address[](underlyingAssetsLength + 6);
+        address[] memory tokens = new address[](2);
         tokens[0] = address(_asset0);
         tokens[1] = address(_asset1);
 
-        // share tokens array
-        (tokens[2], tokens[3], tokens[4]) = vault0.config().getShareTokens(_vault0);
-        (tokens[5], tokens[6], tokens[7]) = vault0.config().getShareTokens(_vault1);
-
-        address[] memory contracts = new address[](5);
+        address[] memory contracts = new address[](3);
         contracts[0] = address(_vault0);
         contracts[1] = address(_vault1);
         contracts[2] = address(liquidationModule);
-        contracts[3] = address(siloLeverage);
-        contracts[4] = address(swapRouterMock);
 
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deploy actor proxies and approve system contracts
             address _actor = _setUpActor(addresses[i], tokens, contracts);
 
             // Mint initial balances to actors
-            for (uint256 j = 0; j < underlyingAssetsLength; j++) {
+            for (uint256 j = 0; j < tokens.length; j++) {
                 TestERC20 _token = TestERC20(tokens[j]);
                 _token.mint(_actor, INITIAL_BALANCE);
             }
@@ -351,6 +332,7 @@ contract Setup is BaseTest {
     /// @return actorAddress Address of the deployed actor
     function _setUpActor(address userAddress, address[] memory tokens, address[] memory contracts)
         internal
+        virtual
         returns (address actorAddress)
     {
         bool success;

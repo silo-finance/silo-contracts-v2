@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Invariants} from "./Invariants.t.sol";
-import {Setup} from "./Setup.t.sol";
+import {InvariantsLeverage} from "./InvariantsLeverage.t.sol";
+import {SetupLeverage} from "./SetupLeverage.t.sol";
 
-/// @title Tester
+/// @title LeverageTester
 /// @notice Entry point for invariant testing, inherits all contracts, invariants & handler
 /// @dev Mono contract that contains all the testing logic
-contract Tester is Invariants, Setup {
+contract LeverageTester is InvariantsLeverage, SetupLeverage {
     constructor() payable {
         // Deploy protocol contracts and protocol actors
         setUp();
