@@ -25,7 +25,6 @@ import {BaseTest} from "./base/BaseTest.t.sol";
 import {MockFlashLoanReceiver} from "./helpers/FlashLoanReceiver.sol";
 
 // Mock Contracts
-import {TestWETH} from "./utils/mocks/TestWETH.sol";
 import {TestERC20} from "./utils/mocks/TestERC20.sol";
 import {MockSiloOracle} from "./utils/mocks/MockSiloOracle.sol";
 
@@ -67,8 +66,8 @@ contract Setup is BaseTest {
     //                                          SETUP FUNCTIONS                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _deployAssets() internal {
-        _asset0 = new TestWETH("Test Token0", "TT0", 18);
+    function _deployAssets() internal virtual {
+        _asset0 = new TestERC20("Test Token0", "TT0", 18);
         _asset1 = new TestERC20("Test Token1", "TT1", 6);
         baseAssets.push(address(_asset0));
         baseAssets.push(address(_asset1));
@@ -332,7 +331,6 @@ contract Setup is BaseTest {
     /// @return actorAddress Address of the deployed actor
     function _setUpActor(address userAddress, address[] memory tokens, address[] memory contracts)
         internal
-        virtual
         returns (address actorAddress)
     {
         bool success;
