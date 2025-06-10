@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {MessageHashUtils} from "openzeppelin5//utils/cryptography/MessageHashUtils.sol";
+import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {ERC20PermitUpgradeable} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";

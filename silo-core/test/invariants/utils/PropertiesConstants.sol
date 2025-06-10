@@ -7,4 +7,6 @@ abstract contract PropertiesConstants {
     address constant USER2 = address(0x20000);
     address constant USER3 = address(0x30000);
     uint256 constant INITIAL_BALANCE = 1000e35;
+
+    uint256 internal constant _PRECISION_DECIMALS = 1e18;
 }

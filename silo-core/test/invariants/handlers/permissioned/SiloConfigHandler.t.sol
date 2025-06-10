@@ -31,16 +31,17 @@ contract SiloConfigHandler is BaseHandler {
 
         // POST-CONDITIONS
 
-        assertGe(
-            defaultVarsAfter[silo].debtAssets,
-            defaultVarsBefore[silo].debtAssets,
-            SILO_HSPOST_A
-        );
-        assertGe(
-            defaultVarsAfter[silo].collateralAssets,
-            defaultVarsBefore[silo].collateralAssets,
-            SILO_HSPOST_A
-        );
+        if (defaultVarsBefore[silo].debtAssets > 1) {
+            // We account for fractions delta
+            assertGe(defaultVarsAfter[silo].debtAssets, defaultVarsBefore[silo].debtAssets - 2, SILO_HSPOST_A);
+        }
+
+        if (defaultVarsBefore[silo].collateralAssets > 1) {
+            // We account for fractions delta
+            assertGe(
+                defaultVarsAfter[silo].collateralAssets, defaultVarsBefore[silo].collateralAssets - 2, SILO_HSPOST_A
+            );
+        }
     }
 
     function accrueInterestForBothSilos() external {

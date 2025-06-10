@@ -176,7 +176,7 @@ contract XRedeemPolicyTest is Test {
         vm.expectRevert(IXRedeemPolicy.DurationTooLow.selector);
         policy.redeemSilo(1, 0);
 
-        vm.expectRevert(IXRedeemPolicy.DurationTooHi.selector);
+        vm.expectRevert(IXRedeemPolicy.DurationTooHigh.selector);
         policy.redeemSilo(1, 3);
     }
 
@@ -858,9 +858,9 @@ contract XRedeemPolicyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_updateRedeemSettings_durationTooHigh
+    FOUNDRY_PROFILE=x_silo forge test -vv --ffi --mt test_updateRedeemSettings_DurationTooHigh
     */
-    function test_updateRedeemSettings_durationTooHigh() public {
+    function test_updateRedeemSettings_DurationTooHigh() public {
         vm.expectRevert(IXRedeemPolicy.DurationTooHigh.selector);
         policy.updateRedeemSettings(0, 0, 365 days + 1);
     }
