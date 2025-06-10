@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 // Utils
-import {Actor} from "./utils/Actor.sol";
+import {ActorLeverage} from "./utils/ActorLeverage.sol";
 
 // Contracts
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
@@ -21,6 +21,7 @@ import {TestWETH} from "./utils/mocks/TestWETH.sol";
 
 // Interfaces
 import {Setup} from "silo-core/test/invariants/Setup.t.sol";
+import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 import "forge-std/console.sol";
 
@@ -90,5 +91,23 @@ contract SetupLeverage is Setup {
 
             actorAddresses.push(_actor);
         }
+    }
+
+    /// @notice Deploy an actor proxy contract for a user address
+    /// @param userAddress Address of the user
+    /// @param tokens Array of token addresses
+    /// @param contracts Array of contract addresses to aprove tokens to
+    /// @return actorAddress Address of the deployed actor
+    function _setUpActor(address userAddress, address[] memory tokens, address[] memory contracts)
+        internal
+        override
+        returns (address actorAddress)
+    {
+        bool success;
+        ActorLeverage _actor = new ActorLeverage(tokens, contracts);
+        actors[userAddress] = Actor(_actor);
+        (success,) = address(_actor).call{value: INITIAL_ETH_BALANCE}("");
+        assert(success);
+        actorAddress = address(_actor);
     }
 }

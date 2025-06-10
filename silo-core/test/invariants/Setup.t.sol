@@ -17,8 +17,6 @@ import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
-import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";
 
 // Test Contracts
 import {BaseTest} from "./base/BaseTest.t.sol";
@@ -331,6 +329,7 @@ contract Setup is BaseTest {
     /// @return actorAddress Address of the deployed actor
     function _setUpActor(address userAddress, address[] memory tokens, address[] memory contracts)
         internal
+        virtual
         returns (address actorAddress)
     {
         bool success;

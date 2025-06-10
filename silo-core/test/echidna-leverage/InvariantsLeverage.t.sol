@@ -7,6 +7,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Invariant Contracts
 import {Invariants} from "silo-core/test/invariants/Invariants.t.sol";
+import {LeverageHandler} from "./handlers/user/LeverageHandler.t.sol";
 
 import "forge-std/console.sol";
 
@@ -14,7 +15,7 @@ import "forge-std/console.sol";
 /// @notice Wrappers for the protocol invariants implemented in each invariants contract
 /// @dev recognised by Echidna when property mode is activated
 /// @dev Inherits BaseInvariants
-abstract contract InvariantsLeverage is Invariants {
+abstract contract InvariantsLeverage is Invariants, LeverageHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     BASE INVARIANTS                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////

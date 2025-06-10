@@ -11,8 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import "forge-std/console.sol";
 
 // Test Contracts
-import {Actor} from "../../utils/Actor.sol";
-import {BaseHandlerLeverage} from "../../base/BaseHandler.t.sol";
+import {BaseHandlerLeverage} from "../../base/BaseHandlerLeverage.t.sol";
 
 /// @title LeverageHandler
 /// @notice Handler test contract for a set of actions
