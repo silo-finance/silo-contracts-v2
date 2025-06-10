@@ -5,15 +5,36 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-### Added
-- silo-core: leverage
 
-### Fixed
-- x-silo: use rounding direction in favor of protocol for cancel redeem 
-- x-silo: ensure we set `distrubutionEnd` when reset emission
-- x-silo: add restriction when redeem duration is too hi
-- x-silo: ensure cancel redeem does not give more tokens that user should receive
-- x-silo: at xSilo restart, ensure leftovers are distributed and not create min deposit restriction 
+### [3.7.0] - 2025-06-10
+### Added
+- silo-core: Ethereum deployment
+- silo-vaults: Ethereum deployment
+- silo-oracles: DIA price provider deployments
+- x-silo: XSilo and Stream
+- x-silo: production deployment
+- silo-vaults: fixed decimals offset 
+- silo-core: enigma invariant suite core
+- new markets:
+  - silo-core: PT-Silo-46-scUSD-14AUG2025 USDC.e market on Sonic
+  - silo-core: PT-aSonUSDC-14AUG2025 USDC.e Silo on Sonic
+  - silo-core: PT-Silo-20-USDC.e-17JUL2025 USDC.e new market on Sonic
+  - silo-core: WBTC USDC new market on Arbitrum
+  - silo-core: wstETH WETH new market on Arbitrum
+  - silo-core: kBTC USDT0 Silo on Ink
+  - silo-core: kBTC WETH Silo on Ink
+  - silo-core: ezETH WETH market on Arbitrum
+  - silo-core: WBTC WETH market on Arbitrum
+  - silo-core: ARB WETH market on Arbitrum
+  - silo-core: ETH+ WETH market on Arbitrum
+  - silo-core: PEAS USDC on Arbitrum
+  - silo-core: GRAIL USDC market on Arbitrum
+  - silo-core: PT-wstkscUSD-18DEC2025 USDC.e market on Sonic
+  - silo-core: PT-wOS-18DEC2025 wS silo on Sonic 
+  - silo-core: PT-wstkscETH-18DEC2025 WETH market on Sonic
+  - silo-core: yUSD USDC.e silo on Sonic
+  - silo-core: OS scUSD market on Sonic
+  - silo-core: xUSD USDC.e market on Sonic
 
 ### [3.6.0] - 2025-05-19
 #Added 
