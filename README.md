@@ -1,6 +1,10 @@
 # Silo V2
 Monorepository for Silo V2.
 
+### Info
+[Known Issues](./KnownIssues.md) \
+[Deployed silo versions](./silo-core/docs/DeployedSiloVersions.md)
+
 ## How to deploy a Silo or implement an integration
 ### Prepare local environment, run the tests
 
