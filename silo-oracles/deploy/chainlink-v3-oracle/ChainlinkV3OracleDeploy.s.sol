@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/Console2.sol";
+import {console2} from "forge-std/console2.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {ChainlinkV3OraclesConfigsParser as ConfigParser} from "./ChainlinkV3OraclesConfigsParser.sol";
