@@ -37,6 +37,7 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
     */
     function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
+        vm.assume(block.timestamp + _addTimestamp < 2 ** 64 - 1);
         vm.warp(block.timestamp + _addTimestamp);
 
         (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);

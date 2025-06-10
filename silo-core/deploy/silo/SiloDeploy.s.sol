@@ -193,10 +193,6 @@ contract SiloDeploy is CommonDeploy {
             return _chainLinkTxData(_oracleConfigName);
         }
 
-        if (_isDiaOracle(_oracleConfigName)) {
-            return _diaTxData(_oracleConfigName);
-        }
-
         address deployed = SiloCoreDeployments.parseAddress(_oracleConfigName);
 
         if (deployed != address(0)) {

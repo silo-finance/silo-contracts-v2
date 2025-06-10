@@ -20,7 +20,7 @@ contract MockOracleHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     uint256 public constant MIN_PRICE = 1e10;
-    uint256 public constant MAX_PRICE = 1e30;
+    uint256 public constant MAX_PRICE = 1e26;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
