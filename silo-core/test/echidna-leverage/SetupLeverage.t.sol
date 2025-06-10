@@ -17,6 +17,7 @@ import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMo
 
 // Mock Contracts
 import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
+import {TestWETH} from "./utils/mocks/TestWETH.sol";
 
 // Interfaces
 import {Setup} from "silo-core/test/invariants/Setup.t.sol";
@@ -34,6 +35,13 @@ contract SetupLeverage is Setup {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          SETUP FUNCTIONS                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _deployAssets() internal override {
+        _asset0 = TestERC20(address(new TestWETH("Test Token0", "TT0", 18)));
+        _asset1 = new TestERC20("Test Token1", "TT1", 6);
+        baseAssets.push(address(_asset0));
+        baseAssets.push(address(_asset1));
+    }
 
     function _deployLeverage() internal {
         siloLeverage = new LeverageUsingSiloFlashloanWithGeneralSwap(address(this), address(_asset0));
