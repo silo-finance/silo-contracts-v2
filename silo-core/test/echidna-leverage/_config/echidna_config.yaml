@@ -17,7 +17,7 @@ testLimit: 20000000
 seqLen: 300
 
 #shrinkLimit determines how much effort is spent shrinking failing sequences
-shrinkLimit: 2500
+shrinkLimit: 500
 
 #propMaxGas defines gas cost at which a property fails
 propMaxGas: 1000000000
@@ -55,9 +55,9 @@ maxValue: 1e+23 # 100000 eth
 #quiet produces (much) less verbose output
 quiet: false
 
-format: "text"
+#format: "text"
 
 # concurrent workers
-workers: 1
+workers: 3
 
 #testMode: assertion

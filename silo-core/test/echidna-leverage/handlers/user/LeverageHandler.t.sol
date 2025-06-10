@@ -34,7 +34,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     function openLeveragePosition(
         uint256 _depositAmount,
         uint256 _multiplier,
-        RandomGenerator2 memory _random
+        RandomGenerator2 calldata _random
     ) external payable {
         _multiplier = _multiplier % 2e18; // leverage up to 2x
         uint256 _PRECISION = 1e18;
@@ -59,8 +59,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             silo: ISilo(silo)
         });
 
-        // this data should be provided by BE API
-        // NOTICE: user needs to give allowance for swap router to use tokens
         swapArgs = IGeneralSwapModule.SwapArgs({
             buyToken: depositArgs.silo.asset(),
             sellToken: ISilo(flashArgs.flashloanTarget).asset(),
@@ -87,32 +85,59 @@ contract LeverageHandler is BaseHandlerLeverage {
         if (success) {
             _after();
         }
-
-        fail(); // will this be executed?
     }
 
-//        _before();
-//        (success, returnData) = actor.proxy(
-//            address(liquidationModule),
-//            abi.encodeWithSelector(
-//                ILeverageUsingSiloFlashloan.liquidationCall.selector,
-//                collateralAsset,
-//                debtAsset,
-//                borrower,
-//                _debtToCover,
-//                _receiveSToken
-//            )
-//        );
-//
-//        if (success) {
-//            _after();
-//        }
+    function assert_closeLeveragePosition(RandomGenerator2 calldata _random) external {
+        address borrower = _getRandomActor(_random.i);
+        _setTargetActor(borrower);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                         OWNER ACTIONS                                     //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+        address silo = _getRandomSilo(_random.j);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                           HELPERS                                         //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
+
+        closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
+            flashloanTarget: _getOtherSilo(silo),
+            siloWithCollateral: ISilo(silo),
+            collateralType: ISilo.CollateralType(_random.k % 2)
+        });
+
+        uint256 flashAmount = ISilo(closeArgs.flashloanTarget).maxRepay(borrower);
+        uint256 amountIn = flashAmount * 111 / 100;
+        // swap with 0.5% slippage
+        swapRouterMock.setSwap(swapArgs.sellToken, amountIn, swapArgs.buyToken, amountIn * 995 / 1000);
+
+        swapArgs = IGeneralSwapModule.SwapArgs({
+            buyToken: ISilo(closeArgs.flashloanTarget).asset(),
+            sellToken: ISilo(closeArgs.siloWithCollateral).asset(),
+            allowanceTarget: address(swapRouterMock),
+            exchangeProxy: address(swapRouterMock),
+            swapCallData: "mocked swap data"
+        });
+
+        _before();
+
+        (bool success, bytes memory returnData) = actor.proxy(
+            address(siloLeverage),
+            abi.encodeWithSelector(
+                ILeverageUsingSiloFlashloan.closeLeveragePosition.selector,
+                abi.encode(swapArgs),
+                closeArgs
+            )
+        );
+
+        if (success) {
+            _after();
+        }
+
+        assertTrue(false, "does close run?");
+        assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(borrower), 0, "borrower should have no debt");
+    }
+
+    function echidna_SiloLeverage_neverKeepsTokens() external returns (bool) {
+        if (_asset0.balanceOf(address(siloLeverage)) != 0) return false;
+        if (_asset1.balanceOf(address(siloLeverage)) != 0) return false;
+
+        return true;
+    }
 }
