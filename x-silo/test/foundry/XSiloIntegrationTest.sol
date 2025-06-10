@@ -46,7 +46,7 @@ contract XSiloIntegrationTest is Test {
     uint256 userInitialSiloBalance;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("RPC_SONIC"));
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 33001840);
 
         XSiloAndStreamDeploy deploy = new XSiloAndStreamDeploy();
         deploy.disableDeploymentsSync();
