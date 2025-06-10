@@ -21,6 +21,7 @@ import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreC
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {PendleRewardsClaimer} from "silo-core/contracts/hooks/PendleRewardsClaimer.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {PendleMarketThatReverts} from "../../../_mocks/PendleMarketThatReverts.sol";
@@ -38,7 +39,8 @@ import {
 contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     uint256 internal constant _BLOCK_TO_FORK = 22518257;
 
-    address internal _dao = makeAddr("DAO");
+    address internal _dao;
+    address internal _deployer;
     address internal _depositor = 0xf06e212f3d021842f1C8c2De4b9dd04945717aDd;
     address internal _rewardToken = 0x808507121B80c02388fAd14726482e061B8da827;
     address internal _lptWhale = 0x6E799758CEE75DAe3d84e09D40dc416eCf713652;
@@ -63,6 +65,8 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
             ChainsLib.chainAlias()
         ));
 
+        _dao = AddrLib.getAddress(AddrKey.DAO);
+
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
 
         _incentivesController = ISiloIncentivesController(_factory.create(
@@ -74,7 +78,9 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         IGaugeHookReceiver gaugeHookReceiver = IGaugeHookReceiver(address(_hookReceiver));
 
-        vm.prank(_dao);
+        _deployer = vm.addr(uint256(vm.envBytes32("PRIVATE_KEY")));
+
+        vm.prank(_deployer);
         gaugeHookReceiver.setGauge(
             _incentivesController,
             IShareToken(address(protected))
@@ -382,7 +388,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
 
-        vm.prank(_dao);
+        vm.prank(_deployer);
         IGaugeHookReceiver(address(_hookReceiver)).removeGauge(IShareToken(protected));
 
         vm.expectRevert(IPendleRewardsClaimer.IncentivesControllerRequired.selector);
