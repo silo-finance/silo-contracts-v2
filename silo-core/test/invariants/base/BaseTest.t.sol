@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // Interfaces
 import {ISilo} from "silo-core/contracts/Silo.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
 
 // Libraries
 import {Vm} from "forge-std/Base.sol";
@@ -41,6 +42,11 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     modifier monotonicTimestamp() virtual {
         // Implement monotonic timestamp if needed
         _;
+    }
+
+    /// @dev Makes this Tester contract able to receive ERC721 using safeTransfer
+    function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +100,13 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
             + ISilo(silo).convertToAssets(collateralShares, ISilo.AssetType.Collateral);
     }
 
+    function _getUserProtectedAssets(address silo, address user) internal view returns (uint256) {
+        (address protectedShareToken,) =
+            siloConfig.getCollateralShareTokenAndAsset(silo, ISilo.CollateralType.Protected);
+        uint256 protectedShares = IERC20(protectedShareToken).balanceOf(user);
+        return ISilo(silo).convertToAssets(protectedShares, ISilo.AssetType.Protected);
+    }
+
     function _setTargetActor(address user) internal {
         targetActor = user;
     }
@@ -113,5 +126,16 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     function _getRandomActor(uint256 _i) internal view returns (address) {
         uint256 _actorIndex = _i % NUMBER_OF_ACTORS;
         return actorAddresses[_actorIndex];
+    }
+
+    function _isCustomError(bytes memory returnData, bytes4 expectedSelector) internal pure returns (bool) {
+        if (returnData.length >= 4) {
+            bytes4 errorSelector;
+            assembly {
+                errorSelector := mload(add(returnData, 32))
+            }
+            return errorSelector == expectedSelector;
+        }
+        return false;
     }
 }
