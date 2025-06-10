@@ -8,7 +8,7 @@ import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
 import {TestStateLib} from "./TestState.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol"; 
-import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

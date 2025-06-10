@@ -23,8 +23,6 @@ library SiloCoreContracts {
     string public constant SILO_LEVERAGE_USING_SILO = "LeverageUsingSiloFlashloanWithGeneralSwap.sol";
     string public constant SILO_ROUTER_V2 = "SiloRouterV2.sol";
     string public constant INCENTIVES_CONTROLLER_FACTORY = "SiloIncentivesControllerFactory.sol";
-    string public constant INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY
-        = "SiloIncentivesControllerGaugeLikeFactory.sol";
 }
 
 /// @notice SiloCoreDeployments library

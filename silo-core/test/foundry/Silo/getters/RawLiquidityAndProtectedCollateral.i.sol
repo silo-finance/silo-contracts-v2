@@ -11,7 +11,7 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
 contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;

@@ -17,7 +17,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo as SiloFixture} from "../../_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc HookCallsOutsideActionTest

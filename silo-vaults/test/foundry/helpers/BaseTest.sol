@@ -16,7 +16,7 @@ import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 
 import {SiloFixture, SiloConfigOverride} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
-import {SiloFixtureWithVeSilo} from "silo-core/test/foundry/_common/fixtures/SiloFixtureWithVeSilo.sol";
+import {SiloFixture} from "silo-core/test/foundry/_common/fixtures/SiloFixture.sol";
 
 import {SiloVaultsFactoryDeploy} from "../../../deploy/SiloVaultsFactoryDeploy.s.sol";
 
@@ -106,7 +106,7 @@ contract BaseTest is SiloLittleHelper, Test {
     }
 
     function _createNewMarkets() public virtual {
-        SiloFixture siloFixture = new SiloFixtureWithVeSilo();
+        SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory _override;
 
         _override.token0 = address(collateralToken);
@@ -132,7 +132,7 @@ contract BaseTest is SiloLittleHelper, Test {
     }
 
     function _createNewMarket(address _collateralToken, address _loanToken) public virtual returns (IERC4626) {
-        SiloFixture siloFixture = new SiloFixtureWithVeSilo();
+        SiloFixture siloFixture = new SiloFixture();
         SiloConfigOverride memory _override;
 
         _override.token0 = _collateralToken;

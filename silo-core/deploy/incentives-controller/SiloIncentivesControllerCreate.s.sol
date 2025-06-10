@@ -15,15 +15,15 @@ import {
 } from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLikeFactory.sol";
 
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {SiloIncentivesControllerGLDeployments} from "./SiloIncentivesControllerGLDeployments.sol";
+import {SiloIncentivesControllerDeployments} from "./SiloIncentivesControllerDeployments.sol";
 
 /**
     INCENTIVES_OWNER=DAO SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerGLCreate.s.sol \
+        forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreate.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
-contract SiloIncentivesControllerGLCreate is CommonDeploy {
+contract SiloIncentivesControllerCreate is CommonDeploy {
     error OwnerNotFound();
     error SiloNotFound();
     error IncentivizedAssetNotFound();
@@ -68,7 +68,7 @@ contract SiloIncentivesControllerGLCreate is CommonDeploy {
         }
 
         address factory = SiloCoreDeployments.get(
-            SiloCoreContracts.INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY,
+            SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY,
             ChainsLib.chainAlias()
         );
 
@@ -102,6 +102,6 @@ contract SiloIncentivesControllerGLCreate is CommonDeploy {
 
         vm.stopBroadcast();
 
-        SiloIncentivesControllerGLDeployments.save(ChainsLib.chainAlias(), incentivizedSilo, incentivesControllerGaugeLike);
+        SiloIncentivesControllerDeployments.save(ChainsLib.chainAlias(), incentivizedSilo, incentivesControllerGaugeLike);
     }
 }
