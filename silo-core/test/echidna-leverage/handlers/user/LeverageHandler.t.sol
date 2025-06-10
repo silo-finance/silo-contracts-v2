@@ -12,11 +12,11 @@ import "forge-std/console.sol";
 
 // Test Contracts
 import {Actor} from "../../utils/Actor.sol";
-import {BaseHandler} from "../../base/BaseHandler.t.sol";
+import {BaseHandlerLeverage} from "../../base/BaseHandler.t.sol";
 
 /// @title LeverageHandler
 /// @notice Handler test contract for a set of actions
-contract LeverageHandler is BaseHandler {
+contract LeverageHandler is BaseHandlerLeverage {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
