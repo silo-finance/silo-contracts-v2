@@ -97,6 +97,6 @@ contract PendleWrapperLPTOracle is Test {
 
         uint256 price = pendleWrapperLPTToSyOracle.quote(1e18, address(sUSDe_WRAPPER));
 
-        assertEq(price, 2_745809640189568598256609960000); // ~2.745 USDC
+        assertEq(price, 2_745809640189568598256609960000); // ~2.745 USD
     }
 }
