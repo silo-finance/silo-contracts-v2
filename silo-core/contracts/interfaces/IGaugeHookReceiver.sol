@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 import {IShareToken} from "./IShareToken.sol";
 import {IHookReceiver} from "./IHookReceiver.sol";
-import {IGaugeLike as IGauge} from "./IGaugeLike.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 
 /// @notice Silo share token hook receiver for the gauge
 interface IGaugeHookReceiver is IHookReceiver {
@@ -39,7 +39,7 @@ interface IGaugeHookReceiver is IHookReceiver {
     /// @dev Overrides existing configuration
     /// @param _shareToken Share token for which the gauge is configured
     /// @param _gauge Array of gauges for which hook receiver will send notification.
-    function setGauge(IGauge _gauge, IShareToken _shareToken) external;
+    function setGauge(ISiloIncentivesController _gauge, IShareToken _shareToken) external;
 
     /// @notice Remove the gauge from the hook receiver for the share token
     /// @dev While removing the gauge,
@@ -49,5 +49,5 @@ interface IGaugeHookReceiver is IHookReceiver {
 
     /// @notice Get the gauge for the share token
     /// @param _shareToken Share token
-    function configuredGauges(IShareToken _shareToken) external view returns (IGauge);
+    function configuredGauges(IShareToken _shareToken) external view returns (ISiloIncentivesController);
 }
