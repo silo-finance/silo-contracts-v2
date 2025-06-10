@@ -17,10 +17,16 @@ FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract ChainlinkV3OracleDeploy is CommonDeploy {
+    string public useConfigName;
+
+    function setUseConfigName(string memory _useConfigName) public {
+        useConfigName = _useConfigName;
+    }
+    
     function run() public returns (ChainlinkV3Oracle oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        string memory configName = vm.envString("CONFIG");
+        string memory configName = bytes(useConfigName).length != 0 ? useConfigName : vm.envString("CONFIG");
 
         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ConfigParser.getConfig(
             getChainAlias(),
