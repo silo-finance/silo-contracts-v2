@@ -17,8 +17,6 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPendleRewardsClaimer} from "silo-core/contracts/interfaces/IPendleRewardsClaimer.sol";
 import {IPendleMarketLike} from "silo-core/contracts/interfaces/IPendleMarketLike.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
-import {VeSiloContracts} from "ve-silo/common/VeSiloContracts.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {PendleRewardsClaimer} from "silo-core/contracts/hooks/PendleRewardsClaimer.sol";
@@ -30,11 +28,8 @@ import {PendleMarketGasWaster} from "../../../_mocks/PendleMarketGasWaster.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
 import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
 import {
-    SiloIncentivesControllerGaugeLike
-} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLike.sol";
-import {
-    ISiloIncentivesControllerGaugeLikeFactory
-} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGaugeLikeFactory.sol";
+    ISiloIncentivesControllerFactory
+} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {
     PendleRewardsClaimerHarness
 } from "silo-core/test/foundry/utils/hook-receivers/pendle-rewards-claimer/PendleRewardsClaimerHarness.sol";
@@ -52,37 +47,36 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     PendleRewardsClaimerHarness internal _hookReceiverHarness;
     ISiloConfig internal _siloConfig;
     ISiloIncentivesController internal _incentivesController;
-    ISiloIncentivesControllerGaugeLikeFactory internal _factory;
+    ISiloIncentivesControllerFactory internal _factory;
 
     event FailedToClaimIncentives(address _silo);
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), _BLOCK_TO_FORK);
 
-        AddrLib.setAddress(VeSiloContracts.TIMELOCK_CONTROLLER, _dao);
-
         _siloConfig = _setUpLocalFixtureNoOverrides(SiloConfigsNames.SILO_PENDLE_REWARDS_TEST);
 
         _hookReceiver = IPendleRewardsClaimer(address(IShareToken(address(silo0)).hookSetup().hookReceiver));
 
-        _factory = ISiloIncentivesControllerGaugeLikeFactory(SiloCoreDeployments.get(
-            SiloCoreContracts.INCENTIVES_CONTROLLER_GAUGE_LIKE_FACTORY,
+        _factory = ISiloIncentivesControllerFactory(SiloCoreDeployments.get(
+            SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY,
             ChainsLib.chainAlias()
         ));
 
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
 
-        _incentivesController = ISiloIncentivesController(_factory.createGaugeLike(
+        _incentivesController = ISiloIncentivesController(_factory.create(
             _dao,
             address(_hookReceiver),
-            address(protected))
-        );
+            address(protected),
+            bytes32(0)
+        ));
 
         IGaugeHookReceiver gaugeHookReceiver = IGaugeHookReceiver(address(_hookReceiver));
 
         vm.prank(_dao);
         gaugeHookReceiver.setGauge(
-            IGauge(address(_incentivesController)),
+            _incentivesController,
             IShareToken(address(protected))
         );
 
@@ -387,9 +381,6 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         _depositProtected(); // deposit without revert as incentives controller is configured
 
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
-
-        vm.prank(_dao);
-        SiloIncentivesControllerGaugeLike(address(_incentivesController)).killGauge();
 
         vm.prank(_dao);
         IGaugeHookReceiver(address(_hookReceiver)).removeGauge(IShareToken(protected));

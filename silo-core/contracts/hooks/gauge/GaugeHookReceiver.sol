@@ -67,7 +67,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
     {
         ISiloIncentivesController theGauge = configuredGauges[IShareToken(msg.sender)];
 
-        if (theGauge == IGauge(address(0))) return;
+        if (theGauge == ISiloIncentivesController(address(0))) return;
         if (!_getHooksAfter(_silo).matchAction(_action)) return;
 
         Hook.AfterTokenTransfer memory input = _inputAndOutput.afterTokenTransferDecode();

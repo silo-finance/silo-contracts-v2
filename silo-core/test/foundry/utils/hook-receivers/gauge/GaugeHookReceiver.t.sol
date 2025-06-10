@@ -164,7 +164,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testRemoveGauge
-    function testRemoveGauge() public {
+        function testRemoveGauge() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
         (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
 
@@ -176,6 +176,11 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         vm.prank(_dao);
         _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(shareCollateralToken));
+
+        (uint24 hooksBefore0, uint24 hooksAfter0) = _hookReceiver.hookReceiverConfig(silo0);
+
+        IShareToken.HookSetup memory silo0HooksBefore = IShareToken(address(silo0)).hookSetup();
+        IShareToken.HookSetup memory silo1HooksBefore = IShareToken(address(silo1)).hookSetup();
 
         vm.prank(_dao);
         _hookReceiver.removeGauge(IShareToken(shareCollateralToken));

@@ -6,7 +6,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
 import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
-import {PendleRewardsClaimerDeploy} from "../PendleRewardsClaimerDeploy.s.sol";
+import {PendleRewardsClaimerDeploy} from "./PendleRewardsClaimerDeploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
 import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
 import {TowerDeploy} from "./TowerDeploy.s.sol";
