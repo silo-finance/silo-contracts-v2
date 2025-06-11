@@ -31,6 +31,12 @@ contract WrappedMetaVaultOracleAdapterTest is Test {
     function test_WrappedMetaVaultOracleAdapter_constructor() public view {
         assertEq(address(adapter.FEED()), 0x440A6bf579069Fa4e7C3C9fe634B34D2C78C584c, "feed is expected");
         assertEq(adapter.DECIMALS(), adapter.FEED().decimals(), "decimals are cached");
+
+        assertEq(
+            adapter.description(),
+            "WrappedMetaVaultOracleAdapter for Wrapped Stability USD",
+            "description has asset name"
+        );
     }
 
     function test_WrappedMetaVaultOracleAdapter_constructor_reverts() public {

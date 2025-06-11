@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IWrappedMetaVaultOracle} from "./interfaces/IWrappedMetaVaultOracle.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @title WrappedMetaVaultOracleAdapter adapter for IWrappedMetaVaultOracle feeds.
 /// @notice Adapter returns price with the latest block timestamp for ChainlinkV3Oracle compatibility.
@@ -52,8 +53,11 @@ contract WrappedMetaVaultOracleAdapter is AggregatorV3Interface {
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function description() external pure virtual returns (string memory) {
-        return "WrappedMetaVaultOracleAdapter";
+    function description() external view virtual returns (string memory) {
+        return string.concat(
+            "WrappedMetaVaultOracleAdapter for ",
+            IERC20Metadata(FEED.wrappedMetaVault()).name()
+        );
     }
 
     /// @inheritdoc AggregatorV3Interface
