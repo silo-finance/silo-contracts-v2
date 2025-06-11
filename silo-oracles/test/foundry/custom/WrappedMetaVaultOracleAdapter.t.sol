@@ -30,6 +30,7 @@ contract WrappedMetaVaultOracleAdapterTest is TokensGenerator {
 
     function test_WrappedMetaVaultOracleAdapter_constructor() public view {
         assertEq(address(adapter.FEED()), 0x440A6bf579069Fa4e7C3C9fe634B34D2C78C584c, "feed is expected");
+        assertEq(adapter.DECIMALS(), adapter.FEED().decimals(), "decimals are cached");
     }
 
     function test_WrappedMetaVaultOracleAdapter_constructor_reverts() public {
@@ -50,10 +51,11 @@ contract WrappedMetaVaultOracleAdapterTest is TokensGenerator {
     function test_WrappedMetaVaultOracleAdapter_decimals() public view {
         IWrappedMetaVaultOracle underlyingFeed = adapter.FEED();
         assertEq(adapter.decimals(), underlyingFeed.decimals());
+        assertEq(adapter.decimals(), adapter.DECIMALS());
         assertEq(adapter.decimals(), 8);
     }
 
-    function test_WrappedMetaVaultOracleAdapter_latestRoundData_compareToOriginalRate() public {
+    function test_WrappedMetaVaultOracleAdapter_latestRoundData_compareToOriginalRate() public view {
         (
             uint80 roundId,
             int256 answer,
@@ -69,7 +71,7 @@ contract WrappedMetaVaultOracleAdapterTest is TokensGenerator {
         assertEq(answeredInRound, 1);
     }
 
-    function test_WrappedMetaVaultOracleAdapter_latestRoundData_sanityCheck() public {
+    function test_WrappedMetaVaultOracleAdapter_latestRoundData_sanityCheck() public view {
         ( ,int256 answer,,,) = adapter.latestRoundData();
 
         assertEq(answer, 1.00144500e8, "USD vault price is close to dollar");

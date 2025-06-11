@@ -10,6 +10,9 @@ contract WrappedMetaVaultOracleAdapter is AggregatorV3Interface {
     /// @dev Price source feed address.
     IWrappedMetaVaultOracle public immutable FEED; // solhint-disable-line var-name-mixedcase
 
+    /// @dev Price decimals cached from FEED.
+    uint8 public immutable DECIMALS;
+
     /// @dev Revert in constructor when price is zero to check setup.
     error FeedHasZeroPrice();
     error NotImplemented();
@@ -20,6 +23,7 @@ contract WrappedMetaVaultOracleAdapter is AggregatorV3Interface {
         }
 
         FEED = _feed;
+        DECIMALS = _feed.decimals();
     }
 
     /// @inheritdoc AggregatorV3Interface
@@ -44,7 +48,7 @@ contract WrappedMetaVaultOracleAdapter is AggregatorV3Interface {
 
     /// @inheritdoc AggregatorV3Interface
     function decimals() external view virtual returns (uint8) {
-        return FEED.decimals();
+        return DECIMALS;
     }
 
     /// @inheritdoc AggregatorV3Interface
