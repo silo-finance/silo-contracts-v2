@@ -53,7 +53,7 @@ deployContracts: [ [ "0xf01", "Actions" ], [ "0xf02", "ShareCollateralTokenLib" 
 maxValue: 1e+23 # 100000 eth
 
 #quiet produces (much) less verbose output
-quiet: false
+quiet: true
 
 #format: "text"
 

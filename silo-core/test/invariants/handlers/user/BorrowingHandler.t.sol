@@ -31,7 +31,7 @@ contract BorrowingHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function borrow(uint256 _assets, uint8 i, uint8 j) external setup {
+    function borrow(uint256 _assets, uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 
@@ -60,7 +60,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function borrowSameAsset(uint256 _assets, uint8 i, uint8 j) external setup {
+    function borrowSameAsset(uint256 _assets, uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 
@@ -88,7 +88,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function borrowShares(uint256 _shares, uint8 i, uint8 j) external setup {
+    function borrowShares(uint256 _shares, uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 
@@ -112,7 +112,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function repay(uint256 _assets, uint8 i, uint8 j) external setup {
+    function repay(uint256 _assets, uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 
@@ -138,7 +138,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function repayShares(uint256 _shares, uint8 i, uint8 j) external setup {
+    function repayShares(uint256 _shares, uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 
@@ -165,7 +165,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function switchCollateralToThisSilo(uint8 i) external setup {
+    function switchCollateralToThisSilo(uint8 i) external setup(0) {
         bool success;
         bytes memory returnData;
 
@@ -179,16 +179,16 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function transitionCollateral(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup {
+    function transitionCollateral(uint256 _shares, Random memory r) external setup(r.i) {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
-        address owner = _getRandomActor(i);
+        address owner = _getRandomActor(r.i);
 
         _setTargetActor(owner);
 
-        address target = _getRandomSilo(j);
+        address target = _getRandomSilo(r.j);
 
         ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
 
@@ -230,7 +230,7 @@ contract BorrowingHandler is BaseHandler {
     //                                          PROPERTIES                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_BORROWING_HSPOST_D(uint8 i, uint8 j) external setup {
+    function assert_BORROWING_HSPOST_D(uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 
@@ -263,7 +263,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function assertBORROWING_HSPOST_F(uint8 i, uint8 j) external setup {
+    function assertBORROWING_HSPOST_F(uint8 i, uint8 j) external setup(i) {
         bool success;
         bytes memory returnData;
 

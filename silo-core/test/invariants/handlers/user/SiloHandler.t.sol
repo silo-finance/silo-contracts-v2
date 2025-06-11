@@ -30,7 +30,7 @@ contract SiloHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function accrueInterest(uint8 i) external setup {
+    function accrueInterest(uint8 i) external setup (0){
         bool success;
         bytes memory returnData;
 

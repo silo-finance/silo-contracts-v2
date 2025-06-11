@@ -29,7 +29,7 @@ contract LiquidationHandler is BaseHandler {
         uint256 _debtToCover,
         bool _receiveSToken,
         RandomGenerator memory random
-    ) external setup {
+    ) external setup(random.i) {
         bool success;
         bytes memory returnData;
 

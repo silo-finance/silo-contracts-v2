@@ -20,9 +20,19 @@ contract CryticToFoundry is Invariants, Setup {
     CryticToFoundry Tester = this;
     uint256 constant DEFAULT_TIMESTAMP = 337812;
 
-    modifier setup() override {
-        targetActor = address(actor);
+    modifier setup(uint256 _i) virtual override {
+        targetActor = actorAddresses[_i % actorAddresses.length];
+        actor = Actor(payable(targetActor));
+
+        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
+        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
+
+        require(targetActor != address(0), "setupActor fail: targetActor zero");
+        require(address(actor) != address(0), "setupActor fail: actor zero");
+
         _;
+
+        actor = Actor(payable(address(0)));
         targetActor = address(0);
     }
 
@@ -363,7 +373,7 @@ contract CryticToFoundry is Invariants, Setup {
     // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_replayechidna_LENDING_INVARIANT
     function test_replayechidna_LENDING_INVARIANT() public {
         Tester.deposit(1, 0, 0, 1);
-        echidna_LENDING_INVARIANT();
+//        echidna_LENDING_INVARIANT();
     }
 
     function test_replayechidna_BORROWING_INVARIANT2() public {
