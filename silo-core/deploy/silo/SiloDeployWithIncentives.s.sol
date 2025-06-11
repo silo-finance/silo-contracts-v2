@@ -10,8 +10,8 @@ import {SiloDeployWithDeployerOwner} from "silo-core/deploy/silo/SiloDeployWithD
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {
-    SiloIncentivesControllerGLCreateAndConfigure
-} from "silo-core/deploy/incentives-controller/SiloIncentivesControllerGLCreateAndConfigure.s.sol";
+    SiloIncentivesControllerCreateAndConfigure
+} from "silo-core/deploy/incentives-controller/SiloIncentivesControllerCreateAndConfigure.sol";
 
 /**
 FOUNDRY_PROFILE=core CONFIG=wS_scUSD_Silo INCENTIVES_OWNER=GROWTH_MULTISIG INCENTIVIZED_ASSET=scUSD \
@@ -22,8 +22,8 @@ contract SiloDeployWithIncentives is SiloDeployWithDeployerOwner {
     function run() public override returns (ISiloConfig siloConfig) {
         siloConfig = super.run();
 
-        SiloIncentivesControllerGLCreateAndConfigure createAndConfigure =
-            new SiloIncentivesControllerGLCreateAndConfigure();
+        SiloIncentivesControllerCreateAndConfigure createAndConfigure =
+            new SiloIncentivesControllerCreateAndConfigure();
 
         createAndConfigure.createIncentivesController().setSiloConfig(address(siloConfig));
         createAndConfigure.run();
