@@ -7,7 +7,7 @@ import {console2} from "forge-std/console2.sol";
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloIncentivesControllerCreate} from "./SiloIncentivesControllerCreate.s.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {IGaugeLike as IGauge} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /**
@@ -29,7 +29,7 @@ contract SiloIncentivesControllerCreateAndConfigure is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address deployer = vm.addr(deployerPrivateKey);
 
-        address incentivesControllerGaugeLike = createIncentivesController.run();
+        address incentivesController = createIncentivesController.run();
 
         address hookReceiver = createIncentivesController.hookReceiver();
         address shareToken = createIncentivesController.incentivizedAsset();
@@ -38,7 +38,7 @@ contract SiloIncentivesControllerCreateAndConfigure is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        IGaugeHookReceiver(hookReceiver).setGauge(IGauge(incentivesControllerGaugeLike), IShareToken(shareToken));
+        IGaugeHookReceiver(hookReceiver).setGauge(ISiloIncentivesController(incentivesController), IShareToken(shareToken));
 
         vm.stopBroadcast();
 
