@@ -34,12 +34,13 @@ contract WrappedMetaVaultOracleAdapterDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
-
         adapter = new WrappedMetaVaultOracleAdapter(feed);
-
         vm.stopBroadcast();
 
-        string memory oracleName = string.concat("WRAPPED_META_VAULT_", feedKey);
-        OraclesDeployments.save(getChainAlias(), oracleName, address(adapter));
+        // fixes Sonic chainId not found in unit tests
+        if (bytes(feedKey).length == 0) {
+            string memory oracleName = string.concat("WRAPPED_META_VAULT_", feedKey);
+            OraclesDeployments.save(getChainAlias(), oracleName, address(adapter));
+        }
     }
 }
