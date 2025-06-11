@@ -174,21 +174,21 @@ contract ERC4626PriceManipulation is IntegrationTest {
 
         _logPrice("After 100% mint");
 
-        uint256 maxRedeem = _vault.maxRedeem(address(_attacker));
-        assertNotEq(maxRedeem, 0, "Max redeem is 0");
+        uint256 maxWithdraw = _vault.maxWithdraw(address(_attacker));
+        assertNotEq(maxWithdraw, 0, "Max withdraw is 0");
 
-        emit log_named_decimal_uint("Max redeem", maxRedeem, _assetDecimals);
+        emit log_named_decimal_uint("Max withdraw", maxWithdraw, _assetDecimals);
 
         vm.prank(_attacker);
-        _vault.redeem(maxRedeem, _attacker, _attacker);
+        _vault.withdraw(maxWithdraw, _attacker, _attacker);
 
-        _logPrice("After 100% redeem");
+        _logPrice("After 100% withdraw");
 
         _logVaultSharesAndAssets();
     }
 
-    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_crossCheck_deposit_withdraw -vv
-    function test_ERC4626PriceManipulation_crossCheck_deposit_withdraw() public priceDidNotChange {
+    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_crossCheck_deposit_redeem -vv
+    function test_ERC4626PriceManipulation_crossCheck_deposit_redeem() public priceDidNotChange {
         uint256 attackerBalance = _fundAttackerWithTotalAssets();
 
         vm.prank(_attacker);
@@ -199,15 +199,15 @@ contract ERC4626PriceManipulation is IntegrationTest {
 
         _logPrice("After 100% deposit");
 
-        uint256 maxWithdraw = _vault.maxWithdraw(address(_attacker));
-        assertNotEq(maxWithdraw, 0, "Max withdraw is 0");
+        uint256 maxRedeem = _vault.maxRedeem(address(_attacker));
+        assertNotEq(maxRedeem, 0, "Max redeem is 0");
 
-        emit log_named_decimal_uint("Max withdraw", maxWithdraw, _assetDecimals);
+        emit log_named_decimal_uint("Max redeem", maxRedeem, _assetDecimals);
 
         vm.prank(_attacker);
-        _vault.withdraw(maxWithdraw, _attacker, _attacker);
+        _vault.redeem(maxRedeem, _attacker, _attacker);
 
-        _logPrice("After 100% withdraw");
+        _logPrice("After 100% redeem");
 
         _logVaultSharesAndAssets();
     }
