@@ -35,7 +35,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint256 _depositAmount,
         uint256 _multiplier,
         RandomGenerator2 calldata _random
-    ) external payable {
+    ) external payable setup {
         _multiplier = _multiplier % 2e18; // leverage up to 2x
         uint256 _PRECISION = 1e18;
 
@@ -72,7 +72,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _before();
 
-        (bool success, bytes memory returnData) = actor.proxy(
+        (bool success, bytes memory returnData) = actor.proxy{value: msg.value}(
             address(siloLeverage),
             abi.encodeWithSelector(
                 ILeverageUsingSiloFlashloan.openLeveragePosition.selector,
@@ -84,10 +84,13 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         if (success) {
             _after();
+            assertGt(ISilo(closeArgs.flashloanTarget).maxRepay(borrower), 0, "borrower should have debt");
         }
+
+        assert_SiloLeverage_neverKeepsTokens();
     }
 
-    function assert_closeLeveragePosition(RandomGenerator2 calldata _random) external {
+    function closeLeveragePosition(RandomGenerator2 calldata _random) external setup {
         address borrower = _getRandomActor(_random.i);
         _setTargetActor(borrower);
 
@@ -128,10 +131,16 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         if (success) {
             _after();
+            assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(borrower), 0, "borrower should have no debt");
         }
 
-        assertTrue(false, "does close run?");
-        assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(borrower), 0, "borrower should have no debt");
+        assert_SiloLeverage_neverKeepsTokens();
+    }
+
+    function assert_SiloLeverage_neverKeepsTokens() public {
+        assertEq(_asset0.balanceOf(address(siloLeverage)), 0, "SiloLeverage should have 0 asset0");
+        assertEq(_asset1.balanceOf(address(siloLeverage)), 0, "SiloLeverage should have 0 asset1");
+        assertEq(address(siloLeverage).balance, 0, "SiloLeverage should have 0 ETH");
     }
 
     function echidna_SiloLeverage_neverKeepsTokens() external returns (bool) {
