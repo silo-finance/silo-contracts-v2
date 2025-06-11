@@ -1,10 +1,12 @@
 {
-    "CHAINLINK_Demo_config": {
-        "baseToken": "USDC",
-        "quoteToken": "WETH",
-        "primaryAggregator": "CHAINLINK_PRIMARY_AGGREGATOR",
-        "primaryHeartbeat": 120,
-        "secondaryAggregator": "CHAINLINK_SECONDARY_AGGREGATOR",
-        "secondaryHeartbeat": 240
+    "CHAINLINK_sUSDe_USD": {
+        "baseToken": "sUSDe",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_sUSDe_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4
     }
 }
