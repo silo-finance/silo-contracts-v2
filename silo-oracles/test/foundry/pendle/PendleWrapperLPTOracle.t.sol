@@ -87,7 +87,7 @@ contract PendleWrapperLPTOracle is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_wrapperLPTToAssetOracle_deploy --ffi -vv
      */
     function test_wrapperLPTToAssetOracle_deploy() public {
-        chainlinkOracleDeploy.setUseConfigName(OracleConfig.CHAINLINK_StakedUSDeV2_USD);
+        chainlinkOracleDeploy.setUseConfigName(OracleConfig.CHAINLINK_sUSDe_USD);
         ISiloOracle oracle = ISiloOracle(address(chainlinkOracleDeploy.run()));
 
         vm.expectEmit(false, false, false, false); // check only if the event is emitted

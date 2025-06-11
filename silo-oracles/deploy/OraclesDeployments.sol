@@ -6,7 +6,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 library OracleConfig {
     string public constant DAI_DEMO_CONFIG = "DIA_Demo_config";
-    string public constant CHAINLINK_StakedUSDeV2_USD = "CHAINLINK_StakedUSDeV2_USD";
+    string public constant CHAINLINK_sUSDe_USD = "CHAINLINK_sUSDe_USD";
     string public constant UNI_V3_ETH_USDC_03 = "UniV3-ETH-USDC-0.3";
 }
 

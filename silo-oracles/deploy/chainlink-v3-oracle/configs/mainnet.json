@@ -1,6 +1,6 @@
 {
-    "CHAINLINK_StakedUSDeV2_USD": {
-        "baseToken": "StakedUSDeV2",
+    "CHAINLINK_sUSDe_USD": {
+        "baseToken": "sUSDe",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_sUSDe_USD_AGGREGATOR",
         "primaryHeartbeat": 87001,
