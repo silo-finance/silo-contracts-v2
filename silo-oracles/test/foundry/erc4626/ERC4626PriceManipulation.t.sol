@@ -92,6 +92,22 @@ contract ERC4626PriceManipulation is IntegrationTest {
         _logVaultSharesAndAssets();
     }
 
+    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_mint -vv
+    function test_ERC4626PriceManipulation_mint() public priceDidNotChange {
+        uint256 attackerBalance = _fundAttackerWithTotalAssets();
+
+        vm.prank(_attacker);
+        _asset.approve(address(_vault), attackerBalance);
+
+        uint256 expectedShares = _vault.convertToShares(attackerBalance);
+
+        vm.prank(_attacker);
+        _vault.mint(expectedShares, address(_attacker));
+
+        _logPrice("After 100% mint");
+        _logVaultSharesAndAssets();
+    }
+
     // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_deposit_and_withdraw -vv
     function test_ERC4626PriceManipulation_deposit_and_withdraw() public priceDidNotChange {
         uint256 attackerBalance = _fundAttackerWithTotalAssets();
@@ -105,6 +121,86 @@ contract ERC4626PriceManipulation is IntegrationTest {
         _logPrice("After 100% deposit");
 
         uint256 maxWithdraw = _vault.maxWithdraw(address(_attacker));
+        assertNotEq(maxWithdraw, 0, "Max withdraw is 0");
+
+        emit log_named_decimal_uint("Max withdraw", maxWithdraw, _assetDecimals);
+
+        vm.prank(_attacker);
+        _vault.withdraw(maxWithdraw, _attacker, _attacker);
+
+        _logPrice("After 100% withdraw");
+
+        _logVaultSharesAndAssets();
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_mint_and_redeem -vv
+    function test_ERC4626PriceManipulation_mint_and_redeem() public priceDidNotChange {
+        uint256 attackerBalance = _fundAttackerWithTotalAssets();
+
+        vm.prank(_attacker);
+        _asset.approve(address(_vault), attackerBalance);
+
+        uint256 expectedShares = _vault.convertToShares(attackerBalance);
+
+        vm.prank(_attacker);
+        _vault.mint(expectedShares, address(_attacker));
+
+        _logPrice("After 100% mint");
+
+        uint256 maxRedeem = _vault.maxRedeem(address(_attacker));
+        assertNotEq(maxRedeem, 0, "Max redeem is 0");
+
+        emit log_named_decimal_uint("Max redeem", maxRedeem, _assetDecimals);
+
+        vm.prank(_attacker);
+        _vault.redeem(maxRedeem, _attacker, _attacker);
+
+        _logPrice("After 100% redeem");
+
+        _logVaultSharesAndAssets();
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_crossCheck_mint_withdraw -vv
+    function test_ERC4626PriceManipulation_crossCheck_mint_withdraw() public priceDidNotChange {
+        uint256 attackerBalance = _fundAttackerWithTotalAssets();
+
+        vm.prank(_attacker);
+        _asset.approve(address(_vault), attackerBalance);
+
+        uint256 expectedShares = _vault.convertToShares(attackerBalance);
+
+        vm.prank(_attacker);
+        _vault.mint(expectedShares, address(_attacker));
+
+        _logPrice("After 100% mint");
+
+        uint256 maxRedeem = _vault.maxRedeem(address(_attacker));
+        assertNotEq(maxRedeem, 0, "Max redeem is 0");
+
+        emit log_named_decimal_uint("Max redeem", maxRedeem, _assetDecimals);
+
+        vm.prank(_attacker);
+        _vault.redeem(maxRedeem, _attacker, _attacker);
+
+        _logPrice("After 100% redeem");
+
+        _logVaultSharesAndAssets();
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_crossCheck_deposit_withdraw -vv
+    function test_ERC4626PriceManipulation_crossCheck_deposit_withdraw() public priceDidNotChange {
+        uint256 attackerBalance = _fundAttackerWithTotalAssets();
+
+        vm.prank(_attacker);
+        _asset.approve(address(_vault), attackerBalance);
+
+        vm.prank(_attacker);
+        _vault.deposit(attackerBalance, address(_attacker));
+
+        _logPrice("After 100% deposit");
+
+        uint256 maxWithdraw = _vault.maxWithdraw(address(_attacker));
+        assertNotEq(maxWithdraw, 0, "Max withdraw is 0");
 
         emit log_named_decimal_uint("Max withdraw", maxWithdraw, _assetDecimals);
 
