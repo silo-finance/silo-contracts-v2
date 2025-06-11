@@ -27,25 +27,24 @@ print(f"input_file: {input_file}")
 # JSON keys
 keys = [
  "LP",
- "Blockchain",
- "market",
- "token",
- "address",
- "-",
- "Borrowable",
- "maxLtv",
- "lt",
- "liquidationTargetLtv",
- "liquidationFee",
- "interestRateModelConfig",
- "ORacle Provider",
- "ORacle Address",
- "daoFee",
- "DAO's fee recpient",
- "deployerFee",
- "Deployer's fee recpient",
- "flashloanFee",
- "_2",
+ "Blockchain", # Network
+ "market", # Market
+ "token", # Asset
+ "address", # Asset Address
+ "-", # Underlying address
+ "Borrowable", # Borrowable?
+ "maxLtv", # maxLTV
+ "lt", # LT
+ "liquidationTargetLtv", # LiquidationTargetLTV
+ "liquidationFee", # Liquidation fee
+ "interestRateModelConfig", # IRM config name
+ "ORacle Provider", # "Oracle Provider Include a link to docs"
+ "ORacle Address", # Oracle address
+ "daoFee", # DAO fee
+ "DAO's fee recpient", # DAO's fee recpient
+ "deployerFee", # Deployer fee
+ "Deployer's fee recpient", # Deployer's fee recpient
+ "flashloanFee" # Flashloan fee
 ]
 
 # Check if the input file exists
