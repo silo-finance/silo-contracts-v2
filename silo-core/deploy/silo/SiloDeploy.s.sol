@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata, IERC20} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
@@ -12,6 +12,7 @@ import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRate
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {UniswapV3OraclesConfigsParser} from "silo-oracles/deploy/uniswap-v3-oracle/UniswapV3OraclesConfigsParser.sol";
 import {DIAOraclesConfigsParser} from "silo-oracles/deploy/dia-oracle/DIAOraclesConfigsParser.sol";
@@ -85,6 +86,8 @@ abstract contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
 
+        _checkForTokenBalances(siloInitData);
+
         console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
         console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
 
@@ -122,6 +125,8 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] run() finished.");
 
         _printAndValidateDetails(siloConfig, siloInitData);
+
+        _executeInitialDeposits(siloConfig);
     }
 
     function _saveOracles(
@@ -534,11 +539,50 @@ abstract contract SiloDeploy is CommonDeploy {
             return abi.decode(data, (string));
         }
     }
-    
+
+    function _checkForTokenBalances(ISiloConfig.InitData memory _siloInitData) internal view {
+        uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
+        address deployerAddr = vm.addr(deployerPrivateKey);
+
+        _assertInitialBalanceAmount(_siloInitData.token0, deployerAddr);
+        _assertInitialBalanceAmount(_siloInitData.token1, deployerAddr);
+    }
+
+    function _assertInitialBalanceAmount(address _token, address _user) internal view {
+        uint256 initialDepositAmount = 1e5;
+
+        require(
+            IERC20(_token).balanceOf(_user) >= initialDepositAmount,
+            string.concat("missing ",IERC20Metadata(_token).symbol()," balance for initial deposit")
+        );
+    }
+
+    function _executeInitialDeposits(ISiloConfig _siloConfig) internal {
+        console2.log("[SiloCommonDeploy] _executeInitialDeposits()");
+
+        (address silo0, address silo1) = _siloConfig.getSilos();
+
+        _doInitialDeposit(IERC20(ISilo(silo0).asset()), ISilo(silo0));
+        _doInitialDeposit(IERC20(ISilo(silo1).asset()), ISilo(silo1));
+    }
+
+    function _doInitialDeposit(IERC20 _asset, ISilo _silo) internal {
+        uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
+        address deployerAddr = vm.addr(deployerPrivateKey);
+        uint256 initialDeposit = 1e5;
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        _asset.approve(address(_silo), initialDeposit);
+        _silo.deposit(initialDeposit, deployerAddr);
+
+        vm.stopBroadcast();
+    }
+
     function _x_() internal pure virtual returns (string memory) {
         return string.concat(unicode"❌", " ");
     }
-    
+
     function _ok_() internal pure virtual returns (string memory) {
         return string.concat(unicode"✅", " ");
     }
