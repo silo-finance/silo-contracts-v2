@@ -585,7 +585,7 @@ abstract contract SiloDeploy is CommonDeploy {
         vm.stopBroadcast();
     }
 
-    function _localOrFork() internal returns (bool) {
+    function _localOrFork() internal view returns (bool) {
         if (block.chainid == 31337) return true;
 
         try vm.activeFork() returns (uint id) {
