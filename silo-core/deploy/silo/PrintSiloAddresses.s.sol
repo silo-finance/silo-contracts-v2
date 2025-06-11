@@ -11,7 +11,6 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {ChainlinkV3Oracle, ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
 import {InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {GaugeHookReceiver, IGauge} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
-import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /**
