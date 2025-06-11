@@ -551,7 +551,7 @@ abstract contract SiloDeploy is CommonDeploy {
     function _assertInitialBalanceAmount(address _token, address _user) internal view {
         if (_localOrFork()) return;
 
-        uint256 initialDepositAmount = 1e5;
+        uint256 initialDepositAmount = 1e3;
 
         require(
             IERC20(_token).balanceOf(_user) >= initialDepositAmount,
