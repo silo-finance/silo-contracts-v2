@@ -14,7 +14,10 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
-import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {
+    InterestRateModelV2,
+    IInterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
@@ -27,6 +30,10 @@ import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
 import {IDIAOracle, DIAOracle, DIAOracleConfig} from "silo-oracles/contracts/dia/DIAOracle.sol";
+import {
+    WrappedMetaVaultOracleAdapter,
+    IWrappedMetaVaultOracle
+} from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -418,6 +425,11 @@ contract Logger is Test {
         console2.log("\tNormalization multiplier: ", _normalizationMultiplier);
         console2.log("\tConvert to quote: ", _convertToQuote);
         console2.log("\tInvert second price: ", _invertSecondPrice);
+
+         try WrappedMetaVaultOracleAdapter(address(_primaryAggregator)).FEED() returns (IWrappedMetaVaultOracle feed) {
+            console2.log("\tUnderlying WrappedMetaVaultOracle: ", address(feed));
+            console2.log("\tUnderlying wrappedMetaVault: ", address(feed.wrappedMetaVault()));
+         } catch {}
     }
 
     function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
