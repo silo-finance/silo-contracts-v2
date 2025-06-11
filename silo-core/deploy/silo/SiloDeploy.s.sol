@@ -150,12 +150,28 @@ contract SiloDeploy is CommonDeploy {
 
         bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
 
-        if (_oracle == address(0) || configHashedKey == _noOracleKey) return;
+        if (configHashedKey == _noOracleKey) return;
 
         string memory chainAlias = ChainsLib.chainAlias();
         address oracleFromDeployments = OraclesDeployments.get(chainAlias, _oracleConfigName);
 
-        if (oracleFromDeployments != address(0)) return;
+        if (oracleFromDeployments != address(0)) {
+            if (oracleFromDeployments != _oracle) {
+                console2.log(
+                    "we have deployment address for %s, but it was deployed again at %s",
+                    _oracleConfigName,
+                    _oracle,
+                    _warn_()
+                );
+            }
+
+            return;
+        }
+
+        if (_oracle == address(0)) {
+            console2.log("missing deployment for %s", _oracleConfigName, _x_());
+            return;
+        }
 
         OraclesDeployments.save(chainAlias, _oracleConfigName, _oracle);
     }
@@ -368,41 +384,41 @@ contract SiloDeploy is CommonDeploy {
 
         string memory icon;
         uint256 configValueUint256 = _siloInitData.daoFee;
-        icon = _siloConfig.daoFee != configValueUint256 ? unicode"❌" : unicode"✅";
+        icon = _siloConfig.daoFee != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee), icon);
 
         configValueUint256 = _siloInitData.deployerFee;
-        icon = _siloConfig.deployerFee != configValueUint256 ? unicode"❌" : unicode"✅";   
+        icon = _siloConfig.deployerFee != configValueUint256 ? _x_() : _ok_();   
 
         console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee), icon);
 
         configValueUint256 = _isSilo0 ? _siloInitData.liquidationFee0 : _siloInitData.liquidationFee1;
-        icon = _siloConfig.liquidationFee != configValueUint256 ? unicode"❌" : unicode"✅";
+        icon = _siloConfig.liquidationFee != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tliquidationFee", _representAsPercent(_siloConfig.liquidationFee), icon);
 
         configValueUint256 = _isSilo0 ? _siloInitData.flashloanFee0 : _siloInitData.flashloanFee1;
-        icon = _siloConfig.flashloanFee != configValueUint256 ? unicode"❌" : unicode"✅";
+        icon = _siloConfig.flashloanFee != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tflashloanFee  ", _representAsPercent(_siloConfig.flashloanFee), icon);
         console2.log("\n");
 
         configValueUint256 = _isSilo0 ? _siloInitData.maxLtv0 : _siloInitData.maxLtv1;
-        icon = _siloConfig.maxLtv != configValueUint256 ? unicode"❌" : unicode"✅";
+        icon = _siloConfig.maxLtv != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tmaxLtv              ", _representAsPercent(_siloConfig.maxLtv), icon);
 
         configValueUint256 = _isSilo0 ? _siloInitData.lt0 : _siloInitData.lt1;
-        icon = _siloConfig.lt != configValueUint256 ? unicode"❌" : unicode"✅";
+        icon = _siloConfig.lt != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tlt                  ", _representAsPercent(_siloConfig.lt), icon);
 
         configValueUint256 = _isSilo0 ? _siloInitData.liquidationTargetLtv0 : _siloInitData.liquidationTargetLtv1;
-        icon = _siloConfig.liquidationTargetLtv != configValueUint256 ? unicode"❌" : unicode"✅";
+        icon = _siloConfig.liquidationTargetLtv != configValueUint256 ? _x_() : _ok_();
 
         if (_siloConfig.liquidationTargetLtv == _siloConfig.lt) {
-            icon = string.concat(unicode"🚸", "!!! WARNING !!!");
+            icon = string.concat(_warn_(), "!!! WARNING !!!");
         }
 
         console2.log(
@@ -522,5 +538,17 @@ contract SiloDeploy is CommonDeploy {
         } else {
             return abi.decode(data, (string));
         }
+    }
+    
+    function _x_() internal pure virtual returns (string memory) {
+        return string.concat(unicode"❌", " ");
+    }
+    
+    function _ok_() internal pure virtual returns (string memory) {
+        return string.concat(unicode"✅", " ");
+    }
+
+    function _warn_() internal pure virtual returns (string memory) {
+        return string.concat(unicode"🚸", " ");
     }
 }
