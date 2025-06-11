@@ -58,7 +58,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
 
         console2.log("Using token decimals:");
         uint256 price = printQuote(oracle, config, uint256(10 ** config.baseToken.decimals()));
-        console2.log("Price in quote token divided by 1e18: ", price / 1e18);
+        console2.log("Price in quote token divided by 1e18: ", _formatNumberInE(price / 1e18));
 
         ChainlinkV3OracleConfig oracleConfig = oracle.oracleConfig();
         IChainlinkV3Oracle.ChainlinkV3Config memory oracleConfigLive = oracleConfig.getConfig();
@@ -67,8 +67,8 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         console2.log("Secondary aggregator: ", address(oracleConfigLive.secondaryAggregator));
         console2.log("Primary heartbeat: ", oracleConfigLive.primaryHeartbeat);
         console2.log("Secondary heartbeat: ", oracleConfigLive.secondaryHeartbeat);
-        console2.log("Normalization divider: ", oracleConfigLive.normalizationDivider);
-        console2.log("Normalization multiplier: ", oracleConfigLive.normalizationMultiplier);
+        console2.log("Normalization divider: ", _formatNumberInE(oracleConfigLive.normalizationDivider));
+        console2.log("Normalization multiplier: ", _formatNumberInE(oracleConfigLive.normalizationMultiplier));
         console2.log("Base token: ", address(oracleConfigLive.baseToken));
         console2.log("Quote token: ", address(oracleConfigLive.quoteToken));
         console2.log("Convert to quote: ", oracleConfigLive.convertToQuote);
@@ -80,11 +80,29 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         uint256 _baseAmount
     ) internal view returns (uint256 quote) {
          try _oracle.quote(_baseAmount, address(_config.baseToken)) returns (uint256 price) {
-            require(price > 0, string.concat("Quote for ", vm.toString(_baseAmount), "wei is 0"));
-            console2.log(string.concat("Quote for ", vm.toString(_baseAmount), "wei is ", vm.toString(price)));
+            require(price > 0, string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is 0"));
+            console2.log(string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is ", _formatNumberInE(price)));
             quote = price;
         } catch {
-            console2.log(string.concat("Failed to quote", vm.toString(_baseAmount), "wei"));
+            console2.log(string.concat("Failed to quote", _formatNumberInE(_baseAmount), "wei"));
         }
+    }
+
+    function _formatNumberInE(uint256 _in) internal pure returns (string memory) {
+        if (_in < 1e3) return vm.toString(_in);
+
+        uint256 e;
+        uint256 out = _in;
+
+        while (out != 0) {
+            if (out % 10 != 0) break;
+
+            e++;
+            out /= 10;
+        }
+
+        if (e < 3 && _in < 1e7) return vm.toString(_in);
+
+        return string.concat(vm.toString(out), "e", vm.toString(e));
     }
 }
