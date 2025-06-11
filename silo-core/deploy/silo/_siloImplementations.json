@@ -30,5 +30,11 @@
             "implementation": "0xd3De080436b9d38DC315944c16d89C050C414Fed",
             "description": "original implementation"
         }
+    ],
+    "mainnet": [
+        {
+            "implementation": "0xEF1BC66E0eA9717a3f2C969633A989D6BF41024B",
+            "description": "original implementation"
+        }
     ]
 }
