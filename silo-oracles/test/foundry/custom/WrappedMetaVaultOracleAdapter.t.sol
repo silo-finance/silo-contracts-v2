@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {TokensGenerator} from "../_common/TokensGenerator.sol";
+import {Test} from "forge-std/Test.sol";
 import {WrappedMetaVaultOracleAdapterDeploy} from "silo-oracles/deploy/WrappedMetaVaultOracleAdapterDeploy.sol";
 import {
     WrappedMetaVaultOracleAdapter,
@@ -14,12 +14,12 @@ import {
 /*
     FOUNDRY_PROFILE=oracles forge test -vv --ffi --match-contract WrappedMetaVaultOracleAdapterTest
 */
-contract WrappedMetaVaultOracleAdapterTest is TokensGenerator {
+contract WrappedMetaVaultOracleAdapterTest is Test {
     uint256 constant TEST_BLOCK = 33323452;
     WrappedMetaVaultOracleAdapter adapter;
 
-    constructor() TokensGenerator(BlockChain.SONIC) {
-        initFork(TEST_BLOCK);
+    function setUp() public {
+        vm.createSelectFork(vm.envString("RPC_SONIC"), TEST_BLOCK);
 
         WrappedMetaVaultOracleAdapterDeploy deploy = new WrappedMetaVaultOracleAdapterDeploy();
         deploy.disableDeploymentsSync();
