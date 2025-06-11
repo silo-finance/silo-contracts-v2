@@ -101,7 +101,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
             out /= 10;
         }
 
-        if (e < 3 && _in < 1e7) return vm.toString(_in);
+        if (e < 3 || _in < 1e7) return vm.toString(_in);
 
         return string.concat(vm.toString(out), "e", vm.toString(e));
     }
