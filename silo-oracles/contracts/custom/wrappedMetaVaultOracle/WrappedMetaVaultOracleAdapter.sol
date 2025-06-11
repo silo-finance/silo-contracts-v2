@@ -12,7 +12,7 @@ contract WrappedMetaVaultOracleAdapter is AggregatorV3Interface {
     IWrappedMetaVaultOracle public immutable FEED; // solhint-disable-line var-name-mixedcase
 
     /// @dev Price decimals cached from FEED.
-    uint8 public immutable DECIMALS;
+    uint8 public immutable DECIMALS; // solhint-disable-line var-name-mixedcase
 
     /// @dev Revert in constructor when price is zero to check setup.
     error FeedHasZeroPrice();
