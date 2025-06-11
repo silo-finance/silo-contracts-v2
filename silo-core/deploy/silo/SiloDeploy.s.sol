@@ -549,6 +549,8 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _assertInitialBalanceAmount(address _token, address _user) internal view {
+        if (_localOrFork()) return;
+
         uint256 initialDepositAmount = 1e5;
 
         require(
@@ -558,6 +560,8 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _executeInitialDeposits(ISiloConfig _siloConfig) internal {
+        if (_localOrFork()) return;
+
         console2.log("[SiloCommonDeploy] _executeInitialDeposits()");
 
         (address silo0, address silo1) = _siloConfig.getSilos();
@@ -567,6 +571,8 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _doInitialDeposit(IERC20 _asset, ISilo _silo) internal {
+        if (_localOrFork()) return;
+
         uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
         address deployerAddr = vm.addr(deployerPrivateKey);
         uint256 initialDeposit = 1e5;
@@ -577,6 +583,16 @@ abstract contract SiloDeploy is CommonDeploy {
         _silo.deposit(initialDeposit, deployerAddr);
 
         vm.stopBroadcast();
+    }
+
+    function _localOrFork() internal returns (bool) {
+        if (block.chainid == 31337) return true;
+
+        try vm.activeFork() returns (uint id) {
+            return id != 0;
+        } catch {
+            return false;
+        }
     }
 
     function _x_() internal pure virtual returns (string memory) {
