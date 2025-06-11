@@ -8,7 +8,7 @@ import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 /**
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/SiloVirtualAsset8DecimalsDeploy.s.sol \
-        --ffi --rpc-url $RPC_INK --broadcast --verify
+        --ffi --rpc-url $RPC_MAINNET --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=oracles \
