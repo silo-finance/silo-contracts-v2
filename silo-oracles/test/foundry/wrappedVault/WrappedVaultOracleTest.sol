@@ -38,4 +38,16 @@ contract WrappedVaultOracleTest is Test {
     function test_wrappedVault_deploy() public {
         // deploy pass
     }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_price --ffi -vv
+     */
+    function test_wrappedVault_price() public {
+        /*
+        WstUSR::convertToAssets(1e18) = 1087372222978808737;
+        at this block USR price in aggregator is 1.0
+        chainlink.quote() => 1087372222978808737
+        */
+        assertEq(oracle.quote(1e18, AddrLib.getAddress("wstUSR")), 1.087372222978808737e18, "wstUSR price in USD");
+    }
 }
