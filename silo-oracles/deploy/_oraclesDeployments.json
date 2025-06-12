@@ -18,6 +18,9 @@
     "PYTH_WETH_USD": "0x65f46B50e1b8e74087619782d5c0152f1A4B6E7d",
     "PYTH_kBTC_USD": "0xA50e0A948bce4b54FeEC2864F5Fcd0cc5864f6cb"
   },
+  "mainnet": {
+    "REDSTONE_ezETH_WETH": "0xaC5d8B66F7f2F3b9c20FEEB20Aa58F265031Ddf2"
+  },
   "optimism": {
     "UniswapV3-WETH-USDC-0.05-optimism": "0x5B176280777494fb659a8110EEa80Ae7fd99F8fb"
   },
