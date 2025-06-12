@@ -31,9 +31,8 @@ contract InterestRateModelConfigData {
 
     function _readInput(string memory input) internal view returns (string memory) {
         string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
-        string memory chainDir = string.concat(ChainsLib.chainAlias(block.chainid), "/");
         string memory file = string.concat(input, ".json");
-        return VmLib.vm().readFile(string.concat(inputDir, chainDir, file));
+        return VmLib.vm().readFile(string.concat(inputDir, file));
     }
 
     function _readDataFromJson() internal view returns (ConfigData[] memory) {

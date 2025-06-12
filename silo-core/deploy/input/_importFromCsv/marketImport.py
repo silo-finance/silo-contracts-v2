@@ -17,7 +17,7 @@ def to_percent(percentage_string):
     numeric_value = float(percentage_string.strip('%')) * 100
     return int(round(numeric_value, 0))
 
-def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/sonic/InterestRateModelConfigs.json') -> str:
+def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
     with open(filename, 'r') as f:
         data = json.load(f)
 
