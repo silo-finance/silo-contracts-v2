@@ -8,6 +8,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IWrappedVaultOracle} from "silo-oracles/contracts/interfaces/IWrappedVaultOracle.sol";
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 
 library WrappedVaultOraclesConfigsParser {
     string constant public CONFIGS_DIR = "silo-oracles/deploy/wrappedVault/configs/";
@@ -28,7 +29,7 @@ library WrappedVaultOraclesConfigsParser {
         string memory vaultKey = KV.getString(configJson, _name, "vault");
 
 
-        config.oracle = ISiloOracle(AddrLib.getAddressSafe(_network, oracleKey));
+        config.oracle = ISiloOracle(OraclesDeployments.get(_network, oracleKey));
         config.vault = IERC4626(AddrLib.getAddressSafe(_network, vaultKey));
     }
 
