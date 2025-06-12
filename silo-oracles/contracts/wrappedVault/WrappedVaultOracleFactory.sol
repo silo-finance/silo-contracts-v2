@@ -15,11 +15,10 @@ contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
     }
 
     function create(
-        ISiloOracle _oracle, 
-        IERC4626 _vault,
+        IWrappedVaultOracle.WrappedVaultDeploymentConfig calldata _cfg,
         bytes32 _externalSalt
     ) external virtual returns (WrappedVaultOracle oracle) {
-        bytes32 id = hashConfig(_oracle, _vault);
+        bytes32 id = hashConfig(_cfg);
         WrappedVaultOracleConfig oracleConfig = WrappedVaultOracleConfig(getConfigAddress[id]);
 
         if (address(oracleConfig) != address(0)) {
@@ -27,9 +26,9 @@ contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
             return WrappedVaultOracle(getOracleAddress[address(oracleConfig)]);
         }
 
-        verifyConfig(_oracle, _vault);
+        verifyConfig(_cfg);
 
-        oracleConfig = new WrappedVaultOracleConfig(oracle, _vault);
+        oracleConfig = new WrappedVaultOracleConfig(_cfg.oracle, _cfg.vault);
         oracle = WrappedVaultOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
@@ -37,21 +36,21 @@ contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
         oracle.initialize(oracleConfig);
     }
 
-    function hashConfig(ISiloOracle _oracle, IERC4626 _vault)
+    function hashConfig(IWrappedVaultOracle.WrappedVaultDeploymentConfig calldata _cfg)
         public
         virtual
         view
         returns (bytes32 configId)
     {
-        configId = keccak256(abi.encode(_oracle, _vault));
+        configId = keccak256(abi.encode(_cfg));
     }
 
-    function verifyConfig(ISiloOracle _oracle, IERC4626 _vault)
+    function verifyConfig(IWrappedVaultOracle.WrappedVaultDeploymentConfig calldata _cfg)
         public
         view
         virtual
     {
-        if (_vault.asset() == address(0)) revert IWrappedVaultOracle.AssetZero();
-        if (_oracle.quoteToken() == address(0)) revert IWrappedVaultOracle.QuoteTokenZero();
+        if (_cfg.vault.asset() == address(0)) revert IWrappedVaultOracle.AssetZero();
+        if (_cfg.oracle.quoteToken() == address(0)) revert IWrappedVaultOracle.QuoteTokenZero();
     }
 }

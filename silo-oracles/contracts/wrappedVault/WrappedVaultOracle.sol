@@ -19,7 +19,7 @@ contract WrappedVaultOracle is IWrappedVaultOracle, ISiloOracle, Initializable {
     /// use factory always.
     function initialize(WrappedVaultOracleConfig _configAddress) external virtual initializer {
         oracleConfig = _configAddress;
-        emit WrappedVaultOracleDeployed(_configAddress);
+        emit WrappedVaultOracleDeployed(address(_configAddress));
     }
     
     /// @inheritdoc ISiloOracle
