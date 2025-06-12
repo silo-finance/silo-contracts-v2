@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
+import {IWrappedVaultOracle} from "../interfaces/IWrappedVaultOracle.sol";
 import {WrappedVaultOracleConfig} from "./WrappedVaultOracleConfig.sol";
 
 contract WrappedVaultOracle is IWrappedVaultOracle, ISiloOracle, Initializable {
@@ -25,19 +26,19 @@ contract WrappedVaultOracle is IWrappedVaultOracle, ISiloOracle, Initializable {
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
-        (ISiloOracle oracle, IERC4626 vault, address vaultAsset) = oracleConfig.getConfig();
-        if (_baseToken != address(vault)) revert AssetNotSupported();
+        Config memory cfg = oracleConfig.getConfig();
+        if (_baseToken != address(cfg.vault)) revert AssetNotSupported();
 
-        uint256 underlyingAssets = vault.convertToAssets(_baseAmount);
-        quoteAmount = oracle.quote(underlyingAssets, vaultAsset);
+        uint256 underlyingAssets = cfg.vault.convertToAssets(_baseAmount);
+        quoteAmount = cfg.oracle.quote(underlyingAssets, cfg.vaultAsset);
   
         if (quoteAmount == 0) revert ZeroQuote();
     }
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
-        (ISiloOracle oracle,,) = oracleConfig.getConfig();
-        return oracle.quoteToken();
+        Config memory cfg = oracleConfig.getConfig();
+        return cfg.quoteToken;
     }
 
     function beforeQuote(address) external pure virtual override {

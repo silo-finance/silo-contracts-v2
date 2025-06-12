@@ -19,7 +19,7 @@ contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
         IERC4626 _vault,
         bytes32 _externalSalt
     ) external virtual returns (WrappedVaultOracle oracle) {
-        bytes32 id = hashConfig(_config);
+        bytes32 id = hashConfig(_oracle, _vault);
         WrappedVaultOracleConfig oracleConfig = WrappedVaultOracleConfig(getConfigAddress[id]);
 
         if (address(oracleConfig) != address(0)) {
@@ -51,7 +51,6 @@ contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
         view
         virtual
     {
-
         if (_vault.asset() == address(0)) revert IWrappedVaultOracle.AssetZero();
         if (_oracle.quoteToken() == address(0)) revert IWrappedVaultOracle.QuoteTokenZero();
     }
