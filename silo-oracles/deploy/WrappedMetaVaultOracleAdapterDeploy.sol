@@ -18,15 +18,17 @@ import {
  */
 contract WrappedMetaVaultOracleAdapterDeploy is CommonDeploy {
     string public feedKey;
+    bool feedKeySetByFunction;
 
     function setFeedKey(string memory _feedKey) public {
         feedKey = _feedKey;
+        feedKeySetByFunction = true;
     }
 
     function run() public returns (WrappedMetaVaultOracleAdapter adapter) {
         AddrLib.init();
 
-        if (bytes(feedKey).length == 0) {
+        if (!feedKeySetByFunction) {
             feedKey = vm.envString("FEED");
         }
 
@@ -38,7 +40,7 @@ contract WrappedMetaVaultOracleAdapterDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         // fixes Sonic chainId not found in unit tests
-        if (bytes(feedKey).length == 0) {
+        if (!feedKeySetByFunction) {
             string memory oracleName = string.concat("WRAPPED_META_VAULT_", feedKey);
             OraclesDeployments.save(getChainAlias(), oracleName, address(adapter));
         }
