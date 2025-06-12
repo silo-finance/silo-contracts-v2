@@ -313,7 +313,7 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
-    "CHAINLINK_wmetaUSD_USD": {
+    "WMETAVAULT_wmetaUSD_USD": {
         "baseToken": "wmetaUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "WRAPPED_META_VAULT_wmetaUSD_USD_wMetaVault_aggregator",
