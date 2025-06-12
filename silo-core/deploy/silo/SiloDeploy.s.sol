@@ -37,6 +37,7 @@ import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
     uint256 private constant _BYTES32_SIZE = 32;
+    uint256 private constant _INITIAL_DEPOSIT = 1e3;
 
     string public configName;
     uint256 public privateKey;
@@ -550,11 +551,9 @@ abstract contract SiloDeploy is CommonDeploy {
 
     function _assertInitialBalanceAmount(address _token, address _user) internal view {
         if (_localOrFork()) return;
-
-        uint256 initialDepositAmount = 1e3;
-
+        
         require(
-            IERC20(_token).balanceOf(_user) >= initialDepositAmount,
+            IERC20(_token).balanceOf(_user) >= _INITIAL_DEPOSIT,
             string.concat("missing ",IERC20Metadata(_token).symbol()," balance for initial deposit")
         );
     }
@@ -575,12 +574,11 @@ abstract contract SiloDeploy is CommonDeploy {
 
         uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
         address deployerAddr = vm.addr(deployerPrivateKey);
-        uint256 initialDeposit = 1e5;
 
         vm.startBroadcast(deployerPrivateKey);
 
-        _asset.approve(address(_silo), initialDeposit);
-        _silo.deposit(initialDeposit, deployerAddr);
+        _asset.approve(address(_silo), _INITIAL_DEPOSIT);
+        _silo.deposit(_INITIAL_DEPOSIT, deployerAddr);
 
         vm.stopBroadcast();
     }
