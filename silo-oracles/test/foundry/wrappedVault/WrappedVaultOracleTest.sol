@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+
+import {WrappedVaultOracleFactoryDeploy} from "silo-oracles/deploy/wrappedVault/WrappedVaultOracleFactoryDeploy.s.sol";
+import {WrappedVaultOracleDeploy} from "silo-oracles/deploy/wrappedVault/WrappedVaultOracleDeploy.s.sol";
+import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleFactory.sol";
+import {WrappedVaultOracle} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracle.sol";
+import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+
+contract WrappedVaultOracleTest is Test {
+    WrappedVaultOracle oracle;
+
+    function setUp() public {
+        vm.createSelectFork(vm.envString("RPC_MAINNET"), 22690540); // forking block Jun 12 2025
+
+        AddrLib.init();
+
+        WrappedVaultOracleFactoryDeploy factoryDeployer = new WrappedVaultOracleFactoryDeploy();
+        factoryDeployer.disableDeploymentsSync();
+
+        WrappedVaultOracleFactory factory = WrappedVaultOracleFactory(factoryDeployer.run());
+
+        AddrLib.setAddress(SiloOraclesFactoriesContracts.WRAPPED_VAULT_ORACLE_FACTORY, address(factory));
+
+        WrappedVaultOracleDeploy deployer = new WrappedVaultOracleDeploy();
+        deployer.setUseConfigName("WRAPPED_VAULT_wstUSR_USD");
+
+        oracle = deployer.run();
+    }
+
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_deploy --ffi -vv
+     */
+    function test_wrappedVault_deploy() public {
+        // deploy pass
+    }
+}

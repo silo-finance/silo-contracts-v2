@@ -50,7 +50,12 @@ contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
         view
         virtual
     {
-        if (_cfg.vault.asset() == address(0)) revert IWrappedVaultOracle.AssetZero();
+        address vaultAsset = _cfg.vault.asset();
+
+        if (vaultAsset == address(0)) revert IWrappedVaultOracle.AssetZero();
         if (_cfg.oracle.quoteToken() == address(0)) revert IWrappedVaultOracle.QuoteTokenZero();
+
+        // sanity check for baseAsset
+        _cfg.oracle.quote(1e15, vaultAsset);
     }
 }
