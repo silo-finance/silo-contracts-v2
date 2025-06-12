@@ -16,7 +16,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 // FOUNDRY_PROFILE=oracles forge test -vv --ffi --mc ERC4626PriceManipulation
 contract ERC4626PriceManipulation is IntegrationTest {
     string internal _vaultKey = "ERC4626_vault";
-    IERC4626 internal _vault = IERC4626(0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0); // sUSDf - Ethereum
+    IERC4626 internal _vault = IERC4626(0xd3fd63209fa2d55b07a0f6db36c2f43900be3094); // sUSDf - Ethereum
 
     ISiloOracle internal _erc4626Oracle;
     IERC20 internal _asset;
