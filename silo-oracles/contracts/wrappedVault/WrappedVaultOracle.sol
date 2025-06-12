@@ -16,8 +16,8 @@ contract WrappedVaultOracle is IWrappedVaultOracle, ISiloOracle, Initializable {
         _disableInitializers();
     }
 
-    /// @notice validation of oracleConfig is checked in factory, therefore you should not deploy and initialize directly
-    /// use factory always.
+    /// @notice validation of oracleConfig is checked in factory, therefore you should not deploy
+    /// and initialize directly, use factory always.
     function initialize(WrappedVaultOracleConfig _configAddress) external virtual initializer {
         oracleConfig = _configAddress;
         emit WrappedVaultOracleDeployed(address(_configAddress));
