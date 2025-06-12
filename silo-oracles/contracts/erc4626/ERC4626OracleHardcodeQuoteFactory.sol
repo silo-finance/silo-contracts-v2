@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ERC4626OracleHardcodeQuote} from "silo-oracles/contracts/erc4626/ERC4626OracleHardcodeQuote.sol";
