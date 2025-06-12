@@ -3,10 +3,11 @@ pragma solidity 0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
-import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleFactory.sol";
+import {ERC4626OracleHardcodeQuoteFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleHardcodeQuoteFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
@@ -40,14 +41,16 @@ contract ERC4626OracleHardcodeQuoteDeploy is CommonDeploy {
             quoteTokenKey = vm.envString("HARDCODE_QUOTE_TOKEN");
         }
 
-        IERC4626 vault = IERC4626(AddrLib.getAddressSafe(vaultKey));
-        address quoteToken = AddrLib.getAddressSafe(quoteTokenKey);
+        string memory chainAlias = ChainsLib.chainAlias();
+
+        IERC4626 vault = IERC4626(AddrLib.getAddressSafe(chainAlias, vaultKey));
+        address quoteToken = AddrLib.getAddressSafe(chainAlias, quoteTokenKey);
 
         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.ERC4626_ORACLE_HARDCODE_QUOTE_FACTORY);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = ERC4626OracleFactory(factory).createERC4626Oracle(vault, quoteToken, bytes32(0));
+        oracle = ERC4626OracleHardcodeQuoteFactory(factory).createERC4626Oracle(vault, quoteToken, bytes32(0));
 
         vm.stopBroadcast();
 
