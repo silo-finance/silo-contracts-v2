@@ -11,22 +11,6 @@ import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/Wra
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/wrappedVault/WrappedVaultOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
-
-//Resume verification:
-//FOUNDRY_PROFILE=oracles \
-//    forge script silo-oracles/deploy/wrappedVault/WrappedVaultOracleFactoryDeploy.s.sol \
-//    --ffi --rpc-url $RPC_MAINNET \
-//    --verify \
-//    --verifier blockscout \
-//    --verifier-url $VERIFIER_URL_INK \
-//    --private-key $PRIVATE_KEY \
-//    --resume
-//
-//FOUNDRY_PROFILE=oracles forge verify-contract <contract-address> \
-//    WrappedVaultOracleFactory \
-//    --compiler-version 0.8.28 \
-//    --rpc-url $RPC_MAINNET \
-//    --watch
  */
 contract WrappedVaultOracleFactoryDeploy is CommonDeploy {
     function run() public returns (WrappedVaultOracleFactory factory) {
