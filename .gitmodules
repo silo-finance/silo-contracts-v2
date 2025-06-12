@@ -5,7 +5,7 @@
 [submodule "silo-foundry-utils"]
 	path = gitmodules/silo-foundry-utils
 	url = https://github.com/silo-finance/silo-foundry-utils
-	branch = v0.0.18
+	branch = v0.0.19
 [submodule "gitmodules/uniswap/v3-periphery"]
 	path = gitmodules/uniswap/v3-periphery
 	url = https://github.com/Uniswap/v3-periphery
