@@ -11,6 +11,10 @@ import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/Chain
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 
+interface Kiss {
+    function kiss(address) external;
+    function rely(address) external;
+}
 /**
 FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
@@ -40,6 +44,10 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         oracle = ChainlinkV3OracleFactory(factory).create(config, bytes32(0));
 
         vm.stopBroadcast();
+
+        vm.prank(0x40C33e796be78148CeC983C2202335A0962d172A);
+//        Kiss(0x0b4Cb11faC24707F3F0F89E441A4Cdf6EF01d215).rely(address(oracle));
+        Kiss(0x0b4Cb11faC24707F3F0F89E441A4Cdf6EF01d215).kiss(address(oracle));
 
         OraclesDeployments.save(getChainAlias(), configName, address(oracle));
 
