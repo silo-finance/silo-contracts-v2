@@ -21,9 +21,6 @@
     "Silo_kBTC_USDT0": "0xA902e0833D4ED6dfcF1bd928bBBc9634DdB54Ba7",
     "Silo_kBTC_WETH": "0x225E300756E2989ee021F2087452d2158bE4C95C"
   },
-  "mainnet": {
-    "Silo_sUSDf_USDC": "0xDded9D03C97634Ac89df7e30C53aD9cDd5049d15"
-  },
   "optimism": {
     "Silo_UniswapV3-WETH-USDC": "0x34A40A76823838a22AE42cB5B62F83580900061d"
   },
@@ -76,6 +73,7 @@
     "Silo_ylstETH_scETH": "0x7c83aeBa152405E0B6A949fA457CCb5031432C09"
   },
   "mainnet": {
-    "Silo_PR-sUSDf_USDC_25_sep_25": "0x0e77620fD9709f465Dab14Ef3fCeff122EB2db02"
+    "Silo_PR-sUSDf_USDC_25_sep_25": "0x0e77620fD9709f465Dab14Ef3fCeff122EB2db02",
+    "Silo_sUSDf_USDC": "0xDded9D03C97634Ac89df7e30C53aD9cDd5049d15"
   }
 }
