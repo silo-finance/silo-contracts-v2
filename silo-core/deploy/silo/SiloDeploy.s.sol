@@ -33,12 +33,8 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
-/**
-FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
-    forge script silo-core/deploy/silo/SiloDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
- */
-contract SiloDeploy is CommonDeploy {
+/// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
+abstract contract SiloDeploy is CommonDeploy {
     uint256 private constant _BYTES32_SIZE = 32;
 
     string public configName;
@@ -333,8 +329,7 @@ contract SiloDeploy is CommonDeploy {
     function _getClonableHookReceiverConfig(address _implementation)
         internal
         virtual
-        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver) {
-    }
+        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver);
 
     function _printAndValidateDetails(
         ISiloConfig _siloConfig,
