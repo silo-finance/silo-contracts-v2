@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {console2} from "forge-std/console2.sol";
+
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {ChainlinkV3OraclesConfigsParser as ConfigParser} from "./ChainlinkV3OraclesConfigsParser.sol";
@@ -46,7 +47,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         console2.log("Config name", configName);
 
         console2.log("Token name:", config.baseToken.name());
-        console2.log("Token symbol:", config.baseToken.symbol());
+        console2.log("Token symbol:", (config.baseToken).symbol());
         console2.log("Token decimals:", config.baseToken.decimals());
 
         printQuote(oracle, config, 1);

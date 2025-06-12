@@ -10,11 +10,15 @@ interface IWrappedVaultOracle {
         IERC4626 vault;
     }
 
+    /// @param baseToken address of the vault itself, vault share is base token
+    /// @param quoteToken address of asset in which price id denominated in
+    /// @param vaultAsset vault underlying asset
+    /// @param oracle oracle address to provide price for `vaultAsset`
     struct Config {
-        address vaultAsset;
+        IERC4626 baseToken;
         address quoteToken;
+        address vaultAsset;
         ISiloOracle oracle;
-        IERC4626 vault;
     }
 
     event WrappedVaultOracleDeployed(address configAddress);

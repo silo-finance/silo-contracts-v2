@@ -7,16 +7,18 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IWrappedVaultOracle} from "../interfaces/IWrappedVaultOracle.sol";
 
 contract WrappedVaultOracleConfig {
+    /// @dev address of the vault itself, vault share is base token
+    IERC4626 private immutable _VAULT; // solhint-disable-line var-name-mixedcase
+
+    /// @dev quoteToken address of asset in which price id denominated in
+    address private immutable _QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
+
     /// @dev vault.asset()
     address private immutable _VAULT_ASSET; // solhint-disable-line var-name-mixedcase
 
-    address private immutable _QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
-
-    /// @dev oracle for underlying price
+    /// @dev oracle address to provide price for `_VAULT_ASSET`
     ISiloOracle private immutable _ORACLE; // solhint-disable-line var-name-mixedcase
 
-    /// @dev vault that is on top of price
-    IERC4626 private immutable _VAULT; // solhint-disable-line var-name-mixedcase
 
     /// @dev all verification should be done by factory
     constructor(ISiloOracle _oracle, IERC4626 _vault) {
@@ -29,10 +31,10 @@ contract WrappedVaultOracleConfig {
 
     function getConfig() external view returns (IWrappedVaultOracle.Config memory) {
         return IWrappedVaultOracle.Config({
+            baseToken: _VAULT,
+            quoteToken: _QUOTE_TOKEN,
             oracle: _ORACLE,
-            vault: _VAULT,
-            vaultAsset: _VAULT_ASSET,
-            quoteToken: _QUOTE_TOKEN
+            vaultAsset: _VAULT_ASSET
         });
     }
 }

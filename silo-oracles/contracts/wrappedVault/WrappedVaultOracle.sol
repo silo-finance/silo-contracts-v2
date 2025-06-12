@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
@@ -27,9 +28,9 @@ contract WrappedVaultOracle is IWrappedVaultOracle, ISiloOracle, Initializable {
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
         Config memory cfg = oracleConfig.getConfig();
-        if (_baseToken != address(cfg.vault)) revert AssetNotSupported();
+        if (_baseToken != address(cfg.baseToken)) revert AssetNotSupported();
 
-        uint256 underlyingAssets = cfg.vault.convertToAssets(_baseAmount);
+        uint256 underlyingAssets = IERC4626(cfg.baseToken).convertToAssets(_baseAmount);
         quoteAmount = cfg.oracle.quote(underlyingAssets, cfg.vaultAsset);
   
         if (quoteAmount == 0) revert ZeroQuote();
