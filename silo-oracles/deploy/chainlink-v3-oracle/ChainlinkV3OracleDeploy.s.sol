@@ -12,9 +12,9 @@ import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=CHRONICLE_wsrUSD_USD \
+FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_wsrUSD_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
-    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract ChainlinkV3OracleDeploy is CommonDeploy {
     string public useConfigName;
