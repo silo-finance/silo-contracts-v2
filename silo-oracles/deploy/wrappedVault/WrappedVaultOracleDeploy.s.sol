@@ -1,45 +1,47 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
-
 import {console2} from "forge-std/console2.sol";
-import {CommonDeploy} from "../CommonDeploy.sol";
-import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
-import {WrappedVaultOraclesConfigsParser} from "./WrappedVaultOracleConfigsParser.sol";
+
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+
 import {WrappedVaultOracle} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracle.sol";
 import {IWrappedVaultOracle} from "silo-oracles/contracts/interfaces/IWrappedVaultOracle.sol";
 import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleFactory.sol";
+
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+
+import {CommonDeploy} from "../CommonDeploy.sol";
+import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
-import {WrappedVaultOracleConfig} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleConfig.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \
+FOUNDRY_PROFILE=oracles ORACLE=CHAINLINK_USR_USD VAULT=wstUSR \
     forge script silo-oracles/deploy/wrappedVault/WrappedVaultOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
 contract WrappedVaultOracleDeploy is CommonDeploy {
-    string public useConfigName;
+    string private _useOracle;
+    string private _useVault;
 
-    function setUseConfigName(string memory _useConfigName) public {
-        useConfigName = _useConfigName;
+    function setUseConfig(string memory _vaultName, string memory _oracleName) public {
+        _useVault = _vaultName;
+        _useOracle = _oracleName;
     }
     
     function run() public returns (WrappedVaultOracle oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        string memory configName = bytes(useConfigName).length != 0 ? useConfigName : vm.envString("CONFIG");
-
-        IWrappedVaultOracle.WrappedVaultDeploymentConfig memory deployCfg = WrappedVaultOraclesConfigsParser.getConfig(
-            getChainAlias(),
-            configName
-        );
+        (IERC4626 useVault, ISiloOracle useOracle, string memory configName) = _parseDeployArgs();
 
         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.WRAPPED_VAULT_ORACLE_FACTORY);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = WrappedVaultOracleFactory(factory).create(deployCfg, bytes32(0));
+        oracle = WrappedVaultOracleFactory(factory).create(useVault, useOracle, bytes32(0));
 
         vm.stopBroadcast();
 
@@ -47,7 +49,7 @@ contract WrappedVaultOracleDeploy is CommonDeploy {
 
         console2.log("Config name", configName);
 
-        IWrappedVaultOracle.Config memory cfg = oracle.oracleConfig().getConfig();
+        IWrappedVaultOracle.Config memory cfg = oracle.getConfig();
 
         address baseToken = address(cfg.baseToken);
         _printMetadata(baseToken);
@@ -68,5 +70,28 @@ contract WrappedVaultOracleDeploy is CommonDeploy {
         console2.log("quoteToken: ", address(cfg.quoteToken));
         console2.log("vaultAsset: ", address(cfg.vaultAsset));
         console2.log("oracle: ", address(cfg.oracle));
+    }
+
+    function _parseDeployArgs() internal returns (IERC4626 vault, ISiloOracle oracle, string memory configName) {
+        string memory useVault = bytes(_useVault).length != 0 ? _useVault : vm.envString("VAULT");
+        string memory useOracle = bytes(_useOracle).length != 0 ? _useOracle : vm.envString("ORACLE");
+
+        vault = IERC4626(AddrLib.getAddressSafe(getChainAlias(), useVault));
+        oracle = ISiloOracle(OraclesDeployments.get(getChainAlias(), useOracle));
+
+        configName = _createDeploymentName(vault, useOracle);
+    }
+
+    function _createDeploymentName(IERC4626 _vault, string memory _oracleName)
+        internal
+        view
+        returns (string memory name)
+    {
+        name = string.concat(
+            "WRAPPED_VAULT_",
+            IERC20Metadata(address(_vault)).symbol(),
+            "_",
+            _oracleName
+        );
     }
 }

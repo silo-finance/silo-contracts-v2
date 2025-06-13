@@ -2,44 +2,56 @@
 pragma solidity 0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
-import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {IWrappedVaultOracle} from "../interfaces/IWrappedVaultOracle.sol";
-import {WrappedVaultOracleConfig} from "./WrappedVaultOracleConfig.sol";
 
-contract WrappedVaultOracle is IWrappedVaultOracle, ISiloOracle, Initializable {
-    WrappedVaultOracleConfig public oracleConfig;
+contract WrappedVaultOracle is IWrappedVaultOracle {
+    /// @dev address of the vault itself, vault share is base token
+    IERC4626 private immutable _VAULT; // solhint-disable-line var-name-mixedcase
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
+    /// @dev quoteToken address of asset in which price id denominated in
+    address private immutable _QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
+
+    /// @dev vault.asset()
+    address private immutable _VAULT_ASSET; // solhint-disable-line var-name-mixedcase
+
+    /// @dev oracle address to provide price for `_VAULT_ASSET`
+    ISiloOracle private immutable _ORACLE; // solhint-disable-line var-name-mixedcase
+
+    /// @dev all verification should be done by factory
+    constructor(IERC4626 _vault, ISiloOracle _oracle) {
+        _VAULT = _vault;
+        _ORACLE = _oracle;
+
+        _VAULT_ASSET = _vault.asset();
+        _QUOTE_TOKEN = _oracle.quoteToken();
     }
 
-    /// @notice validation of oracleConfig is checked in factory, therefore you should not deploy
-    /// and initialize directly, use factory always.
-    function initialize(WrappedVaultOracleConfig _configAddress) external virtual initializer {
-        oracleConfig = _configAddress;
-        emit WrappedVaultOracleDeployed(address(_configAddress));
+    function getConfig() external view returns (Config memory) {
+        return Config({
+            baseToken: _VAULT,
+            quoteToken: _QUOTE_TOKEN,
+            oracle: _ORACLE,
+            vaultAsset: _VAULT_ASSET
+        });
     }
     
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
-        Config memory cfg = oracleConfig.getConfig();
-        if (_baseToken != address(cfg.baseToken)) revert AssetNotSupported();
+        if (_baseToken != address(_VAULT)) revert AssetNotSupported();
 
-        uint256 underlyingAssets = IERC4626(cfg.baseToken).convertToAssets(_baseAmount);
-        quoteAmount = cfg.oracle.quote(underlyingAssets, cfg.vaultAsset);
+        uint256 underlyingAssets = _VAULT.convertToAssets(_baseAmount);
+        quoteAmount = _ORACLE.quote(underlyingAssets, _VAULT_ASSET);
   
         if (quoteAmount == 0) revert ZeroQuote();
     }
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
-        Config memory cfg = oracleConfig.getConfig();
-        return cfg.quoteToken;
+        return _QUOTE_TOKEN;
     }
 
     function beforeQuote(address) external pure virtual override {

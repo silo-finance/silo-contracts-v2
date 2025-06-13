@@ -4,12 +4,7 @@ pragma solidity >=0.8.0;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
-interface IWrappedVaultOracle {
-    struct WrappedVaultDeploymentConfig {
-        ISiloOracle oracle;
-        IERC4626 vault;
-    }
-
+interface IWrappedVaultOracle is ISiloOracle {
     /// @param baseToken address of the vault itself, vault share is base token
     /// @param quoteToken address of asset in which price id denominated in
     /// @param vaultAsset vault underlying asset
@@ -28,4 +23,6 @@ interface IWrappedVaultOracle {
     error ZeroQuote();
     error AssetZero();
     error QuoteTokenZero();
+
+    function getConfig() external view returns (Config memory);
 }

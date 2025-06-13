@@ -1,6 +1,0 @@
-{
-    "WRAPPED_VAULT_wstUSR_USD": {
-        "vault": "wstUSR",
-        "oracle": "CHAINLINK_USR_USD"
-    }
-}

@@ -13,7 +13,7 @@ import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFact
 contract WrappedVaultOracleTest is Test {
     WrappedVaultOracle oracle;
 
-    function setUp() public {
+    function _setUp() public {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), 22690540); // forking block Jun 12 2025
 
         AddrLib.init();
@@ -26,7 +26,7 @@ contract WrappedVaultOracleTest is Test {
         AddrLib.setAddress(SiloOraclesFactoriesContracts.WRAPPED_VAULT_ORACLE_FACTORY, address(factory));
 
         WrappedVaultOracleDeploy deployer = new WrappedVaultOracleDeploy();
-        deployer.setUseConfigName("WRAPPED_VAULT_wstUSR_USD");
+        deployer.setUseConfig("wstUSR", "CHAINLINK_USR_USD");
 
         oracle = deployer.run();
     }
@@ -37,6 +37,7 @@ contract WrappedVaultOracleTest is Test {
      */
     function test_wrappedVault_deploy() public {
         // deploy pass
+    _setUp();
     }
 
     /*

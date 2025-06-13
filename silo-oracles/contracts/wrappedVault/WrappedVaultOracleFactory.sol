@@ -2,60 +2,39 @@
 pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {Create2Factory} from "common/utils/Create2Factory.sol";
-import {OracleFactory} from "../_common/OracleFactory.sol";
+import {MadeByFactory} from "../_common/MadeByFactory.sol";
 import {IWrappedVaultOracle} from "../interfaces/IWrappedVaultOracle.sol";
 import {WrappedVaultOracle} from "../wrappedVault/WrappedVaultOracle.sol";
-import {WrappedVaultOracleConfig} from "../wrappedVault/WrappedVaultOracleConfig.sol";
 
-contract WrappedVaultOracleFactory is Create2Factory, OracleFactory {
-    constructor() OracleFactory(address(new WrappedVaultOracle())) {
-        // noting to configure
-    }
-
+contract WrappedVaultOracleFactory is Create2Factory, MadeByFactory {
     function create(
-        IWrappedVaultOracle.WrappedVaultDeploymentConfig calldata _cfg,
+        IERC4626 _vault,
+        ISiloOracle _oracle,
         bytes32 _externalSalt
     ) external virtual returns (WrappedVaultOracle oracle) {
-        bytes32 id = hashConfig(_cfg);
-        WrappedVaultOracleConfig oracleConfig = WrappedVaultOracleConfig(getConfigAddress[id]);
+        verifyConfig(_vault, _oracle);
 
-        if (address(oracleConfig) != address(0)) {
-            // config already exists, so oracle exists as well
-            return WrappedVaultOracle(getOracleAddress[address(oracleConfig)]);
-        }
+        oracle = new WrappedVaultOracle{salt: _salt(_externalSalt)}( _vault, _oracle);
 
-        verifyConfig(_cfg);
-
-        oracleConfig = new WrappedVaultOracleConfig(_cfg.oracle, _cfg.vault);
-        oracle = WrappedVaultOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
-
-        _saveOracle(address(oracle), address(oracleConfig), id);
-
-        oracle.initialize(oracleConfig);
+        _saveOracle(address(oracle));
     }
 
-    function hashConfig(IWrappedVaultOracle.WrappedVaultDeploymentConfig calldata _cfg)
-        public
-        virtual
-        view
-        returns (bytes32 configId)
-    {
-        configId = keccak256(abi.encode(_cfg));
-    }
+    function verifyConfig(IERC4626 _vault, ISiloOracle _oracle) public view virtual {
+        address vaultAsset = _vault.asset();
 
-    function verifyConfig(IWrappedVaultOracle.WrappedVaultDeploymentConfig calldata _cfg)
-        public
-        view
-        virtual
-    {
-        address vaultAsset = _cfg.vault.asset();
-
-        if (vaultAsset == address(0)) revert IWrappedVaultOracle.AssetZero();
-        if (_cfg.oracle.quoteToken() == address(0)) revert IWrappedVaultOracle.QuoteTokenZero();
+        require(vaultAsset != address(0), IWrappedVaultOracle.AssetZero());
+        require(_oracle.quoteToken() != address(0), IWrappedVaultOracle.QuoteTokenZero());
 
         // sanity check for baseAsset
-        _cfg.oracle.quote(1e15, vaultAsset);
+        require(
+            _oracle.quote(10 ** IERC20Metadata(_vault.asset()).decimals(), vaultAsset) != 0,
+            IWrappedVaultOracle.ZeroQuote()
+        );
     }
 }
