@@ -39,14 +39,13 @@ contract WrappedVaultOracle is IWrappedVaultOracle {
     
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
-
-        if (_baseToken != address(_VAULT)) revert AssetNotSupported();
+        require(_baseAmount < type(uint128).max, BaseAmountOverflow());
+        require(_baseToken == address(_VAULT), AssetNotSupported());
 
         uint256 underlyingAssets = _VAULT.convertToAssets(_baseAmount);
         quoteAmount = _ORACLE.quote(underlyingAssets, _VAULT_ASSET);
   
-        if (quoteAmount == 0) revert ZeroQuote();
+        require(quoteAmount != 0, ZeroQuote());
     }
 
     /// @inheritdoc ISiloOracle

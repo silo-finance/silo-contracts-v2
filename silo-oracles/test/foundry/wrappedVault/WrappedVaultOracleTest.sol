@@ -9,11 +9,12 @@ import {WrappedVaultOracleDeploy} from "silo-oracles/deploy/wrappedVault/Wrapped
 import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleFactory.sol";
 import {WrappedVaultOracle} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracle.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {IWrappedVaultOracle} from "silo-oracles/contracts/interfaces/IWrappedVaultOracle.sol";
 
 contract WrappedVaultOracleTest is Test {
     WrappedVaultOracle oracle;
 
-    function _setUp() public {
+    function setUp() public {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), 22690540); // forking block Jun 12 2025
 
         AddrLib.init();
@@ -37,7 +38,6 @@ contract WrappedVaultOracleTest is Test {
      */
     function test_wrappedVault_deploy() public {
         // deploy pass
-    _setUp();
     }
 
     /*
@@ -50,5 +50,21 @@ contract WrappedVaultOracleTest is Test {
         chainlink.quote() => 1087372222978808737
         */
         assertEq(oracle.quote(1e18, AddrLib.getAddress("wstUSR")), 1.087372222978808737e18, "wstUSR price in USD");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_BaseAmountOverflow --ffi -vv
+     */
+    function test_wrappedVault_BaseAmountOverflow() public {
+        vm.expectRevert(IWrappedVaultOracle.BaseAmountOverflow.selector);
+        oracle.quote(2 ** 128, address(1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_AssetNotSupported --ffi -vv
+     */
+    function test_wrappedVault_AssetNotSupported() public {
+        vm.expectRevert(IWrappedVaultOracle.AssetNotSupported.selector);
+        oracle.quote(1, address(1));
     }
 }
