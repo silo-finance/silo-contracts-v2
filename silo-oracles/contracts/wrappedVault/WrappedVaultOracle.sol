@@ -6,6 +6,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {IWrappedVaultOracle} from "../interfaces/IWrappedVaultOracle.sol";
 
+/// @dev quote will returns price in oracle decimals
 contract WrappedVaultOracle is IWrappedVaultOracle {
     /// @dev address of the vault itself, vault share is base token
     IERC4626 private immutable _VAULT; // solhint-disable-line var-name-mixedcase
