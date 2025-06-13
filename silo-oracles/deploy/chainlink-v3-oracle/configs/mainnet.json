@@ -128,7 +128,7 @@
     "CHAINLINK_wsrUSD_USD": {
         "baseToken": "wsrUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
-        "primaryAggregator": "CHAINLINK_LIKE_wsrUSD_USD_AGGREGATOR",
+        "primaryAggregator": "CHRONICLE_wsrUSD_USD_AGGREGATOR",
         "primaryHeartbeat": 43801,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
