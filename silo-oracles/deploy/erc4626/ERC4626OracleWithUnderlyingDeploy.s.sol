@@ -90,7 +90,7 @@ contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
         returns (string memory name)
     {
         name = string.concat(
-            "WRAPPED_VAULT_",
+            "ERC4626OracleWithUnderlying_",
             IERC20Metadata(address(_vault)).symbol(),
             "_",
             _oracleName
