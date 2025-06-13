@@ -32,7 +32,7 @@ contract ERC4626Oracle is ISiloOracle {
     }
 
     /// @inheritdoc ISiloOracle
-    function quoteToken() external view returns (address) {
+    function quoteToken() external view virtual returns (address) {
         return UNDERLYING;
     }
 }

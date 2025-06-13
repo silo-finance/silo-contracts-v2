@@ -17,7 +17,7 @@ def to_percent(percentage_string):
     numeric_value = float(percentage_string.strip('%')) * 100
     return int(round(numeric_value, 0))
 
-def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/sonic/InterestRateModelConfigs.json') -> str:
+def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
     with open(filename, 'r') as f:
         data = json.load(f)
 
@@ -30,7 +30,6 @@ def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/so
 # Relative paths
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Script's location
 input_file = os.path.join(script_dir, "data.csv")  # Relative path to the CSV file
-output_file = os.path.join(script_dir, "market.json")  # Relative path to the JSON file
 print(f"input_file: {input_file}")
 
 # JSON keys
@@ -104,6 +103,9 @@ json_structure = {
     "flashloanFee1": to_percent(data[1]["flashloanFee"]),
     "callBeforeQuote1": False
 }
+
+# Relative path to the JSON file
+output_file = os.path.join(script_dir, f"Silo_{data[0]["token"]}_{data[1]["token"]}.json")
 
 with open(output_file, "w", encoding="utf-8") as jsonfile:
     json.dump(json_structure, jsonfile, indent=4, ensure_ascii=False)
