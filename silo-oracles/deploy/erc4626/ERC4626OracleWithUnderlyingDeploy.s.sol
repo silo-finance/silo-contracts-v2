@@ -8,9 +8,9 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
-import {WrappedVaultOracle} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracle.sol";
-import {IWrappedVaultOracle} from "silo-oracles/contracts/interfaces/IWrappedVaultOracle.sol";
-import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleFactory.sol";
+import {ERC4626OracleWithUnderlying} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlying.sol";
+import {IERC4626OracleWithUnderlying} from "silo-oracles/contracts/interfaces/IERC4626OracleWithUnderlying.sol";
+import {ERC4626OracleWithUnderlyingFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
@@ -20,10 +20,10 @@ import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
 FOUNDRY_PROFILE=oracles ORACLE=CHAINLINK_USR_USD VAULT=wstUSR \
-    forge script silo-oracles/deploy/wrappedVault/WrappedVaultOracleDeploy.s.sol \
+    forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
-contract WrappedVaultOracleDeploy is CommonDeploy {
+contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
     string private _useOracle;
     string private _useVault;
 
@@ -32,16 +32,16 @@ contract WrappedVaultOracleDeploy is CommonDeploy {
         _useOracle = _oracleName;
     }
     
-    function run() public returns (WrappedVaultOracle oracle) {
+    function run() public returns (ERC4626OracleWithUnderlying oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         (IERC4626 useVault, ISiloOracle useOracle, string memory configName) = _parseDeployArgs();
 
-        address factory = getDeployedAddress(SiloOraclesFactoriesContracts.WRAPPED_VAULT_ORACLE_FACTORY);
+        address factory = getDeployedAddress(SiloOraclesFactoriesContracts.ERC4626_ORACLE_UNDERLYING_FACTORY);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = WrappedVaultOracleFactory(factory).create(useVault, useOracle, bytes32(0));
+        oracle = ERC4626OracleWithUnderlyingFactory(factory).create(useVault, useOracle, bytes32(0));
 
         vm.stopBroadcast();
 
@@ -49,7 +49,7 @@ contract WrappedVaultOracleDeploy is CommonDeploy {
 
         console2.log("Config name", configName);
 
-        IWrappedVaultOracle.Config memory cfg = oracle.getConfig();
+        IERC4626OracleWithUnderlying.Config memory cfg = oracle.getConfig();
 
         address baseToken = address(cfg.baseToken);
         _printMetadata(baseToken);

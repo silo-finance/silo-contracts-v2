@@ -5,22 +5,22 @@ import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV
 
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
-import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleFactory.sol";
+import {ERC4626OracleWithUnderlyingFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
 
 /**
 FOUNDRY_PROFILE=oracles \
-    forge script silo-oracles/deploy/wrappedVault/WrappedVaultOracleFactoryDeploy.s.sol \
+    forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
-contract WrappedVaultOracleFactoryDeploy is CommonDeploy {
-    function run() public returns (WrappedVaultOracleFactory factory) {
+contract ERC4626OracleWithUnderlyingFactoryDeploy is CommonDeploy {
+    function run() public returns (ERC4626OracleWithUnderlyingFactory factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
-        factory = new WrappedVaultOracleFactory();
+        factory = new ERC4626OracleWithUnderlyingFactory();
         
         vm.stopBroadcast();
 
-        _registerDeployment(address(factory), SiloOraclesFactoriesContracts.WRAPPED_VAULT_ORACLE_FACTORY);
+        _registerDeployment(address(factory), SiloOraclesFactoriesContracts.ERC4626_ORACLE_UNDERLYING_FACTORY);
     }
 }

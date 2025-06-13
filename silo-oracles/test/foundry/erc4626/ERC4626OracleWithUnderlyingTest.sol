@@ -4,18 +4,18 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-import {WrappedVaultOracleFactoryDeploy} from "silo-oracles/deploy/wrappedVault/WrappedVaultOracleFactoryDeploy.s.sol";
-import {WrappedVaultOracleDeploy} from "silo-oracles/deploy/wrappedVault/WrappedVaultOracleDeploy.s.sol";
-import {WrappedVaultOracleFactory} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracleFactory.sol";
-import {WrappedVaultOracle} from "silo-oracles/contracts/wrappedVault/WrappedVaultOracle.sol";
+import {ERC4626OracleWithUnderlyingFactoryDeploy} from "../../../deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol";
+import {ERC4626OracleWithUnderlyingDeploy} from "../../../deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol";
+import {ERC4626OracleWithUnderlyingFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
+import {ERC4626OracleWithUnderlying} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlying.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
-import {IWrappedVaultOracle} from "silo-oracles/contracts/interfaces/IWrappedVaultOracle.sol";
+import {IERC4626OracleWithUnderlying} from "silo-oracles/contracts/interfaces/IERC4626OracleWithUnderlying.sol";
 
 /*
-    FOUNDRY_PROFILE=oracles forge test --mc WrappedVaultOracleTest --ffi -vv
+    FOUNDRY_PROFILE=oracles forge test --mc ERC4626OracleWithUnderlyingTest --ffi -vv
 */
-contract WrappedVaultOracleTest is Test {
-    WrappedVaultOracle oracle;
+contract ERC4626OracleWithUnderlyingTest is Test {
+    ERC4626OracleWithUnderlying oracle;
     address wstUSR;
 
     function setUp() public {
@@ -23,14 +23,14 @@ contract WrappedVaultOracleTest is Test {
 
         AddrLib.init();
 
-        WrappedVaultOracleFactoryDeploy factoryDeployer = new WrappedVaultOracleFactoryDeploy();
+        ERC4626OracleWithUnderlyingFactoryDeploy factoryDeployer = new ERC4626OracleWithUnderlyingFactoryDeploy();
         factoryDeployer.disableDeploymentsSync();
 
-        WrappedVaultOracleFactory factory = WrappedVaultOracleFactory(factoryDeployer.run());
+        ERC4626OracleWithUnderlyingFactory factory = ERC4626OracleWithUnderlyingFactory(factoryDeployer.run());
 
-        AddrLib.setAddress(SiloOraclesFactoriesContracts.WRAPPED_VAULT_ORACLE_FACTORY, address(factory));
+        AddrLib.setAddress(SiloOraclesFactoriesContracts.ERC4626_ORACLE_UNDERLYING_FACTORY, address(factory));
 
-        WrappedVaultOracleDeploy deployer = new WrappedVaultOracleDeploy();
+        ERC4626OracleWithUnderlyingDeploy deployer = new ERC4626OracleWithUnderlyingDeploy();
         deployer.setUseConfig("wstUSR", "CHAINLINK_USR_USD");
 
         oracle = deployer.run();
@@ -62,7 +62,7 @@ contract WrappedVaultOracleTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_BaseAmountOverflow --ffi -vv
      */
     function test_wrappedVault_BaseAmountOverflow() public {
-        vm.expectRevert(IWrappedVaultOracle.BaseAmountOverflow.selector);
+        vm.expectRevert(IERC4626OracleWithUnderlying.BaseAmountOverflow.selector);
         oracle.quote(2 ** 128, address(1));
     }
 
@@ -70,7 +70,7 @@ contract WrappedVaultOracleTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_AssetNotSupported --ffi -vv
      */
     function test_wrappedVault_AssetNotSupported() public {
-        vm.expectRevert(IWrappedVaultOracle.AssetNotSupported.selector);
+        vm.expectRevert(IERC4626OracleWithUnderlying.AssetNotSupported.selector);
         oracle.quote(1, address(1));
     }
 
@@ -78,7 +78,7 @@ contract WrappedVaultOracleTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_ZeroQuote --ffi -vv
      */
     function test_wrappedVault_ZeroQuote() public {
-        vm.expectRevert(IWrappedVaultOracle.ZeroQuote.selector);
+        vm.expectRevert(IERC4626OracleWithUnderlying.ZeroQuote.selector);
         oracle.quote(0, wstUSR);
     }
 }
