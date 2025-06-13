@@ -21,7 +21,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
-FOUNDRY_PROFILE=oracles ORACLE=CHAINLINK_USR_USD VAULT=wstUSR \
+FOUNDRY_PROFILE=oracles VAULT=wstUSR ORACLE=CHAINLINK_USR_USD  \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
