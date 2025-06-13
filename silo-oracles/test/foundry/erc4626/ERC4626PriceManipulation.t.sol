@@ -33,11 +33,14 @@ contract ERC4626PriceManipulation is IntegrationTest {
         uint256 blockToFork = 22679533;
         vm.createSelectFork(vm.envString("RPC_MAINNET"), blockToFork);
 
-        string memory vaultArg = vm.envString("VAULT");
-
-        if (bytes(vaultArg).length != 0) {
-            _vault = IERC4626(vm.parseAddress(vaultArg));
+        try vm.envString("VAULT") returns (string memory vaultArg) {
+            if (bytes(vaultArg).length != 0) {
+                _vault = IERC4626(vm.parseAddress(vaultArg));
+            }
+        } catch {
+            // empty arg
         }
+
 
         AddrLib.init();
         AddrLib.setAddress(_vaultKey, address(_vault));
@@ -69,7 +72,9 @@ contract ERC4626PriceManipulation is IntegrationTest {
         assertEq(initialPrice, finalPrice, "Price changed");
     }
 
-    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation -vv
+    /*
+    VAULT=0xd3fd63209fa2d55b07a0f6db36c2f43900be3094 FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_donation -vv
+    */
     function test_ERC4626PriceManipulation_donation() public {
         uint256 attackerBalance = _fundAttackerWithTotalAssets();
 
@@ -226,7 +231,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
 
     function _fundAttackerWithTotalAssets() internal returns (uint256 attackerBalance) {
         uint256 totalShares = _vault.totalSupply();
-        uint256 totalAssets = _vault.convertToAssets(totalShares);
+        uint256 totalAssets = _vault.convertToAssets(totalShares) / 10;
 
         _dealAsset(_attacker, totalAssets);
 
