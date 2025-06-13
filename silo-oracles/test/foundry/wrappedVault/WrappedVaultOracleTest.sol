@@ -11,8 +11,12 @@ import {WrappedVaultOracle} from "silo-oracles/contracts/wrappedVault/WrappedVau
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {IWrappedVaultOracle} from "silo-oracles/contracts/interfaces/IWrappedVaultOracle.sol";
 
+/*
+    FOUNDRY_PROFILE=oracles forge test --mc WrappedVaultOracleTest --ffi -vv
+*/
 contract WrappedVaultOracleTest is Test {
     WrappedVaultOracle oracle;
+    address wstUSR;
 
     function setUp() public {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), 22690540); // forking block Jun 12 2025
@@ -30,6 +34,8 @@ contract WrappedVaultOracleTest is Test {
         deployer.setUseConfig("wstUSR", "CHAINLINK_USR_USD");
 
         oracle = deployer.run();
+
+        wstUSR = AddrLib.getAddress("wstUSR");
     }
 
 
@@ -66,5 +72,13 @@ contract WrappedVaultOracleTest is Test {
     function test_wrappedVault_AssetNotSupported() public {
         vm.expectRevert(IWrappedVaultOracle.AssetNotSupported.selector);
         oracle.quote(1, address(1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_ZeroQuote --ffi -vv
+     */
+    function test_wrappedVault_ZeroQuote() public {
+        vm.expectRevert(IWrappedVaultOracle.ZeroQuote.selector);
+        oracle.quote(0, wstUSR);
     }
 }

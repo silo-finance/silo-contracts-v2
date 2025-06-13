@@ -26,6 +26,9 @@ contract WrappedVaultOracleFactory is Create2Factory, MadeByFactory {
     }
 
     function verifyConfig(IERC4626 _vault, ISiloOracle _oracle) public view virtual {
+        require(address(_vault) != address(0), IWrappedVaultOracle.ZeroAddress());
+        require(address(_oracle) != address(0), IWrappedVaultOracle.ZeroAddress());
+
         address vaultAsset = _vault.asset();
 
         require(vaultAsset != address(0), IWrappedVaultOracle.AssetZero());

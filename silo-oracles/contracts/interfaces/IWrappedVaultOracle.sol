@@ -20,6 +20,7 @@ interface IWrappedVaultOracle is ISiloOracle {
 
     error BaseAmountOverflow();
     error AssetNotSupported();
+    error ZeroAddress();
     error ZeroQuote();
     error AssetZero();
     error QuoteTokenZero();
