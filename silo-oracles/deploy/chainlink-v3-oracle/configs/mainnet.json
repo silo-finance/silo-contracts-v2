@@ -125,7 +125,7 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
-    "CHAINLINK_wsrUSD_USD": {
+    "CHRONICLE_wsrUSD_USD": {
         "baseToken": "wsrUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHRONICLE_wsrUSD_USD_AGGREGATOR",
