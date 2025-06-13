@@ -6,9 +6,9 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=Silo_wsrUSD_USDC HOOK_RECEIVER_OWNER=DAO \
+FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract SiloDeployWithHookReceiverOwner is SiloDeploy {
     function _getClonableHookReceiverConfig(address _implementation)
