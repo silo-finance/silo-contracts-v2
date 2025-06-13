@@ -231,7 +231,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
 
     function _fundAttackerWithTotalAssets() internal returns (uint256 attackerBalance) {
         uint256 totalShares = _vault.totalSupply();
-        uint256 totalAssets = _vault.convertToAssets(totalShares) / 10;
+        uint256 totalAssets = _vault.convertToAssets(totalShares);
 
         _dealAsset(_attacker, totalAssets);
 
