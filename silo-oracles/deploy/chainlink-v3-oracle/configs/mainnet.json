@@ -63,7 +63,7 @@
     "REDSTONE_weETH_WETH": {
         "baseToken": "weETH",
         "quoteToken": "WETH",
-        "primaryAggregator": "REDSTONE_weETH_ETH_aggregator"
+        "primaryAggregator": "REDSTONE_weETH_ETH_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
