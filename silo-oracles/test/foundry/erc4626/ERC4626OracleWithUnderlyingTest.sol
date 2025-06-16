@@ -19,7 +19,7 @@ contract ERC4626OracleWithUnderlyingTest is Test {
     address wstUSR;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("RPC_MAINNET"), 22690540); // forking block Jun 12 2025
+        vm.createSelectFork(vm.envString("RPC_MAINNET"), 22716500); // forking block Jun 16 2025
 
         AddrLib.init();
 
