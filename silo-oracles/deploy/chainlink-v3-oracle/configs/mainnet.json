@@ -138,7 +138,7 @@
     },
     "EORACLE_PT-USDe_25SEP25_USDC": {
         "baseToken": "PT-USDe_25SEP25",
-        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "quoteToken": "USDC",
         "primaryAggregator": "EORACLE_PT-USDe_25SEP25_USDC_AGGREGATOR",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",

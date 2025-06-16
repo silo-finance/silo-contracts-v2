@@ -16,7 +16,7 @@
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
     "token1": "USDC",
-    "solvencyOracle1": "CHAINLINK_USDC_USD",
+    "solvencyOracle1": "SCALER_USDC",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2.sol",
     "interestRateModelConfig1": "bridgeETHv4",
