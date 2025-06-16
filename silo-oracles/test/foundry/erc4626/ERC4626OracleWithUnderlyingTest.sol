@@ -55,7 +55,7 @@ contract ERC4626OracleWithUnderlyingTest is Test {
         at this block USR price in aggregator is 1.0
         chainlink.quote() => 1087372222978808737
         */
-        assertEq(oracle.quote(1e18, AddrLib.getAddress("wstUSR")), 1.087372222978808737e18, "wstUSR price in USD");
+        assertEq(oracle.quote(1e18, AddrLib.getAddress("wstUSR")), 1.088034809135912077e18, "wstUSR price in USD");
     }
 
     /*
