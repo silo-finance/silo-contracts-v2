@@ -65,7 +65,7 @@ contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
 
         console2.log("Using token decimals:");
         uint256 price = printQuote(oracle, baseToken, uint256(10 ** cfg.baseToken.decimals()));
-        console2.log("Price in quote token divided by 1e18: ", PriceFormatter._formatNumberInE(price / 1e18));
+        console2.log("Price in quote token divided by 1e18: ", PriceFormatter.formatNumberInE(price / 1e18));
 
         console2.log("Oracle config:");
         console2.log("baseToken: ", address(cfg.baseToken));
