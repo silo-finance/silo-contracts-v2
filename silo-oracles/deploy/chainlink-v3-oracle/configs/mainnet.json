@@ -127,7 +127,7 @@
     },
     "CHRONICLE_wsrUSD_USD": {
         "baseToken": "wsrUSD",
-        "quoteToken": "SILO_VIRTUAL_USD_18",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHRONICLE_wsrUSD_USD_AGGREGATOR",
         "primaryHeartbeat": 43801,
         "secondaryAggregator": "",
