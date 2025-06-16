@@ -10,7 +10,7 @@ library PriceFormatter {
     /// @dev Virtual machine instance
     Vm internal constant vm = Vm(VM_ADDRESS);
 
-    function _formatNumberInE(uint256 _in) internal pure returns (string memory) {
+    function formatNumberInE(uint256 _in) internal pure returns (string memory) {
         if (_in < 1e3) return vm.toString(_in);
 
         uint256 e;
@@ -23,14 +23,14 @@ library PriceFormatter {
             out /= 10;
         }
 
-        if (e < 3 || _in < 1e6) return string.concat(vm.toString(_in), _digits(_in));
+        if (e < 3 || _in < 1e6) return string.concat(vm.toString(_in), digits(_in));
 
-        return string.concat(vm.toString(out), "e", vm.toString(e), _digits(_in));
+        return string.concat(vm.toString(out), "e", vm.toString(e), digits(_in));
     }
 
-    function _formatPriceInE18(uint256 _in) internal pure returns (string memory) {
-        if (_in < 1e4) return string.concat(vm.toString(_in), _digits(_in));
-        if (_in < 1e7) return _formatNumberInE(_in);
+    function formatPriceInE18(uint256 _in) internal pure returns (string memory) {
+        if (_in < 1e4) return string.concat(vm.toString(_in), digits(_in));
+        if (_in < 1e7) return formatNumberInE(_in);
 
         uint256 integerPart = _in / 1e18;
         uint256 fractionalPart = _in % 1e18;
@@ -57,7 +57,7 @@ library PriceFormatter {
         }
     }
 
-    function _digits(uint256 _in) internal pure returns (string memory) {
+    function digits(uint256 _in) internal pure returns (string memory) {
         uint256 l = bytes(vm.toString(_in)).length;
         if (l < 6) return "";
 

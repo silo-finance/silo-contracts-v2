@@ -457,7 +457,7 @@ contract Logger is Test {
 
         if (success) {
             if (_quoteNamedAmount.logExponentialNotation) {
-                console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, PriceFormatter._formatPriceInE18(price));
+                console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, PriceFormatter.formatPriceInE18(price));
             } else {
                 console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, price);
             }

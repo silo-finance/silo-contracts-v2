@@ -28,11 +28,11 @@ contract CommonDeploy is Deployer {
         uint256 _baseAmount
     ) internal view returns (uint256 quote) {
         try _oracle.quote(_baseAmount, _baseToken) returns (uint256 price) {
-            require(price > 0, string.concat("Quote for ", PriceFormatter._formatNumberInE(_baseAmount), " wei is 0"));
-            console2.log(string.concat("Quote for ", PriceFormatter._formatNumberInE(_baseAmount), " wei is ", PriceFormatter._formatNumberInE(price)));
+            require(price > 0, string.concat("Quote for ", PriceFormatter.formatNumberInE(_baseAmount), " wei is 0"));
+            console2.log(string.concat("Quote for ", PriceFormatter.formatNumberInE(_baseAmount), " wei is ", PriceFormatter.formatNumberInE(price)));
             quote = price;
         } catch {
-            console2.log(string.concat("Failed to quote", PriceFormatter._formatNumberInE(_baseAmount), "wei"));
+            console2.log(string.concat("Failed to quote", PriceFormatter.formatNumberInE(_baseAmount), "wei"));
         }
     }
 
