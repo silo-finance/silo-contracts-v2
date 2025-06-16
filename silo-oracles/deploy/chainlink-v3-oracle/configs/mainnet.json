@@ -59,5 +59,27 @@
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "EORACLE_PT_cUSDO_20NOV2025_HARDCODE_QUOTE_USDC": {
+        "baseToken": "PT-cUSDO-20NOV2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_cUSDO_20NOV2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_PT_eUSDE_14AUG2025_USDC": {
+        "baseToken": "PT-eUSDE-14AUG2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_eUSDe_14AUG2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
