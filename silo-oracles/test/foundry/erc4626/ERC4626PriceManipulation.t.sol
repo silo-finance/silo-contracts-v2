@@ -14,7 +14,7 @@ import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626Oracle
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 /*
-FOUNDRY_PROFILE=oracles VAULT=0xd3fd63209fa2d55b07a0f6db36c2f43900be3094 forge test -vv --ffi --mc ERC4626PriceManipulation
+FOUNDRY_PROFILE=oracles VAULT=wsrUSD forge test -vv --ffi --mc ERC4626PriceManipulation
 */
 contract ERC4626PriceManipulation is IntegrationTest {
     string internal _vaultKey = "ERC4626_vault";
@@ -32,18 +32,14 @@ contract ERC4626PriceManipulation is IntegrationTest {
     function setUp() public {
         uint256 blockToFork = 22679533;
         vm.createSelectFork(vm.envString("RPC_MAINNET"), blockToFork);
-
-        try vm.envString("VAULT") returns (string memory vaultArg) {
-            if (bytes(vaultArg).length != 0) {
-                _vault = IERC4626(vm.parseAddress(vaultArg));
-            }
-        } catch {
-            // empty arg
-        }
-
+        string memory vaultAddressString = vm.envOr("VAULT", string(""));
 
         AddrLib.init();
         AddrLib.setAddress(_vaultKey, address(_vault));
+
+        if (bytes(vaultAddressString).length != 0) {
+            _vault = IERC4626(AddrLib.getAddress(vaultAddressString));
+        }
 
         ERC4626OracleFactoryDeploy erc4626OracleFactoryDeploy = new ERC4626OracleFactoryDeploy();
         erc4626OracleFactoryDeploy.disableDeploymentsSync();
