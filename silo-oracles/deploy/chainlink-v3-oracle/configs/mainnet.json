@@ -29,6 +29,17 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0
     },
+    "CHAINLINK_WBTC_USD": {
+        "baseToken": "WBTC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_WBTC_BTC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_BTC_USD_aggregator",
+        "secondaryHeartbeat": 4201,
+        "normalizationDivider": 1e6,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "REDSTONE_ezETH_WETH": {
         "baseToken": "ezETH",
         "quoteToken": "WETH",
