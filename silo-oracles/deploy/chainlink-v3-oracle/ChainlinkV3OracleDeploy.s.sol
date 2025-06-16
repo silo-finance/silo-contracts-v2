@@ -87,22 +87,4 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
             console2.log(string.concat("Failed to quote", _formatNumberInE(_baseAmount), "wei"));
         }
     }
-
-    function _formatNumberInE(uint256 _in) internal pure returns (string memory) {
-        if (_in < 1e3) return vm.toString(_in);
-
-        uint256 e;
-        uint256 out = _in;
-
-        while (out != 0) {
-            if (out % 10 != 0) break;
-
-            e++;
-            out /= 10;
-        }
-
-        if (e < 3 || _in < 1e7) return vm.toString(_in);
-
-        return string.concat(vm.toString(out), "e", vm.toString(e));
-    }
 }
