@@ -48,5 +48,16 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0
+    },
+    "EORACLE_PT_sUSDE_25SEP2025_USDC": {
+        "baseToken": "PT-sUSDE-25SEP2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_sUSDE_25SEP2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
