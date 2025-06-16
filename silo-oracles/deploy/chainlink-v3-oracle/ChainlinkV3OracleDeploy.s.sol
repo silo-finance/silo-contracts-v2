@@ -58,7 +58,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
 
         console2.log("Using token decimals:");
         uint256 price = printQuote(oracle, config, uint256(10 ** config.baseToken.decimals()));
-        console2.log("Price in quote token divided by 1e18: ", _formatNumberInE(price / 1e18));
+        console2.log("Price in quote token divided by 1e18: ", _formatPriceInE18(price / 1e18));
 
         ChainlinkV3OracleConfig oracleConfig = oracle.oracleConfig();
         IChainlinkV3Oracle.ChainlinkV3Config memory oracleConfigLive = oracleConfig.getConfig();
@@ -81,7 +81,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
     ) internal view returns (uint256 quote) {
          try _oracle.quote(_baseAmount, address(_config.baseToken)) returns (uint256 price) {
             require(price > 0, string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is 0"));
-            console2.log(string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is ", _formatNumberInE(price)));
+            console2.log(string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is ", _formatPriceInE18(price)));
             quote = price;
         } catch {
             console2.log(string.concat("Failed to quote", _formatNumberInE(_baseAmount), "wei"));
