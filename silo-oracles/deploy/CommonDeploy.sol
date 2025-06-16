@@ -7,6 +7,7 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 
 import {Deployer} from "silo-foundry-utils/deployer/Deployer.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 import {SiloOraclesFactoriesDeployments} from "./SiloOraclesFactoriesContracts.sol";
 
@@ -27,66 +28,12 @@ contract CommonDeploy is Deployer {
         uint256 _baseAmount
     ) internal view returns (uint256 quote) {
         try _oracle.quote(_baseAmount, _baseToken) returns (uint256 price) {
-            require(price > 0, string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is 0"));
-            console2.log(string.concat("Quote for ", _formatNumberInE(_baseAmount), " wei is ", _formatNumberInE(price)));
+            require(price > 0, string.concat("Quote for ", PriceFormatter._formatNumberInE(_baseAmount), " wei is 0"));
+            console2.log(string.concat("Quote for ", PriceFormatter._formatNumberInE(_baseAmount), " wei is ", PriceFormatter._formatNumberInE(price)));
             quote = price;
         } catch {
-            console2.log(string.concat("Failed to quote", _formatNumberInE(_baseAmount), "wei"));
+            console2.log(string.concat("Failed to quote", PriceFormatter._formatNumberInE(_baseAmount), "wei"));
         }
-    }
-
-    function _formatNumberInE(uint256 _in) internal pure returns (string memory) {
-        if (_in < 1e3) return vm.toString(_in);
-
-        uint256 e;
-        uint256 out = _in;
-
-        while (out != 0) {
-            if (out % 10 != 0) break;
-
-            e++;
-            out /= 10;
-        }
-
-        if (e < 3 || _in < 1e6) return string.concat(vm.toString(_in), _digits(_in));
-
-        return string.concat(vm.toString(out), "e", vm.toString(e), _digits(_in));
-    }
-
-    function _formatPriceInE18(uint256 _in) internal pure returns (string memory) {
-        if (_in < 1e4) return string.concat(vm.toString(_in), _digits(_in));
-        if (_in < 1e7) return _formatNumberInE(_in);
-
-        uint256 integerPart = _in / 1e18;
-        uint256 fractionalPart = _in % 1e18;
-
-        string memory integerStr = vm.toString(integerPart);
-        uint256 leadingZeros = 18 - bytes(vm.toString(fractionalPart)).length;
-
-        while (fractionalPart != 0 && fractionalPart % 10 == 0) {
-            fractionalPart /= 10;
-        }
-
-        string memory fractionalStr = vm.toString(fractionalPart);
-
-        for (uint256 i = 0; i < leadingZeros; i++) {
-            fractionalStr = string.concat("0", fractionalStr);
-        }
-
-        if (integerPart == 0) {
-            return string.concat("0.", fractionalStr, "e18");
-        } if (fractionalPart == 0) {
-            return string.concat(integerStr, "e18");
-        } else {
-            return string.concat(integerStr, ".", fractionalStr, "e18");
-        }
-    }
-
-    function _digits(uint256 _in) internal pure returns (string memory) {
-        uint256 l = bytes(vm.toString(_in)).length;
-        if (l < 6) return "";
-
-        return string.concat(" [", vm.toString(l) ," digits]");
     }
 
     function _printMetadata(address _token) internal view {
