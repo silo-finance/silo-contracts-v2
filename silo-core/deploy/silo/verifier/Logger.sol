@@ -281,9 +281,7 @@ contract Logger is Test {
             ")"
         );
 
-        vm.prank(0xC727Db2b556843457e9f5023a7cF357B806104e8);
-
-    (
+        (
             /*uint80 roundID*/,
             int256 aggregatorPrice,
             /*uint256 startedAt*/,
@@ -304,7 +302,7 @@ contract Logger is Test {
     /// @dev returns underlying primary and secondary aggregators. Logs setup if needed.
     function _resolveUnderlyingChainlinkAggregators(ISiloOracle _oracle, bool _logDetails)
         internal
-         returns (address primaryAggregator, address secondaryAggregator)
+        view returns (address primaryAggregator, address secondaryAggregator)
     {
         try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
             (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
@@ -423,12 +421,12 @@ contract Logger is Test {
         bool _invertSecondPrice
     )
         internal
+        view
     {
         console2.log("\n\tChainlinkV3 underlying feed setup:");
         console2.log("\tOracle config: ", _oracleConfig);
         console2.log("\tPrimary aggregator: ", _primaryAggregator);
-        console2.log("\tPrimary aggregator name: N/A");
-        vm.prank(0xC727Db2b556843457e9f5023a7cF357B806104e8);
+        console2.log("\tPrimary aggregator name: ", AggregatorV3Interface(_primaryAggregator).description());
         console2.log("\tPrimary aggregator decimals: ", AggregatorV3Interface(_primaryAggregator).decimals());
         console2.log("\tSecondary aggregator: ", _secondaryAggregator);
 
