@@ -6,6 +6,8 @@ import {console2} from "forge-std/console2.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {ERC4626OracleWithUnderlying} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlying.sol";
@@ -63,7 +65,7 @@ contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
 
         console2.log("Using token decimals:");
         uint256 price = printQuote(oracle, baseToken, uint256(10 ** cfg.baseToken.decimals()));
-        console2.log("Price in quote token divided by 1e18: ", _formatNumberInE(price / 1e18));
+        console2.log("Price in quote token divided by 1e18: ", PriceFormatter._formatNumberInE(price / 1e18));
 
         console2.log("Oracle config:");
         console2.log("baseToken: ", address(cfg.baseToken));
