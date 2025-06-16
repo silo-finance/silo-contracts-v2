@@ -28,6 +28,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
+import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
 import {IDIAOracle, DIAOracle, DIAOracleConfig} from "silo-oracles/contracts/dia/DIAOracle.sol";
 import {
@@ -194,37 +195,11 @@ contract Logger is Test {
         console2.log("\tQuote token:", quoteToken);
 
         try PendlePTOracle(address(_oracle)).MARKET() returns (address market) {
-            console2.log(DELIMITER);
-            console2.log("\n\tPENDLE ORACLE INFO\n");
-            console2.log("\tMarket:", market);
+            _logPendleOracle(_oracle, market, false);
+        } catch {}
 
-            console2.log(
-                "\tPendle oracle (Pendle protocol deployments):",
-                address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
-            );
-
-            address ptToken = address(PendlePTOracle(address(_oracle)).PT_TOKEN());
-            console2.log("\tPT token:", ptToken);
-            console2.log("\tPT token symbol:", IERC20Metadata(ptToken).symbol());
-
-            address underlyingToken;
-
-            try PendlePTToAssetOracle(address(_oracle)).SY_UNDERLYING_TOKEN() returns (address syUnderlyingToken) {
-                console2.log("\tSY underlying token:", syUnderlyingToken);
-                underlyingToken = syUnderlyingToken;
-            } catch {}
-
-            try PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN() returns (address ptUnderlyingToken) {
-                console2.log("\tPT underlying token:", ptUnderlyingToken);
-                underlyingToken = ptUnderlyingToken;
-            } catch {}
-
-            address underlyingOracle = address(PendlePTOracle(address(_oracle)).UNDERLYING_ORACLE());
-            console2.log("\tPT underlying token symbol:", IERC20Metadata(underlyingToken).symbol());
-            console2.log("\tUnderlying oracle:", underlyingOracle);
-            console2.log("\n\tPendle underlying oracle info:");
-            _logOracle(ISiloOracle(underlyingOracle), underlyingToken);
-            console2.log(DELIMITER);
+        try PendleLPTOracle(address(_oracle)).PENDLE_MARKET() returns (address market) {
+            _logPendleOracle(_oracle, market, true);
         } catch {}
 
         (
@@ -250,6 +225,47 @@ contract Logger is Test {
 
         _resolveUnderlyingChainlinkAggregators({_oracle: _oracle, _logDetails: true});
 
+        console2.log(DELIMITER);
+    }
+
+    function _logPendleOracle(ISiloOracle _oracle, address market, bool isLPTWrapper) internal {
+        console2.log(DELIMITER);
+        console2.log("\n\tPENDLE ORACLE INFO\n");
+        console2.log("\tMarket:", market);
+
+        console2.log(
+            "\tPendle oracle (Pendle protocol deployments):",
+            address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
+        );
+
+        if (!isLPTWrapper) {
+            address ptToken = address(PendlePTOracle(address(_oracle)).PT_TOKEN());
+            console2.log("\tPT token:", ptToken);
+            console2.log("\tPT token symbol:", IERC20Metadata(ptToken).symbol());
+        }
+
+        address underlyingToken;
+
+        try PendlePTToAssetOracle(address(_oracle)).SY_UNDERLYING_TOKEN() returns (address syUnderlyingToken) {
+            console2.log("\tSY underlying token:", syUnderlyingToken);
+            underlyingToken = syUnderlyingToken;
+        } catch {}
+
+        try PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN() returns (address ptUnderlyingToken) {
+            console2.log("\tPT underlying token:", ptUnderlyingToken);
+            underlyingToken = ptUnderlyingToken;
+        } catch {}
+
+        try PendleLPTOracle(address(_oracle)).UNDERLYING_TOKEN() returns (address lptUnderlyingToken) {
+            console2.log("\tLPT underlying token:", lptUnderlyingToken);
+            underlyingToken = lptUnderlyingToken;
+        } catch {}
+
+        address underlyingOracle = address(PendlePTOracle(address(_oracle)).UNDERLYING_ORACLE());
+        console2.log("\tUnderlying token symbol:", IERC20Metadata(underlyingToken).symbol());
+        console2.log("\tUnderlying oracle:", underlyingOracle);
+        console2.log("\n\tPendle underlying oracle info:");
+        _logOracle(ISiloOracle(underlyingOracle), underlyingToken);
         console2.log(DELIMITER);
     }
 
