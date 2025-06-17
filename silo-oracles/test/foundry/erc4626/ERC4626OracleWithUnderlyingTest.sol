@@ -19,7 +19,7 @@ contract ERC4626OracleWithUnderlyingTest is Test {
     address wstUSR;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("RPC_MAINNET"), 22690540); // forking block Jun 12 2025
+        vm.createSelectFork(vm.envString("RPC_MAINNET"), 22724590); // forking Jun 17 2025
 
         AddrLib.init();
 
@@ -55,7 +55,7 @@ contract ERC4626OracleWithUnderlyingTest is Test {
         at this block USR price in aggregator is 1.0
         chainlink.quote() => 1087372222978808737
         */
-        assertEq(oracle.quote(1e18, AddrLib.getAddress("wstUSR")), 1.087372222978808737e18, "wstUSR price in USD");
+        assertEq(oracle.quote(1e18, AddrLib.getAddress("wstUSR")), 1.088293604071978577e18, "wstUSR price in USD");
     }
 
     /*
