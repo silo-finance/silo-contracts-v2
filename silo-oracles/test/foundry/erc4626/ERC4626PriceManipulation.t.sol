@@ -38,7 +38,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
         AddrLib.setAddress(_vaultKey, address(_vault));
 
         if (bytes(vaultAddressString).length != 0) {
-            _vault = IERC4626(AddrLib.getAddress(vaultAddressString));
+            _vault = IERC4626(AddrLib.getAddressSafe(ChainsLib.chainAlias(), vaultAddressString));
         }
 
         ERC4626OracleFactoryDeploy erc4626OracleFactoryDeploy = new ERC4626OracleFactoryDeploy();
