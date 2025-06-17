@@ -30,7 +30,6 @@ contract ChainlinkV3OracleFactory is Create2Factory, OracleFactory {
         }
 
         verifyConfig(_config);
-        verifyHeartbeat(_config);
 
         oracleConfig = new ChainlinkV3OracleConfig(_config);
         oracle = ChainlinkV3Oracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
@@ -74,22 +73,6 @@ contract ChainlinkV3OracleFactory is Create2Factory, OracleFactory {
 
         if (_config.normalizationDivider == 0 && _config.normalizationMultiplier == 0) {
             revert IChainlinkV3Oracle.MultiplierAndDividerZero();
-        }
-    }
-
-    /// @dev heartbeat restrictions are arbitrary
-    /// @notice Chainlink's heartbeat is "always" less than a day, except when they late
-    function verifyHeartbeat(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config) public pure virtual {
-        if (_config.primaryHeartbeat < 30 seconds || _config.primaryHeartbeat > 2 days) {
-            revert IChainlinkV3Oracle.InvalidHeartbeat();
-        }
-
-        if (address(_config.secondaryAggregator) == address(0)) {
-            if (_config.secondaryHeartbeat != 0) revert IChainlinkV3Oracle.InvalidEthHeartbeat();
-        } else {
-            if (_config.secondaryHeartbeat < 30 seconds || _config.secondaryHeartbeat > 2 days) {
-                revert IChainlinkV3Oracle.InvalidEthHeartbeat();
-            }
         }
     }
 }
