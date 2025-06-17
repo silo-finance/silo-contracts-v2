@@ -97,7 +97,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
             /*uint80 answeredInRound*/
         ) = _aggregator.latestRoundData();
 
-        if (aggregatorPrice != 0) {
+        if (aggregatorPrice > 0) {
             return (true, uint256(aggregatorPrice));
         }
 
