@@ -284,7 +284,7 @@ contract PendlePTOracleTest is Forking {
         assertEq(
             oracle.quote(quoteAmount, ptToken),
             rateFromPendleOracle,
-            "quote value is equal to ptToSyRate, because underlying oracle returns 10**18 for quote amount"
+            "quote value is equal to ptToSyRate, because underlying oracle returns amount to quote"
         );
 
         // Mock call to underlying oracle with quote amount scaled by the rate. It will ensure that quote function is
@@ -304,7 +304,7 @@ contract PendlePTOracleTest is Forking {
         assertEq(
             underlyingOracle.quote(scaledAmountToQuote, ptUnderlyingToken),
             newUnderlyingPrice,
-            "price changed only for underlying to ensure PT oracle asking underlying price"
+            "price changed only for underlying to ensure PT oracle asking underlying price with right args"
         );
 
         // Scaled amount to quote for underlying oracle was pre-calculated, quote for this value was mocked. Quote from
