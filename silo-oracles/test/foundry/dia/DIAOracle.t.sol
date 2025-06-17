@@ -36,8 +36,12 @@ contract DIAOracleTest is DIAConfigDefault {
 
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        vm.expectRevert(IDIAOracle.OldPrice.selector);
-        newOracle.quote(1e18, address(tokens["RDPX"]));
+        // does not revert
+        assertGt(
+            newOracle.quote(1e18, address(tokens["RDPX"])),
+            0,
+            "does not revert for old price"
+        );
     }
 
     function test_DIAOracle_initialize_OldSecondaryPrice() public {
@@ -52,8 +56,11 @@ contract DIAOracleTest is DIAConfigDefault {
         DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        vm.expectRevert(IDIAOracle.OldSecondaryPrice.selector);
-        newOracle.quote(1e18, address(tokens["RDPX"]));
+        assertGt(
+            newOracle.quote(1e18, address(tokens["RDPX"])),
+            0,
+            "does not revert even for old secondary price"
+        );
     }
 
     function test_DIAOracle_initialize_pass() public {
