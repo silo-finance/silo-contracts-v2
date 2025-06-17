@@ -32,7 +32,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         if (_baseToken != address(config.baseToken)) revert AssetNotSupported();
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
-        (bool success, uint256 price) = _getAggregatorPrice(config.primaryAggregator, config.primaryHeartbeat);
+        (bool success, uint256 price) = _getAggregatorPrice(config.primaryAggregator);
         if (!success) revert InvalidPrice();
 
         if (!config.convertToQuote) {
@@ -47,7 +47,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         (
             bool secondSuccess,
             uint256 secondPrice
-        ) = _getAggregatorPrice(config.secondaryAggregator, config.secondaryHeartbeat);
+        ) = _getAggregatorPrice(config.secondaryAggregator);
 
         if (!secondSuccess) revert InvalidSecondPrice();
 
@@ -69,8 +69,8 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         IChainlinkV3Oracle.ChainlinkV3Config memory config = oracleConfig.getConfig();
 
         return _primary
-            ? _getAggregatorPrice(config.primaryAggregator, config.primaryHeartbeat)
-            : _getAggregatorPrice(config.secondaryAggregator, config.secondaryHeartbeat);
+            ? _getAggregatorPrice(config.primaryAggregator)
+            : _getAggregatorPrice(config.secondaryAggregator);
     }
 
     /// @inheritdoc ISiloOracle
@@ -83,7 +83,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         // nothing to execute
     }
 
-    function _getAggregatorPrice(AggregatorV3Interface _aggregator, uint256 _heartbeat)
+    function _getAggregatorPrice(AggregatorV3Interface _aggregator)
         internal
         view
         virtual
@@ -93,16 +93,11 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
             /*uint80 roundID*/,
             int256 aggregatorPrice,
             /*uint256 startedAt*/,
-            uint256 priceTimestamp,
+            /* uint256 priceTimestamp */,
             /*uint80 answeredInRound*/
         ) = _aggregator.latestRoundData();
 
-        // price must be updated at least once every _heartbeat, otherwise something is wrong
-        uint256 oldestAcceptedPriceTimestamp;
-        // block.timestamp is more than HEARTBEAT, so we can not underflow
-        unchecked { oldestAcceptedPriceTimestamp = block.timestamp - _heartbeat; }
-
-        if (aggregatorPrice > 0 && priceTimestamp > oldestAcceptedPriceTimestamp) {
+        if (aggregatorPrice != 0) {
             return (true, uint256(aggregatorPrice));
         }
 
