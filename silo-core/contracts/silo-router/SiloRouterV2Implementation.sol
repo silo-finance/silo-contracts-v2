@@ -8,6 +8,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {ISiloRouterV2Implementation} from "../interfaces/ISiloRouterV2Implementation.sol";
 import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
+import {IPendleWrapperLike} from "../interfaces/IPendleWrapperLike.sol";
 
 // solhint-disable ordering
 
@@ -73,6 +74,14 @@ Supporting the following scenarios:
 - full repay native
     SiloRouterV2.repayAllNative(IWrappedNativeToken _native, ISilo _silo)
     SiloRouterV2.transferAll(IERC20 _token, address _to)
+
+## Pendle LP tokens
+- wrap pendle LP token
+    SiloRouterV2.wrapPendleLP(IPendleWrapperLike _wrapper, IERC20 _pendleLPToken, address _receiver, uint256 _amount)
+- unwrap pendle LP token
+    SiloRouterV2.unwrapPendleLP(IPendleWrapperLike _wrapper, address _receiver, uint256 _amount)
+- unwrap all tokens that are on the router's balance
+    SiloRouterV2.unwrapAllPendleLP(IPendleWrapperLike _wrapper, address _receiver)
  */
 
 /// @dev This contract should never use `msg.value` as `SiloRouterV2` contract executes multicall with a delegatecall.
@@ -95,6 +104,33 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
     function unwrapAll(IWrappedNativeToken _native) external payable virtual {
         uint256 balance = _native.balanceOf(address(this));
         unwrap(_native, balance);
+    }
+
+    /// @inheritdoc ISiloRouterV2Implementation
+    function wrapPendleLP(
+        IPendleWrapperLike _wrapper,
+        IERC20 _pendleLPToken,
+        address _receiver,
+        uint256 _amount
+    ) external virtual {
+        transferFrom(_pendleLPToken, address(this), _amount);
+        approve(_pendleLPToken, address(_wrapper), _amount);
+        _wrapper.wrap(_receiver, _amount);
+    }
+
+    /// @inheritdoc ISiloRouterV2Implementation
+    function unwrapPendleLP(
+        IPendleWrapperLike _wrapper,
+        address _receiver,
+        uint256 _amount
+    ) public virtual {
+        _wrapper.unwrap(_receiver, _amount);
+    }
+
+    /// @inheritdoc ISiloRouterV2Implementation
+    function unwrapAllPendleLP(IPendleWrapperLike _wrapper, address _receiver) external virtual {
+        uint256 balance = IERC20(address(_wrapper)).balanceOf(address(this));
+        unwrapPendleLP(_wrapper, _receiver, balance);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation

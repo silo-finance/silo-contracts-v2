@@ -5,6 +5,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo} from "./ISilo.sol";
 import {IWrappedNativeToken} from "./IWrappedNativeToken.sol";
+import {IPendleWrapperLike} from "./IPendleWrapperLike.sol";
 
 interface ISiloRouterV2Implementation {
     /// @notice Wrap native token to wrapped native token
@@ -20,6 +21,34 @@ interface ISiloRouterV2Implementation {
     /// @param _native The address of the native token
     /// @param _amount The amount of wrapped native token to unwrap
     function unwrap(IWrappedNativeToken _native, uint256 _amount) external payable;
+
+    /// @notice Wrap pendle LP token to wrapped pendle LP token
+    /// @dev Pendle LP tokens needs to be approved to the router before wrapping
+    /// @param _wrapper The address of the pendle wrapper
+    /// @param _pendleLPToken The address of the pendle LP token
+    /// @param _amount The amount of pendle LP token to wrap
+    function wrapPendleLP(
+        IPendleWrapperLike _wrapper,
+        IERC20 _pendleLPToken,
+        address _receiver,
+        uint256 _amount
+    ) external;
+
+    /// @notice Unwrap wrapped pendle LP token to pendle LP token
+    /// @param _wrapper The address of the pendle wrapper
+    /// @param _receiver The address of the receiver
+    /// @param _amount The amount of wrapped pendle LP token to unwrap
+    function unwrapPendleLP(
+        IPendleWrapperLike _wrapper,
+        address _receiver,
+        uint256 _amount
+    ) external;
+
+    /// @notice Unwrap all wrapped pendle LP token to pendle LP token
+    /// @dev By "all" it means all tokens on the router's balance
+    /// @param _wrapper The address of the pendle wrapper
+    /// @param _receiver The address of the receiver
+    function unwrapAllPendleLP(IPendleWrapperLike _wrapper, address _receiver) external;
 
     /// @notice Unwrap all wrapped native token to native token
     /// @dev Tokens are unwrapped to the router's balance.
