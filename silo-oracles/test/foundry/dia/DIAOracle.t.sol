@@ -27,6 +27,23 @@ contract DIAOracleTest is DIAConfigDefault {
         DIA_ORACLE.initialize(cfg, _defaultDIAConfig().primaryKey, _defaultDIAConfig().secondaryKey);
     }
 
+    function test_DIAOracle_initialize_OldPrice() public {
+        DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
+        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
+
+        cfg.heartbeat = 1856;
+        DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
+
+        newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
+
+        // does not revert
+        assertGt(
+            newOracle.quote(1e18, address(tokens["RDPX"])),
+            0,
+            "does not revert for old price"
+        );
+    }
+
     function test_DIAOracle_initialize_OldSecondaryPrice() public {
         DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
@@ -39,8 +56,11 @@ contract DIAOracleTest is DIAConfigDefault {
         DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        vm.expectRevert(IDIAOracle.OldSecondaryPrice.selector);
-        newOracle.quote(1e18, address(tokens["RDPX"]));
+        assertGt(
+            newOracle.quote(1e18, address(tokens["RDPX"])),
+            0,
+            "does not revert even for old secondary price"
+        );
     }
 
     function test_DIAOracle_initialize_pass() public {
