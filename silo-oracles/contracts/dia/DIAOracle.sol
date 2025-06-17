@@ -99,7 +99,6 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
 
     /// @param _diaOracle IDIAOracleV2 oracle where price is stored
     /// @param _key string under this key asset price will be available in DIA oracle
-    /// @param _heartbeat ignored
     /// @return assetPriceInUsd uint128 asset price
     /// @return priceUpToDate bool TRUE if price is up to date (acceptable), FALSE otherwise
     function getPriceForKey(IDIAOracleV2 _diaOracle, string memory _key, uint256)
