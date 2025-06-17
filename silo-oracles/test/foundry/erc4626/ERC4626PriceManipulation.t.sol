@@ -5,6 +5,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -13,7 +14,9 @@ import {ERC4626OracleFactoryDeploy} from "silo-oracles/deploy/erc4626/ERC4626Ora
 import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
-// FOUNDRY_PROFILE=oracles forge test -vv --ffi --mc ERC4626PriceManipulation
+/*
+FOUNDRY_PROFILE=oracles VAULT=wsrUSD forge test -vv --ffi --mc ERC4626PriceManipulation
+*/
 contract ERC4626PriceManipulation is IntegrationTest {
     string internal _vaultKey = "ERC4626_vault";
     IERC4626 internal _vault = IERC4626(0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0); // sUSDf - Ethereum
@@ -30,9 +33,14 @@ contract ERC4626PriceManipulation is IntegrationTest {
     function setUp() public {
         uint256 blockToFork = 22679533;
         vm.createSelectFork(vm.envString("RPC_MAINNET"), blockToFork);
+        string memory vaultAddressString = vm.envOr("VAULT", string(""));
 
         AddrLib.init();
         AddrLib.setAddress(_vaultKey, address(_vault));
+
+        if (bytes(vaultAddressString).length != 0) {
+            _vault = IERC4626(AddrLib.getAddressSafe(ChainsLib.chainAlias(), vaultAddressString));
+        }
 
         ERC4626OracleFactoryDeploy erc4626OracleFactoryDeploy = new ERC4626OracleFactoryDeploy();
         erc4626OracleFactoryDeploy.disableDeploymentsSync();
@@ -61,7 +69,9 @@ contract ERC4626PriceManipulation is IntegrationTest {
         assertEq(initialPrice, finalPrice, "Price changed");
     }
 
-    // FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation -vv
+    /*
+    VAULT=wsrUSD FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_donation -vv
+    */
     function test_ERC4626PriceManipulation_donation() public {
         uint256 attackerBalance = _fundAttackerWithTotalAssets();
 
