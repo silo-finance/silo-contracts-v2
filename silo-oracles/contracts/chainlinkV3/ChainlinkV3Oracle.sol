@@ -32,7 +32,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         if (_baseToken != address(config.baseToken)) revert AssetNotSupported();
         if (_baseAmount > type(uint128).max) revert BaseAmountOverflow();
 
-        (bool success, uint256 price) = _getAggregatorPrice(config.primaryAggregator);
+        (bool success, uint256 price) = _getAggregatorPrice(config.primaryAggregator, config.primaryHeartbeat);
         if (!success) revert InvalidPrice();
 
         if (!config.convertToQuote) {
@@ -47,7 +47,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         (
             bool secondSuccess,
             uint256 secondPrice
-        ) = _getAggregatorPrice(config.secondaryAggregator);
+        ) = _getAggregatorPrice(config.secondaryAggregator, config.secondaryHeartbeat);
 
         if (!secondSuccess) revert InvalidSecondPrice();
 
@@ -69,8 +69,8 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         IChainlinkV3Oracle.ChainlinkV3Config memory config = oracleConfig.getConfig();
 
         return _primary
-            ? _getAggregatorPrice(config.primaryAggregator)
-            : _getAggregatorPrice(config.secondaryAggregator);
+            ? _getAggregatorPrice(config.primaryAggregator, config.primaryHeartbeat)
+            : _getAggregatorPrice(config.secondaryAggregator, config.secondaryHeartbeat);
     }
 
     /// @inheritdoc ISiloOracle
@@ -83,7 +83,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         // nothing to execute
     }
 
-    function _getAggregatorPrice(AggregatorV3Interface _aggregator)
+    function _getAggregatorPrice(AggregatorV3Interface _aggregator, uint256 /* _heartbeat */)
         internal
         view
         virtual
