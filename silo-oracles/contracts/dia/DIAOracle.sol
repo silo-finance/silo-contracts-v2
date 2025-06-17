@@ -102,7 +102,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
     /// @param _heartbeat ignored
     /// @return assetPriceInUsd uint128 asset price
     /// @return priceUpToDate bool TRUE if price is up to date (acceptable), FALSE otherwise
-    function getPriceForKey(IDIAOracleV2 _diaOracle, string memory _key, uint256 _heartbeat)
+    function getPriceForKey(IDIAOracleV2 _diaOracle, string memory _key, uint256)
         public
         view
         virtual
