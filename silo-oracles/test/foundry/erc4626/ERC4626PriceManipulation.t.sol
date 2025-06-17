@@ -69,7 +69,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
     }
 
     /*
-    VAULT=0xd3fd63209fa2d55b07a0f6db36c2f43900be3094 FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_donation -vv
+    VAULT=wsrUSD FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_donation -vv
     */
     function test_ERC4626PriceManipulation_donation() public {
         uint256 attackerBalance = _fundAttackerWithTotalAssets();
