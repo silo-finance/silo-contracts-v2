@@ -35,6 +35,7 @@ import {
     WrappedMetaVaultOracleAdapter,
     IWrappedMetaVaultOracle
 } from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -456,7 +457,7 @@ contract Logger is Test {
 
         if (success) {
             if (_quoteNamedAmount.logExponentialNotation) {
-                console2.log("\tPrice for %s = %e", _quoteNamedAmount.name, price);
+                console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, PriceFormatter.formatPriceInE18(price));
             } else {
                 console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, price);
             }
