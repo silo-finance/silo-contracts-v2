@@ -18,7 +18,6 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 FOUNDRY_PROFILE=oracles VAULT=wsrUSD forge test -vv --ffi --mc ERC4626PriceManipulation
 */
 contract ERC4626PriceManipulation is IntegrationTest {
-    string internal _vaultKey = "ERC4626_vault";
     IERC4626 internal _vault = IERC4626(0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0); // sUSDf - Ethereum
 
     ISiloOracle internal _erc4626Oracle;
@@ -36,7 +35,6 @@ contract ERC4626PriceManipulation is IntegrationTest {
         string memory vaultAddressString = vm.envOr("VAULT", string(""));
 
         AddrLib.init();
-        AddrLib.setAddress(_vaultKey, address(_vault));
 
         if (bytes(vaultAddressString).length != 0) {
             _vault = IERC4626(AddrLib.getAddressSafe(ChainsLib.chainAlias(), vaultAddressString));
