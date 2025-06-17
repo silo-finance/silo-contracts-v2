@@ -8,9 +8,18 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol";
 
 /**
-ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
+FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
-    --ffi $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
+
+
+    FOUNDRY_PROFILE=oracles \
+    forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
+    --ffi --rpc-url $RPC_ARBITRUM \
+    --private-key $PRIVATE_KEY \
+    --verifier-url $VERIFIER_URL_ARBISCAN \
+    --resume \
+    --verify
  */
 contract DIAOracleFactoryDeploy is CommonDeploy {
     function run() public returns (DIAOracleFactory factory) {
