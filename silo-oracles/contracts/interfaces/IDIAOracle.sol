@@ -48,8 +48,6 @@ interface IDIAOracle {
     error EmptyPrimaryKey();
 
     error InvalidKey();
-    error OldPrice();
-    error OldSecondaryPrice();
     error NotSupported();
     error AssetNotSupported();
     error Overflow();
