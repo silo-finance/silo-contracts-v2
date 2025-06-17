@@ -112,7 +112,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
         if (priceTimestamp == 0) revert InvalidKey();
 
         // We not checking assetPriceInUsd != 0, because this is checked on setup, so it will be always some value here.
-        // We not checking heartbeat so price is always up to date.
+        // We are not checking heartbeat so price is always up to date.
         priceUpToDate = true;
     }
 }
