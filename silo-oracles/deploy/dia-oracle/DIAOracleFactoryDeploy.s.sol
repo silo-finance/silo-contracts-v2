@@ -8,12 +8,12 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol";
 
 /**
-ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
+FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
 
 
-    ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
+    FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM \
     --private-key $PRIVATE_KEY \
