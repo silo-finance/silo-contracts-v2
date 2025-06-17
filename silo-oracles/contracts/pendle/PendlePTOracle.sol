@@ -6,10 +6,11 @@ import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtL
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 /// @notice PendlePTOracle is an oracle, which multiplies the underlying PT token price by PtToSyRate from Pendle.
 /// This oracle must be deployed using PendlePTOracleFactory contract. PendlePTOracle decimals are equal to underlying
-/// oracle's decimals. TWAP duration is constant and equal to 30 minutes. UNDERLYING_ORACLE must return the price of 
+/// oracle's decimals. TWAP duration is constant and equal to 30 minutes. UNDERLYING_ORACLE must return the price of
 /// PT token's underlying asset. Quote token of PendlePTOracle is equal to UNDERLYING_ORACLE quote token.
 contract PendlePTOracle is ISiloOracle {
     /// @dev PtToSyRate unit of measurement.
@@ -27,7 +28,7 @@ contract PendlePTOracle is ISiloOracle {
     /// @dev Pendle PT token address. Quote function returns the price of this asset.
     address public immutable PT_TOKEN; // solhint-disable-line var-name-mixedcase
 
-    /// @dev PT_TOKEN underlying asset 
+    /// @dev PT_TOKEN underlying asset
     address public immutable PT_UNDERLYING_TOKEN; // solhint-disable-line var-name-mixedcase
 
     /// @dev Pendle market for PT_TOKEN. This address is used to get PtToSyRate.
@@ -36,7 +37,6 @@ contract PendlePTOracle is ISiloOracle {
     /// @dev This oracle's quote token is equal to UNDERLYING_ORACLE's quote token.
     address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
-    error TokensDecimalsDoesNotMatch();
     error InvalidUnderlyingOracle();
     error PendleOracleNotReady();
     error PendlePtToSyRateIsZero();
@@ -55,11 +55,9 @@ contract PendlePTOracle is ISiloOracle {
         address ptUnderlyingToken = getPtUnderlyingToken(_market);
         uint256 ptUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(ptUnderlyingToken);
 
-        require(ptUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(ptToken), TokensDecimalsDoesNotMatch());
-
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             _pendleOracle.getOracleState(_market, TWAP_DURATION);
-        
+
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
         require(_pendleOracle.getPtToSyRate(_market, TWAP_DURATION) != 0, PendlePtToSyRateIsZero());
 
@@ -82,8 +80,18 @@ contract PendlePTOracle is ISiloOracle {
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
         require(_baseToken == PT_TOKEN, AssetNotSupported());
 
-        quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, PT_UNDERLYING_TOKEN);
-        quoteAmount = quoteAmount * PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION) / PENDLE_RATE_PRECISION;
+        uint256 rate = PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION);
+
+        // Price of PT token is defined as the price of underlying asset multiplied by PtToSyRate. PtToSyRate can be
+        // more than 10**18 when decimals of PT token are less than decimals of underlying asset. In this case the
+        // rate multiplier is applied to token amounts to improve the precision of calculations.
+        if (rate <= PENDLE_RATE_PRECISION) {
+            quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, PT_UNDERLYING_TOKEN);
+            quoteAmount = Math.mulDiv(quoteAmount, rate, PENDLE_RATE_PRECISION);
+        } else {
+            uint256 underlyingAmount = Math.mulDiv(_baseAmount, rate, PENDLE_RATE_PRECISION);
+            quoteAmount = UNDERLYING_ORACLE.quote(underlyingAmount, PT_UNDERLYING_TOKEN);
+        }
 
         require(quoteAmount != 0, ZeroPrice());
     }
