@@ -5,6 +5,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
