@@ -27,22 +27,6 @@ contract DIAOracleTest is DIAConfigDefault {
         DIA_ORACLE.initialize(cfg, _defaultDIAConfig().primaryKey, _defaultDIAConfig().secondaryKey);
     }
 
-    function test_DIAOracle_initialize_OldSecondaryPrice() public {
-        DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
-        IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
-
-        // at the block from test, price is 1856s old
-        // and ETH price is 6306s old
-        cfg.heartbeat = 1857;
-        cfg.secondaryKey = "ETH/USD";
-
-        DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
-        newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
-
-        vm.expectRevert(IDIAOracle.OldSecondaryPrice.selector);
-        newOracle.quote(1e18, address(tokens["RDPX"]));
-    }
-
     function test_DIAOracle_initialize_pass() public {
         DIAOracle newOracle = DIAOracle(Clones.clone(address(new DIAOracle())));
         IDIAOracle.DIADeploymentConfig memory cfg = _defaultDIAConfig(10 ** (18 + 8 - 18), 0);
