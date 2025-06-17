@@ -298,8 +298,13 @@ contract PendlePTOracleTest is Forking {
             abi.encode(newUnderlyingPrice)
         );
 
-        assertEq(underlyingOracle.quote(quoteAmount, address(0)), 10 ** 18, "price NOT changed for other tokens");
         assertEq(underlyingOracle.quote(quoteAmount, ptToken), 10 ** 18, "price NOT changed for other tokens");
+
+        assertEq(
+            underlyingOracle.quote(1, ptUnderlyingToken),
+            1,
+            "price NOT changed for other amounts to quote"
+        );
 
         assertEq(
             underlyingOracle.quote(scaledAmountToQuote, ptUnderlyingToken),
