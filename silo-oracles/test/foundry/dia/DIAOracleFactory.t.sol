@@ -39,6 +39,15 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_zeroHeartbeat
+    */
+    function test_DIAOracleFactory_zeroHeartbeat() public view {
+        IDIAOracle.DIADeploymentConfig memory zeroHeartbeat = _defaultDIAConfig();
+        zeroHeartbeat.heartbeat = 0;
+        ORACLE_FACTORY.verifyConfig(zeroHeartbeat);
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quote_RDPXinUSDT
     */
     function test_DIAOracleFactory_quote_RDPXinUSDT() public {
