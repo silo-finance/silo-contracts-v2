@@ -21,7 +21,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
-FOUNDRY_PROFILE=oracles ORACLE=CHAINLINK_USR_USD VAULT=wstUSR \
+FOUNDRY_PROFILE=oracles VAULT=wstUSR ORACLE=CHAINLINK_USR_USD  \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
@@ -90,7 +90,7 @@ contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
         returns (string memory name)
     {
         name = string.concat(
-            "WRAPPED_VAULT_",
+            "ERC4626OracleWithUnderlying_",
             IERC20Metadata(address(_vault)).symbol(),
             "_",
             _oracleName
