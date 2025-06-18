@@ -136,10 +136,10 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
-    "EORACLE_PT-USDe_25SEP25_USDC": {
-        "baseToken": "PT-USDe_25SEP25",
+    "EORACLE_PT-USDe_25SEP2025_USDC": {
+        "baseToken": "PT-USDe_25SEP2025",
         "quoteToken": "USDC",
-        "primaryAggregator": "EORACLE_PT-USDe_25SEP25_USDC_AGGREGATOR",
+        "primaryAggregator": "EORACLE_PT-USDe_25SEP2025_USDC_AGGREGATOR",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
