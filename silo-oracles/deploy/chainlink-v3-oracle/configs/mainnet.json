@@ -60,6 +60,16 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0
     },
+    "MIDAS_mMEV_USD": {
+        "baseToken": "mMEV",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "MIDAS_mMEV_USD_aggregator",
+        "primaryHeartbeat": 172800,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
     "REDSTONE_weETH_WETH": {
         "baseToken": "weETH",
         "quoteToken": "WETH",
@@ -135,5 +145,15 @@
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "EORACLE_PT-USDe_25SEP25_USDC": {
+        "baseToken": "PT-USDe_25SEP25",
+        "quoteToken": "USDC",
+        "primaryAggregator": "EORACLE_PT-USDe_25SEP25_USDC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
     }
 }
