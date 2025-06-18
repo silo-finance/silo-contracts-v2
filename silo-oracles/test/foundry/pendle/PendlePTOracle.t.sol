@@ -253,7 +253,7 @@ contract PendlePTOracleTest is Forking {
         assertEq(IERC20Metadata(oracle.PT_TOKEN()).decimals(), 6);
         assertEq(IERC20Metadata(oracle.PT_UNDERLYING_TOKEN()).decimals(), 18);
 
-        uint256 underlyingPrice = rlpUsdOracle.quote(10**18, oracle.PT_UNDERLYING_TOKEN());
+        uint256 underlyingPrice = rlpUsdOracle.quote(10 ** 18, oracle.PT_UNDERLYING_TOKEN());
         assertEq(underlyingPrice, 1.19895478e18, "underlying is 1.20$");
 
         uint256 ptPrice = oracle.quote(10**6, oracle.PT_TOKEN());

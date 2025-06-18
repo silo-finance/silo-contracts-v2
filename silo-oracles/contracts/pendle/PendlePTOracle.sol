@@ -79,7 +79,6 @@ contract PendlePTOracle is ISiloOracle {
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
         require(_baseToken == PT_TOKEN, AssetNotSupported());
-
         uint256 rate = PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION);
 
         // Price of PT token is defined as the price of underlying asset multiplied by PtToSyRate. PtToSyRate can be
