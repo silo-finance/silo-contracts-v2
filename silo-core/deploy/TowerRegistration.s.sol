@@ -32,7 +32,7 @@ contract TowerRegistration is CommonDeploy {
 
         if (old == _currentAddress) {
             console2.log("[TowerRegistration] %s up to date", _name);
-        } if (old == address(0)) {
+        } else if (old == address(0)) {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
             console2.log("[TowerRegistration] New entry for `%s` will be added with address %s", _name, _currentAddress);
 
