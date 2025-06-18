@@ -395,6 +395,41 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertSiloLeverageHasNoTokens();
     }
 
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_frontrun_closeWithPermit
+    */
+    function test_leverage_frontrun_closeWithPermit() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        (
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
+            IGeneralSwapModule.SwapArgs memory _swapArgs
+        ) = _defaultCloseArgs( address(silo1));
+
+
+        ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(collateralShareToken);
+        // frontrun
+        IERC20Permit(collateralShareToken).permit({
+            owner: user,
+            spender: address(siloLeverage),
+            value: permit.value,
+            deadline: permit.deadline,
+            v: permit.v,
+            r: permit.r,
+            s: permit.s
+        });
+
+        _closeLeverage(user, _closeArgs, _swapArgs, permit);
+
+        assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
+        assertEq(silo1.maxRepay(user), 0, "user has NO debt");
+
+        _assertSiloLeverageHasNoTokens();
+    }
+
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_AboveMaxLtv
     */
