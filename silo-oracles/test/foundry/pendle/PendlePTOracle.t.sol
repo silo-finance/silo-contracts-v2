@@ -244,6 +244,31 @@ contract PendlePTOracleTest is Forking {
         assertTrue(oracle.quote(quoteAmount, ptToken) > newUnderlyingPrice * 95 / 100); // rate is ~96.68%
     }
 
+    function test_PendlePTOracle_quote_rateIsMoreThanPrecisionDecimals_rlpMarket() public {
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_MAINNET"))), 22728624);
+        ISiloOracle rlpUsdOracle = ISiloOracle(0x6dFD2c79b34D05CC713f7725Db984f3D18B79aaE);
+        address rlpMarket = 0x55F06992E4C3ed17Df830dA37644885c0c34EDdA;
+        oracle = new PendlePTOracle(rlpUsdOracle, pendleOracle, rlpMarket);
+
+        assertEq(IERC20Metadata(oracle.PT_TOKEN()).decimals(), 6);
+        assertEq(IERC20Metadata(oracle.PT_UNDERLYING_TOKEN()).decimals(), 18);
+
+        uint256 underlyingPrice = rlpUsdOracle.quote(10**18, oracle.PT_UNDERLYING_TOKEN());
+        assertEq(underlyingPrice, 1.19895478e18, "underlying is 1.20$");
+
+        uint256 ptPrice = oracle.quote(10**6, oracle.PT_TOKEN());
+        assertEq(ptPrice, 0.973714918088968959e18, "PT is 0.97$");
+
+        uint256 pendleRate = pendleOracle.getPtToSyRate(rlpMarket, 1800);
+        assertEq(
+            pendleRate,
+            0.812136482819618067081806307831e30,
+            "rate has 10**30 precision decimals, expected for 6 and 18 decimals difference"
+        );
+
+        assertEq(ptPrice, pendleRate * underlyingPrice / 10**(18+(18-6)), "pt price is expected");
+    }
+
     function test_PendlePTOracle_quote_rateIsMoreThanPrecisionDecimals() public {
         // The difference with case above is oracle does scaling for amount to quote in underlying oracle
         // instead of scaling for the price.
@@ -334,6 +359,6 @@ contract PendlePTOracleTest is Forking {
         vm.prank(eoa2);
         address oracle2 = address(factory.create(underlyingOracle, market, bytes32(0)));
 
-        assertNotEq(oracle1, oracle2, "oracle1 == oracle2");        
+        assertNotEq(oracle1, oracle2, "oracle1 == oracle2");
     }
 }
