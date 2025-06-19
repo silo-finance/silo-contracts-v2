@@ -109,11 +109,19 @@ contract CheckExternalPrices is ICheck {
         externalRatio = externalPrice0 * precisionDecimals / externalPrice1;
 
         if (solvencyOracle1 == address(0)) {
-            (, contractsRatio) = Utils.quote(ISiloOracle(solvencyOracle0), token0, oneToken0);
-            contractsRatio = contractsRatio * precisionDecimals / oneToken1;
+            if (solvencyOracle0 == address(0)) {
+                contractsRatio = oneToken0 / oneToken1;
+            } else {
+                (, contractsRatio) = Utils.quote(ISiloOracle(solvencyOracle0), token0, oneToken0);
+                contractsRatio = contractsRatio * precisionDecimals / oneToken1;
+            }
         } else {
-            (bool success0, uint256 price0) =
-                Utils.quote(ISiloOracle(solvencyOracle0), token0, oneToken0);
+            bool success0 = true;
+            uint256 price0 = oneToken0;
+
+            if (solvencyOracle0 != address(0)) {
+                (success0, price0) = Utils.quote(ISiloOracle(solvencyOracle0), token0, oneToken0);
+            }
 
             (bool success1, uint256 price1) =
                 Utils.quote(ISiloOracle(solvencyOracle1), token1, oneToken1);
