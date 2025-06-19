@@ -12,7 +12,7 @@
     "maxLtv0": 8000,
     "lt0": 8500,
     "liquidationTargetLtv0": 8300,
-    "liquidationFee0": 350,
+    "liquidationFee0": 500,
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
     "token1": "USDC",
@@ -23,7 +23,7 @@
     "maxLtv1": 8000,
     "lt1": 8500,
     "liquidationTargetLtv1": 8300,
-    "liquidationFee1": 0,
+    "liquidationFee1": 500,
     "flashloanFee1": 0,
     "callBeforeQuote1": false
 }
