@@ -154,14 +154,14 @@ abstract contract SiloDeploy is CommonDeploy {
         if (oracleFromDeployments != address(0)) {
             if (oracleFromDeployments != _oracle) {
                 console2.log(
-                    "we have deployment address for %s, but it was deployed again at %s",
+                    string.concat(_warn_(), "we have deployment address for %s, but it was deployed again at %s"),
                     _oracleConfigName,
                     _oracle,
                     _warn_()
                 );
-            }
 
-            return;
+                revert(string.concat("unnecessary redeployment of ", _oracleConfigName));
+            }
         }
 
         if (_oracle == address(0)) {
@@ -191,34 +191,41 @@ abstract contract SiloDeploy is CommonDeploy {
         internal
         returns (ISiloDeployer.OracleCreationTxData memory txData)
     {
-        console2.log("[SiloCommonDeploy] verifying an oracle config: ", _oracleConfigName);
+        console2.log("[SiloCommonDeploy] _getOracleTxData for config: ", _oracleConfigName);
 
         bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
 
-        if (configHashedKey == _noOracleKey || configHashedKey == placeHolderKey) return txData;
-
-        if (_isUniswapOracle(_oracleConfigName)) {
-            return _uniswapV3TxData(_oracleConfigName);
-        }
-
-        if (_isChainlinkOracle(_oracleConfigName)) {
-            return _chainLinkTxData(_oracleConfigName);
+        if (configHashedKey == _noOracleKey || configHashedKey == placeHolderKey) {
+            console2.log("\t[SiloCommonDeploy] no deployment required for", _oracleConfigName);
+            return txData;
         }
 
         address deployed = SiloCoreDeployments.parseAddress(_oracleConfigName);
+        console2.log("\ttry to parse name to address: %s", deployed);
 
         if (deployed != address(0)) {
             txData.deployed = deployed;
-            console2.log("using already deployed oracle with fixed address: %s", _oracleConfigName, deployed);
+            console2.log("\tusing already deployed oracle with fixed address: %s", _oracleConfigName, deployed);
             return txData;
         }
 
         deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
+        console2.log("\tOraclesDeployments: %s", deployed);
 
         if (deployed != address(0)) {
             txData.deployed = deployed;
-            console2.log("using already deployed oracle %s: %s", _oracleConfigName, deployed);
+            console2.log("\tusing already deployed oracle %s: %s", _oracleConfigName, deployed);
             return txData;
+        }
+
+        if (_isUniswapOracle(_oracleConfigName)) {
+            console2.log("\t[SiloCommonDeploy] _uniswapV3TxData used for", _oracleConfigName);
+            return _uniswapV3TxData(_oracleConfigName);
+        }
+
+        if (_isChainlinkOracle(_oracleConfigName)) {
+            console2.log("\t[SiloCommonDeploy] _chainLinkTxData used for", _oracleConfigName);
+            return _chainLinkTxData(_oracleConfigName);
         }
 
         revert("[_getOracleTxData] unknown oracle type");
