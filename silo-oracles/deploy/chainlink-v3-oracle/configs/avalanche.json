@@ -1,8 +1,8 @@
 {
-    "CHAINLINK_AVAX_USDC": {
+    "CHAINLINK_AVAX_USD": {
         "baseToken": "WAVAX",
         "quoteToken": "SILO_VIRTUAL_USD_8",
-        "primaryAggregator": "CHAINLINK_AVAX_USDC_AGGREGATOR",
+        "primaryAggregator": "CHAINLINK_AVAX_USD_AGGREGATOR",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
