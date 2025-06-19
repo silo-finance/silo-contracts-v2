@@ -1,5 +1,5 @@
 {
-    "deployer": "",
+    "deployer": "0x7461d8c0fDF376c847b651D882DEa4C73fad2e4B",
     "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "SiloHookV1.sol",
     "daoFee": 1500,
@@ -23,7 +23,7 @@
     "maxLtv1": 0,
     "lt1": 0,
     "liquidationTargetLtv1": 0,
-    "liquidationFee1": 500,
+    "liquidationFee1": 0,
     "flashloanFee1": 0,
     "callBeforeQuote1": false
 }
