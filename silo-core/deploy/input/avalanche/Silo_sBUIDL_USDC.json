@@ -2,7 +2,7 @@
     "deployer": "0xE8e8041cB5E3158A0829A19E014CA1cf91098554",
     "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "SiloHookV1.sol",
-    "daoFee": 1500,
+    "daoFee": 1000,
     "deployerFee": 0,
     "token0": "sBUIDL",
     "solvencyOracle0": "ERC4626OracleWithUnderlying_sBUIDL_REDSTONE_BUIDL_USD",
