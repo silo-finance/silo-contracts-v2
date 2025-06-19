@@ -1,5 +1,20 @@
 [
   {
+    "name": "empty",
+    "config": {
+      "uopt": 0,
+      "ucrit": 0,
+      "ulow": 0,
+      "ki": 0,
+      "kcrit": 0,
+      "klow": 0,
+      "klin": 0,
+      "beta": 0,
+      "ri": 0,
+      "Tcrit": 0
+    }
+  },
+  {
     "name": "defaultAsset",
     "config": {
       "uopt": 500000000000000000,
