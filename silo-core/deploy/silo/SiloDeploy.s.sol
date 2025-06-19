@@ -161,7 +161,7 @@ abstract contract SiloDeploy is CommonDeploy {
                 );
             }
 
-            revert("unnecessary redeployment");
+            revert(string.concat("unnecessary redeployment of ", _oracleConfigName));
         }
 
         if (_oracle == address(0)) {

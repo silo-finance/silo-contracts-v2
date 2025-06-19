@@ -17,6 +17,7 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 
 import {
    UniswapV3OracleFactoryMock
@@ -105,7 +106,9 @@ contract SiloDeployTest is IntegrationTest {
         assertEq(keccak256(callDataForModification), keccak256(callDataExpected), "failed to update the salt");
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloConfig_and_hookReceiver_reorg
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloConfig_and_hookReceiver_reorg
+    */
     function test_siloConfig_and_hookReceiver_reorg() public {
         Vm.Wallet memory wallet1 = vm.createWallet("eoa1");
         Vm.Wallet memory wallet2 = vm.createWallet("eoa2");
@@ -121,6 +124,8 @@ contract SiloDeployTest is IntegrationTest {
 
         ISiloConfig.ConfigData memory siloConfigData1 = siloConfig1.getConfig(silo0);
 
+        // reset deployed address to 0
+        OraclesDeployments.save(MAINNET_ALIAS, "UniV3-ETH-USDC-0.3", address(0));
         vm.revertTo(snapshot);
 
         ISiloConfig siloConfig2 = _siloDeploy
