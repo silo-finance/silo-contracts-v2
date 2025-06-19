@@ -18,6 +18,9 @@ def to_percent(percentage_string):
     return int(round(numeric_value, 0))
 
 def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
+    if configName == 'NA':
+        return ''
+
     with open(filename, 'r') as f:
         data = json.load(f)
 
