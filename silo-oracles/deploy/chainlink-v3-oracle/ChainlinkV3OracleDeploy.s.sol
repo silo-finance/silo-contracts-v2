@@ -13,21 +13,9 @@ import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/Chainl
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 /**
-FOUNDRY_PROFILE=oracles CONFIG=REDSTONE_scUSD_USD_CHAINLINK \
+FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
-
-resume verification:
-    FOUNDRY_PROFILE=oracles CONFIG=REDSTONE_scUSD_USD_CHAINLINK \
-    forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --verify --resume --private-key $PRIVATE_KEY
-
-verify Chainlink deployment
-    FOUNDRY_PROFILE=oracles forge verify-contract 0x47EcdD1986D4D729cb2018C47b62B8f007d795d9 \
-    ChainlinkV3Oracle \
-    --compiler-version 0.8.28 \
-    --rpc-url $RPC_SONIC \
-    --watch
  */
 contract ChainlinkV3OracleDeploy is CommonDeploy {
     string public useConfigName;
