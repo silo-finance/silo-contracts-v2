@@ -379,6 +379,17 @@
         "normalizationMultiplier": 1e2,
         "invertSecondPrice": false
     },
+    "REDSTONE_scUSD_USD_CHAINLINK": {
+        "baseToken": "scUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_scUSD_USDC_aggregator",
+        "primaryHeartbeat": 0,
+        "secondaryAggregator": "CHAINLINK_USDC.e_USD_aggregator",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e4,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "EORACLE_wsrUSD_USD": {
         "baseToken": "wsrUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
