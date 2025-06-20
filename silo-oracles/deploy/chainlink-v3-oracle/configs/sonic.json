@@ -383,7 +383,7 @@
         "baseToken": "scUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "REDSTONE_scUSD_USDC_aggregator",
-        "primaryHeartbeat": 0,
+        "primaryHeartbeat": 87001,
         "secondaryAggregator": "CHAINLINK_USDC.e_USD_aggregator",
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e4,
