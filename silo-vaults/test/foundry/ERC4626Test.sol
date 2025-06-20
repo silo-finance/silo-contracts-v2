@@ -86,9 +86,9 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
 
-        redeemed = bound(redeemed, 0, shares);
+        redeemed = bound(redeemed, 1, shares);
 
-        vm.assume(vault.convertToAssets(redeemed) != 0);
+        vm.assume(vault.previewRedeem(redeemed - 1) != 0);
 
         vm.expectEmit();
         emit EventsLib.UpdateLastTotalAssets(vault.totalAssets() - vault.convertToAssets(redeemed - 1));
