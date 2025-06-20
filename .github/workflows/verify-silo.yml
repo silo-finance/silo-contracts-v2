@@ -83,25 +83,19 @@ jobs:
 
       - name: Extract optional price arguments from PR body
         id: price
-        shell: bash
         run: |
-          set -e
-
           BODY="${{ github.event.pull_request.body }}"
-
-          # Normalize lines and extract values
-          PRICE_0=$(echo "$BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
-          PRICE_1=$(echo "$BODY" | grep -i 'EXTERNAL_PRICE_1' | head -n1 | sed 's/ //g' | cut -d= -f2)
-
-          # Fallback to defaults if missing or empty
+          
+          PRICE_0=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_0=\d+' | cut -d= -f2)
+          PRICE_1=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_1=\d+' | cut -d= -f2)
+          
           PRICE_0=${PRICE_0:-99999}
           PRICE_1=${PRICE_1:-100000}
-
-          echo "EXTERNAL_PRICE_0=$PRICE_0" >> $GITHUB_OUTPUT
-          echo "EXTERNAL_PRICE_1=$PRICE_1" >> $GITHUB_OUTPUT
           
           echo "$PRICE_0"
           echo "$PRICE_1"
+          echo "EXTERNAL_PRICE_0=$PRICE_0" >> $GITHUB_OUTPUT
+          echo "EXTERNAL_PRICE_1=$PRICE_1" >> $GITHUB_OUTPUT
 
       # Run the forge script with extracted parameters
       - name: Run verify script
