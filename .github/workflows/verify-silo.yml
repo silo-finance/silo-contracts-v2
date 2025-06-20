@@ -83,17 +83,25 @@ jobs:
 
       - name: Extract optional price arguments from PR body
         id: price
+        shell: bash
         run: |
+          set -e
+
           BODY="${{ github.event.pull_request.body }}"
-          
-          PRICE_0=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_0=\d+' | cut -d= -f2)
-          PRICE_1=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_1=\d+' | cut -d= -f2)
-          
+
+          # Normalize lines and extract values
+          PRICE_0=$(echo "$BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
+          PRICE_1=$(echo "$BODY" | grep -i 'EXTERNAL_PRICE_1' | head -n1 | sed 's/ //g' | cut -d= -f2)
+
+          # Fallback to defaults if missing or empty
           PRICE_0=${PRICE_0:-99999}
           PRICE_1=${PRICE_1:-100000}
-          
+
           echo "EXTERNAL_PRICE_0=$PRICE_0" >> $GITHUB_OUTPUT
           echo "EXTERNAL_PRICE_1=$PRICE_1" >> $GITHUB_OUTPUT
+          
+          echo "$PRICE_0"
+          echo "$PRICE_1"
 
       # Run the forge script with extracted parameters
       - name: Run verify script
@@ -103,7 +111,7 @@ jobs:
           
           VERIFIER_API_KEY_SONIC=placeholder VERIFIER_URL_SONIC=https://api.sonicscan.org/api \
           FOUNDRY_PROFILE=core CONFIG=${{ steps.extract.outputs.CONFIG }} \
-          EXTERNAL_PRICE_0=${{ steps.extract.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.extract.outputs.EXTERNAL_PRICE_1 }} \
+          EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
           forge script silo-core/deploy/silo/VerifySilo.s.sol \
             --ffi --rpc-url "${{ steps.extract.outputs.RPC_URL }}" \
             -vvvv \
@@ -112,8 +120,8 @@ jobs:
           echo '```' > result.txt
           echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> result.txt
           echo "Commit: ${{ github.sha }}" >> result.txt
-          echo "EXTERNAL_PRICE_0=${{ steps.extract.outputs.EXTERNAL_PRICE_0 }}" >> result.txt
-          echo "EXTERNAL_PRICE_1=${{ steps.extract.outputs.EXTERNAL_PRICE_1 }}" >> result.txt
+          echo "EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }}" >> result.txt
+          echo "EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }}" >> result.txt
 
           # extract everything from `== Logs ==` to the end
           awk '/== Logs ==/ { print_flag = 1 } print_flag' output.log >> result.txt
