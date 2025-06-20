@@ -11,7 +11,14 @@ import {
 /**
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/erc4626/ERC4626OracleHardcodeQuoteFactoryDeploy.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
+        --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
+
+    FOUNDRY_PROFILE=oracles \
+        forge script silo-oracles/deploy/erc4626/ERC4626OracleHardcodeQuoteFactoryDeploy.sol \
+        --ffi --rpc-url $RPC_AVALANCHE \
+        --verify \
+        --resume \
+        --private-key $PRIVATE_KEY
  */
 contract ERC4626OracleHardcodeQuoteFactoryDeploy is CommonDeploy {
     function run() public returns (address factory) {
