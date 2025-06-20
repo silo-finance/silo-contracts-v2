@@ -119,7 +119,7 @@ jobs:
           echo "EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }}" >> result.txt
 
           # extract everything from `== Logs ==` to the end
-          awk '/VerifySilo RESULTS/ { print_flag = 1 } print_flag' output.log >> result.txt
+          awk '/== Logs ==/ { print_flag = 1 } print_flag' output.log >> result.txt
           echo '```' >> result.txt
 
       # Post result as a sticky comment on the PR
