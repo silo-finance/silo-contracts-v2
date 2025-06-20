@@ -84,11 +84,12 @@ jobs:
       - name: Extract optional price arguments from PR body
         id: price
         run: |
-          # Replace carriage returns with linefeeds
-          BODY=$(echo "${{ github.event.pull_request.body }}" | sed 's/\r/\n/g')
-          
-          PRICE_0=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_0=\d+' | cut -d= -f2)
-          PRICE_1=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_1=\d+' | cut -d= -f2)
+          # Replace \r with newlines to handle copy-paste from Windows
+          CLEANED_BODY=$(echo "${{ github.event.pull_request.body }}" | sed 's/\r/\n/g')
+      
+          # Extract prices using pattern match
+          PRICE_0=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
+          PRICE_1=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_1' | head -n1 | sed 's/ //g' | cut -d= -f2)
           
           PRICE_0=${PRICE_0:-99999}
           PRICE_1=${PRICE_1:-100000}
@@ -119,7 +120,7 @@ jobs:
           echo "EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }}" >> result.txt
 
           # extract everything from `== Logs ==` to the end
-          awk '/VerifySilo RESULTS/ { print_flag = 1 } print_flag' output.log >> result.txt
+          awk '/== Logs ==/ { print_flag = 1 } print_flag' output.log >> result.txt
           echo '```' >> result.txt
 
       # Post result as a sticky comment on the PR
