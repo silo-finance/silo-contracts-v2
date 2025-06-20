@@ -84,7 +84,8 @@ jobs:
       - name: Extract optional price arguments from PR body
         id: price
         run: |
-          BODY="${{ github.event.pull_request.body }}"
+          # Replace carriage returns with linefeeds
+          BODY=$(echo "${{ github.event.pull_request.body }}" | sed 's/\r/\n/g')
           
           PRICE_0=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_0=\d+' | cut -d= -f2)
           PRICE_1=$(echo "$BODY" | grep -oP 'EXTERNAL_PRICE_1=\d+' | cut -d= -f2)
