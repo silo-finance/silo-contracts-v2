@@ -95,6 +95,7 @@ library SiloMathLib {
         accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
 
         if (SiloStorageLib.getSiloStorage().ignoreInterestRateForDebt) {
+            // accruedInterest += Stream.pendingRewards();
             return (_totalDebtAssets, accruedInterest);
         }
 
