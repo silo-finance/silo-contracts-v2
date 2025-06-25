@@ -118,12 +118,22 @@ library SiloLendingLib {
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
 
-        uint256 rcomp = getCompoundInterestRate({
+        uint256 newTotalDebtWithInterest;
+        bool success;
+
+        // (uint256 accruedInterest, uint256 totalDebtWithInterest, bool success)
+        (
+            accruedInterest, newTotalDebtWithInterest, success
+        ) = getCompoundInterestRate({
             _interestRateModel: _interestRateModel,
             _totalCollateralAssets: totalCollateralAssets,
             _totalDebtAssets: totalDebtAssets,
             _lastTimestamp: lastTimestamp
         });
+
+        if (success) {
+            $.totalAssets[ISilo.AssetType.Debt] = newTotalDebtWithInterest;
+        }
 
         if (rcomp == 0) {
             $.interestRateTimestamp = uint64(block.timestamp);
@@ -131,11 +141,11 @@ library SiloLendingLib {
         }
 
         (
-            $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
+            $.totalAssets[ISilo.AssetType.Collateral], totalFees
         ) = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: totalCollateralAssets,
             _debtAssets: totalDebtAssets,
-            _rcomp: rcomp,
+            _accruedInterest: accruedInterest,
             _daoFee: _daoFee,
             _deployerFee: _deployerFee
         });
@@ -429,16 +439,18 @@ library SiloLendingLib {
         uint256 _totalCollateralAssets,
         uint256 _totalDebtAssets,
         uint64 _lastTimestamp
-    ) internal returns (uint256 rcomp) {
+    ) internal returns (uint256 accruedInterest, uint256 totalDebtWithInterest, bool success) {
         try
             IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
                 _totalCollateralAssets,
                 _totalDebtAssets,
                 _lastTimestamp
             )
-            returns (uint256 interestRate)
+            returns (uint256 interest, uint256 newTotalDebtWithInterest)
         {
-            rcomp = interestRate;
+            accruedInterest = interest;
+            totalDebtWithInterest = newTotalDebtWithInterest;
+            success = true;
         } catch {
             // do not lock silo on interest calculation
             emit IInterestRateModel.InterestRateModelError();

@@ -103,23 +103,17 @@ library SiloStdLib {
         uint256 _daoFee,
         uint256 _deployerFee
     ) internal view returns (uint256 totalCollateralAssetsWithInterest) {
-        uint256 rcomp;
-
-        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
-            rcomp = r;
+        // we can pass (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
+        // to IRM in order for model don't need to call for it
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp)
+            returns (uint256 accruedInterest, uint256 newCollateralAssetsWithInterest)
+        {
+            totalCollateralAssetsWithInterest = newCollateralAssetsWithInterest;
         } catch {
             // do not lock silo
+            (uint256 collateralAssets, ) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
+            totalCollateralAssetsWithInterest = collateralAssets;
         }
-
-        (uint256 collateralAssets, uint256 debtAssets) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
-
-        (totalCollateralAssetsWithInterest,,,) = SiloMathLib.getCollateralAmountsWithInterest({
-            _collateralAssets: collateralAssets,
-            _debtAssets: debtAssets,
-            _rcomp: rcomp,
-            _daoFee: _daoFee,
-            _deployerFee: _deployerFee
-        });
     }
 
     /// @param _balanceCached if balance of `_owner` is unknown beforehand, then pass `0`
@@ -145,16 +139,14 @@ library SiloStdLib {
         view
         returns (uint256 totalDebtAssetsWithInterest)
     {
-        uint256 rcomp;
-
-        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns (uint256 r) {
-            rcomp = r;
+        try IInterestRateModel(_interestRateModel).getCompoundInterestRate(_silo, block.timestamp) returns
+            (,, uint256 newTotalDebtAssetsWithInterest)
+        {
+            totalDebtAssetsWithInterest = totalDebtWithInterest;
         } catch {
             // do not lock silo
+            (, uint256 oldTotalDebtAssetsWithInterest) = ISilo(_silo).getCollateralAndDebtTotalsStorage();
+            totalDebtAssetsWithInterest = oldTotalDebtAssetsWithInterest;
         }
-
-        (
-            totalDebtAssetsWithInterest,
-        ) = SiloMathLib.getDebtAmountsWithInterest(ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Debt), rcomp);
     }
 }

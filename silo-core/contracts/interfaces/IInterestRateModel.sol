@@ -19,7 +19,7 @@ interface IInterestRateModel {
         uint256 _interestRateTimestamp
     )
         external
-        returns (uint256 rcomp);
+        returns (uint256 accruedInterest, uint256 newTotalDebtWithInterest);
 
     /// @dev get compound interest rate
     /// @param _silo address of Silo for which interest rate should be calculated
@@ -28,7 +28,7 @@ interface IInterestRateModel {
     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
-        returns (uint256 rcomp);
+        returns (uint256 accruedInterest, uint256 newTotalDebtWithInterest);
 
     /// @dev get current annual interest rate
     /// @param _silo address of Silo for which interest rate should be calculated
@@ -37,7 +37,7 @@ interface IInterestRateModel {
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
-        returns (uint256 rcur);
+        returns (uint256 accruedInterest, uint256 newTotalDebtWithInterest);
 
     /// @dev returns decimal points used by model
     function decimals() external view returns (uint256);

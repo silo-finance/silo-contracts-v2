@@ -96,7 +96,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         external
         virtual
         override
-        returns (uint256 rcomp)
+        returns (uint256 accruedInterest, uint256 newTotalDebtWithInterest)
     {
         // assume that caller is Silo
         address silo = msg.sender;
@@ -136,17 +136,20 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
         view
         virtual
         override
-        returns (uint256 rcomp)
+        returns (uint256 accruedInterest, uint256 newTotalDebtWithInterest)
     {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
-        (rcomp,,) = calculateCompoundInterestRate(
+        (uint256 rcomp,,) = calculateCompoundInterestRate(
             getConfig(_silo),
             data.collateralAssets,
             data.debtAssets,
             data.interestRateTimestamp,
             _blockTimestamp
         );
+
+        accruedInterest = data.debtAssets * rcomp / _DP; // TODO muldiv, rounding UP
+        newTotalDebtWithInterest = data.debtAssets + accruedInterest;
     }
 
     /// @inheritdoc IInterestRateModelV2
