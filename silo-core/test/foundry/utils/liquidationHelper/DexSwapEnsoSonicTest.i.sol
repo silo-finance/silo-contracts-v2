@@ -18,7 +18,7 @@ contract DexSwapEnsoSonicTest is IntegrationTest {
 
         uint256 blockToFork = 36036102;
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);
-        dex = new DexSwap(0xF75584eF6673aD213a685a1B58Cc0330B8eA22Cf);
+        dex = new DexSwap(getAddress(AddrKey.ENSO_ROUTER));
     }
 
     function test_skip_fillQuote_PT() public {
@@ -32,7 +32,7 @@ contract DexSwapEnsoSonicTest is IntegrationTest {
         sellToken.transfer(address(dex),186688269);
 
         IERC20 buyToken = IERC20(0x29219dd400f2Bf60E5a23d13Be72B486D4038894); // USDC
-        address allowanceTarget = 0xF75584eF6673aD213a685a1B58Cc0330B8eA22Cf;
+        address allowanceTarget = getAddress(AddrKey.ENSO_ROUTER);
 
         uint256 usdcBefore = buyToken.balanceOf(address(dex));
         assertEq(usdcBefore, 0, "expect to have no USDC");

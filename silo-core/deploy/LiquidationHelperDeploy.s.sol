@@ -32,6 +32,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract LiquidationHelperDeploy is CommonDeploy {
     address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
     address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
+    address constant ENSO_ROUTER_SONIC = 0xF75584eF6673aD213a685a1B58Cc0330B8eA22Cf;
     address constant EXCHANGE_PROXY_ZERO_X_INK = 0x0000000000001fF3684f28c67538d4D072C22734;
 
     address payable constant GNOSIS_SAFE_MAINNET = payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554);
@@ -70,7 +71,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
-        if (chainId == ChainsLib.SONIC_CHAIN_ID) return ODOS_ROUTER_SONIC;
+        if (chainId == ChainsLib.SONIC_CHAIN_ID) return ENSO_ROUTER_SONIC;
         if (chainId == ChainsLib.INK_CHAIN_ID) return EXCHANGE_PROXY_ZERO_X_INK;
 
         revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
