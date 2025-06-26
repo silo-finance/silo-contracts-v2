@@ -1,0 +1,108 @@
+name: Certora Compilation Check
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  certora-compilation-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install Certora CLI
+      run: pip install certora-cli
+      
+    - name: Install Solidity compiler
+      run: |
+        wget https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux
+        chmod +x solc-static-linux
+        sudo mv solc-static-linux /usr/local/bin/solc8.28
+        
+    - name: Apply patches for Vault scripts
+      run: |
+        if [ -f certora/patches/SiloVault.patch ]; then
+          git apply certora/patches/SiloVault.patch
+        fi
+        if [ -f certora/patches/SiloVaultActionsLib.patch ]; then
+          git apply certora/patches/SiloVaultActionsLib.patch
+        fi
+        
+    - name: Run Silo compilation checks
+      run: |
+        echo "Running Silo compilation checks..."
+        certoraRun certora/config/silo/risk_assessment.conf --compilation_steps_only --msg "Risk assessment"
+        certoraRun certora/config/silo/risk_assessment_silo.conf --compilation_steps_only --msg "Risk assessment silo"
+        certoraRun certora/config/silo/access-single-silo.conf --compilation_steps_only --msg "Access single silo"
+        certoraRun certora/config/silo/accrue_hooks.conf --compilation_steps_only --msg "Accrue hooks"
+        certoraRun certora/config/silo/accrue_noAdditionalEffect.conf --compilation_steps_only --msg "Accrue no additional effect"
+        certoraRun certora/config/silo/customerSuggested.conf --compilation_steps_only --msg "Customer suggested"
+        certoraRun certora/config/silo/mathLib.conf --compilation_steps_only --msg "Math lib"
+        certoraRun certora/config/silo/maxCorectness.conf --compilation_steps_only --msg "Max correctness"
+        certoraRun certora/config/silo/methods_integrity.conf --compilation_steps_only --msg "Methods integrity"
+        certoraRun certora/config/silo/noDebtInBoth.conf --compilation_steps_only --msg "No debt in both"
+        certoraRun certora/config/silo/preview_integrity.conf --compilation_steps_only --msg "Preview integrity"
+        certoraRun certora/config/silo/silo_config.conf --compilation_steps_only --msg "Silo config"
+        certoraRun certora/config/silo/solvent_user.conf --compilation_steps_only --msg "Solvent user"
+        certoraRun certora/config/silo/third_party_protections.conf --compilation_steps_only --msg "Third party protections"
+        certoraRun certora/config/silo/whoCanCallSetSilo.conf --compilation_steps_only --msg "Who can call set silo"
+        
+    - name: Run Factory compilation checks
+      run: |
+        echo "Running Factory compilation checks..."
+        certoraRun certora/config/SiloFactory/SiloFactory.conf --compilation_steps_only
+        certoraRun certora/config/SiloFactory/SiloFactory.conf --compilation_steps_only --verify SiloFactoryHarness:certora/specs/SiloFactory/createSiloIntegrity.spec --msg SiloFactory_createSilo
+        
+    - name: Run Router compilation checks
+      run: |
+        echo "Running Router compilation checks..."
+        certoraRun certora/config/silo-router/SiloRouter.conf --compilation_steps_only --msg SiloRouter
+        certoraRun certora/config/silo-router/SiloRouterImplementation.conf --compilation_steps_only --msg SiloRouterImplementation
+        
+    - name: Run Vault compilation checks
+      run: |
+        echo "Running Vault compilation checks..."
+        certoraRun certora/config/vaults/consistentState.conf --compilation_steps_only --rule supplyCapIsEnabled --msg supplyCapIsEnabled
+        certoraRun certora/config/vaults/consistentState.conf --compilation_steps_only --exclude_rule supplyCapIsEnabled
+        certoraRun certora/config/vaults/distinctIdentifiers.conf --compilation_steps_only
+        certoraRun certora/config/vaults/enabled.conf --compilation_steps_only --rule nonZeroCapHasPositiveRank --msg nonZeroCapHasPositiveRank
+        certoraRun certora/config/vaults/enabled.conf --compilation_steps_only --rule addedToSupplyQThenIsInWithdrawQ --msg addedToSupplyQThenIsInWithdrawQ
+        certoraRun certora/config/vaults/enabled.conf --compilation_steps_only --rule inWithdrawQueueIsEnabled --msg inWithdrawQueueIsEnabled
+        certoraRun certora/config/vaults/enabled.conf --compilation_steps_only --rule inWithdrawQueueIsEnabledPreservedUpdateWithdrawQueue --msg inWithdrawQueueIsEnabled2
+        certoraRun certora/config/vaults/immutability.conf --compilation_steps_only
+        certoraRun certora/config/vaults/lastUpdated.conf --compilation_steps_only
+        certoraRun certora/config/vaults/liveness.conf --compilation_steps_only --rule canPauseSupply
+        certoraRun certora/config/vaults/marketInteractions.conf --compilation_steps_only
+        certoraRun certora/config/vaults/pendingValues.conf --compilation_steps_only
+        certoraRun certora/config/vaults/range.conf --compilation_steps_only
+        certoraRun certora/config/vaults/reentrancy.conf --compilation_steps_only
+        certoraRun certora/config/vaults/reverts.conf --compilation_steps_only
+        certoraRun certora/config/vaults/roles.conf --compilation_steps_only
+        certoraRun certora/config/vaults/timelock.conf --compilation_steps_only --exclude_rule removableTime
+        certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --exclude_rule vaultBalanceNeutral
+        certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --rule vaultBalanceNeutral --msg vaultBalanceNeutral --parametric_contracts SiloVaultHarness
+        certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
+        certoraRun certora/config/vaults/ERC4626.conf --compilation_steps_only --rule dustFavorsTheHouse --msg dustFavorsTheHouse
+        certoraRun certora/config/vaults/ERC4626.conf --compilation_steps_only --rule onlyContributionMethodsReduceAssets --msg onlyContributionMethodsReduceAssets
+        certoraRun certora/config/vaults/ERC4626.conf --compilation_steps_only --rule conversionWeakMonotonicity_assets --msg conversionWeakMonotonicity_assets
+        
+    - name: Revert patches
+      if: always()
+      run: |
+        if [ -f certora/patches/SiloVault.patch ]; then
+          git apply -R certora/patches/SiloVault.patch || true
+        fi
+        if [ -f certora/patches/SiloVaultActionsLib.patch ]; then
+          git apply -R certora/patches/SiloVaultActionsLib.patch || true
+        fi
