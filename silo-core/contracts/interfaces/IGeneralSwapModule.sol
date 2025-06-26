@@ -19,4 +19,6 @@ interface IGeneralSwapModule {
     error SwapCallFailed();
     error Swap();
     error ZeroAmountOut();
+
+    function fillQuote(SwapArgs memory _swapArgs, uint256 _maxApprovalAmount) external returns (uint256 amountOut);
 }

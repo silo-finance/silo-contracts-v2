@@ -21,7 +21,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
 
     string public constant DESCRIPTION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
-    GeneralSwapModule public immutable SWAP_MODULE;
+    IGeneralSwapModule public immutable SWAP_MODULE;
 
     constructor (address _initialOwner, address _native) Ownable(_initialOwner) LeverageUsingSiloFlashloan(_native) {
         SWAP_MODULE = new GeneralSwapModule();
