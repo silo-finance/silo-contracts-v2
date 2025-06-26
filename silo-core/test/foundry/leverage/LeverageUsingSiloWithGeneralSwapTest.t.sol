@@ -18,6 +18,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
@@ -512,6 +513,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         });
 
         vm.prank(attacker);
+        vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
         siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
 
         assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
