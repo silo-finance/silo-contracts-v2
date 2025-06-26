@@ -9,6 +9,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -479,7 +480,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         _leverage_approvalAbuse(
             address(silo1),
-            abi.encodeWithSignature("borrow(uint256,address,address)", 1, attacker, user)
+            abi.encodeWithSignature("borrow(uint256,address,address)", 1, attacker, user),
+            abi.encodePacked(IShareToken.AmountExceedsAllowance.selector)
         );
 
         assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
@@ -501,7 +503,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         _leverage_approvalAbuse(
             address(silo0.asset()),
-            abi.encodeWithSignature("transferFrom(address,address,uint256)", user, attacker, 1)
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", user, attacker, 1),
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(siloLeverage.SWAP_MODULE()), 0, 1)
         );
 
         assertEq(userBalanceBefore, token0.balanceOf(user), "user allowance was abused");
@@ -526,7 +529,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         token1.mint(user, 100e18);
     }
 
-    function _leverage_approvalAbuse(address _exchangeProxy, bytes memory _swapCallData) internal {
+    function _leverage_approvalAbuse(
+        address _exchangeProxy,
+        bytes memory _swapCallData,
+        bytes memory _expectedError
+    ) internal {
         address attacker = makeAddr("attacker");
         uint256 depositAmount = 1e18;
         uint256 multiplier = 1.00001e18;
@@ -558,7 +565,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         });
 
         vm.prank(attacker);
-        vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
+        vm.expectRevert(_expectedError);
         siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
     }
 
