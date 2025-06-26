@@ -3,10 +3,11 @@ pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlashloan.sol";
 
-import {GeneralSwapModule} from "./modules/GeneralSwapModule.sol";
+import {GeneralSwapModule, IGeneralSwapModule} from "./modules/GeneralSwapModule.sol";
 import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
 
 /*
@@ -14,28 +15,29 @@ import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
 */
 contract LeverageUsingSiloFlashloanWithGeneralSwap is
     ILeverageUsingSiloFlashloan,
-    LeverageUsingSiloFlashloan,
-    GeneralSwapModule
+    LeverageUsingSiloFlashloan
 {
+    using SafeERC20 for IERC20;
+
     string public constant DESCRIPTION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
+    GeneralSwapModule public immutable SWAP_MODULE;
+
     constructor (address _initialOwner, address _native) Ownable(_initialOwner) LeverageUsingSiloFlashloan(_native) {
+        SWAP_MODULE = new GeneralSwapModule();
     }
 
     function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount)
         internal
         virtual
-        override(LeverageUsingSiloFlashloan, GeneralSwapModule)
+        override
         returns (uint256 amountOut)
     {
-        amountOut = GeneralSwapModule._fillQuote(_swapArgs, _maxApprovalAmount);
-    }
+        IGeneralSwapModule.SwapArgs memory swapArgs = abi.decode(_swapArgs, (IGeneralSwapModule.SwapArgs));
 
-    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount)
-        internal
-        virtual
-        override(GeneralSwapModule, LeverageUsingSiloFlashloan)
-    {
-        LeverageUsingSiloFlashloan._setMaxAllowance(_asset, _spender, _requiredAmount);
+        uint256 sellTokenBalance = IERC20(swapArgs.sellToken).balanceOf(address(this));
+        IERC20(swapArgs.sellToken).safeTransfer(address(SWAP_MODULE), sellTokenBalance);
+
+        amountOut = SWAP_MODULE.fillQuote(swapArgs, _maxApprovalAmount);
     }
 }

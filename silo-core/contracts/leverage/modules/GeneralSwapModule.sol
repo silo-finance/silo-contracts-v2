@@ -11,34 +11,43 @@ import {IGeneralSwapModule} from "../../interfaces/IGeneralSwapModule.sol";
 /// @notice Enables ERC20 token swaps via an external exchange (e.g., 0x, ODOS, Pendle)
 /// @dev Based on the 0x demo contract:
 /// https://github.com/0xProject/0x-api-starter-guide-code/blob/master/contracts/SimpleTokenSwap.sol
-abstract contract GeneralSwapModule is IGeneralSwapModule {
+contract GeneralSwapModule is IGeneralSwapModule {
     using SafeERC20 for IERC20;
 
     /// @notice Executes a token swap using a prebuilt swap quote
     /// @dev The contract must hold the sell token balance before calling.
-    /// @param _swapArgs SwapArgs struct as bytes containing containing all parameters for executing a swap
+    /// @param _swapArgs SwapArgs struct containing containing all parameters for executing a swap
     /// @param _maxApprovalAmount Amount of sell token to approve before the swap
     /// @return amountOut Amount of buy token received after the swap including any previous balance that contract has
-    function _fillQuote(bytes memory _swapArgs, uint256 _maxApprovalAmount)
-        internal
+    function fillQuote(SwapArgs memory _swapArgs, uint256 _maxApprovalAmount)
+        external
         virtual
         returns (uint256 amountOut)
     {
-        SwapArgs memory swapArgs = abi.decode(_swapArgs, (SwapArgs));
-
-        if (swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
+        if (_swapArgs.exchangeProxy == address(0)) revert ExchangeAddressZero();
 
         // Approve token for spending by the exchange
-        _setMaxAllowance(IERC20(swapArgs.sellToken), swapArgs.allowanceTarget, _maxApprovalAmount);
+        _setMaxAllowance(IERC20(_swapArgs.sellToken), _swapArgs.allowanceTarget, _maxApprovalAmount);
 
         // Perform low-level call to external exchange proxy
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) = swapArgs.exchangeProxy.call(swapArgs.swapCallData);
+        (bool success, bytes memory data) = _swapArgs.exchangeProxy.call(_swapArgs.swapCallData);
         if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
 
-        amountOut = IERC20(swapArgs.buyToken).balanceOf(address(this));
+        amountOut = IERC20(_swapArgs.buyToken).balanceOf(address(this));
         if (amountOut == 0) revert ZeroAmountOut();
+
+        IERC20(_swapArgs.buyToken).safeTransfer(msg.sender, amountOut);
+
+        uint256 buyTokenLeftover = IERC20(_swapArgs.sellToken).balanceOf(address(this));
+
+        if (buyTokenLeftover != 0) {
+            IERC20(_swapArgs.sellToken).safeTransfer(msg.sender, buyTokenLeftover);
+        }
     }
 
-    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual;
+    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
+        uint256 allowance = _asset.allowance(address(this), _spender);
+        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
+    }
 }
