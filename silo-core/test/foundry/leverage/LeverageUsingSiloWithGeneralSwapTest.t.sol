@@ -463,6 +463,60 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertSiloLeverageHasNoTokens();
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_debtApprovalAbuse
+    */
+    function test_leverage_debtApprovalAbuse() public {
+        address user = wallet.addr;
+        address attacker = makeAddr("attacker");
+
+        _openLeverageExample();
+
+        // user gave MAX approvals
+
+        vm.prank(user);
+        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), type(uint256).max);
+
+        vm.prank(user);
+        IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
+
+        uint256 userDebtBefore = IERC20(debtShareToken).balanceOf(user);
+
+        uint256 depositAmount = 1e18;
+        uint256 multiplier = 1.00001e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        // this will bypass ZeroAmountOutError
+        token0.mint(address(siloLeverage), 1e18);
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
+            buyToken: address(silo0.asset()),
+            sellToken: address(silo1.asset()),
+            allowanceTarget: address(swap),
+            exchangeProxy: address(silo1),
+            swapCallData: abi.encodeWithSignature("borrow(uint256,address,address)", 1, attacker, user)
+        });
+
+        _prepareForOpeningLeverage({
+            _user: attacker,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _approveAssets: true
+        });
+
+        vm.prank(attacker);
+        siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+
+        assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
+    }
+
     function _openLeverageExample() internal {
         address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
