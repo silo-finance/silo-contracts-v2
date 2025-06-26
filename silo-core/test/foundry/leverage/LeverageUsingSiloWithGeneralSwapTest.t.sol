@@ -513,7 +513,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         });
 
         vm.prank(attacker);
+<<<<<<< feature/fix-leverage
         vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
+=======
+>>>>>>> feature/leverage-allowance-test
         siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
 
         assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
