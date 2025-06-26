@@ -473,16 +473,61 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         _openLeverageExample();
 
-        // user gave MAX approvals
-
-        vm.prank(user);
-        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), type(uint256).max);
-
-        vm.prank(user);
-        IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
+        _giveMaxApprovalsToLeverage();
 
         uint256 userDebtBefore = IERC20(debtShareToken).balanceOf(user);
 
+        _leverage_approvalAbuse(
+            address(silo1),
+            abi.encodeWithSignature("borrow(uint256,address,address)", 1, attacker, user)
+        );
+
+        assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_transferFromAbuse
+    */
+    function test_leverage_transferFromAbuse() public {
+        _openLeverageExample();
+
+        _giveMaxApprovalsToLeverage();
+
+        address user = wallet.addr;
+        address attacker = makeAddr("attacker");
+
+        uint256 userBalanceBefore = token0.balanceOf(user);
+        emit log_named_address("leverage", address(siloLeverage));
+
+        _leverage_approvalAbuse(
+            address(silo0.asset()),
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", user, attacker, 1)
+        );
+
+        assertEq(userBalanceBefore, token0.balanceOf(user), "user allowance was abused");
+    }
+
+    function _giveMaxApprovalsToLeverage() internal {
+        address user = wallet.addr;
+
+        // user gave MAX approvals
+
+        vm.startPrank(user);
+
+        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), type(uint256).max);
+        IERC20(silo0.asset()).forceApprove(address(siloLeverage), type(uint256).max);
+        IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
+
+        vm.stopPrank();
+
+        // make sure token balance is not an issue
+
+        token0.mint(user, 100e18);
+        token1.mint(user, 100e18);
+    }
+
+    function _leverage_approvalAbuse(address _exchangeProxy, bytes memory _swapCallData) internal {
+        address attacker = makeAddr("attacker");
         uint256 depositAmount = 1e18;
         uint256 multiplier = 1.00001e18;
 
@@ -500,8 +545,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             buyToken: address(silo0.asset()),
             sellToken: address(silo1.asset()),
             allowanceTarget: address(swap),
-            exchangeProxy: address(silo1),
-            swapCallData: abi.encodeWithSignature("borrow(uint256,address,address)", 1, attacker, user)
+            exchangeProxy: _exchangeProxy,
+            swapCallData: _swapCallData
         });
 
         _prepareForOpeningLeverage({
@@ -515,8 +560,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         vm.prank(attacker);
         vm.expectRevert(IShareToken.AmountExceedsAllowance.selector);
         siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
-
-        assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
     }
 
     function _openLeverageExample() internal {
