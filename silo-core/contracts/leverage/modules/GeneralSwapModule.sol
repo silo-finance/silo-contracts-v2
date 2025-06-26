@@ -40,7 +40,7 @@ contract GeneralSwapModule is IGeneralSwapModule {
         _returnTokenToExecutor(_swapArgs.sellToken);
     }
 
-    function _returnTokenToExecutor(address _token) internal virtual returns (uint256 balance) {
+    function _transferBalanceToSender(address _token) internal virtual returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(address(this));
 
         if (balance != 0) {
