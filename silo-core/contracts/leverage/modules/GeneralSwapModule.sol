@@ -34,10 +34,10 @@ contract GeneralSwapModule is IGeneralSwapModule {
         (bool success, bytes memory data) = _swapArgs.exchangeProxy.call(_swapArgs.swapCallData);
         if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
 
-        amountOut = _returnTokenToExecutor(_swapArgs.buyToken);
+        amountOut = _transferBalanceToSender(_swapArgs.buyToken);
         if (amountOut == 0) revert ZeroAmountOut();
 
-        _returnTokenToExecutor(_swapArgs.sellToken);
+        _transferBalanceToSender(_swapArgs.sellToken);
     }
 
     function _transferBalanceToSender(address _token) internal virtual returns (uint256 balance) {
