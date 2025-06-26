@@ -7,7 +7,8 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  certora-compilation-check:
+  silo-compilation-check:
+    name: Silo, SiloFactory, and SiloRouterV2 Compilation
     runs-on: ubuntu-latest
     
     steps:
@@ -29,15 +30,6 @@ jobs:
         wget https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux
         chmod +x solc-static-linux
         sudo mv solc-static-linux /usr/local/bin/solc8.28
-        
-    - name: Apply patches for Vault scripts
-      run: |
-        if [ -f certora/patches/SiloVault.patch ]; then
-          git apply certora/patches/SiloVault.patch
-        fi
-        if [ -f certora/patches/SiloVaultActionsLib.patch ]; then
-          git apply certora/patches/SiloVaultActionsLib.patch
-        fi
         
     - name: Run Silo compilation checks
       run: |
@@ -69,6 +61,39 @@ jobs:
         echo "Running Router compilation checks..."
         certoraRun certora/config/silo-router/SiloRouter.conf --compilation_steps_only --msg SiloRouter
         certoraRun certora/config/silo-router/SiloRouterImplementation.conf --compilation_steps_only --msg SiloRouterImplementation
+
+  vault-compilation-check:
+    name: SiloVaults Compilation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install Certora CLI
+      run: pip install certora-cli
+      
+    - name: Install Solidity compiler
+      run: |
+        wget https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux
+        chmod +x solc-static-linux
+        sudo mv solc-static-linux /usr/local/bin/solc8.28
+        
+    - name: Apply patches for Vault scripts
+      run: |
+        if [ -f certora/patches/SiloVault.patch ]; then
+          git apply certora/patches/SiloVault.patch
+        fi
+        if [ -f certora/patches/SiloVaultActionsLib.patch ]; then
+          git apply certora/patches/SiloVaultActionsLib.patch
+        fi
         
     - name: Run Vault compilation checks
       run: |
@@ -92,7 +117,7 @@ jobs:
         certoraRun certora/config/vaults/timelock.conf --compilation_steps_only --exclude_rule removableTime
         certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --exclude_rule vaultBalanceNeutral
         certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --rule vaultBalanceNeutral --msg vaultBalanceNeutral --parametric_contracts SiloVaultHarness
-        certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecicifiedMethodsCanDecreaseMarketBalance
+        certoraRun certora/config/vaults/tokens.conf --compilation_steps_only --verify SiloVaultHarness:certora/specs/vaults/MarketBalance.spec --parametric_contracts SiloVaultHarness --rule onlySpecifiedMethodsCanDecreaseMarketBalance
         certoraRun certora/config/vaults/ERC4626.conf --compilation_steps_only --rule dustFavorsTheHouse --msg dustFavorsTheHouse
         certoraRun certora/config/vaults/ERC4626.conf --compilation_steps_only --rule onlyContributionMethodsReduceAssets --msg onlyContributionMethodsReduceAssets
         certoraRun certora/config/vaults/ERC4626.conf --compilation_steps_only --rule conversionWeakMonotonicity_assets --msg conversionWeakMonotonicity_assets
