@@ -15,6 +15,7 @@ import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreC
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 import {INotificationReceiver} from "silo-vaults/contracts/interfaces/INotificationReceiver.sol";
+import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 
 import {
     ISiloIncentivesControllerFactory
@@ -68,9 +69,9 @@ contract XSiloIntegrationTest is Test {
         siloTokenV2.transfer(dao, userInitialSiloBalance);
         vm.stopPrank();
 
-        siloIncentivesControllerFactory = ISiloIncentivesControllerFactory(
-            SiloCoreDeployments.get(SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY, ChainsLib.chainAlias())
-        );
+        SiloIncentivesControllerFactoryDeploy factoryDeploy = new SiloIncentivesControllerFactoryDeploy();
+        factoryDeploy.disableDeploymentsSync();
+        siloIncentivesControllerFactory = ISiloIncentivesControllerFactory(address(factoryDeploy.run()));
 
         distributionEnd = block.timestamp + INCENTIVE_DURATION;
 
@@ -78,7 +79,7 @@ contract XSiloIntegrationTest is Test {
         vm.label(user2, "user2");
 
         controller = ISiloIncentivesController(
-            siloIncentivesControllerFactory.create(dao, address(xSilo), bytes32(0))
+            siloIncentivesControllerFactory.create(dao, address(xSilo), address(xSilo), bytes32(0))
         );
 
         vm.label(address(controller), "SiloIncentivesController");

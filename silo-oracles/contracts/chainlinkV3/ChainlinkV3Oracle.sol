@@ -83,7 +83,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         // nothing to execute
     }
 
-    function _getAggregatorPrice(AggregatorV3Interface _aggregator, uint256 _heartbeat)
+    function _getAggregatorPrice(AggregatorV3Interface _aggregator, uint256 /* _heartbeat */)
         internal
         view
         virtual
@@ -93,16 +93,11 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
             /*uint80 roundID*/,
             int256 aggregatorPrice,
             /*uint256 startedAt*/,
-            uint256 priceTimestamp,
+            /* uint256 priceTimestamp */,
             /*uint80 answeredInRound*/
         ) = _aggregator.latestRoundData();
 
-        // price must be updated at least once every _heartbeat, otherwise something is wrong
-        uint256 oldestAcceptedPriceTimestamp;
-        // block.timestamp is more than HEARTBEAT, so we can not underflow
-        unchecked { oldestAcceptedPriceTimestamp = block.timestamp - _heartbeat; }
-
-        if (aggregatorPrice > 0 && priceTimestamp > oldestAcceptedPriceTimestamp) {
+        if (aggregatorPrice > 0) {
             return (true, uint256(aggregatorPrice));
         }
 

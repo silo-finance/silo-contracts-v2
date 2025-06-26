@@ -72,8 +72,6 @@ interface IChainlinkV3Oracle {
 
     error QuoteTokenNotMatchEth();
     error InvalidEthAggregatorDecimals();
-    error InvalidHeartbeat();
-    error InvalidEthHeartbeat();
 
     error AssetNotSupported();
     error HugeDivider();

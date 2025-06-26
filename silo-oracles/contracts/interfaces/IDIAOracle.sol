@@ -44,7 +44,6 @@ interface IDIAOracle {
 
     error AddressZero();
     error TokensAreTheSame();
-    error InvalidHeartbeat();
     error EmptyPrimaryKey();
 
     error InvalidKey();

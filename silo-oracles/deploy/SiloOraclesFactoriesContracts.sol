@@ -9,12 +9,16 @@ library SiloOraclesFactoriesContracts {
     string public constant DIA_ORACLE_FACTORY = "DIAOracleFactory.sol";
     string public constant ORACLE_FORWARDER_FACTORY = "OracleForwarderFactory.sol";
     string public constant ERC4626_ORACLE_FACTORY = "ERC4626OracleFactory.sol";
+    string public constant ERC4626_ORACLE_HARDCODE_QUOTE_FACTORY = "ERC4626OracleHardcodeQuoteFactory.sol";
+    string public constant ERC4626_ORACLE_UNDERLYING_FACTORY = "ERC4626OracleWithUnderlyingFactory.sol";
     string public constant PYTH_AGGREGATOR_FACTORY = "PythAggregatorFactory.sol";
     string public constant ORACLE_SCALER_FACTORY = "OracleScalerFactory.sol";
     string public constant PENDLE_PT_ORACLE_FACTORY = "PendlePTOracleFactory.sol";
     string public constant PENDLE_PT_TO_ASSET_ORACLE_FACTORY = "PendlePTToAssetOracleFactory.sol";
     string public constant PENDLE_LPT_TO_SY_ORACLE_FACTORY = "PendleLPTToSyOracleFactory.sol";
     string public constant PENDLE_LPT_TO_ASSET_ORACLE_FACTORY = "PendleLPTToAssetOracleFactory.sol";
+    string public constant PENDLE_WRAPPER_LPT_TO_ASSET_ORACLE_FACTORY = "PendleWrapperLPTToAssetOracleFactory.sol";
+    string public constant PENDLE_WRAPPER_LPT_TO_SY_ORACLE_FACTORY = "PendleWrapperLPTToSyOracleFactory.sol";
 }
 
 library SiloOraclesFactoriesDeployments {

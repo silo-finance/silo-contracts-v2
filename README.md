@@ -1,6 +1,9 @@
 # Silo V2
 Monorepository for Silo V2.
 
+### Bug bounty
+Immunefi bug bounty program is live, more details at https://immunefi.com/bug-bounty/silofinance-v2/information/
+
 ### Info
 [Known Issues](./KnownIssues.md) \
 [Deployed silo versions](./silo-core/docs/DeployedSiloVersions.md)
@@ -29,7 +32,7 @@ $ git submodule update --init --recursive
 $ cd ./gitmodules/silo-foundry-utils && cargo build --release && cp target/release/silo-foundry-utils ../../silo-foundry-utils && cd -
 
 # 7. Check if tests can be executed
-$ FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "SiloIntegrationTest|MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
+$ FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest" --ffi -vv
 
 # 8. You are ready to contribute to the protocol!
 ```
@@ -43,7 +46,7 @@ $ FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "SiloInteg
 # with your config name.
 
 $ FOUNDRY_PROFILE=core CONFIG=wstETH_WETH_Silo \
-forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
+forge script silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol \
 --ffi --rpc-url $YOUR_RPC_URL
 
 # 3. Silo is deployed to a local blockchain fork. Check logs to verify market parameters. Green check marks
@@ -56,7 +59,7 @@ forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
 
 $ anvil --fork-url $RPC_ARBITRUM --fork-block-number 284045200 & 
 
-# in case of issues, deploy contracts locally, so you can retreive errors
+# in case of issues, deploy contracts locally, so you can retrieve errors
 FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2FactoryDeploy.s.sol:InterestRateModelV2FactoryDeploy \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545 
@@ -70,8 +73,8 @@ FOUNDRY_PROFILE=core \
 # verification providers, including Arbiscan. 
 
 $ FOUNDRY_PROFILE=core CONFIG=YOUR_CONFIG_NAME_WITHOUT_JSON_EXTENSION \
-forge script silo-core/deploy/silo/SiloDeployWithGaugeHookReceiver.s.sol \
---ffi --broadcast --rpc-url 127.0.0.1:8545 --verify
+forge script silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol \
+--ffi --broadcast --rpc-url 127.0.0.1:8545
 
 # 3. Silo is deployed on-chain. Address is saved to silo-core/deploy/silo/_siloDeployments.json. 
 # You can create a PR to merge config and deployed address to develop branch.

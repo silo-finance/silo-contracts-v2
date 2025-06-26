@@ -7,7 +7,6 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
-import {SiloIncentivesControllerGaugeLike} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLike.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
@@ -15,7 +14,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {IGaugeLike} from "silo-core/contracts/interfaces/IGaugeLike.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -37,7 +36,7 @@ contract VaultMultipleRewardsTest is IntegrationTest {
     MintableToken reward1 = new MintableToken(18);
     MintableToken reward2 = new MintableToken(18);
 
-    SiloIncentivesControllerGaugeLike siloIncentivesController;
+    SiloIncentivesController siloIncentivesController;
     SiloIncentivesController vaultIncentivesController;
     IVaultIncentivesModule vaultIncentivesModule;
 
@@ -58,18 +57,18 @@ contract VaultMultipleRewardsTest is IntegrationTest {
 
         siloWithIncentives = _overrideTestAddresses();
 
-        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault));
+        vaultIncentivesController = new SiloIncentivesController(address(this), address(vault), address(vault));
         vm.label(address(vaultIncentivesController), "VaultIncentivesController");
 
         // SiloIncentivesController is per silo
-        siloIncentivesController = new SiloIncentivesControllerGaugeLike(
+        siloIncentivesController = new SiloIncentivesController(
             address(this), address(partialLiquidation), siloWithIncentives
         );
 
         // set SiloIncentivesController as gauge for hook
         vm.prank(Ownable(address(partialLiquidation)).owner());
         IGaugeHookReceiver(address(partialLiquidation)).setGauge(
-            IGaugeLike(address(siloIncentivesController)), IShareToken(siloWithIncentives)
+            ISiloIncentivesController(address(siloIncentivesController)), IShareToken(siloWithIncentives)
         );
 
         _sortSupplyQueueIdleLast();

@@ -69,7 +69,7 @@ abstract contract PendleLPTOracle is ISiloOracle {
 
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
-        require(_baseToken == PENDLE_MARKET, AssetNotSupported());
+        require(_baseToken == _getBaseToken(), AssetNotSupported());
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, UNDERLYING_TOKEN);
         quoteAmount = quoteAmount * _getRateLpToUnderlying() / PENDLE_RATE_PRECISION;
@@ -80,6 +80,10 @@ abstract contract PendleLPTOracle is ISiloOracle {
     /// @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
+    }
+
+    function _getBaseToken() internal virtual view returns (address baseToken) {
+        baseToken = PENDLE_MARKET;
     }
 
     function _getRateLpToUnderlying() internal virtual view returns (uint256);
