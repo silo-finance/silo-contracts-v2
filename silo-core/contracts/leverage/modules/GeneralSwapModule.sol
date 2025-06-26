@@ -16,7 +16,7 @@ contract GeneralSwapModule is IGeneralSwapModule {
 
     /// @notice Executes a token swap using a prebuilt swap quote
     /// @dev The contract must hold the sell token balance before calling.
-    /// @param _swapArgs SwapArgs struct containing containing all parameters for executing a swap
+    /// @param _swapArgs SwapArgs struct containing all parameters for executing a swap
     /// @param _maxApprovalAmount Amount of sell token to approve before the swap
     /// @return amountOut Amount of buy token received after the swap including any previous balance that contract has
     function fillQuote(SwapArgs memory _swapArgs, uint256 _maxApprovalAmount)
@@ -34,15 +34,17 @@ contract GeneralSwapModule is IGeneralSwapModule {
         (bool success, bytes memory data) = _swapArgs.exchangeProxy.call(_swapArgs.swapCallData);
         if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
 
-        amountOut = IERC20(_swapArgs.buyToken).balanceOf(address(this));
+        amountOut = _returnTokenToExecutor(_swapArgs.buyToken);
         if (amountOut == 0) revert ZeroAmountOut();
 
-        IERC20(_swapArgs.buyToken).safeTransfer(msg.sender, amountOut);
+        _returnTokenToExecutor(_swapArgs.sellToken);
+    }
 
-        uint256 buyTokenLeftover = IERC20(_swapArgs.sellToken).balanceOf(address(this));
+    function _returnTokenToExecutor(address _token) internal virtual returns (uint256 balance) {
+        balance = IERC20(_token).balanceOf(address(this));
 
-        if (buyTokenLeftover != 0) {
-            IERC20(_swapArgs.sellToken).safeTransfer(msg.sender, buyTokenLeftover);
+        if (balance != 0) {
+            IERC20(_token).safeTransfer(msg.sender, balance);
         }
     }
 
