@@ -21,6 +21,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
 
     string public constant DESCRIPTION = "Leverage with silo flashloan and 0x (or compatible) swap";
 
+    /// @notice The swap module is designed to execute external calls and is under the caller's full control.
+    /// It can call any contract using any method. NEVER approve any tokens for it!
     IGeneralSwapModule public immutable SWAP_MODULE;
 
     constructor (address _initialOwner, address _native) Ownable(_initialOwner) LeverageUsingSiloFlashloan(_native) {
