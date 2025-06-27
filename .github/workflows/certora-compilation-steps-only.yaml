@@ -48,15 +48,6 @@ jobs:
         # Process runRouter.sh
         sed 's/certoraRun/certoraRun/g' certora/scripts/runRouter.sh | \
         sed 's/--server production/--compilation_steps_only/g' | \
-        sed 's/--msg/--compilation_steps_only --msg/g' > certora/scripts/compilation-only/runRouter.sh
-        
-        # Process runLeverage.sh if it exists
-        if [ -f certora/scripts/runLeverage.sh ]; then
-          sed 's/certoraRun/certoraRun/g' certora/scripts/runLeverage.sh | \
-          sed 's/--server production/--compilation_steps_only/g' | \
-          sed 's/--msg/--compilation_steps_only --msg/g' > certora/scripts/compilation-only/runLeverage.sh
-          chmod +x certora/scripts/compilation-only/runLeverage.sh
-        fi
         
         # Make scripts executable
         chmod +x certora/scripts/compilation-only/*.sh
