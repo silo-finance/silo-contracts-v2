@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 ### Fixed
-- silo-core: fix leverage bug with swap abusing debt allowance
+- silo-core: fix leverage bug with swap abusing debt share token receive allowance and ERC-20 approval
 
 ### Removed
 - silo-oracles: remove heartbeat check from DIA oracle
