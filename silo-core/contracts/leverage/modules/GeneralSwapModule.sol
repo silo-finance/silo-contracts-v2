@@ -31,7 +31,7 @@ contract GeneralSwapModule is IGeneralSwapModule {
         // Approve token for spending by the exchange
         _setMaxAllowance(IERC20(_swapArgs.sellToken), _swapArgs.allowanceTarget, _maxApprovalAmount);
 
-        // Perform low-level call to external exchange proxy
+        // Perform low-level call to any method and any smart contract provided by the caller.
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = _swapArgs.exchangeProxy.call(_swapArgs.swapCallData);
         if (!success) RevertLib.revertBytes(data, SwapCallFailed.selector);
