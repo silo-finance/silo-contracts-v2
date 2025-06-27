@@ -9,6 +9,7 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -18,6 +19,7 @@ import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
@@ -461,6 +463,110 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         _assertThereIsNoDebtApprovals(user);
         _assertSiloLeverageHasNoTokens();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_debtApprovalAbuse
+    */
+    function test_leverage_debtApprovalAbuse() public {
+        address user = wallet.addr;
+        address attacker = makeAddr("attacker");
+
+        _openLeverageExample();
+
+        _giveMaxApprovalsToLeverage();
+
+        uint256 userDebtBefore = IERC20(debtShareToken).balanceOf(user);
+
+        _leverage_approvalAbuse(
+            address(silo1),
+            abi.encodeWithSignature("borrow(uint256,address,address)", 1, attacker, user),
+            abi.encodePacked(IShareToken.AmountExceedsAllowance.selector)
+        );
+
+        assertEq(userDebtBefore, IERC20(debtShareToken).balanceOf(user), "user debt allowance was abused");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_transferFromAbuse
+    */
+    function test_leverage_transferFromAbuse() public {
+        _openLeverageExample();
+
+        _giveMaxApprovalsToLeverage();
+
+        address user = wallet.addr;
+        address attacker = makeAddr("attacker");
+
+        uint256 userBalanceBefore = token0.balanceOf(user);
+        emit log_named_address("leverage", address(siloLeverage));
+
+        _leverage_approvalAbuse(
+            address(silo0.asset()),
+            abi.encodeWithSignature("transferFrom(address,address,uint256)", user, attacker, 1),
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(siloLeverage.SWAP_MODULE()), 0, 1)
+        );
+
+        assertEq(userBalanceBefore, token0.balanceOf(user), "user allowance was abused");
+    }
+
+    function _giveMaxApprovalsToLeverage() internal {
+        address user = wallet.addr;
+
+        // user gave MAX approvals
+
+        vm.startPrank(user);
+
+        IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), type(uint256).max);
+        IERC20(silo0.asset()).forceApprove(address(siloLeverage), type(uint256).max);
+        IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
+
+        vm.stopPrank();
+
+        // make sure token balance is not an issue
+
+        token0.mint(user, 100e18);
+        token1.mint(user, 100e18);
+    }
+
+    function _leverage_approvalAbuse(
+        address _exchangeProxy,
+        bytes memory _swapCallData,
+        bytes memory _expectedError
+    ) internal {
+        address attacker = makeAddr("attacker");
+        uint256 depositAmount = 1e18;
+        uint256 multiplier = 1.00001e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        // this will bypass ZeroAmountOutError
+        token0.mint(address(siloLeverage), 1e18);
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
+            buyToken: address(silo0.asset()),
+            sellToken: address(silo1.asset()),
+            allowanceTarget: address(swap),
+            exchangeProxy: _exchangeProxy,
+            swapCallData: _swapCallData
+        });
+
+        _prepareForOpeningLeverage({
+            _user: attacker,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _approveAssets: true
+        });
+
+        vm.prank(attacker);
+        vm.expectRevert(_expectedError);
+        siloLeverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
     }
 
     function _openLeverageExample() internal {
