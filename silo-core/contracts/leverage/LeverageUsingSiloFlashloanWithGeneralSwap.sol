@@ -10,9 +10,7 @@ import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlash
 import {GeneralSwapModule, IGeneralSwapModule} from "./modules/GeneralSwapModule.sol";
 import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
 
-/*
-    @notice This contract allow to create and close leverage position using flasnloan and swap.
-*/
+/// @notice This contract allow to create and close leverage position using flasnloan and swap.
 contract LeverageUsingSiloFlashloanWithGeneralSwap is
     ILeverageUsingSiloFlashloan,
     LeverageUsingSiloFlashloan
