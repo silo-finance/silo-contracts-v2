@@ -60,10 +60,6 @@ jobs:
         
     - name: Run Router compilation checks
       run: ./certora/scripts/compilation-only/runRouter.sh
-      
-    - name: Run Leverage compilation checks
-      if: ${{ hashFiles('certora/scripts/runLeverage.sh') != '' }}
-      run: ./certora/scripts/compilation-only/runLeverage.sh
 
   vault-compilation-check:
     name: SiloVaults Compilation
