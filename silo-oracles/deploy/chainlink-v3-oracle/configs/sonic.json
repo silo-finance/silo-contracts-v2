@@ -316,7 +316,18 @@
     "WMETAVAULT_wmetaUSD_USD": {
         "baseToken": "wmetaUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
-        "primaryAggregator": "WRAPPED_META_VAULT_wmetaUSD_USD_wMetaVault_aggregator",
+        "primaryAggregator": "WRAPPED_META_VAULT_ADAPTER_wmetaUSD_USD_wMetaVault_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "WMETAVAULT_wmetaS_USD": {
+        "baseToken": "wmetaS",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "WRAPPED_META_VAULT_ADAPTER_wmetaS_USD_wMetaVault_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
