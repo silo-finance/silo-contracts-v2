@@ -70,8 +70,9 @@ contract PublicAllocatorTest is IntegrationTest {
     /*
      FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testConvertToAssetsVerification -vv
 
-    for acceptable withdraw value based on convertToAssets (what is higher than previewRedeem)
+    for acceptable withdraw value, based on convertToAssets (what is higher than previewRedeem)
     we should never revert
+    input for this test will reduce withdrawal amount to check some range of amounts close to max
     */
     function testConvertToAssetsVerification(
         uint8 _subWithdraw0,
