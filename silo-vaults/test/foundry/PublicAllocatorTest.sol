@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {ErrorsLib} from "../../contracts/libraries/ErrorsLib.sol";
 import {EventsLib} from "../../contracts/libraries/EventsLib.sol";
@@ -63,6 +65,107 @@ contract PublicAllocatorTest is IntegrationTest {
 
         _setCap(allMarkets[0], CAP2);
         _sortSupplyQueueIdleLast();
+    }
+
+    /*
+     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testConvertToAssetsVerification -vv
+
+    for acceptable withdraw value based on convertToAssets (what is higher than previewRedeem)
+    we should never revert
+    */
+    function testConvertToAssetsVerification(
+        uint8 _subWithdraw0,
+        uint8 _subWithdraw1,
+        uint8 _subWithdraw2
+    ) public {
+        // prepare environment for test in such a way, that ratio is over 1, it will mock interest
+        _prepareToTestForConvertToAssets();
+
+        // TEST STARTS
+        // goal is to prove that using convertToAsset in public allocator can do no harm
+
+        Withdrawal[] memory withdrawals_ = new Withdrawal[](3);
+
+        withdrawals_[0] = _maxWithdrawalAmount(vault.withdrawQueue(1), _subWithdraw0);
+        withdrawals_[1] = _maxWithdrawalAmount(vault.withdrawQueue(2), _subWithdraw1);
+        withdrawals_[2] = _maxWithdrawalAmount(vault.withdrawQueue(3), _subWithdraw2);
+
+        publicAllocator.reallocateTo(vault, withdrawals_, idleMarket);
+
+        emit log_named_uint("vault.withdrawQueueLength()", vault.withdrawQueueLength());
+
+        IERC4626[] memory withdrawQueue = new IERC4626[](vault.withdrawQueueLength());
+
+        for (uint256 i; i < withdrawQueue.length; ++i) {
+            IERC4626 market = vault.withdrawQueue(i);
+
+            uint256 b = market.balanceOf(address(vault));
+            emit log_named_address("withdrawQueue address", address(market));
+            emit log_named_uint("withdrawQueue balance", b);
+        }
+    }
+
+    function _maxWithdrawalAmount(IERC4626 _market, uint8 _subWithdraw) internal returns (Withdrawal memory withdrawal) {
+        withdrawal = Withdrawal({
+            market: _market,
+            amount: uint128(_market.convertToAssets(_market.balanceOf(address(vault))))
+        });
+
+        withdrawal.amount -= _subWithdraw;
+    }
+
+    function _prepareToTestForConvertToAssets() internal {
+        // prepare environment for test in such a way, that ratio is over 1, it will mock interest
+
+        _setCap(allMarkets[1], CAP2);
+        _setCap(allMarkets[2], CAP2);
+
+        MarketAllocation[] memory allocations = new MarketAllocation[](4);
+        allocations[0] = MarketAllocation(vault.withdrawQueue(0), 400e18 - 66e18 - 66666); // idle
+        allocations[1] = MarketAllocation(vault.withdrawQueue(1), 11e18 + 11111);
+        allocations[2] = MarketAllocation(vault.withdrawQueue(2), 22e18 + 22222);
+        allocations[3] = MarketAllocation(vault.withdrawQueue(3), 33e18 + 33333);
+
+        _depositToTheMarketFromExternalSource(allocations[1].market);
+        _depositToTheMarketFromExternalSource(allocations[2].market);
+        _depositToTheMarketFromExternalSource(allocations[3].market);
+
+        vm.prank(OWNER);
+        vault.reallocate(allocations);
+
+        _changeRatioByBurningShares(allocations[1].market);
+        _changeRatioByBurningShares(allocations[2].market);
+        _changeRatioByBurningShares(allocations[3].market);
+
+        assertGt(allocations[1].market.convertToAssets(1e21), 1e18, "ratio#1 is over 1:1");
+        assertGt(allocations[2].market.convertToAssets(1e21), 1e18, "ratio#2 is over 1:1");
+        assertGt(allocations[3].market.convertToAssets(1e21), 1e18, "ratio#3 is over 1:1");
+
+        // Set flow limits
+        flowCaps.push(FlowCapsConfig(allocations[0].market, FlowCaps(MAX_SETTABLE_FLOW_CAP, MAX_SETTABLE_FLOW_CAP)));
+        flowCaps.push(FlowCapsConfig(allocations[1].market, FlowCaps(MAX_SETTABLE_FLOW_CAP, MAX_SETTABLE_FLOW_CAP)));
+        flowCaps.push(FlowCapsConfig(allocations[2].market, FlowCaps(MAX_SETTABLE_FLOW_CAP, MAX_SETTABLE_FLOW_CAP)));
+        flowCaps.push(FlowCapsConfig(allocations[3].market, FlowCaps(MAX_SETTABLE_FLOW_CAP, MAX_SETTABLE_FLOW_CAP)));
+
+        vm.prank(OWNER);
+        publicAllocator.setFlowCaps(vault, flowCaps);
+    }
+
+    function _changeRatioByBurningShares(IERC4626 _market) internal {
+        address silo = address(_market);
+        address user = makeAddr("user");
+
+        vm.prank(silo);
+        IShareToken(silo).burn(address(vault), address(vault), 0.1e18);
+
+        vm.prank(silo);
+        IShareToken(silo).burn(user, user, 0.1e15);
+    }
+
+    function _depositToTheMarketFromExternalSource(IERC4626 _market) internal {
+        address user = makeAddr("user");
+        vm.prank(user);
+        _market.deposit(1e18, user);
     }
 
     function testAdmin() public view {
