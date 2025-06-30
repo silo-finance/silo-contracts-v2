@@ -13,7 +13,7 @@ contract GetDebtAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getDebtAmountsWithInterest_pass
     */
-    function test_getDebtAmountsWithInterest_pass() public pure {
+    function test_getDebtAmountsWithInterest_pass() public view {
         uint256 debtAssets;
         uint256 rcompInDp;
 
@@ -42,14 +42,14 @@ contract GetDebtAmountsWithInterestTest is Test {
     forge test -vv --mt test_getDebtAmountsWithInterest_notRevert
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_getDebtAmountsWithInterest_notRevert_fuzz(uint256 _debtAssets, uint256 _rcompInDp) public pure {
+    function test_getDebtAmountsWithInterest_notRevert_fuzz(uint256 _debtAssets, uint256 _rcompInDp) public view {
         SiloMathLib.getDebtAmountsWithInterest(_debtAssets, _rcompInDp);
     }
 
     /*
     forge test -vv --mt test_getDebtAmountsWithInterest_accruedInterest_overflow
     */
-    function test_getDebtAmountsWithInterest_accruedInterest_overflow() public pure {
+    function test_getDebtAmountsWithInterest_accruedInterest_overflow() public view {
         uint256 debtAssets = type(uint248).max;
         // this should be impossible because of IRM cap, but for QA we have to support it
         uint256 rcompInDp = 1e18; // 100 %
@@ -67,7 +67,7 @@ contract GetDebtAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getDebtAmountsWithInterest_interest_overflow
     */
-    function test_getDebtAmountsWithInterest_interest_overflow() public pure {
+    function test_getDebtAmountsWithInterest_interest_overflow() public view {
         uint256 debtAssets = type(uint256).max;
         // this should be impossible because of IRM cap, but for QA we have to support it
         uint256 rcompInDp = 1e18; // 100 %

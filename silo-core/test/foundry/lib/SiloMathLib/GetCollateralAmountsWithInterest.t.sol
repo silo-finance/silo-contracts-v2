@@ -9,7 +9,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getCollateralAmountsWithInterest
     */
-    function test_getCollateralAmountsWithInterest() public pure {
+    function test_getCollateralAmountsWithInterest() public view {
         uint256 collateralAssets;
         uint256 debtAssets;
         uint256 rcomp;
@@ -113,7 +113,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
         uint256 _rcomp,
         uint64 _daoFee,
         uint64 _deployerFee
-    ) public pure {
+    ) public view {
         vm.assume(uint256(_daoFee) + _deployerFee <= 1e18);
         SiloMathLib.getCollateralAmountsWithInterest(_collateralAssets, _debtAssets, _rcomp, _daoFee, _deployerFee);
     }
@@ -121,7 +121,7 @@ contract GetCollateralAmountsWithInterestTest is Test {
     /*
     forge test -vv --mt test_getCollateralAmountsWithInterest_cap
     */
-    function test_getCollateralAmountsWithInterest_cap() public pure {
+    function test_getCollateralAmountsWithInterest_cap() public view {
         uint256 collateralAssets = type(uint256).max - 1e18;
         uint256 debtAssets = type(uint128).max;
         uint256 rcomp = 0.1e18;

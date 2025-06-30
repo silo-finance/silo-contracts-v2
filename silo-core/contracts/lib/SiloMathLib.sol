@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Rounding} from "../lib/Rounding.sol";
+import {SiloStorageLib} from "../lib/SiloStorageLib.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 
 library SiloMathLib {
@@ -44,7 +45,7 @@ library SiloMathLib {
         uint256 _deployerFee
     )
         internal
-        pure
+        view
         returns (
             uint256 collateralAssetsWithInterest,
             uint256 debtAssetsWithInterest,
@@ -84,9 +85,14 @@ library SiloMathLib {
     /// @return accruedInterest The total amount of interest accrued on the debt assets
     function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)
         internal
-        pure
+        view
         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
+        if (SiloStorageLib.getSiloStorage().ignoreInterestRateForDebt) {
+            // accruedInterest += IRM.pendingRewards();
+            return (_totalDebtAssets, accruedInterest);
+        }
+
         if (_totalDebtAssets == 0 || _rcomp == 0) {
             return (_totalDebtAssets, 0);
         }
