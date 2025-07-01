@@ -13,8 +13,8 @@
 exit 1
 
 if [ -z "$1" ]; then
-  echo "Usage: $0 <chain-name>"
-  exit 1
+    echo "Usage: $0 <chain-name>"
+    exit 1
 fi
 
 CHAIN_NAME="$1"
@@ -22,43 +22,43 @@ ADDRESSES=()
 
 # Read addresses from stdin
 while read -r address; do
-  [[ -z "$address" ]] && continue
-  ADDRESSES+=("$address")
+    [[ -z "$address" ]] && continue
+    ADDRESSES+=("$address")
 done
 
 # Build the JSON payload dynamically
 JSON_ASSETS=""
 for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
-  ADDR="${ADDRESSES[$i]}"
-  COMMA=","
-  [[ $i -eq $((${#ADDRESSES[@]} - 1)) ]] && COMMA=""
-  JSON_ASSETS+="
-    {
-      \"chain\": \"${CHAIN_NAME}\",
-      \"type\": \"Contract\",
-      \"address\": \"${ADDR}\"
-    }${COMMA}"
+    ADDR="${ADDRESSES[$i]}"
+    COMMA=","
+    [[ $i -eq $((${#ADDRESSES[@]} - 1)) ]] && COMMA=""
+    JSON_ASSETS+="
+        {
+        \"chain\": \"${CHAIN_NAME}\",
+        \"type\": \"Contract\",
+        \"address\": \"${ADDR}\"
+        }${COMMA}"
 done
 
 RESPONSE=$(curl -X 'PATCH' \
-  "$HYPERNATIVE_WATCHLIST" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
-  -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
-  -d '{
-  "name": "All Silo0 and Silo1 addresses",
-  "description": "",
-  "assets": [
-'"$JSON_ASSETS"'
-  ],
-  "mode": "add"
+    "$HYPERNATIVE_WATCHLIST" \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
+    -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
+    -d '{
+    "name": "All Silo0 and Silo1 addresses",
+    "description": "",
+    "assets": [
+    '"$JSON_ASSETS"'
+    ],
+    "mode": "add"
 }' 2>/dev/null)
 
 if echo "$RESPONSE" | grep -q '"success"[[:space:]]*:[[:space:]]*true'; then
-  echo "Success from Hypernative response for $CHAIN_NAME"
-  exit 0
+    echo "Success from Hypernative response for $CHAIN_NAME"
+    exit 0
 else
-  echo "Error: PATCH failed or did not return \"success\":true in response" >&2
-  exit 1
+    echo "Error: PATCH failed or did not return \"success\":true in response" >&2
+    exit 1
 fi

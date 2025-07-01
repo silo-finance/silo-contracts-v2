@@ -1,7 +1,7 @@
 name: Update addresses in Hypernative
 
 on:
-  commit:
+  push:
     paths:
       - silo-core/deploy/silo/_siloDeployments.json
       - silo-core/deployments/**/*.json

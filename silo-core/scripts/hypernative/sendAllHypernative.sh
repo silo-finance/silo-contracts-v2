@@ -12,6 +12,6 @@ FOUNDRY_PROFILE=core \
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
-  echo "Error occurred"
-  exit $EXIT_CODE
+    echo "Error occurred"
+    exit $EXIT_CODE
 fi
