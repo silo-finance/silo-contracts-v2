@@ -39,24 +39,21 @@ for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
 done
 
 RESPONSE=$(curl google.com 2>/dev/null)
-RESPONSE=$(curl nonexistingwillgiveerror 2>/dev/null)
-echo "error is manually returned"
-exit 1
 
-RESPONSE=$(curl -X 'PATCH' \
-    "$HYPERNATIVE_WATCHLIST" \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
-    -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
-    -d '{
-    "name": "All Silo0 and Silo1 addresses",
-    "description": "",
-    "assets": [
-    '"$JSON_ASSETS"'
-    ],
-    "mode": "add"
-}' 2>/dev/null)
+# RESPONSE=$(curl -X 'PATCH' \
+#     "$HYPERNATIVE_WATCHLIST" \
+#     -H 'accept: application/json' \
+#     -H 'Content-Type: application/json' \
+#     -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
+#     -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
+#     -d '{
+#     "name": "All Silo0 and Silo1 addresses",
+#     "description": "",
+#     "assets": [
+#     '"$JSON_ASSETS"'
+#     ],
+#     "mode": "add"
+# }' 2>/dev/null)
 
 if echo "$RESPONSE" | grep -q '"success"[[:space:]]*:[[:space:]]*true'; then
     echo "Success from Hypernative response for $CHAIN_NAME"
