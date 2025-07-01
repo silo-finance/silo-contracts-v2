@@ -18,8 +18,8 @@ on:
       - silo-core/deployments/**/*.json
 
 jobs:
-  hypernative:
-    name: Add all silo related addresses to existing monitor.
+  before_each:
+    name: Build packages.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -44,5 +44,9 @@ jobs:
           forge --version
           FOUNDRY_PROFILE=core forge build --sizes
 
+  hypernative-sonic:
+    needs: before_each
+    runs-on: ubuntu-latest
+    steps:
       - name: Fetch addresses and send request for Sonic
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
