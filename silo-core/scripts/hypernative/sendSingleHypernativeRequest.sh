@@ -10,8 +10,6 @@
 #    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
 #    --ffi --rpc-url $RPC_SONIC | grep 0x | ./silo-core/scripts/hypernative.sh sonic
 
-exit 1
-
 if [ -z "$1" ]; then
     echo "Usage: $0 <chain-name>"
     exit 1
@@ -19,6 +17,8 @@ fi
 
 CHAIN_NAME="$1"
 ADDRESSES=()
+
+exit 1
 
 # Read addresses from stdin
 while read -r address; do

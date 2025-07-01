@@ -1,13 +1,5 @@
 #!/bin/bash
 
-FOUNDRY_PROFILE=core \
-    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
-    --ffi --rpc-url $RPC_SONIC | \
-    grep 0x | \
-    wc -l
-
-exit 1
-
 # Sonic
 FOUNDRY_PROFILE=core \
     forge script silo-core/scripts/PrintSiloAddresses.s.sol \
