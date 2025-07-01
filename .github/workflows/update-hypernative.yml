@@ -1,5 +1,15 @@
 name: Update addresses in Hypernative
 
+env:
+  RPC_SONIC: ${{ secrets.RPC_SONIC }}
+  VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
+  VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
+  RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+  RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+  HYPERNATIVE_WATCHLIST: ${{ secrets.HYPERNATIVE_WATCHLIST }}
+  HYPERNATIVE_CLIENT_ID: ${{ secrets.HYPERNATIVE_CLIENT_ID }}
+  HYPERNATIVE_CLIENT_SECRET: ${{ secrets.HYPERNATIVE_CLIENT_SECRET }}
+
 on:
   push:
   pull_request:
@@ -35,13 +45,4 @@ jobs:
           FOUNDRY_PROFILE=core forge build --sizes
 
       - name: Fetch addresses and send request for Sonic
-        env:
-            RPC_SONIC: ${{ secrets.RPC_SONIC }}
-            VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
-            VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
-            RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
-            RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
-            HYPERNATIVE_WATCHLIST: ${{ secrets.HYPERNATIVE_WATCHLIST }}
-            HYPERNATIVE_CLIENT_ID: ${{ secrets.HYPERNATIVE_CLIENT_ID }}
-            HYPERNATIVE_CLIENT_SECRET: ${{ secrets.HYPERNATIVE_CLIENT_SECRET }}
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
