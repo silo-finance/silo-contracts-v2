@@ -24,6 +24,7 @@ while read -r address; do
     ADDRESSES+=("$address")
 done
 
+echo "before error"
 exit 1
 
 # Build the JSON payload dynamically
