@@ -24,9 +24,6 @@ while read -r address; do
     ADDRESSES+=("$address")
 done
 
-echo "before error"
-exit 1
-
 # Build the JSON payload dynamically
 JSON_ASSETS=""
 for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
@@ -40,6 +37,10 @@ for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
         \"address\": \"${ADDR}\"
         }${COMMA}"
 done
+
+curl google.com
+curl nonexistingwillgiveerror
+exit 1
 
 RESPONSE=$(curl -X 'PATCH' \
     "$HYPERNATIVE_WATCHLIST" \
