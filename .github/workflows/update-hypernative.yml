@@ -2,6 +2,7 @@ name: Update addresses in Hypernative
 
 on:
   push:
+  pull_request:
     paths:
       - silo-core/deploy/silo/_siloDeployments.json
       - silo-core/deployments/**/*.json
