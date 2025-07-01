@@ -38,6 +38,8 @@ for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
         }${COMMA}"
 done
 
+echo "Amount of addresses to submit is ${#ADDRESSES[@]}"
+
 RESPONSE=$(curl -X 'PATCH' \
     "$HYPERNATIVE_WATCHLIST" \
     -H 'accept: application/json' \
