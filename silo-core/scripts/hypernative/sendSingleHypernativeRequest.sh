@@ -18,13 +18,13 @@ fi
 CHAIN_NAME="$1"
 ADDRESSES=()
 
-exit 1
-
 # Read addresses from stdin
 while read -r address; do
     [[ -z "$address" ]] && continue
     ADDRESSES+=("$address")
 done
+
+exit 1
 
 # Build the JSON payload dynamically
 JSON_ASSETS=""
