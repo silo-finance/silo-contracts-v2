@@ -38,8 +38,8 @@ for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
         }${COMMA}"
 done
 
-curl google.com
-curl nonexistingwillgiveerror
+RESPONSE=$(curl google.com 2>/dev/null)
+RESPONSE=$(curl nonexistingwillgiveerror 2>/dev/null)
 exit 1
 
 RESPONSE=$(curl -X 'PATCH' \
