@@ -38,6 +38,7 @@ jobs:
         env:
             RPC_SONIC: ${{ secrets.RPC_SONIC }}
             VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
+            VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
             RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
             RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
             HYPERNATIVE_WATCHLIST: ${{ secrets.HYPERNATIVE_WATCHLIST }}
