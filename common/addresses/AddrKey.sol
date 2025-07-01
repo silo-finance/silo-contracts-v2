@@ -24,6 +24,10 @@ library AddrKey {
     string constant public ODOS_ROUTER = "ODOS_ROUTER";
     string constant public ENSO_ROUTER = "ENSO_ROUTER";
     string constant public DAO = "DAO";
+    string constant public EXCHANGE_AGGREGATOR_1INCH = "EXCHANGE_AGGREGATOR_1INCH";
+    string constant public EXCHANGE_AGGREGATOR_ODOS = "EXCHANGE_AGGREGATOR_ODOS";
+    string constant public EXCHANGE_AGGREGATOR_ENSO = "EXCHANGE_AGGREGATOR_ENSO";
+    string constant public EXCHANGE_AGGREGATOR_0X = "EXCHANGE_AGGREGATOR_0X";
     string constant public GROWTH_MULTISIG = "GROWTH_MULTISIG";
     string constant public DEV_WALLET = "DEV_WALLET";
     string constant public scUSD = "scUSD";
