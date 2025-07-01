@@ -34,7 +34,7 @@ jobs:
           forge --version
           FOUNDRY_PROFILE=core forge build --sizes
 
-      - name: Fetch addresses and send request
+      - name: Fetch addresses and send request for Sonic
         env:
             RPC_SONIC: ${{ secrets.RPC_SONIC }}
             VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
@@ -44,4 +44,11 @@ jobs:
             HYPERNATIVE_WATCHLIST: ${{ secrets.HYPERNATIVE_WATCHLIST }}
             HYPERNATIVE_CLIENT_ID: ${{ secrets.HYPERNATIVE_CLIENT_ID }}
             HYPERNATIVE_CLIENT_SECRET: ${{ secrets.HYPERNATIVE_CLIENT_SECRET }}
-        run: ./silo-core/scripts/hypernative/sendAllHypernative.sh
+        run: FOUNDRY_PROFILE=core \
+          forge script PRINT_ONLY_SILOS=true silo-core/scripts/PrintSiloAddresses.s.sol \
+            --ffi --rpc-url $RPC_SONIC | \
+            grep 0x | \
+            ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh sonic
+
+          ./silo-core/scripts/hypernative/printCoreAddresses.sh sonic | \
+            ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh sonic

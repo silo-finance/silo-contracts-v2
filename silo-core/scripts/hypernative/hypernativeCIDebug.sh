@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Sonic
 FOUNDRY_PROFILE=core \
     forge script silo-core/scripts/PrintSiloAddresses.s.sol \
     --ffi --rpc-url $RPC_SONIC | \
     grep 0x | \
+    uniq | \
     ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh sonic
 
 EXIT_CODE=$?

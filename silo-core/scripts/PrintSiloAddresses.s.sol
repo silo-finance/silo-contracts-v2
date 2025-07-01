@@ -14,7 +14,7 @@ import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiv
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /**
-FOUNDRY_PROFILE=core \
+FOUNDRY_PROFILE=core PRINT_ONLY_SILOS=true \
     forge script silo-core/scripts/PrintSiloAddresses.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
@@ -30,8 +30,10 @@ contract PrintSiloAddresses is CommonDeploy {
         console2.log("All silo0 and silo1 addresses for network", ChainsLib.chainAlias());
         printSilos(siloFactory, startingIndex);
 
-        console2.log("\nAll related addresses to silos, including configs, IRMs, oracles (duplicates not filtered)");
-        printAllRelatedAddresses(siloFactory, startingIndex);
+        if (!vm.envOr("PRINT_ONLY_SILOS", false)) {
+            console2.log("\nAll related addresses to silos, including configs, oracles (duplicates not filtered)");
+            printAllRelatedAddresses(siloFactory, startingIndex);
+        }
     }
 
     /// @dev print only silo0 and silo1 addresses for all deployed silos.
