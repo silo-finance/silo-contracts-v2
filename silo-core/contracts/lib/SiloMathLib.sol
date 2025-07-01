@@ -89,7 +89,7 @@ library SiloMathLib {
         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
         if (SiloStorageLib.getSiloStorage().ignoreInterestRateForDebt) {
-            // accruedInterest += IRM.pendingRewards();
+            // accruedInterest += IRM.accruedInterest();
             return (_totalDebtAssets, accruedInterest);
         }
 
