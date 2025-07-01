@@ -44,8 +44,9 @@ jobs:
             HYPERNATIVE_WATCHLIST: ${{ secrets.HYPERNATIVE_WATCHLIST }}
             HYPERNATIVE_CLIENT_ID: ${{ secrets.HYPERNATIVE_CLIENT_ID }}
             HYPERNATIVE_CLIENT_SECRET: ${{ secrets.HYPERNATIVE_CLIENT_SECRET }}
-        run: FOUNDRY_PROFILE=core \
-          forge script PRINT_ONLY_SILOS=true silo-core/scripts/PrintSiloAddresses.s.sol \
+        run: |
+          FOUNDRY_PROFILE=core \
+            forge script PRINT_ONLY_SILOS=true silo-core/scripts/PrintSiloAddresses.s.sol \
             --ffi --rpc-url $RPC_SONIC | \
             grep 0x | \
             ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh sonic
