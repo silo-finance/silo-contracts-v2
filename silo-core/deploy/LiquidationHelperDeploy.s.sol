@@ -105,7 +105,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
     }
 
     function _envAggregator() internal view returns (string memory aggregator) {
-        aggregator = vm.envOr("AGGREGATOR", "");
+        aggregator = vm.envOr(string("AGGREGATOR"), string(""));
     }
 
     function _tokenReceiver() internal view returns (address payable) {
