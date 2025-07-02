@@ -337,7 +337,7 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     function _executePermit(Permit memory _permit, address _token) internal virtual {
-        IERC20Permit(_token).permit({
+        try IERC20Permit(_token).permit({
             owner: msg.sender,
             spender: address(this),
             value: _permit.value,
@@ -345,7 +345,11 @@ abstract contract LeverageUsingSiloFlashloan is
             v: _permit.v,
             r: _permit.r,
             s: _permit.s
-        });
+        }) {
+            // execution successful
+        } catch {
+            // on fail we still want to try, in case permit was executed by frontrun
+        }
     }
 
     function _transferTokensFromUser(address _asset, uint256 _expectedValue) internal {

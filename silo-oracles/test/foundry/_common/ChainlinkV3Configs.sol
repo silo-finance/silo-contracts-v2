@@ -51,7 +51,7 @@ abstract contract ChainlinkV3Configs is TokensGenerator {
             IERC20Metadata(address(tokens["DYDX"])),
             IERC20Metadata(address(tokens["USDT"])),
             AggregatorV3Interface(0x478909D4D798f3a1F11fFB25E4920C959B4aDe0b),
-            1 days + 10 minutes,
+            0,
             AggregatorV3Interface(address(0)),
             0,
             _divider,

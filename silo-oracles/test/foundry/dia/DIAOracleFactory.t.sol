@@ -39,6 +39,15 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_zeroHeartbeat
+    */
+    function test_DIAOracleFactory_zeroHeartbeat() public view {
+        IDIAOracle.DIADeploymentConfig memory zeroHeartbeat = _defaultDIAConfig();
+        zeroHeartbeat.heartbeat = 0;
+        ORACLE_FACTORY.verifyConfig(zeroHeartbeat);
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracleFactory_quote_RDPXinUSDT
     */
     function test_DIAOracleFactory_quote_RDPXinUSDT() public {
@@ -101,12 +110,12 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         DIAOracle oracle1 = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         DIAOracle oracle2 = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));

@@ -11,8 +11,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 
 import {
-    SiloIncentivesControllerGaugeLikeFactory
-} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLikeFactory.sol";
+    SiloIncentivesControllerFactory
+} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
 
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloIncentivesControllerDeployments} from "./SiloIncentivesControllerDeployments.sol";
@@ -46,7 +46,7 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
         siloConfig = _siloConfig;
     }
 
-    function run() public returns (address incentivesControllerGaugeLike) {
+    function run() public returns (address incentivesController) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         if (incentivesOwner == address(0)) {
@@ -94,14 +94,15 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        incentivesControllerGaugeLike = SiloIncentivesControllerGaugeLikeFactory(factory).createGaugeLike({
+        incentivesController = SiloIncentivesControllerFactory(factory).create({
             _owner: incentivesOwner,
             _notifier: hookReceiver,
-            _shareToken: incentivizedSilo
+            _shareToken: incentivizedSilo,
+            _externalSalt: bytes32(0)
         });
 
         vm.stopBroadcast();
 
-        SiloIncentivesControllerDeployments.save(ChainsLib.chainAlias(), incentivizedSilo, incentivesControllerGaugeLike);
+        SiloIncentivesControllerDeployments.save(ChainsLib.chainAlias(), incentivizedSilo, incentivesController);
     }
 }

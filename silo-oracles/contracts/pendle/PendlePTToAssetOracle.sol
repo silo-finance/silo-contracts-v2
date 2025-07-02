@@ -6,6 +6,7 @@ import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtL
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 /// @notice PendlePTToAssetOracle is an oracle, which multiplies the SY.assetInfo() asset price by PtToAssetRate.
 /// This oracle must be deployed using PendlePTToAssetOracleFactory contract. TWAP duration is constant and equal
@@ -40,7 +41,6 @@ contract PendlePTToAssetOracle is ISiloOracle {
     /// @dev This oracle's quote token is equal to UNDERLYING_ORACLE's quote token.
     address public immutable QUOTE_TOKEN; // solhint-disable-line var-name-mixedcase
 
-    error TokensDecimalsDoesNotMatch();
     error InvalidUnderlyingOracle();
     error PendleOracleNotReady();
     error PendlePtToAssetRateIsZero();
@@ -62,11 +62,9 @@ contract PendlePTToAssetOracle is ISiloOracle {
         address syUnderlyingToken = getSyUnderlyingToken(_market);
         uint256 syUnderlyingTokenDecimals = TokenHelper.assertAndGetDecimals(syUnderlyingToken);
 
-        require(syUnderlyingTokenDecimals == TokenHelper.assertAndGetDecimals(ptToken), TokensDecimalsDoesNotMatch());
-
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             _pendleOracle.getOracleState(_market, TWAP_DURATION);
-        
+
         require(oldestObservationSatisfied && !increaseCardinalityRequired, PendleOracleNotReady());
         require(_pendleOracle.getPtToAssetRate(_market, TWAP_DURATION) != 0, PendlePtToAssetRateIsZero());
 
@@ -88,9 +86,18 @@ contract PendlePTToAssetOracle is ISiloOracle {
     // @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
         require(_baseToken == PT_TOKEN, AssetNotSupported());
+        uint256 rate = PENDLE_ORACLE.getPtToAssetRate(MARKET, TWAP_DURATION);
 
-        quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, SY_UNDERLYING_TOKEN);
-        quoteAmount = quoteAmount * PENDLE_ORACLE.getPtToAssetRate(MARKET, TWAP_DURATION) / PENDLE_RATE_PRECISION;
+        // Price of PT token is defined as the price of underlying asset multiplied by getPtToAssetRate.
+        // getPtToAssetRate can be more than 10**18 when decimals of PT token are less than decimals of underlying
+        // asset. In this case the rate multiplier is applied to token amounts to improve the precision of calculation.
+        if (rate <= PENDLE_RATE_PRECISION) {
+            quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, SY_UNDERLYING_TOKEN);
+            quoteAmount = Math.mulDiv(quoteAmount, rate, PENDLE_RATE_PRECISION);
+        } else {
+            uint256 underlyingAmount = Math.mulDiv(_baseAmount, rate, PENDLE_RATE_PRECISION);
+            quoteAmount = UNDERLYING_ORACLE.quote(underlyingAmount, SY_UNDERLYING_TOKEN);
+        }
 
         require(quoteAmount != 0, ZeroPrice());
     }

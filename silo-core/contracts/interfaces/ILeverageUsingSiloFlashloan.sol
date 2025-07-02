@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {ISilo, IERC3156FlashLender} from "./ISilo.sol";
+import {IGeneralSwapModule} from "./IGeneralSwapModule.sol";
 
 /// @title LeverageUsingSiloFlashloan Interface
 /// @notice Interface for a contract that enables leveraged deposits using flash loans from silo
@@ -78,6 +79,8 @@ interface ILeverageUsingSiloFlashloan {
     error UnknownAction();
     error SwapDidNotCoverObligations();
     error InvalidSilo();
+
+    function SWAP_MODULE() external view returns (IGeneralSwapModule);
 
     /// @return debtReceiveApproval amount of approval (receive approval) that is required on debt share token
     /// in order to borow on behalf of user when opening leverage position

@@ -40,7 +40,7 @@ index 21c0d443..88f0b681 100644
 +
 +            // HARNESS
 +            withdrawRank[address(market)] = i + 1;
-+    
++
          }
  
          for (uint256 i; i < currLength; ++i) {

@@ -39,6 +39,8 @@ contract ManualLiquidationHelper is TokenRescuer {
         TOKENS_RECEIVER = _tokensReceiver;
     }
 
+    receive() external payable {}
+
     /// @dev open method to rescue tokens, tokens will be transferred to `TOKENS_RECEIVER`
     function rescueTokens(IERC20 _token) external virtual {
         _rescueTokens(TOKENS_RECEIVER, _token);

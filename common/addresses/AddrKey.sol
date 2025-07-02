@@ -3,6 +3,7 @@ pragma solidity >=0.6.2 <0.9.0;
 
 library AddrKey {
     string constant public WETH = "WETH";
+    string constant public WAVAX = "WAVAX";
     string constant public BALANCER_VAULT = "BALANCER_VAULT";
     string constant public UNISWAP_ROUTER = "UNISWAP_ROUTER";
     string constant public UNISWAP_FACTORY = "UNISWAP_FACTORY";
@@ -28,4 +29,5 @@ library AddrKey {
     string constant public EGGS = "EGGS";
     string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
     string constant public PYTH_SHADOW_USD_aggregator = "PYTH_SHADOW_USD_aggregator";
+    string constant public WRAPPER_LPT_eUSDe_14AUG25 = "Wrapper-LPT-sUSDe-25SEP25";
 }

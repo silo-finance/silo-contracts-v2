@@ -17,35 +17,45 @@ def to_percent(percentage_string):
     numeric_value = float(percentage_string.strip('%')) * 100
     return int(round(numeric_value, 0))
 
+def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
+    if configName == 'NA':
+        return ''
+
+    with open(filename, 'r') as f:
+        data = json.load(f)
+
+    for item in data:
+        if item.get('name', '').lower() == configName.lower():
+            return item['name']
+
+    raise ValueError(f'Config with name "{configName}" not found.')
 
 # Relative paths
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Script's location
 input_file = os.path.join(script_dir, "data.csv")  # Relative path to the CSV file
-output_file = os.path.join(script_dir, "market.json")  # Relative path to the JSON file
 print(f"input_file: {input_file}")
 
 # JSON keys
 keys = [
  "LP",
- "Blockchain",
- "market",
- "token",
- "address",
- "-",
- "Borrowable",
- "maxLtv",
- "lt",
- "liquidationTargetLtv",
- "liquidationFee",
- "interestRateModelConfig",
- "ORacle Provider",
- "ORacle Address",
- "daoFee",
- "DAO's fee recpient",
- "deployerFee",
- "Deployer's fee recpient",
- "flashloanFee",
- "_2",
+ "Blockchain", # Network
+ "market", # Market
+ "token", # Asset
+ "address", # Asset Address
+ "-", # Underlying address
+ "Borrowable", # Borrowable?
+ "maxLtv", # maxLTV
+ "lt", # LT
+ "liquidationTargetLtv", # LiquidationTargetLTV
+ "liquidationFee", # Liquidation fee
+ "interestRateModelConfig", # IRM config name
+ "ORacle Provider", # "Oracle Provider Include a link to docs"
+ "ORacle Address", # Oracle address
+ "daoFee", # DAO fee
+ "DAO's fee recpient", # DAO's fee recpient
+ "deployerFee", # Deployer fee
+ "Deployer's fee recpient", # Deployer's fee recpient
+ "flashloanFee" # Flashloan fee
 ]
 
 # Check if the input file exists
@@ -76,7 +86,7 @@ json_structure = {
     "solvencyOracle0": "",
     "maxLtvOracle0": "",
     "interestRateModel0": "InterestRateModelV2.sol",
-    "interestRateModelConfig0": data[0]["interestRateModelConfig"],
+    "interestRateModelConfig0": find_config_name(data[0]["interestRateModelConfig"]),
     "maxLtv0": to_percent(data[0]["maxLtv"]),
     "lt0": to_percent(data[0]["lt"]),
     "liquidationTargetLtv0": to_percent(data[0]["liquidationTargetLtv"]),
@@ -88,7 +98,7 @@ json_structure = {
     "solvencyOracle1": "",
     "maxLtvOracle1": "",
     "interestRateModel1": "InterestRateModelV2.sol",
-    "interestRateModelConfig1": data[1]["interestRateModelConfig"],
+    "interestRateModelConfig1": find_config_name(data[1]["interestRateModelConfig"]),
     "maxLtv1": to_percent(data[1]["maxLtv"]),
     "lt1": to_percent(data[1]["lt"]),
     "liquidationTargetLtv1": to_percent(data[1]["liquidationTargetLtv"]),
@@ -96,6 +106,9 @@ json_structure = {
     "flashloanFee1": to_percent(data[1]["flashloanFee"]),
     "callBeforeQuote1": False
 }
+
+# Relative path to the JSON file
+output_file = os.path.join(script_dir, f"Silo_{data[0]["token"]}_{data[1]["token"]}.json")
 
 with open(output_file, "w", encoding="utf-8") as jsonfile:
     json.dump(json_structure, jsonfile, indent=4, ensure_ascii=False)

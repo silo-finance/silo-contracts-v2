@@ -15,11 +15,15 @@ contract CommonDeploy is Deployer {
 
     error UnsupportedNetworkForDeploy(string networkAlias);
 
-    function _forgeOutDir() internal pure override virtual returns (string memory) {
+    function _contractBaseDir() internal view override virtual returns (string memory baseDir) {
+        baseDir = "";
+    }
+
+    function _forgeOutDir() internal view override virtual returns (string memory) {
         return _FORGE_OUT_DIR;
     }
 
-    function _deploymentsSubDir() internal pure override virtual returns (string memory) {
+    function _deploymentsSubDir() internal view override virtual returns (string memory) {
         return SiloCoreDeployments.DEPLOYMENTS_DIR;
     }
 
@@ -28,6 +32,7 @@ contract CommonDeploy is Deployer {
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
         if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
+        if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WAVAX);
         if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return AddrLib.getAddress(AddrKey.WETH);
         if (chainId == ChainsLib.SONIC_CHAIN_ID) return AddrLib.getAddress(AddrKey.wS);

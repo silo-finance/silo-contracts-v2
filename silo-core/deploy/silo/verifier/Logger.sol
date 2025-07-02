@@ -14,7 +14,10 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
-import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {
+    InterestRateModelV2,
+    IInterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
@@ -25,8 +28,14 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
+import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
 import {IDIAOracle, DIAOracle, DIAOracleConfig} from "silo-oracles/contracts/dia/DIAOracle.sol";
+import {
+    WrappedMetaVaultOracleAdapter,
+    IWrappedMetaVaultOracle
+} from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -187,37 +196,11 @@ contract Logger is Test {
         console2.log("\tQuote token:", quoteToken);
 
         try PendlePTOracle(address(_oracle)).MARKET() returns (address market) {
-            console2.log(DELIMITER);
-            console2.log("\n\tPENDLE ORACLE INFO\n");
-            console2.log("\tMarket:", market);
+            _logPendleOracle(_oracle, market, false);
+        } catch {}
 
-            console2.log(
-                "\tPendle oracle (Pendle protocol deployments):",
-                address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
-            );
-
-            address ptToken = address(PendlePTOracle(address(_oracle)).PT_TOKEN());
-            console2.log("\tPT token:", ptToken);
-            console2.log("\tPT token symbol:", IERC20Metadata(ptToken).symbol());
-
-            address underlyingToken;
-
-            try PendlePTToAssetOracle(address(_oracle)).SY_UNDERLYING_TOKEN() returns (address syUnderlyingToken) {
-                console2.log("\tSY underlying token:", syUnderlyingToken);
-                underlyingToken = syUnderlyingToken;
-            } catch {}
-
-            try PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN() returns (address ptUnderlyingToken) {
-                console2.log("\tPT underlying token:", ptUnderlyingToken);
-                underlyingToken = ptUnderlyingToken;
-            } catch {}
-
-            address underlyingOracle = address(PendlePTOracle(address(_oracle)).UNDERLYING_ORACLE());
-            console2.log("\tPT underlying token symbol:", IERC20Metadata(underlyingToken).symbol());
-            console2.log("\tUnderlying oracle:", underlyingOracle);
-            console2.log("\n\tPendle underlying oracle info:");
-            _logOracle(ISiloOracle(underlyingOracle), underlyingToken);
-            console2.log(DELIMITER);
+        try PendleLPTOracle(address(_oracle)).PENDLE_MARKET() returns (address market) {
+            _logPendleOracle(_oracle, market, true);
         } catch {}
 
         (
@@ -243,6 +226,47 @@ contract Logger is Test {
 
         _resolveUnderlyingChainlinkAggregators({_oracle: _oracle, _logDetails: true});
 
+        console2.log(DELIMITER);
+    }
+
+    function _logPendleOracle(ISiloOracle _oracle, address market, bool isLPTWrapper) internal {
+        console2.log(DELIMITER);
+        console2.log("\n\tPENDLE ORACLE INFO\n");
+        console2.log("\tMarket:", market);
+
+        console2.log(
+            "\tPendle oracle (Pendle protocol deployments):",
+            address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
+        );
+
+        if (!isLPTWrapper) {
+            address ptToken = address(PendlePTOracle(address(_oracle)).PT_TOKEN());
+            console2.log("\tPT token:", ptToken);
+            console2.log("\tPT token symbol:", IERC20Metadata(ptToken).symbol());
+        }
+
+        address underlyingToken;
+
+        try PendlePTToAssetOracle(address(_oracle)).SY_UNDERLYING_TOKEN() returns (address syUnderlyingToken) {
+            console2.log("\tSY underlying token:", syUnderlyingToken);
+            underlyingToken = syUnderlyingToken;
+        } catch {}
+
+        try PendlePTOracle(address(_oracle)).PT_UNDERLYING_TOKEN() returns (address ptUnderlyingToken) {
+            console2.log("\tPT underlying token:", ptUnderlyingToken);
+            underlyingToken = ptUnderlyingToken;
+        } catch {}
+
+        try PendleLPTOracle(address(_oracle)).UNDERLYING_TOKEN() returns (address lptUnderlyingToken) {
+            console2.log("\tLPT underlying token:", lptUnderlyingToken);
+            underlyingToken = lptUnderlyingToken;
+        } catch {}
+
+        address underlyingOracle = address(PendlePTOracle(address(_oracle)).UNDERLYING_ORACLE());
+        console2.log("\tUnderlying token symbol:", IERC20Metadata(underlyingToken).symbol());
+        console2.log("\tUnderlying oracle:", underlyingOracle);
+        console2.log("\n\tPendle underlying oracle info:");
+        _logOracle(ISiloOracle(underlyingOracle), underlyingToken);
         console2.log(DELIMITER);
     }
 
@@ -418,6 +442,11 @@ contract Logger is Test {
         console2.log("\tNormalization multiplier: ", _normalizationMultiplier);
         console2.log("\tConvert to quote: ", _convertToQuote);
         console2.log("\tInvert second price: ", _invertSecondPrice);
+
+         try WrappedMetaVaultOracleAdapter(address(_primaryAggregator)).FEED() returns (IWrappedMetaVaultOracle feed) {
+            console2.log("\tUnderlying WrappedMetaVaultOracle: ", address(feed));
+            console2.log("\tUnderlying wrappedMetaVault: ", address(feed.wrappedMetaVault()));
+         } catch {}
     }
 
     function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
@@ -428,7 +457,7 @@ contract Logger is Test {
 
         if (success) {
             if (_quoteNamedAmount.logExponentialNotation) {
-                console2.log("\tPrice for %s = %e", _quoteNamedAmount.name, price);
+                console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, PriceFormatter.formatPriceInE18(price));
             } else {
                 console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, price);
             }

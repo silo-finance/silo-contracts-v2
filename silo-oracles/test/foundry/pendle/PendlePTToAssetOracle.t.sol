@@ -15,7 +15,7 @@ import {PendlePTToAssetOracleDeploy} from "silo-oracles/deploy/pendle/PendlePTTo
 import {PendlePTToAssetOracleFactoryDeploy} from "silo-oracles/deploy/pendle/PendlePTToAssetOracleFactoryDeploy.s.sol";
 import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
-import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
+import {SiloOracleMockReturnSame} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMockReturnSame.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
@@ -44,7 +44,7 @@ contract PendlePTToAssetOracleTest is Forking {
         factoryDeploy.disableDeploymentsSync();
         factory = PendlePTToAssetOracleFactory(factoryDeploy.run());
 
-        underlyingOracle = new SiloOracleMock1();
+        underlyingOracle = new SiloOracleMockReturnSame();
         PendlePTToAssetOracleDeploy oracleDeploy = new PendlePTToAssetOracleDeploy();
         AddrLib.setAddress(AddrKey.PENDLE_ORACLE, address(pendleOracle));
         oracleDeploy.setParams(market, underlyingOracle, factory);
@@ -65,11 +65,11 @@ contract PendlePTToAssetOracleTest is Forking {
         vm.expectEmit(false, false, false, false);
         emit PendlePTOracleCreated(ISiloOracle(address(0)));
 
-        factory.create(new SiloOracleMock1(), market, bytes32(0));
+        factory.create(new SiloOracleMockReturnSame(), market, bytes32(0));
     }
 
     function test_PendlePTToAssetOracle_factory_create_updatesMapping() public {
-        assertTrue(factory.createdInFactory(factory.create(new SiloOracleMock1(), market, bytes32(0))));
+        assertTrue(factory.createdInFactory(factory.create(new SiloOracleMockReturnSame(), market, bytes32(0))));
         assertTrue(factory.createdInFactory(oracle));
     }
 
@@ -92,14 +92,13 @@ contract PendlePTToAssetOracleTest is Forking {
         assertTrue(oracle.QUOTE_TOKEN() != address(0));
     }
 
-    function test_PendlePTToAssetOracle_constructor_revertsInvalidDecimals() public {
+    function test_PendlePTToAssetOracle_constructor_notRevertsInvalidDecimals() public {
         vm.mockCall(
             address(syUnderlyingToken),
             abi.encodeWithSelector(IERC20Metadata.decimals.selector),
             abi.encode(uint8(63))
         );
 
-        vm.expectRevert(PendlePTToAssetOracle.TokensDecimalsDoesNotMatch.selector);
         factory.create(underlyingOracle, market, bytes32(0));
     }
 
@@ -205,18 +204,17 @@ contract PendlePTToAssetOracleTest is Forking {
         oracle.quote(0, ptToken);
     }
 
-    function test_PendlePTToAssetOracle_quote() public {
-        uint256 quoteAmount = 1000 * IERC20Metadata(ptToken).decimals();
-        uint256 quote = oracle.quote(quoteAmount, ptToken);
+    function test_PendlePTToAssetOracle_quote_rateIsLessThanPrecisionDecimals() public {
+        uint256 quoteAmount = 10 ** 18;
         uint256 rateFromPendleOracle = IPyYtLpOracleLike(pendleOracle).getPtToAssetRate(market, 1800);
 
-        assertEq(underlyingOracle.quote(0, address(0)), 10 ** 18, "underlying oracle always returns 10**18");
-        assertEq(underlyingOracle.quote(quoteAmount, syUnderlyingToken), 10 ** 18, "underlying oracle returns 10**18");
+        assertEq(underlyingOracle.quote(1, address(0)), 1, "underlying oracle always returns same");
+        assertEq(underlyingOracle.quote(2, syUnderlyingToken), 2, "underlying oracle returns same");
         
         assertEq(
-            quote,
+            oracle.quote(quoteAmount, ptToken),
             rateFromPendleOracle,
-            "quote value is equal to ptToAssetRate, because underlying oracle returns 10**18"
+            "quote value is equal to ptToAssetRate, because underlying oracle returns 10**18 for 10**18 input"
         );
 
         assertTrue(rateFromPendleOracle < 10 ** 18, "<100%");
@@ -231,8 +229,8 @@ contract PendlePTToAssetOracleTest is Forking {
             abi.encode(newUnderlyingPrice)
         );
 
-        assertEq(underlyingOracle.quote(0, address(0)), 10 ** 18, "price NOT changed for other tokens");
-        assertEq(underlyingOracle.quote(1, ptToken), 10 ** 18, "price NOT changed for other tokens");
+        assertEq(underlyingOracle.quote(quoteAmount, address(0)), 10 ** 18, "price NOT changed for other tokens");
+        assertEq(underlyingOracle.quote(quoteAmount, ptToken), 10 ** 18, "price NOT changed for other tokens");
 
         assertEq(
             underlyingOracle.quote(quoteAmount, syUnderlyingToken),
@@ -245,6 +243,49 @@ contract PendlePTToAssetOracleTest is Forking {
         assertTrue(oracle.quote(quoteAmount, ptToken) > newUnderlyingPrice * 95 / 100); // rate is ~95.58%
     }
 
+    function test_PendlePTToAssetOracle_quote_rateIsMoreThanPrecisionDecimals() public {
+        uint256 quoteAmount = 10 ** 18;
+        uint256 rateFromPendleOracle = IPyYtLpOracleLike(pendleOracle).getPtToAssetRate(market, 1800);
+
+        vm.mockCall(
+            address(pendleOracle),
+            abi.encodeWithSelector(IPyYtLpOracleLike.getPtToAssetRate.selector, market, 1800),
+            abi.encode(rateFromPendleOracle * 100)
+        );
+
+        rateFromPendleOracle = IPyYtLpOracleLike(pendleOracle).getPtToAssetRate(market, 1800);
+        assertTrue(rateFromPendleOracle > oracle.PENDLE_RATE_PRECISION());
+
+        assertEq(
+            oracle.quote(quoteAmount, ptToken),
+            rateFromPendleOracle,
+            "quote value is equal to ptToSyRate, because underlying oracle returns amount to quote"
+        );
+
+        uint256 newUnderlyingPrice = 15 * 10 ** 18;
+        uint256 scaledUnderlyingAmount = quoteAmount * rateFromPendleOracle / 10 ** 18;
+
+        vm.mockCall(
+            address(underlyingOracle),
+            abi.encodeWithSelector(ISiloOracle.quote.selector, scaledUnderlyingAmount, syUnderlyingToken),
+            abi.encode(newUnderlyingPrice)
+        );
+
+        uint256 underlyingScaledQuote = underlyingOracle.quote(scaledUnderlyingAmount, syUnderlyingToken);
+
+        assertEq(
+            underlyingScaledQuote,
+            newUnderlyingPrice,
+            "price is changed only for scaled amount to quote in underlying oracle"
+        );
+
+        assertEq(
+            oracle.quote(quoteAmount, ptToken),
+            underlyingScaledQuote,
+            "price is equal to underlying oracle's quote for scaled amount"
+        );
+    }
+
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_PendlePTToAssetOracle_reorg -vv
     */
@@ -252,12 +293,12 @@ contract PendlePTToAssetOracleTest is Forking {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         address oracle1 = address(factory.create(underlyingOracle, market, bytes32(0)));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         address oracle2 = address(factory.create(underlyingOracle, market, bytes32(0)));

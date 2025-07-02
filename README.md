@@ -1,6 +1,9 @@
 # Silo V2
 Monorepository for Silo V2.
 
+### Bug bounty
+Immunefi bug bounty program is live, more details at https://immunefi.com/bug-bounty/silofinance-v2/information/
+
 ### Info
 [Known Issues](./KnownIssues.md) \
 [Deployed silo versions](./silo-core/docs/DeployedSiloVersions.md)

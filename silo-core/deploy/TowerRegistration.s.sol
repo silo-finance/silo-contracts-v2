@@ -18,6 +18,12 @@ contract TowerRegistration is CommonDeploy {
     function run() public {
         _register("SiloFactory", getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
         _register("LiquidationHelper", getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER));
+
+        _register(
+            "ManualLiquidationHelper",
+            getDeployedAddress(SiloCoreContracts.MANUAL_LIQUIDATION_HELPER)
+        );
+
         _register("SiloLens", getDeployedAddress(SiloCoreContracts.SILO_LENS));
         _register("SiloLeverage", getDeployedAddress(SiloCoreContracts.SILO_LEVERAGE));
     }
@@ -28,6 +34,15 @@ contract TowerRegistration is CommonDeploy {
 
         if (old == _currentAddress) {
             console2.log("[TowerRegistration] %s up to date", _name);
+        } else if (old == address(0)) {
+            uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+            console2.log("[TowerRegistration] %s will be register at %s", _name, _currentAddress);
+
+            vm.startBroadcast(deployerPrivateKey);
+
+            tower.register(_name, _currentAddress);
+
+            vm.stopBroadcast();
         } else {
             uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
             console2.log("[TowerRegistration] %s will be updated from %s to %s", _name, old, _currentAddress);

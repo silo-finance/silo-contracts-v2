@@ -1,10 +1,159 @@
 {
-    "CHAINLINK_Demo_config": {
+    "CHAINLINK_sUSDe_USD": {
+        "baseToken": "sUSDe",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_sUSDe_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_USDC_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4
+    },
+    "CHAINLINK_USR_USD": {
+        "baseToken": "USR",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_LIKE_USR_USD_AGGREGATOR",
+        "primaryHeartbeat": 172800,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_WBTC_USD": {
+        "baseToken": "WBTC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_WBTC_BTC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_BTC_USD_aggregator",
+        "secondaryHeartbeat": 4201,
+        "normalizationDivider": 1e6,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "REDSTONE_ezETH_WETH": {
+        "baseToken": "ezETH",
         "quoteToken": "WETH",
-        "primaryAggregator": "CHAINLINK_PRIMARY_AGGREGATOR",
-        "primaryHeartbeat": 120,
-        "secondaryAggregator": "CHAINLINK_SECONDARY_AGGREGATOR",
-        "secondaryHeartbeat": 240
+        "primaryAggregator": "REDSTONE_ezETH_ETH_aggregator",
+        "primaryHeartbeat": 43801,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
+    "RESOLV_RLP_USD": {
+        "baseToken": "RLP",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "RESOLV_RLP_USD_aggregator",
+        "primaryHeartbeat": 172800,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
+    "MIDAS_mMEV_USD": {
+        "baseToken": "mMEV",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "MIDAS_mMEV_USD_aggregator",
+        "primaryHeartbeat": 172800,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
+    "REDSTONE_weETH_WETH": {
+        "baseToken": "weETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "REDSTONE_weETH_ETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
+    "EORACLE_PT_eUSDE_14AUG2025_HARDCODE_QUOTE_USDF": {
+        "baseToken": "PT-eUSDE-14AUG2025",
+        "quoteToken": "USDf",
+        "primaryAggregator": "eOracle_PT_eUSDe_14AUG2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_PT_USDS_14AUG2025_USDC": {
+        "baseToken": "PT-USDS-14AUG2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_USDS_14AUG2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_PT_sUSDE_25SEP2025_USDC": {
+        "baseToken": "PT-sUSDE-25SEP2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_sUSDE_25SEP2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_PT_cUSDO_20NOV2025_HARDCODE_QUOTE_USDC": {
+        "baseToken": "PT-cUSDO-20NOV2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_cUSDO_20NOV2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_PT_eUSDE_14AUG2025_USDC": {
+        "baseToken": "PT-eUSDE-14AUG2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "eOracle_PT_eUSDe_14AUG2025_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHRONICLE_wsrUSD_USD": {
+        "baseToken": "wsrUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHRONICLE_wsrUSD_USD_AGGREGATOR",
+        "primaryHeartbeat": 43801,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_PT-USDe_25SEP25_USDC": {
+        "baseToken": "PT-USDe_25SEP25",
+        "quoteToken": "USDC",
+        "primaryAggregator": "EORACLE_PT-USDe_25SEP25_USDC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
     }
 }
