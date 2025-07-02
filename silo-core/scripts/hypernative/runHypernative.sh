@@ -22,5 +22,5 @@ FOUNDRY_PROFILE=core PRINT_ONLY_SILOS=true \
     grep 0x | \
     ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
 
-./silo-core/scripts/hypernative/printCoreAddresses.sh $DEPLOYMENTS_DIR | \
+./silo-core/scripts/hypernative/printDeployments.sh $DEPLOYMENTS_DIR | \
     ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
