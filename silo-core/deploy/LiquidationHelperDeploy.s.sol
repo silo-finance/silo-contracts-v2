@@ -14,9 +14,9 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    FOUNDRY_PROFILE=core AGGREGATOR=ODOS \
+    FOUNDRY_PROFILE=core AGGREGATOR=1INCH \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --rpc-url $RPC_INK \
+        --ffi --rpc-url $RPC_SONIC \
         --broadcast --verify
 
     Resume verification:
@@ -45,11 +45,13 @@ contract LiquidationHelperDeploy is CommonDeploy {
         address nativeToken = _nativeToken();
         address exchangeProxy = _exchangeProxy();
         address payable tokenReceiver = _tokenReceiver();
+        string memory deploymentFileName = _generateContractName();
 
         console2.log("[LiquidationHelperDeploy] AGGREGATOR: ", _envAggregator());
         console2.log("[LiquidationHelperDeploy] nativeToken(): ", nativeToken);
         console2.log("[LiquidationHelperDeploy] exchangeProxy: ", exchangeProxy);
         console2.log("[LiquidationHelperDeploy] tokenReceiver: ", tokenReceiver);
+        console2.log("[LiquidationHelperDeploy] deployment name: ", deploymentFileName);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -57,16 +59,8 @@ contract LiquidationHelperDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        console2.log("[LiquidationHelperDeploy] deployment name: ", _generateContractName());
-
-        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER, _generateContractName());
+        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER, deploymentFileName);
     }
-
-//    function _deploymentsSubDir() internal view override virtual returns (string memory) {
-//        console2.log("[super._deploymentsSubDir()]: ", super._deploymentsSubDir());
-//
-////        return string.concat(super._deploymentsSubDir(), "/deployments/", _generateContractName());
-//    }
 
     function _exchangeProxy() internal returns (address exchangeProxy) {
         exchangeProxy = _resolveExchangeProxyAddress();
