@@ -293,12 +293,12 @@ contract PendlePTToAssetOracleTest is Forking {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         address oracle1 = address(factory.create(underlyingOracle, market, bytes32(0)));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         address oracle2 = address(factory.create(underlyingOracle, market, bytes32(0)));

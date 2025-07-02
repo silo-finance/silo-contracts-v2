@@ -141,12 +141,12 @@ contract InterestRateModelV2FactoryTest is Test, InterestRateModelConfigs {
 
         IInterestRateModelV2.Config memory config = _defaultConfig();
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         (, IInterestRateModelV2 irm) = factory.create(config, bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         (, IInterestRateModelV2 irm2) = factory.create(config, bytes32(0));

@@ -186,7 +186,7 @@ contract SiloVaultsFactoryTest is IntegrationTest {
         address devWallet = makeAddr("dev wallet");
         address otherWallet = makeAddr("other wallet");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(devWallet);
         ISiloVault siloVault = factory.createSiloVault(
@@ -202,7 +202,7 @@ contract SiloVaultsFactoryTest is IntegrationTest {
             new IIncentivesClaimingLogicFactory[](0)
         );
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(otherWallet);
         ISiloVault siloVault2 = factory.createSiloVault(

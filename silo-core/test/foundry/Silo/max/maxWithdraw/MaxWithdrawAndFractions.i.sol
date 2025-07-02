@@ -32,7 +32,7 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         uint256 depositAmount = 1e6;
         _doDeposit(depositAmount);
 
-        snapshot = vm.snapshot();
+        snapshot = vm.snapshotState();
     }
 
     /*
@@ -72,13 +72,13 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         bool redeem = false;
 
         _executeWithdrawScenario1(50, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario1(silo0.maxBorrow(borrower) / 2, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario1(0, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     /*
@@ -90,13 +90,13 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         bool redeem = true;
 
         _executeWithdrawScenario1(50, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario1(silo0.maxBorrow(borrower) / 2, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario1(0, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     function _executeWithdrawScenario1(uint256 _borrowAmount, bool _redeem) internal {
@@ -133,13 +133,13 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         bool redeem = false;
 
         _executeWithdrawScenario2(50, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario2(silo0.maxBorrow(borrower) / 2, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario2(0, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     /*
@@ -151,13 +151,13 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         bool redeem = true;
 
         _executeWithdrawScenario2(50, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario2(silo0.maxBorrow(borrower) / 2, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario2(0, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     function _executeWithdrawScenario2(uint256 _borrowAmount, bool _redeem) internal {
@@ -192,13 +192,13 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         bool redeem = false;
 
         _executeWithdrawScenario3(50, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario3(silo0.maxBorrow(borrower) / 2, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario3(0, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     /*
@@ -210,13 +210,13 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         bool redeem = true;
 
         _executeWithdrawScenario3(50, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario3(silo0.maxBorrow(borrower) / 2, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeWithdrawScenario3(0, redeem);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     function _executeWithdrawScenario3(uint256 _borrowAmount, bool _redeem) internal {

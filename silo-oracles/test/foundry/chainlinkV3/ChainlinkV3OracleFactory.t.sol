@@ -84,12 +84,12 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         ChainlinkV3Oracle oracle1 = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         ChainlinkV3Oracle oracle2 = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
