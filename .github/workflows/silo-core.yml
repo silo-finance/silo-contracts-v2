@@ -67,6 +67,7 @@ jobs:
                 working-directory: ./gitmodules/silo-foundry-utils
                 run: |
                     ls
+                    git branch
                     cargo build --release
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
