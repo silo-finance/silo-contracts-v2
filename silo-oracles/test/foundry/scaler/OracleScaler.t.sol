@@ -103,12 +103,12 @@ contract OracleScalerTest is Test {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         ISiloOracle scaler1 = factory.createOracleScaler(USDC, bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         ISiloOracle scaler2 = factory.createOracleScaler(USDC, bytes32(0));

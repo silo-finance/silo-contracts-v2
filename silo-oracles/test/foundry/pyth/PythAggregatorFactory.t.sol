@@ -83,12 +83,12 @@ contract PythAggregatorFactoryTest is TokensGenerator {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         AggregatorV3Interface ethAggregator1 = factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         AggregatorV3Interface ethAggregator2 = factory.deploy(PYTH_ETH_USD_PRICE_ID, bytes32(0));

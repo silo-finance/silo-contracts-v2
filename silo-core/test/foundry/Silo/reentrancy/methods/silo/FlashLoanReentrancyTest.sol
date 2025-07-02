@@ -42,7 +42,7 @@ contract FlashLoanReentrancyTest is MethodReentrancyTest {
         uint256 flashLoanAmount = 1e18;
         bytes memory data;
 
-        uint256 snapshotId = vm.snapshot();
+        uint256 snapshotId = vm.snapshotState();
 
         TestStateLib.disableReentrancy();
 
@@ -52,6 +52,6 @@ contract FlashLoanReentrancyTest is MethodReentrancyTest {
         // no reentrancy test as flashLoan allows to reenter
         silo.flashLoan(IERC3156FlashBorrower(address(this)), address(token), flashLoanAmount, data);
 
-        vm.revertTo(snapshotId);
+        vm.revertToState(snapshotId);
     }
 }

@@ -51,7 +51,7 @@ contract SiloIncentivesControllerCLTest is Test {
         address devWallet = makeAddr("dev wallet");
         address otherWallet = makeAddr("other wallet");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(devWallet);
         SiloIncentivesControllerCL logic1 = factory.createIncentivesControllerCL(
@@ -60,7 +60,7 @@ contract SiloIncentivesControllerCLTest is Test {
             bytes32(0)
         );
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(otherWallet);
         SiloIncentivesControllerCL logic2 = factory.createIncentivesControllerCL(

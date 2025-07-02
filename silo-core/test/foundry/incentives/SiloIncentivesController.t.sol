@@ -1115,12 +1115,12 @@ contract SiloIncentivesControllerTest is Test {
     }
 
     function _claimRewards(address _user, address _to, string memory _programName) internal {
-        uint256 snapshotId = vm.snapshot();
+        uint256 snapshotId = vm.snapshotState();
 
         vm.prank(_user);
         IDistributionManager.AccruedRewards[] memory accruedRewards1 = _controller.claimRewards(_to);
 
-        vm.revertTo(snapshotId);
+        vm.revertToState(snapshotId);
 
         string[] memory programsNames = new string[](1);
         programsNames[0] = _programName;

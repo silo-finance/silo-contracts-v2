@@ -110,12 +110,12 @@ contract DIAOracleFactoryTest is DIAConfigDefault {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         DIAOracle oracle1 = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         DIAOracle oracle2 = ORACLE_FACTORY.create(_defaultDIAConfig(1e20, 0), bytes32(0));
