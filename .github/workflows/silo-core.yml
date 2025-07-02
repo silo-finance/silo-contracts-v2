@@ -66,6 +66,7 @@ jobs:
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
                 run: |
+                    git pull
                     cargo build --release
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
