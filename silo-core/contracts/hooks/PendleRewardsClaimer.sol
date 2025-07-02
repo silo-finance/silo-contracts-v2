@@ -83,7 +83,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     }
 
     /// @inheritdoc IHookReceiver
-    function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
+    function beforeAction(address /* _silo */, uint256 _action, bytes calldata /* _inputAndOutput */)
         public
         virtual
         onlySilo()
@@ -201,7 +201,7 @@ contract PendleRewardsClaimer is GaugeHookReceiver, PartialLiquidation, IPendleR
     /// @notice Get the incentives controller from the `GaugeHookReceiver` configuration.
     /// @dev Reverts if the incentives controller is not configured.
     /// @return controller
-    function _getIncentivesControllerSafe() private returns (ISiloIncentivesController controller) {
+    function _getIncentivesControllerSafe() private view returns (ISiloIncentivesController controller) {
         controller = ISiloIncentivesController(address(configuredGauges[protectedShareToken]));
         require(address(controller) != address(0), IncentivesControllerRequired());
     }
