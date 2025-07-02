@@ -4,6 +4,8 @@ pragma solidity 0.8.28;
 import {console2} from "forge-std/console2.sol";
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
@@ -12,13 +14,13 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    FOUNDRY_PROFILE=core \
+    FOUNDRY_PROFILE=core AGGREGATOR=1INCH \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --rpc-url $RPC_INK \
+        --ffi --rpc-url $RPC_SONIC \
         --broadcast --verify
 
     Resume verification:
-    FOUNDRY_PROFILE=core \
+    FOUNDRY_PROFILE=core AGGREGATOR=ODOS \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
         --ffi --rpc-url $RPC_INK \
         --verify \
@@ -30,10 +32,6 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
     NOTICE: remember to register it in Tower
 */
 contract LiquidationHelperDeploy is CommonDeploy {
-    address constant EXCHANGE_PROXY_1INCH = 0x1111111254EEB25477B68fb85Ed929f73A960582;
-    address constant ODOS_ROUTER_SONIC = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
-    address constant EXCHANGE_PROXY_ZERO_X_INK = 0x0000000000001fF3684f28c67538d4D072C22734;
-
     address payable constant GNOSIS_SAFE_MAINNET = payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554);
     address payable constant GNOSIS_SAFE_AVALANCHE = payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554);
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
@@ -47,10 +45,13 @@ contract LiquidationHelperDeploy is CommonDeploy {
         address nativeToken = _nativeToken();
         address exchangeProxy = _exchangeProxy();
         address payable tokenReceiver = _tokenReceiver();
+        string memory deploymentFileName = _generateContractName();
 
+        console2.log("[LiquidationHelperDeploy] AGGREGATOR: ", _envAggregator());
         console2.log("[LiquidationHelperDeploy] nativeToken(): ", nativeToken);
         console2.log("[LiquidationHelperDeploy] exchangeProxy: ", exchangeProxy);
         console2.log("[LiquidationHelperDeploy] tokenReceiver: ", tokenReceiver);
+        console2.log("[LiquidationHelperDeploy] deployment name: ", deploymentFileName);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -58,22 +59,53 @@ contract LiquidationHelperDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER);
+        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER, deploymentFileName);
     }
 
-    function _exchangeProxy() internal view returns (address) {
+    function _exchangeProxy() internal returns (address exchangeProxy) {
+        exchangeProxy = _resolveExchangeProxyAddress();
+
+        require(
+            exchangeProxy != address(0),
+            string.concat(_envAggregator(), " exchangeProxy not set for `", ChainsLib.chainAlias(), "` blockchain")
+        );
+    }
+
+    function _resolveExchangeProxyAddress() internal returns (address) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(2);
-        if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
-        if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
-        if (chainId == ChainsLib.OPTIMISM_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
-        if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
-        if (chainId == ChainsLib.MAINNET_CHAIN_ID) return EXCHANGE_PROXY_1INCH;
-        if (chainId == ChainsLib.SONIC_CHAIN_ID) return ODOS_ROUTER_SONIC;
-        if (chainId == ChainsLib.INK_CHAIN_ID) return EXCHANGE_PROXY_ZERO_X_INK;
 
-        revert(string.concat("exchangeProxy not set for ", ChainsLib.chainAlias()));
+        if (_isRequestedAggregator(AGGREGATOR_1INCH)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_1INCH);
+        if (_isRequestedAggregator(AGGREGATOR_ODOS)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_ODOS);
+        if (_isRequestedAggregator(AGGREGATOR_ENSO)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_ENSO);
+        if (_isRequestedAggregator(AGGREGATOR_0X)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_0X);
+
+        return address(0);
+    }
+
+    function _generateContractName() internal view returns (string memory contractName) {
+        uint256 chainId = getChainId();
+
+        if (chainId == ChainsLib.ANVIL_CHAIN_ID) return SiloCoreContracts.LIQUIDATION_HELPER;
+
+        string memory mainPart = "LiquidationHelper_";
+
+        if (_isRequestedAggregator(AGGREGATOR_1INCH)) return string.concat(mainPart, AGGREGATOR_1INCH);
+        if (_isRequestedAggregator(AGGREGATOR_ODOS)) return string.concat(mainPart, AGGREGATOR_ODOS);
+        if (_isRequestedAggregator(AGGREGATOR_ENSO)) return string.concat(mainPart, AGGREGATOR_ENSO);
+        if (_isRequestedAggregator(AGGREGATOR_0X)) return string.concat(mainPart, AGGREGATOR_0X);
+
+        revert("unknown aggregator");
+    }
+
+    function _isRequestedAggregator(string memory _aggregator) internal view returns (bool) {
+        bytes32 cfgAggregator = keccak256(abi.encodePacked(_envAggregator()));
+        return cfgAggregator == keccak256(abi.encodePacked(_aggregator));
+    }
+
+    function _envAggregator() internal view returns (string memory aggregator) {
+        aggregator = vm.envOr(string("AGGREGATOR"), string(""));
     }
 
     function _tokenReceiver() internal view returns (address payable) {

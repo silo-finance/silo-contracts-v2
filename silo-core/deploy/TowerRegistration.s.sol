@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
 import {Tower} from "silo-core/contracts/utils/Tower.sol";
+import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
@@ -17,7 +18,11 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract TowerRegistration is CommonDeploy {
     function run() public {
         _register("SiloFactory", getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
-        _register("LiquidationHelper", getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER));
+
+        _registerLiquidationHelper(AGGREGATOR_1INCH);
+        _registerLiquidationHelper(AGGREGATOR_ODOS);
+        _registerLiquidationHelper(AGGREGATOR_ENSO);
+        _registerLiquidationHelper(AGGREGATOR_0X);
 
         _register(
             "ManualLiquidationHelper",
@@ -25,7 +30,15 @@ contract TowerRegistration is CommonDeploy {
         );
 
         _register("SiloLens", getDeployedAddress(SiloCoreContracts.SILO_LENS));
-        _register("SiloLeverage", getDeployedAddress(SiloCoreContracts.SILO_LEVERAGE));
+        _register("SiloLeverageUsingSilo", getDeployedAddress(SiloCoreContracts.SILO_LEVERAGE_USING_SILO));
+    }
+
+    function _registerLiquidationHelper(string memory _aggregator) internal {
+        string memory contractName = _liquidationHelperName(_aggregator);
+        address helper = getDeployedAddress(contractName);
+
+        if (helper != address(0)) _register(contractName, helper);
+        else console2.log("[TowerRegistration] %s is NOT deployed, no registration needed", contractName);
     }
 
     function _register(string memory _name, address _currentAddress) internal {
@@ -53,5 +66,9 @@ contract TowerRegistration is CommonDeploy {
 
             vm.stopBroadcast();
         }
+    }
+
+    function _liquidationHelperName(string memory _aggregator) internal pure returns (string memory) {
+        return string.concat("LiquidationHelper_", _aggregator);
     }
 }
