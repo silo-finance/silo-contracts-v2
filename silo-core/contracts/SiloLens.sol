@@ -32,8 +32,8 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
-        return SiloLensLib.getRawLiquidity(_silo);
+    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 rawLiquidity) {
+        rawLiquidity = SiloLensLib.getRawLiquidity(_silo);
     }
 
     /// @inheritdoc ISiloLens
@@ -130,8 +130,8 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function totalDeposits(ISilo _silo) external view returns (uint256 totalDeposits) {
-        totalDeposits = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+    function totalDeposits(ISilo _silo) external view returns (uint256 totalDepositsAmount) {
+        totalDepositsAmount = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     }
 
     /// @inheritdoc ISiloLens
@@ -205,11 +205,11 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getUtilization(ISilo _silo) external view returns (uint256) {
+    function getUtilization(ISilo _silo) external view returns (uint256 utilization) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
 
         if (data.collateralAssets != 0) {
-            return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+            utilization = data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
         }
     }
 
