@@ -143,9 +143,6 @@ contract SiloLensTest is SiloLittleHelper, Test {
         forge test -vvv --ffi --mt test_SiloLens_getFeesAndFeeReceivers
     */
     function test_SiloLens_getFeesAndFeeReceivers() public {
-        string memory chainAlias = ChainsLib.chainAlias();
-        address daoFeeReceiverConfig = makeAddr("DaoFeeReceiver");
-
         // hardcoded in the silo config for the local testing
         address deployerFeeReceiverConfig = 0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE;
 
