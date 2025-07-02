@@ -93,3 +93,11 @@ The primary license for Silo V2 Core is the Business Source License 1.1 (`BUSL-1
 - Interfaces have an MIT license
 
 Each of these files states their license type.
+
+
+``` 
+Please do the following:
+Revert any changes in the gitmodules/forge-std/src/StdChains.sol
+cd ./gitmodules/silo-foundry-utils && cargo build --release && cp target/release/silo-foundry-utils ../../silo-foundry-utils && cd -
+Check silo foundry version ./silo-foundry-utils --version it should be silo-foundry-utils 0.0.19
+```

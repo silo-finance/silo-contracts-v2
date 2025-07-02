@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
 import {Tower} from "silo-core/contracts/utils/Tower.sol";
+import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
@@ -17,7 +18,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract TowerRegistration is CommonDeploy {
     function run() public {
         _register("SiloFactory", getDeployedAddress(SiloCoreContracts.SILO_FACTORY));
-        _register("LiquidationHelper", getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER));
+        _register(_liquidationHelperName(), getDeployedAddress(_liquidationHelperName()));
 
         _register(
             "ManualLiquidationHelper",
@@ -53,5 +54,25 @@ contract TowerRegistration is CommonDeploy {
 
             vm.stopBroadcast();
         }
+    }
+
+    function _liquidationHelperName() internal view returns (string memory) {
+        return string.concat("LiquidationHelper", _resolveAggregatorName());
+    }
+
+    function _resolveAggregatorName() internal view returns (string memory) {
+        uint256 chainId = getChainId();
+
+        if (chainId == ChainsLib.ANVIL_CHAIN_ID) return "_anvil_";
+
+        address currentAddress = getDeployedAddress(SiloCoreContracts.LIQUIDATION_HELPER);
+        address exchangeProxy = LiquidationHelper(currentAddress).EXCHANGE_PROXY();
+
+        if (exchangeProxy == AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_1INCH)) return AGGREGATOR_1INCH;
+        if (exchangeProxy == AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_ODOS)) return AGGREGATOR_ODOS;
+        if (exchangeProxy == AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_ENSO)) return AGGREGATOR_ENSO;
+        if (exchangeProxy == AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_0X)) return AGGREGATOR_0X;
+
+        revert("unknown exchange proxy");
     }
 }

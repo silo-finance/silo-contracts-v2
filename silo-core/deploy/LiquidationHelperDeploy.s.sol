@@ -32,11 +32,6 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
     NOTICE: remember to register it in Tower
 */
 contract LiquidationHelperDeploy is CommonDeploy {
-    string constant AGGREGATOR_1INCH = "1INCH";
-    string constant AGGREGATOR_ODOS = "ODOS";
-    string constant AGGREGATOR_ENSO = "ENSO";
-    string constant AGGREGATOR_0X = "0x";
-
     address payable constant GNOSIS_SAFE_MAINNET = payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554);
     address payable constant GNOSIS_SAFE_AVALANCHE = payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554);
     address payable constant GNOSIS_SAFE_ARB = payable(0x865A1DA42d512d8854c7b0599c962F67F5A5A9d9);
@@ -62,8 +57,16 @@ contract LiquidationHelperDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER);
+        console2.log("[LiquidationHelperDeploy] deployment name: ", _generateContractName());
+
+        _registerDeployment(liquidationHelper, SiloCoreContracts.LIQUIDATION_HELPER, _generateContractName());
     }
+
+//    function _deploymentsSubDir() internal view override virtual returns (string memory) {
+//        console2.log("[super._deploymentsSubDir()]: ", super._deploymentsSubDir());
+//
+////        return string.concat(super._deploymentsSubDir(), "/deployments/", _generateContractName());
+//    }
 
     function _exchangeProxy() internal returns (address exchangeProxy) {
         exchangeProxy = _resolveExchangeProxyAddress();
@@ -85,6 +88,21 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (_isRequestedAggregator(AGGREGATOR_0X)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_0X);
 
         return address(0);
+    }
+
+    function _generateContractName() internal view returns (string memory contractName) {
+        uint256 chainId = getChainId();
+
+        if (chainId == ChainsLib.ANVIL_CHAIN_ID) return SiloCoreContracts.LIQUIDATION_HELPER;
+
+        string memory mainPart = "LiquidationHelper_";
+
+        if (_isRequestedAggregator(AGGREGATOR_1INCH)) return string.concat(mainPart, AGGREGATOR_1INCH);
+        if (_isRequestedAggregator(AGGREGATOR_ODOS)) return string.concat(mainPart, AGGREGATOR_ODOS);
+        if (_isRequestedAggregator(AGGREGATOR_ENSO)) return string.concat(mainPart, AGGREGATOR_ENSO);
+        if (_isRequestedAggregator(AGGREGATOR_0X)) return string.concat(mainPart, AGGREGATOR_0X);
+
+        revert("unknown aggregator");
     }
 
     function _isRequestedAggregator(string memory _aggregator) internal view returns (bool) {
