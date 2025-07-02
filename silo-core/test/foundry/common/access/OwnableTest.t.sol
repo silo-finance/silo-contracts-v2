@@ -3,13 +3,13 @@ pragma solidity 0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {Test} from "forge-std/Test.sol";
-import {OwnableMock} from "silo-core/test/foundry/_mocks/OwnableMock.sol";
+import {OwnableMock as SiloOwnableWith1Step} from "silo-core/test/foundry/_mocks/OwnableMock.sol";
 
 /*
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mc OwnableTest
 */
 contract OwnableTest is Test {
-    OwnableMock public ownableContract;
+    SiloOwnableWith1Step public ownableContract;
 
     address public owner = makeAddr("Owner");
     address public newOwner = makeAddr("NewOwner");
@@ -19,7 +19,7 @@ contract OwnableTest is Test {
 
     function setUp() public {
         vm.prank(owner);
-        ownableContract = new OwnableMock(owner);
+        ownableContract = new SiloOwnableWith1Step(owner);
     }
 
     function testTransferOwnership1Step() public {
@@ -105,7 +105,7 @@ contract OwnableTest is Test {
 
         // Deploy with fuzzed initial owner
         vm.prank(initialOwner);
-        OwnableMock fuzzedOwnable = new OwnableMock(initialOwner);
+        SiloOwnableWith1Step fuzzedOwnable = new SiloOwnableWith1Step(initialOwner);
 
         // Transfer to fuzzed target owner
         vm.expectEmit(true, true, false, true);
