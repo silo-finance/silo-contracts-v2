@@ -1,7 +1,7 @@
 [submodule "foundry"]
 	path = gitmodules/forge-std
 	url = https://github.com/foundry-rs/forge-std
-	branch = v1.8.1
+	branch = v1.9.7
 [submodule "silo-foundry-utils"]
 	path = gitmodules/silo-foundry-utils
 	url = https://github.com/silo-finance/silo-foundry-utils
