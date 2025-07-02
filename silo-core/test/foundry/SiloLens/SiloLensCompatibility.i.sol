@@ -341,7 +341,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         sig = ISiloLens.getModel.selector;
     }
 
-    function _getSiloIncentivesControllerProgramsNames() internal view returns (bytes4 sig) {
+    function _getSiloIncentivesControllerProgramsNames() internal pure returns (bytes4 sig) {
         // method is not related to Silo
         sig = ISiloLens.getSiloIncentivesControllerProgramsNames.selector;
     }
