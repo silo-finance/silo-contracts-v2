@@ -17,7 +17,7 @@ contract PendleMarketGasWaster is ERC20 {
         }
     }
 
-    function getRewardTokens() external view returns (address[] memory) {
+    function getRewardTokens() external pure returns (address[] memory) {
         return new address[](0);
     }
 }
