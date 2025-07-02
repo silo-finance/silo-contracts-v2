@@ -103,6 +103,18 @@ jobs:
         steps:
             -   uses: actions/checkout@v3
 
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
             - name: Run Forge build
               run: |
                   git submodule
@@ -129,6 +141,18 @@ jobs:
         steps:
             -   uses: actions/checkout@v3
 
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
             -   name: ${{ matrix.match-contract }}
                 run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
 
@@ -148,6 +172,18 @@ jobs:
         steps:
             -   uses: actions/checkout@v3
 
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
             -   name: ${{ matrix.match-test }}
                 run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
 
@@ -160,6 +196,18 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v3
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
 
             -   name: ${{ matrix.match-contract }}
                 run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
