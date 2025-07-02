@@ -18,7 +18,7 @@ on:
       - silo-core/deployments/**/*.json
 
 jobs:
-  before_each:
+  hypernative:
     name: Build packages
     runs-on: ubuntu-latest
     steps:
@@ -44,10 +44,5 @@ jobs:
           forge --version
           FOUNDRY_PROFILE=core forge build --sizes
 
-  hypernative-sonic:
-    name: Hypernative Sonic monitor update
-    needs: before_each
-    runs-on: ubuntu-latest
-    steps:
       - name: Fetch addresses and send request
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
