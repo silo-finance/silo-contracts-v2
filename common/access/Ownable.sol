@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {Ownable2Step, Ownable as Ownable1Step} from "openzeppelin5/access/Ownable2Step.sol";
 
 /// @dev This contract is a wrapper around Ownable2Step that allows for 1-step ownership transfer
-abstract contract Ownable is Ownable2Step {
+abstract contract Ownable1and2Steps is Ownable2Step {
     constructor(address _initialOwner) Ownable1Step(_initialOwner) {}
 
     /// @notice Transfer ownership to a new address
