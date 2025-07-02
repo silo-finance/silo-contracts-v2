@@ -15,7 +15,7 @@ contract ManualLiquidationHelper2TokensReceiverTest is ManualLiquidationHelper2T
         LIQUIDATION_HELPER.executeLiquidation(silo1, BORROWER, 2 ** 128, false, _tokenReceiver());
     }
 
-    function _tokenReceiver() internal override returns (address payable) {
+    function _tokenReceiver() internal view override returns (address payable) {
         return payable(address(this));
     }
 }

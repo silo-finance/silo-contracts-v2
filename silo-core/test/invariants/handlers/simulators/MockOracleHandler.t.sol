@@ -38,9 +38,6 @@ contract MockOracleHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function setOraclePrice(uint256 _price, uint8 i) external setup {
-        bool success;
-        bytes memory returnData;
-
         _price = clampBetween(_price, MIN_PRICE, MAX_PRICE);
 
         // Get one of the mock oracles randomly
