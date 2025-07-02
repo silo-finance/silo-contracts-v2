@@ -88,16 +88,15 @@ library SiloMathLib {
         view
         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)
     {
-        if (SiloStorageLib.getSiloStorage().ignoreInterestRateForDebt) {
-            // accruedInterest += IRM.accruedInterest();
-            return (_totalDebtAssets, accruedInterest);
-        }
-
         if (_totalDebtAssets == 0 || _rcomp == 0) {
             return (_totalDebtAssets, 0);
         }
 
         accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);
+
+        if (SiloStorageLib.getSiloStorage().ignoreInterestRateForDebt) {
+            return (_totalDebtAssets, accruedInterest);
+        }
 
         unchecked {
             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.

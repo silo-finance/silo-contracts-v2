@@ -88,39 +88,6 @@ library SiloLendingLib {
         IERC20(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
     }
 
-    /// @notice Accrues interest on collateral only.
-    /// @param _totalCollateralAssets The total amount of collateral assets
-    /// @param _totalDebtAssets The total amount of debt assets
-    /// @param _daoFee The fee (in 18 decimals points) to be taken for the DAO
-    /// @param _deployerFee The fee (in 18 decimals points) to be taken for the deployer
-    function _accrueOnlyCollateral(
-        uint256 _totalCollateralAssets,
-        uint256 _totalDebtAssets,
-        uint256 _daoFee,
-        uint256 _deployerFee
-    ) internal returns (uint256 accruedInterest) {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-
-        uint256 totalFees;
-
-        (
-            $.totalAssets[ISilo.AssetType.Collateral],, totalFees, accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest({
-            _collateralAssets: _totalCollateralAssets,
-            _debtAssets: _totalDebtAssets,
-            _rcomp: 0,
-            _daoFee: _daoFee,
-            _deployerFee: _deployerFee
-        });
-
-        // update remaining contract state
-        $.interestRateTimestamp = uint64(block.timestamp);
-
-        // we operating on chunks (fees) of real tokens, so overflow should not happen
-        // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
-        unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
-    }
-
     /// @notice Accrues interest on assets, updating the collateral and debt balances
     /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
     /// with `_configData` for each token
@@ -150,10 +117,6 @@ library SiloLendingLib {
         uint256 totalFees;
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
-
-        if (SiloStorageLib.getSiloStorage().ignoreInterestRateForDebt) {
-            return _accrueOnlyCollateral(totalCollateralAssets, totalDebtAssets, _daoFee, _deployerFee);
-        }
 
         uint256 rcomp = getCompoundInterestRate({
             _interestRateModel: _interestRateModel,
