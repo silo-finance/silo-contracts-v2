@@ -8,8 +8,8 @@
 set -e
 
 if [ $# -ne 3 ]; then
-  echo "Usage: $0 <rpc_url> <hypernative_chain_alias> <deployments_dir>" >&2
-  exit 1
+    echo "Usage: $0 <rpc_url> <hypernative_chain_alias> <deployments_dir>" >&2
+    exit 1
 fi
 
 RPC_URL="$1"
@@ -17,10 +17,10 @@ HYPERNATIVE_CHAIN_ALIAS="$2"
 DEPLOYMENTS_DIR="$3"
 
 FOUNDRY_PROFILE=core PRINT_ONLY_SILOS=true \
-  forge script silo-core/scripts/PrintSiloAddresses.s.sol \
-  --ffi --rpc-url $RPC_URL | \
-  grep 0x | \
-  ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
+    --ffi --rpc-url $RPC_URL | \
+    grep 0x | \
+    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
 
 ./silo-core/scripts/hypernative/printCoreAddresses.sh $DEPLOYMENTS_DIR | \
-            ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
