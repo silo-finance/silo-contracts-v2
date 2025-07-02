@@ -44,5 +44,11 @@ jobs:
           forge --version
           FOUNDRY_PROFILE=core forge build --sizes
 
-      - name: Fetch addresses and send request
+      - name: Fetch addresses and send request for Sonic
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
+
+      - name: Fetch addresses and send request for Mainnet
+        run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_MAINNET ethereum mainnet
+
+      - name: Fetch addresses and send request for Arbitrum
+        run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_ARBITRUM arbitrum arbitrum_one
