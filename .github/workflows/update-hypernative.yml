@@ -23,6 +23,10 @@ jobs:
     name: Hypernative request for all chains
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
       - name: Fetch addresses and send request for Sonic
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
 
