@@ -48,7 +48,7 @@ contract MaliciousToken is MintableToken, Test {
 
         TestStateLib.disableReentrancy();
 
-        uint256 stateBeforeReentrancyTest = vm.snapshot();
+        uint256 stateBeforeReentrancyTest = vm.snapshotState();
 
         for (uint j = 0; j < _methodRegistries.length; j++) {
             uint256 totalMethods = _methodRegistries[j].supportedMethodsLength();
@@ -61,7 +61,7 @@ contract MaliciousToken is MintableToken, Test {
 
                 method.verifyReentrancy();
 
-                vm.revertTo(stateBeforeReentrancyTest);
+                vm.revertToState(stateBeforeReentrancyTest);
             }
         }
 

@@ -6,17 +6,15 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
-import {SiloHookReceiver} from "silo-core/contracts/utils/hook-receivers/_common/SiloHookReceiver.sol";
+import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
-contract EmptyHookReceiver is SiloHookReceiver {
+contract EmptyHookReceiver is BaseHookReceiver {
     using Hook for uint256;
     using Hook for bytes;
 
     uint24 internal constant HOOKS_BEFORE_NOT_CONFIGURED = 0;
-
-    ISiloConfig public siloConfig;
 
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _siloConfig, bytes calldata _data) external {
@@ -31,13 +29,5 @@ contract EmptyHookReceiver is SiloHookReceiver {
     /// @inheritdoc IHookReceiver
     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
         // Do not expect any actions.
-    }
-    
-    // TODO: is this correct implementation?
-    function hookReceiverConfig(address _silo) external view returns (
-        uint24 hooksBefore,
-        uint24 hooksAfter
-    ) {
-        return _hookReceiverConfig(_silo);
     }
 }

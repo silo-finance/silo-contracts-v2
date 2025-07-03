@@ -63,7 +63,7 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         uint256 depositAmount = 1e6;
         _doDeposit(depositAmount);
 
-        snapshot = vm.snapshot();
+        snapshot = vm.snapshotState();
     }
 
     /*
@@ -109,13 +109,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         bool borrowShares = false;
 
         _executeBorrowScenario1(50, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario1(silo1.maxBorrow(address(this)) / 2, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario1(0, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     /*
@@ -127,13 +127,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         bool borrowShares = true;
 
         _executeBorrowScenario1(50, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario1(silo1.maxBorrow(address(this)) / 2, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario1(0, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     function _executeBorrowScenario1(uint256 _firstBorrowAmount, bool _borrowShares) internal {
@@ -170,13 +170,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         bool borrowShares = false;
 
         _executeBorrowScenario2(50, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario2(silo1.maxBorrow(address(this)) / 2, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario2(0, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     /*
@@ -188,13 +188,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         bool borrowShares = true;
 
         _executeBorrowScenario2(50, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario2(silo1.maxBorrow(address(this)) / 2, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario2(0, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     function _executeBorrowScenario2(uint256 _firstBorrowAmount, bool _borrowShares) internal {
@@ -230,13 +230,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         bool borrowShares = false;
 
         _executeBorrowScenario3(50, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario3(silo1.maxBorrow(address(this)) / 2, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario3(0, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     /*
@@ -248,13 +248,13 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         bool borrowShares = true;
 
         _executeBorrowScenario3(50, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario3(silo1.maxBorrow(address(this)) / 2, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         _executeBorrowScenario3(0, borrowShares);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
     }
 
     function _executeBorrowScenario3(uint256 _firstBorrowAmount, bool _borrowShares) internal {

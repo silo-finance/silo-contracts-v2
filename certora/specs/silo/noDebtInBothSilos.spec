@@ -1,9 +1,9 @@
 /* Integrity of main methods */
 
 // import "../setup/CompleteSiloSetup.spec";
-import "authorized_functions.spec";
+import "../setup/meta/authorized_functions.spec";
 import "unresolved.spec";
-import "../simplifications/SiloMathLib.spec";
+import "../simplifications/SiloMathLib_SAFE.spec";
 import "../simplifications/Oracle_quote_one_UNSAFE.spec";
 import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 

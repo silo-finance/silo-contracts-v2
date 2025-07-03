@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [3.9.0] - 2025-07-03
+### Added
+- silo-core: Silo hook deployment (#1453)
+- silo-core: GaugeHookReceiver with Ownable 1-step transfer (#1447)
+- silo-core: Manual liquidation helper accepts native tokens (#1439)
+- silo-core: Allow multiple instances of liquidation helper (#1436)
+- new markets:
+  - silo-core: wmetaS/wS market on Sonic (#1437)
+  - silo-core: Anon/USDC.e market on Sonic (#1438)
+  - silo-core: yUSD/USDC Silo on Arbitrum (#1446)
+  - silo-core: sACRED/USDC market on Avalanche (#1452)
+  - silo-core: USDf/USDC market on mainnet (#1442)
+
+### Fixed
+- silo-core: fix leverage bug with swap abusing debt share token receive allowance and ERC-20 approval (#1434)
 
 ### [3.8.0] - 2025-06-26
 ### Added

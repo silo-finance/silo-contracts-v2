@@ -41,7 +41,7 @@ contract WrappedMetaVaultOracleAdapterDeploy is CommonDeploy {
 
         // fixes Sonic chainId not found in unit tests
         if (!feedKeySetByFunction) {
-            string memory oracleName = string.concat("WRAPPED_META_VAULT_", feedKey);
+            string memory oracleName = string.concat("WRAPPED_META_VAULT_ADAPTER_", feedKey);
             OraclesDeployments.save(getChainAlias(), oracleName, address(adapter));
         }
     }

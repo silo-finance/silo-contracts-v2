@@ -13,13 +13,22 @@ contract CommonDeploy is Deployer {
     // Common variables
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/silo-core";
 
+    string constant AGGREGATOR_1INCH = "1INCH";
+    string constant AGGREGATOR_ODOS = "ODOS";
+    string constant AGGREGATOR_ENSO = "ENSO";
+    string constant AGGREGATOR_0X = "0x";
+
     error UnsupportedNetworkForDeploy(string networkAlias);
 
-    function _forgeOutDir() internal pure override virtual returns (string memory) {
+    function _contractBaseDir() internal view override virtual returns (string memory baseDir) {
+        baseDir = "";
+    }
+
+    function _forgeOutDir() internal view override virtual returns (string memory) {
         return _FORGE_OUT_DIR;
     }
 
-    function _deploymentsSubDir() internal pure override virtual returns (string memory) {
+    function _deploymentsSubDir() internal view override virtual returns (string memory) {
         return SiloCoreDeployments.DEPLOYMENTS_DIR;
     }
 
