@@ -62,7 +62,7 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function initialize(ISiloConfig _config) external virtual {
+    function initialize(ISiloConfig _config) public virtual {
         // silo initialization
         address hookReceiver = Actions.initialize(_config);
         // silo (vault) share token initialization
