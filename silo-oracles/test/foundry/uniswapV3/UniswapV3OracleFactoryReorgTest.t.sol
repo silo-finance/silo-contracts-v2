@@ -41,12 +41,12 @@ contract UniswapV3OracleFactoryReorgTest is UniswapPools {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         UniswapV3Oracle oracle1 = UNISWAPV3_ORACLE_FACTORY.create(creationConfig, bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         UniswapV3Oracle oracle2 = UNISWAPV3_ORACLE_FACTORY.create(creationConfig, bytes32(0));

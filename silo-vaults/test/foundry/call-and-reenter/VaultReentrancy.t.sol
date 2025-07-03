@@ -62,7 +62,7 @@ contract VaultReentrancyTest is Test {
 
         emit log_string("\n\nRunning reentrancy test");
 
-        uint256 stateBeforeTest = vm.snapshot();
+        uint256 stateBeforeTest = vm.snapshotState();
 
         for (uint j = 0; j < methodRegistries.length; j++) {
             uint256 totalMethods = methodRegistries[j].supportedMethodsLength();
@@ -83,7 +83,7 @@ contract VaultReentrancyTest is Test {
                 entered = vault.reentrancyGuardEntered();
                 assertTrue(!entered, "Reentrancy should be disabled after calling the method");
 
-                vm.revertTo(stateBeforeTest);
+                vm.revertToState(stateBeforeTest);
             }
         }
     }
