@@ -1,0 +1,132 @@
+name: Verify Silo Config
+
+on:
+  pull_request:
+    # Trigger only when the deployments file is changed
+    paths:
+      - 'silo-core/deploy/silo/_siloDeployments.json'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write  # Required to post a comment on the PR
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          # Checkout full repo history to allow git diff against base branch
+          fetch-depth: 0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Run submodule update
+        run: git submodule update --init --recursive
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
+
+      # Extract CONFIG address and CHAIN (RPC key) from the changed JSON file
+      - name: Extract CONFIG and CHAIN
+        id: extract
+        run: |
+          FILE=silo-core/deploy/silo/_siloDeployments.json
+          BASE_REF=${{ github.base_ref }}
+
+          # Get the last added config entry (a line that starts with "+" and contains an address)
+          DIFF_LINE=$(git diff origin/$BASE_REF -- $FILE | grep '^+' | grep -E '"[^"]+":\s*"0x[0-9a-fA-F]{40}"' | tail -n1)
+
+          # Extract config key and address
+          CONFIG_NAME=$(echo "$DIFF_LINE" | grep -oP '"[^"]+"' | head -1 | tr -d '"')
+          CONFIG=$(echo "$DIFF_LINE" | grep -oP '0x[0-9a-fA-F]{40}')
+
+          # Extract chain (level 1 key)
+          CHAIN=$(jq -r --arg address "$CONFIG" '
+            to_entries[] |
+            select(.value | type == "object") |
+            select(.value | to_entries[] | .value == $address) |
+            .key' "$FILE")
+
+          # Construct the RPC environment variable name, e.g., RPC_MAINNET
+          RPC_VAR="RPC_${CHAIN^^}"
+          RPC_URL=$(eval echo \$$RPC_VAR)
+
+          # Fail if RPC URL is missing
+          if [[ -z "$RPC_URL" ]]; then
+            echo "::error title=Missing RPC::RPC URL for chain '$CHAIN' not found in env var '$RPC_VAR'"
+            exit 1
+          fi
+
+          # Set outputs for use in next steps
+          echo "CONFIG=$CONFIG"
+          echo "CONFIG=$CONFIG" >> $GITHUB_OUTPUT
+          echo "CHAIN=$CHAIN"
+          echo "CHAIN=$CHAIN" >> $GITHUB_OUTPUT
+          echo "RPC_URL=$RPC_URL"
+          echo "RPC_URL=$RPC_URL" >> $GITHUB_OUTPUT
+          echo "CONFIG_NAME=$CONFIG_NAME" >> $GITHUB_OUTPUT
+
+        env:
+          # Available RPC URLs (add more if needed)
+          RPC_SONIC: ${{ secrets.RPC_SONIC }}
+          RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+          RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+          RPC_ARBITRUM_ONE: ${{ secrets.RPC_ARBITRUM }}
+
+      - name: Extract optional price arguments from PR body
+        id: price
+        run: |
+          # Replace \r with newlines to handle copy-paste from Windows
+          CLEANED_BODY=$(echo "${{ github.event.pull_request.body }}" | sed 's/\r/\n/g')
+      
+          # Extract prices using pattern match
+          PRICE_0=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
+          PRICE_1=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_1' | head -n1 | sed 's/ //g' | cut -d= -f2)
+          
+          PRICE_0=${PRICE_0:-99999}
+          PRICE_1=${PRICE_1:-100000}
+          
+          echo "$PRICE_0"
+          echo "$PRICE_1"
+          echo "EXTERNAL_PRICE_0=$PRICE_0" >> $GITHUB_OUTPUT
+          echo "EXTERNAL_PRICE_1=$PRICE_1" >> $GITHUB_OUTPUT
+
+      # Run the forge script with extracted parameters
+      - name: Run verify script
+        id: verify
+        run: |
+          echo "Running verify script for ${{ steps.extract.outputs.CONFIG_NAME }} (${{ steps.extract.outputs.CONFIG }}) on ${{ steps.extract.outputs.CHAIN }}"
+          
+          VERIFIER_API_KEY_SONIC=placeholder VERIFIER_URL_SONIC=https://api.sonicscan.org/api \
+          FOUNDRY_PROFILE=core CONFIG=${{ steps.extract.outputs.CONFIG }} \
+          EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
+          forge script silo-core/deploy/silo/VerifySilo.s.sol \
+            --ffi --rpc-url "${{ steps.extract.outputs.RPC_URL }}" \
+            -vvvv \
+            > output.log 2>&1 || true
+
+          echo '```' > result.txt
+          echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> result.txt
+          echo "Commit: ${{ github.sha }}" >> result.txt
+          echo "EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }}" >> result.txt
+          echo "EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }}" >> result.txt
+
+          # extract everything from `== Logs ==` to the end
+          awk '/== Logs ==/ { print_flag = 1 } print_flag' output.log >> result.txt
+          echo '```' >> result.txt
+
+      # Post result as a sticky comment on the PR
+      - name: Comment result on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: verify-silo
+          path: result.txt

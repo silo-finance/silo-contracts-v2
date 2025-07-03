@@ -1,0 +1,303 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: CORE Quality Test
+
+env:
+    RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+    RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+    RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+    RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+    RPC_SONIC: ${{ secrets.RPC_SONIC }}
+    PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
+    VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
+    VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
+    AGGREGATOR: "1INCH" # because it is available on all blockchains
+
+on:
+    push:
+        branches: [ master, develop ]
+        paths:
+            - silo-core/**/*.sol
+            - silo-core/**/*.ts
+            - silo-core/**/*.js
+            - silo-core/**/*.json
+            - silo-oracles/**/*.sol
+            - silo-oracles/**/*.ts
+            - silo-oracles/**/*.js
+            - silo-oracles/**/*.json
+            - package.json
+            - yarn.lock
+            - gitmodules/*
+            - .gitmodules
+            - .github/workflows/silo-core.yml
+
+    pull_request:
+        paths:
+            - silo-core/**/*.sol
+            - silo-core/**/*.ts
+            - silo-core/**/*.js
+            - silo-core/**/*.json
+            - silo-oracles/**/*.sol
+            - silo-oracles/**/*.ts
+            - silo-oracles/**/*.js
+            - silo-oracles/**/*.json
+            - package.json
+            - yarn.lock
+            - gitmodules/*
+            - .gitmodules
+            - .github/workflows/silo-core.yml
+
+jobs:
+    silo-core-cache:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+                with:
+                    submodules: recursive
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    restore-keys: |
+                        silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                        silo-core-contracts-cache-
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Run submodule update
+                run: git submodule update --init --recursive
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: Run single test to build cache for contracts
+                run: FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloStoragePointer
+
+            -   name: Run Forge build
+                run: |
+                    git submodule
+                    forge --version
+                    FOUNDRY_PROFILE=core forge build --sizes
+
+    linters:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout sources
+                uses: actions/checkout@v3
+
+            -   name: Set up Node.js
+                uses: actions/setup-node@v3
+                with:
+                    node-version: 20.x
+                    cache: 'yarn'
+
+            -   run: yarn install
+
+            -   name: Solidity Lint
+                run: yarn workspace silo-core lint:sol
+
+    fast-tests:
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: all fast test
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
+
+    slow-contracts-tests:
+        strategy:
+            matrix:
+                match-contract: [
+                    MaxBorrow,
+                    MaxDepositTest,
+                    MaxLiquidationBadDebt,
+                    PreviewTest,
+                    PreviewDepositTest,
+                    PreviewMintTest
+               ]
+
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: ${{ matrix.match-contract }}
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
+
+    MaxLiquidationTest:
+        strategy:
+            matrix:
+                match-test: [
+                    test_maxLiquidation_noDebt,
+                    test_maxLiquidation_partial_1token_sTokens,
+                    test_maxLiquidation_partial_1token_tokens,
+                    test_maxLiquidation_partial_2tokens_sTokens,
+                    test_maxLiquidation_partial_2tokens_tokens
+               ]
+
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: ${{ matrix.match-test }}
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
+
+    SiloLensCompatibilityTest:
+        strategy:
+            matrix:
+                match-contract: [ SiloLensCompatibilityTest ]
+
+        needs: silo-core-cache
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Cache (home/runner/work)
+                uses: actions/cache@v3
+                with:
+                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
+                    key: home-runner-work-silo-contracts-v2-gitmodules
+
+            -   uses: actions/checkout@v3
+
+            -   name: Cache gitmodules
+                uses: actions/cache@v3
+                with:
+                    path: ./gitmodules/
+                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+
+            -   name: Install Foundry
+                uses: foundry-rs/foundry-toolchain@v1
+                with:
+                    version: stable
+
+            -   name: Build silo foundry utils
+                working-directory: ./gitmodules/silo-foundry-utils
+                run: |
+                    cargo build --release
+                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
+                    ../../silo-foundry-utils --version
+
+            -   name: ${{ matrix.match-contract }}
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
