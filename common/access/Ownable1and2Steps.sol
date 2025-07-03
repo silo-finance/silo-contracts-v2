@@ -7,7 +7,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 abstract contract Ownable1and2Steps is Ownable2Step {
     constructor(address _initialOwner) Ownable(_initialOwner) {}
 
-    /// @notice Transfer ownership to a new address
+    /// @notice Transfer ownership to a new address. Pending ownership transfer will be canceled.
     /// @param newOwner The new owner of the contract
     function transferOwnership1Step(address newOwner) public virtual onlyOwner {
         if (newOwner == address(0)) {
