@@ -16,11 +16,17 @@ RPC_URL="$1"
 HYPERNATIVE_CHAIN_ALIAS="$2"
 DEPLOYMENTS_DIR="$3"
 
-FOUNDRY_PROFILE=core PRINT_ONLY_SILOS=true \
-    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
-    --ffi --rpc-url $RPC_URL | \
-    grep 0x | \
-    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+echo "Submitting silo-core and silo-vaults deployments..."
 
 ./silo-core/scripts/hypernative/printDeployments.sh $DEPLOYMENTS_DIR | \
+    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+
+echo "Submitting Silo addresses..."
+
+silo-core/scripts/hypernative/printSilos.sh $DEPLOYMENTS_DIR | \
+    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+
+echo "Submitting SiloVault addresses..."
+
+./silo-core/scripts/hypernative/printSiloVaults.sh $HYPERNATIVE_CHAIN_ALIAS | \
     ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
