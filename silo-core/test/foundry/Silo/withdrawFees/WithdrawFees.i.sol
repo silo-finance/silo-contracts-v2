@@ -60,7 +60,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1);
-        uint256 interest = silo1.accrueInterest();
+        silo1.accrueInterest();
 
         vm.expectEmit(address(silo1));
         uint256 daoFees = 1; // DAO have higher priority
@@ -203,10 +203,10 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         assertGt(interest, 0, "expect some interest at this point");
 
-        (ISilo.Fractions memory fractions, ) = _printFractions(interest);
+        (ISilo.Fractions memory fractions_, ) = _printFractions(interest);
 
         assertLt(
-            fractions.interest,
+            fractions_.interest,
             prevInterestFraction,
             "prevInterestFraction is result of modulo, so once we got interest it should circle-drop"
         );
@@ -228,8 +228,8 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         emit log_named_decimal_uint("# daoAndDeployerRevenue", prevDaoAndDeployerRevenue, 18);
 
-        (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
-        assertLt(daoAndDeployerRevenue, 10 ** _decimals, "[daoAndDeployerRevenue] only fraction left < 1e18");
+        (uint256 daoAndDeployerRevenue_,,,,) = silo1.getSiloStorage();
+        assertLt(daoAndDeployerRevenue_, 10 ** _decimals, "[daoAndDeployerRevenue] only fraction left < 1e18");
     }
 
     /*

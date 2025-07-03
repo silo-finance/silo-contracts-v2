@@ -44,7 +44,7 @@ contract VaultHandler is BaseHandler {
             _after();
 
             if (_collateralType == ISilo.CollateralType.Collateral) {
-                (uint256 totalCollateralAssets,) = vault1.getCollateralAndDebtTotalsStorage();
+                vault1.getCollateralAndDebtTotalsStorage();
                 assertApproxEqAbs(
                     defaultVarsBefore[target].totalAssets + _assets,
                     defaultVarsAfter[target].totalAssets,

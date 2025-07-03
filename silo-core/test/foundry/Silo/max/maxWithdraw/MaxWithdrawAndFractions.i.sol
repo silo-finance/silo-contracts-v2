@@ -100,7 +100,6 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
     }
 
     function _executeWithdrawScenario1(uint256 _borrowAmount, bool _redeem) internal {
-        address borrower = address(this);
         _borrowAndUpdateSiloCode(_borrowAmount);
 
         if (_redeem) {
