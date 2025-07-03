@@ -458,11 +458,11 @@
     },
     "PYTH_wstkscUSD_dUSD": {
         "baseToken": "wstkscUSD",
-        "quoteToken": "dUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "PYTH_wstkscUSD_scUSD_aggregator",
         "primaryHeartbeat": 7200,
-        "secondaryAggregator": "",
-        "secondaryHeartbeat": 0,
+        "secondaryAggregator": "CHAINLINK_scUSD_USD_aggregator",
+        "secondaryHeartbeat": 87001,
         "normalizationDivider": 1e4,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
