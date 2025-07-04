@@ -38,3 +38,9 @@ For `SiloVault` and `Silo` `decimals()` fn return underlying asset decimals (USD
 Silo incentives controller with version < 3.6.0 has issue with `getProgramName` fn. It fails to convert the immediate 
 distribution program name into a proper string representation.
 Silos incentives controller with this issue: Sonic 1 - 101, Arbitrum 100 - 111, Optimism - 100, Ink - 100 - 101.
+
+### Debt share tokens approval for the leverage smart contract
+
+The leverage contract requires approval of share debt tokens so it can borrow on behalf of the user. Recent versions of the debt share token used `approve` fn for that, but it was changed in PR#1098 (Release 3.0.0), and after that change, we need to use `setReceiveApproval` fn.
+
+Affected only silos with id < 100 on Sonic.
