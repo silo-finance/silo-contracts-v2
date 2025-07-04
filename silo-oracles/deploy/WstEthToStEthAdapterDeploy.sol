@@ -5,6 +5,8 @@ import {CommonDeploy} from "./CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {WstEthToStEthAdapter} from "silo-oracles/contracts/custom/WstEthToStEthAdapter.sol";
 import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 /**
     FOUNDRY_PROFILE=oracles \
@@ -13,8 +15,11 @@ import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
  */
 contract WstEthToStEthAdapterDeploy is CommonDeploy {
     function run() public returns (WstEthToStEthAdapter adapter) {
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        if (!Strings.equal(ChainsLib.chainAlias(), "mainnet")) {
+            revert("Unsupported chain for WstEthToStEthAdapter");
+        }
 
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
         adapter = new WstEthToStEthAdapter();
