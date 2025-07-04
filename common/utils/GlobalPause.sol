@@ -113,6 +113,7 @@ contract GlobalPause is Pausable {
         // Sanity check to avoid blockage of the `pauseAll` fn
         // in case contract ownership was transferred and contract was not removed.
         if (IOwnableLike(_contract).owner() != address(this)) return;
+
         IPausable(_contract).pause();
         emit Paused(_contract);
     }
