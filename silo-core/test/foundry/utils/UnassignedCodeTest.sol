@@ -12,8 +12,6 @@ contract A {
 contract UnassignedCodeTest is Test {
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_ifUnassignedCodeWillBeExecuted
-
-    this test is to confirm, that all checks we doing in `IRM.configOverflowCheck` method, will be executed
     */
     function test_ifUnassignedCodeWillBeExecuted() public {
         A a = new A();
