@@ -256,4 +256,7 @@ interface ISiloLens {
     function getSiloIncentivesControllerProgramsNames(
         address _siloIncentivesController
     ) external view returns (string[] memory programsNames);
+
+    /// @notice Returns oracle addresses for silo
+    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle);
 }
