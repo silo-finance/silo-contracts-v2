@@ -59,9 +59,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         }
     }
 
-
     /*
-    forge test -vv --mt test_PartialLiquidationLib_liquidationPreview_pass
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_PartialLiquidationLib_liquidationPreview_pass
     */
     function test_PartialLiquidationLib_liquidationPreview_pass() public {
         LiquidationPreviewTestData json = new LiquidationPreviewTestData();
