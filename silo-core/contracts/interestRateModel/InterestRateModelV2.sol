@@ -389,8 +389,8 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             int256 ri_max = _max(_config.ri, rlin_max) +_config.ki * (DP - _config.uopt) * MAX_TIME / DP;
             int256 ri_min = -_config.ki * _config.uopt * MAX_TIME / DP;
             rcur_max = ri_max + rp_max;
-            ri_min + rp_min;
-            rcur_max * YEAR;
+            int256 rcur_min = ri_min + rp_min;
+            int256 rcur_ann_max = rcur_max * YEAR;
         }
 
         {
@@ -399,7 +399,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             int256 slope_max = slopei_max + _config.kcrit * _config.beta / DP * (DP - _config.ucrit) / DP;
             int256 slope_min = slopei_min;
 
-            rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;
+            int256 x_max = rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;
         }
     }
 
