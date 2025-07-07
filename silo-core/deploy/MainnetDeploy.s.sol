@@ -32,7 +32,7 @@ contract MainnetDeploy is CommonDeploy {
         LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
         SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
         TowerDeploy towerDeploy = new TowerDeploy();
-        SiloRouterV2Deploy SiloRouterV2Deploy = new SiloRouterV2Deploy();
+        SiloRouterV2Deploy siloRouterV2Deploy = new SiloRouterV2Deploy();
         ManualLiquidationHelperDeploy manualLiquidationHelperDeploy = new ManualLiquidationHelperDeploy();
 
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
@@ -47,7 +47,7 @@ contract MainnetDeploy is CommonDeploy {
         liquidationHelperDeploy.run();
         siloLensDeploy.run();
         towerDeploy.run();
-        SiloRouterV2Deploy.run();
+        siloRouterV2Deploy.run();
         siloIncentivesControllerFactoryDeploy.run();
         manualLiquidationHelperDeploy.run();
     }

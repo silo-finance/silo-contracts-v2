@@ -194,7 +194,7 @@ contract BorrowingHandler is BaseHandler {
 
         uint256 liquidity = ISilo(target).getLiquidity();
 
-        uint256 protectedAssets = _getUserProtectedAssets(target, owner);
+        _getUserProtectedAssets(target, owner);
 
         uint256 _assets = ISilo(target).convertToAssets(
             _shares,

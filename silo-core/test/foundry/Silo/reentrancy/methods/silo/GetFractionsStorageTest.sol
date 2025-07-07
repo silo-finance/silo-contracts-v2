@@ -11,7 +11,7 @@ contract GetFractionsStorageTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -19,7 +19,7 @@ contract GetFractionsStorageTest is MethodReentrancyTest {
         description = "getFractionsStorage()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
