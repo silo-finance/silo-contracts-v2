@@ -96,14 +96,14 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             );
 
             assertEq(
+                ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, _concatMsg(i, "] expect ltvAfterLiquidation")
+            );
+            assertEq(
                 collateralAssetsToLiquidate, data[i].output.collateralAssetsToLiquidate,
                 _concatMsg(i, "] output.collateralAssetsToLiquidate")
             );
             assertEq(
                 debtAssetsToRepay, data[i].output.debtAssetsToRepay, _concatMsg(i, "] expect debtAssetsToRepay")
-            );
-            assertEq(
-                ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, _concatMsg(i, "] expect ltvAfterLiquidation")
             );
         }
     }
