@@ -75,6 +75,7 @@ contract PublicAllocatorTest is IntegrationTest {
         assertEq(publicAllocator.admin(vault), address(1));
     }
 
+    
     function testSetAdminByAdmin(address sender, address newAdmin) public {
         vm.assume(publicAllocator.admin(vault) != sender);
         vm.assume(sender != newAdmin);
