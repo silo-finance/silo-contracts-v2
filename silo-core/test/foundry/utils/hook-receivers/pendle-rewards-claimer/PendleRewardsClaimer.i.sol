@@ -342,7 +342,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookConfigurationDuringInit -vv
-    function test_hookConfigurationDuringInit() public {
+    function test_hookConfigurationDuringInit() public view {
         (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(address(silo0));
         
         // All before actions should be configured (type(uint24).max)

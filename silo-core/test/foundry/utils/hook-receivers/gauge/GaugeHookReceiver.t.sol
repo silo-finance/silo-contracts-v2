@@ -180,13 +180,13 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         (uint24 hooksBefore0, uint24 hooksAfter0) = _hookReceiver.hookReceiverConfig(silo0);
 
         IShareToken.HookSetup memory silo0HooksBefore = IShareToken(address(silo0)).hookSetup();
-        IShareToken.HookSetup memory silo1HooksBefore = IShareToken(address(silo1)).hookSetup();
+        IShareToken(address(silo1)).hookSetup();
 
         vm.prank(_dao);
         _hookReceiver.removeGauge(IShareToken(shareCollateralToken));
 
         IShareToken.HookSetup memory silo0HooksAfter = IShareToken(address(silo0)).hookSetup();
-        IShareToken.HookSetup memory silo1HooksAfter = IShareToken(address(silo1)).hookSetup();
+        IShareToken(address(silo1)).hookSetup();
 
         (uint24 hooksBefore1, uint24 hooksAfter1) = _hookReceiver.hookReceiverConfig(silo0);
 

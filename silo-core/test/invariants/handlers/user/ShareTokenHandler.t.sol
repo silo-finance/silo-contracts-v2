@@ -207,7 +207,7 @@ contract ShareTokenHandler is BaseHandler {
     }
 
     function receiveAllowance(
-        uint256 _addedValue,
+        uint256 /* _addedValue */,
         uint8 i,
         uint8 j,
         uint8 k
