@@ -1,64 +1,94 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-# This script reads addresses from stdin and adds these addresses to existing Hypernative monitor.
-# HYPERNATIVE_WATCHLIST, HYPERNATIVE_CLIENT_ID and HYPERNATIVE_CLIENT_SECRET must be set.
+"""
+This script reads Ethereum addresses from stdin and adds them to an existing Hypernative monitor.
 
-# Usage example:
-# Chain name (sonic) should be one of items from this list
-# https://docs.hypernative.xyz/hypernative-product-docs/hypernative-web-application/supported-chains
-# FOUNDRY_PROFILE=core \
-#    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
-#    --ffi --rpc-url $RPC_SONIC | grep 0x | ./silo-core/scripts/hypernative.sh sonic
+Environment variables required:
+- HYPERNATIVE_WATCHLIST: The full PATCH API URL of the watchlist endpoint.
+- HYPERNATIVE_CLIENT_ID: Your Hypernative client ID.
+- HYPERNATIVE_CLIENT_SECRET: Your Hypernative client secret.
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <chain-name>"
-    exit 1
-fi
+Usage:
+    python3 hypernative_submit.py <chain-name>
 
-CHAIN_NAME="$1"
-ADDRESSES=()
+Example integration:
+    The chain name (e.g., 'sonic') must be one of the supported chains:
+    https://docs.hypernative.xyz/hypernative-product-docs/hypernative-web-application/supported-chains
 
-# Read addresses from stdin
-while read -r address; do
-    [[ -z "$address" ]] && continue
-    ADDRESSES+=("$address")
-done
+    Example command that pipes addresses to this script:
+        FOUNDRY_PROFILE=core \
+        forge script silo-core/scripts/PrintSiloAddresses.s.sol \
+        --ffi --rpc-url $RPC_SONIC | grep 0x | python3 hypernative_submit.py sonic
+"""
 
-# Build the JSON payload dynamically
-JSON_ASSETS=""
-for ((i = 0; i < ${#ADDRESSES[@]}; i++)); do
-    ADDR="${ADDRESSES[$i]}"
-    COMMA=","
-    [[ $i -eq $((${#ADDRESSES[@]} - 1)) ]] && COMMA=""
-    JSON_ASSETS+="
-        {
-        \"chain\": \"${CHAIN_NAME}\",
-        \"type\": \"Contract\",
-        \"address\": \"${ADDR}\"
-        }${COMMA}"
-done
+import sys
+import os
+import json
+import requests
 
-echo "Amount of addresses to submit is ${#ADDRESSES[@]}"
+def main():
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <chain-name>")
+        sys.exit(1)
 
-RESPONSE=$(curl -X 'PATCH' \
-    "$HYPERNATIVE_WATCHLIST" \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
-    -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
-    -d '{
-    "name": "All Silo0 and Silo1 addresses",
-    "description": "",
-    "assets": [
-    '"$JSON_ASSETS"'
-    ],
-    "mode": "add"
-}' 2>/dev/null)
+    chain_name = sys.argv[1]
+    addresses = []
 
-if echo "$RESPONSE" | grep -q '"success"[[:space:]]*:[[:space:]]*true'; then
-    echo "Success from Hypernative response for $CHAIN_NAME"
-    exit 0
-else
-    echo "Error: PATCH failed or did not return \"success\":true in response" >&2
-    exit 1
-fi
+    # Read addresses from stdin
+    for line in sys.stdin:
+        address = line.strip()
+        if address:
+            addresses.append(address)
+
+    if not addresses:
+        print("No addresses provided on stdin.")
+        sys.exit(1)
+
+    print(f"Amount of addresses to submit is {len(addresses)}")
+
+    # Build assets JSON array
+    assets = [{
+        "chain": chain_name,
+        "type": "Contract",
+        "address": addr
+    } for addr in addresses]
+
+    payload = {
+        "name": "All Silo0 and Silo1 addresses",
+        "description": "",
+        "assets": assets,
+        "mode": "add"
+    }
+
+    url = os.getenv("HYPERNATIVE_WATCHLIST")
+    client_id = os.getenv("HYPERNATIVE_CLIENT_ID")
+    client_secret = os.getenv("HYPERNATIVE_CLIENT_SECRET")
+
+    if not url or not client_id or not client_secret:
+        print("Error: HYPERNATIVE_WATCHLIST, HYPERNATIVE_CLIENT_ID, or HYPERNATIVE_CLIENT_SECRET not set.", file=sys.stderr)
+        sys.exit(1)
+
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+        "x-client-id": client_id,
+        "x-client-secret": client_secret,
+    }
+
+    try:
+        response = requests.patch(url, headers=headers, json=payload)
+        response.raise_for_status()
+        result = response.json()
+    except Exception as e:
+        print(f"Error: PATCH failed - {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if result.get("success") is True:
+        print(f"Success from Hypernative response for {chain_name}")
+        sys.exit(0)
+    else:
+        print("Error: PATCH failed or did not return \"success\": true in response", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
