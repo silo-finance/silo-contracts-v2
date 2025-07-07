@@ -347,7 +347,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         sig = ISiloLens.getSiloIncentivesControllerProgramsNames.selector;
     }
 
-    function _getOracleAddresses(ISilo _silo) internal pure returns (bytes4 sig) {
+    function _getOracleAddresses(ISilo _silo) internal view returns (bytes4 sig) {
         // expect do not revert
         _lens.getOracleAddresses(_silo);
         sig = ISiloLens.getOracleAddresses.selector;
