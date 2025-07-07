@@ -15,7 +15,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
  */
 contract WstEthToStEthAdapterMainnetDeploy is CommonDeploy {
     function run() public returns (WstEthToStEthAdapterMainnet adapter) {
-        if (!Strings.equal(ChainsLib.chainAlias(), "mainnet")) {
+        if (!Strings.equal(ChainsLib.chainAlias(), ChainsLib.MAINNET_ALIAS)) {
             revert("Unsupported chain for WstEthToStEthAdapter");
         }
 

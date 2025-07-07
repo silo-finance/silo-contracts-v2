@@ -3,10 +3,7 @@ pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
-
-interface IStEthLike {
-    function getPooledEthByShares(uint256 _sharesAmount) external view returns (uint256);
-}
+import {IStEthLike} from "silo-oracles/contracts/interfaces/IStEthLike.sol";
 
 /// @title wstETH / stETH adapter on Ethereum mainnet.
 /// @notice Adapter returns wstETH contract rate in AggregatorV3Interface interface.

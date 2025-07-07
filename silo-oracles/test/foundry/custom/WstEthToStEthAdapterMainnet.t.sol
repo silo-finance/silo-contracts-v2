@@ -28,6 +28,7 @@ contract WstEthToStEthAdapterMainnetTest is TokensGenerator {
 
     function test_WstEthToStEthAdapterMainnet_constructor() public view {
         assertEq(address(adapter.STETH()), address(STETH), "STETH address is valid");
+        assertTrue(Strings.equal(IERC20Metadata(address(adapter.STETH())).symbol(), "stETH"), "stETH symbol correct");
     }
 
     function test_WstEthToStEthAdapterMainnet_decimals() public view {
