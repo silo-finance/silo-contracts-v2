@@ -8,9 +8,11 @@ interface IStEthLike {
     function getPooledEthByShares(uint256 _sharesAmount) external view returns (uint256);
 }
 
-/// @title wstETH / stETH adapter
+/// @title wstETH / stETH adapter on Ethereum mainnet.
 /// @notice Adapter returns wstETH contract rate in AggregatorV3Interface interface.
-contract WstEthToStEthAdapter is AggregatorV3Interface {
+/// @dev wstETH implementation uses external call to stETH to get the rate. We could use wstETH.getStETHByWstETH()
+/// (it is a wrapper for stETH call), but direct call saves gas.
+contract WstEthToStEthAdapterMainnet is AggregatorV3Interface {
     IStEthLike public constant STETH = IStEthLike(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);
 
     /// @dev Revert when getRoundData() is called.

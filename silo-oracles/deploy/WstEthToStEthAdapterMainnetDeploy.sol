@@ -3,18 +3,18 @@ pragma solidity >=0.7.6;
 
 import {CommonDeploy} from "./CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
-import {WstEthToStEthAdapter} from "silo-oracles/contracts/custom/WstEthToStEthAdapter.sol";
+import {WstEthToStEthAdapterMainnet} from "silo-oracles/contracts/custom/WstEthToStEthAdapterMainnet.sol";
 import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 /**
     FOUNDRY_PROFILE=oracles \
-        forge script silo-oracles/deploy/WstEthToStEthAdapterDeploy.sol \
+        forge script silo-oracles/deploy/WstEthToStEthAdapterMainnetDeploy.sol \
         --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
-contract WstEthToStEthAdapterDeploy is CommonDeploy {
-    function run() public returns (WstEthToStEthAdapter adapter) {
+contract WstEthToStEthAdapterMainnetDeploy is CommonDeploy {
+    function run() public returns (WstEthToStEthAdapterMainnet adapter) {
         if (!Strings.equal(ChainsLib.chainAlias(), "mainnet")) {
             revert("Unsupported chain for WstEthToStEthAdapter");
         }
@@ -22,10 +22,10 @@ contract WstEthToStEthAdapterDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
-        adapter = new WstEthToStEthAdapter();
+        adapter = new WstEthToStEthAdapterMainnet();
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(adapter), SiloOraclesContracts.WSTETH_TO_STETH_ADAPTER);
+        _registerDeployment(address(adapter), SiloOraclesContracts.WSTETH_TO_STETH_ADAPTER_MAINNET);
     }
 }

@@ -1,45 +1,45 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {WstEthToStEthAdapter, IStEthLike} from "silo-oracles/contracts/custom/WstEthToStEthAdapter.sol";
+import {WstEthToStEthAdapterMainnet, IStEthLike} from "silo-oracles/contracts/custom/WstEthToStEthAdapterMainnet.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {TokensGenerator} from "../_common/TokensGenerator.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /*
-    FOUNDRY_PROFILE=oracles forge test -vv --match-contract WstEthToStEthAdapter
+    FOUNDRY_PROFILE=oracles forge test -vv --match-contract WstEthToStEthAdapterMainnet
 */
 
 interface IWstEthLike {
     function unwrap(uint256 _wstETHAmount) external returns (uint256);
 }
 
-contract WstEthToStEthAdapterTest is TokensGenerator {
+contract WstEthToStEthAdapterMainnetTest is TokensGenerator {
     uint256 constant TEST_BLOCK = 22846446;
     IStEthLike constant STETH = IStEthLike(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);
     address constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-    WstEthToStEthAdapter adapter;
+    WstEthToStEthAdapterMainnet adapter;
 
     constructor() TokensGenerator(BlockChain.ETHEREUM) {
         initFork(TEST_BLOCK);
-        adapter = new WstEthToStEthAdapter();
+        adapter = new WstEthToStEthAdapterMainnet();
     }
 
-    function test_WstEthToStEthAdapter_constructor() public view {
+    function test_WstEthToStEthAdapterMainnet_constructor() public view {
         assertEq(address(adapter.STETH()), address(STETH), "STETH address is valid");
     }
 
-    function test_WstEthToStEthAdapter_decimals() public view {
+    function test_WstEthToStEthAdapterMainnet_decimals() public view {
         assertEq(adapter.decimals(), 18, "decimals are 18");
     }
 
-    function test_WstEthToStEthAdapter_description() public view {
+    function test_WstEthToStEthAdapterMainnet_description() public view {
         assertTrue(Strings.equal(adapter.description(), "wstETH / stETH adapter"), "description expected");
     }
 
-    function test_WstEthToStEthAdapter_latestRoundData_compareToOriginalRate() public {
-        AggregatorV3Interface aggregator = AggregatorV3Interface(new WstEthToStEthAdapter());
+    function test_WstEthToStEthAdapterMainnet_latestRoundData_compareToOriginalRate() public {
+        AggregatorV3Interface aggregator = AggregatorV3Interface(new WstEthToStEthAdapterMainnet());
         int256 originalRate = int256(STETH.getPooledEthByShares(1 ether));
 
         (
@@ -58,7 +58,7 @@ contract WstEthToStEthAdapterTest is TokensGenerator {
         assertEq(answeredInRound, 1);
     }
 
-    function test_WstEthToStEthAdapter_latestRoundData_integration() public {
+    function test_WstEthToStEthAdapterMainnet_latestRoundData_integration() public {
         deal(WSTETH, address(this), 1 ether);
         (, int256 answer,,,) = adapter.latestRoundData();
 
