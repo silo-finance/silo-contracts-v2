@@ -25,7 +25,7 @@ contract LiquidationPreviewTestData {
     }
 
     function readDataFromJson() external pure returns (CELAData[] memory data) {
-        data = new CELAData[](13);
+        data = new CELAData[](13 + 80);
         uint256 i;
 
         data[i++] = CELAData({ // #0
@@ -273,7 +273,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #0
+        data[i++] = CELAData({ // #13
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -291,7 +291,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #1
+        data[i++] = CELAData({ // #14
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -309,7 +309,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #2
+        data[i++] = CELAData({ // #15
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -327,7 +327,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #3
+        data[i++] = CELAData({ // #16
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -345,7 +345,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #4
+        data[i++] = CELAData({ // #17
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -363,7 +363,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #5
+        data[i++] = CELAData({ // #18
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -381,7 +381,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #6
+        data[i++] = CELAData({ // #19
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -399,7 +399,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #7
+        data[i++] = CELAData({ // #20
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -417,7 +417,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #8
+        data[i++] = CELAData({ // #21
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -435,7 +435,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #9
+        data[i++] = CELAData({ // #22
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -453,7 +453,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #10
+        data[i++] = CELAData({ // #23
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -471,7 +471,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #11
+        data[i++] = CELAData({ // #24
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -489,7 +489,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #12
+        data[i++] = CELAData({ // #25
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -507,7 +507,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #13
+        data[i++] = CELAData({ // #26
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -525,7 +525,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #14
+        data[i++] = CELAData({ // #27
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -543,7 +543,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #15
+        data[i++] = CELAData({ // #28
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -561,7 +561,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #16
+        data[i++] = CELAData({ // #29
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -579,7 +579,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #17
+        data[i++] = CELAData({ // #30
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -597,7 +597,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #18
+        data[i++] = CELAData({ // #31
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -615,7 +615,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #19
+        data[i++] = CELAData({ // #32
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -633,7 +633,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #20
+        data[i++] = CELAData({ // #33
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -651,7 +651,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #21
+        data[i++] = CELAData({ // #34
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -669,7 +669,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #22
+        data[i++] = CELAData({ // #35
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -687,7 +687,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #23
+        data[i++] = CELAData({ // #36
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -705,7 +705,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #24
+        data[i++] = CELAData({ // #37
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -723,7 +723,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #25
+        data[i++] = CELAData({ // #38
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -741,7 +741,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #26
+        data[i++] = CELAData({ // #39
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -759,7 +759,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #27
+        data[i++] = CELAData({ // #40
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -777,7 +777,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #28
+        data[i++] = CELAData({ // #41
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -795,7 +795,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #29
+        data[i++] = CELAData({ // #42
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -813,7 +813,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #30
+        data[i++] = CELAData({ // #43
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -831,7 +831,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #31
+        data[i++] = CELAData({ // #44
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -849,7 +849,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #32
+        data[i++] = CELAData({ // #45
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -867,7 +867,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #33
+        data[i++] = CELAData({ // #46
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -885,7 +885,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #34
+        data[i++] = CELAData({ // #47
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -903,7 +903,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #35
+        data[i++] = CELAData({ // #48
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -921,7 +921,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #36
+        data[i++] = CELAData({ // #49
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -939,7 +939,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #37
+        data[i++] = CELAData({ // #50
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -957,7 +957,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #38
+        data[i++] = CELAData({ // #51
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -975,7 +975,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #39
+        data[i++] = CELAData({ // #52
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -993,7 +993,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #40
+        data[i++] = CELAData({ // #53
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1011,7 +1011,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #41
+        data[i++] = CELAData({ // #54
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1029,7 +1029,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #42
+        data[i++] = CELAData({ // #55
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1047,7 +1047,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #43
+        data[i++] = CELAData({ // #56
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1065,7 +1065,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #44
+        data[i++] = CELAData({ // #57
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1083,7 +1083,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #45
+        data[i++] = CELAData({ // #58
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1101,7 +1101,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #46
+        data[i++] = CELAData({ // #59
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1119,7 +1119,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #47
+        data[i++] = CELAData({ // #60
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1137,7 +1137,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #48
+        data[i++] = CELAData({ // #61
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1155,7 +1155,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #49
+        data[i++] = CELAData({ // #62
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1173,7 +1173,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #50
+        data[i++] = CELAData({ // #63
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1191,7 +1191,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #51
+        data[i++] = CELAData({ // #64
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1209,7 +1209,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #52
+        data[i++] = CELAData({ // #65
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1227,7 +1227,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #53
+        data[i++] = CELAData({ // #66
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1245,7 +1245,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #54
+        data[i++] = CELAData({ // #67
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1263,7 +1263,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #55
+        data[i++] = CELAData({ // #68
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1281,7 +1281,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #56
+        data[i++] = CELAData({ // #69
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1299,7 +1299,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #57
+        data[i++] = CELAData({ // #70
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1317,7 +1317,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #58
+        data[i++] = CELAData({ // #71
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1335,7 +1335,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #59
+        data[i++] = CELAData({ // #72
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1353,7 +1353,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #60
+        data[i++] = CELAData({ // #73
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1371,7 +1371,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #61
+        data[i++] = CELAData({ // #74
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1389,7 +1389,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #62
+        data[i++] = CELAData({ // #75
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1407,7 +1407,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #63
+        data[i++] = CELAData({ // #76
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1425,7 +1425,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #64
+        data[i++] = CELAData({ // #77
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1443,7 +1443,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #65
+        data[i++] = CELAData({ // #78
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1461,7 +1461,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #66
+        data[i++] = CELAData({ // #79
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1479,7 +1479,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #67
+        data[i++] = CELAData({ // #80
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1497,7 +1497,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #68
+        data[i++] = CELAData({ // #81
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1515,7 +1515,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #69
+        data[i++] = CELAData({ // #82
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1533,7 +1533,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #70
+        data[i++] = CELAData({ // #83
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1551,7 +1551,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #71
+        data[i++] = CELAData({ // #84
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1569,7 +1569,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #72
+        data[i++] = CELAData({ // #85
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1587,7 +1587,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #73
+        data[i++] = CELAData({ // #86
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1605,7 +1605,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #74
+        data[i++] = CELAData({ // #87
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1623,7 +1623,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #75
+        data[i++] = CELAData({ // #88
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1641,7 +1641,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #76
+        data[i++] = CELAData({ // #89
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1659,7 +1659,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #77
+        data[i++] = CELAData({ // #90
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1677,7 +1677,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #78
+        data[i++] = CELAData({ // #91
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
@@ -1695,7 +1695,7 @@ contract LiquidationPreviewTestData {
             })
         });
 
-        data[i++] = CELAData({ // #79
+        data[i++] = CELAData({ // #92
             input: Input({
                 lt: 800000000000000000,
                 liquidationTargetLtv: 720000000000000000,
