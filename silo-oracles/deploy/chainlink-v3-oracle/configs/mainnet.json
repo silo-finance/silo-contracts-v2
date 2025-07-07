@@ -40,6 +40,17 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "CHAINLINK_HARDCODE_tETH_WETH": {
+        "baseToken": "tETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_tETH_wstETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "WSTETH_ADAPTER_wstETH_stETH_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e36,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "REDSTONE_ezETH_WETH": {
         "baseToken": "ezETH",
         "quoteToken": "WETH",
