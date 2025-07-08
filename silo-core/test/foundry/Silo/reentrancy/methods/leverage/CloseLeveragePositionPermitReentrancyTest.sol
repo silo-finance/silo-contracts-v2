@@ -18,6 +18,7 @@ contract CloseLeveragePositionPermitReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
+        // solhint-disable-next-line max-line-length
         description = "closeLeveragePositionPermit(bytes,(address,address,uint8),(uint256,uint256,uint8,bytes32,bytes32))";
     }
 }

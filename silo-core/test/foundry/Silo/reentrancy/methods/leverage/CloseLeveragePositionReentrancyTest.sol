@@ -44,7 +44,7 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
     }
 
     function _closeLeverage() internal {
-        address user = makeAddr("User");
+        address user = wallet.addr;
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
             flashloanTarget: address(TestStateLib.silo1()),
