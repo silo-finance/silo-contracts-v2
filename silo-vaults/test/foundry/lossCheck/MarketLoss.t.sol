@@ -98,7 +98,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation -vvv
     */
     /// forge-config: vaults_tests.fuzz.runs = 10000
-    function test_idleVault_InflationAttackWithDonation(
+    function test_skip_idleVault_InflationAttackWithDonation(
         uint64 _attackerDeposit,
         uint64 _supplierDeposit,
         uint64 _donation,

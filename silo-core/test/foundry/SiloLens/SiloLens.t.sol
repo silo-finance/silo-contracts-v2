@@ -54,6 +54,19 @@ contract SiloLensTest is SiloLittleHelper, Test {
     }
 
     /*
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_SiloLens_getOracleAddresses
+    */
+    function test_SiloLens_getOracleAddresses() public view {
+        (address solvencyOracle, address maxLtvOracle) = (siloLens.getOracleAddresses(silo0));
+        assertEq(solvencyOracle, address(0), "solvencyOracle0");
+        assertEq(maxLtvOracle, address(0), "maxLtvOracle0");
+
+        (solvencyOracle, maxLtvOracle) = (siloLens.getOracleAddresses(silo1));
+        assertEq(solvencyOracle, address(0), "solvencyOracle1");
+        assertEq(maxLtvOracle, address(0), "maxLtvOracle1");
+    }
+
+    /*
         forge test -vvv --ffi --mt test_SiloLens_getDepositAPR
     */
     function test_SiloLens_getDepositAPR() public view {

@@ -257,7 +257,7 @@ contract SiloLens is ISiloLens {
         for (uint256 i; i < originalProgramsNames.length; i++) {
             bytes memory originalProgramName = bytes(originalProgramsNames[i]);
 
-            if (isTokenAddress(originalProgramName)) {
+            if (_isTokenAddress(originalProgramName)) {
                 address token = address(bytes20(originalProgramName));
                 programsNames[i] = Strings.toHexString(token);
             } else {
@@ -266,7 +266,14 @@ contract SiloLens is ISiloLens {
         }
     }
 
-    function isTokenAddress(bytes memory _name) private view returns (bool isToken) {
+    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle) {
+        ISiloConfig.ConfigData memory config = _silo.config().getConfig(address(_silo));
+
+        solvencyOracle = config.solvencyOracle;
+        maxLtvOracle = config.maxLtvOracle;
+    }
+
+    function _isTokenAddress(bytes memory _name) private view returns (bool isToken) {
         if (_name.length != 20) return false;
 
         address token = address(bytes20(_name));
