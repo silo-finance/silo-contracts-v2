@@ -9,6 +9,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
+import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -34,25 +35,38 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
         swap.setSwap(TestStateLib.token1(), flashloanAmount, TestStateLib.token0(), flashloanAmount * 99 / 100);
 
         TestStateLib.enableLeverageReentrancy();
-        
+
         // Execute leverage position opening
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(TestStateLib.token0());
 
-        vm.startPrank(user);
-
+        vm.prank(user);
         leverage.openLeveragePositionPermit({
             _flashArgs: flashArgs,
             _swapArgs: abi.encode(swapArgs),
             _depositArgs: depositArgs,
-            _depositAllowance: _generatePermit(TestStateLib.token0())
+            _depositAllowance: permit
         });
-
-        vm.stopPrank();
 
         TestStateLib.disableLeverageReentrancy();
     }
 
     function verifyReentrancy() external override{
+        address user = wallet.addr;
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        ) = _prepareLeverageArgs(0, 0);
+
+        // Execute leverage position opening
+        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+
+        ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(TestStateLib.token0());
+
+        vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
+        leverage.openLeveragePositionPermit(flashArgs, abi.encode(swapArgs), depositArgs, permit);
     }
 
     function methodDescription() external pure override returns (string memory description) {

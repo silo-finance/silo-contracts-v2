@@ -35,31 +35,31 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
     bytes4[] public supportedMethods;
 
     constructor() {
-        // _registerMethod(new DescriptionReentrancyTest());
-        // _registerMethod(new SwapModuleReentrancyTest());
-        // _registerMethod(new CalculateDebtReceiveApprovalReentrancyTest());
+        _registerMethod(new DescriptionReentrancyTest());
+        _registerMethod(new SwapModuleReentrancyTest());
+        _registerMethod(new CalculateDebtReceiveApprovalReentrancyTest());
         _registerMethod(new OpenLeveragePositionPermitReentrancyTest());
-        // _registerMethod(new OpenLeveragePositionReentrancyTest());
-        // _registerMethod(new CloseLeveragePositionPermitReentrancyTest()); // TODO
-        // _registerMethod(new CloseLeveragePositionReentrancyTest());
-        // _registerMethod(new OnFlashLoanReentrancyTest());
-        // _registerMethod(new NativeTokenReentrancyTest());
-        // _registerMethod(new FeePrecisionReentrancyTest());
-        // _registerMethod(new LeverageFeeReentrancyTest());
-        // _registerMethod(new RevenueReceiverReentrancyTest());
-        // _registerMethod(new PauseReentrancyTest());
-        // _registerMethod(new UnpauseReentrancyTest());
-        // _registerMethod(new SetLeverageFeeReentrancyTest());
-        // _registerMethod(new SetRevenueReceiverReentrancyTest());
-        // _registerMethod(new RescueTokensArrayReentrancyTest());
-        // _registerMethod(new RescueTokensSingleReentrancyTest());
-        // _registerMethod(new CalculateLeverageFeeReentrancyTest());
-        // _registerMethod(new OwnerReentrancyTest());
-        // _registerMethod(new PendingOwnerReentrancyTest());
-        // _registerMethod(new TransferOwnershipReentrancyTest());
-        // _registerMethod(new AcceptOwnershipReentrancyTest());
-        // _registerMethod(new RenounceOwnershipReentrancyTest());
-        // _registerMethod(new PausedReentrancyTest());
+        _registerMethod(new OpenLeveragePositionReentrancyTest());
+        _registerMethod(new CloseLeveragePositionPermitReentrancyTest());
+        _registerMethod(new CloseLeveragePositionReentrancyTest());
+        _registerMethod(new OnFlashLoanReentrancyTest());
+        _registerMethod(new NativeTokenReentrancyTest());
+        _registerMethod(new FeePrecisionReentrancyTest());
+        _registerMethod(new LeverageFeeReentrancyTest());
+        _registerMethod(new RevenueReceiverReentrancyTest());
+        _registerMethod(new PauseReentrancyTest());
+        _registerMethod(new UnpauseReentrancyTest());
+        _registerMethod(new SetLeverageFeeReentrancyTest());
+        _registerMethod(new SetRevenueReceiverReentrancyTest());
+        _registerMethod(new RescueTokensArrayReentrancyTest());
+        _registerMethod(new RescueTokensSingleReentrancyTest());
+        _registerMethod(new CalculateLeverageFeeReentrancyTest());
+        _registerMethod(new OwnerReentrancyTest());
+        _registerMethod(new PendingOwnerReentrancyTest());
+        _registerMethod(new TransferOwnershipReentrancyTest());
+        _registerMethod(new AcceptOwnershipReentrancyTest());
+        _registerMethod(new RenounceOwnershipReentrancyTest());
+        _registerMethod(new PausedReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {

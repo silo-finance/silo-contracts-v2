@@ -37,26 +37,12 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
 
     function verifyReentrancy() external virtual {
         address user = wallet.addr;
-        // Prepare leverage arguments
-        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
-            flashloanTarget: address(0),
-            amount: 0
-        });
 
-        ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
-            silo: TestStateLib.silo0(),
-            amount: 0,
-            collateralType: ISilo.CollateralType.Collateral
-        });
-
-        // Mock swap module arguments
-        IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
-            buyToken: address(0),
-            sellToken: address(0),
-            allowanceTarget: address(0),
-            exchangeProxy: address(0),
-            swapCallData: "mocked swap data"
-        });
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        ) = _prepareLeverageArgs(0, 0);
 
         // Execute leverage position opening
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
@@ -137,7 +123,6 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
 
         MaliciousToken(TestStateLib.token0()).mint(_user, _depositAmount);
 
-        // Set up approvals
         vm.startPrank(_user);
 
         if (_approveAssets) {
@@ -154,6 +139,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
             TestStateLib.silo1(), 
             _flashloanAmount
         );
+
         IERC20R(debtShareToken).setReceiveApproval(address(leverage), debtReceiveApproval);
 
         vm.stopPrank();

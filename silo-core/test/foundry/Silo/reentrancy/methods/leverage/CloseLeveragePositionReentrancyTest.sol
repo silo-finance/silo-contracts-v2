@@ -7,58 +7,24 @@ import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
-import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
-
 import {OpenLeveragePositionReentrancyTest} from "./OpenLeveragePositionReentrancyTest.sol";
 
 contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTest {
-    function callMethod() external override {
+    function callMethod() external virtual override {
         _openLeverage();
-        _closeLeverage();
-    }
-
-    function verifyReentrancy() external override {
-        emit log_string("[CloseLeveragePositionReentrancyTest] before closeLeveragePosition");
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
         
-        bytes memory swapArgs = "";
-        
-        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
-            flashloanTarget: address(TestStateLib.silo1()),
-            siloWithCollateral: TestStateLib.silo0(),
-            collateralType: ISilo.CollateralType.Collateral
-        });
-        
-        vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
-        leverage.closeLeveragePosition(swapArgs, closeArgs);
-    }
-
-    function methodDescription() external pure override returns (string memory description) {
-        description = "closeLeveragePosition(bytes,(address,address,uint8))";
-    }
-
-    function _closeLeverage() internal {
         address user = wallet.addr;
 
-        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
-            flashloanTarget: address(TestStateLib.silo1()),
-            siloWithCollateral: TestStateLib.silo0(),
-            collateralType: ISilo.CollateralType.Collateral
-        });
-
-        IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
-            sellToken: TestStateLib.token0(),
-            buyToken: TestStateLib.token1(),
-            allowanceTarget: address(swap),
-            exchangeProxy: address(swap),
-            swapCallData: "mocked swap data"
-        });
+        (
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        ) = _closeLeverageArgs();
 
         uint256 flashAmount = TestStateLib.silo1().maxRepay(user);
 
@@ -66,7 +32,6 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
         swap.setSwap(TestStateLib.token0(), amountIn, TestStateLib.token1(), amountIn * 99 / 100);
 
         LeverageUsingSiloFlashloanWithGeneralSwap siloLeverage = _getLeverage();
-
 
         address silo0 = address(TestStateLib.silo0());
 
@@ -79,5 +44,45 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
         siloLeverage.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
 
         TestStateLib.disableLeverageReentrancy();
+    }
+
+    function verifyReentrancy() external virtual override {
+        emit log_string("[CloseLeveragePositionReentrancyTest] before closeLeveragePosition");
+        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+
+        bytes memory swapArgs = "";
+
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs =
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs({
+                flashloanTarget: address(TestStateLib.silo1()),
+                siloWithCollateral: TestStateLib.silo0(),
+                collateralType: ISilo.CollateralType.Collateral
+            });
+
+        vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
+        leverage.closeLeveragePosition(swapArgs, closeArgs);
+    }
+
+    function methodDescription() external pure virtual override returns (string memory description) {
+        description = "closeLeveragePosition(bytes,(address,address,uint8))";
+    }
+
+    function _closeLeverageArgs() internal view returns (
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
+        IGeneralSwapModule.SwapArgs memory swapArgs
+    ) {
+        closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
+            flashloanTarget: address(TestStateLib.silo1()),
+            siloWithCollateral: TestStateLib.silo0(),
+            collateralType: ISilo.CollateralType.Collateral
+        });
+
+        swapArgs = IGeneralSwapModule.SwapArgs({
+            sellToken: TestStateLib.token0(),
+            buyToken: TestStateLib.token1(),
+            allowanceTarget: address(swap),
+            exchangeProxy: address(swap),
+            swapCallData: "mocked swap data"
+        });
     }
 }
