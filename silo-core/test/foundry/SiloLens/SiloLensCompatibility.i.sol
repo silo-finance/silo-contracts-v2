@@ -89,6 +89,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_maxLiquidation, _silo, _borrower);
         _testFn(_getFeesAndFeeReceivers, _silo);
         _testFn(_getSiloIncentivesControllerProgramsNames);
+        _testFn(_getOracleAddresses, _silo);
     }
 
     function _testSiloConfig(ISiloConfig _siloConfig) internal {
@@ -344,6 +345,12 @@ contract SiloLensCompatibilityTest is IntegrationTest {
     function _getSiloIncentivesControllerProgramsNames() internal pure returns (bytes4 sig) {
         // method is not related to Silo
         sig = ISiloLens.getSiloIncentivesControllerProgramsNames.selector;
+    }
+
+    function _getOracleAddresses(ISilo _silo) internal view returns (bytes4 sig) {
+        // expect do not revert
+        _lens.getOracleAddresses(_silo);
+        sig = ISiloLens.getOracleAddresses.selector;
     }
 
     function _initializeSilosForChain(string memory _chainAlias) internal {
