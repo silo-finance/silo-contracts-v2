@@ -5,14 +5,9 @@ import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
-import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
-import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
-import {MaliciousToken} from "../../MaliciousToken.sol";
 import {OpenLeveragePositionReentrancyTest} from "./OpenLeveragePositionReentrancyTest.sol";
 
 contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentrancyTest {

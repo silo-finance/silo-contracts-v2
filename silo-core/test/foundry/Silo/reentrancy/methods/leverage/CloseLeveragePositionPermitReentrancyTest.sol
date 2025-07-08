@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
-
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
     } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
-import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {CloseLeveragePositionReentrancyTest} from "./CloseLeveragePositionReentrancyTest.sol";
 
