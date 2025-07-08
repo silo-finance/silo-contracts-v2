@@ -462,6 +462,8 @@ contract SiloVerifierScriptTest is Test {
         address token0 = regularConfig.getConfig(silo0).token;
 
         CheckNonBorrowableAsset check = new CheckNonBorrowableAsset(token0, configData1);
+        assertTrue(configData1.maxLtv != 0, "max ltv!=0");
+        assertTrue(configData1.lt != 0, "max ltv!=0");
         assertTrue(check.execute(), "check passes for regular config, maxLTV!=0 and LT!=0");
 
         configData1.maxLtv = 0;
