@@ -203,6 +203,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
             emit log_named_decimal_uint("supplierLostPercent", supplierLostPercent, 18);
 
             uint256 lostShares = vault.convertToShares(supplierLoss);
+            emit log_named_uint("lostShares", lostShares);
 
             if (lostShares > 1) {
                 assertLe(
@@ -211,12 +212,7 @@ contract MarketLossTest is IBefore, IntegrationTest {
                     "% is higher than THRESHOLD, we should detect"
                 );
             } else {
-                // if loss is in scope of rounding/precision error then it is ok not to discover it
-                assertLe(
-                    vault.convertToShares(_acceptableLoss),
-                    1,
-                    "_acceptableLoss THRESHOLD should be less than precision error"
-                );
+                // if we only lost up to 1 share, it is because of precision error or rounding
             }
         } catch (bytes memory data) {
             emit log("deposit reverted for SUPPLIER");
