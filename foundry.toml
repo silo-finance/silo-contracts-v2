@@ -143,5 +143,6 @@ ink = "${RPC_INK}"
 
 [etherscan]
 sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
+ink = { key = "", chain = 57073, url = "https://explorer.inkonchain.com/api/", verifier = "blockscout" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
