@@ -59,9 +59,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         }
     }
 
-
     /*
-    forge test -vv --mt test_PartialLiquidationLib_liquidationPreview_pass
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_PartialLiquidationLib_liquidationPreview_pass
     */
     function test_PartialLiquidationLib_liquidationPreview_pass() public {
         LiquidationPreviewTestData json = new LiquidationPreviewTestData();
@@ -97,14 +96,14 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             );
 
             assertEq(
+                ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, _concatMsg(i, "] expect ltvAfterLiquidation")
+            );
+            assertEq(
                 collateralAssetsToLiquidate, data[i].output.collateralAssetsToLiquidate,
                 _concatMsg(i, "] output.collateralAssetsToLiquidate")
             );
             assertEq(
                 debtAssetsToRepay, data[i].output.debtAssetsToRepay, _concatMsg(i, "] expect debtAssetsToRepay")
-            );
-            assertEq(
-                ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, _concatMsg(i, "] expect ltvAfterLiquidation")
             );
         }
     }
