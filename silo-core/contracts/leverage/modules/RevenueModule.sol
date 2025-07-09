@@ -7,7 +7,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
+import {TransientReentrancy} from "../../hooks/_common/TransientReentrancy.sol";
 
 /// @title Revenue Module for Leverage Operations
 /// @notice This contract collects and distributes revenue from leveraged operations.
@@ -102,8 +102,6 @@ abstract contract RevenueModule is TransientReentrancy, Ownable2Step, Pausable {
         _token.safeTransfer(receiver, balance);
         emit LeverageRevenue(address(_token), balance, receiver);
     }
-
-    function reentrancyGuardEntered() internal view returns (bool);
 
     /// @notice Calculates the leverage fee for a given amount
     /// @dev Will always return at least 1 if fee > 0 and calculation rounds down
