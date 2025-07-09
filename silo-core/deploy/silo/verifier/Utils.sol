@@ -4,11 +4,13 @@ pragma solidity 0.8.28;
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
 import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
+import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
 
 library Utils {
     address constant internal _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
@@ -98,5 +100,35 @@ library Utils {
         } catch {
             return "Name reverted";
         }
+    }
+
+    function isTokenERC4626(address _token) internal view returns (bool result) {
+        try IERC4626(_token).convertToAssets(1000 * 10 ** IERC20Metadata(_token).decimals()) returns (uint256 assets) {
+            return assets != 0;
+        } catch {}
+    }
+
+    function isTokenLPT(address _token) internal view returns (bool result) {
+        try IPendleLPWrapperLike(_token).LP() returns (address lp) {
+            return lp != address(0);
+        } catch {}
+    }
+
+    function isTokenPT(address _token) internal view returns (bool result) {
+        try IERC20Metadata(_token).symbol() returns (string memory symbol) {
+            string memory prefix = "PT-";
+
+            if (bytes(symbol).length < bytes(prefix).length) {
+                return false;
+            }
+
+            for (uint i; i < bytes(prefix).length; i++) {
+                if (bytes(prefix)[i] != bytes(symbol)[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch {}
     }
 }
