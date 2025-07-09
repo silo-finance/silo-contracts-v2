@@ -50,6 +50,9 @@ abstract contract RevenueModule is Ownable2Step, Pausable {
     /// @dev Thrown when there is no revenue to withdraw
     error NoRevenue();
 
+    /// @dev Thrown when reentrancy is detected
+    error ReentrancyGuardReentrantCall();
+
     /// @dev Thrown when revenue receiver is not set
     error ReceiverNotSet();
 
@@ -91,6 +94,8 @@ abstract contract RevenueModule is Ownable2Step, Pausable {
 
     /// @param _token ERC20 token to rescue
     function rescueTokens(IERC20 _token) public {
+        require(!reentrancyGuardEntered(), ReentrancyGuardReentrantCall());
+
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, NoRevenue());
 
@@ -100,6 +105,8 @@ abstract contract RevenueModule is Ownable2Step, Pausable {
         _token.safeTransfer(receiver, balance);
         emit LeverageRevenue(address(_token), balance, receiver);
     }
+
+    function reentrancyGuardEntered() internal view returns (bool);
 
     /// @notice Calculates the leverage fee for a given amount
     /// @dev Will always return at least 1 if fee > 0 and calculation rounds down

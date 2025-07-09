@@ -82,6 +82,8 @@ interface ILeverageUsingSiloFlashloan {
 
     function SWAP_MODULE() external view returns (IGeneralSwapModule);
 
+    function reentrancyGuardEntered() internal view returns (bool);
+
     /// @return debtReceiveApproval amount of approval (receive approval) that is required on debt share token
     /// in order to borow on behalf of user when opening leverage position
     function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
