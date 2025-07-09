@@ -2,7 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Registries} from "./registries/Registries.sol";
 import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
@@ -13,6 +16,10 @@ import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+
+import {
+    LeverageUsingSiloFlashloanWithGeneralSwapDeploy
+} from "silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
@@ -96,13 +103,22 @@ contract SiloReentrancyTest is Test {
 
         (siloConfig, silo0, silo1,,, hookReceiver) = siloFixture.deploy_local(configOverride);
 
+        AddrLib.setAddress(AddrKey.DAO, makeAddr("DAO"));
+
+        LeverageUsingSiloFlashloanWithGeneralSwapDeploy leverageDeploy =
+            new LeverageUsingSiloFlashloanWithGeneralSwapDeploy();
+
+        leverageDeploy.disableDeploymentsSync();
+        address leverage = address(leverageDeploy.run());
+
         TestStateLib.init(
             address(siloConfig),
             address(silo0),
             address(silo1),
             configOverride.token0,
             configOverride.token1,
-            hookReceiver
+            hookReceiver,
+            leverage
         );
     }
 }
