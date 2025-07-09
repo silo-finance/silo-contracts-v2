@@ -7,9 +7,11 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
+import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
+
 /// @title Revenue Module for Leverage Operations
 /// @notice This contract collects and distributes revenue from leveraged operations.
-abstract contract RevenueModule is Ownable2Step, Pausable {
+abstract contract RevenueModule is TransientReentrancy, Ownable2Step, Pausable {
     using SafeERC20 for IERC20;
 
     /// @notice Fee base constant (1e18 represents 100%)
@@ -49,10 +51,7 @@ abstract contract RevenueModule is Ownable2Step, Pausable {
 
     /// @dev Thrown when there is no revenue to withdraw
     error NoRevenue();
-
-    /// @dev Thrown when reentrancy is detected
-    error ReentrancyGuardReentrantCall();
-
+    
     /// @dev Thrown when revenue receiver is not set
     error ReceiverNotSet();
 
@@ -93,9 +92,7 @@ abstract contract RevenueModule is Ownable2Step, Pausable {
     }
 
     /// @param _token ERC20 token to rescue
-    function rescueTokens(IERC20 _token) public {
-        require(!reentrancyGuardEntered(), ReentrancyGuardReentrantCall());
-
+    function rescueTokens(IERC20 _token) public nonReentrant {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, NoRevenue());
 
