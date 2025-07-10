@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
@@ -83,11 +85,15 @@ library PartialLiquidationExecLib {
             0 /* no cached balance */
         );
 
+        console2.log("A");
+
         if (ltvData.borrowerDebtAssets == 0) return (0, 0, false);
 
         (
             uint256 sumOfCollateralValue, uint256 debtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
+
+        console2.log("B");
 
         uint256 sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets;
 
@@ -95,6 +101,8 @@ library PartialLiquidationExecLib {
 
         uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
         if (ltvInDp <= collateralConfig.lt) return (0, 0, false); // user solvent
+
+        console2.log("C");
 
         (collateralToLiquidate, debtToRepay) = PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
