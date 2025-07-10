@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
-import {console2} from "forge-std/console2.sol";
 
 import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 import {SiloStdLib, ISiloConfig, IShareToken, ISilo} from "./SiloStdLib.sol";
@@ -144,11 +143,6 @@ library SiloSolvencyLib {
         ltvData.borrowerDebtAssets = SiloMathLib.convertToAssets(
             shares, totalDebtAssets, totalShares, Rounding.DEBT_TO_ASSETS, ISilo.AssetType.Debt
         );
-
-        console2.log("[getAssetsDataForLtvCalculations] totalDebtAssets", totalDebtAssets);
-        console2.log("[getAssetsDataForLtvCalculations] totalCollateralAssets", totalCollateralAssets);
-        console2.log("[getAssetsDataForLtvCalculations] ltvData.borrowerDebtAssets", ltvData.borrowerDebtAssets);
-        console2.log("[getAssetsDataForLtvCalculations] ltvData.borrowerCollateralAssets", ltvData.borrowerCollateralAssets);
     }
 
     /// @notice Calculates the Loan-To-Value (LTV) ratio for a given borrower
@@ -233,9 +227,6 @@ library SiloSolvencyLib {
                 ? _ltvData.debtOracle.quote(_ltvData.borrowerDebtAssets, _debtAsset)
                 : _ltvData.borrowerDebtAssets;
         }
-
-        console2.log("[getPositionValues] sumOfCollateralValue", sumOfCollateralValue);
-        console2.log("[getPositionValues] debtValue", debtValue);
     }
 
     function ltvMath(uint256 _totalBorrowerDebtValue, uint256 _sumOfBorrowerCollateralValue)
