@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
@@ -22,12 +23,7 @@ contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
         RevenueModule leverage = _getLeverage();
         address token = TestStateLib.token0();
 
-        if (IERC20(token).balanceOf(address(leverage)) != 0) {
-            vm.expectRevert(RevenueModule.ReceiverNotSet.selector);
-        } else {
-            vm.expectRevert(RevenueModule.NoRevenue.selector);
-        }
-
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         leverage.rescueTokens(IERC20(token));
     }
 
