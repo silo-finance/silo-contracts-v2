@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {console2} from "forge-std/console2.sol";
-import {CommonDeploy} from "../_CommonDeploy.sol";
+import {CommonDeploy} from "silo-core/deploy/_CommonDeploy.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
@@ -14,8 +14,8 @@ import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiv
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 /**
-FOUNDRY_PROFILE=core \
-    forge script silo-core/deploy/silo/PrintSiloAddresses.s.sol \
+FOUNDRY_PROFILE=core PRINT_ONLY_SILOS=true \
+    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
 
@@ -25,20 +25,22 @@ contract PrintSiloAddresses is CommonDeploy {
             SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, ChainsLib.chainAlias())
         );
 
-        console2.log("All silo0 and silo1 addresses for network", ChainsLib.chainAlias());
-        printSilos(siloFactory);
+        uint256 startingIndex = siloFactory.idToSiloConfig(1) != address(0) ? 1 : 101;
 
-        console2.log("\nAll related addresses to silos, including configs, IRMs, oracles (duplicates not filtered)");
-        printAllRelatedAddresses(siloFactory);
+        console2.log("All silo0 and silo1 addresses for network", ChainsLib.chainAlias());
+        printSilos(siloFactory, startingIndex);
+
+        if (!vm.envOr("PRINT_ONLY_SILOS", false)) {
+            console2.log("\nAll related addresses to silos, including configs, oracles (duplicates not filtered)");
+            printAllRelatedAddresses(siloFactory, startingIndex);
+        }
     }
 
     /// @dev print only silo0 and silo1 addresses for all deployed silos.
-    function printSilos(ISiloFactory _siloFactory) internal view {
-        uint256 i = 1;
-
+    function printSilos(ISiloFactory _siloFactory, uint256 _startingIndex) internal view {
         while (true) {
-            ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(i));
-            i++;
+            ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(_startingIndex));
+            _startingIndex++;
 
             if (address(config) == address(0)) break;
 
@@ -50,12 +52,10 @@ contract PrintSiloAddresses is CommonDeploy {
 
     /// @dev print all related addresses for every silo: IRMs, Oracles, configs. Prints everything except silo0 and
     /// silo1 addresses.
-    function printAllRelatedAddresses(ISiloFactory _siloFactory) internal view {
-        uint256 i = 1;
-
+    function printAllRelatedAddresses(ISiloFactory _siloFactory, uint256 _startingIndex) internal view {
         while (true) {
-            ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(i));
-            i++;
+            ISiloConfig config = ISiloConfig(_siloFactory.idToSiloConfig(_startingIndex));
+            _startingIndex++;
 
             if (address(config) == address(0)) break;
 
