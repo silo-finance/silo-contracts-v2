@@ -113,6 +113,17 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "EORACLE_xUSD_USD": {
+        "baseToken": "xUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_xUSD_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
     "EORACLE_PT_sUSDE_25SEP2025_USDC": {
         "baseToken": "PT-sUSDE-25SEP2025",
         "quoteToken": "USDC",
