@@ -21,7 +21,9 @@ import {
     LeverageUsingSiloFlashloanWithGeneralSwapDeploy
 } from "silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
-// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
+/*
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
+*/
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
     
