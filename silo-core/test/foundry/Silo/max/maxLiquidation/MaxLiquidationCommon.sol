@@ -45,17 +45,19 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
             debtConfig = siloConfig.getConfig(address(silo1));
         }
 
+        uint256 maxLtv = collateralConfig.maxLtv / 1e16; // to avoid overflow on high numbers
+        vm.assume(_collateral < type(uint128).max / maxLtv); // to avoid overflow
+
+        uint256 toBorrow = _collateral * maxLtv / 1e2;
+        emit log_named_uint("full toBorrow amount", toBorrow);
+        vm.assume(toBorrow > 0);
+
         vm.assume(silo1.previewDeposit(_collateral) > 0); // exclude InputZeroShares
         _depositForBorrow(_collateral, depositor);
 
         if (!_sameAsset) {
             vm.assume(silo0.previewDeposit(_collateral) > 0); // exclude InputZeroShares
             _depositCollateral(_collateral, borrower, false /* to silo 1 */);
-
-            uint256 toBorrow = silo1.maxBorrow(borrower) / 1e2;
-            emit log_named_uint("full toBorrow amount", toBorrow);
-            vm.assume(toBorrow > 0);
-
             _borrow(toBorrow, borrower);
         } else {
             vm.prank(borrower);
@@ -67,10 +69,6 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
             vm.assume(silo1.previewDeposit(_collateral) > 0); // exclude InputZeroShares
             vm.prank(borrower);
             silo1.deposit(_collateral, borrower);
-
-            uint256 toBorrow = silo1.maxBorrowSameAsset(borrower) / 1e2;
-            emit log_named_uint("full toBorrow amount", toBorrow);
-            vm.assume(toBorrow > 0);
 
             vm.prank(borrower);
             silo1.borrowSameAsset(toBorrow, borrower, borrower);
