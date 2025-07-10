@@ -74,7 +74,18 @@ library PartialLiquidationLib {
             _sumOfCollateralAssets,
             _sumOfCollateralValue
         );
-        
+
+        if (collateralToLiquidate > _UNDERESTIMATION) {
+            // -_UNDERESTIMATION here is to underestimate collateral that user gets on liquidation
+            // liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
+            // this two conversions are rounding down and can create 2 wei difference
+
+            // we will not underflow on -_UNDERESTIMATION because collateralToLiquidate is >= _UNDERESTIMATION
+            unchecked { collateralToLiquidate -= _UNDERESTIMATION; }
+        } else {
+            collateralToLiquidate = 0;
+        }
+
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
         console2.log("[maxLiquidation] debtToRepay", debtToRepay);
     }
