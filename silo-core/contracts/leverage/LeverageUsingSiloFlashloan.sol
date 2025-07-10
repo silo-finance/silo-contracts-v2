@@ -5,8 +5,6 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
-import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
-
 import {RevertLib} from "../lib/RevertLib.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -48,7 +46,6 @@ abstract contract LeverageUsingSiloFlashloan is
     ILeverageUsingSiloFlashloan,
     IERC3156FlashBorrower,
     RevenueModule,
-    TransientReentrancy,
     LeverageTxState
 {
     using SafeERC20 for IERC20;
