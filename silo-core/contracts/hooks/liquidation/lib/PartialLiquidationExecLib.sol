@@ -113,24 +113,15 @@ library PartialLiquidationExecLib {
             collateralConfig.liquidationFee
         );
 
-
-        // `collateralToLiquidate` will be converted to shares and then withdrawn as assets on liquidation call
-        // therefore we have to adjust it using same flow
-
-        (uint256 collateralPart, uint256 protectedPart) = ltvData.borrowerCollateralAssets >= collateralToLiquidate
-            ? (collateralToLiquidate, 0)
-            : (ltvData.borrowerCollateralAssets, collateralToLiquidate - ltvData.borrowerCollateralAssets);
-
-        uint256 collateralShares = collateralPart == 0 ? 0 : ISilo(collateralConfig.silo).convertToShares(collateralPart);
-
-        // protected ratio is 1:1, so we can simply underestimate using constant
-        protectedPart = protectedPart > PartialLiquidationLib._UNDERESTIMATION
-            ? protectedPart - PartialLiquidationLib._UNDERESTIMATION
-            : 0;
-
-        collateralToLiquidate = ISilo(collateralConfig.silo).previewRedeem(collateralShares) + protectedPart;
-
-        sTokenRequired = collateralToLiquidate > ISilo(collateralConfig.silo).getLiquidity();
+        // maxLiquidation() can underestimate collateral by `PartialLiquidationLib._UNDERESTIMATION`,
+        // when we do that, actual collateral that we will transfer will match exactly liquidity,
+        // but we will liquidate higher value by 1 or 2, then sTokenRequired will return false,
+        // but we can not withdraw (because we will be short by 2) solution is to include this 2wei here
+        unchecked {
+            // safe to uncheck, because we underestimated this value in a first place by _UNDERESTIMATION
+            uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
+            sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
+        }
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
