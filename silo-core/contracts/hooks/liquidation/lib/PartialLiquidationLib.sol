@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
@@ -49,6 +50,13 @@ library PartialLiquidationLib {
         pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
+        console2.log("[maxLiquidation] _sumOfCollateralAssets", _sumOfCollateralAssets);
+        console2.log("[maxLiquidation] _sumOfCollateralValue", _sumOfCollateralValue);
+        console2.log("[maxLiquidation] _borrowerDebtAssets", _borrowerDebtAssets);
+        console2.log("[maxLiquidation] _borrowerDebtValue", _borrowerDebtValue);
+        console2.log("[maxLiquidation] _liquidationTargetLTV", _liquidationTargetLTV);
+        console2.log("[maxLiquidation] _liquidationFee", _liquidationFee);
+
         (
             uint256 collateralValueToLiquidate, uint256 repayValue
         ) = maxLiquidationPreview(
@@ -58,15 +66,17 @@ library PartialLiquidationLib {
             _liquidationFee
         );
 
+        console2.log("[maxLiquidation] collateralValueToLiquidate", collateralValueToLiquidate);
+        console2.log("[maxLiquidation] repayValue", repayValue);
+
         collateralToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate,
             _sumOfCollateralAssets,
             _sumOfCollateralValue
         );
-
-
-
+        
         debtToRepay = valueToAssetsByRatio(repayValue, _borrowerDebtAssets, _borrowerDebtValue);
+        console2.log("[maxLiquidation] debtToRepay", debtToRepay);
     }
 
     /// @dev in case of bad debt, we do not apply any restrictions.
@@ -121,9 +131,15 @@ library PartialLiquidationLib {
             _sumOfCollateralValue
         );
 
+        console2.log("[liquidationPreview] collateralValueToLiquidate", collateralValueToLiquidate);
+        console2.log("[liquidationPreview] collateralToLiquidate", collateralToLiquidate);
+        console2.log("[liquidationPreview] debtToRepay", debtToRepay);
+
         ltvAfter = _calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
         );
+
+        console2.log("[liquidationPreview] ltvAfter", ltvAfter);
     }
 
     /// @notice reverts on `_totalValue` == 0
