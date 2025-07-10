@@ -19,7 +19,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
 
     ISiloConfig siloConfig;
     address immutable depositor;
-    address immutable borrower;
+    address borrower;
 
     constructor() {
         depositor = makeAddr("Depositor");
