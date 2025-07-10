@@ -28,6 +28,18 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         _maxLiquidation_full_1token({_collateral: _collateral, _receiveSToken: false, _warp: _warp});
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_twoAssets_badDebt_investigateCase_fuzz
+
+    this test did not found case where maxLiquidation will overestimate
+    */
+    /// forge-config: core_test.fuzz.runs = 10000
+    function test_maxLiquidation_twoAssets_badDebt_investigateCase_fuzz(
+        uint128 _collateral, uint64 _warp
+    ) public {
+        _maxLiquidation_full_2tokens({_collateral: _collateral, _receiveSToken: false, _warp: _warp});
+    }
+
     function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken) internal virtual override {
         // not needed for this case
     }
@@ -45,6 +57,27 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         vm.startPrank(borrower);
         uint256 maxWithdraw = silo1.maxWithdraw(borrower);
         if (maxWithdraw != 0) silo1.withdraw(maxWithdraw, borrower, borrower);
+        vm.stopPrank();
+
+        vm.assume(block.timestamp + _warp < type(uint64).max);
+        vm.warp(block.timestamp + _warp); // initial time movement to speed up _moveTimeUntilInsolvent
+
+        _moveTimeUntilBadDebt();
+
+        _assertBorrowerIsNotSolvent(_BAD_DEBT);
+
+        _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
+    }
+
+    function _maxLiquidation_full_2tokens(uint128 _collateral, bool _receiveSToken, uint64 _warp) internal {
+        bool sameAsset = false;
+
+        _createDebtForBorrower(_collateral, sameAsset);
+
+        // we want high interest
+        vm.startPrank(borrower);
+        uint256 maxWithdraw = silo0.maxWithdraw(borrower);
+        if (maxWithdraw != 0) silo0.withdraw(maxWithdraw, borrower, borrower);
         vm.stopPrank();
 
         vm.assume(block.timestamp + _warp < type(uint64).max);
