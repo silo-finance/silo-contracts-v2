@@ -52,9 +52,11 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         emit log_named_uint("full toBorrow amount", toBorrow);
         vm.assume(toBorrow > 0);
 
+        vm.assume(silo1.previewDeposit(_collateral) > 0); // exclude InputZeroShares
         _depositForBorrow(_collateral, depositor);
 
         if (!_sameAsset) {
+            vm.assume(silo0.previewDeposit(_collateral) > 0); // exclude InputZeroShares
             _depositCollateral(_collateral, borrower, false /* to silo 1 */);
             _borrow(toBorrow, borrower);
         } else {
@@ -64,6 +66,7 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
             vm.prank(borrower);
             token1.approve(address(silo1), _collateral);
 
+            vm.assume(silo1.previewDeposit(_collateral) > 0); // exclude InputZeroShares
             vm.prank(borrower);
             silo1.deposit(_collateral, borrower);
 
