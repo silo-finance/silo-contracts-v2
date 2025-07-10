@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -72,6 +73,10 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             collateralConfig.liquidationFee
         );
 
+        console2.log("[liquidation] params.withdrawAssetsFromCollateral", params.withdrawAssetsFromCollateral);
+        console2.log("[liquidation] params.withdrawAssetsFromProtected", params.withdrawAssetsFromProtected);
+        console2.log("[liquidation] params.repayDebtAssets", repayDebtAssets);
+
         RevertLib.revertIfError(params.customError);
 
         // we do not allow dust so full liquidation is required
@@ -90,6 +95,8 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             collateralConfig.collateralShareToken,
             ISilo.AssetType.Collateral
         );
+
+        console2.log("[liquidation] params.collateralShares", params.collateralShares);
 
         params.protectedShares = _callShareTokenForwardTransferNoChecks(
             collateralConfig.silo,
@@ -129,6 +136,8 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             // if share token offset is more than 0, positive number of shares can generate 0 assets
             // so there is a need to check assets before we withdraw collateral/protected
 
+            console2.log("[liquidation] balanceOf", ISilo(collateralConfig.silo).balanceOf(address(this)));
+
             if (params.collateralShares != 0) {
                 withdrawCollateral = ISilo(collateralConfig.silo).redeem({
                     _shares: params.collateralShares,
@@ -136,6 +145,8 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
                     _owner: address(this),
                     _collateralType: ISilo.CollateralType.Collateral
                 });
+
+                console2.log("[liquidation] withdrawCollateral", withdrawCollateral);
             }
 
             if (params.protectedShares != 0) {
