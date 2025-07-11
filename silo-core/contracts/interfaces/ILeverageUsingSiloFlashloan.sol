@@ -118,7 +118,7 @@ interface ILeverageUsingSiloFlashloan {
         Permit calldata _depositAllowance
     ) external;
 
-    /// @notice Does not support fee on transfer tokens. It also does not support borrow on same asset.
+    /// @notice Closes opened leveraged position. Does not support fee on transfer tokens. It also does not support borrow on same asset.
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval can be done using Permit, for that case please use `closeLeveragePositionPermit`
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
