@@ -163,7 +163,7 @@ abstract contract LeverageUsingSiloFlashloan is
         } else revert UnknownAction();
 
         // approval for repay flashloan
-        _setMaxAllowance(IERC20(_borrowToken), _txFlashloanTarget, _flashloanAmount + _flashloanFee);
+        IERC20(_borrowToken).forceApprove(_txFlashloanTarget, _flashloanAmount + _flashloanFee);
 
         return _FLASHLOAN_CALLBACK;
     }
@@ -226,7 +226,7 @@ abstract contract LeverageUsingSiloFlashloan is
     function _deposit(DepositArgs memory _depositArgs, uint256 _totalDeposit, address _asset) internal virtual {
         _transferTokensFromUser(_asset, _depositArgs.amount);
 
-        _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), _totalDeposit);
+        IERC20(_asset).forceApprove(address(_depositArgs.silo), _totalDeposit);
 
         _depositArgs.silo.deposit({
             _assets: _totalDeposit,
@@ -250,11 +250,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
         ISilo siloWithDebt = _resolveOtherSilo(closeArgs.siloWithCollateral);
 
-        _setMaxAllowance({
-            _asset: IERC20(_debtToken),
-            _spender: address(siloWithDebt),
-            _requiredAmount: _flashloanAmount
-        });
+        IERC20(_debtToken).forceApprove(address(siloWithDebt), _flashloanAmount);
 
         siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), _txMsgSender);
 
@@ -295,11 +291,6 @@ abstract contract LeverageUsingSiloFlashloan is
         internal
         virtual
         returns (uint256 amountOut);
-
-    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
-        uint256 allowance = _asset.allowance(address(this), _spender);
-        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
-    }
 
     function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
         internal
