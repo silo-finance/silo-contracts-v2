@@ -9,6 +9,10 @@ import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
+import {
+    LeverageUsingSiloFlashloanWithGeneralSwap
+} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 
 contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
@@ -31,7 +35,8 @@ contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
         description = "rescueTokens(address)";
     }
 
-    function _getLeverage() internal view returns (RevenueModule) {
-        return RevenueModule(TestStateLib.leverage());
+    function _getLeverage() internal returns (RevenueModule) {
+        ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
+        return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }
 }

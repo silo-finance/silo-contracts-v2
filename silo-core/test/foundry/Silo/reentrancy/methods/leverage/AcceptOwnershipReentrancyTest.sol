@@ -6,6 +6,7 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 
@@ -24,17 +25,17 @@ contract AcceptOwnershipReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillRevert() internal {
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter router = _getLeverageRouter();
 
         vm.expectRevert(abi.encodeWithSelector(
             Ownable.OwnableUnauthorizedAccount.selector,
             address(this)
         ));
 
-        Ownable2Step(address(leverage)).acceptOwnership();
+        router.acceptOwnership();
     }
 
-    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
-        return LeverageUsingSiloFlashloanWithGeneralSwap(TestStateLib.leverage());
+    function _getLeverageRouter() internal view returns (LeverageRouter) {
+        return LeverageRouter(TestStateLib.leverageRouter());
     }
 }

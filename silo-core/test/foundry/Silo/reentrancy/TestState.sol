@@ -13,7 +13,7 @@ contract ReentrancyTestState {
     address public token0;
     address public token1;
     address public hookReceiver;
-    address public leverage;
+    address public leverageRouter;
     bool public reenter = true;
     bool public reenterViaLiquidationCall = false;
     bool public leverageReenter = true;
@@ -25,7 +25,7 @@ contract ReentrancyTestState {
         address _token0,
         address _token1,
         address _hookReceiver,
-        address _leverage
+        address _leverageRouter
     ) external {
         siloConfig = _siloConfig;
         silo0 = _silo0;
@@ -33,7 +33,7 @@ contract ReentrancyTestState {
         token0 = _token0;
         token1 = _token1;
         hookReceiver = _hookReceiver;
-        leverage = _leverage;
+        leverageRouter = _leverageRouter;
     }
 
     function setReenter(bool _status) external {
@@ -59,7 +59,7 @@ library TestStateLib {
         address _token0,
         address _token1,
         address _hookReceiver,
-        address _leverage
+        address _leverageRouter
     ) internal {
         bytes memory code = Utils.getCodeAt(_ADDRESS);
 
@@ -71,7 +71,7 @@ library TestStateLib {
 
         VmLib.vm().etch(_ADDRESS, deployedCode);
 
-        ReentrancyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver, _leverage);
+        ReentrancyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver, _leverageRouter);
         ReentrancyTestState(_ADDRESS).setReenter(true);
         ReentrancyTestState(_ADDRESS).setLeverageReenter(false);
     }
@@ -100,8 +100,8 @@ library TestStateLib {
         return ReentrancyTestState(_ADDRESS).hookReceiver();
     }
 
-    function leverage() internal view returns (address) {
-        return ReentrancyTestState(_ADDRESS).leverage();
+    function leverageRouter() internal view returns (address) {
+        return ReentrancyTestState(_ADDRESS).leverageRouter();
     }
 
     function reenter() internal view returns (bool) {
