@@ -291,6 +291,17 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "EORACLE_HARDCODE_xETH_scETH": {
+        "baseToken": "xETH",
+        "quoteToken": "scETH",
+        "primaryAggregator": "EORACLE_xETH_ETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_OS_USD": {
         "baseToken": "OS",
         "quoteToken": "SILO_VIRTUAL_USD_8",
