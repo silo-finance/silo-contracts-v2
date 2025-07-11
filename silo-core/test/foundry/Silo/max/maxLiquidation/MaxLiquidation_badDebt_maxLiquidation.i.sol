@@ -17,15 +17,40 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
     bool private constant _BAD_DEBT = true;
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sameAsset_badDebt_investigateCase
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sameAsset_badDebt_investigateCase_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_maxLiquidation_sameAsset_badDebt_investigateCase_fuzz(
         uint128 _collateral, uint64 _warp
     ) public {
 //        (uint128 _collateral, uint64 _warp) = (287062504436733, 7854163971367945);
+        // looking for minimal collateral and time
+//        vm.assume(_collateral < 287062504436733);
+//        vm.assume(_warp < 7854163971367945);
 
-        _maxLiquidation_full_1token({_collateral: _collateral, _receiveSToken: false, _warp: _warp});
+        _maxLiquidation_overestimate_1token({_collateral: _collateral, _receiveSToken: false, _warp: _warp, _onlyCreateCase: false});
+    }
+
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sameAsset_badDebt_anotherBorrower_fuzz
+    */
+    /// forge-config: core_test.fuzz.runs = 100
+    function test_maxLiquidation_sameAsset_badDebt_anotherBorrower_fuzz(
+//        uint128 _collateral
+    ) public {
+        uint128 _collateral = 2 ** 120;
+
+        // create case where we can overestimate on maxLiquidation
+        _maxLiquidation_overestimate_1token({
+            _collateral: 287062504436733,
+            _receiveSToken: false,
+            _warp: 7854163971367945,
+            _onlyCreateCase: true
+        });
+
+        borrower = makeAddr("another borrower");
+        _maxLiquidation_partial_1token({_collateral: _collateral, _receiveSToken: false});
     }
 
     /*
@@ -48,7 +73,12 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         // not needed for this case
     }
 
-    function _maxLiquidation_full_1token(uint128 _collateral, bool _receiveSToken, uint64 _warp) internal {
+    function _maxLiquidation_overestimate_1token(
+        uint128 _collateral,
+        bool _receiveSToken,
+        uint64 _warp,
+        bool _onlyCreateCase
+    ) internal {
         bool sameAsset = true;
 
         _createDebtForBorrower(_collateral, sameAsset);
@@ -65,6 +95,8 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         _moveTimeUntilBadDebt();
 
         _assertBorrowerIsNotSolvent(_BAD_DEBT);
+
+        if (_onlyCreateCase) return;
 
         _executeLiquidationAndRunChecks(sameAsset, _receiveSToken);
     }
