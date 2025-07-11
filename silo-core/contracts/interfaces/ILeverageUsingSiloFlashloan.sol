@@ -90,6 +90,7 @@ interface ILeverageUsingSiloFlashloan {
         returns (uint256 debtReceiveApproval);
 
     /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
+    /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails
     /// This method requires approval for transfer collateral from borrower to leverage contract and to create
     /// debt position. Approval for collateral can be done using Permit (if asset supports it), for that case please
@@ -104,6 +105,7 @@ interface ILeverageUsingSiloFlashloan {
     ) external payable;
 
     /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
+    /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
@@ -116,7 +118,7 @@ interface ILeverageUsingSiloFlashloan {
         Permit calldata _depositAllowance
     ) external;
 
-    /// @notice Does not support fee on transfer tokens.
+    /// @notice Does not support fee on transfer tokens. It also does not support borrow on same asset.
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval can be done using Permit, for that case please use `closeLeveragePositionPermit`
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
@@ -126,7 +128,7 @@ interface ILeverageUsingSiloFlashloan {
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external;
 
-    /// @notice Does not support fee on transfer tokens.
+    /// @notice Does not support fee on transfer tokens. It also does not support borrow on same asset.
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval is done using Permit
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
