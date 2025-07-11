@@ -216,6 +216,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _closeLeverage(user, closeArgs, swapArgs);
 
         _assertUserHasNoPosition(user);
+        _assertNoApprovalsFromLeverage({_checkSwap: false});
         _assertSiloLeverageHasNoTokens();
         _assertThereIsNoDebtApprovals(user);
 
@@ -278,6 +279,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         emit log_named_decimal_uint("LTV", siloLens.getUserLTV(silo0, user), 16);
 
         _assertThereIsNoDebtApprovals(user);
+        _assertNoApprovalsFromLeverage({_checkSwap: true});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -345,6 +347,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
+        _assertNoApprovalsFromLeverage({_checkSwap: true});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -388,6 +391,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
+        _assertNoApprovalsFromLeverage({_checkSwap: true});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -409,6 +413,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
 
+        _assertNoApprovalsFromLeverage({_checkSwap: false});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -444,6 +449,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
 
+        _assertNoApprovalsFromLeverage({_checkSwap: false});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -477,6 +483,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         leverageRouter.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
 
         _assertThereIsNoDebtApprovals(user);
+        _assertNoApprovalsFromLeverage({_checkSwap: true});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -615,6 +622,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         assertEq(silo1.maxRepay(user), 0.10908e18, "users debt");
 
+        _assertNoApprovalsFromLeverage({_checkSwap: true});
         _assertSiloLeverageHasNoTokens();
     }
 
@@ -852,6 +860,29 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
                 IERC20(_customToken).balanceOf(address(siloLeverage)),
                 0,
                 "siloLeverage has no custom tokens"
+            );
+        }
+    }
+
+    // we not always checking swap, because eg on closing, we not using whole approval
+    function _assertNoApprovalsFromLeverage(bool _checkSwap) internal view {
+        assertEq(token0.allowance(address(siloLeverage), address(silo0)), 0, "[_assertNoApprovals] token0 for silo0");
+        assertEq(token0.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token0 for silo1");
+
+        assertEq(token1.allowance(address(siloLeverage), address(silo0)), 0, "[_assertNoApprovals] token1 for silo0");
+        assertEq(token1.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token1 for silo1");
+
+        if (_checkSwap) {
+            assertEq(
+                token0.allowance(address(siloLeverage.SWAP_MODULE()), address(swap)),
+                0,
+                "[_assertNoApprovals] token0 for swap router"
+            );
+
+            assertEq(
+                token1.allowance(address(siloLeverage.SWAP_MODULE()), address(swap)),
+                0,
+                "[_assertNoApprovals] token1 for swap router"
             );
         }
     }

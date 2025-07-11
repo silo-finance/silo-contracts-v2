@@ -36,5 +36,10 @@ abstract contract LeverageTxState {
         _txSiloConfig = _silo.config();
 
         _;
+
+        _txFlashloanTarget = address(0);
+        _txAction = ILeverageUsingSiloFlashloan.LeverageAction.Undefined;
+        _txMsgSender = address(0);
+        _txSiloConfig = ISiloConfig(address(0));
     }
 }
