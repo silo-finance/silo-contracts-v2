@@ -32,27 +32,27 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint8 k;
     }
 
-//    modifier setup((uint256 _i) virtual {
-//        targetActor = actorAddresses[_i % actorAddresses.length];
-//        actor = Actor(payable(targetActor));
-//
-//        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
-//        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
-//
-//        require(targetActor != address(0), "setupActor fail: targetActor zero");
-//        require(address(actor) != address(0), "setupActor fail: actor zero");
-//
-//        _;
-//
-//        actor = Actor(payable(address(0)));
-//        targetActor = address(0);
-//    }
+    //    modifier setup((uint256 _i) virtual {
+    //        targetActor = actorAddresses[_i % actorAddresses.length];
+    //        actor = Actor(payable(targetActor));
+    //
+    //        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
+    //        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
+    //
+    //        require(targetActor != address(0), "setupActor fail: targetActor zero");
+    //        require(address(actor) != address(0), "setupActor fail: actor zero");
+    //
+    //        _;
+    //
+    //        actor = Actor(payable(address(0)));
+    //        targetActor = address(0);
+    //    }
 
-    function openLeveragePosition(
-        uint256 _depositAmount,
-        uint256 _multiplier,
-        RandomGenerator2 calldata _random
-    ) external payable setup(_random.i) {
+    function openLeveragePosition(uint256 _depositAmount, uint256 _multiplier, RandomGenerator2 calldata _random)
+        external
+        payable
+        setup(_random.i)
+    {
         _multiplier = _multiplier % 2e18; // leverage up to 2x
         uint256 _PRECISION = 1e18;
 
@@ -96,10 +96,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         (bool success, bytes memory returnData) = actor.proxy{value: msg.value}(
             address(siloLeverage),
             abi.encodeWithSelector(
-                ILeverageUsingSiloFlashloan.openLeveragePosition.selector,
-                flashArgs,
-                abi.encode(swapArgs),
-                depositArgs
+                ILeverageUsingSiloFlashloan.openLeveragePosition.selector, flashArgs, abi.encode(swapArgs), depositArgs
             )
         );
 
@@ -146,9 +143,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         (bool success, bytes memory returnData) = actor.proxy(
             address(siloLeverage),
             abi.encodeWithSelector(
-                ILeverageUsingSiloFlashloan.closeLeveragePosition.selector,
-                abi.encode(swapArgs),
-                closeArgs
+                ILeverageUsingSiloFlashloan.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs
             )
         );
 
@@ -167,8 +162,12 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function assert_userAllowanceDoesNotChanged() public {
-        assertEq(_asset0.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval0 must stay");
-        assertEq(_asset1.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval1 must stay");
+        assertEq(
+            _asset0.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval0 must stay"
+        );
+        assertEq(
+            _asset1.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval1 must stay"
+        );
     }
 
     function echidna_user4AllowanceDoesNotChanged() public {

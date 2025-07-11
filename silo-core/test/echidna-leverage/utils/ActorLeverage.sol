@@ -7,7 +7,6 @@ import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 /// @notice Proxy contract for invariant suite actors to avoid aTester calling contracts
 contract ActorLeverage is Actor {
-
     constructor(address[] memory _tokens, address[] memory _contracts) payable Actor(_tokens, _contracts) {
         for (uint256 i = 0; i < _tokens.length; i++) {
             for (uint256 j = 0; j < _contracts.length; j++) {

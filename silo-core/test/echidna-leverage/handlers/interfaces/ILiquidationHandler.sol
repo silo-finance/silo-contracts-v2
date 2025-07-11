@@ -2,11 +2,7 @@
 pragma solidity ^0.8.19;
 
 interface ILiquidationHandler {
-    function liquidationCall(
-        uint256 _debtToCover,
-        bool _receiveSToken,
-        RandomGenerator memory random
-    ) external;
+    function liquidationCall(uint256 _debtToCover, bool _receiveSToken, RandomGenerator memory random) external;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //

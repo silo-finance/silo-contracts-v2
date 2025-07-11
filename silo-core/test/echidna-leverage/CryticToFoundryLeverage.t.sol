@@ -21,21 +21,21 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
 
     CryticToFoundryLeverage LeverageTester = this;
 
-//    modifier setup(uint256 _i) override {
-//        targetActor = actorAddresses[_i % actorAddresses.length];
-//        actor = Actor(payable(targetActor));
-//
-//        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
-//        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
-//
-//        require(targetActor != address(0), "setupActor fail: targetActor zero");
-//        require(address(actor) != address(0), "setupActor fail: actor zero");
-//
-//        _;
-//
-//        actor = Actor(payable(address(0)));
-//        targetActor = address(0);
-//    }
+    //    modifier setup(uint256 _i) override {
+    //        targetActor = actorAddresses[_i % actorAddresses.length];
+    //        actor = Actor(payable(targetActor));
+    //
+    //        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
+    //        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
+    //
+    //        require(targetActor != address(0), "setupActor fail: targetActor zero");
+    //        require(address(actor) != address(0), "setupActor fail: actor zero");
+    //
+    //        _;
+    //
+    //        actor = Actor(payable(address(0)));
+    //        targetActor = address(0);
+    //    }
 
     function setUp() public {
         // Deploy protocol contracts
@@ -65,7 +65,7 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
     FOUNDRY_PROFILE=echidna_leverage forge test -vv --ffi --mt test_replay_leverage
     */
     function test_replay_leverage() public {
-        LeverageTester.deposit(3108972722022,0,1,1);
-        LeverageTester.openLeveragePosition(100000000000000001,23, LeverageHandler.RandomGenerator2(25, 0, 10));
+        LeverageTester.deposit(3108972722022, 0, 1, 1);
+        LeverageTester.openLeveragePosition(100000000000000001, 23, LeverageHandler.RandomGenerator2(25, 0, 10));
     }
 }

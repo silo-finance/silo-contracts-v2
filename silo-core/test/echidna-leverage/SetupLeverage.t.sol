@@ -10,7 +10,8 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";
 
 // Test Contracts
