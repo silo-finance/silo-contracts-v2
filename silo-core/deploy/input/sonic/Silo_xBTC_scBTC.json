@@ -16,7 +16,7 @@
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
     "token1": "scBTC",
-    "solvencyOracle1": "NO_ORACLE",
+    "solvencyOracle1": "SCALER_scBTC",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2.sol",
     "interestRateModelConfig1": "bridgeETHv15",
