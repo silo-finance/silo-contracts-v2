@@ -73,6 +73,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePositionPermit(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs,
@@ -81,13 +82,14 @@ abstract contract LeverageUsingSiloFlashloan is
         external
         virtual
     {
-        _executePermit(_depositAllowance, _depositArgs.silo.asset());
+        _executePermit(_msgSender, _depositAllowance, _depositArgs.silo.asset());
 
-        openLeveragePosition(_flashArgs, _swapArgs, _depositArgs);
+        openLeveragePosition(_msgSender, _flashArgs, _swapArgs, _depositArgs);
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePosition(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs
@@ -95,9 +97,9 @@ abstract contract LeverageUsingSiloFlashloan is
         public
         payable
         virtual
-        whenNotPaused
+        onlyRouter
         nonReentrant
-        setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
+        setupTxState(_msgSender, _depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
         _txMsgValue = msg.value;
 
@@ -111,6 +113,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePositionPermit(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs,
         Permit calldata _withdrawAllowance
@@ -118,26 +121,27 @@ abstract contract LeverageUsingSiloFlashloan is
         external
         virtual
     {
-        _executePermit(_withdrawAllowance, address(_closeArgs.siloWithCollateral));
+        _executePermit(_msgSender, _withdrawAllowance, address(_closeArgs.siloWithCollateral));
 
-        closeLeveragePosition(_swapArgs, _closeArgs);
+        closeLeveragePosition(_msgSender, _swapArgs, _closeArgs);
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePosition(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs
     )
         public
         virtual
-        whenNotPaused
+        onlyRouter
         nonReentrant
-        setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
+        setupTxState(_msgSender, _closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
     {
         require(IERC3156FlashLender(_closeArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: ISilo(_closeArgs.flashloanTarget).asset(),
-            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(msg.sender),
+            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(_msgSender),
             _data: abi.encode(_swapArgs, _closeArgs)
         }), FlashloanFailed());
     }
@@ -333,9 +337,9 @@ abstract contract LeverageUsingSiloFlashloan is
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
     }
 
-    function _executePermit(Permit memory _permit, address _token) internal virtual {
+    function _executePermit(address _msgSender, Permit memory _permit, address _token) internal virtual {
         try IERC20Permit(_token).permit({
-            owner: msg.sender,
+            owner: _msgSender,
             spender: address(this),
             value: _permit.value,
             deadline: _permit.deadline,
