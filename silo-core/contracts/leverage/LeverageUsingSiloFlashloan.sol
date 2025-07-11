@@ -165,6 +165,8 @@ abstract contract LeverageUsingSiloFlashloan is
         // approval for repay flashloan
         IERC20(_borrowToken).forceApprove(_txFlashloanTarget, _flashloanAmount + _flashloanFee);
 
+        // by resetting `_txFlashloanTarget` we basically making this method nonReentrant
+        _txFlashloanTarget = address(0);
         return _FLASHLOAN_CALLBACK;
     }
 
@@ -348,6 +350,7 @@ abstract contract LeverageUsingSiloFlashloan is
             require(_txMsgValue == _expectedValue, IncorrectNativeTokenAmount());
 
             NATIVE_TOKEN.deposit{value: _txMsgValue}();
+            _txMsgValue = 0;
         }
     }
 }
