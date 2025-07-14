@@ -52,6 +52,7 @@ abstract contract RevenueModule is TransientReentrancy {
         _;
     }
 
+    /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @param _tokens List of tokens to rescue
     function rescueTokens(IERC20[] calldata _tokens) external {
         for (uint256 i; i < _tokens.length; i++) {
@@ -59,6 +60,7 @@ abstract contract RevenueModule is TransientReentrancy {
         }
     }
 
+    /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @param _token ERC20 token to rescue
     function rescueTokens(IERC20 _token) public nonReentrant {
         require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
