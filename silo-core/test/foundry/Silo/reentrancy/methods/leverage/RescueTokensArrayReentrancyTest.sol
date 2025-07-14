@@ -27,7 +27,7 @@ contract RescueTokensArrayReentrancyTest is MethodReentrancyTest {
         IERC20[] memory tokens = new IERC20[](1);
         tokens[0] = IERC20(token);
 
-        vm.expectRevert(RevenueModule.NoRevenue.selector);
+        vm.expectRevert(RevenueModule.OnlyLeverageUser.selector);
 
         leverage.rescueTokens(tokens);
     }

@@ -26,6 +26,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
+import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -974,5 +975,111 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function _flashFee(ISilo _flashloanTarget, uint256 _amount) internal view returns (uint256 fee) {
         address token = _flashloanTarget.asset();
         fee = _flashloanTarget.flashFee(token, _amount);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_success
+    */
+    function test_rescueTokens_singleToken_success() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Send some tokens to the leverage contract
+        uint256 rescueAmount = 1e18;
+        token0.mint(userLeverageContract, rescueAmount);
+
+        uint256 userBalanceBefore = token0.balanceOf(user);
+
+        // Rescue tokens
+        vm.prank(user);
+        vm.expectEmit(true, true, false, true, userLeverageContract);
+        emit RevenueModule.TokensRescued(address(token0), rescueAmount);
+
+        siloLeverage.rescueTokens(token0);
+
+        // Verify tokens were transferred to user
+        assertEq(token0.balanceOf(user), userBalanceBefore + rescueAmount, "User should receive rescued tokens");
+        assertEq(token0.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_multipleTokens_success
+    */
+    function test_rescueTokens_multipleTokens_success() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Send some tokens to the leverage contract
+        uint256 rescueAmount = 1e18;
+        token0.mint(userLeverageContract, rescueAmount);
+        token1.mint(userLeverageContract, rescueAmount);
+
+        uint256 user0BalanceBefore = token0.balanceOf(user);
+        uint256 user1BalanceBefore = token1.balanceOf(user);
+
+        // Rescue tokens
+        vm.prank(user);
+        vm.expectEmit(true, true, false, true, userLeverageContract);
+        emit RevenueModule.TokensRescued(address(token0), rescueAmount);
+        vm.expectEmit(true, true, false, true, userLeverageContract);
+        emit RevenueModule.TokensRescued(address(token1), rescueAmount);
+
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens[0] = token0;
+        tokens[1] = token1;
+
+        siloLeverage.rescueTokens(tokens);
+
+        // Verify tokens were transferred to user
+        assertEq(token0.balanceOf(user), user0BalanceBefore + rescueAmount, "User should receive rescued tokens");
+        assertEq(token1.balanceOf(user), user1BalanceBefore + rescueAmount, "User should receive rescued tokens");
+        assertEq(token0.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
+        assertEq(token1.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_emptyBalance
+    */
+    function test_rescueTokens_singleToken_emptyBalance() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token0)));
+        siloLeverage.rescueTokens(token0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_multipleTokens_emptyBalance
+    */
+    function test_rescueTokens_multipleTokens_emptyBalance() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        token0.mint(userLeverageContract, 1e18);
+
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens[0] = token0;
+        tokens[1] = token1;
+        
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token1)));
+        siloLeverage.rescueTokens(tokens);
     }
 }

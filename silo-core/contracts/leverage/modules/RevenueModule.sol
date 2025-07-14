@@ -25,14 +25,22 @@ abstract contract RevenueModule is TransientReentrancy {
     /// @param receiver Address that received the funds
     event LeverageRevenue(address indexed token, uint256 revenue, address indexed receiver);
 
-    /// @dev Thrown when there is no revenue to withdraw
-    error NoRevenue();
+    /// @notice Emitted when tokens are rescued
+    /// @param token Address of the token
+    /// @param amount Amount rescued
+    event TokensRescued(address indexed token, uint256 amount);
+
+    /// @dev Thrown when there is no tokens to rescue
+    error EmptyBalance(address token);
 
     /// @dev Thrown when the caller is not the router
     error OnlyRouter();
 
     /// @dev Thrown when revenue receiver is not set
     error ReceiverNotSet();
+
+    /// @dev Thrown when caller is not the leverage user
+    error OnlyLeverageUser();
 
     constructor(address _router, uint256 _feePrecision) {
         ROUTER = ILeverageRouter(_router);
@@ -53,14 +61,15 @@ abstract contract RevenueModule is TransientReentrancy {
 
     /// @param _token ERC20 token to rescue
     function rescueTokens(IERC20 _token) public nonReentrant {
-        uint256 balance = _token.balanceOf(address(this));
-        require(balance != 0, NoRevenue());
+        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
 
-        address receiver = ROUTER.revenueReceiver();
-        require(receiver != address(0), ReceiverNotSet());
+        uint256 balance = _token.balanceOf(address(this));
+        require(balance != 0, EmptyBalance(address(_token)));
+
+        address receiver = msg.sender;
 
         _token.safeTransfer(receiver, balance);
-        emit LeverageRevenue(address(_token), balance, receiver);
+        emit TokensRescued(address(_token), balance);
     }
 
     /// @notice Calculates the leverage fee for a given amount

@@ -24,7 +24,7 @@ contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
         RevenueModule leverage = RevenueModule(leverageRouter.LEVERAGE_IMPLEMENTATION());
         address token = TestStateLib.token0();
 
-        vm.expectRevert(RevenueModule.NoRevenue.selector);
+        vm.expectRevert(RevenueModule.OnlyLeverageUser.selector);
         leverage.rescueTokens(IERC20(token));
     }
 
