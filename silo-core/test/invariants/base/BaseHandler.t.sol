@@ -15,6 +15,12 @@ import {HookAggregator} from "../hooks/HookAggregator.t.sol";
 /// @notice Contains common logic for all handlers
 /// @dev inherits all suite assertions since per action assertions are implmenteds in the handlers
 contract BaseHandler is HookAggregator {
+    struct RandomGenerator {
+        uint8 i;
+        uint8 j;
+        uint8 k;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         HELPERS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////

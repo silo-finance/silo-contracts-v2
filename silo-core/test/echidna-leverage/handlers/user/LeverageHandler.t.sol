@@ -25,13 +25,6 @@ contract LeverageHandler is BaseHandlerLeverage {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice Random number struct to help with stack too deep errors
-    struct RandomGenerator2 {
-        uint8 i;
-        uint8 j;
-        uint8 k;
-    }
-
     //    modifier setup((uint256 _i) virtual {
     //        targetActor = actorAddresses[_i % actorAddresses.length];
     //        actor = Actor(payable(targetActor));
@@ -48,7 +41,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     //        targetActor = address(0);
     //    }
 
-    function openLeveragePosition(uint256 _depositAmount, uint256 _multiplier, RandomGenerator2 calldata _random)
+    function openLeveragePosition(uint256 _depositAmount, uint256 _multiplier, RandomGenerator calldata _random)
         external
         payable
         setup(_random.i)
@@ -108,7 +101,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         assert_SiloLeverage_neverKeepsTokens();
     }
 
-    function closeLeveragePosition(RandomGenerator2 calldata _random) external setup(_random.i) {
+    function closeLeveragePosition(RandomGenerator calldata _random) external setup(_random.i) {
         if (_userWhoOnlyApprove() == targetActor) {
             assert_userAllowanceDoesNotChanged();
             return;

@@ -8,7 +8,7 @@ interface ILiquidationHandler {
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// @notice Random number struct to help with stack too deep errors
+    /// @notice RandomGenerator number struct to help with stack too deep errors
     struct RandomGenerator {
         uint8 i;
         uint8 j;

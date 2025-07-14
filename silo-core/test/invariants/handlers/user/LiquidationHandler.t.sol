@@ -67,11 +67,4 @@ contract LiquidationHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// @notice Random number struct to help with stack too deep errors
-    struct RandomGenerator {
-        uint8 i;
-        uint8 j;
-        uint8 k;
-    }
 }

@@ -179,7 +179,7 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function transitionCollateral(uint256 _shares, Random memory r) external setup(r.i) {
+    function transitionCollateral(uint256 _shares, RandomGenerator memory r) external setup(r.i) {
         bool success;
         bytes memory returnData;
 
@@ -190,7 +190,7 @@ contract BorrowingHandler is BaseHandler {
 
         address target = _getRandomSilo(r.j);
 
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
+        ISilo.CollateralType _collateralType = ISilo.CollateralType(r.k % 2);
 
         uint256 liquidity = ISilo(target).getLiquidity();
 
