@@ -1078,7 +1078,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         IERC20[] memory tokens = new IERC20[](2);
         tokens[0] = token0;
         tokens[1] = token1;
-        
+
         vm.prank(user);
         vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token1)));
         siloLeverage.rescueTokens(tokens);

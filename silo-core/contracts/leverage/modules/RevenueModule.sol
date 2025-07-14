@@ -68,13 +68,13 @@ abstract contract RevenueModule is TransientReentrancy {
 
         (bool success, ) = payable(msg.sender).call{value: balance}("");
         require(success, NativeTokenTransferFailed());
-        
+
         emit TokensRescued(address(0), balance);
     }
 
     /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @param _tokens List of tokens to rescue
-    function rescueTokens(IERC20[] calldata _tokens) external nonReentrant onlyLeverageUser {
+    function rescueTokens(IERC20[] calldata _tokens) external {
         for (uint256 i; i < _tokens.length; i++) {
             rescueTokens(_tokens[i]);
         }
