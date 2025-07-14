@@ -74,7 +74,7 @@ abstract contract RevenueModule is TransientReentrancy {
 
     /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @param _tokens List of tokens to rescue
-    function rescueTokens(IERC20[] calldata _tokens) external {
+    function rescueTokens(IERC20[] calldata _tokens) external nonReentrant onlyLeverageUser {
         for (uint256 i; i < _tokens.length; i++) {
             rescueTokens(_tokens[i]);
         }
