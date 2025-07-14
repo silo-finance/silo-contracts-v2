@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 // Libraries
-import "forge-std/console.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
