@@ -61,7 +61,6 @@ contract LeverageRouter is LeverageRouterRevenueModule, Pausable {
             _swapArgs: _swapArgs,
             _depositArgs: _depositArgs,
             _depositAllowance: _depositAllowance
-        
         });
     }
 
