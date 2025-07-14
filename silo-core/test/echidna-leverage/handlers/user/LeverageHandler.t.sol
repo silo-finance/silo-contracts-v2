@@ -52,7 +52,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         console2.log("targetActor", targetActor, address(actor));
 
         if (_userWhoOnlyApprove() == targetActor) {
-            assert_userAllowanceDoesNotChanged();
+            assert_allowanceDoesNotChangedForUserWhoOnlyapprove();
             return;
         }
 
@@ -103,7 +103,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     function closeLeveragePosition(RandomGenerator calldata _random) external setup(_random.i) {
         if (_userWhoOnlyApprove() == targetActor) {
-            assert_userAllowanceDoesNotChanged();
+            assert_allowanceDoesNotChangedForUserWhoOnlyapprove();
             return;
         }
 
@@ -154,7 +154,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         assertEq(address(siloLeverage).balance, 0, "SiloLeverage should have 0 ETH");
     }
 
-    function assert_userAllowanceDoesNotChanged() public {
+    function assert_allowanceDoesNotChangedForUserWhoOnlyapprove() public {
         assertEq(
             _asset0.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval0 must stay"
         );
@@ -163,8 +163,10 @@ contract LeverageHandler is BaseHandlerLeverage {
         );
     }
 
-    function echidna_user4AllowanceDoesNotChanged() public {
-        assert_userAllowanceDoesNotChanged();
+    function echidna_allowanceDoesNotChangedForUserWhoOnlyapprove() public  returns (bool) {
+        assert_allowanceDoesNotChangedForUserWhoOnlyapprove();
+
+        return true;
     }
 
     function echidna_SiloLeverage_neverKeepsTokens() external returns (bool) {
