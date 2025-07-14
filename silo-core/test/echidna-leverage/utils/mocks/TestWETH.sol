@@ -9,4 +9,13 @@ contract TestWETH is TestERC20 {
     function deposit() external payable {
         _mint(msg.sender, msg.value);
     }
+
+    function burn(address _from, uint256 _amount) external virtual {
+        _burn(_from, _amount);
+    }
+
+    function withdraw(uint256 _amount) external virtual {
+        _burn(msg.sender, _amount);
+        payable(msg.sender).transfer(_amount);
+    }
 }
