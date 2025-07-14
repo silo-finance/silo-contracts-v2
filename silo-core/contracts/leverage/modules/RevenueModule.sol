@@ -55,11 +55,14 @@ abstract contract RevenueModule is TransientReentrancy {
         _;
     }
 
+    modifier onlyLeverageUser() {
+        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
+        _;
+    }
+
     /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @dev Use this function to rescue native tokens
-    function rescueNativeTokens() external nonReentrant {
-        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
-
+    function rescueNativeTokens() external nonReentrant onlyLeverageUser {
         uint256 balance = address(this).balance;
         require(balance != 0, EmptyBalance(address(0)));
 
@@ -80,9 +83,7 @@ abstract contract RevenueModule is TransientReentrancy {
 
     /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @param _token ERC20 token to rescue
-    function rescueTokens(IERC20 _token) public nonReentrant {
-        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
-
+    function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, EmptyBalance(address(_token)));
 
