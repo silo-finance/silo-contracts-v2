@@ -39,47 +39,47 @@ contract LeverageHandler is BaseHandlerLeverage {
     // TODO direct transfer to leverage
 
     // TODO onFlashLoan
-//    function onFlashLoan(
-//        address _initiator,
-//        uint256 _flashloanAmount,
-//        uint256 _flashloanFee,
-//        bytes calldata _data,
-//        RandomGenerator calldata _random
-//    )
-//        external
-//        payable
-//        setupRandomActor(_random.i)
-//    {
-//        address silo = _getRandomSilo(_random.j);
-//
-//        _before();
-//
-//        address _borrowToken = ISilo(silo).asset();
-//
-//        (bool success,) = actor.proxy{value: msg.value}(
-//            address(siloLeverage),
-//            abi.encodeWithSelector(
-//                ILeverageUsingSiloFlashloan.onFlashLoan.selector,
-//                _initiator,
-//                _borrowToken,
-//                _flashloanAmount,
-//                _flashloanFee,
-//                _data
-//            )
-//        );
-//
-//        if (success) {
-//            _after();
-//
-//            assertTrue(
-//                false,
-//                "[onFlashLoan] direct call on onFlashLoan should always revert"
-//            );
-//        }
-//
-//        assert_SiloLeverage_NeverKeepsTokens();
-//        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
-//    }
+    //    function onFlashLoan(
+    //        address _initiator,
+    //        uint256 _flashloanAmount,
+    //        uint256 _flashloanFee,
+    //        bytes calldata _data,
+    //        RandomGenerator calldata _random
+    //    )
+    //        external
+    //        payable
+    //        setupRandomActor(_random.i)
+    //    {
+    //        address silo = _getRandomSilo(_random.j);
+    //
+    //        _before();
+    //
+    //        address _borrowToken = ISilo(silo).asset();
+    //
+    //        (bool success,) = actor.proxy{value: msg.value}(
+    //            address(siloLeverage),
+    //            abi.encodeWithSelector(
+    //                ILeverageUsingSiloFlashloan.onFlashLoan.selector,
+    //                _initiator,
+    //                _borrowToken,
+    //                _flashloanAmount,
+    //                _flashloanFee,
+    //                _data
+    //            )
+    //        );
+    //
+    //        if (success) {
+    //            _after();
+    //
+    //            assertTrue(
+    //                false,
+    //                "[onFlashLoan] direct call on onFlashLoan should always revert"
+    //            );
+    //        }
+    //
+    //        assert_SiloLeverage_NeverKeepsTokens();
+    //        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+    //    }
 
     function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)
         external
@@ -223,7 +223,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         );
     }
 
-    function echidna_AllowanceDoesNotChangedForUserWhoOnlyApprove() public  returns (bool) {
+    function echidna_AllowanceDoesNotChangedForUserWhoOnlyApprove() public returns (bool) {
         assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
 
         return true;
