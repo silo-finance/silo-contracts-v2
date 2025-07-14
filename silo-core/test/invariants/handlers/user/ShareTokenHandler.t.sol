@@ -36,7 +36,7 @@ contract ShareTokenHandler is BaseHandler {
         uint256 _amount,
         uint8 i,
         uint8 j
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -59,7 +59,7 @@ contract ShareTokenHandler is BaseHandler {
         uint256 _amount,
         uint8 i,
         uint8 j
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -89,7 +89,7 @@ contract ShareTokenHandler is BaseHandler {
         uint8 i,
         uint8 j,
         uint8 k
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -129,7 +129,7 @@ contract ShareTokenHandler is BaseHandler {
         uint256 _amount,
         uint8 i,
         uint8 j
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -156,7 +156,7 @@ contract ShareTokenHandler is BaseHandler {
         uint256 _subtractedValue,
         uint8 i,
         uint8 j
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -183,7 +183,7 @@ contract ShareTokenHandler is BaseHandler {
         uint256 _addedValue,
         uint8 i,
         uint8 j
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -211,7 +211,7 @@ contract ShareTokenHandler is BaseHandler {
         uint8 i,
         uint8 j,
         uint8 k
-    ) external setup(i) {
+    ) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 

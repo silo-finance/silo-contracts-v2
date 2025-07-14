@@ -44,7 +44,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     function openLeveragePosition(uint256 _depositAmount, uint256 _multiplier, RandomGenerator calldata _random)
         external
         payable
-        setup(_random.i)
+        setupRandomActor(_random.i)
     {
         _multiplier = _multiplier % 2e18; // leverage up to 2x
         uint256 _PRECISION = 1e18;
@@ -52,7 +52,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         console2.log("targetActor", targetActor, address(actor));
 
         if (_userWhoOnlyApprove() == targetActor) {
-            assert_allowanceDoesNotChangedForUserWhoOnlyapprove();
+            assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
             return;
         }
 
@@ -98,12 +98,12 @@ contract LeverageHandler is BaseHandlerLeverage {
             assertGt(ISilo(flashArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have debt");
         }
 
-        assert_SiloLeverage_neverKeepsTokens();
+        assert_SiloLeverage_NeverKeepsTokens();
     }
 
-    function closeLeveragePosition(RandomGenerator calldata _random) external setup(_random.i) {
+    function closeLeveragePosition(RandomGenerator calldata _random) external setupRandomActor(_random.i) {
         if (_userWhoOnlyApprove() == targetActor) {
-            assert_allowanceDoesNotChangedForUserWhoOnlyapprove();
+            assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
             return;
         }
 
@@ -145,16 +145,16 @@ contract LeverageHandler is BaseHandlerLeverage {
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
         }
 
-        assert_SiloLeverage_neverKeepsTokens();
+        assert_SiloLeverage_NeverKeepsTokens();
     }
 
-    function assert_SiloLeverage_neverKeepsTokens() public {
+    function assert_SiloLeverage_NeverKeepsTokens() public {
         assertEq(_asset0.balanceOf(address(siloLeverage)), 0, "SiloLeverage should have 0 asset0");
         assertEq(_asset1.balanceOf(address(siloLeverage)), 0, "SiloLeverage should have 0 asset1");
         assertEq(address(siloLeverage).balance, 0, "SiloLeverage should have 0 ETH");
     }
 
-    function assert_allowanceDoesNotChangedForUserWhoOnlyapprove() public {
+    function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
         assertEq(
             _asset0.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval0 must stay"
         );
@@ -163,14 +163,14 @@ contract LeverageHandler is BaseHandlerLeverage {
         );
     }
 
-    function echidna_allowanceDoesNotChangedForUserWhoOnlyapprove() public  returns (bool) {
-        assert_allowanceDoesNotChangedForUserWhoOnlyapprove();
+    function echidna_AllowanceDoesNotChangedForUserWhoOnlyApprove() public  returns (bool) {
+        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
 
         return true;
     }
 
-    function echidna_SiloLeverage_neverKeepsTokens() external returns (bool) {
-        assert_SiloLeverage_neverKeepsTokens();
+    function echidna_SiloLeverage_NeverKeepsTokens() external returns (bool) {
+        assert_SiloLeverage_NeverKeepsTokens();
 
         return true;
     }

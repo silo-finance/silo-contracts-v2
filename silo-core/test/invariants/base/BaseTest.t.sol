@@ -30,7 +30,7 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @dev Actor proxy mechanism
-    modifier setup(uint256 _i) virtual {
+    modifier setupRandomActor(uint256 _i) virtual {
         targetActor = actorAddresses[_i % actorAddresses.length];
         actor = Actor(payable(targetActor));
 

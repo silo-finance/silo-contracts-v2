@@ -20,22 +20,6 @@ contract CryticToFoundry is Invariants, Setup {
     CryticToFoundry Tester = this;
     uint256 constant DEFAULT_TIMESTAMP = 337812;
 
-    modifier setup(uint256 _i) virtual override {
-        targetActor = actorAddresses[_i % actorAddresses.length];
-        actor = Actor(payable(targetActor));
-
-        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
-        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
-
-        require(targetActor != address(0), "setupActor fail: targetActor zero");
-        require(address(actor) != address(0), "setupActor fail: actor zero");
-
-        _;
-
-        actor = Actor(payable(address(0)));
-        targetActor = address(0);
-    }
-
     function setUp() public {
         // Deploy protocol contracts
         _setUp();

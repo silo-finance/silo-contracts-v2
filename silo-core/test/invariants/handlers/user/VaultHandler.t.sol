@@ -23,7 +23,7 @@ contract VaultHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function deposit(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup(i) {
+    function deposit(uint256 _assets, uint8 i, uint8 j, uint8 k) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -59,7 +59,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function mint(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup(i) {
+    function mint(uint256 _shares, uint8 i, uint8 j, uint8 k) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -93,7 +93,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function withdraw(uint256 _assets, uint8 i, uint8 j, uint8 k) external setup(i) {
+    function withdraw(uint256 _assets, uint8 i, uint8 j, uint8 k) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -120,7 +120,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function redeem(uint256 _shares, uint8 i, uint8 j, uint8 k) external setup(i) {
+    function redeem(uint256 _shares, uint8 i, uint8 j, uint8 k) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -150,7 +150,7 @@ contract VaultHandler is BaseHandler {
     //                                          PROPERTIES                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_LENDING_INVARIANT_B(uint8 i, uint8 j) public setup(i) {
+    function assert_LENDING_INVARIANT_B(uint8 i, uint8 j) public setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
