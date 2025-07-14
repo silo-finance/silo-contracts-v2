@@ -80,7 +80,7 @@ abstract contract RevenueModule is TransientReentrancy {
         }
     }
 
-    /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
+    /// @notice We do not expect anyone else to engage with a contract except the user for whom this contract instance was cloned.
     /// @param _token ERC20 token to rescue
     function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
         uint256 balance = _token.balanceOf(address(this));
