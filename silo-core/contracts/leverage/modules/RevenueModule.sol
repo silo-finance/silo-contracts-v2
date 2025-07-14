@@ -66,8 +66,7 @@ abstract contract RevenueModule is TransientReentrancy {
         uint256 balance = address(this).balance;
         require(balance != 0, EmptyBalance(address(0)));
 
-        address receiver = msg.sender;
-        (bool success, ) = payable(receiver).call{value: balance}("");
+        (bool success, ) = payable(msg.sender).call{value: balance}("");
         require(success, NativeTokenTransferFailed());
         
         emit TokensRescued(address(0), balance);
