@@ -60,8 +60,8 @@ abstract contract RevenueModule is TransientReentrancy {
         _;
     }
 
-    /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
-    /// @dev Use this function to rescue native tokens
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
     function rescueNativeTokens() external nonReentrant onlyLeverageUser {
         uint256 balance = address(this).balance;
         require(balance != 0, EmptyBalance(address(0)));
@@ -72,7 +72,8 @@ abstract contract RevenueModule is TransientReentrancy {
         emit TokensRescued(address(0), balance);
     }
 
-    /// @notice We do not expect anyone else to engage with a contract except the user for whom this contract instance was cloned.
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
     /// @param _tokens List of tokens to rescue
     function rescueTokens(IERC20[] calldata _tokens) external {
         for (uint256 i; i < _tokens.length; i++) {
@@ -80,7 +81,8 @@ abstract contract RevenueModule is TransientReentrancy {
         }
     }
 
-    /// @notice We do not expect anyone else to engage with a contract except the user for whom this contract instance was cloned.
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
     /// @param _token ERC20 token to rescue
     function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
         uint256 balance = _token.balanceOf(address(this));
