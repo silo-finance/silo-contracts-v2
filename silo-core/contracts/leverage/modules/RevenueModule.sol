@@ -42,6 +42,9 @@ abstract contract RevenueModule is TransientReentrancy {
     /// @dev Thrown when caller is not the leverage user
     error OnlyLeverageUser();
 
+    /// @dev Thrown when native token transfer fails
+    error NativeTokenTransferFailed();
+
     constructor(address _router, uint256 _feePrecision) {
         ROUTER = ILeverageRouter(_router);
         FEE_PRECISION = _feePrecision;
@@ -50,6 +53,23 @@ abstract contract RevenueModule is TransientReentrancy {
     modifier onlyRouter() {
         require(msg.sender == address(ROUTER), OnlyRouter());
         _;
+    }
+
+    modifier onlyLeverageUser() {
+        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
+        _;
+    }
+
+    /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
+    /// @dev Use this function to rescue native tokens
+    function rescueNativeTokens() external nonReentrant onlyLeverageUser {
+        uint256 balance = address(this).balance;
+        require(balance != 0, EmptyBalance(address(0)));
+
+        (bool success, ) = payable(msg.sender).call{value: balance}("");
+        require(success, NativeTokenTransferFailed());
+
+        emit TokensRescued(address(0), balance);
     }
 
     /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
@@ -62,9 +82,7 @@ abstract contract RevenueModule is TransientReentrancy {
 
     /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
     /// @param _token ERC20 token to rescue
-    function rescueTokens(IERC20 _token) public nonReentrant {
-        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
-
+    function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
         uint256 balance = _token.balanceOf(address(this));
         require(balance != 0, EmptyBalance(address(_token)));
 

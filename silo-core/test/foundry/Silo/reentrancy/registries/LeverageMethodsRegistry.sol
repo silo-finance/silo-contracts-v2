@@ -27,6 +27,7 @@ import {SetLeverageFeeReentrancyTest} from "../methods/leverage/SetLeverageFeeRe
 import {SetRevenueReceiverReentrancyTest} from "../methods/leverage/SetRevenueReceiverReentrancyTest.sol";
 import {RescueTokensArrayReentrancyTest} from "../methods/leverage/RescueTokensArrayReentrancyTest.sol";
 import {RescueTokensSingleReentrancyTest} from "../methods/leverage/RescueTokensSingleReentrancyTest.sol";
+import {RescueNativeTokensReentrancyTest} from "../methods/leverage/RescueNativeTokensReentrancyTest.sol";
 import {CalculateLeverageFeeReentrancyTest} from "../methods/leverage/CalculateLeverageFeeReentrancyTest.sol";
 import {OwnerReentrancyTest} from "../methods/leverage/OwnerReentrancyTest.sol";
 import {PendingOwnerReentrancyTest} from "../methods/leverage/PendingOwnerReentrancyTest.sol";
@@ -63,6 +64,7 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
         _registerMethod(new SetRevenueReceiverReentrancyTest());
         _registerMethod(new RescueTokensArrayReentrancyTest());
         _registerMethod(new RescueTokensSingleReentrancyTest());
+        _registerMethod(new RescueNativeTokensReentrancyTest());
         _registerMethod(new CalculateLeverageFeeReentrancyTest());
         _registerMethod(new OwnerReentrancyTest());
         _registerMethod(new PendingOwnerReentrancyTest());
