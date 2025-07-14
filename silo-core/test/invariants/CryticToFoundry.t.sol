@@ -336,7 +336,7 @@ contract CryticToFoundry is Invariants, Setup {
         _delay(490703);
         _setUpActor(0x0000000000000000000000000000000000020000);
         _delay(185532);
-        Tester.transitionCollateral(1524785992, 7, 136, 158);
+        Tester.transitionCollateral(1524785992, RandomGenerator(7, 136, 158));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -458,7 +458,7 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_transitionCollateralEchidna() public {
-        Tester.transitionCollateral(0, 0, 0, 0);
+        Tester.transitionCollateral(0, RandomGenerator(0, 0, 0));
     }
 
     function test_liquidationCallEchidna() public {
@@ -494,7 +494,7 @@ contract CryticToFoundry is Invariants, Setup {
 
     function test_replaytransitionCollateral() public {
         Tester.mint(1023, 0, 0, 0);
-        Tester.transitionCollateral(679, 0, 0, 0);
+        Tester.transitionCollateral(679, RandomGenerator(0, 0, 0));
     }
 
     function test_replayredeem() public {
@@ -523,7 +523,7 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.setOraclePrice(5167899937944767889217962943343171205019348763, 0);
         Tester.assertBORROWING_HSPOST_F(0, 1);
         Tester.setOraclePrice(2070693789985146455311434266782705402030751026, 1);
-        Tester.transitionCollateral(2194, 0, 0, 0);
+        Tester.transitionCollateral(2194, RandomGenerator(0, 0, 0));
     }
 
     function test_replayborrowShares2() public {
