@@ -72,7 +72,7 @@ abstract contract RevenueModule is TransientReentrancy {
         emit TokensRescued(address(0), balance);
     }
 
-    /// @notice We do not expect anyone else to engage with a contract except the user for whom it was created.
+    /// @notice We do not expect anyone else to engage with a contract except the user for whom this contract instance was cloned.
     /// @param _tokens List of tokens to rescue
     function rescueTokens(IERC20[] calldata _tokens) external {
         for (uint256 i; i < _tokens.length; i++) {
