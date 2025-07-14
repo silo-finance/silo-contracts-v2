@@ -3,27 +3,22 @@ pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
+import {LeverageRouterRevenueModule} from "silo-core/contracts/leverage/modules/LeverageRouterRevenueModule.sol";
 
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
 /// @notice This contract is used to route leverage operations to the appropriate leverage contract.
-contract LeverageRouter is ILeverageRouter, Ownable2Step, Pausable {
+contract LeverageRouter is LeverageRouterRevenueModule, Pausable {
     /// @notice The implementation of the leverage contract
     address public immutable LEVERAGE_IMPLEMENTATION;
-    /// @notice Fee base constant (1e18 represents 100%)
-    uint256 public constant FEE_PRECISION = 1e18;
-    /// @notice The leverage fee expressed as a fraction of 1e18
-    uint256 public leverageFee;
-    /// @notice Address where collected fees are sent
-    address public revenueReceiver;
     /// @notice Mapping of user to their leverage contract
-    mapping(address user => address leverageContract) public userLeverageContract;
+    mapping(address user => ILeverageUsingSiloFlashloan leverageContract) public userLeverageContract;
 
     /// @param _initialOwner The initial owner of the contract
     /// @param _native The native token address
@@ -41,9 +36,9 @@ contract LeverageRouter is ILeverageRouter, Ownable2Step, Pausable {
         bytes calldata _swapArgs,
         ILeverageUsingSiloFlashloan.DepositArgs calldata _depositArgs
     ) external whenNotPaused payable {
-        address leverageContract = _getLeverageContract();
+        ILeverageUsingSiloFlashloan leverageContract = _getLeverageContract();
 
-        ILeverageUsingSiloFlashloan(leverageContract).openLeveragePosition{value: msg.value}({
+        leverageContract.openLeveragePosition{value: msg.value}({
             _msgSender: msg.sender,
             _flashArgs: _flashArgs,
             _swapArgs: _swapArgs,
@@ -58,9 +53,9 @@ contract LeverageRouter is ILeverageRouter, Ownable2Step, Pausable {
         ILeverageUsingSiloFlashloan.DepositArgs calldata _depositArgs,
         ILeverageUsingSiloFlashloan.Permit calldata _depositAllowance
     ) external whenNotPaused {
-        address leverageContract = _getLeverageContract();
+        ILeverageUsingSiloFlashloan leverageContract = _getLeverageContract();
 
-        ILeverageUsingSiloFlashloan(leverageContract).openLeveragePositionPermit({
+        leverageContract.openLeveragePositionPermit({
             _msgSender: msg.sender,
             _flashArgs: _flashArgs,
             _swapArgs: _swapArgs,
@@ -75,9 +70,9 @@ contract LeverageRouter is ILeverageRouter, Ownable2Step, Pausable {
         bytes calldata _swapArgs,
         ILeverageUsingSiloFlashloan.CloseLeverageArgs calldata _closeLeverageArgs
     ) external whenNotPaused {
-        address leverageContract = userLeverageContract[msg.sender];
+        ILeverageUsingSiloFlashloan leverageContract = userLeverageContract[msg.sender];
 
-        ILeverageUsingSiloFlashloan(leverageContract).closeLeveragePosition({
+        leverageContract.closeLeveragePosition({
             _msgSender: msg.sender,
             _swapArgs: _swapArgs,
             _closeLeverageArgs: _closeLeverageArgs
@@ -90,33 +85,14 @@ contract LeverageRouter is ILeverageRouter, Ownable2Step, Pausable {
         ILeverageUsingSiloFlashloan.CloseLeverageArgs calldata _closeLeverageArgs,
         ILeverageUsingSiloFlashloan.Permit calldata _withdrawAllowance
     ) external whenNotPaused {
-        address leverageContract = userLeverageContract[msg.sender];
+        ILeverageUsingSiloFlashloan leverageContract = userLeverageContract[msg.sender];
 
-        ILeverageUsingSiloFlashloan(leverageContract).closeLeveragePositionPermit({
+        leverageContract.closeLeveragePositionPermit({
             _msgSender: msg.sender,
             _swapArgs: _swapArgs,
             _closeLeverageArgs: _closeLeverageArgs,
             _withdrawAllowance: _withdrawAllowance
         });
-    }
-
-    /// @inheritdoc ILeverageRouter
-    function setLeverageFee(uint256 _fee) external onlyOwner {
-        require(revenueReceiver != address(0), ReceiverZero());
-        require(leverageFee != _fee, FeeDidNotChanged());
-        require(_fee < FEE_PRECISION, InvalidFee());
-
-        leverageFee = _fee;
-        emit LeverageFeeChanged(_fee);
-    }
-
-    /// @inheritdoc ILeverageRouter
-    function setRevenueReceiver(address _receiver) external onlyOwner {
-        require(revenueReceiver != _receiver, ReceiverDidNotChanged());
-        require(_receiver != address(0), ReceiverZero());
-
-        revenueReceiver = _receiver;
-        emit RevenueReceiverChanged(_receiver);
     }
 
     /// @inheritdoc ILeverageRouter
@@ -141,21 +117,21 @@ contract LeverageRouter is ILeverageRouter, Ownable2Step, Pausable {
     /// @dev This function is used to get the leverage contract for a user.
     /// If the leverage contract does not exist, it will be created.
     /// @return leverageContract
-    function _getLeverageContract() internal returns (address leverageContract) {
+    function _getLeverageContract() internal returns (ILeverageUsingSiloFlashloan leverageContract) {
         leverageContract = userLeverageContract[msg.sender];
 
-        if (leverageContract != address(0)) {
+        if (address(leverageContract) != address(0)) {
             return leverageContract;
         }
 
-        leverageContract = Clones.cloneDeterministic({
+        leverageContract = ILeverageUsingSiloFlashloan(Clones.cloneDeterministic({
             implementation: LEVERAGE_IMPLEMENTATION,
             salt: _getSalt(msg.sender)
-        });
+        }));
 
         userLeverageContract[msg.sender] = leverageContract;
 
-        emit LeverageContractCreated(msg.sender, leverageContract);
+        emit LeverageContractCreated(msg.sender, address(leverageContract));
     }
 
     /// @dev This function is used to get the salt for a user.

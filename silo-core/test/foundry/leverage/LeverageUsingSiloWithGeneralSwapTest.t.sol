@@ -224,11 +224,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_openLeveragePosition -vv
     */
-    function test_leverage_pausable() public {
-        // OPEN
-
+    function test_leverage_pausable_openLeveragePosition() public {
         leverageRouter.pause();
 
         ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
@@ -237,13 +235,48 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         vm.expectRevert(Pausable.EnforcedPause.selector);
         leverageRouter.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+    }
 
-        // CLOSE
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_openLeveragePositionPermit -vv
+    */
+    function test_leverage_pausable_openLeveragePositionPermit() public {
+        leverageRouter.pause();
+
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
+        ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
+        ILeverageUsingSiloFlashloan.Permit memory depositAllowance;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        leverageRouter.openLeveragePositionPermit(flashArgs, abi.encode(swapArgs), depositArgs, depositAllowance);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_closeLeveragePosition -vv
+    */
+    function test_leverage_pausable_closeLeveragePosition() public {
+        leverageRouter.pause();
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
 
         vm.expectRevert(Pausable.EnforcedPause.selector);
         leverageRouter.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_closeLeveragePositionPermit -vv
+    */
+    function test_leverage_pausable_closeLeveragePositionPermit() public {
+        leverageRouter.pause();
+
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
+        ILeverageUsingSiloFlashloan.Permit memory withdrawAllowance;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        leverageRouter.closeLeveragePositionPermit(abi.encode(swapArgs), closeArgs, withdrawAllowance);
     }
 
     /*
@@ -523,10 +556,14 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         uint256 userBalanceBefore = token0.balanceOf(user);
         emit log_named_address("leverage", address(siloLeverage));
 
+        address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
+            leverageRouter.LEVERAGE_IMPLEMENTATION()
+        ).SWAP_MODULE());
+
         _leverage_approvalAbuse(
             address(silo0.asset()),
             abi.encodeWithSignature("transferFrom(address,address,uint256)", user, attacker, 1),
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(siloLeverage.SWAP_MODULE()), 0, 1)
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, swapModule, 0, 1)
         );
 
         assertEq(userBalanceBefore, token0.balanceOf(user), "user allowance was abused");
@@ -873,14 +910,18 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(token1.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token1 for silo1");
 
         if (_checkSwap) {
+            address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
+                leverageRouter.LEVERAGE_IMPLEMENTATION()
+            ).SWAP_MODULE());
+
             assertEq(
-                token0.allowance(address(siloLeverage.SWAP_MODULE()), address(swap)),
+                token0.allowance(swapModule, address(swap)),
                 0,
                 "[_assertNoApprovals] token0 for swap router"
             );
 
             assertEq(
-                token1.allowance(address(siloLeverage.SWAP_MODULE()), address(swap)),
+                token1.allowance(swapModule, address(swap)),
                 0,
                 "[_assertNoApprovals] token1 for swap router"
             );

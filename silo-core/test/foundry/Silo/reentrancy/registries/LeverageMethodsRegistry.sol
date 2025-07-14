@@ -6,11 +6,16 @@ import {IMethodsRegistry} from "../interfaces/IMethodsRegistry.sol";
 
 import {DescriptionReentrancyTest} from "../methods/leverage/DescriptionReentrancyTest.sol";
 import {SwapModuleReentrancyTest} from "../methods/leverage/SwapModuleReentrancyTest.sol";
+import {RouterReentrancyTest} from "../methods/leverage/RouterReentrancyTest.sol";
 import {CalculateDebtReceiveApprovalReentrancyTest} from "../methods/leverage/CalculateDebtReceiveApprovalReentrancyTest.sol";
 import {OpenLeveragePositionPermitReentrancyTest} from "../methods/leverage/OpenLeveragePositionPermitReentrancyTest.sol";
 import {OpenLeveragePositionReentrancyTest} from "../methods/leverage/OpenLeveragePositionReentrancyTest.sol";
+import {OpenLeveragePositionDirectReentrancyTest} from "../methods/leverage/OpenLeveragePositionDirectReentrancyTest.sol";
+import {OpenLeveragePositionPermitDirectReentrancyTest} from "../methods/leverage/OpenLeveragePositionPermitDirectReentrancyTest.sol";
 import {CloseLeveragePositionPermitReentrancyTest} from "../methods/leverage/CloseLeveragePositionPermitReentrancyTest.sol";
 import {CloseLeveragePositionReentrancyTest} from "../methods/leverage/CloseLeveragePositionReentrancyTest.sol";
+import {CloseLeveragePositionDirectReentrancyTest} from "../methods/leverage/CloseLeveragePositionDirectReentrancyTest.sol";
+import {CloseLeveragePositionPermitDirectReentrancyTest} from "../methods/leverage/CloseLeveragePositionPermitDirectReentrancyTest.sol";
 import {OnFlashLoanReentrancyTest} from "../methods/leverage/OnFlashLoanReentrancyTest.sol";
 import {NativeTokenReentrancyTest} from "../methods/leverage/NativeTokenReentrancyTest.sol";
 import {FeePrecisionReentrancyTest} from "../methods/leverage/FeePrecisionReentrancyTest.sol";
@@ -37,11 +42,16 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
     constructor() {
         _registerMethod(new DescriptionReentrancyTest());
         _registerMethod(new SwapModuleReentrancyTest());
+        _registerMethod(new RouterReentrancyTest());
         _registerMethod(new CalculateDebtReceiveApprovalReentrancyTest());
         _registerMethod(new OpenLeveragePositionPermitReentrancyTest());
         _registerMethod(new OpenLeveragePositionReentrancyTest());
+        _registerMethod(new OpenLeveragePositionDirectReentrancyTest());
+        _registerMethod(new OpenLeveragePositionPermitDirectReentrancyTest());
         _registerMethod(new CloseLeveragePositionPermitReentrancyTest());
         _registerMethod(new CloseLeveragePositionReentrancyTest());
+        _registerMethod(new CloseLeveragePositionDirectReentrancyTest());
+        _registerMethod(new CloseLeveragePositionPermitDirectReentrancyTest());
         _registerMethod(new OnFlashLoanReentrancyTest());
         _registerMethod(new NativeTokenReentrancyTest());
         _registerMethod(new FeePrecisionReentrancyTest());
