@@ -34,6 +34,7 @@ import {WETH} from "./mocks/WETH.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {RevertingReceiver} from "../_mocks/RevertingReceiver.sol";
 
 
 /*
@@ -1081,5 +1082,88 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         vm.prank(user);
         vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token1)));
         siloLeverage.rescueTokens(tokens);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_success
+    */
+    function test_rescueNativeTokens_success() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Use vm.deal to directly set ETH balance on the leverage contract
+        uint256 rescueAmount = 1e18;
+        vm.deal(userLeverageContract, rescueAmount);
+
+        uint256 userBalanceBefore = user.balance;
+        uint256 contractBalanceBefore = userLeverageContract.balance;
+        
+        assertEq(contractBalanceBefore, rescueAmount, "Contract should have native tokens");
+
+        vm.expectEmit(true, true, false, true, userLeverageContract);
+        emit RevenueModule.TokensRescued(address(0), rescueAmount);
+
+        vm.prank(user);
+        siloLeverage.rescueNativeTokens();
+
+        // Verify native tokens were transferred to user
+        assertEq(user.balance, userBalanceBefore + rescueAmount, "User should receive rescued native tokens");
+        assertEq(userLeverageContract.balance, 0, "Leverage contract should have no native tokens");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_noBalance
+    */
+    function test_rescueNativeTokens_noBalance() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Verify leverage contract has no native tokens
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        assertEq(userLeverageContract.balance, 0, "Contract should have no native tokens");
+
+        // Try to rescue native tokens when there's no balance (should revert)
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(0)));
+        siloLeverage.rescueNativeTokens();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_nativeTokenTransferFailed
+    */
+    function test_rescueNativeTokens_nativeTokenTransferFailed() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Use vm.deal to set native token balance on the leverage contract
+        uint256 rescueAmount = 1e18;
+        vm.deal(userLeverageContract, rescueAmount);
+        
+        // Deploy reverting receiver and get its bytecode
+        RevertingReceiver revertingReceiver = new RevertingReceiver();
+        bytes memory revertingCode = address(revertingReceiver).code;
+
+        // Replace user's code with reverting receiver code
+        vm.etch(user, revertingCode);
+
+        // Verify contract has native tokens to rescue
+        assertEq(userLeverageContract.balance, rescueAmount, "Contract should have native tokens");
+
+        // Try to rescue native tokens - should fail because user's receive() reverts
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.NativeTokenTransferFailed.selector));
+        siloLeverage.rescueNativeTokens();
+
+        // Verify native tokens are still in the contract
+        assertEq(userLeverageContract.balance, rescueAmount, "Native tokens should still be in leverage contract");
     }
 }
