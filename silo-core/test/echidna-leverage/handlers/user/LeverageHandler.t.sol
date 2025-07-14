@@ -136,7 +136,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         uint256 beforeDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
-        (bool success, bytes memory returnData) = actor.proxy{value: msg.value}(
+        (bool success,) = actor.proxy{value: msg.value}(
             address(siloLeverage),
             abi.encodeWithSelector(
                 ILeverageUsingSiloFlashloan.openLeveragePosition.selector, flashArgs, abi.encode(swapArgs), depositArgs
@@ -193,7 +193,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _before();
 
-        (bool success, bytes memory returnData) = actor.proxy(
+        (bool success,) = actor.proxy(
             address(siloLeverage),
             abi.encodeWithSelector(
                 ILeverageUsingSiloFlashloan.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs

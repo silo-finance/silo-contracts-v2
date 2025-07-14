@@ -21,22 +21,6 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
 
     CryticToFoundryLeverage LeverageTester = this;
 
-    //    modifier setup(uint256 _i) override {
-    //        targetActor = actorAddresses[_i % actorAddresses.length];
-    //        actor = Actor(payable(targetActor));
-    //
-    //        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
-    //        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
-    //
-    //        require(targetActor != address(0), "setupActor fail: targetActor zero");
-    //        require(address(actor) != address(0), "setupActor fail: actor zero");
-    //
-    //        _;
-    //
-    //        actor = Actor(payable(address(0)));
-    //        targetActor = address(0);
-    //    }
-
     function setUp() public {
         // Deploy protocol contracts
         _setUp();
@@ -46,9 +30,6 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
 
         // Initialize handler contracts
         _setUpHandlers();
-
-        /// @dev fixes the actor to the first user
-        actor = actors[USER1];
 
         vm.warp(DEFAULT_TIMESTAMP);
     }
