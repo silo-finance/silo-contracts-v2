@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
+import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
@@ -25,29 +26,71 @@ contract LeverageHandler is BaseHandlerLeverage {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    //    modifier setup((uint256 _i) virtual {
-    //        targetActor = actorAddresses[_i % actorAddresses.length];
-    //        actor = Actor(payable(targetActor));
-    //
-    //        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
-    //        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
-    //
-    //        require(targetActor != address(0), "setupActor fail: targetActor zero");
-    //        require(address(actor) != address(0), "setupActor fail: actor zero");
-    //
-    //        _;
-    //
-    //        actor = Actor(payable(address(0)));
-    //        targetActor = address(0);
-    //    }
+    // TODO rescueTokens
 
-    function openLeveragePosition(uint256 _depositAmount, uint256 _multiplier, RandomGenerator calldata _random)
+    // TODO openLeveragePositionPermit? worth it?
+
+    // TODO closeLeveragePositionPermit? worth it?
+
+    // TODO whole Leverage interface
+
+    // TODO direct transfer to Swap
+
+    // TODO direct transfer to leverage
+
+    // TODO onFlashLoan
+//    function onFlashLoan(
+//        address _initiator,
+//        uint256 _flashloanAmount,
+//        uint256 _flashloanFee,
+//        bytes calldata _data,
+//        RandomGenerator calldata _random
+//    )
+//        external
+//        payable
+//        setupRandomActor(_random.i)
+//    {
+//        address silo = _getRandomSilo(_random.j);
+//
+//        _before();
+//
+//        address _borrowToken = ISilo(silo).asset();
+//
+//        (bool success,) = actor.proxy{value: msg.value}(
+//            address(siloLeverage),
+//            abi.encodeWithSelector(
+//                ILeverageUsingSiloFlashloan.onFlashLoan.selector,
+//                _initiator,
+//                _borrowToken,
+//                _flashloanAmount,
+//                _flashloanFee,
+//                _data
+//            )
+//        );
+//
+//        if (success) {
+//            _after();
+//
+//            assertTrue(
+//                false,
+//                "[onFlashLoan] direct call on onFlashLoan should always revert"
+//            );
+//        }
+//
+//        assert_SiloLeverage_NeverKeepsTokens();
+//        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+//    }
+
+    function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)
         external
         payable
         setupRandomActor(_random.i)
     {
-        _multiplier = _multiplier % 2e18; // leverage up to 2x
         uint256 _PRECISION = 1e18;
+
+        // it allows to set 110%, so we do not exclude cases when user pick value that is too high
+        _flashloanPercent = _flashloanPercent % 1.1e18;
+        _depositPercent = _depositPercent % 1.1e18;
 
         console2.log("targetActor", targetActor, address(actor));
 
@@ -62,13 +105,18 @@ contract LeverageHandler is BaseHandlerLeverage {
         ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
         IGeneralSwapModule.SwapArgs memory swapArgs;
 
+        address otherSilo = _getOtherSilo(silo);
+        uint256 maxFlashloan = IERC3156FlashLender(otherSilo).maxFlashLoan(ISilo(otherSilo).asset());
+
         flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
-            amount: _depositAmount * _multiplier / _PRECISION,
-            flashloanTarget: _getOtherSilo(silo)
+            amount: maxFlashloan * _flashloanPercent / _PRECISION,
+            flashloanTarget: otherSilo
         });
 
+        address depositAsset = ISilo(silo).asset();
+
         depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
-            amount: _depositAmount,
+            amount: IERC20(depositAsset).balanceOf(targetActor) * _depositPercent / _PRECISION,
             collateralType: ISilo.CollateralType(_random.k % 2),
             silo: ISilo(silo)
         });
@@ -86,6 +134,8 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _before();
 
+        uint256 beforeDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
+
         (bool success, bytes memory returnData) = actor.proxy{value: msg.value}(
             address(siloLeverage),
             abi.encodeWithSelector(
@@ -93,12 +143,22 @@ contract LeverageHandler is BaseHandlerLeverage {
             )
         );
 
+        uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
+
         if (success) {
             _after();
-            assertGt(ISilo(flashArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have debt");
+
+            assertEq(
+                ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
+                beforeDebt + flashArgs.amount + depositArgs.amount,
+                "[openLeveragePosition] borrower should have debt created by leverage"
+            );
+        } else {
+            assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
         }
 
         assert_SiloLeverage_NeverKeepsTokens();
+        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
     }
 
     function closeLeveragePosition(RandomGenerator calldata _random) external setupRandomActor(_random.i) {
