@@ -60,7 +60,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         _donation(address(leverageRouter), _t);
     }
 
-    function setLeverageFee(uint256 _fee) external onlyOwner {
+    function setLeverageFee(uint256 _fee) external {
         address owner = leverageRouter.owner();
 
         _before();
