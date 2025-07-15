@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {AccessControl} from "openzeppelin5/access/AccessControl.sol";
-import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-
+import {PausableWithAccessControl} from "common/utils/PausableWithAccessControl.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 
 /// @title Leverage Router Revenue Module
-abstract contract LeverageRouterRevenueModule is ILeverageRouter, AccessControl, Pausable {
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    
+abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithAccessControl {    
     /// @notice Fee base constant (1e18 represents 100%)
     uint256 public constant FEE_PRECISION = 1e18;
 
@@ -39,13 +35,5 @@ abstract contract LeverageRouterRevenueModule is ILeverageRouter, AccessControl,
 
         revenueReceiver = _receiver;
         emit RevenueReceiverChanged(_receiver);
-    }
-
-    function pause() external onlyRole(PAUSER_ROLE) {
-        _pause();
-    }
-
-    function unpause() external onlyRole(PAUSER_ROLE) {
-        _unpause();
     }
 }

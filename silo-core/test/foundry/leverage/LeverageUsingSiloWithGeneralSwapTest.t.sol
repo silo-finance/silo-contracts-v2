@@ -9,8 +9,6 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-import {PausableWithRole} from "common/utils/PausableWithRole.sol";
-import {IPausableWithRole} from "silo-core/contracts/interfaces/IPausableWithRole.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {IAccessControl} from "openzeppelin5/access/IAccessControl.sol";
