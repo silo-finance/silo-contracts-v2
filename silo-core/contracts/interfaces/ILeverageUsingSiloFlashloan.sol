@@ -82,8 +82,12 @@ interface ILeverageUsingSiloFlashloan {
 
     function SWAP_MODULE() external view returns (IGeneralSwapModule);
 
-    /// @return debtReceiveApproval amount of approval (receive approval) that is required on debt share token
-    /// in order to borow on behalf of user when opening leverage position
+    /// @notice Calculates an amount of approval (receive approval) that is required on debt share token in order
+    /// to borrow on behalf of user when opening leverage position. This function should only be used when a flash
+    /// loan provider is the Silo contract.
+    /// @param _flashFrom Silo contract address to take flash loan from
+    /// @param _flashAmount amount of flash loan
+    /// @return debtReceiveApproval amount of receive approval
     function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
         external
         view
@@ -95,10 +99,12 @@ interface ILeverageUsingSiloFlashloan {
     /// This method requires approval for transfer collateral from borrower to leverage contract and to create
     /// debt position. Approval for collateral can be done using Permit (if asset supports it), for that case please
     /// use `openLeveragePositionPermit`
+    /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
     /// @param _depositArgs Final deposit configuration into a Silo
     function openLeveragePosition(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs
@@ -107,11 +113,13 @@ interface ILeverageUsingSiloFlashloan {
     /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
     /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails
+    /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
     /// @param _depositArgs Final deposit configuration into a Silo
     /// @param _depositAllowance Permit for leverage contract to transfer collateral from borrower
     function openLeveragePositionPermit(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs,
@@ -122,9 +130,11 @@ interface ILeverageUsingSiloFlashloan {
     /// Does not support fee on transfer tokens. It also does not support borrow on same asset.
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval can be done using Permit, for that case please use `closeLeveragePositionPermit`
+    /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
     function closeLeveragePosition(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external;
@@ -133,10 +143,12 @@ interface ILeverageUsingSiloFlashloan {
     /// Does not support fee on transfer tokens. It also does not support borrow on same asset.
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval is done using Permit
+    /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
     /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral tokens
     function closeLeveragePositionPermit(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs,
         Permit calldata _withdrawAllowance

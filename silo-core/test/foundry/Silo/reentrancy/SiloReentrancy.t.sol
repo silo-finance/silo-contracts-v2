@@ -18,8 +18,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {
-    LeverageUsingSiloFlashloanWithGeneralSwapDeploy
-} from "silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
+    LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy
+} from "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
@@ -107,11 +107,11 @@ contract SiloReentrancyTest is Test {
 
         AddrLib.setAddress(AddrKey.DAO, makeAddr("DAO"));
 
-        LeverageUsingSiloFlashloanWithGeneralSwapDeploy leverageDeploy =
-            new LeverageUsingSiloFlashloanWithGeneralSwapDeploy();
+        LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy leverageDeploy =
+            new LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy();
 
         leverageDeploy.disableDeploymentsSync();
-        address leverage = address(leverageDeploy.run());
+        address leverageRouter = address(leverageDeploy.run());
 
         TestStateLib.init(
             address(siloConfig),
@@ -120,7 +120,7 @@ contract SiloReentrancyTest is Test {
             configOverride.token0,
             configOverride.token1,
             hookReceiver,
-            leverage
+            leverageRouter
         );
     }
 }
