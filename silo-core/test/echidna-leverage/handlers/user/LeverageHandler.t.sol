@@ -6,6 +6,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
@@ -42,7 +44,9 @@ contract LeverageHandler is BaseHandlerLeverage {
             _after();
         }
 
-        assertEq(_token.balanceOf(address(revenueModule)), 0, "after rescue (success of fail) there should be 0 tokens");
+        assertEq(
+            _token.balanceOf(address(revenueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
+        );
 
         assert_SiloLeverage_NeverKeepsTokens();
         assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
@@ -54,9 +58,13 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     // TODO whole Leverage interface
 
-    // TODO direct transfer to Swap
+    function swapModuleDonation(uint256 _t) external {
+        _donation(address(_swapModuleAddress()), _t);
+    }
 
-    // TODO direct transfer to leverage
+    function siloLeverageImplementationDonation(uint256 _t) external {
+        _donation(siloLeverage.LEVERAGE_IMPLEMENTATION(), _t);
+    }
 
     function revenueModelDonation(uint256 _t, uint256 _i) external {
         RevenueModule revenueModule = RevenueModule(siloLeverage.predictUserLeverageContract(targetActor));
@@ -66,19 +74,6 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     function siloLeverageDonation(uint256 _t) external {
         _donation(address(siloLeverage), _t);
-    }
-
-    function _donation(address _target, uint256 _t) internal {
-        if (_t == 0) {
-            payable(_target).transfer(1e18);
-
-            assertGt(_target.balance, 0, "[_donation] expect ETH to be send");
-        } else {
-            TestERC20 token = _t % 2 == 0 ? _asset0 : _asset1;
-            token.mint(_target, 1e18);
-
-            assertGt(token.balanceOf(_target), 0, "[_donation] expect tokens to be send");
-        }
     }
 
     // TODO onFlashLoan
@@ -281,5 +276,22 @@ contract LeverageHandler is BaseHandlerLeverage {
     function _userWhoOnlyApprove() internal view returns (address) {
         // this user only approve leverage and we expect approval did not changed
         return actorAddresses[0];
+    }
+
+    function _donation(address _target, uint256 _t) internal {
+        if (_t == 0) {
+            payable(_target).transfer(1e18);
+
+            assertGt(_target.balance, 0, "[_donation] expect ETH to be send");
+        } else {
+            TestERC20 token = _t % 2 == 0 ? _asset0 : _asset1;
+            token.mint(_target, 1e18);
+
+            assertGt(token.balanceOf(_target), 0, "[_donation] expect tokens to be send");
+        }
+    }
+
+    function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {
+        return LeverageUsingSiloFlashloanWithGeneralSwap(siloLeverage.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE();
     }
 }
