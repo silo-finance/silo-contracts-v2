@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
+import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
@@ -15,15 +15,15 @@ contract RescueNativeTokensReentrancyTest is MethodReentrancyTest {
 
     function callMethod() external {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
-        RevenueModule leverage = RevenueModule(leverageRouter.LEVERAGE_IMPLEMENTATION());
+        RescueModule leverage = RescueModule(leverageRouter.LEVERAGE_IMPLEMENTATION());
 
-        vm.expectRevert(RevenueModule.OnlyLeverageUser.selector);
+        vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
         leverage.rescueNativeTokens();
     }
 
     function verifyReentrancy() external {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
-        RevenueModule module = RevenueModule(leverageRouter.predictUserLeverageContract(wallet.addr));
+        RescueModule module = RescueModule(leverageRouter.predictUserLeverageContract(wallet.addr));
 
         vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         module.rescueNativeTokens();

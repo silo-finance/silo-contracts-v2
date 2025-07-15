@@ -9,7 +9,7 @@ import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.so
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
-import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
+import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 
 contract OpenLeveragePositionDirectReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
@@ -43,7 +43,7 @@ contract OpenLeveragePositionDirectReentrancyTest is MethodReentrancyTest {
         });
         
         // This should revert with OnlyRouter error
-        vm.expectRevert(RevenueModule.OnlyRouter.selector);
+        vm.expectRevert(RescueModule.OnlyRouter.selector);
         leverage.openLeveragePosition{value: 0}(
             address(this),
             flashArgs,

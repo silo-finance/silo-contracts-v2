@@ -28,7 +28,7 @@ contract GrantRoleReentrancyTest is MethodReentrancyTest {
         address anyAccount = makeAddr("anyAccount");
 
         LeverageRouter router = _getLeverageRouter();
-        bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
+        bytes32 adminRole = router.PAUSER_ADMIN_ROLE();
         bytes32 pauserRole = router.PAUSER_ROLE();
 
         vm.expectRevert(abi.encodeWithSelector(

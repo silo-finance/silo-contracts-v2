@@ -27,7 +27,7 @@ contract RevokeRoleReentrancyTest is MethodReentrancyTest {
     function _expectRevert() internal {
         LeverageRouter router = _getLeverageRouter();
         address anyAccount = makeAddr("anyAccount");
-        bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
+        bytes32 adminRole = router.PAUSER_ADMIN_ROLE();
         bytes32 pauserRole = router.PAUSER_ROLE();
 
         vm.expectRevert(abi.encodeWithSelector(

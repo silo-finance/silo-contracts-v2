@@ -6,7 +6,7 @@ import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
+import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
@@ -21,16 +21,16 @@ contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
 
     function callMethod() external {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
-        RevenueModule leverage = RevenueModule(leverageRouter.LEVERAGE_IMPLEMENTATION());
+        RescueModule leverage = RescueModule(leverageRouter.LEVERAGE_IMPLEMENTATION());
         address token = TestStateLib.token0();
 
-        vm.expectRevert(RevenueModule.OnlyLeverageUser.selector);
+        vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
         leverage.rescueTokens(IERC20(token));
     }
 
     function verifyReentrancy() external {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
-        RevenueModule module = RevenueModule(leverageRouter.predictUserLeverageContract(wallet.addr));
+        RescueModule module = RescueModule(leverageRouter.predictUserLeverageContract(wallet.addr));
 
         address token = TestStateLib.token0();
 

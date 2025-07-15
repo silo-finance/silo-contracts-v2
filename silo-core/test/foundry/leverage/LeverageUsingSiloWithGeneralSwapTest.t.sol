@@ -28,7 +28,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
-import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
+import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -377,7 +377,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address newPauser = makeAddr("newPauser");
 
         bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
-        bytes32 adminRole = leverageRouter.DEFAULT_ADMIN_ROLE();
+        bytes32 adminRole = leverageRouter.PAUSER_ADMIN_ROLE();
 
         vm.expectRevert(abi.encodeWithSelector(
             IAccessControl.AccessControlUnauthorizedAccount.selector,
@@ -395,7 +395,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function test_leverage_pausable_nonAdminCannotRevokePauserRole() public {
         address anyAccount = makeAddr("anyAccount");
         bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
-        bytes32 adminRole = leverageRouter.DEFAULT_ADMIN_ROLE();
+        bytes32 adminRole = leverageRouter.PAUSER_ADMIN_ROLE();
 
         leverageRouter.grantRole(pauserRole, pauser);
         assertTrue(leverageRouter.hasRole(pauserRole, pauser));
@@ -817,7 +817,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IERC20(_depositArgs.silo.asset()).forceApprove(userLeverage, _depositArgs.amount);
         }
 
-        uint256 debtReceiveApproval = siloLeverageImpl.calculateDebtReceiveApproval(
+        uint256 debtReceiveApproval = leverageRouter.calculateDebtReceiveApproval(
             ISilo(_flashArgs.flashloanTarget), _flashArgs.amount
         );
 
@@ -844,7 +844,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             uint256 swapAmountOut = _flashArgs.amount * 99 / 100;
             uint256 totalUserDeposit;
 
-            uint256 leverageFee = siloLeverageImpl.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
+            uint256 leverageFee = leverageRouter.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
             totalUserDeposit = _depositArgs.amount + swapAmountOut - leverageFee;
 
             uint256 flashloanFee = _flashFee(ISilo(_flashArgs.flashloanTarget), _flashArgs.amount);
@@ -1127,7 +1127,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // Rescue tokens
         vm.prank(user);
         vm.expectEmit(true, true, false, true, userLeverageContract);
-        emit RevenueModule.TokensRescued(address(token0), rescueAmount);
+        emit RescueModule.TokensRescued(address(token0), rescueAmount);
 
         siloLeverage.rescueTokens(token0);
 
@@ -1148,7 +1148,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
         
         vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token0)));
+        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(token0)));
         siloLeverage.rescueTokens(token0);
     }
 
@@ -1173,7 +1173,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(contractBalanceBefore, rescueAmount, "Contract should have native tokens");
 
         vm.expectEmit(true, true, false, true, userLeverageContract);
-        emit RevenueModule.TokensRescued(address(0), rescueAmount);
+        emit RescueModule.TokensRescued(address(0), rescueAmount);
 
         vm.prank(user);
         siloLeverage.rescueNativeTokens();
@@ -1197,7 +1197,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         // Try to rescue native tokens when there's no balance (should revert)
         vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
         siloLeverage.rescueNativeTokens();
     }
 
@@ -1228,7 +1228,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         // Try to rescue native tokens - should fail because user's receive() reverts
         vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RevenueModule.NativeTokenTransferFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(RescueModule.NativeTokenTransferFailed.selector));
         siloLeverage.rescueNativeTokens();
 
         // Verify native tokens are still in the contract

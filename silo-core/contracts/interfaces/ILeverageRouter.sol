@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import {ISilo} from "./ISilo.sol";
 import {ILeverageUsingSiloFlashloan} from "./ILeverageUsingSiloFlashloan.sol";
 
 /// @title ILeverageRouter
@@ -100,4 +101,21 @@ interface ILeverageRouter {
     /// @notice Returns the leverage implementation
     /// @return implementation The leverage implementation
     function LEVERAGE_IMPLEMENTATION() external view returns (address implementation);
+
+    /// @notice Calculates an amount of approval (receive approval) that is required on debt share token in order
+    /// to borrow on behalf of user when opening leverage position. This function should only be used when a flash
+    /// loan provider is the Silo contract.
+    /// @param _flashFrom Silo contract address to take flash loan from
+    /// @param _flashAmount amount of flash loan
+    /// @return debtReceiveApproval amount of receive approval
+    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
+        external
+        view
+        returns (uint256 debtReceiveApproval);
+
+    /// @notice Calculates the leverage fee for a given amount
+    /// @dev Will always return at least 1 if fee > 0 and calculation rounds down
+    /// @param _amount The amount to calculate the fee for
+    /// @return leverageFeeAmount The calculated fee amount
+    function calculateLeverageFee(uint256 _amount) external view returns (uint256 leverageFeeAmount);
 }
