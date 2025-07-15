@@ -23,7 +23,7 @@ contract LeverageRouter is LeverageRouterRevenueModule {
     /// @param _initialPauser The initial pauser of the contract
     /// @param _native The native token address
     constructor(address _initialOwner, address _initialPauser, address _native) {
-        _grantRole(DEFAULT_ADMIN_ROLE, _initialOwner);
+        _grantRole(OWNER_ROLE, _initialOwner);
         _grantRole(PAUSER_ROLE, _initialPauser);
 
         LEVERAGE_IMPLEMENTATION = address(new LeverageUsingSiloFlashloanWithGeneralSwap({
