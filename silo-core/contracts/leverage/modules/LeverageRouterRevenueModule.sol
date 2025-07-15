@@ -19,7 +19,7 @@ abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithAc
     address public revenueReceiver;
 
     /// @inheritdoc ILeverageRouter
-    function setLeverageFee(uint256 _fee) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setLeverageFee(uint256 _fee) external onlyRole(OWNER_ROLE) {
         require(revenueReceiver != address(0), ReceiverZero());
         require(leverageFee != _fee, FeeDidNotChanged());
         require(_fee < MAX_LEVERAGE_FEE, InvalidFee());
