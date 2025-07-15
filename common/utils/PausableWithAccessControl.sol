@@ -7,7 +7,12 @@ import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 /// @title Pausable contract with a separate role for pausing
 abstract contract PausableWithAccessControl is AccessControlEnumerable, Pausable {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant PAUSER_ADMIN_ROLE = keccak256("PAUSER_ADMIN_ROLE");
     bytes32 public constant OWNER_ROLE = DEFAULT_ADMIN_ROLE;
+
+    constructor() {
+        _setRoleAdmin(PAUSER_ROLE, PAUSER_ADMIN_ROLE);
+    }
 
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
