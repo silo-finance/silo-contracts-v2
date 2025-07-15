@@ -10,7 +10,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 /**
@@ -29,20 +29,20 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
     remember to run `TowerRegistration` script after deployment!
  */
-contract LeverageUsingSiloFlashloanWithGeneralSwapDeploy is CommonDeploy {
-    function run() public returns (LeverageUsingSiloFlashloanWithGeneralSwap leverage) {
+contract LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy is CommonDeploy {
+    function run() public returns (LeverageRouter leverage) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address dao = AddrLib.getAddressSafe(ChainsLib.chainAlias(), AddrKey.DAO);
         address nativeToken = _nativeToken();
 
         vm.startBroadcast(deployerPrivateKey);
 
-        leverage = new LeverageUsingSiloFlashloanWithGeneralSwap(dao, nativeToken);
+        leverage = new LeverageRouter(dao, dao, nativeToken);
 
         vm.stopBroadcast();
 
-        console2.log("LeverageUsingSiloFlashloanWithGeneralSwap redeployed - remember to run `TowerRegistration` script!");
+        console2.log("LeverageRouter for LeverageUsingSiloFlashloanWithGeneralSwap redeployed - remember to run `TowerRegistration` script!");
 
-        _registerDeployment(address(leverage), SiloCoreContracts.SILO_LEVERAGE_USING_SILO);
+        _registerDeployment(address(leverage), SiloCoreContracts.LEVERAGE_ROUTER);
     }
 }

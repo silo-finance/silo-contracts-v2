@@ -2,29 +2,29 @@
 pragma solidity ^0.8.28;
 
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
+import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract LeverageFeeReentrancyTest is MethodReentrancyTest {
+contract IsPauserReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        emit log_string("\tEnsure it will not revert)");
-        _ensureItWillNotRevert();
+        _callMethod();
     }
 
     function verifyReentrancy() external {
-        _ensureItWillNotRevert();
+        _callMethod();
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "leverageFee()";
-    }
-
-    function _ensureItWillNotRevert() internal {
-        LeverageRouter router = _getLeverageRouter();
-        router.leverageFee();
+        description = "isPauser(address)";
     }
 
     function _getLeverageRouter() internal view returns (LeverageRouter) {
         return LeverageRouter(TestStateLib.leverageRouter());
+    }
+
+    function _callMethod() internal {
+        LeverageRouter router = _getLeverageRouter();
+        router.isPauser(address(this));
     }
 }

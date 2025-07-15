@@ -3,15 +3,12 @@ pragma solidity ^0.8.28;
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract TransferOwnershipReentrancyTest is MethodReentrancyTest {
+contract GrantPauseRoleReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         _expectRevert();
     }
@@ -21,7 +18,7 @@ contract TransferOwnershipReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "transferOwnership(address)";
+        description = "grantPauseRole(address)";
     }
 
     function _getLeverageRouter() internal view returns (LeverageRouter) {
@@ -36,6 +33,6 @@ contract TransferOwnershipReentrancyTest is MethodReentrancyTest {
             address(this)
         ));
 
-        router.transferOwnership(address(this));
+        router.grantPauseRole(address(this));
     }
 }

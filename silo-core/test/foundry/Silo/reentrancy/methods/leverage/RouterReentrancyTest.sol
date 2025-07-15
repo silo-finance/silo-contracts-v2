@@ -9,7 +9,7 @@ import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract DescriptionReentrancyTest is MethodReentrancyTest {
+contract RouterReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert)");
         _ensureItWillNotRevert();
@@ -20,12 +20,14 @@ contract DescriptionReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "DESCRIPTION()";
+        description = "ROUTER()";
     }
 
     function _ensureItWillNotRevert() internal {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
-        leverage.DESCRIPTION();
+        // ROUTER is a public immutable variable, not a function
+        ILeverageRouter router = leverage.ROUTER();
+        require(address(router) != address(0), "Router should not be zero");
     }
 
     function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {

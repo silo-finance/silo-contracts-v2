@@ -6,11 +6,16 @@ import {IMethodsRegistry} from "../interfaces/IMethodsRegistry.sol";
 
 import {DescriptionReentrancyTest} from "../methods/leverage/DescriptionReentrancyTest.sol";
 import {SwapModuleReentrancyTest} from "../methods/leverage/SwapModuleReentrancyTest.sol";
+import {RouterReentrancyTest} from "../methods/leverage/RouterReentrancyTest.sol";
 import {CalculateDebtReceiveApprovalReentrancyTest} from "../methods/leverage/CalculateDebtReceiveApprovalReentrancyTest.sol";
 import {OpenLeveragePositionPermitReentrancyTest} from "../methods/leverage/OpenLeveragePositionPermitReentrancyTest.sol";
 import {OpenLeveragePositionReentrancyTest} from "../methods/leverage/OpenLeveragePositionReentrancyTest.sol";
+import {OpenLeveragePositionDirectReentrancyTest} from "../methods/leverage/OpenLeveragePositionDirectReentrancyTest.sol";
+import {OpenLeveragePositionPermitDirectReentrancyTest} from "../methods/leverage/OpenLeveragePositionPermitDirectReentrancyTest.sol";
 import {CloseLeveragePositionPermitReentrancyTest} from "../methods/leverage/CloseLeveragePositionPermitReentrancyTest.sol";
 import {CloseLeveragePositionReentrancyTest} from "../methods/leverage/CloseLeveragePositionReentrancyTest.sol";
+import {CloseLeveragePositionDirectReentrancyTest} from "../methods/leverage/CloseLeveragePositionDirectReentrancyTest.sol";
+import {CloseLeveragePositionPermitDirectReentrancyTest} from "../methods/leverage/CloseLeveragePositionPermitDirectReentrancyTest.sol";
 import {OnFlashLoanReentrancyTest} from "../methods/leverage/OnFlashLoanReentrancyTest.sol";
 import {NativeTokenReentrancyTest} from "../methods/leverage/NativeTokenReentrancyTest.sol";
 import {FeePrecisionReentrancyTest} from "../methods/leverage/FeePrecisionReentrancyTest.sol";
@@ -20,8 +25,8 @@ import {PauseReentrancyTest} from "../methods/leverage/PauseReentrancyTest.sol";
 import {UnpauseReentrancyTest} from "../methods/leverage/UnpauseReentrancyTest.sol";
 import {SetLeverageFeeReentrancyTest} from "../methods/leverage/SetLeverageFeeReentrancyTest.sol";
 import {SetRevenueReceiverReentrancyTest} from "../methods/leverage/SetRevenueReceiverReentrancyTest.sol";
-import {RescueTokensArrayReentrancyTest} from "../methods/leverage/RescueTokensArrayReentrancyTest.sol";
 import {RescueTokensSingleReentrancyTest} from "../methods/leverage/RescueTokensSingleReentrancyTest.sol";
+import {RescueNativeTokensReentrancyTest} from "../methods/leverage/RescueNativeTokensReentrancyTest.sol";
 import {CalculateLeverageFeeReentrancyTest} from "../methods/leverage/CalculateLeverageFeeReentrancyTest.sol";
 import {OwnerReentrancyTest} from "../methods/leverage/OwnerReentrancyTest.sol";
 import {PendingOwnerReentrancyTest} from "../methods/leverage/PendingOwnerReentrancyTest.sol";
@@ -29,6 +34,10 @@ import {TransferOwnershipReentrancyTest} from "../methods/leverage/TransferOwner
 import {AcceptOwnershipReentrancyTest} from "../methods/leverage/AcceptOwnershipReentrancyTest.sol";
 import {RenounceOwnershipReentrancyTest} from "../methods/leverage/RenounceOwnershipReentrancyTest.sol";
 import {PausedReentrancyTest} from "../methods/leverage/PausedReentrancyTest.sol";
+import {GrantPauseRoleReentrancyTest} from "../methods/leverage/GrantPauseRoleReentrancyTest.sol";
+import {RevokePauseRoleReentrancyTest} from "../methods/leverage/RevokePauseRoleReentrancyTest.sol";
+import {IsPauserReentrancyTest} from "../methods/leverage/IsPauserReentrancyTest.sol";
+import {MaxLeverageFeeReentrancyTest} from "../methods/leverage/MaxLeverageFeeReentrancyTest.sol";
 
 contract LeverageMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -37,22 +46,28 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
     constructor() {
         _registerMethod(new DescriptionReentrancyTest());
         _registerMethod(new SwapModuleReentrancyTest());
+        _registerMethod(new RouterReentrancyTest());
         _registerMethod(new CalculateDebtReceiveApprovalReentrancyTest());
         _registerMethod(new OpenLeveragePositionPermitReentrancyTest());
         _registerMethod(new OpenLeveragePositionReentrancyTest());
+        _registerMethod(new OpenLeveragePositionDirectReentrancyTest());
+        _registerMethod(new OpenLeveragePositionPermitDirectReentrancyTest());
         _registerMethod(new CloseLeveragePositionPermitReentrancyTest());
         _registerMethod(new CloseLeveragePositionReentrancyTest());
+        _registerMethod(new CloseLeveragePositionDirectReentrancyTest());
+        _registerMethod(new CloseLeveragePositionPermitDirectReentrancyTest());
         _registerMethod(new OnFlashLoanReentrancyTest());
         _registerMethod(new NativeTokenReentrancyTest());
         _registerMethod(new FeePrecisionReentrancyTest());
+        _registerMethod(new MaxLeverageFeeReentrancyTest());
         _registerMethod(new LeverageFeeReentrancyTest());
         _registerMethod(new RevenueReceiverReentrancyTest());
         _registerMethod(new PauseReentrancyTest());
         _registerMethod(new UnpauseReentrancyTest());
         _registerMethod(new SetLeverageFeeReentrancyTest());
         _registerMethod(new SetRevenueReceiverReentrancyTest());
-        _registerMethod(new RescueTokensArrayReentrancyTest());
         _registerMethod(new RescueTokensSingleReentrancyTest());
+        _registerMethod(new RescueNativeTokensReentrancyTest());
         _registerMethod(new CalculateLeverageFeeReentrancyTest());
         _registerMethod(new OwnerReentrancyTest());
         _registerMethod(new PendingOwnerReentrancyTest());
@@ -60,6 +75,9 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
         _registerMethod(new AcceptOwnershipReentrancyTest());
         _registerMethod(new RenounceOwnershipReentrancyTest());
         _registerMethod(new PausedReentrancyTest());
+        _registerMethod(new GrantPauseRoleReentrancyTest());
+        _registerMethod(new RevokePauseRoleReentrancyTest());
+        _registerMethod(new IsPauserReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {
