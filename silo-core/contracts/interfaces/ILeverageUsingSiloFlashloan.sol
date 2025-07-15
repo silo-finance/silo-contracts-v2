@@ -82,17 +82,6 @@ interface ILeverageUsingSiloFlashloan {
 
     function SWAP_MODULE() external view returns (IGeneralSwapModule);
 
-    /// @notice Calculates an amount of approval (receive approval) that is required on debt share token in order
-    /// to borrow on behalf of user when opening leverage position. This function should only be used when a flash
-    /// loan provider is the Silo contract.
-    /// @param _flashFrom Silo contract address to take flash loan from
-    /// @param _flashAmount amount of flash loan
-    /// @return debtReceiveApproval amount of receive approval
-    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
-        external
-        view
-        returns (uint256 debtReceiveApproval);
-
     /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
     /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails

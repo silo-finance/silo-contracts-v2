@@ -143,12 +143,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         ISiloConfig config = TestStateLib.silo1().config();
         (,, address debtShareToken) = config.getShareTokens(address(TestStateLib.silo1()));
 
-        // Calculate and set debt receive approval for user's leverage contract
-        // Need to get the leverage implementation to call calculateDebtReceiveApproval
-        LeverageUsingSiloFlashloanWithGeneralSwap leverageImpl =
-            LeverageUsingSiloFlashloanWithGeneralSwap(router.LEVERAGE_IMPLEMENTATION());
-
-        uint256 debtReceiveApproval = leverageImpl.calculateDebtReceiveApproval(
+        uint256 debtReceiveApproval = router.calculateDebtReceiveApproval(
             TestStateLib.silo1(), 
             _flashloanAmount
         );
