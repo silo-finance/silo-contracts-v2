@@ -6,6 +6,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
+import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
@@ -26,7 +27,24 @@ contract LeverageHandler is BaseHandlerLeverage {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO rescueTokens
+    function rescueTokens(IERC20 _token, uint256 _i) external payable setupRandomActor(_i) {
+        RevenueModule revenueModule = RevenueModule(siloLeverage.predictUserLeverageContract(targetActor));
+
+        _before();
+
+        (bool success,) = actor.proxy{value: msg.value}(
+            address(revenueModule), abi.encodeWithSelector(RevenueModule.rescueTokens.selector, _token)
+        );
+
+        if (success) {
+            _after();
+        }
+
+        assertEq(_token.balanceOf(address(revenueModule)), 0, "after rescue (success of fail) there should be 0 tokens");
+
+        assert_SiloLeverage_NeverKeepsTokens();
+        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+    }
 
     // TODO openLeveragePositionPermit? worth it?
 

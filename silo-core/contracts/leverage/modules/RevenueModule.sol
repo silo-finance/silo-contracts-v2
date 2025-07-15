@@ -44,13 +44,6 @@ abstract contract RevenueModule is TransientReentrancy {
         _;
     }
 
-    /// @param _tokens List of tokens to rescue
-    function rescueTokens(IERC20[] calldata _tokens) external {
-        for (uint256 i; i < _tokens.length; i++) {
-            rescueTokens(_tokens[i]);
-        }
-    }
-
     /// @param _token ERC20 token to rescue
     function rescueTokens(IERC20 _token) public nonReentrant {
         uint256 balance = _token.balanceOf(address(this));
